@@ -38810,5 +38810,170 @@ window.phgSay = function(text, opts){
 })();
 </script>
 
+<!-- PHG TEMPORARY COLA SEARCH SMOKE TEST — DEVELOPER ONLY. Remove this entire block after testing. -->
+<script>
+(function(){
+  var CS_URL="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-taxonomy-cola-search";
+  var el=null,busy=false,lines=[],open=false;
+
+  function allowed(){
+    if(typeof SITE_MODE!=='undefined'&&SITE_MODE!=='developer')return false;
+    return !!(typeof PHGAUTH!=='undefined'&&PHGAUTH.workspace&&PHGAUTH.workspace.account
+      &&typeof phgAuthAccessToken==='function'&&phgAuthAccessToken());
+  }
+  function esc(v){return String(v==null?'—':v).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+  /* Sends the authenticated request. The token is read inline and never stored,
+     displayed, logged or copied anywhere. */
+  function call(filters){
+    return fetch(CS_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+phgAuthAccessToken()},
+      body:JSON.stringify(filters)
+    }).then(function(r){
+      return r.json().catch(function(){return {};}).then(function(j){return {http:r.status,body:j};});
+    }).catch(function(){return {http:0,body:{code:'request_failed'}};});
+  }
+
+  function rec(name,pass,http,detail,coverage){
+    lines.push({name:name,pass:pass,http:http,detail:detail,coverage:coverage===undefined?null:coverage});
+    draw();
+  }
+  function rows(b){return (b&&b.results)||[];}
+  function find(rs,f){for(var i=0;i<rs.length;i++){if(f(rs[i]))return rs[i];}return null;}
+
+  function runAll(){
+    if(busy||!allowed())return;
+    busy=true;lines=[];open=true;draw();
+
+    /* A — tequila / Mexico origin */
+    call({origin_code:'81',class_type_desc:'tequila',limit:5}).then(function(a){
+      var rs=rows(a.body),ok=a.http===200&&rs.length>0&&rs.every(function(r){return r.origin_code==='81';});
+      rec('A tequila/Mexico',ok,a.http,
+        'n='+rs.length+(rs[0]?' · origin_resolution='+rs[0].origin_resolution+' · class='+esc(rs[0].class_type_desc):''),
+        a.body.coverage_status);
+
+    /* B — text-only origin */
+    return call({origin_resolution:'text_only',limit:5});}).then(function(b){
+      var rs=rows(b.body),r0=rs[0];
+      var ok=b.http===200&&rs.length>0&&rs.every(function(r){
+        return r.origin_resolution==='text_only'&&r.origin_code===null&&r.origin_desc!==null;});
+      rec('B text-only origin',ok,b.http,
+        'n='+rs.length+(r0?' · origin_desc='+esc(r0.origin_desc)+' · origin_code='+(r0.origin_code===null?'null ✓':'NOT NULL ✗')+' · '+r0.origin_resolution:''),
+        b.body.coverage_status);
+
+    /* C — unmapped class */
+    return call({class_unmapped:true,limit:5});}).then(function(c){
+      var rs=rows(c.body),r0=rs[0];
+      var ok=c.http===200&&rs.length>0&&rs.every(function(r){
+        return r.class_unmapped===true&&r.class_type_code===null&&r.class_type_desc!==null;});
+      rec('C unmapped class',ok,c.http,
+        'n='+rs.length+(r0?' · class_unmapped='+r0.class_unmapped+' · code='+(r0.class_type_code===null?'null ✓':'✗')+' · desc verbatim="'+esc(r0.class_type_desc)+'"':''),
+        c.body.coverage_status);
+
+    /* D/E/F — match methods, all three present in one approved brand_text query */
+    return call({brand_text:'patron',limit:100});}).then(function(d){
+      var rs=rows(d.body);
+      var ex=find(rs,function(r){return r.match_method==='exact';});
+      var st=find(rs,function(r){return r.match_method==='stripped_class_word';});
+      var um=find(rs,function(r){return r.match_method==='unmatched';});
+      rec('D exact brand match',!!(d.http===200&&ex),d.http,
+        ex?'match_method=exact · strength='+ex.match_strength+' · brand_id '+(ex.brand_id?'present ✓':'missing ✗')+' · identity_resolved='+ex.brand_identity_resolved:'no exact row returned',
+        d.body.coverage_status);
+      rec('E stripped_class_word',!!(d.http===200&&st&&st.match_strength==='weak'),d.http,
+        st?'match_method=stripped_class_word · strength='+st.match_strength+' (weaker than exact ✓)':'no stripped row returned',
+        d.body.coverage_status);
+      rec('F unmatched not canonical',!!(d.http===200&&um&&um.brand_id===null&&um.brand_identity_resolved===false&&um.match_strength==='none'),d.http,
+        um?'match_method=unmatched · brand_id='+(um.brand_id===null?'null ✓':'✗')+' · identity_resolved='+um.brand_identity_resolved+' ✓ · strength='+um.match_strength:'no unmatched row returned',
+        d.body.coverage_status);
+
+    /* G — coverage from authoritative registry */
+    return call({category:'tequila',limit:1});}).then(function(g){
+      var ok=g.http===200&&g.body.coverage_status==='partial';
+      rec('G coverage = partial',ok,g.http,
+        'coverage_status='+esc(g.body.coverage_status)+' · categories='+esc((g.body.categories_in_scope||[]).join(','))+' · from registry',
+        g.body.coverage_status);
+
+    /* H — bounded date range */
+    return call({completed_date_from:'2026-01-01',completed_date_to:'2026-03-31',limit:5});}).then(function(h){
+      var rs=rows(h.body);
+      var ok=h.http===200&&rs.every(function(r){
+        return r.completed_date>='2026-01-01'&&r.completed_date<='2026-03-31';});
+      rec('H date range',ok,h.http,
+        'n='+rs.length+' · total_matching='+esc(h.body.total_matching)+(rs[0]?' · first='+esc(rs[0].completed_date):''),
+        h.body.coverage_status);
+
+    /* I — pagination + hard limit clamp */
+    return Promise.all([call({limit:5,offset:0}),call({limit:5,offset:5}),call({limit:5000})]);}).then(function(p){
+      var p1=rows(p[0].body),p2=rows(p[1].body),big=p[2].body;
+      var ids1=p1.map(function(r){return r.ttb_id;});
+      var overlap=p2.filter(function(r){return ids1.indexOf(r.ttb_id)>=0;}).length;
+      var clamped=(big.page&&big.page.limit<=100);
+      var ok=p[0].http===200&&p1.length===5&&p2.length===5&&overlap===0&&clamped;
+      rec('I pagination / limit',ok,p[0].http,
+        'page1=5 page2=5 · overlap='+overlap+' ✓ · limit:5000 clamped to '+esc(big.page&&big.page.limit)+' ✓',
+        p[0].body.coverage_status);
+
+    /* J — unsupported filter must fail closed */
+    return call({not_a_real_filter:'x',limit:5});}).then(function(j){
+      var ok=j.http===400&&j.body.code==='unsupported_filter';
+      rec('J invalid filter rejected',ok,j.http,'code='+esc(j.body.code)+' (fail-closed)',null);
+
+    /* K1 — SQL-like payload in a text filter: must be literal, never executed */
+    return call({brand_text:"' OR 1=1 --",limit:5});}).then(function(k){
+      var rs=rows(k.body);
+      var ok=k.http===200&&rs.length===0;
+      rec('K1 SQL payload treated as literal',ok,k.http,
+        'n='+rs.length+' (0 = matched literally, not executed) · total_matching='+esc(k.body.total_matching),null);
+
+    /* K2 — SQL-like payload in a coded filter: must be rejected by pattern validation */
+    return call({class_type_code:"978; DROP TABLE cola_label_approvals",limit:5});}).then(function(k2){
+      var ok=k2.http===400&&k2.body.code==='invalid_class_type_code';
+      rec('K2 SQL payload rejected',ok,k2.http,'code='+esc(k2.body.code),null);
+      busy=false;draw();
+    }).catch(function(){
+      rec('SUITE ERROR',false,0,'request_failed',null);busy=false;draw();
+    });
+  }
+
+  function draw(){
+    if(!el){
+      el=document.createElement('div');
+      el.id='csSmokeTest';
+      el.style.cssText='position:fixed;z-index:10001;right:10px;bottom:10px;max-width:390px;'
+        +'max-height:70vh;overflow:auto;font:11px/1.45 ui-monospace,Menlo,monospace;color:#cfe9ef;'
+        +'background:rgba(6,14,18,.95);border:1px solid rgba(126,249,255,.35);border-radius:8px;padding:8px;display:none';
+      document.body.appendChild(el);
+    }
+    if(!allowed()){el.style.display='none';el.innerHTML='';return;}
+    el.style.display='block';
+    var pass=lines.filter(function(l){return l.pass;}).length;
+    var h='<button id="csBtn" style="width:100%;cursor:pointer;font:inherit;color:#062;'
+      +'background:#7ef9ff;border:0;border-radius:6px;padding:6px 8px">'
+      +(busy?'Running…':'TEST COLA SEARCH')+'</button>';
+    if(lines.length){
+      h+='<div style="margin-top:8px;font-weight:bold">'+pass+'/'+lines.length+' passed</div>';
+      for(var i=0;i<lines.length;i++){
+        var l=lines[i];
+        h+='<div style="margin-top:6px;padding-top:5px;border-top:1px solid rgba(126,249,255,.15)">'
+          +'<span style="color:'+(l.pass?'#7df59a':'#ff8f8f')+'">'+(l.pass?'PASS':'FAIL')+'</span> '
+          +'<b>'+esc(l.name)+'</b> · HTTP '+esc(l.http)
+          +(l.coverage?' · coverage='+esc(l.coverage):'')
+          +'<div style="opacity:.8">'+esc(l.detail)+'</div></div>';
+      }
+    }
+    el.innerHTML=h;
+    var b=document.getElementById('csBtn');
+    if(b)b.onclick=runAll;
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',draw);
+  else draw();
+  setInterval(function(){if(!busy&&!open)draw();},1500);
+})();
+</script>
+<!-- END PHG TEMPORARY COLA SEARCH SMOKE TEST -->
+
 </body>
 </html>
