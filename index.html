@@ -38810,5 +38810,69 @@ window.phgSay = function(text, opts){
 })();
 </script>
 
+<!-- PHG MILESTONE 1 — TEMPORARY DEVELOPER-ONLY TEST CONTROL. Remove this entire block after Milestone 1. -->
+<script>
+(function(){
+  var M1_URL="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-harmony-reason";
+  var M1_TEXT="make me a margarita menu for a Mexican restaurant";
+  var el=null,busy=false,result='';
+
+  function allowed(){
+    if(typeof SITE_MODE!=='undefined'&&SITE_MODE!=='developer')return false;
+    return !!(typeof PHGAUTH!=='undefined'&&PHGAUTH.workspace&&PHGAUTH.workspace.account
+      &&typeof phgAuthAccessToken==='function'&&phgAuthAccessToken());
+  }
+  function esc(v){return String(v==null?'—':v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function ensure(){
+    if(el)return el;
+    el=document.createElement('div');
+    el.id='m1HarmonyReasonTest';
+    el.style.cssText='position:fixed;z-index:10001;right:10px;bottom:10px;max-width:280px;'
+      +'font:11px/1.45 ui-monospace,Menlo,monospace;color:#cfe9ef;background:rgba(6,14,18,.92);'
+      +'border:1px solid rgba(126,249,255,.35);border-radius:8px;padding:8px;display:none';
+    document.body.appendChild(el);
+    return el;
+  }
+  function draw(){
+    var d=ensure();
+    if(!allowed()){d.style.display='none';d.innerHTML='';return;}
+    d.style.display='block';
+    d.innerHTML='<button id="m1HRBtn" style="width:100%;cursor:pointer;font:inherit;color:#062;'
+      +'background:#7ef9ff;border:0;border-radius:6px;padding:6px 8px"'+(busy?' disabled':'')+'>'
+      +(busy?'Working…':'TEST HARMONY REASON')+'</button>'
+      +(result?'<pre style="margin:8px 0 0;white-space:pre-wrap">'+result+'</pre>':'');
+    var b=document.getElementById('m1HRBtn');
+    if(b)b.onclick=run;
+  }
+  function run(){
+    if(busy||!allowed())return;
+    busy=true;result='';draw();
+    var acct=PHGAUTH.workspace.account||{};
+    fetch(M1_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+phgAuthAccessToken()},
+      body:JSON.stringify({user_text:M1_TEXT,account_id:acct.id||null})
+    }).then(function(r){
+      return r.json().catch(function(){return {};}).then(function(j){
+        var i=(j&&j.interpretation)||{};
+        result='HTTP status: '+esc(r.status)+'\n'
+          +'status: '+esc(j&&j.status)+'\n'
+          +'schema_valid: '+esc(j&&j.schema_valid)+'\n'
+          +'wrote_to_database: '+esc(j&&j.wrote_to_database)+'\n'
+          +'intent_hint: '+esc(i.intent_hint)+'\n'
+          +'execution_class_hint: '+esc(i.execution_class_hint);
+      });
+    }).catch(function(){
+      result='HTTP status: —\nstatus: request_failed\nschema_valid: —\n'
+        +'wrote_to_database: —\nintent_hint: —\nexecution_class_hint: —';
+    }).then(function(){busy=false;draw();});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',draw);
+  else draw();
+  setInterval(function(){if(!busy)draw();},1500);
+})();
+</script>
+<!-- END PHG MILESTONE 1 TEMPORARY TEST CONTROL -->
+
 </body>
 </html>
