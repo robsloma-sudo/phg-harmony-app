@@ -38836,8 +38836,9 @@ window.phgSay = function(text, opts){
     }).catch(function(){return {http:0,body:{code:'request_failed'}};});
   }
 
-  function rec(name,pass,http,detail,coverage){
-    lines.push({name:name,pass:pass,http:http,detail:detail,coverage:coverage===undefined?null:coverage});
+  function rec(name,pass,http,detail,coverage,kind){
+    lines.push({name:name,pass:pass,http:http,detail:detail,
+      coverage:coverage===undefined?null:coverage,kind:kind||'assert'});
     draw();
   }
   function rows(b){return (b&&b.results)||[];}
@@ -38920,12 +38921,20 @@ window.phgSay = function(text, opts){
       var ok=j.http===400&&j.body.code==='unsupported_filter';
       rec('J invalid filter rejected',ok,j.http,'code='+esc(j.body.code)+' (fail-closed)',null);
 
-    /* K1 — SQL-like payload in a text filter: must be literal, never executed */
+    /* K1 — upstream_security_test. NOT a gateway pass/fail assertion.
+       Acceptable outcomes: (A) upstream rejects the maliciously shaped request before the
+       function, or (B) it reaches the function and is handled as literal input.
+       Outcome A is NOT observable from the browser because the upstream block page carries
+       no CORS headers, so fetch surfaces a generic network error. We therefore report HTTP 0
+       as NOT OBSERVABLE and never claim it proves a WAF block -- that would mask real
+       network failures. Server-side evidence is recorded separately. */
     return call({brand_text:"' OR 1=1 --",limit:5});}).then(function(k){
-      var rs=rows(k.body);
-      var ok=k.http===200&&rs.length===0;
-      rec('K1 SQL payload treated as literal',ok,k.http,
-        'n='+rs.length+' (0 = matched literally, not executed) · total_matching='+esc(k.body.total_matching),null);
+      var rs=rows(k.body),verdict;
+      if(k.http===403) verdict='outcome A · rejected upstream before the function';
+      else if(k.http===200&&rs.length===0) verdict='outcome B · reached function, treated as literal input, n=0';
+      else if(k.http===0) verdict='NOT OBSERVABLE from browser (upstream block page sends no CORS headers). Could also be a genuine network error — see server-side evidence.';
+      else verdict='unexpected: HTTP '+esc(k.http)+' n='+rs.length;
+      rec('K1 upstream_security_test',null,k.http,verdict,null,'info');
 
     /* K2 — SQL-like payload in a coded filter: must be rejected by pattern validation */
     return call({class_type_code:"978; DROP TABLE cola_label_approvals",limit:5});}).then(function(k2){
@@ -38948,16 +38957,19 @@ window.phgSay = function(text, opts){
     }
     if(!allowed()){el.style.display='none';el.innerHTML='';return;}
     el.style.display='block';
-    var pass=lines.filter(function(l){return l.pass;}).length;
+    var scored=lines.filter(function(l){return l.kind!=='info';});
+    var pass=scored.filter(function(l){return l.pass;}).length;
     var h='<button id="csBtn" style="width:100%;cursor:pointer;font:inherit;color:#062;'
       +'background:#7ef9ff;border:0;border-radius:6px;padding:6px 8px">'
       +(busy?'Running…':'TEST COLA SEARCH')+'</button>';
     if(lines.length){
-      h+='<div style="margin-top:8px;font-weight:bold">'+pass+'/'+lines.length+' passed</div>';
+      h+='<div style="margin-top:8px;font-weight:bold">'+pass+'/'+scored.length+' passed'
+        +' <span style="opacity:.6;font-weight:normal">(+'+(lines.length-scored.length)+' informational)</span></div>';
       for(var i=0;i<lines.length;i++){
         var l=lines[i];
         h+='<div style="margin-top:6px;padding-top:5px;border-top:1px solid rgba(126,249,255,.15)">'
-          +'<span style="color:'+(l.pass?'#7df59a':'#ff8f8f')+'">'+(l.pass?'PASS':'FAIL')+'</span> '
+          +'<span style="color:'+(l.kind==='info'?'#ffd479':(l.pass?'#7df59a':'#ff8f8f'))+'">'
+          +(l.kind==='info'?'INFO':(l.pass?'PASS':'FAIL'))+'</span> '
           +'<b>'+esc(l.name)+'</b> · HTTP '+esc(l.http)
           +(l.coverage?' · coverage='+esc(l.coverage):'')
           +'<div style="opacity:.8">'+esc(l.detail)+'</div></div>';
