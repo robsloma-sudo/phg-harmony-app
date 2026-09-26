@@ -6173,7 +6173,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.48.2 LIVE MENU CORPUS RESILIENT · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.48.3 LIVE MENU CORPUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7405,7 +7405,7 @@ function load(){
   phgPipelineStatsRefresh();
   Promise.all([
     get("/v_public_stats?select=*"),
-    get("/v_public_batches?select=*&order=batch_no"+(STATE==="ALL"?"":"&state_code=eq."+STATE)),
+    get("/v_public_batches?select=*&order=batch_no"+(STATE==="ALL"?"":"&state_code=eq."+STATE)).catch(function(){return []}),
     Promise.resolve(VENUES),
     Promise.resolve(EXP),
     get("/v_public_states?select=*"),
