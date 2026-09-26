@@ -6173,7 +6173,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-23.18.48 LOCAL VOICE RUNTIME FIX · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.48.1 LIVE MENU CORPUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7220,6 +7220,48 @@ var NAVOPEN={bev:true,fn:false,reporting:false};
 function toggleGroup(g){NAVOPEN[g]=!NAVOPEN[g];render()}
 
 var S={},BATCHES=[],VENUES=[],EXP=[],STATES=[],allStatsCache=[],CORPUS=[],page="home",prev={};
+var PIPESTATS=null;
+var PHG_PIPELINE_STATS_URL="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-menu-pipeline-stats";
+
+function phgPipelineStatsFetch(){
+  return fetch(PHG_PIPELINE_STATS_URL,{cache:"no-store"}).then(function(r){
+    if(!r.ok)throw new Error("pipeline stats returned "+r.status);
+    return r.json();
+  }).then(function(j){
+    return j&&j.status==="live"?j:PIPESTATS;
+  }).catch(function(){ return PIPESTATS; });
+}
+function phgPipelineAge(ts){
+  if(!ts)return "waiting for snapshot";
+  var d=new Date(ts),secs=Math.max(0,Math.round((Date.now()-d.getTime())/1000));
+  if(secs<90)return "updated "+secs+"s ago";
+  return "updated "+Math.round(secs/60)+"m ago";
+}
+function pipelineCorpusCard(){
+  var p=PIPESTATS;
+  if(!p){
+    return '<div class="card" style="margin-bottom:16px"><div class="ttl"><span style="color:'+GREEN+'">&#9673;</span><span class="ttltxt">Live Menu Corpus</span><span class="pct" style="color:'+GREY+'">connecting</span></div><div class="pdesc">Current discovery, archive and rendering totals.</div></div>';
+  }
+  var ready=Number(p.visual_pages_ready||0),required=Number(p.visual_pages_required||0),pending=Number(p.visual_pages_pending||0),pct=required?Math.min(100,ready/required*100):0;
+  return '<div class="card" style="margin-bottom:16px">'+
+    '<div class="ttl"><span style="color:'+GREEN+'">&#9673;</span><span class="ttltxt">Live Menu Corpus</span><span class="pct" style="color:'+GREEN+'">'+phgPipelineAge(p.updated_at)+'</span></div>'+
+    '<div class="pdesc">Pipeline totals from the active PHG menu archive.</div>'+
+    '<div class="bar" style="margin:10px 0 14px"><div class="fill" style="width:'+pct.toFixed(1)+'%;background:'+GREEN+'"></div></div>'+
+    '<div class="grid g4">'+
+      '<div class="card" style="background:#11161b"><div class="lbl">Menu candidates</div><div class="big" style="font-size:28px;color:'+BLUE+'">'+n(p.menu_candidates)+'</div><div class="sub">discovered sources</div></div>'+
+      '<div class="card" style="background:#11161b"><div class="lbl">Archived documents</div><div class="big" style="font-size:28px;color:'+ORANGE+'">'+n(p.visual_documents)+'</div><div class="sub">PDF, image and HTML</div></div>'+
+      '<div class="card" style="background:#11161b"><div class="lbl">Rendered pages</div><div class="big" style="font-size:28px;color:'+GREEN+'">'+n(ready)+'</div><div class="sub">'+pct.toFixed(1)+'% of required pages</div></div>'+
+      '<div class="card" style="background:#11161b"><div class="lbl">Remaining pages</div><div class="big" style="font-size:28px;color:'+PINK+'">'+n(pending)+'</div><div class="sub">waiting for visual render</div></div>'+
+    '</div>'+
+    '<div class="row"><span>PDF documents</span><b>'+n(p.pdf_documents)+'</b></div>'+
+    '<div class="row"><span>Image documents</span><b>'+n(p.image_documents)+'</b></div>'+
+    '<div class="row"><span>HTML documents</span><b>'+n(p.html_documents)+'</b></div>'+
+    '<div class="row"><span>Railway PDF pages rendered</span><b>'+n(p.pdf_pages_rendered)+'</b></div>'+
+    '<div class="row"><span>Railway HTML pages rendered</span><b>'+n(p.html_pages_rendered)+'</b></div>'+
+    '<div class="row"><span>Downloaded source documents</span><b>'+n(p.downloaded_documents)+'</b></div>'+
+  '</div>';
+}
+
 /* The landing view is the whole country, not a single state. page already
    defaults to "home", so this is the only half that was missing. */
 var STATE="ALL";
@@ -7354,7 +7396,8 @@ function load(){
     Promise.resolve(VENUES),
     Promise.resolve(EXP),
     get("/v_public_states?select=*"),
-    get("/v_public_corpus?select=*")
+    get("/v_public_corpus?select=*"),
+    phgPipelineStatsFetch()
   ]).then(function(r){
     var allStats=r[0]||[];
     allStatsCache=allStats;
@@ -7367,14 +7410,15 @@ function load(){
     } else {
       S=allStats.filter(function(x){return x.state_code===STATE})[0]||{};
     }
-    BATCHES=r[1]||[];STATES=r[4]||[];CORPUS=r[5]||[];
+    BATCHES=r[1]||[];STATES=r[4]||[];CORPUS=r[5]||[];PIPESTATS=r[6]||PIPESTATS;
     document.getElementById("err").innerHTML="";
     document.getElementById("status").textContent="live";
     document.getElementById("pill").className="live";
     // Re-render ONLY when the data changed. Rebuilding the DOM every 5
     // seconds closed open dropdowns, reset scroll position and destroyed
     // the map mid-interaction.
-    var sig=[STATE,S.places_done,S.websites,S.drink_items,S.menus_auto,VENUES.length,EXP.length,STATES.length].join("|");
+    var ps=PIPESTATS||{};
+    var sig=[STATE,S.places_done,S.websites,S.drink_items,S.menus_auto,VENUES.length,EXP.length,STATES.length,ps.menu_candidates,ps.visual_documents,ps.visual_pages_ready,ps.visual_pages_pending,ps.updated_at].join("|");
     /* The heavy tables reload only when the state changes or the counts
        behind them move - and only for a view that actually reads them. */
     var hsig = [STATE,S.drink_items,S.venues].join("|");
@@ -7907,7 +7951,7 @@ function countryHome(){
       '<td style="color:'+ORANGE+'"><b>'+n(st.drink_items)+'</b></td></tr>';
   }).join("");
 
-  return '<div class="grid g4">'+
+  return pipelineCorpusCard()+'<div class="grid g4">'+
     metric("mV","Venues nationwide","across "+loaded.length+" states",PLAIN,"coverage")+
     metric("mP","Places looked up",pct.toFixed(1)+"% complete",BLUE,"coverage")+
     metric("mS","Websites found",web.toFixed(1)+"% hit rate",GREEN,"competitors")+
@@ -7972,7 +8016,7 @@ function homePage(){
       '<div class="bar" style="margin:4px 0 9px"><div class="fill" style="width:'+p+'%;background:'+BLUE+'"></div></div>'
   }).join(""):'<div class="sub">No batch data</div>';
 
-  return '<div class="grid g4">'+
+  return pipelineCorpusCard()+'<div class="grid g4">'+
     metric("mV","Venue universe","spirits-capable",PLAIN,"competitors")+
     metric("mP","Places looked up",pct.toFixed(1)+"% complete",BLUE,"competitors")+
     metric("mS","Websites found",web.toFixed(1)+"% hit rate",GREEN,"competitors")+
