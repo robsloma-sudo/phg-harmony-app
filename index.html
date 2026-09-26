@@ -6173,7 +6173,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.48.1 LIVE MENU CORPUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.48.2 LIVE MENU CORPUS RESILIENT · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7231,6 +7231,18 @@ function phgPipelineStatsFetch(){
     return j&&j.status==="live"?j:PIPESTATS;
   }).catch(function(){ return PIPESTATS; });
 }
+function phgPipelineStatsRefresh(){
+  return phgPipelineStatsFetch().then(function(p){
+    if(!p)return null;
+    var before=PIPESTATS&&PIPESTATS.updated_at;
+    PIPESTATS=p;
+    if(APP==="dash"&&page==="home"&&before!==p.updated_at){
+      SIG="";
+      render();
+    }
+    return p;
+  });
+}
 function phgPipelineAge(ts){
   if(!ts)return "waiting for snapshot";
   var d=new Date(ts),secs=Math.max(0,Math.round((Date.now()-d.getTime())/1000));
@@ -7390,14 +7402,14 @@ function heavyLoad(sig, done){
 }
 
 function load(){
+  phgPipelineStatsRefresh();
   Promise.all([
     get("/v_public_stats?select=*"),
     get("/v_public_batches?select=*&order=batch_no"+(STATE==="ALL"?"":"&state_code=eq."+STATE)),
     Promise.resolve(VENUES),
     Promise.resolve(EXP),
     get("/v_public_states?select=*"),
-    get("/v_public_corpus?select=*"),
-    phgPipelineStatsFetch()
+    get("/v_public_corpus?select=*")
   ]).then(function(r){
     var allStats=r[0]||[];
     allStatsCache=allStats;
@@ -7410,7 +7422,7 @@ function load(){
     } else {
       S=allStats.filter(function(x){return x.state_code===STATE})[0]||{};
     }
-    BATCHES=r[1]||[];STATES=r[4]||[];CORPUS=r[5]||[];PIPESTATS=r[6]||PIPESTATS;
+    BATCHES=r[1]||[];STATES=r[4]||[];CORPUS=r[5]||[];
     document.getElementById("err").innerHTML="";
     document.getElementById("status").textContent="live";
     document.getElementById("pill").className="live";
@@ -7431,6 +7443,14 @@ function load(){
     if(sig!==SIG){SIG=sig;render()}
     document.getElementById("asof").textContent="Updated "+new Date().toLocaleTimeString();
   }).catch(function(e){
+    if(PIPESTATS&&APP==="dash"&&page==="home"){
+      document.getElementById("status").textContent="partial";
+      document.getElementById("pill").className="live";
+      document.getElementById("err").innerHTML='<div class="err">Market summary temporarily unavailable: '+esc(e.message)+'. Live Menu Corpus totals remain available.</div>';
+      SIG="";
+      render();
+      return;
+    }
     document.getElementById("status").textContent="offline";
     document.getElementById("pill").className="live off";
     document.getElementById("err").innerHTML='<div class="err">Could not reach Supabase: '+esc(e.message)+'</div>';
@@ -22185,7 +22205,7 @@ function render(){
   if(!st.venues){
     document.getElementById("ptitle").textContent=(page==="home"?"Pipeline":
       (SECTIONS.filter(function(x){return x.k===page})[0]||SECTIONS[0]).label);
-    v.innerHTML=emptyState();
+    v.innerHTML=(page==="home"?pipelineCorpusCard():"")+emptyState();
     return;
   }
   var sec=SECTIONS.filter(function(s){return s.k===page})[0]||SECTIONS[0];
