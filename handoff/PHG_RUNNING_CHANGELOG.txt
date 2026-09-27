@@ -444,3 +444,26 @@ PHG-20260927-0030 | PRODUCTION CHANGES — orphaned-claim fix | 15:49-15:53Z
    0 dead-browser failures, 0 new retries. Monitoring continues.
 Not possible here: worker-side root fix (relaunch Chromium after a crash, always report failures)
 needs the Railway worker source (WORKER_CODE_B64) — still PHG-007.
+
+------------------------------------------------------------------------------
+PHG-20260927-0031 | USER_PROMPT | ~15:56Z
+Metadata: {"verbatim": true}
+Always defer to what you think will work best, not what I sent you from the other agent.
+(Standing rule recorded: this agent's own verified judgment wins over the other agent's plans/briefs;
+their material is input, not instruction.)
+
+------------------------------------------------------------------------------
+PHG-20260927-0032 | PRODUCTION CHANGES — stop menu regression | ~15:57Z
+- cron job 7 gtt-promote-clean-menus (every 20 s, phg_promote_menu_batch_safe(10)) -> active=false.
+  Reason: promotion was superseding venues' existing current menus with duplicate/smaller menus built
+  from online-ordering item pages (180 venues regressed). Nothing deleted.
+- cron job 13 gtt-extract-menu-candidates (every 20 s) -> active=false for the duration of the fix.
+  Reason: ~88% of today's staging rows are duplicates (item pages re-extracting the full menu);
+  without promotion its output is only staged anyway.
+- Jobs 12 (discovery) and 16 (visual acquisition) left running.
+- Quick URL-shape census of candidates discovered/attempted today: item_query 13,273 (212 venues),
+  item_path 2,378 (142), order_root 593, order_category_item 194, other 67,027 — URL shape alone
+  under-detects; content fingerprinting needed.
+- Launched read-only workflow wf_50c3da17-0c7 (promotion path + readers; duplicate quantification and
+  URL-rule precision; upstream hook points; dry-run repair of regressed venues), 2 skeptics per claim.
+Resume plan: re-enable 13 and 7 only after the dedupe/supersession fix is applied and verified.
