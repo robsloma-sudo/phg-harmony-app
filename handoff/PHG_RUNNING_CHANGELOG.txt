@@ -265,3 +265,49 @@ PHG-20260927-0018 | DECISION + ACTION | ~15:32Z
 - Launched read-only workflow wf_30d5110c-e45: six investigators (Edge functions + migrations;
   cron + SQL functions + settings; job 5 diagnosis; orphaned-claim diagnosis; GitHub + Netlify;
   data growth) each followed by two skeptics per consequential finding.
+
+------------------------------------------------------------------------------
+PHG-20260927-0019 | USER_PROMPT | ~15:38Z
+Metadata: {"verbatim": true}
+Okay, can you fix all of these? Except five.
+(Context: the five loose ends reported at ~15:35Z — 1 job 13 re-enabled despite 402 hold;
+2 v_public_batches 15 h stale (job 23 off); 3 counting jobs share one lock key; 4 per-venue counts
+take ~28 h per cycle; 5 anon-executable refresh functions -> EXCLUDED by Rob.)
+
+------------------------------------------------------------------------------
+PHG-20260927-0020 | FINDINGS (first two audit investigators, wf_30d5110c-e45) | ~15:30Z
+Another agent (as robsloma@gmail.com) made 15 migrations 03:27-04:14Z + 13:52-13:54Z, bumped
+extract-menu-candidates v4, acquire-menu-visual-assets v8, discover-beverage-menus v15 (free direct
+crawler), activated cron jobs 5,7,12,13,15,16,18,22 (7/12/13/16 every 20 s) with per-command
+SET statement_timeout 5s (12s job 7) + lock_timeout 500ms, added worker-lease table
+phg_menu_worker_leases, atomic extraction save + source archive (menu_extraction_sources, 100 MB),
+bounded refresh_menu_page_counts/visual_counts (50 accounts, advisory 830927,1, SKIP LOCKED,
+IS DISTINCT FROM), fixed job 5 at 13:54Z (0 failures since). menu-render-worker-api unchanged (v3).
+Health 03:46-15:25Z: 10,254 cron runs, 90 failures (88 job-5 timeouts before its fix, 2 job 13),
+0 deadlocks, max 4-5 concurrent. Accounts actually 41,886 rows (78,319 was a bloated estimate).
+
+------------------------------------------------------------------------------
+PHG-20260927-0021 | VERIFICATION — item 1 (job 13 vs provider 402) | 15:36Z
+extract-menu-candidates v4 source: Firecrawl is called only when opts.allow_paid===true; the
+job-13 dispatcher phg_dispatch_menu_recovery_work('candidate_extraction') hard-codes
+{"batch":20,"concurrency":3,"allow_paid":false}. menu_source_candidates attempted since 03:40Z:
+38,106; last_error/visual_asset_last_error containing 402/payment/credit: 0. Lease last_result
+provider_blocked 0. RESULT: job 13 is running the free direct-HTML path only; no budget exposure.
+No change needed. Caveat logged: candidates with 0 parsed items go to status 'review' (not retried);
+when billing (PHG-006) is restored they can be re-queued for the paid path.
+
+------------------------------------------------------------------------------
+PHG-20260927-0022 | MEASUREMENTS + DRAFT FIX — items 2, 3, 4 | 15:33-15:45Z
+- Shared advisory key (item 3): both cursors advance every run (page_counts 15:28, visual_counts
+  15:29); jobs 15/18 alternate minutes and take 0.17 s avg (max 1.17 s) under a 5 s cap, so they
+  never overlap. The shared key is what serialises the two accounts batch writers — KEEP it;
+  make skipped runs visible instead (skipped_busy, last_skipped_at).
+- Per-venue lag (item 4): EXPLAIN ANALYZE of the page-count aggregate over 1,000 accounts = 1.77 s.
+  Draft migration supabase/migrations/20260927160000_phg_count_refresh_faster_cycle.sql: batch
+  50 -> 1000 (full cycle ~84 min instead of ~28 h), visual counts take up to 300 recently changed
+  accounts first (documents/pages updated since last run), run bookkeeping columns, immediate
+  cursor wrap. Rolled-back dry run in production (DO block ending in RAISE): page 1,259 ms
+  (1000 picked, 158 stale corrected), visual 493 ms (1000 picked, 324 stale corrected).
+- Job 23 (item 2): phg_internal.refresh_public_batches_cache aggregate = 2.05 s uncontended
+  (58 s under the Sep-26 contention). Plan: every 15 min, statement_timeout 30s, lock_timeout 500ms.
+- Launched review workflow wf_4f72b646-736 (locking / correctness / operations reviewers) before apply.
