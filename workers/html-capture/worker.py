@@ -102,6 +102,8 @@ async def run() -> None:
                     timeout=180)
                 res = await asyncio.to_thread(_post, "complete_html", cap.jpeg, "image/jpeg",
                                               page_id=pid, width=cap.width, height=cap.height)
+                if res.get("status") == "ready" and cap.text:
+                    await asyncio.to_thread(_post, "save_text", json.dumps({"page_id": pid, "text": cap.text}).encode())
                 print(json.dumps({"page_id": pid, "status": res.get("status") or res.get("error"),
                                   "h": cap.height, "notes": cap.notes}), flush=True)
             except Exception as e:  # report and move on; the API decides backoff / quarantine

@@ -1,4 +1,3 @@
-// phg-menu-corpus-browser v7 (2026-09-27, PHG-035): + tags tequila_mezcal, whiskey, bot_check. v6 = v6.rollback.index.ts
 // phg-menu-corpus-browser v6 (2026-09-27, PHG-033): + rule (keep_word|keep_method|defer|skip, capture-gate review) and sort "shuffle" with seed. v5 = v5.rollback.index.ts
 // phg-menu-corpus-browser v5 (2026-09-27, PHG-030): + menu_kind / has / hide (phg_menu_doc_class). v4 = v4.rollback.index.ts
 // phg-menu-corpus-browser v4 (2026-09-27, PHG-027)
@@ -168,7 +167,7 @@ Deno.serve(async (req: Request) => {
   };
   for (const k of CENSUS_KEYS) params[k] = list(b[k], 10, 10);
   const KINDS = ["beverage","mixed","food","happy_hour","specials","delivery","not_menu","little_text","unread"];
-  const TAGS = ["cocktails","beer","wine","spirits","tequila_mezcal","whiskey","sake_soju","non_alcoholic","food","happy_hour","specials","brunch","events","delivery","bot_check"];
+  const TAGS = ["cocktails","beer","wine","spirits","sake_soju","non_alcoholic","food","happy_hour","specials","brunch","events","delivery"];
   params.menu_kind = list(b.menu_kind, 10, 20)?.filter((x) => KINDS.includes(x));
   params.has = list(b.has, 12, 20)?.filter((x) => TAGS.includes(x));
   params.hide = list(b.hide, 12, 20)?.filter((x) => TAGS.includes(x));

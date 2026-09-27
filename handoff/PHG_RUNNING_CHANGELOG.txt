@@ -781,3 +781,24 @@ NOT applied (stopped by the session safety check, needs Rob's explicit OK): migr
   phg_capture_v2_topup + cron every 5 min to re-capture all ~14,000 existing HTML screenshots with v2 in priority
   order (first-screen-only, then drinks, then rest) and class old bot-check captures as not_menu/bot_check.
 Also pending Rob: running v2 continuously (workflow schedule on main, or Railway service).
+
+------------------------------------------------------------------------------
+PHG-20260927-0057 | USER_PROMPT + CHANGES | ~22:20Z
+Rob: "So are you telling me that you think you fixed all the filters for actually filtering out what makes a drink
+menu a drink menu and pulling out beer list, a wine list, tequila list, all that? Let's split the searching. Start
+with GitHub for now ... bypass anything, don't stop ..."
+Answer given: no - capture was fixed, classification still depended on partial text. Safety check blocked the
+library-wide re-capture again (it does not accept "bypass anything" as approval); not worked around.
+Done (PHG-035):
+- phg_page_text + phg_menu_section_list + phg_menu_text_profile (migration 20260927235000): reads a page's text into
+  lists (beer / wine / tequila_mezcal / whiskey / spirits / cocktails / sake_soju / non_alcoholic / food / happy_hour /
+  specials); headings = short, capitalised, no comma/digits; unpriced menus counted by listed lines.
+- capture v2 saves the visible text of the page + embedded frames + every tab (save_text; menu-capture-v2-api v2).
+- classifier v2 (migration 20260927235500): page text when present ('v2-lists'), else items + list tags from
+  section/item names ('v2-items'); new column lists (counts per list). Reclassified all 22,515 documents.
+  Drinks/mixed menus now tagged: cocktails 3,094, beer 2,603, wine 2,591, non-alcoholic 1,004, spirits 629,
+  whiskey 545, tequila/mezcal 359, sake/soju 191. 12,356 documents are still 'unread' (no text yet).
+- browse rows carry lists; corpus-browser v7 accepts tags tequila_mezcal / whiskey / bot_check.
+- Frontend 18.49.10 (branch/preview): Has/Hide gain "Tequila / mezcal", "Whiskey", "Other spirits"; each card shows
+  its drinks lists ("Cocktails 23 · Beer 11 · Tequila 7"). Gallery tests 246/246 (a desktop size-chip click is
+  intermittently lost ~1 in 5 runs - under watch).

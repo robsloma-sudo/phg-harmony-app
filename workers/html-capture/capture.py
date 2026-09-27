@@ -40,6 +40,7 @@ class Capture:
     width: int
     height: int
     notes: list = field(default_factory=list)
+    text: str = ""  # visible text of the page, its embedded frames and every captured tab (for menu classification)
 
 
 # --------------------------------------------------------------------------- page preparation
@@ -360,6 +361,22 @@ JS_DIAG = """() => {
 }"""
 
 
+async def _visible_text(page) -> str:
+    parts = []
+    try:
+        parts.append(await _ev(page, "document.body ? document.body.innerText : ''"))
+    except Exception:
+        pass
+    for fr in page.frames[1:]:
+        try:
+            t = await fr.evaluate("document.body ? document.body.innerText : ''")
+            if t and len(t) > 40:
+                parts.append(t)
+        except Exception:
+            continue
+    return "\n".join(parts)
+
+
 async def capture(page, url: str, target_width: int = 1400, jpeg_quality: int = 85, diag: dict | None = None) -> Capture:
     notes: list = []
 
@@ -399,6 +416,7 @@ async def capture(page, url: str, target_width: int = 1400, jpeg_quality: int = 
 
     parts = [await _shot(page)]
     seen: list = []
+    texts = [await _visible_text(page)]
 
     await d("prepared")
     tabs = await _drink_tabs(page)
@@ -419,6 +437,7 @@ async def capture(page, url: str, target_width: int = 1400, jpeg_quality: int = 
                     continue
                 seen.append(img)
                 parts.append(img)
+                texts.append(await _visible_text(page))
                 notes.append("tab:" + t["text"][:20])
             except Exception:
                 continue
@@ -438,4 +457,4 @@ async def capture(page, url: str, target_width: int = 1400, jpeg_quality: int = 
         y += p.height
     buf = io.BytesIO()
     sheet.save(buf, "JPEG", quality=jpeg_quality, optimize=True)
-    return Capture(buf.getvalue(), width, sheet.height, notes)
+    return Capture(buf.getvalue(), width, sheet.height, notes, "\n\n".join(texts)[:400000])

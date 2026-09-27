@@ -8,6 +8,7 @@
 //
 // Lane: pages with render_strategy 'html_capture_v2' (queued by phg_capture_v2_queue, backed up first). A queued page
 // keeps serving its old image until v2 replaces it. v2 images go to page-NNN.v2.jpg (old image stays in the bucket).
+// save_text (PHG-035): stores the page text in phg_page_text; the classifier re-reads it.
 // Lease: render_next_retry_at (10 min) + render_last_error 'capture_v2_claim|..'. Three failures -> gave up, old kept.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -95,6 +96,22 @@ Deno.serve(async (req: Request) => {
     await sb.from("menu_visual_documents").update({ page_render_status: "ready", page_rendered_at: t, updated_at: t })
       .eq("id", page.menu_visual_document_id);
     return json({ status: "ready", page_id: pageId, bytes: bytes.length, path });
+  }
+
+  if (action === "save_text") {
+    // PHG-035: the page's visible text (all tabs + embedded frames) for drinks-list classification
+    let body: any = {};
+    try { body = await req.json(); } catch { /* empty */ }
+    const pageId = Number(body.page_id);
+    const text = String(body.text || "").slice(0, 400000);
+    const { data: page } = await sb.from("menu_visual_pages").select("id,menu_visual_document_id,render_strategy").eq("id", pageId).maybeSingle();
+    if (!page?.id || page.render_strategy !== LANE) return json({ error: "page_not_in_v2_lane" }, 404);
+    if (!text.trim()) return json({ error: "empty_text" }, 400);
+    const { error } = await sb.from("phg_page_text").upsert({ page_id: pageId, document_id: page.menu_visual_document_id, text,
+      source: "capture_v2", captured_at: new Date().toISOString() });
+    if (error) return json({ error: "save_failed", detail: error.message }, 500);
+    // the classifier cron re-reads documents whose text is newer than their class
+    return json({ status: "saved", page_id: pageId, chars: text.length });
   }
 
   if (action === "fail_html") {
