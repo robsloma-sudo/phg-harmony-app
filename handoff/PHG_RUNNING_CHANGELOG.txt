@@ -652,3 +652,14 @@ suggestions and feedback is not integrated. I want that in there." / "Resume"
   classifier + browse filter backend exists (PHG-030).
 - Review workflows wf_b63e551b-399 and the classifier-design agent failed on the session usage limit
   (resets 20:00Z); rerun both. PHG-026 fix + repair still NOT applied; cron 7 and 13 still paused.
+
+------------------------------------------------------------------------------
+PHG-20260927-0049 | USER_PROMPT + CHANGE | ~20:15Z
+Rob: "There's no other way around reading that text." -> answered: free options (PDF text layer, re-fetch
+web page text, free OCR on Railway once worker source is in repo, filename clues); paid only for leftovers.
+Rob: "Let's definitely do the free ones and see how that turns out. Have you been able to parse out the
+different menus on how I talked about earlier and" (message cut off).
+- Built menu type v1 from existing text: table phg_menu_doc_class (see migration 20260927200000). Counts:
+  unread 11,287 / beverage 5,253 / food 2,406 / not_menu 1,147 / mixed 471 / happy_hour 303 / specials 187 /
+  delivery 6. Examples classify correctly. Not yet wired into the gallery filters (next: browse SQL + Edge +
+  the parked chip patch), then the free text passes (PDF text layer, web page text).
