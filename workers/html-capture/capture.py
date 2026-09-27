@@ -143,6 +143,20 @@ CHALLENGE_RE = re.compile(r"checking the site connection|checking your browser|j
                           r"security check|attention required|enable (javascript|cookies)|ddos protection|please wait", re.I)
 
 
+class BotCheckBlocked(RuntimeError):
+    pass
+
+
+async def _is_challenge(page) -> bool:
+    if re.search(r"/\.well-known/captcha|/cdn-cgi/challenge|captcha", page.url, re.I):
+        return True
+    try:
+        txt = await page.evaluate("(document.title || '') + ' ' + (document.body ? document.body.innerText.slice(0, 800) : '')")
+    except Exception:
+        return False
+    return len(txt) < 700 and bool(CHALLENGE_RE.search(txt) or re.search(r"captcha|are you a robot|not a robot", txt, re.I))
+
+
 async def _wait_out_challenge(page, max_s: int = 30) -> bool:
     """Bot-check interstitials (SiteGround, Cloudflare, Sucuri) solve themselves and reload; wait for the real page."""
     waited = False
@@ -151,7 +165,7 @@ async def _wait_out_challenge(page, max_s: int = 30) -> bool:
             txt = await page.evaluate("(document.title || '') + ' ' + (document.body ? document.body.innerText.slice(0, 600) : '')")
         except Exception:
             txt = "please wait"  # navigating
-        if len(txt) > 700 or not CHALLENGE_RE.search(txt):
+        if (len(txt) > 700 or not CHALLENGE_RE.search(txt)) and "captcha" not in page.url.lower():
             break
         waited = True
         await page.wait_for_timeout(1000)
@@ -364,6 +378,9 @@ async def capture(page, url: str, target_width: int = 1400, jpeg_quality: int = 
 
     if await _wait_out_challenge(page):
         notes.append("waited_bot_check")
+    if await _is_challenge(page):
+        # a CAPTCHA / bot wall is never saved as a menu; the job fails and retries later (old image kept)
+        raise BotCheckBlocked("bot_check_blocked: " + page.url[:120])
     await d("loaded")
     if await _click_matching(page, AGE_RE):
         notes.append("age_gate")

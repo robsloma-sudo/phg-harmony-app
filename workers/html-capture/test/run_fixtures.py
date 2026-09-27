@@ -58,6 +58,12 @@ async def main():
                 ok = ok and cn > 5000 and co < 1000
                 print('   lazy colored px in bottom quarter: old', co, 'new', cn)
             print('   ', 'PASS' if ok else 'FAIL'); fails += (not ok)
+        pg = await b.new_page()
+        try:
+            await capture(pg, 'file://' + os.path.join(HERE, 'fixtures', 'captcha.html'))
+            print('captcha        FAIL (saved a bot-check page)'); fails += 1
+        except Exception as e:
+            ok = 'bot_check_blocked' in str(e); print('captcha       ', 'PASS' if ok else 'FAIL', str(e)[:80]); fails += (not ok)
         await b.close()
     print('FAILURES', fails); sys.exit(1 if fails else 0)
 
