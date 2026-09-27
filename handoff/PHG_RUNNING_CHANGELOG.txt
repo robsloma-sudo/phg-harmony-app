@@ -247,3 +247,21 @@ use_original_downloaded_image ready 2,993; legacy strategies unchanged (199 read
 Retry breakdown: 2,988 "stale external html claim reset" (attempt <= 2) — the orphaned-claim
 pattern recurs continuously (~27% of processed pages), so the worker loses claims routinely, not
 only during the browser-closed incident; 42 real per-page failures (timeouts, SSL/HTTP2, 500s).
+
+------------------------------------------------------------------------------
+PHG-20260927-0017 | USER_PROMPT | ~15:30Z
+Metadata: {"verbatim": true}
+Another agent changed this. Um, what are you trying to say when it comes to the Acron jobs? Can you fix that? You're, what do you mean when you're saying you're losing 27% of claims routinely and need the Braille worker source? Can you fix that as well? Yeah, let's do... We're going to package a lot of edge functions to let different levels of signed-in users have different functions. Let's pass on that for now. What else has changed that you... are not privy to until now.
+
+------------------------------------------------------------------------------
+PHG-20260927-0018 | DECISION + ACTION | ~15:32Z
+- Account-level authorization for Edge Functions (PHG-022): DEFERRED by Rob (will be packaged later
+  as tiered signed-in-user function sets).
+- Authorization to FIX cron job problems and the HTML worker orphaned-claim problem.
+- Session model switched to claude-opus-5-5; ultracode on.
+- No Railway connector in this session (ToolSearch 'railway' -> none), so the worker's
+  WORKER_CODE_B64 source cannot be read; the orphan fix must be server-side in
+  menu-render-worker-api unless Rob supplies the worker source.
+- Launched read-only workflow wf_30d5110c-e45: six investigators (Edge functions + migrations;
+  cron + SQL functions + settings; job 5 diagnosis; orphaned-claim diagnosis; GitHub + Netlify;
+  data growth) each followed by two skeptics per consequential finding.
