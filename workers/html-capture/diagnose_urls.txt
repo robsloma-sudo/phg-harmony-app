@@ -1,0 +1,10 @@
+# Rob's examples 2026-09-27 (one URL per line); pushing a change here runs the diagnose workflow
+https://mymoonnyc.com/bar-menu
+https://bonaorestaurant.com/drinks
+https://www.adriftbar.com/menus/cocktails-to-go-menu
+https://www.317mainstreet.com/menus/drinks-menu
+https://thewatershedli.com/south-jamesport-the-watershed-kitchen-and-bar-drink-menu
+https://lapiovranyc.com/drink-menu
+https://bluestagsaloon.com/drink-menu
+https://elbornnyc.com/brooklyn-greenpoint-brooklyn-el-born-drink-menu
+https://denver.blueagavegrillcolorado.com/denver-lodo-blue-agave-grill-denver-drink-menu

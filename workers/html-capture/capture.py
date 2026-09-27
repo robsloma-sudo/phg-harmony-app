@@ -65,6 +65,7 @@ JS_UNLOCK = """() => {
   }
   if (best && document.documentElement.scrollHeight <= vh + 50) {
     for (let el = best; el && el !== document.documentElement; el = el.parentElement) {
+      if (getComputedStyle(el).position === 'fixed') el.style.setProperty('position', 'relative', 'important');
       el.style.setProperty('overflow', 'visible', 'important');
       el.style.setProperty('height', 'auto', 'important');
       el.style.setProperty('max-height', 'none', 'important');
@@ -82,8 +83,10 @@ JS_HIDE_OVERLAYS = """() => {
     const r = el.getBoundingClientRect();
     const area = (r.width * r.height) / (vw * vh);
     const txt = (el.innerText || '').toLowerCase();
-    const consent = /cookie|consent|privacy|gdpr|we use|21 or older|legal drinking age/.test(txt);
-    // pop-ups/scrims of any size if they are consent/age walls; otherwise only bars, bubbles and side tabs
+    // Never hide a wrapper that holds the page itself (some sites put all content in a fixed/sticky box).
+    if (txt.length > 1500 || el.scrollHeight > vh * 1.5 || el.querySelector('main, article, [data-phg-tab]')) continue;
+    const consent = txt.length < 900 && /cookie|consent|privacy|gdpr|we use|21 or older|legal drinking age/.test(txt);
+    // consent/age walls of any size; otherwise only small bars, bubbles and side tabs
     if (consent || area < 0.35) { el.style.setProperty('display', 'none', 'important'); n++; }
   }
   return n;
@@ -112,6 +115,25 @@ JS_IMAGES_DONE = """() => [...document.images].every(i => i.complete || i.getBou
 JS_HEIGHT = """() => Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)"""
 
 
+async def _settle(page) -> None:
+    for state in ("domcontentloaded", "load"):
+        try:
+            await page.wait_for_load_state(state, timeout=8000)
+        except Exception:
+            pass
+
+
+async def _ev(page, js: str, arg=None):
+    """page.evaluate that survives a navigation (consent buttons often reload the page)."""
+    for i in range(3):
+        try:
+            return await (page.evaluate(js, arg) if arg is not None else page.evaluate(js))
+        except Exception as e:
+            if "Execution context was destroyed" not in str(e) and "navigat" not in str(e) or i == 2:
+                raise
+            await _settle(page)
+
+
 async def _click_matching(page, pattern: str) -> int:
     """Click visible buttons/links whose whole label matches pattern (consent / age gates)."""
     clicked = 0
@@ -128,7 +150,8 @@ async def _click_matching(page, pattern: str) -> int:
                     if re.match(pattern, label.strip(), re.I) and len(label) < 40:
                         await el.click(timeout=1500)
                         clicked += 1
-                        await page.wait_for_timeout(300)
+                        await page.wait_for_timeout(500)
+                        await _settle(page)
                         break
                 except Exception:
                     continue
@@ -139,11 +162,11 @@ async def _click_matching(page, pattern: str) -> int:
 
 async def _scroll_through(page, notes: list, max_steps: int = 80) -> None:
     """Scroll to the bottom in steps so lazy content loads; stop when height is stable."""
-    await page.evaluate(JS_LAZY)
+    await _ev(page, JS_LAZY)
     last, stable, y = 0, 0, 0
     vh = page.viewport_size["height"]
     for _ in range(max_steps):
-        h = await page.evaluate(JS_HEIGHT)
+        h = await _ev(page, JS_HEIGHT)
         if y >= h - vh:
             if h == last:
                 stable += 1
@@ -154,24 +177,24 @@ async def _scroll_through(page, notes: list, max_steps: int = 80) -> None:
             last = h
             await page.wait_for_timeout(400)
         y = min(y + int(vh * 0.8), max(0, h - vh))
-        await page.evaluate(f"window.scrollTo(0, {y})")
+        await _ev(page, f"window.scrollTo(0, {y})")
         await page.wait_for_timeout(180)
         if h > MAX_HEIGHT:
             notes.append("height_capped")
             break
-    await page.evaluate(JS_LAZY)
+    await _ev(page, JS_LAZY)
     for _ in range(40):  # up to ~8 s for images to finish
-        if await page.evaluate(JS_IMAGES_DONE):
+        if await _ev(page, JS_IMAGES_DONE):
             break
         await page.wait_for_timeout(200)
-    await page.evaluate("window.scrollTo(0, 0)")
+    await _ev(page, "window.scrollTo(0, 0)")
     await page.wait_for_timeout(250)
 
 
 async def _shot(page, top: int = 0) -> Image.Image:
     """Full-page screenshot from `top` down, in slices (no texture-size limit)."""
     width = page.viewport_size["width"]
-    height = min(await page.evaluate(JS_HEIGHT), MAX_HEIGHT)
+    height = min(await _ev(page, JS_HEIGHT), MAX_HEIGHT)
     top = max(0, min(top, height - 1))
     out = Image.new("RGB", (width, height - top), "white")
     y = top
@@ -187,7 +210,8 @@ async def _drink_tabs(page) -> list:
     """In-page tabs whose labels are drinks (Beer / Wine / Cocktails ...). Links to other pages are not tabs."""
     js = """(reS) => {
       const re = new RegExp(reS[0], 'i'), no = new RegExp(reS[1], 'i'), out = [];
-      const cands = document.querySelectorAll('[role=tab], button, a, li, [data-tab], [data-toggle=tab], [data-bs-toggle=tab], [aria-controls]');
+      const cands = [...document.querySelectorAll('[role=tab], button, a, li, label, [data-tab], [data-toggle=tab], [data-bs-toggle=tab], [aria-controls], [onclick]')]
+        .concat([...document.querySelectorAll('div, span, h2, h3, h4, p')].filter(e => e.childElementCount <= 1 && getComputedStyle(e).cursor === 'pointer'));
       for (const el of cands) {
         const t = (el.innerText || '').trim();
         if (!t || t.length > 30 || !re.test(t) || no.test(t)) continue;
@@ -199,14 +223,15 @@ async def _drink_tabs(page) -> list:
         }
         if (el.closest('nav, header, footer') && el.getAttribute('role') !== 'tab') continue;
         // keep the innermost clickable (skip an li whose child button is also a candidate)
-        if (el.querySelector('[role=tab], button, a')) continue;
+        if (el.querySelector('[role=tab], button, a, [onclick]')) continue;
+        if (el.hasAttribute('data-phg-tab')) continue;
         el.setAttribute('data-phg-tab', out.length);
         out.push({i: out.length, text: t, y: Math.round(r.top + window.scrollY)});
       }
       return out;
     }"""
     try:
-        return await page.evaluate(js, [DRINK_TAB_RE.pattern, NOT_TAB_RE.pattern])
+        return await _ev(page, js, [DRINK_TAB_RE.pattern, NOT_TAB_RE.pattern])
     except Exception:
         return []
 
@@ -224,8 +249,31 @@ def _same(a: Image.Image, b: Image.Image) -> bool:
     return diff < 2.0
 
 
-async def capture(page, url: str, target_width: int = 1400, jpeg_quality: int = 85) -> Capture:
+JS_DIAG = """() => {
+  const vh = innerHeight, de = document.documentElement, b = document.body;
+  const fixed = [], scrollers = [];
+  for (const el of document.querySelectorAll('body *')) {
+    const cs = getComputedStyle(el), r = el.getBoundingClientRect();
+    if ((cs.position === 'fixed' || cs.position === 'sticky') && r.width * r.height > 0)
+      fixed.push([el.tagName, (el.id || el.className || '').toString().slice(0, 40), Math.round(r.width), Math.round(r.height), (el.innerText || '').length]);
+    if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 100)
+      scrollers.push([el.tagName, (el.id || el.className || '').toString().slice(0, 40), el.clientHeight, el.scrollHeight]);
+  }
+  return {doc: de.scrollHeight, body: b ? b.scrollHeight : 0, vh, htmlOverflow: getComputedStyle(de).overflowY,
+          bodyOverflow: b ? getComputedStyle(b).overflowY : '', bodyPos: b ? getComputedStyle(b).position : '',
+          fixed: fixed.slice(0, 12), scrollers: scrollers.slice(0, 8), text: (b ? b.innerText : '').length, url: location.href};
+}"""
+
+
+async def capture(page, url: str, target_width: int = 1400, jpeg_quality: int = 85, diag: dict | None = None) -> Capture:
     notes: list = []
+
+    async def d(step: str):
+        if diag is not None:
+            try:
+                diag[step] = await _ev(page, JS_DIAG)
+            except Exception as e:
+                diag[step] = {"error": str(e)[:200]}
     await page.set_viewport_size({"width": target_width, "height": 1000})
     await page.goto(url, wait_until="domcontentloaded", timeout=45000)
     try:
@@ -233,23 +281,29 @@ async def capture(page, url: str, target_width: int = 1400, jpeg_quality: int = 
     except Exception:
         notes.append("no_networkidle")
 
+    await d("loaded")
     if await _click_matching(page, AGE_RE):
         notes.append("age_gate")
     if await _click_matching(page, CONSENT_RE):
         notes.append("consent")
-    unlocked = await page.evaluate(JS_UNLOCK)
+    unlocked = await _ev(page, JS_UNLOCK)
     if unlocked:
         notes.append(unlocked)
+    await d("unlocked")
     await _scroll_through(page, notes)
-    hidden = await page.evaluate(JS_HIDE_OVERLAYS)
+    await d("scrolled")
+    hidden = await _ev(page, JS_HIDE_OVERLAYS)
     if hidden:
         notes.append(f"overlays_hidden:{hidden}")
-    await page.evaluate(JS_UNLOCK)
+    await _ev(page, JS_UNLOCK)
 
     parts = [await _shot(page)]
     seen: list = []
 
+    await d("prepared")
     tabs = await _drink_tabs(page)
+    if diag is not None:
+        diag["tabs"] = tabs
     if len(tabs) >= 2:
         top = max(0, min(t["y"] for t in tabs) - 20)
         seen.append(parts[0].crop((0, top, parts[0].width, parts[0].height)))  # the tab already showing
@@ -257,9 +311,9 @@ async def capture(page, url: str, target_width: int = 1400, jpeg_quality: int = 
             try:
                 await page.locator(f'[data-phg-tab="{t["i"]}"]').first.click(timeout=2000)
                 await page.wait_for_timeout(600)
-                await page.evaluate(JS_UNLOCK)
+                await _ev(page, JS_UNLOCK)
                 await _scroll_through(page, notes, max_steps=40)
-                await page.evaluate(JS_HIDE_OVERLAYS)
+                await _ev(page, JS_HIDE_OVERLAYS)
                 img = await _shot(page, top)
                 if any(_same(img, x) for x in seen):
                     continue

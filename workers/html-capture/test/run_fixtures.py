@@ -19,7 +19,7 @@ async def main():
             import glob; c = glob.glob(exe + '/**/chrome', recursive=True); exe = c[0] if c else None
         b = await p.chromium.launch(executable_path=exe, args=['--no-sandbox'])
         for name, expect in [('cookie_lock', ['Cocktail 30']), ('lazy', ['Signature Cocktail 7']), ('tabs', ['Wine 10', 'Cocktail 12', 'Whiskey 15']),
-                             ('inner_scroll', ['Cocktail 40']), ('sticky_bar', ['Cocktail 25'])]:
+                             ('inner_scroll', ['Cocktail 40']), ('fixed_wrapper', ['Cocktail 35']), ('sticky_bar', ['Cocktail 25'])]:
             url = 'file://' + os.path.join(HERE, 'fixtures', name + '.html')
             # old: what the current worker appears to do
             pg = await b.new_page(viewport={'width': 1400, 'height': 1000})
@@ -40,7 +40,7 @@ async def main():
                 ok = any(n.startswith('overlays_hidden') for n in cap.notes)
             if name == 'cookie_lock':
                 ok = 'consent' in cap.notes and cap.height > 2000
-            if name == 'inner_scroll':
+            if name in ('inner_scroll', 'fixed_wrapper'):
                 ok = ok and cap.height > 2000
             if name == 'lazy':
                 im = Image.open(io.BytesIO(cap.jpeg)).convert('RGB')

@@ -738,3 +738,17 @@ Changes:
 Needs Rob: deploy workers/html-capture as a Railway service (README) or share the current worker source.
 After it runs: re-queue the 4,137 first-screen-only pages
   (menu_visual_pages where capture_method='railway_playwright_screenshot' and height=1000).
+
+------------------------------------------------------------------------------
+PHG-20260927-0055 | USER_PROMPT + PRODUCTION CHANGES | ~21:10Z
+Rob: "Okay, so now what? Deploy. You can do this. Whatever you need to. Get it, get it working right this time."
+Railway is unreachable from this workspace (egress policy, no Railway login), so capture v2 runs on GitHub Actions:
+- DB (migration phg_capture_v2_queue, file 20260927230000): phg_capture_v2_backup + phg_capture_v2_queue(ids, reason)
+  (backs up then moves pages to render_strategy 'html_capture_v2'; old image keeps serving) +
+  phg_capture_v2_rollback(ids|null). Old Railway worker never claims that strategy.
+- Edge: menu-capture-v2-api v1 (verify_jwt=false; verifies GitHub OIDC itself: issuer, audience
+  phg-menu-capture-v2, repository_id 1384918236, job_workflow_ref = .github/workflows/html-capture-v2.yml).
+  v2 images -> document/<id>/page-NNN.v2.jpg (old image kept). 3 failures -> gave up, old image stays.
+- .github/workflows/html-capture-v2.yml: push to this branch (worker paths) or dispatch; 2 runners; fixture tests,
+  then the worker until the lane is empty (55 min cap). No stored secret.
+- Queued Rob's 9 HTML examples (reason rob_10_examples; Cantina Rooftop is a PDF). Run 36350703399.
