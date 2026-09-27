@@ -22113,7 +22113,8 @@ function render(){
     v.innerHTML=(page==="home"?pipelineCorpusCard():"")+emptyState();
     return;
   }
-  if(STATE==="ALL"&&page!=="home"){document.getElementById("ptitle").textContent="Market Intelligence";v.innerHTML='<div class="card"><div class="ttl">Choose a state</div><div class="sub">Detailed venue, competitor and menu views load one state at a time. This keeps PHG responsive instead of downloading the entire national venue corpus into the browser.</div><div style="margin-top:14px"><select class="stsel" onchange="if(this.value)setState(this.value)"><option value="">Select a state…</option>'+STATES.filter(function(x){return x.venues>0}).map(function(x){return '<option value="'+esc(x.state_code)+'">'+esc(x.state_name)+' · '+n(x.venues)+' venues</option>'}).join('')+'</select></div></div>';return;}\n  var sec=SECTIONS.filter(function(s){return s.k===page})[0]||SECTIONS[0];
+  if(STATE==="ALL"&&page!=="home"){document.getElementById("ptitle").textContent="Market Intelligence";v.innerHTML='<div class="card"><div class="ttl">Choose a state</div><div class="sub">Detailed venue, competitor and menu views load one state at a time. This keeps PHG responsive instead of downloading the entire national venue corpus into the browser.</div><div style="margin-top:14px"><select class="stsel" onchange="if(this.value)setState(this.value)"><option value="">Select a state…</option>'+STATES.filter(function(x){return x.venues>0}).map(function(x){return '<option value="'+esc(x.state_code)+'">'+esc(x.state_name)+' · '+n(x.venues)+' venues</option>'}).join('')+'</select></div></div>';return;}
+  var sec=SECTIONS.filter(function(s){return s.k===page})[0]||SECTIONS[0];
   document.getElementById("ptitle").textContent=page==="home"?"Pipeline":sec.label;
   if(page==="home"){
     v.innerHTML=(STATE==="ALL")?countryHome():homePage();
