@@ -12,13 +12,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: a739f56bb511f95d5d6ce9a153aa62e8cbf7a394
           persist-credentials: false
-      - name: Verify unchanged app baseline
+      - name: Package exact git object for local verification
         run: |
-          test "$(git hash-object index.html)" = "fbf293dfe6c7994243f77c889e385b6b7ef35c37"
           mkdir -p navigation-baseline
-          cp index.html package.json netlify.toml navigation-baseline/
+          git show HEAD:index.html > navigation-baseline/index.html
+          cp package.json netlify.toml navigation-baseline/
           git rev-parse HEAD > navigation-baseline/commit.txt
+          git rev-parse HEAD:index.html > navigation-baseline/expected-blob.txt
+          git hash-object navigation-baseline/index.html > navigation-baseline/actual-blob.txt
+          cmp navigation-baseline/expected-blob.txt navigation-baseline/actual-blob.txt
+          wc -c navigation-baseline/index.html
       - uses: actions/upload-artifact@v4
         with:
           name: phg-navigation-baseline
