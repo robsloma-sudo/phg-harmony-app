@@ -103,6 +103,11 @@ JS_LAZY = """() => {
     const ss = img.getAttribute('data-srcset') || img.getAttribute('data-lazy-srcset');
     if (ss && !img.getAttribute('srcset')) { img.srcset = ss; n++; }
   }
+  for (const f of document.querySelectorAll('iframe')) {  // embedded beer/wine lists (Untappd, BeerMenus...)
+    if (f.loading === 'lazy') { f.loading = 'eager'; n++; }
+    const v = f.getAttribute('data-src') || f.getAttribute('data-lazy-src');
+    if (v && (!f.getAttribute('src') || f.src === 'about:blank')) { f.src = v; n++; }
+  }
   for (const el of document.querySelectorAll('[data-bg],[data-background-image]')) {
     const v = el.getAttribute('data-bg') || el.getAttribute('data-background-image');
     if (v && !el.style.backgroundImage) { el.style.backgroundImage = 'url(' + JSON.stringify(v) + ')'; n++; }
@@ -212,6 +217,11 @@ async def _scroll_through(page, notes: list, max_steps: int = 80) -> None:
         if await _ev(page, JS_IMAGES_DONE):
             break
         await page.wait_for_timeout(200)
+    for fr in page.frames[1:]:  # embedded menus: wait for each frame to finish loading
+        try:
+            await fr.wait_for_load_state("load", timeout=5000)
+        except Exception:
+            pass
     await _ev(page, "window.scrollTo(0, 0)")
     await page.wait_for_timeout(250)
 
@@ -286,7 +296,9 @@ JS_DIAG = """() => {
   }
   return {doc: de.scrollHeight, body: b ? b.scrollHeight : 0, vh, htmlOverflow: getComputedStyle(de).overflowY,
           bodyOverflow: b ? getComputedStyle(b).overflowY : '', bodyPos: b ? getComputedStyle(b).position : '',
-          fixed: fixed.slice(0, 12), scrollers: scrollers.slice(0, 8), text: (b ? b.innerText : '').length, url: location.href};
+          fixed: fixed.slice(0, 12), scrollers: scrollers.slice(0, 8),
+          iframes: [...document.querySelectorAll('iframe')].map(f => [(f.src || f.getAttribute('data-src') || '').slice(0, 90), f.loading, Math.round(f.getBoundingClientRect().height)]).slice(0, 8),
+ text: (b ? b.innerText : '').length, url: location.href};
 }"""
 
 
