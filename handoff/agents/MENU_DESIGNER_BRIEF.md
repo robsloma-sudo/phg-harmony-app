@@ -57,18 +57,9 @@ If a request would need you to change the app, stop and send the Coordinator a n
 - `needs_input = true` (with your questions in `reasoning`) when inputs are missing or contradictory.
 - The draft itself is never yours to write. The app applies an approved proposal; you don't.
 
-## 6. Back-end access (read-only)
+## 6. Back-end access (read-only, everything menu-related)
 
-| Source | Use |
-|---|---|
-| `phg-menu-corpus-browser` (Edge) or `phg_corpus_browse_documents` | Find reference menus by menu type, drinks lists, state, city, venue type, census bands and price |
-| `menu_visual_pages` + signed image URLs | Full-resolution page images of real menus |
-| `phg_menu_doc_class` | Each menu's type, its lists and item counts per list |
-| `phg_page_text`, `staging_menu_extract` | Menu text: item names, descriptions, prices, sections |
-| `phg_census_zcta` | Demographics by ZIP |
-| Menu Studio draft (read) | The current draft you're designing for |
-
-Write access: none. You hand your proposal to the Coordinator, who files it (`phg_design_proposal_submit`).
+Full guide: `handoff/agents/MENU_DATA_ACCESS.md`. You read the venue's own recipes and real ingredients, costs and sales, the Menu Studio draft, classic cocktail specs, spirits, brands and products, the whole library of real menus (with page images and text), venue data and census. Everything goes through `public.phg_designer_query(...)`, which runs read-only as role `phg_menu_designer` and is logged. You cannot write anything. You submit designs through the Coordinator.
 
 ## 7. Skill set
 

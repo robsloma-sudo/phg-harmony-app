@@ -872,3 +872,20 @@ Rob: design scoring must be upper-echelon: lines line up, appealing / eye-poppin
   score-gate migration passes review). Descriptions may be written only from known ingredients; unknowns are flagged.
 - Pre-gate independent review of PHG-026 returned: 1 blocker (repair ranking shrank 23 venues) + should-fix items;
   all fixed (see review log). 185/185 venues restored at least as large.
+
+------------------------------------------------------------------------------
+PHG-20260928-0062 | USER_PROMPT + CHANGES | ~00:30Z
+Rob: "I want them to have access to real ingredients in Supabase. I want them to have full access to anything menu
+related, if they're being the menu designer."
+- Applied (Rob's direct request; read-only, additive): role phg_menu_designer (NOLOGIN) with SELECT on ~80 menu,
+  recipe, ingredient, cost, cocktail-spec, brand/product, library, venue and census tables/views (not the Menu Studio
+  token hash); SELECT-only RLS policy menu_designer_read on the 50 RLS tables; grant phg_menu_designer to postgres;
+  gateway public.phg_designer_query(sql, max_rows, task_id): one statement, read-only transaction, role switch,
+  20 s, <= 5,000 rows, logged in phg.menu_designer_query_log. Migration 20260928040000 (+ membership, policies).
+- Tested: real recipes readable (Manhattan/Margarita/Daiquiri/Old Fashioned specs); refused: write in CTE, secrets,
+  token hash, auth schema, two statements, writing function, sequence.
+- handoff/agents/MENU_DATA_ACCESS.md; designer agent gets execute_sql limited by instruction to the gateway (the DB
+  enforces read-only only inside the gateway; the in-app runtime will call only the gateway).
+- Rob asked what "real library venue" means; offered 8 fully-described library drinks menus (Coppertop Tavern,
+  Double Chicken Please, Cantina Taqueria & Tequila Bar, Ainslie ...) as a demo alternative to the sample Bar menu.
+- Spec reviewer round 1 (on the pre-fix version): 62.5. Remaining items being fixed before round 2.
