@@ -134,6 +134,31 @@ async def _ev(page, js: str, arg=None):
             await _settle(page)
 
 
+CHALLENGE_RE = re.compile(r"checking the site connection|checking your browser|just a moment|verify(ing)? you are (a )?human|"
+                          r"security check|attention required|enable (javascript|cookies)|ddos protection|please wait", re.I)
+
+
+async def _wait_out_challenge(page, max_s: int = 30) -> bool:
+    """Bot-check interstitials (SiteGround, Cloudflare, Sucuri) solve themselves and reload; wait for the real page."""
+    waited = False
+    for _ in range(max_s):
+        try:
+            txt = await page.evaluate("(document.title || '') + ' ' + (document.body ? document.body.innerText.slice(0, 600) : '')")
+        except Exception:
+            txt = "please wait"  # navigating
+        if len(txt) > 700 or not CHALLENGE_RE.search(txt):
+            break
+        waited = True
+        await page.wait_for_timeout(1000)
+    if waited:
+        await _settle(page)
+        try:
+            await page.wait_for_load_state("networkidle", timeout=8000)
+        except Exception:
+            pass
+    return waited
+
+
 async def _click_matching(page, pattern: str) -> int:
     """Click visible buttons/links whose whole label matches pattern (consent / age gates)."""
     clicked = 0
@@ -281,6 +306,8 @@ async def capture(page, url: str, target_width: int = 1400, jpeg_quality: int = 
     except Exception:
         notes.append("no_networkidle")
 
+    if await _wait_out_challenge(page):
+        notes.append("waited_bot_check")
     await d("loaded")
     if await _click_matching(page, AGE_RE):
         notes.append("age_gate")
