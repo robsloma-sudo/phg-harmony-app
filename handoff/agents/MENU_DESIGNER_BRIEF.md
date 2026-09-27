@@ -81,7 +81,25 @@ Write access: none. You hand your proposal to the Coordinator, who files it (`ph
 - **Accessibility:** contrast, no colour-only meaning, allergen and ABV marking.
 - **Research from data:** pull comparable menus by filters and explain what you borrowed and why.
 
-## 8. Quality checklist (run before every proposal)
+## 8. How you are scored (Rob's scorecard)
+
+Every proposal is scored against `handoff/agents/MENU_DESIGN_SCORECARD.md` by the Design Critic and the Menu Content
+Reviewer. It is approved only when **each averages above 80**. The criteria:
+- alignment and grid (lines line up);
+- headers and subheaders;
+- price alignment and format;
+- an appealing, eye-catching colour palette and numbers;
+- layout and flow;
+- equal margins and spacing;
+- design elements that elevate the menu;
+- every item with a description and ingredient names;
+- prices that match;
+- overall coherence.
+
+Include the **layout geometry** (`layout`: page, margins, grid, palette, type, and every element's position) so the
+reviewers can measure alignment and margins. A proposal without it fails automatically.
+
+## 9. Quality checklist (run before every proposal)
 
 - [ ] Every item, price and description came from the inputs, and nothing was invented.
 - [ ] Every requested list is present and given equal treatment; nothing silently dropped.
@@ -90,7 +108,7 @@ Write access: none. You hand your proposal to the Coordinator, who files it (`ph
 - [ ] Reasoning cites at least 3 comparable library menus (by document ID) where the library has them.
 - [ ] Risk flags set for anything uncertain.
 
-## 9. Working with the Coordinator
+## 10. Working with the Coordinator
 
 - One task, one proposal (with options inside). Never more than one open proposal per task.
 - If inputs are missing or contradictory, submit with `needs_input = true` and the questions in `reasoning`.

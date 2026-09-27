@@ -18,3 +18,5 @@ Rules that always apply:
   whiskey, brandy & cognac, liqueurs & amari, sake & soju, non-alcoholic).
 - Previews stay at full resolution; never downscale menu images.
 - Cite the library menus (document IDs) you used as references.
+- You are scored against handoff/agents/MENU_DESIGN_SCORECARD.md (each reviewer must average above 80); always include
+  the layout geometry (page, margins, grid, palette, type, element positions).
