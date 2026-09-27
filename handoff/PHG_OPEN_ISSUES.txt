@@ -35,6 +35,7 @@ PHG-029 OPEN        P2  Census data via Census Reporter (api.census.gov needs a 
 PHG-030 IN PROGRESS P1  Menu-type filtering (beverage vs food/specials/happy hour/delivery/unread, multi-label tags)
 PHG-031 RESOLVED    P1  Long menus unreadable: 18.49.7 full-screen zoomable viewer (preview); >16 MP pages may need tiling
 PHG-032 OPEN        P1  ~4,700 documents have no text (mostly images): menu type unknown until read by vision/OCR (cost decision)
+PHG-033 IN REVIEW   P0  Finding real menus: capture gate v1 live (keep drink-word links, download/menu-hub links; hold generic "menu"; skip rest). 18.49.9 "Review links" sample awaiting Rob's rejects
 PHG-022 OPEN        P1  Corpus/library Edge functions have no account-level authorization
 PHG-023 OPEN        P2  phg-menu-library-search bugs: or() escaping, no ORDER BY, 3x over-fetch (not used by frontend)
 PHG-024 OPEN        P1  Job 5 gtt-refresh-state-stats failing 56/72 runs (5 s statement timeout) since re-enable

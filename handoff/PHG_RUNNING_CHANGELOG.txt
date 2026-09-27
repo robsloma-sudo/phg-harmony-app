@@ -697,3 +697,19 @@ Rob: "Yeah, let's focus on that. Let's figure out how to actually find the menus
   169,889 menu-looking links remain queued; new links gated on insert. Fully reversible (see header).
 - Not changed: already-rendered junk stays (hidden by the drinks-menu default in 18.49.8); discovery Edge code
   unchanged (gate is in the database); extraction job 13 still paused (PHG-026).
+
+------------------------------------------------------------------------------
+PHG-20260927-0053 | USER_PROMPT + CHANGES | ~21:40Z
+Rob: "attach me specific examples from the existing menu pool of what your ... keywords might actually target ...
+then that way I can approve or reject ... if you ... produce some images that are not a drinks menu I can tell you
+that it's not working"
+- SQL: phg_menu_candidate_word / phg_menu_candidate_rule (keep_word | keep_method | defer | skip), migration
+  20260927220000. phg_corpus_browse_documents patched in place: filter 'rule', sort 'shuffle' + seed, rows carry
+  cand_rule / cand_word / cand_method / cand_url.
+- phg-menu-corpus-browser v6 deployed (rule, seed, shuffle; v5 kept as v5.rollback.index.ts).
+- Frontend 18.49.9 (branch / PR #3 preview only): "Review links" button = every menu type, only links the gate
+  keeps, shuffled, 50 per page, yellow #number on each card + the reason ("Link says 'cocktail' · sitemap").
+  Reshuffle button, Link rule chip. Fixed: a chip tap was lost when results arrived mid-tap (chips/head now
+  redraw only on change). 240/240 browser checks, 3 consecutive runs.
+- Rendered documents by rule (read-text kind shares): keep_word 4,871 (drinks ~68% of read ones),
+  keep_method 1,099 (~47%), defer 6,632 (~30%), skip 6,915 (~16%). Host-name-only word matches: 278.

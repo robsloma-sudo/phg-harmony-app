@@ -207,9 +207,11 @@ h1{font-family:'Instrument Serif',Georgia,serif;font-size:34px;font-weight:400;l
 .mlgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;transition:opacity .15s}
 .mlgrid.mlbusy{opacity:.5;pointer-events:none}
 @media (max-width:600px){.mlgrid{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:5px}}
-.mlcard{display:flex;flex-direction:column;min-width:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.mlcard{position:relative;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:6px}
 .mlcard .mlimg{position:relative;aspect-ratio:3/4;overflow:hidden;background:#05070e;cursor:zoom-in}
 .mlcard .mlimg img{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}
+.mlcard .mlnum{position:absolute;left:3px;top:3px;z-index:2;padding:1px 5px;border-radius:3px;background:#ffd23f;color:#111;font:700 11px/1.3 system-ui,sans-serif}
+.mlcard .mlwhy{color:#ffd23f}
 .mlcard .mlimg .mlpg{position:absolute;right:3px;bottom:3px;padding:1px 4px;border-radius:3px;background:rgba(0,0,0,.7);color:#ddd;font-size:9.5px}
 .mlcard .mlnone{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;padding:6px;text-align:center;font-size:10.5px;color:var(--faint);background:#0b0e12}
 .mlcard .mlbody{padding:4px 6px 5px;min-width:0}
@@ -6268,7 +6270,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-27.18.49.8 MENU TYPE FILTER (DRINKS DEFAULT) · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-27.18.49.9 LINK-RULE REVIEW · MENU TYPE FILTER · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7356,10 +7358,12 @@ function phgPipelineAge(ts){
    Rob's rule for text filters: a document with no stored menu text is UNKNOWN, never
    "ingredient absent" - cards say whether text is stored. */
 var CORPUS_BROWSER={open:false,kind:'rendered',busy:false,error:'',rows:[],count:0,capped:false,vals:null,view:null,page:0,size:20,panel:null,
-  f:{q:'',menu_kind:['beverage','mixed'],has:[],hide:[],state:[],city:[],venue_type:[],asset_kind:[],menu_scope:[],status:[],cocktail:'',ingredient:'',prep_type:[],income:[],age:[],young:[],affluent:[],edu:[],hisp:[],sort:'recent'}};
+  f:{q:'',menu_kind:['beverage','mixed'],has:[],hide:[],state:[],city:[],venue_type:[],asset_kind:[],menu_scope:[],status:[],cocktail:'',ingredient:'',prep_type:[],income:[],age:[],young:[],affluent:[],edu:[],hisp:[],rule:[],sort:'recent'},seed:''};
 /* Menu type (one per menu) and content tags (several per menu), from phg_menu_doc_class. A drinks menu with a
    happy-hour section stays a drinks menu and is TAGGED happy_hour, so Type and Has/Hide can be combined. */
 var CORPUS_MENU_KINDS=[['beverage','Drinks menu'],['mixed','Drinks + food'],['food','Food menu'],['happy_hour','Happy hour page'],['specials','Specials / events page'],['delivery','Delivery app listing'],['little_text','Little menu text'],['not_menu','Not a menu'],['unread','Not read yet']];
+/* Capture-gate review (PHG-033): which link rule a document came through. Rob marks the numbered cards that are not drinks menus. */
+var CORPUS_RULES=[['keep_word','Kept: drink word in link'],['keep_method','Kept: menu download / menu-hub link'],['defer','Held: generic "menu" link'],['skip','Skipped: no menu signal']];
 var CORPUS_TAGS=[['cocktails','Cocktails'],['beer','Beer'],['wine','Wine'],['spirits','Spirits'],['sake_soju','Sake / soju'],['non_alcoholic','Non-alcoholic'],['food','Food'],['happy_hour','Happy hour'],['specials','Specials'],['brunch','Brunch'],['events','Events'],['delivery','Delivery app']];
 function corpusLabelOf(list,v){for(var i=0;i<list.length;i++)if(list[i][0]===v)return list[i][1];return corpusNice(v);}
 function corpusLabeled(list,counts){var by={};(counts||[]).forEach(function(x){if(x&&x.v!=null)by[String(x.v)]=x.n;});return list.map(function(x){return {v:x[0],l:x[1],n:by[x[0]]!=null?by[x[0]]:(counts&&counts.length?0:null)};});}
@@ -7375,7 +7379,7 @@ var CORPUS_CENSUS_DEF={
  edu:{label:'Degree',long:'Adults with a bachelor’s degree or higher',bands:[['lt25','Under 25%'],['25_40','25–40%'],['40_60','40–60%'],['60p','60%+'],['na','No census data']]},
  hisp:{label:'Hispanic',long:'Hispanic or Latino share of population',bands:[['lt10','Under 10%'],['10_25','10–25%'],['25_50','25–50%'],['50p','50%+'],['na','No census data']]}
 };
-var CORPUS_SORTS=[['recent','Newest'],['name','Venue A–Z'],['city','City A–Z'],['income_desc','Income high–low'],['income_asc','Income low–high'],['age_asc','Youngest area'],['age_desc','Oldest area'],['young_desc','Most 21–34'],['affluent_desc','Most $100k+ homes'],['edu_desc','Most degrees'],['hisp_desc','Most Hispanic']];
+var CORPUS_SORTS=[['recent','Newest'],['name','Venue A–Z'],['city','City A–Z'],['income_desc','Income high–low'],['income_asc','Income low–high'],['age_asc','Youngest area'],['age_desc','Oldest area'],['young_desc','Most 21–34'],['affluent_desc','Most $100k+ homes'],['edu_desc','Most degrees'],['hisp_desc','Most Hispanic'],['shuffle','Shuffle']];
 var CORPUS_SIZES=[20,50,100];
 var CORPUS_GEN=0,CORPUS_TYPING=null,CORPUS_APPLY=null;
 (function(){try{var p=JSON.parse(localStorage.getItem('phg.menuLibrary.v1')||'{}');
@@ -7401,8 +7405,9 @@ function corpusBody(){
  var b=CORPUS_BROWSER,f=b.f,body={action:'list',kind:b.kind,limit:b.size,offset:b.page*b.size};
  for(var k in f){var v=f[k];if(Array.isArray(v)){if(v.length)body[k]=v.slice();}else if(v)body[k]=v;}
  if(b.kind==='candidates')delete body.sort;
+ if(f.sort==='shuffle')body.seed=b.seed||'phg';
  if(b.kind==='rendered')delete body.status;
- if(b.kind==='candidates'){delete body.menu_kind;delete body.has;delete body.hide;}else delete body.menu_scope;
+ if(b.kind==='candidates'){delete body.menu_kind;delete body.has;delete body.hide;delete body.rule;}else delete body.menu_scope;
  return body;
 }
 function corpusLoad(){
@@ -7419,6 +7424,11 @@ function corpusToggle(k,v,on){var a=CORPUS_BROWSER.f[k];if(!Array.isArray(a))ret
 function corpusClearKey(k){var f=CORPUS_BROWSER.f;if(k==='text'){f.cocktail='';f.ingredient='';f.prep_type=[];}else if(Array.isArray(f[k]))f[k]=[];else f[k]='';
  CORPUS_BROWSER.page=0;corpusDrawChips();corpusPanelRefresh();corpusLoad();}
 var CORPUS_DEFAULT_KINDS=['beverage','mixed'];
+/* Review mode: every menu type, only links the capture rule keeps, shuffled, numbered. */
+function corpusReview(){var b=CORPUS_BROWSER,f=b.f;for(var k in f){if(k==='sort')continue;f[k]=Array.isArray(f[k])?[]:'';}
+ f.rule=['keep_word','keep_method'];f.sort='shuffle';b.seed=b.seed||'r1';b.kind='rendered';b.size=50;b.page=0;
+ var s=document.getElementById('corpusQ');if(s)s.value='';corpusPanelClose();corpusDrawChips();corpusLoad();}
+function corpusReshuffle(){var b=CORPUS_BROWSER;b.seed='r'+(Number(String(b.seed||'r1').slice(1))+1||2);b.f.sort='shuffle';b.page=0;corpusDrawChips();corpusLoad();}
 function corpusReset(){var f=CORPUS_BROWSER.f;for(var k in f){if(k==='sort')continue;f[k]=Array.isArray(f[k])?[]:'';}f.menu_kind=CORPUS_DEFAULT_KINDS.slice();
  var s=document.getElementById('corpusQ');if(s)s.value='';clearTimeout(CORPUS_TYPING);CORPUS_BROWSER.page=0;corpusPanelClose();corpusDrawChips();corpusLoad();}
 function corpusPick(k,v){
@@ -7456,7 +7466,8 @@ function corpusDefs(){
  defs.push({k:'kind',label:'Show',single:true,cur:b.kind,opts:Object.keys(CORPUS_KINDS).map(function(x){return {v:x,l:CORPUS_KINDS[x]}})});
  if(!cand){defs.push({k:'menu_kind',label:'Menu type',long:'Menu type',opts:corpusLabeled(CORPUS_MENU_KINDS,v.menu_kinds)});
   defs.push({k:'has',label:'Has',long:'Has any of',opts:corpusLabeled(CORPUS_TAGS,v.menu_tags)});
-  defs.push({k:'hide',label:'Hide',long:'Hide menus that contain',opts:corpusLabeled(CORPUS_TAGS,v.menu_tags)});}
+  defs.push({k:'hide',label:'Hide',long:'Hide menus that contain',opts:corpusLabeled(CORPUS_TAGS,v.menu_tags)});
+  defs.push({k:'rule',label:'Link rule',long:'Capture rule for the link',opts:corpusLabeled(CORPUS_RULES,null)});}
  defs.push({k:'state',label:'State',opts:corpusCounted(v.states,['NY','CO','IA'])});
  defs.push({k:'city',label:'City',search:true,opts:corpusCities()});
  for(var i=0;i<CORPUS_CENSUS.length;i++){var ck=CORPUS_CENSUS[i];defs.push({k:ck,label:CORPUS_CENSUS_DEF[ck].label,long:CORPUS_CENSUS_DEF[ck].long,census:true,opts:corpusCensusOpts(ck)});}
@@ -7543,6 +7554,7 @@ function corpusPanelHtml(d){
  if(d.census){var cc=(b.vals||{}).census_coverage;h+='<div class="mlpf">US Census ACS 2020–2024, by the venue’s ZIP'+(cc?'. '+n(cc.documents_with_census)+' of '+n(cc.documents_total)+' documents matched':'')+'. Counts cover the whole library.</div>';}
  else if(d.k==='city'&&b.f.state.length)h+='<div class="mlpf">Showing cities in '+esc(b.f.state.join(', '))+'.</div>';
  else if(d.k==='menu_kind')h+='<div class="mlpf">One type per menu, worked out from its text and web address. A drinks menu with a happy-hour section stays a Drinks menu and is tagged Happy hour (use Has or Hide for that). “Not read yet” means no text was captured yet (mostly images and PDFs): unknown, not food.</div>';
+ else if(d.k==='rule')h+='<div class="mlpf">Which rule the new capture gate applies to the link this menu came from. Kept links get captured from now on; held and skipped ones do not.</div>';
  else if(d.k==='has')h+='<div class="mlpf">Shows menus that contain any of these, even as one section of a bigger page.</div>';
  else if(d.k==='hide')h+='<div class="mlpf">Hides every menu that contains any of these anywhere on the page. To drop only pages that are mainly happy hour or specials, pick Menu type instead.</div>';
  return h;
@@ -7552,11 +7564,13 @@ function corpusPanelHtml(d){
 function corpusRange(){var b=CORPUS_BROWSER;if(!b.count)return b.busy?'Loading…':'0 menus';
  var s=b.page*b.size+1,e=b.page*b.size+b.rows.length;return (b.rows.length?n(s)+'–'+n(e)+' of ':'')+n(b.count)+(b.capped?'+':'');}
 function corpusHeadHtml(){var b=CORPUS_BROWSER;
- return '<div class="mlhead" id="corpusHead"><button type="button" class="mlmini" onclick="corpusClose()" aria-label="Back to pipeline">&#8249; Back</button><span class="mltitle">Menu Library</span><span class="mlstat" id="corpusStatus">'+esc(corpusRange())+(b.busy?' · loading…':'')+'</span></div>';}
+ return '<div class="mlhead" id="corpusHead"><button type="button" class="mlmini" onclick="corpusClose()" aria-label="Back to pipeline">&#8249; Back</button><span class="mltitle">Menu Library</span><button type="button" class="mlmini" onclick="corpusReview()" title="Numbered sample of what the capture rule keeps">Review links</button>'+(b.f.sort==='shuffle'?'<button type="button" class="mlmini" onclick="corpusReshuffle()">Reshuffle</button>':'')+'<span class="mlstat" id="corpusStatus">'+esc(corpusRange())+(b.busy?' · loading…':'')+'</span></div>';}
 function corpusErrHtml(){var e=CORPUS_BROWSER.error;return e?'<div class="mlerr">'+esc(e)+' · <a href="#" onclick="corpusLoad();return false">Retry</a></div>':'';}
 function corpusCensusLine(c,brief){if(!c)return 'No census data';var p=[],m=corpusMoney(c.median_household_income);if(m)p.push(m);
  if(c.median_age!=null)p.push('age '+Math.round(Number(c.median_age)));if(!brief&&c.pop_21_34_pct!=null)p.push(Math.round(Number(c.pop_21_34_pct))+'% 21–34');return p.join(' · ')||'No census data';}
 function corpusImgFail(img){var d=document.createElement('div');d.className='mlnone';d.innerHTML='Link expired · <a href="#" onclick="corpusLoad();return false">Refresh</a>';var box=img.parentNode;if(box&&box.parentNode)box.parentNode.replaceChild(d,box);}
+function corpusWhy(d){var r=d.cand_rule,m=corpusNice(d.cand_method||'?');
+ if(r==='keep_word')return 'Link says “'+(d.cand_word||'?')+'” · '+m;if(r==='keep_method')return 'Kept as '+m;if(r==='defer')return 'Held: menu link · '+m;if(r==='skip')return 'Skipped · '+m;return 'No source link';}
 function corpusCardsHtml(){
  var b=CORPUS_BROWSER,h='',cand=b.kind==='candidates';
  if(b.busy&&!b.rows.length)return '<div class="mlmsg">Loading menu library…</div>';
@@ -7570,13 +7584,15 @@ function corpusCardsHtml(){
     +(d.visual_document_id?'<div class="mlmeta"><a href="#" onclick="corpusView('+Number(d.visual_document_id)+');return false">Open document</a></div>':'')+'</div></div>';
    continue;
   }
-  var total=(d.pages||[]).length||d.page_count||0,ready=d.ready_page_count||0;
+  var total=(d.pages||[]).length||d.page_count||0,ready=d.ready_page_count||0,rv=b.f.rule.length>0,num=b.page*b.size+i+1;
   h+='<div class="mlcard">';
+  if(rv)h+='<div class="mlnum">#'+num+'</div>';
   if(t&&t.signed_url)h+='<div class="mlimg" role="button" tabindex="0" aria-label="Open '+esc(name)+' menu" onclick="corpusView('+Number(d.id)+')" onkeydown="if(event.key===\'Enter\')corpusView('+Number(d.id)+')"><img loading="lazy" decoding="async" alt="'+esc(name+' menu page '+(t.page_number||1))+'" src="'+esc(t.signed_url)+'" onerror="corpusImgFail(this)">'+(total>1?'<span class="mlpg">'+n(ready)+'/'+n(total)+'</span>':'')+(t.width&&t.height&&t.height>3*t.width?'<span class="mltall">long page</span>':'')+'</div>';
   else h+='<div class="mlnone">'+(d.page_render_status==='ready'?'Preview unavailable':'Not rendered yet')+'</div>';
   h+='<div class="mlbody"><div class="mlname" title="'+esc(name)+'">'+esc(name)+'</div><div class="mlmeta">'+esc(where)+(type?' · '+esc(type):'')+'</div>'
    +'<div class="mlcen" title="'+esc(corpusCensusLine(d.census))+'">'+esc(corpusCensusLine(d.census,true))+'</div>'
    +'<div class="mlmeta">'+esc(d.menu_kind?corpusLabelOf(CORPUS_MENU_KINDS,d.menu_kind):(d.asset_kind||'menu'))+((d.tags||[]).indexOf('happy_hour')>=0&&d.menu_kind!=='happy_hour'?' · HH':'')+((d.tags||[]).indexOf('specials')>=0&&d.menu_kind!=='specials'?' · specials':'')+' · '+esc(d.asset_kind||'?')+(d.text_coverage?'':' · no text')+'</div>';
+  if(rv)h+='<div class="mlmeta mlwhy" title="'+esc(d.cand_url||'')+'">'+esc(corpusWhy(d))+'</div>';
   if((d.matched_items||[]).length)h+='<div class="mlmeta mlmatch">'+esc(d.matched_items.slice(0,2).join(' · '))+(d.matched_items.length>2?' …':'')+'</div>';
   h+='</div></div>';
  }
@@ -7598,10 +7614,11 @@ function corpusBrowserPage(){
   +'<div class="mlbar" id="corpusBar"><input id="corpusQ" class="mlsearch" type="search" placeholder="Venue…" aria-label="Search venue name" autocomplete="off" enterkeyhint="search" value="'+esc(b.f.q)+'" oninput="corpusType(\'q\',this.value)"><span id="corpusChips" class="mlchips">'+corpusChipsHtml()+'</span></div>'
   +'<div id="corpusErr">'+corpusErrHtml()+'</div><div class="mlgrid" id="corpusGrid">'+corpusCardsHtml()+'</div><div id="corpusPager">'+corpusPagerHtml()+'</div>'+corpusViewerHtml()+'</div>';
 }
-function corpusDrawChips(){var el=document.getElementById('corpusChips');if(el)el.innerHTML=corpusChipsHtml();}
+/* Redraw only on change: replacing a chip mid-tap (results arriving) swallowed the tap. */
+function corpusDrawChips(){var el=document.getElementById('corpusChips');if(!el)return;var h=corpusChipsHtml();if(el._h!==h){el.innerHTML=h;el._h=h;}}
 function corpusDraw(){
  var b=CORPUS_BROWSER,host=document.getElementById('corpusHost');if(!host){if(b.open)render();return;}
- var el=document.getElementById('corpusHead');if(el)el.outerHTML=corpusHeadHtml();
+ var el=document.getElementById('corpusHead'),hh=corpusHeadHtml();if(el&&el._h!==hh){el.outerHTML=hh;el=document.getElementById('corpusHead');if(el)el._h=hh;}
  corpusDrawChips();
  el=document.getElementById('corpusErr');if(el)el.innerHTML=corpusErrHtml();
  el=document.getElementById('corpusGrid');

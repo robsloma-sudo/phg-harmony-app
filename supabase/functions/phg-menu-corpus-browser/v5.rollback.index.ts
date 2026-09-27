@@ -1,4 +1,3 @@
-// phg-menu-corpus-browser v6 (2026-09-27, PHG-033): + rule (keep_word|keep_method|defer|skip, capture-gate review) and sort "shuffle" with seed. v5 = v5.rollback.index.ts
 // phg-menu-corpus-browser v5 (2026-09-27, PHG-030): + menu_kind / has / hide (phg_menu_doc_class). v4 = v4.rollback.index.ts
 // phg-menu-corpus-browser v4 (2026-09-27, PHG-027)
 // Authenticated corpus/gallery drill-down for the Menu Library.
@@ -52,7 +51,7 @@ const list = (v: unknown, maxItems = 60, maxLen = 80): string[] | undefined => {
   return out.length ? out : undefined;
 };
 const CENSUS_KEYS = ["income", "age", "young", "affluent", "edu", "hisp"];
-const SORTS = ["recent","name","city","income_desc","income_asc","age_asc","age_desc","young_desc","affluent_desc","edu_desc","hisp_desc","shuffle"];
+const SORTS = ["recent","name","city","income_desc","income_asc","age_asc","age_desc","young_desc","affluent_desc","edu_desc","hisp_desc"];
 
 type Page = {
   id: number; page_number: number; render_status: string; capture_method: string | null;
@@ -171,10 +170,7 @@ Deno.serve(async (req: Request) => {
   params.menu_kind = list(b.menu_kind, 10, 20)?.filter((x) => KINDS.includes(x));
   params.has = list(b.has, 12, 20)?.filter((x) => TAGS.includes(x));
   params.hide = list(b.hide, 12, 20)?.filter((x) => TAGS.includes(x));
-  const RULES = ["keep_word","keep_method","defer","skip"];
-  params.rule = list(b.rule, 4, 20)?.filter((x) => RULES.includes(x));
-  params.seed = str(b.seed, 40);
-  for (const k of ["menu_kind", "has", "hide", "rule"]) if (!(params[k] as string[] | undefined)?.length) delete params[k];
+  for (const k of ["menu_kind", "has", "hide"]) if (!(params[k] as string[] | undefined)?.length) delete params[k];
   for (const k of Object.keys(params)) if (params[k] === undefined || params[k] === "") delete params[k];
   const sign = str(b.sign || "first", 10).toLowerCase(); // first | none
 
