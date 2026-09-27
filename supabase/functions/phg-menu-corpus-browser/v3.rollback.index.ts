@@ -1,17 +1,18 @@
-// phg-menu-corpus-browser v4 (2026-09-27, PHG-027)
-// Authenticated corpus/gallery drill-down for the Menu Library.
+// phg-menu-corpus-browser v3
+// Authenticated corpus/gallery drill-down for the Live Menu Corpus cards.
 //
-// Changes from v3 (rollback source: v3.rollback.index.ts):
-//  - Every venue/format/scope/status/prep filter accepts a string OR an array of strings (any-of),
-//    for the multi-select dropdowns. Single strings still work (live 18.49.4 / 18.49.5 bodies).
-//  - Census filters by the venue's ZIP (ACS 2020-2024 5-year, phg_census_zcta): income, age, young
-//    (share 21-34), affluent (share of households $100k+), edu (bachelor's+), hisp - each an array of
-//    band keys from action "filters" (values.census). Band 'na' = no census data for that ZIP.
-//  - sort: recent | name | city | income_desc | income_asc | age_asc | age_desc | young_desc |
-//    affluent_desc | edu_desc | hisp_desc (documents only).
-//  - limit 1..100 (was 60) for the 20 / 50 / 100 per-page picker.
-//  - action "filters" reads the cached vocabularies (phg_corpus_filter_values_cached, 15 min).
-//  - action "document" also returns the venue's census row.
+// Changes from v2:
+//  - Queries go through service-role-only SQL functions (phg_corpus_browse_documents /
+//    phg_corpus_browse_candidates / phg_corpus_filter_values) so venue (state, city,
+//    venue_type), cocktail-name, ingredient-text and preparation-class filters run in
+//    the database, paginated, with no large result sets sent to the browser.
+//  - Page images are returned as short-lived SIGNED URLs (private bucket phg-menu-assets)
+//    for every ready page regardless of capture method. v2 returned raw storage paths and
+//    the frontend fell back to menu-render-chat-preview, which only serves 6 page ids.
+//  - `filters` vocabularies are derived from real data (v2 advertised values that do not
+//    occur, so most selects returned 0 rows).
+//  - action: "list" (default) | "document" (all pages of one document, signed) | "filters".
+//  - Legacy v2 body keys (kind, limit, offset, asset_kind, menu_scope, status, q) still work.
 //
 // Data rule (Rob): missing menu text is UNKNOWN, never proof an ingredient is absent.
 // Every row carries text_coverage so the UI can say "no stored text" instead of "no match".
@@ -36,21 +37,6 @@ const json = (body: unknown, status = 200) =>
   });
 
 const str = (v: unknown, max = 200) => String(v ?? "").trim().slice(0, max);
-
-// A filter value may be one string or an array of strings. Returns undefined when empty.
-const list = (v: unknown, maxItems = 60, maxLen = 80): string[] | undefined => {
-  const raw = Array.isArray(v) ? v : (v === undefined || v === null ? [] : [v]);
-  const out: string[] = [];
-  for (const x of raw) {
-    if (typeof x !== "string" && typeof x !== "number") continue;
-    const t = String(x).trim().slice(0, maxLen);
-    if (t && !out.includes(t)) out.push(t);
-    if (out.length >= maxItems) break;
-  }
-  return out.length ? out : undefined;
-};
-const CENSUS_KEYS = ["income", "age", "young", "affluent", "edu", "hisp"];
-const SORTS = ["recent","name","city","income_desc","income_asc","age_asc","age_desc","young_desc","affluent_desc","edu_desc","hisp_desc"];
 
 type Page = {
   id: number; page_number: number; render_status: string; capture_method: string | null;
@@ -103,7 +89,7 @@ Deno.serve(async (req: Request) => {
   const action = str(b.action || "list", 20).toLowerCase();
 
   if (action === "filters") {
-    const { data, error } = await sb.rpc("phg_corpus_filter_values_cached", { p_max_age: 900 });
+    const { data, error } = await sb.rpc("phg_corpus_filter_values");
     if (error) return json({ error: error.message }, 500);
     return json({ status: "ok", action, values: data, coverage_note: COVERAGE_NOTE });
   }
@@ -126,52 +112,39 @@ Deno.serve(async (req: Request) => {
     }));
     const signed = await signPages(sb, pages);
     for (const p of pages) p.signed_url = p.render_status === "ready" && p.path ? (signed.get(keyOf(p)) || null) : null;
-    let census: unknown = null;
-    const zip = String((doc as any)?.accounts?.postal_code || "").slice(0, 5);
-    if (/^[0-9]{5}$/.test(zip)) {
-      const { data: cz } = await sb.from("phg_census_zcta")
-        .select("zcta,total_population,median_age,median_household_income,pop_21_34_pct,households_over_100k_pct,bachelors_or_higher_pct,hispanic_latino_pct")
-        .eq("zcta", zip).maybeSingle();
-      census = cz || null;
-    }
-    return json({ status: "ok", action, document: doc, pages, census, signed_expires_in: SIGN_TTL });
+    return json({ status: "ok", action, document: doc, pages, signed_expires_in: SIGN_TTL });
   }
 
   // ---- action: list ----
   const kind = str(b.kind || "rendered", 20).toLowerCase();
-  const preps = list(b.prep_type, 13, 20)?.map((x) => x.toLowerCase());
-  if (preps && preps.some((x) => !PREP_TYPES.includes(x))) return json({ error: "unknown prep_type", prep_types: PREP_TYPES }, 400);
-  const states = list(b.state, 60, 12)?.map((x) => x.toUpperCase());
-  if (states && states.some((x) => !/^[A-Z]{2}$/.test(x))) return json({ error: "invalid state" }, 400);
-  const sortIn = str(b.sort || "recent", 20).toLowerCase();
-  const limitIn = Math.floor(Number(b.limit) || 24);
+  const prep = str(b.prep_type, 20).toLowerCase();
+  if (prep && !PREP_TYPES.includes(prep)) return json({ error: "unknown prep_type", prep_types: PREP_TYPES }, 400);
+  const state = str(b.state, 2).toUpperCase();
+  if (state && !/^[A-Z]{2}$/.test(state)) return json({ error: "invalid state" }, 400);
 
-  const params: Record<string, unknown> = {
+  const params = {
     kind,
-    limit: Math.min(100, Math.max(1, limitIn)),
-    offset: Math.min(1000000, Math.max(0, Math.floor(Number(b.offset) || 0))),
+    limit: Math.min(60, Math.max(1, Number(b.limit) || 24)),
+    offset: Math.max(0, Number(b.offset) || 0),
     q: str(b.q, 120),
-    state: states,
-    city: list(b.city, 200, 80),
-    venue_type: list(b.venue_type, 60, 60),
-    asset_kind: list(b.asset_kind, 20, 20),
-    source_format: list(b.source_format, 20, 20),
-    menu_scope: list(b.menu_scope, 20, 30),
-    status: list(b.status, 20, 30),
+    state,
+    city: str(b.city, 80),
+    venue_type: str(b.venue_type, 60),
+    asset_kind: str(b.asset_kind, 20),
+    source_format: str(b.source_format, 20),
+    menu_scope: str(b.menu_scope, 30),
+    status: str(b.status, 30),
     cocktail: str(b.cocktail, 80),
     ingredient: str(b.ingredient, 80),
-    prep_type: preps,
-    sort: SORTS.includes(sortIn) ? sortIn : "recent",
+    prep_type: prep,
   };
-  for (const k of CENSUS_KEYS) params[k] = list(b[k], 10, 10);
-  for (const k of Object.keys(params)) if (params[k] === undefined || params[k] === "") delete params[k];
   const sign = str(b.sign || "first", 10).toLowerCase(); // first | none
 
   const fn = kind === "candidates" ? "phg_corpus_browse_candidates" : "phg_corpus_browse_documents";
   const { data, error } = await sb.rpc(fn, { p: params });
   if (error) {
     const msg = String(error.message || "");
-    const bad = /invalid state|unknown prep_type|invalid census band|invalid input/i.test(msg);
+    const bad = /invalid state|unknown prep_type|invalid input/i.test(msg);
     return json({ error: msg }, bad ? 400 : 500);
   }
   const rows: any[] = Array.isArray(data?.rows) ? data.rows : [];
@@ -198,8 +171,8 @@ Deno.serve(async (req: Request) => {
   }
 
   const gallery = kind !== "candidates";
-  const lim = params.limit as number, off = params.offset as number;
-  const next_offset = rows.length === lim && (countCapped || off + lim < count) ? off + lim : null;
+  const next_offset = rows.length === params.limit && (countCapped || params.offset + params.limit < count)
+    ? params.offset + params.limit : null;
 
   return json({
     status: "ok",
@@ -208,17 +181,11 @@ Deno.serve(async (req: Request) => {
     count_capped: countCapped,
     rows,
     next_offset,
-    offset: off,
-    limit: lim,
-    sort: kind === "candidates" ? "recent" : params.sort,
     gallery,
     signed_expires_in: gallery ? SIGN_TTL : null,
     filters: {
       // vocabularies with counts come from action:"filters"; these are the accepted keys
-      keys: ["q","state","city","venue_type","asset_kind","source_format","menu_scope","status","cocktail","ingredient","prep_type","sort", ...CENSUS_KEYS],
-      multi: ["state","city","venue_type","asset_kind","source_format","menu_scope","status","prep_type", ...CENSUS_KEYS],
-      sorts: SORTS,
-      page_sizes: [20, 50, 100],
+      keys: ["q","state","city","venue_type","asset_kind","source_format","menu_scope","status","cocktail","ingredient","prep_type"],
       prep_types: PREP_TYPES,
       states: ["NY","CO","IA"],
       asset_kind: ["html","pdf","image"],
