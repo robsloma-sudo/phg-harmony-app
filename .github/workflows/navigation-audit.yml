@@ -1,0 +1,27 @@
+name: Navigation audit baseline
+on:
+  push:
+    branches: [fix/mobile-navigation-20260927]
+    paths: [.github/workflows/navigation-audit.yml]
+permissions:
+  contents: read
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify unchanged app baseline
+        run: |
+          test "$(git hash-object index.html)" = "fbf293dfe6c7994243f77c889e385b6b7ef35c37"
+          mkdir -p navigation-baseline
+          cp index.html package.json netlify.toml navigation-baseline/
+          git rev-parse HEAD > navigation-baseline/commit.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phg-navigation-baseline
+          path: navigation-baseline/
+          retention-days: 2
+          if-no-files-found: error
