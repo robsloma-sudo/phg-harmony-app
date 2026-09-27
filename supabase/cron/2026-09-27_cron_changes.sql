@@ -27,3 +27,11 @@ SELECT cron.alter_job(job_id := 23, schedule := '4-54/10 * * * *',
 -- Previous: SET statement_timeout='5s'; SET lock_timeout='500ms'; SELECT public.phg_dispatch_menu_recovery_work('candidate_extraction');
 SELECT cron.alter_job(job_id := 13,
   command := $cmd$SET statement_timeout='10s'; SET lock_timeout='500ms'; SELECT public.phg_dispatch_menu_recovery_work('candidate_extraction');$cmd$);
+
+-- ~15:44Z, with migration phg_count_refresh_faster_cycle (aggregate without row locks; only
+-- differing rows locked FOR NO KEY UPDATE for the final UPDATE), longer limits no longer
+-- lengthen row-lock holds. Previous for both: statement_timeout '5s'.
+SELECT cron.alter_job(job_id := 15,
+  command := $cmd$SET statement_timeout='20s'; SET lock_timeout='500ms'; SELECT public.refresh_menu_page_counts();$cmd$);
+SELECT cron.alter_job(job_id := 18,
+  command := $cmd$SET statement_timeout='15s'; SET lock_timeout='500ms'; SELECT public.refresh_menu_visual_counts(); SELECT public.phg_reconcile_completed_image_documents(100);$cmd$);

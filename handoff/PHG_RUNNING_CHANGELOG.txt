@@ -364,3 +364,41 @@ truncated recent pass resumes at newest covered change minus 1 us (limit+1 detec
 last_locked_skipped column; set local lock_timeout '2s' in the migration.
 Rolled-back dry run of the revision: page 754 ms (1000 picked, 142 changed, 0 lock-skipped);
 visual 1,848 ms then 1,554 ms (2nd batch 54 changed, 0 lock-skipped). NOT yet applied.
+
+------------------------------------------------------------------------------
+PHG-20260927-0027 | PRODUCTION CHANGE — counter refresh fix applied | ~15:44Z
+Operations review (wf_4f72b646-736): lock-only-changed-rows needed (done in revision); page-count
+window 0 holds ~41.7k candidates, ~10 s when cold -> page batch 1000 -> 500; job 23 change in the
+review brief was stale (already applied) -> left as is; first cycle will clear visibility-map bits
+so jobs 5/23 index-only scans temporarily do heap fetches (expected, harmless).
+Applied migration phg_count_refresh_faster_cycle (file 20260927160000_...): page counts batch 500,
+visual counts batch 1000 + 300 recent-first, aggregate without row locks, lock only differing rows
+FOR NO KEY UPDATE SKIP LOCKED, shared advisory key kept, bookkeeping columns.
+cron.alter_job: job 15 statement_timeout 5s -> 20s; job 18 5s -> 15s (lock holds no longer scale
+with run time). Verified 15:44-15:48Z: job 15 0.47-0.66 s (500 picked, 51 changed), job 18
+2.9-3.5 s (1000 picked, 67 changed), 0 skipped_busy, 0 lock-skipped, all runs succeeded; job 5
+0.4-2.3 s, job 23 0.20 s, job 22 2.8-3.3 s.
+NOT done (Rob excluded item 5): revoke anon/authenticated EXECUTE on refresh_* / kick_* /
+sync_candidate_page_counts_from_visuals — reviewers flag this as more consequential now that a
+call does 500-1000 accounts; recorded in PHG-022.
+
+------------------------------------------------------------------------------
+PHG-20260927-0028 | USER UPLOAD + BRIEF | ~15:45Z
+Rob uploaded PHG_18_50_NAVIGATION_CANDIDATE.zip (index.html only, SHA-256 f0aca2b2...8c63eb) with a
+review brief from the other agent (ChatGPT navigation/integration work) and its cumulative logs
+(Navigation 010/011, Deployment Access 012, Repair 009, Status 008, Summary 007, Recovery 006,
+Status 004/005, Recovery 003, Log 002). Brief asks the main developer to answer A-G, reconcile with
+newest source, rerun tests, push via GitHub -> Netlify and report commit/deploy.
+Facts learned from the other agent's logs (their work, not this agent's):
+- Recovery 003 (03:23-03:59Z): bounded 50-account refreshes, worker leases, extraction v4,
+  submit_menu fix, cron 7/13 enabled; later 15/16/18/22 observed active.
+- Recovery 006 (04:08-04:15Z): discover-beverage-menus v15 + cron 12; priority dispatcher 13/16.
+- Status 008 (13:40Z): HTML screenshot worker stalled since 11:55Z (browser-closed loop); job 5
+  failing.
+- Repair 009 (13:49-13:57Z): Railway HTML service got an external supervisor (variables
+  PHG_HTML_SUPERVISOR_CODE/VERSION, new startCommand; deployment 7a681f96...) that restarts the
+  UNCHANGED worker after closed-browser errors; worker runtime SHA 6bef6c39...; job 5 repaired by
+  index + rewrite at 13:52-13:54Z.
+- Navigation 010/011: 18.50 built locally; 22 fixture Chromium checks; branch
+  fix/mobile-navigation-20260927 only holds an audit workflow; Netlify publish blocked by TinyFish
+  login on iPhone; main not changed.

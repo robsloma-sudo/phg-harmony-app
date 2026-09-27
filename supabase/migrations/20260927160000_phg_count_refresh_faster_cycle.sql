@@ -1,4 +1,4 @@
--- PHG: per-venue menu counters refresh in ~1.5 h instead of ~28 h, recently changed
+-- PHG: per-venue menu counters refresh in ~1.5-3 h instead of ~28 h, recently changed
 -- venues first, with a smaller lock footprint than before, and skipped work made visible.
 --
 -- Context (2026-09-27): refresh_menu_page_counts() (cron job 15, even minutes) and
@@ -7,8 +7,11 @@
 -- full pass over 41,886 accounts takes ~838 runs (~28 h), so per-venue counts lag.
 --
 -- What changes:
---  * batch 50 -> 1000 accounts. Measured on production (rolled back): page 1,259 ms,
---    visual 493 ms per 1000. Full cycle ~84 min. Cron limits for jobs 15/18 stay at 5 s.
+--  * batch 50 -> 500 accounts for page counts (the first window holds ~41k candidates and can
+--    take ~10 s when the cache is cold; 500 halves it; full cycle ~2.8 h) and 50 -> 1000 for
+--    visual counts (small tables; full cycle ~84 min). Because the aggregate now holds no row
+--    locks, the cron limits can be raised without lengthening lock holds: job 15 -> 20 s,
+--    job 18 -> 15 s (see supabase/cron/2026-09-27_cron_changes.sql).
 --  * Lock footprint (review finding): the old bodies locked EVERY picked account FOR UPDATE
 --    for the whole aggregate. Now the aggregate is computed first without locks, and only the
 --    accounts whose counters actually differ are locked, FOR NO KEY UPDATE ... SKIP LOCKED,
@@ -60,7 +63,7 @@ create or replace function public.refresh_menu_page_counts()
  set search_path to 'public', 'pg_temp'
 as $function$
 declare
-  c_batch   constant int := 1000;
+  c_batch   constant int := 500;
   v_started timestamptz := clock_timestamp();
   v_after   text;
   v_last    text;
