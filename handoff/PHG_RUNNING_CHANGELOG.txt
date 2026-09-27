@@ -402,3 +402,45 @@ Facts learned from the other agent's logs (their work, not this agent's):
 - Navigation 010/011: 18.50 built locally; 22 fixture Chromium checks; branch
   fix/mobile-navigation-20260927 only holds an audit workflow; Netlify publish blocked by TinyFish
   login on iPhone; main not changed.
+
+------------------------------------------------------------------------------
+PHG-20260927-0029 | FINDINGS — orphaned HTML claims (investigator + 2 skeptics, wf_30d5110c-e45) | 15:35Z
+The '27%' was a stock ratio at one snapshot (3,030 retry / 11,250), not a steady loss rate.
+Cause: three 'zombie' Railway HTML replicas. After a Chromium crash the replica reported that one
+page with fail_html, then kept calling claim_html every ~5.86 s for hours without ever completing
+or failing: Z1 152.55.178.12 22:57-00:00Z (370 claims), Z2 152.55.178.37 04:48-13:52Z (5,567),
+Z3 152.55.177.201 11:55-13:52Z (1,194) = 7,131 of 15,862 claims in 24 h. Healthy replicas lost ~0
+(8,731 claims vs 8,601 completes + 125 fails). complete_html size/upload failures are NOT the cause
+(0 x 413, 6 x 500, max JPEG 6.6 MB). The other agent's supervisor redeploy at 13:52:48Z replaced the
+zombies; no stale resets after 14:13:42Z. Crash pages 7836 (beyondmenu.com) and 13564
+(bitterend.com) were back in the retry queue and due imminently.
+Data-growth investigator (same workflow) also found: staging_menu_extract 187,664 -> 1,034,508
+(87.6% redundant: online-ordering item pages each re-extract the full menu, e.g. 97 URLs x 314
+identical items); job 7 re-promotes/supersedes menus (7,344 menus created today, 1,507 current;
+180 pre-existing current menus replaced by smaller ones: items 5,894 -> 3,061, cocktails
+1,538 -> 1,066); storage bucket +4.6 GB since 04:00Z (8.9 GB total); menu_api_usage_ledger has no
+rows since 03:00Z. -> reported to Rob for a decision (other agent's pipeline).
+
+------------------------------------------------------------------------------
+PHG-20260927-0030 | PRODUCTION CHANGES — orphaned-claim fix | 15:49-15:53Z
+(Rob authorized: "losing 27% of claims ... Can you fix that as well?")
+1. Quarantined crash pages 7836 and 13564: render_next_retry_at = now()+24h (15:49:25Z), error
+   prefixed 'quarantined 24h: page crashed the Railway Chromium ...'. Rollback: set
+   render_next_retry_at = null for those two ids.
+2. Deployed menu-render-worker-api v4 (15:53:06Z, verify_jwt=false; ezbr 4ab662cb...). Source in
+   supabase/functions/menu-render-worker-api/index.ts; exact v3 source saved as
+   v3.rollback.index.ts (PDF actions + auth prelude proven identical v3 vs v4, whitespace-
+   insensitive). Changes (HTML actions only): per-claim ledger in render_last_error
+   ('html_claim|by=<ip>|at=<iso>|attempt=n'); a worker's own claim older than 3 min when it polls
+   again = abandoned -> reset with backoff; circuit breaker returns {status:'empty'} to a worker with
+   >=3 open claims or >=3 abandons/dead-browser failures in 30 min; global stale sweep 20 -> 10 min
+   with per-row error text (claim time, claimer) and backoff; complete_html failures (size, empty,
+   upload, body read) are recorded as retries instead of leaving the row 'processing'; size cap
+   12 MB -> 40 MB (resolution unchanged); fail_html 'Target crashed' -> 24 h quarantine for that page;
+   dead-browser errors ('new_page ... browser has been closed') -> normal backoff + counted against
+   the worker (this agent's change to the investigator's draft: the draft quarantined every page a
+   dead browser touched).
+   Verified 15:53:19Z: 4 claims carry the v4 ledger, 6 pages ready since deploy, 0 abandoned,
+   0 dead-browser failures, 0 new retries. Monitoring continues.
+Not possible here: worker-side root fix (relaunch Chromium after a crash, always report failures)
+needs the Railway worker source (WORKER_CODE_B64) — still PHG-007.
