@@ -150,3 +150,100 @@ Tool: Playwright — global playwright@1.56.1 + /opt/pw-browsers/chromium (141.0
 iPhone 390x844 touch context. Emulated viewport checks are possible in this session (PHG-013 workaround).
 Tasks opened: cron plan (PHG-018), emulated node geometry check (PHG-003), gallery filters (PHG-001),
 HTML retry classes (PHG-016/017), ingredient linkage (PHG-011), log upkeep (PHG-010).
+
+------------------------------------------------------------------------------
+PHG-20260927-0011 | WORKFLOW_RESULT | ~02:20Z
+Workflow wf_1502abbe-85b completed: 5 readers + 50 skeptic verifications, 0 errors. Key verified findings:
+- GALLERY IMAGES BROKEN IN 18.49.3/18.49.4: index.html:7276 loads thumbnails from
+  menu-render-chat-preview, which serves only a hard-coded allow-list of 6 page ids
+  {778,783,784,786,793,797} and only capture_method='railway_pymupdf_jpeg'. Nearly every
+  gallery card 404s. Corpus-browser v2 returned raw storage paths, no signed URLs.
+- Corpus-browser v2 filter vocabularies did not match real data (documents: only
+  page_render_status ready/pending, menu_scope beverage/beverage_candidate; candidates:
+  status queued/scope_check/legacy_empty/retry/extracted/no_items/review/processing).
+  Candidates 'All formats' select was inert (frontend sent asset_kind, backend read source_format).
+- No account-level authorization in corpus-browser / library-search (any Auth user, all venues).
+  Library-search esc() leaves , ( ) unescaped in the PostgREST or() string; no ORDER BY; 3x over-fetch.
+- Node map: tier-1 apps on an x-z ring viewed nearly edge-on (rx -0.08 after 18.49.2); sections
+  on a 65-degree cap; K_FLOOR 0.72 on phone. Map is not auth-gated in code; opened in emulation via
+  ?layouttest=1&mode=mobile&neuro=1 with localStorage phg_setup_complete_v2=1.
+- Cron incident root cause (read-only analysis of cron.job_run_details, pg_stat_statements, logs):
+  12-15 concurrent cron sessions (cron.use_background_workers=off, max_connections=60) plus three
+  functions rewriting ALL 78,319 accounts rows every minute in different orders
+  (refresh_menu_page_counts via jobs 14/15 + Edge RPC, refresh_menu_visual_counts via 18) ->
+  deadlocks from 02:00Z Sep 26, statement/startup timeouts from 09:00Z; login/v_public_states failed
+  through connection/CPU starvation and anon 3 s / authenticator 8 s role timeouts, not row locks.
+  No cron function uses advisory locks or SKIP LOCKED. Job 8 (refresh_explorer) does non-concurrent
+  REFRESH MATERIALIZED VIEW mv_drink_explorer (ACCESS EXCLUSIVE) and must not be re-enabled as written.
+- Schema for filters: state = account_state(account_id) prefix (100%); city = substring(accounts.notes,
+  'City: ([^.]+)') (100%, mixed case); venue_type = google_types[1] (98.8%); only real
+  description/ingredient text is staging_menu_extract.notes joined by menu_page_url = original_menu_url;
+  menu_items.raw_text empty in all 119,951 rows; base_spirit/build_family tags cover ~277 IA sites only.
+
+------------------------------------------------------------------------------
+PHG-20260927-0012 | EMULATED_MEASUREMENT | ~02:35Z
+Tool: Playwright Chromium, current index.html, unauthenticated (?layouttest=1&neuro=1)
+Top level, iPhone 390x844: 3 overlapping hit pairs — Settings/Financial 31 px apart vs 73 px combined
+hit radius; Harmony/Main Menu 44 vs 58; Menu/Market 58 vs 73. Same relative geometry on iPad and desktop.
+Depth 2 (Menu focused), iPhone: 2 of 4 sections off-screen (Recipes & cocktails x=507, Operations x=-6),
+Financial/Settings off the left edge; tier-1 nodes recede to 17-41 px (< 44 px tap minimum).
+iPad depth 2: k=0.66, tier-1 nodes 15-38 px. Desktop depth 2: sections on-screen; ancestors 19-36 px.
+Screenshots: scratchpad shots/n3-*.png (session-local). Not a substitute for Rob's device acceptance.
+
+------------------------------------------------------------------------------
+PHG-20260927-0013 | AGENT_FAILURES | ~02:40Z
+Two background agents (node-geometry rework in an isolated worktree; cron dispatcher SQL + runbook
+draft) were terminated by the session rate limit before producing output. No changes resulted.
+Worktree removed. Both tasks remain open (PHG-003 fix, PHG-018 design).
+
+------------------------------------------------------------------------------
+PHG-20260927-0014 | CODE_CHANGE | 02:45Z-15:10Z (session paused by rate limit in between)
+Branch claude/phg-gallery-html-render-j246dy, commit 5860d0c "PHG 18.49.5":
+- supabase/migrations/20260927020000_phg_corpus_browse.sql (APPLIED to production 15:09Z, additive):
+  phg_like_escape, phg_prep_patterns, phg_corpus_browse_documents(jsonb),
+  phg_corpus_browse_candidates(jsonb) (count capped 5001), phg_corpus_filter_values().
+  SECURITY DEFINER, EXECUTE revoked from public/anon/authenticated, granted to service_role only.
+  Filters: kind, q, state, city, venue_type, asset_kind, source_format, menu_scope, status,
+  cocktail (staging item_name ILIKE), ingredient (staging notes ILIKE), prep_type (13 classes).
+  Live test: {"kind":"rendered","cocktail":"margarita","state":"NY","prep_type":"citrus"} -> 137 docs,
+  2.9 s. Candidates {"state":"CO","venue_type":"bar","cocktail":"old fashioned"} -> 341 rows.
+- supabase/functions/phg-menu-corpus-browser/index.ts = v3, DEPLOYED 15:11Z (verify_jwt=true).
+  Calls the RPCs, signs the first ready page per row (batch createSignedUrls, 900 s) for ALL capture
+  methods, action:"document" signs every page of one document, action:"filters" returns real
+  vocabularies with counts. Backward compatible with the v2 request body the live site sends.
+  deno check passed. v2 source retained in workflow scratch for rollback.
+- index.html: Menu Library rewritten (7251-7360 region): signed thumbnails; page viewer with
+  prev/next (48 px controls), Esc/arrow keys; filters for venue name, state, city, venue type,
+  format, scope, render state, cocktail name, ingredient text, preparation; text-coverage badge and
+  coverage note on every card; debounced typing; self-managed DOM so the 15 s poll no longer wipes
+  input/scroll; render() mounts once; corpus tiles now open the library even when the venue views
+  fail (18.49.3 bug: the no-venues branch returned before the gallery hook); CSS block added after
+  .card.clik:after; footer "build 2026-09-27.18.49.5 GALLERY IMAGES + FILTERS · PHG".
+  Validation: node --check 10/10 inline scripts; Playwright smoke test with mocked backend at
+  390x844 and 1440x900: list renders 6 cards/6 images, filters=9 controls, typed cocktail filter
+  sent as {cocktail:"margarita"} and survives render(), Load more appends, viewer opens with 48x48
+  buttons, ArrowRight pages, Escape closes, 0 page errors, no horizontal overflow.
+  NOT deployed to the live site (Netlify/main untouched) — Rob merges/releases.
+Deployment note: production changes made this pass = migration phg_corpus_browse + Edge Function v3.
+Both reversible (DROP FUNCTION / redeploy v2).
+
+------------------------------------------------------------------------------
+PHG-20260927-0015 | OBSERVATION | 15:12Z — CRON JOBS RE-ENABLED BY SOMEONE ELSE
+cron.job now ACTIVE: 1 (*/3), 2 (*/2), 5 gtt-refresh-state-stats (2-57/5), 7 gtt-promote-clean-menus
+(every 20 seconds), 12 gtt-discover-beverage-menus (20 s), 13 gtt-extract-menu-candidates (20 s),
+15 gtt-refresh-menu-page-counts (*/2), 16 gtt-acquire-menu-visual-assets (20 s), 18
+gtt-refresh-menu-visual-counts (1-59/2), 22 gtt-refresh-menu-pipeline-live-stats (*/5).
+Run volume jumped 79/h -> 794/h at 04:00Z. NOT done by this agent (no cron changes were made here).
+Health last 6 h: 0 deadlocks; jobs 15/18 now 0.1-0.2 s avg (fast — possibly rewritten); job 13 2
+statement timeouts; JOB 5 FAILING 56/72 runs with statement timeout at 5.0 s (v_public_states /
+v_public_stats cache not refreshing reliably). pg_stat_activity: 19 connections, 0 lock waits.
+Corpus growth since 01:20Z: visual documents 6,328 -> 15,920; pages 9,446 -> ~20,038.
+
+------------------------------------------------------------------------------
+PHG-20260927-0016 | QUEUE_SNAPSHOT | 2026-09-27T15:12:00Z
+railway_external_html_screenshot ready 8,220 | retry 3,030 | processing 1 | pending 0
+railway_external_pdf_render ready 5,595 (PDF worker active again; last 15:10:39Z)
+use_original_downloaded_image ready 2,993; legacy strategies unchanged (199 ready).
+Retry breakdown: 2,988 "stale external html claim reset" (attempt <= 2) — the orphaned-claim
+pattern recurs continuously (~27% of processed pages), so the worker loses claims routinely, not
+only during the browser-closed incident; 42 real per-page failures (timeouts, SSL/HTTP2, 500s).

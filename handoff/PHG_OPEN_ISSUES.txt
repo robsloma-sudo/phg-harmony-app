@@ -1,6 +1,6 @@
 PERFECT HARMONY GROUP — OPEN ISSUES & RESOLUTION LOG
 =============================================================
-Last updated (UTC): 2026-09-27T01:25Z — Quad backend developer / CEO changeover intake
+Last updated (UTC): 2026-09-27T15:20Z — gallery 18.49.5 on branch; corpus-browser v3 + SQL live
 Mandatory handoff companions: PHG_RUNNING_CHANGELOG.txt + PHG_OPEN_ISSUES.txt.
 Status reflects actual verification, not intent. Resolved entries and historical evidence are kept.
 Canonical frontend: main a739f56 (18.49.4), index.html blob fbf293d.
@@ -8,7 +8,7 @@ Canonical frontend: main a739f56 (18.49.4), index.html blob fbf293d.
 -------------------------------------------------------------
 CURRENT STATUS SUMMARY (2026-09-27T01:20Z)
 -------------------------------------------------------------
-PHG-001 IN PROGRESS P1  Menu Library / corpus gallery (18.49.3/18.49.4 on main; device acceptance + filter expansion open)
+PHG-001 IN PROGRESS P1  Menu Library: 18.49.5 on branch (images fixed, filters expanded); device acceptance + release open
 PHG-002 RESOLVED    P0  HTML worker closed-browser incident (redeploy 144c7bdb, 2026-09-27T00:08Z)
 PHG-003 OPEN        P1  Physical iPhone/iPad/desktop acceptance (node geometry, gallery, transitions)
 PHG-004 OPEN        P1  Exact Netlify production bytes vs GitHub main
@@ -25,9 +25,13 @@ PHG-014 RESOLVED    P2  Mobile controls / unsafe URL handling in gallery candida
 PHG-015 OPEN        P1  Remaining HTML render queue (3,502 pending + 415 retry)
 PHG-016 OPEN        P1  HTML retry population: 390/415 are orphaned stale-claim resets
 PHG-017 OPEN        P2  HTML "Download is starting" pages are actually file downloads (misrouted)
-PHG-018 OPEN        P0  Supabase cron redesign before reactivation (13 heavy jobs paused)
+PHG-018 OPEN        P0  Supabase cron redesign — 8 jobs RE-ENABLED by someone else ~04:00Z (4 at 20 s); job 5 timing out
 PHG-019 OPEN        P2  Cron jobs 1 & 2 (gtt-ingest-iowa, gtt-enrich-places) still ACTIVE — not in paused list
 PHG-020 OPEN        P1  Home -> Menu Studio -> Financial -> Market freeze re-test
+PHG-021 RESOLVED    P0  Gallery thumbnails 404 (preview allow-list of 6 ids) — fixed in 18.49.5 + corpus-browser v3
+PHG-022 OPEN        P1  Corpus/library Edge functions have no account-level authorization
+PHG-023 OPEN        P2  phg-menu-library-search bugs: or() escaping, no ORDER BY, 3x over-fetch (not used by frontend)
+PHG-024 OPEN        P1  Job 5 gtt-refresh-state-stats failing 56/72 runs (5 s statement timeout) since re-enable
 
 -------------------------------------------------------------
 DETAIL
@@ -150,3 +154,34 @@ Next: Confirm they are light and not contributing to lock contention; include in
 
 PHG-020 | OPEN | P1 | Navigation freeze re-test
 Next: Re-test Home -> Menu Studio -> Financial -> Market on iPhone after 18.49.0 state-scoped loading.
+
+
+-------------------------------------------------------------
+UPDATE 2026-09-27T15:20Z
+-------------------------------------------------------------
+PHG-001 | IN PROGRESS | Branch commit 5860d0c (18.49.5) replaces the gallery: signed images for every
+  capture method, real vocabularies, state/city/venue type/cocktail/ingredient/prep filters, page
+  viewer, coverage badges. Backend live (migration phg_corpus_browse + corpus-browser v3).
+  Next: Rob merges to main / releases; then iPhone/iPad acceptance of the gallery. Perf note: cocktail +
+  prep + state query 2.9 s; propose indexes menu_visual_documents(account_id),
+  menu_visual_pages(menu_visual_document_id) WHERE render_status='ready', staging_menu_extract(account_id).
+PHG-003 | OPEN | Emulated numbers now on record (changelog 0012): top-level overlap on all sizes; phone
+  depth 2 puts half the sections off-screen and shrinks the way back below 44 px. Design agreed:
+  screen-facing tier-1 ring (x/y ellipse with small z), full clock-face ring for a focused node's
+  children sized from the viewport, ancestors pinned >= 44 px. Implementation not started (agent was
+  rate-limited). Probe script: scratchpad n3probe.js (session-local; recreate from changelog 0012 recipe).
+PHG-016 | OPEN | Orphaned claims are continuous (2,988 of 3,030 retries at 15:12Z), not incident-only.
+  Worker must report fail_html on any exception and must not hold a claim across a browser restart.
+  Needs worker source (PHG-007). Retries self-serve after pending drains; pending is now 0.
+PHG-018 | OPEN P0 | Someone re-enabled jobs 5,7,12,13,15,16,18,22 at ~04:00Z (7,12,13,16 every 20 s)
+  without this agent. No deadlocks in 6 h, 19 connections, jobs 15/18 now sub-second (verify whether
+  they were rewritten). Dispatcher design (advisory lock, one connection, per-step timeouts, merged
+  accounts counters) still recommended; draft not written (agent rate-limited). Ask Rob who changed it.
+PHG-021 | RESOLVED | Root cause: index.html used menu-render-chat-preview (6-id allow-list). Fixed on branch.
+PHG-022 | OPEN | corpus-browser v3 and library-search v1 authorize only "is an Auth user"; any signed-in user
+  sees every venue. Add account/role check (phg_language_context pattern) before wider rollout.
+PHG-023 | OPEN | library-search v1: esc() leaves , ( ) unescaped in PostgREST or() (filter injection), no
+  ORDER BY (unstable pagination), fetches 3x limit. Not called by the frontend; fix before wiring.
+PHG-024 | OPEN | Job 5 refresh_state_stats: 56/72 runs hit a 5.0 s statement timeout since re-enable
+  (avg 4.5 s). Public state stats (v_public_states/v_public_stats) refresh unreliably. Either raise the
+  per-step timeout to ~15 s and run every 10 min, or make the function incremental.
