@@ -35,3 +35,15 @@ SELECT cron.alter_job(job_id := 15,
   command := $cmd$SET statement_timeout='20s'; SET lock_timeout='500ms'; SELECT public.refresh_menu_page_counts();$cmd$);
 SELECT cron.alter_job(job_id := 18,
   command := $cmd$SET statement_timeout='15s'; SET lock_timeout='500ms'; SELECT public.refresh_menu_visual_counts(); SELECT public.phg_reconcile_completed_image_documents(100);$cmd$);
+
+-- ~15:57Z: pause promotion (7) and extraction (13) while the duplicate order-item menu fix
+-- (PHG-026) is built. Resume 13 first, then 7, after the fix is applied and verified.
+-- Previous: both active=true, schedule '20 seconds'.
+SELECT cron.alter_job(job_id := 7,  active := false);
+SELECT cron.alter_job(job_id := 13, active := false);
+
+-- ~16:06Z: job 22 (full reconciliation of phg_menu_pipeline_live_stats_cache; delta triggers keep
+-- it current between runs) was hitting its 5 s limit (2 of 6 runs failed) as candidates grow.
+-- Previous: schedule '*/5 * * * *', statement_timeout '5s'.
+SELECT cron.alter_job(job_id := 22, schedule := '9,39 * * * *',
+  command := $cmd$SET statement_timeout='30s'; SET lock_timeout='500ms'; SELECT public.refresh_phg_menu_pipeline_live_stats_cache();$cmd$);

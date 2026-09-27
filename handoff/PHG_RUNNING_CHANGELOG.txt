@@ -467,3 +467,13 @@ PHG-20260927-0032 | PRODUCTION CHANGES — stop menu regression | ~15:57Z
 - Launched read-only workflow wf_50c3da17-0c7 (promotion path + readers; duplicate quantification and
   URL-rule precision; upstream hook points; dry-run repair of regressed venues), 2 skeptics per claim.
 Resume plan: re-enable 13 and 7 only after the dedupe/supersession fix is applied and verified.
+
+------------------------------------------------------------------------------
+PHG-20260927-0033 | STATUS + CHANGE | 16:06Z
+- HTML worker on menu-render-worker-api v4: 231 HTML + 54 PDF pages ready since deploy (15:53Z;
+  ~1,070 HTML/h), 0 abandoned, 0 dead-browser, 0 crash-quarantine, 0 complete_html failures.
+  HTML queue: pending 3, retry 2,667 (old orphan resets being re-served). All ready pages 18,259/20,930.
+- Cron last 30 min: all jobs 0 failures except job 22 (2/6 at 5.0 s). Job 22 -> every 30 min
+  ('9,39 * * * *'), statement_timeout 30s.
+- Workflows: 18.50 review 2/4 reviewers done (engine, documents), tests pending; dedupe
+  investigation 0/4 done.
