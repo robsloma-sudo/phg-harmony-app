@@ -1,0 +1,146 @@
+PERFECT HARMONY GROUP — OPEN ISSUES & RESOLUTION LOG
+=============================================================
+Last updated (UTC): 2026-09-27T01:25Z — Quad backend developer / CEO changeover intake
+Mandatory handoff companions: PHG_RUNNING_CHANGELOG.txt + PHG_OPEN_ISSUES.txt.
+Status reflects actual verification, not intent. Resolved entries and historical evidence are kept.
+Canonical frontend: main a739f56 (18.49.4), index.html blob fbf293d.
+
+-------------------------------------------------------------
+CURRENT STATUS SUMMARY (2026-09-27T01:20Z)
+-------------------------------------------------------------
+PHG-001 IN PROGRESS P1  Menu Library / corpus gallery (18.49.3/18.49.4 on main; device acceptance + filter expansion open)
+PHG-002 RESOLVED    P0  HTML worker closed-browser incident (redeploy 144c7bdb, 2026-09-27T00:08Z)
+PHG-003 OPEN        P1  Physical iPhone/iPad/desktop acceptance (node geometry, gallery, transitions)
+PHG-004 OPEN        P1  Exact Netlify production bytes vs GitHub main
+PHG-005 OPEN        P2  PDF worker HTTP 401 logs (not rechecked since takeover)
+PHG-006 OPEN        P1  Extraction provider 402
+PHG-007 OPEN        P1  Railway worker source (WORKER_CODE_B64) not under version control
+PHG-008 OPEN        P2  n8n/Claude control plane unverified
+PHG-009 IN PROGRESS P1  Metric scope / refresh semantics
+PHG-010 RESOLVED    P1  Mandatory two-log handoff files (now also committed to repo /handoff)
+PHG-011 OPEN        P1  Ingredient / preparation text coverage
+PHG-012 IN PROGRESS P1  New backend verification (phg-menu-library-search, phg-menu-corpus-browser)
+PHG-013 OPEN        P2  Live browser test transport limitation (previous agent sandbox)
+PHG-014 RESOLVED    P2  Mobile controls / unsafe URL handling in gallery candidate
+PHG-015 OPEN        P1  Remaining HTML render queue (3,502 pending + 415 retry)
+PHG-016 OPEN        P1  HTML retry population: 390/415 are orphaned stale-claim resets
+PHG-017 OPEN        P2  HTML "Download is starting" pages are actually file downloads (misrouted)
+PHG-018 OPEN        P0  Supabase cron redesign before reactivation (13 heavy jobs paused)
+PHG-019 OPEN        P2  Cron jobs 1 & 2 (gtt-ingest-iowa, gtt-enrich-places) still ACTIVE — not in paused list
+PHG-020 OPEN        P1  Home -> Menu Studio -> Financial -> Market freeze re-test
+
+-------------------------------------------------------------
+DETAIL
+-------------------------------------------------------------
+PHG-001 | IN PROGRESS | P1 | Menu Library / corpus gallery
+Owner: backend/CTO developer
+Evidence: 18.49.3 (416bba5) made Live Menu Corpus cards drill-down entry points; 18.49.4 (a739f56)
+  distinguishes candidate discovery from rendered-image gallery state. phg-menu-corpus-browser v1
+  deployed (authenticated). Earlier local gallery pass (78 responsive / 37 backend assertions) predates
+  18.49.x and is NOT canonical.
+Next: Physical device acceptance; expand filters server-side (cocktail, ingredient, spirit, prep classes,
+  venue type, city) with pagination — never load full corpus into browser memory.
+Verification: Not closed until device acceptance.
+
+PHG-002 | RESOLVED | P0 | HTML worker closed-browser incident
+Evidence: 23:10–23:12Z Sep 26 logs: "Browser.new_page: Target page, context or browser has been closed".
+  Redeploy 144c7bdb-ef21-46af-91aa-29f991cb4236 SUCCESS; html_render_ready resumed. Ready count
+  520 -> 541 (00:08Z) -> 1,028 (01:14Z) -> 943 railway-strategy ready + legacy at 01:20Z.
+  Throughput last full hour (00:00–01:00Z): 383 pages/hour.
+Residual: browser-close root cause unproven; worker should self-relaunch browser (see PHG-007/016).
+
+PHG-003 | OPEN | P1 | Physical-device acceptance
+Scope: 18.49.1 snap navigation, 18.49.2 front-facing larger separated node geometry (no overlapping
+  hit targets, clear tier ordering), 18.49.3/18.49.4 corpus drill-down gallery, simplified Home,
+  grouped Menu Studio, Financial depth, Market state-scoped detail loading. iPhone primary; iPad, desktop.
+Next: Rob to run on device; record results here.
+
+PHG-004 | OPEN | P1 | Exact Netlify production bytes
+Evidence: Netlify site prismatic-rugelach-777e48 previously matched GitHub; Replit public host
+  (worrisome-separate-browser.replit.app) serves older 2026-09-21.17 FINAL. Not re-verified after 18.49.x.
+Next: Tie served bytes/build marker to a739f56 before further release work.
+
+PHG-005 | OPEN | P2 | PDF worker authorization errors
+Evidence: Takeover logs 21:51–21:53Z Sep 26 repeated HTTP 401, page_id null. railway_external_pdf_render
+  ready=4,071, last update 2026-09-26 09:05Z — no PDF renders since then. No PDF pages currently pending
+  in the railway PDF strategy, so the 401s may be idle-poll noise OR a real token mismatch.
+Next: Check PDF worker logs; confirm x-worker-token matches internal_secrets
+  (menu_render_worker_token) without exporting values.
+
+PHG-006 | OPEN | P1 | Extraction provider 402
+Evidence: 100 recent candidate provider-402 records at takeover. Extraction crons now paused.
+Next: Establish billing/access before re-enabling job 13.
+
+PHG-007 | OPEN | P1 | Governed worker source
+Evidence: Both Railway workers execute WORKER_CODE_B64 env payload; source not in this repo.
+Next: Export current executable (no secrets), commit under a workers/ path, hash/version it, then fix
+  PHG-016 (orphaned claims) and browser self-relaunch in versioned code.
+
+PHG-008 | OPEN | P2 | n8n/Claude control plane — unverified. No change.
+
+PHG-009 | IN PROGRESS | P1 | Metric scope and refresh semantics
+Evidence: Candidates (~464,506), visual documents (6,328), page images (9,446 required) are different
+  stages. 18.49.4 labels these separately in UI. phg-menu-pipeline-live-stats refresh cron (22) paused,
+  so cached counters are stale; direct table counts are authoritative for now.
+
+PHG-010 | RESOLVED | P1 | Mandatory two-log handoff files
+Evidence: Files maintained through every handoff; as of 2026-09-27 also committed to
+  branch claude/phg-gallery-html-render-j246dy under /handoff.
+Next: Append/update every substantive turn. Never delete resolved entries.
+
+PHG-011 | OPEN | P1 | Ingredient / preparation text coverage
+Evidence: 4,800 public.menus rows with 0 nonempty raw_content; menu_items.raw_text null. Some stored
+  cocktail descriptions contain prep language (syrup, infusion, cordial, puree, bitters, citrus, garnish,
+  foam, tincture, saline, tea, coffee). phg-menu-library-search v1 exposes these filters.
+Rule: missing text is NOT proof of ingredient absence; UI must say "no text coverage", not "no match".
+Next: Capture visible HTML text during Railway screenshot (same page load) with provenance
+  (url, final url, hash, captured_at, document/page id); backfill in bounded batches.
+
+PHG-012 | IN PROGRESS | P1 | New backend verification
+Evidence: phg-menu-library-search v1 and phg-menu-corpus-browser v1 deployed, JWT required.
+Next: Authenticated end-to-end call from app; allowed / other-account / anonymous denial tests;
+  EXPLAIN on filter queries; private signed image URLs only (bucket stays private).
+
+PHG-013 | OPEN | P2 | Previous agent's browser test transport limitation (localhost blocked).
+  This session has Playwright + Chromium at /opt/pw-browsers; can run emulated viewport checks,
+  still not a substitute for physical devices.
+
+PHG-014 | RESOLVED | P2 | Mobile controls / unsafe URL handling (gallery candidate). Kept for history.
+
+PHG-015 | OPEN | P1 | Remaining HTML render queue
+Snapshot 2026-09-27T01:20:20Z (direct menu_visual_pages):
+  firecrawl_screenshot_after_download_check pending 3,502 (claimable by Railway claim_html)
+  railway_external_html_screenshot ready 943 | retry 415 | processing 1
+  other ready: pdf 4,071; original image 315; local pdf 50+4; firecrawl 31+106; download 1+7
+At ~380/h the pending set needs ~9–10 h, then retries.
+CONSTRAINT: do NOT lower render resolution (target_width 1400) to improve throughput.
+
+PHG-016 | OPEN | P1 | HTML retry population = mostly orphaned claims
+Evidence (2026-09-27T01:20Z): of 415 retry rows, 390 have error "stale external html claim reset",
+  attempt_count=1, next_retry_at NULL. These are pages claimed by the worker during the closed-browser
+  incident that never got complete_html/fail_html; claim_html's 20-minute stale sweep reset them.
+  Remaining 25 are real per-page failures: read timeouts (6), HTTP 500 (4), Page.goto timeout (5),
+  screenshot timeout (2), "Download is starting" (4, see PHG-017), target crash (1), cert error (1),
+  missing source URL (1), execution context destroyed (1).
+Behaviour: claim_html orders by render_attempt_count ASC, so all attempt-0 pending pages are served
+  first; the 390 will be retried automatically after the pending set drains. No manual reset needed.
+Root fix (in worker, PHG-007): on browser/context errors, report fail_html for the claimed page and
+  relaunch Chromium instead of continuing to claim.
+
+PHG-017 | OPEN | P2 | HTML strategy pages that are really file downloads
+Evidence: "Page.goto: Download is starting" for sierrarestaurant, clocktowergrill, daggthainyc (/pdf/),
+  rikospizza (wp-content). These are PDFs misclassified as HTML; retrying will fail forever.
+Next: Route to PDF acquisition/render path (download + pymupdf at full resolution) rather than retry.
+
+PHG-018 | OPEN | P0 | Supabase cron redesign before reactivation
+Paused (verified active=false 2026-09-27T01:20Z): 5,6,7,12,13,14,15,16,17,18,20,22,23 (+3,8,9,10,11
+  were already inactive). Cause: overlapping jobs -> statement timeouts/deadlocks -> iPhone login 504.
+Next: Serialize via advisory lock / single dispatcher; stagger schedules; enable one job at a time with
+  monitoring of auth latency. DO NOT bulk-enable.
+
+PHG-019 | OPEN | P2 | Cron jobs still active that were not in the handoff list
+Evidence: job 1 gtt-ingest-iowa (*/3) and job 2 gtt-enrich-places (*/2) are active=true.
+Next: Confirm they are light and not contributing to lock contention; include in PHG-018 schedule design.
+
+PHG-020 | OPEN | P1 | Navigation freeze re-test
+Next: Re-test Home -> Menu Studio -> Financial -> Market on iPhone after 18.49.0 state-scoped loading.

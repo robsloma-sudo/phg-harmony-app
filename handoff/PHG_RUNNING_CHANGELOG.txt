@@ -1,0 +1,117 @@
+PERFECT HARMONY GROUP — RUNNING CTO CHANGE LOG
+Started: September 26, 2026
+Append-only. User/assistant text and external-agent replies are verbatim where flagged in the
+source package. Tool actions/results are sanitized summaries. No secrets or hidden reasoning.
+
+NOTE ON REPO COPY (2026-09-27): This is the first commit of the log into the repository.
+Entries PHG-20260926-0001 .. PHG-20260926-0083 and the 2026-09-26 22:54Z–01:14Z continuation
+entries were carried forward from the CTO changeover package
+(PHG_QUAD_CEO_CHANGEOVER_2026-09-26 / PHG_RUNNING_CHANGELOG.txt). They are summarized below in
+condensed form; the full verbatim text remains in that package, which is the historical original.
+Nothing below is re-dated or re-worded in meaning.
+
+==============================================================================
+CARRIED FORWARD — 2026-09-26 (condensed index of prior entries)
+==============================================================================
+0001–0010  User assigned CTO developer role; required running log of every prompt/response.
+           Takeover inspected handoff archive (30 entries, 9.1 MB) — two frontends (18.47, 18.49).
+           GitHub access now works (earlier 404 blocker resolved). Supabase reachable/healthy.
+0011–0028  Read handoff docs, schema, migrations. Supabase lqjtwabzmgjcufftuqvu ACTIVE_HEALTHY,
+           us-east-1, PG 17.6. GitHub main then c11091f (18.48.3 LIVE MENU CORPUS).
+           Edge function version drift recorded (discovery v14, acquisition v7, PDF renderer v19,
+           page counter v3, new menu-render-worker-api v3, deep-menu-discovery v3,
+           phg-menu-pipeline-stats v3). Railway projects: PHG Menu Pipeline, PHG Local Voice Service.
+0029–0045  Commits 6c2d6a2/620e8ec/c11091f read (corpus counters, error isolation, batch timeout
+           resilience). PDF worker logs 21:51–21:53Z: repeated HTTP 401. HTML worker producing
+           html_render_ready. Reconstructed main index.html byte-exact (blob dc856f4).
+0046–0049  USER RULE: "Always go with the new functions and new data and new files."
+           Recorded as source-of-truth rule.
+0050–0074  Read pipeline-stats, render-menu-pdf-pages, deep-menu-discovery, acquire v7, discover
+           v14 sources. Snapshot: ~464,506 candidates, 6,328 visual docs, 4,791/9,446 pages ready.
+           Replit apps identified: f5d57d66 = frozen v17 host; dedcb008 = authoring Studio;
+           e80ad9c8 = unrelated portrait proxy. None newer than GitHub.
+0075–0080  Replit agent Q&A (verbatim in package).
+0081–0083  Takeover package verified; assistant reported "up to speed". No production changes.
+
+22:54Z     USER: work on iPhone/iPad/desktop workflows; continue ~4,000 HTML menus not yet imaged;
+           image library gallery with cocktail/ingredient/venue-type filters.
+22:54Z     USER: maintain change log + open-issues log in every handoff.
+23:10Z     Queue 22:56Z: HTML pending 4,446 / processing 2 / ready 517 / retry 33.
+           4,800 public.menus rows, 0 raw_content; menu_items.raw_text null.
+           Gallery review candidate built (local only), 78 responsive + 37 backend checks passed.
+23:15Z     NEW BLOCKER: HTML worker "Browser.new_page: Target page, context or browser has been
+           closed" 23:10–23:12Z.
+CONT.      USER prioritized: finish ~4,500 HTML renders; cocktail search; ingredient/prep filters;
+           hold live website changes until end. USER requested five real rendered examples.
+CONT.      Railway HTML worker redeployed (144c7bdb-ef21-46af-91aa-29f991cb4236), no config/credential
+           change; ready 520 -> 541 by 00:08Z.
+CONT.      Deployed phg-menu-library-search v1 (JWT). Five real PDF-derived JPEGs surfaced:
+           page IDs 778, 783, 784, 786, 793.
+CONT.      Login incident: iPhone HTTP 504, /v_public_states 500; statement timeouts/deadlocks from
+           overlapping cron jobs. Paused jobs 5,6,7,12,13,14,15,16,17,18,20,22,23. Login recovered.
+CONT.      18.49.0 9897b1e simplify navigation / reduce Market freezes.
+           18.49.1 fde2d97 snap node navigation / remove bloom drift.
+20:03–20:14 CDT  Deployed phg-menu-corpus-browser v1. Onclick quoting error caught; main restored
+           (8f222ee/a5b8b38/b2f1d86/6b0d2ba are transient) then:
+           18.49.2 b624943 front-facing larger separated node geometry
+           18.49.3 416bba5 clickable corpus cards + filtered gallery drill-down
+           18.49.4 a739f56 distinguish candidate discovery from rendered gallery
+           index.html blob fbf293d.
+01:14Z     Render: HTML ready 1,028; pending 3,555; retry 414; processing 1; image 323; PDF 4,125.
+
+==============================================================================
+2026-09-27 — QUAD BACKEND DEVELOPER / CEO CHANGEOVER (this agent)
+==============================================================================
+
+PHG-20260927-0001 | USER_PROMPT | ~01:19Z
+Metadata: {"verbatim": false, "note": "Changeover package pasted by Rob; not reproduced in full."}
+CTO -> Main Quad Backend Developer / CEO changeover. Contents: READ FIRST (newest verified
+functions/data/files rule; both logs mandatory), canonical frontend pointer (a739f56 / fbf293d),
+18.49.0–18.49.4 UX changes, gallery requirements, backend/rendering state, full-resolution
+constraint, new Edge functions, paused cron list (do not bulk enable), known pipeline issues,
+device requirements, deployment notes, 9 open next actions, prior changelog and open issues.
+
+------------------------------------------------------------------------------
+PHG-20260927-0002 | ACTION_RESULT | 01:19Z
+Tool: git (session clone)
+Working branch claude/phg-gallery-html-render-j246dy == main == origin/main == a739f56.
+HEAD:index.html blob fbf293dfe6c7994243f77c889e385b6b7ef35c37 — matches handoff exactly.
+Repo tracks only index.html (2,100,130 bytes). Clean tree.
+
+------------------------------------------------------------------------------
+PHG-20260927-0003 | ACTION_RESULT | 01:20Z
+Tool: Supabase.execute_sql (read-only)
+cron.job: jobs 5,6,7,12,13,14,15,16,17,18,20,22,23 active=false (matches handoff). Jobs 3,8,9,10,11
+also inactive. Jobs 1 gtt-ingest-iowa (*/3) and 2 gtt-enrich-places (*/2) are ACTIVE — not mentioned
+in handoff; logged as PHG-019. No cron changes made.
+
+------------------------------------------------------------------------------
+PHG-20260927-0004 | QUEUE_SNAPSHOT | 2026-09-27T01:20:20Z
+Direct public.menu_visual_pages grouped by strategy/status:
+  firecrawl_screenshot_after_download_check  pending 3,502 | ready 106
+  railway_external_html_screenshot           ready 943 | retry 415 | processing 1 (last update 01:20:18Z)
+  railway_external_pdf_render                ready 4,071 (last update 2026-09-26 09:05Z)
+  use_original_downloaded_image              ready 315
+  render_downloaded_pdf_page_locally         ready 50;  local_pdfium_render ready 4
+  firecrawl_full_page_screenshot             ready 31;  html_download_link ready 7; direct_file_download ready 1
+HTML ready by hour (UTC): 20h 65, 21h 83, 22h 235, 00h 383, 01h 180 (partial). ~380/h steady state.
+
+------------------------------------------------------------------------------
+PHG-20260927-0005 | DIAGNOSIS | 01:22Z
+Tool: Supabase.execute_sql (read-only) + Supabase.get_edge_function menu-render-worker-api v3
+HTML retry breakdown (415): 390 "stale external html claim reset" (attempt 1, next_retry NULL);
+6 read timeout; 4 HTTP 500; 5 Page.goto timeout; 2 screenshot timeout; 4 "Download is starting";
+1 target crash; 1 cert CN invalid; 1 html source URL missing; 1 execution context destroyed.
+Read claim_html: sweeps processing >20 min to retry(next_retry NULL); claims pending+retry ordered by
+render_attempt_count ASC then id; pending rows (attempt 0) are served first, so the 390 orphaned
+claims will be retried automatically after pending drains. Orphans were created during the
+closed-browser incident (claimed, never completed/failed). No data reset needed or performed.
+"Download is starting" pages are PDF/file URLs misrouted to the HTML screenshot path (PHG-017).
+Render targets confirmed full resolution: target_width 1400 (html jpeg_quality 85, pdf 88). Unchanged.
+
+------------------------------------------------------------------------------
+PHG-20260927-0006 | LOG_MAINTENANCE | 01:25Z
+Created handoff/ in repo with PHG_RUNNING_CHANGELOG.txt, PHG_OPEN_ISSUES.txt,
+PHG_CURRENT_SOURCE_POINTER.txt. Open issues consolidated (PHG-001..014 carried, PHG-002 marked
+RESOLVED per 00:08Z redeploy evidence, new PHG-015..020). index.html NOT modified.
+No production code, data, schedules, credentials or deployments changed in this entry.
