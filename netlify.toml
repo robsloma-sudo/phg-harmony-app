@@ -1,0 +1,19 @@
+# The site is published from the repository root. Internal handoff logs and database/Edge
+# sources live in this repository too; never serve them as public pages.
+[[redirects]]
+  from = "/handoff/*"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/supabase/*"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/netlify.toml"
+  to = "/__not_found__"
+  status = 404
+  force = true

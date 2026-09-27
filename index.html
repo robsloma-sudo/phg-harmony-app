@@ -159,6 +159,102 @@ h1{font-family:'Instrument Serif',Georgia,serif;font-size:34px;font-weight:400;l
 .clik{cursor:pointer;position:relative}
 .card.clik:hover{border-color:var(--blue);transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.4),0 0 0 1px rgba(90,169,255,.2)}
 .card.clik:after{content:"\2192";position:absolute;top:16px;right:18px;color:var(--blue);font-size:15px;opacity:.4;transition:.2s}
+/* menu library (corpus drill-down) 18.49.6: compact, iPhone-first. Own classes on purpose:
+   the global .grid/.card/.mdcin rules force one column, 18px padding and 46px inputs on mobile. */
+#corpusHost{max-width:1180px;margin:0 auto}
+/* the library has its own compact header; hide the big page title while it is on screen */
+.main:has(#corpusHost)>.hd{display:none}
+.mlhead{display:flex;align-items:center;gap:6px;margin:0 0 4px;min-width:0}
+.mlhead .mltitle{font-size:14px;font-weight:600;color:var(--txt);white-space:nowrap}
+.mlhead .mlstat{flex:1;min-width:0;font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlbar{display:flex;flex-wrap:nowrap;align-items:center;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:none;padding:3px 0 5px;margin:0 0 5px;position:sticky;top:0;z-index:30;background:var(--bg)}
+.mlbar::-webkit-scrollbar{display:none}
+.mlchips{display:contents}
+.mlchip{flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 6px;border:1px solid var(--line2);border-radius:5px;background:var(--panel);color:var(--dim);font:inherit;font-size:11.5px;line-height:1;white-space:nowrap;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.mlchip .mlar{font-size:8px;opacity:.6}
+.mlchip.on{border-color:var(--blue);color:var(--txt);background:rgba(90,169,255,.12)}
+.mlchip.mlclr{color:var(--faint);border-style:dashed}
+.mlsearch{flex:0 0 auto;width:92px;height:24px;box-sizing:border-box;padding:0 6px;border:1px solid var(--line2);border-radius:5px;background:var(--panel);color:var(--txt);font:inherit;font-size:12px;outline:none;-webkit-appearance:none;appearance:none;transition:width .15s}
+.mlsearch:focus{width:150px;border-color:var(--blue)}
+.mlmini{height:22px;padding:0 7px;border:1px solid var(--line2);border-radius:5px;background:transparent;color:var(--dim);font:inherit;font-size:11px;line-height:1;white-space:nowrap;cursor:pointer;touch-action:manipulation}
+.mlmini.pri{border-color:var(--blue);color:var(--txt)}
+.mlscrim{position:fixed;inset:0;z-index:4190;background:transparent}
+.mlpanel{position:fixed;z-index:4200;display:flex;flex-direction:column;width:260px;max-height:min(70vh,440px);overflow:hidden;background:var(--panel2);border:1px solid var(--line2);border-radius:7px;box-shadow:0 12px 32px rgba(0,0,0,.55);color:var(--txt)}
+.mlpanel .mlph{display:flex;align-items:center;gap:5px;padding:5px 6px 5px 9px;border-bottom:1px solid var(--line)}
+.mlpanel .mlpt{flex:1;min-width:0;font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlpanel .mlpl{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:2px 0}
+.mlpanel .mlpf{padding:5px 9px;font-size:10.5px;line-height:1.4;color:var(--faint);border-top:1px solid var(--line)}
+.mlpanel .mlpl .mlpf{border-top:0}
+.mlpanel .mlgh{padding:6px 9px 2px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.mlpanel .mlpin{display:block;box-sizing:border-box;width:calc(100% - 14px);height:26px;margin:5px 7px 3px;padding:0 7px;border:1px solid var(--line2);border-radius:5px;background:var(--panel);color:var(--txt);font:inherit;font-size:12px;outline:none;-webkit-appearance:none;appearance:none}
+.mlpanel .mlpin:focus{border-color:var(--blue)}
+.mlopt{display:flex;align-items:center;gap:7px;width:100%;box-sizing:border-box;padding:5px 9px;border:0;background:transparent;color:var(--txt);font:inherit;font-size:12px;text-align:left;cursor:pointer;user-select:none;-webkit-user-select:none}
+.mlopt:hover{background:rgba(255,255,255,.04)}
+.mlopt input{margin:0;width:14px;height:14px;flex:0 0 auto;accent-color:var(--blue)}
+.mlopt .mll{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mlopt .mln{margin-left:auto;padding-left:6px;font-size:10.5px;color:var(--faint)}
+.mlopt .mlk{width:14px;flex:0 0 auto;color:var(--blue);text-align:center}
+.mlopt.mlsgl.on{color:var(--blue)}
+@media (max-width:600px){
+ .mlscrim{background:rgba(0,0,0,.4)}
+ .mlpanel{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:auto!important;max-height:72vh;border-radius:12px 12px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+ .mlopt{padding:8px 12px;font-size:13px}
+ .mlpanel .mlph{padding:8px 8px 8px 12px}
+}
+@media (pointer:coarse){.mlsearch,.mlpanel .mlpin{font-size:16px}}
+.mlerr{font-size:11.5px;color:#ff9b9b;padding:5px 8px;border:1px solid rgba(255,90,90,.28);border-radius:5px;margin:0 0 5px}
+.mlmsg{grid-column:1/-1;font-size:11.5px;color:var(--dim);padding:10px 2px}
+.mlgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;transition:opacity .15s}
+.mlgrid.mlbusy{opacity:.5;pointer-events:none}
+@media (max-width:600px){.mlgrid{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:5px}}
+.mlcard{display:flex;flex-direction:column;min-width:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.mlcard .mlimg{position:relative;aspect-ratio:3/4;overflow:hidden;background:#05070e;cursor:zoom-in}
+.mlcard .mlimg img{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}
+.mlcard .mlimg .mlpg{position:absolute;right:3px;bottom:3px;padding:1px 4px;border-radius:3px;background:rgba(0,0,0,.7);color:#ddd;font-size:9.5px}
+.mlcard .mlnone{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;padding:6px;text-align:center;font-size:10.5px;color:var(--faint);background:#0b0e12}
+.mlcard .mlbody{padding:4px 6px 5px;min-width:0}
+.mlcard .mlname{font-size:11.5px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlcard .mlmeta,.mlcard .mlcen{margin-top:1px;font-size:10px;line-height:1.35;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlcard .mlcen{color:var(--faint)}
+.mlcard .mlmatch{color:var(--blue)}
+.mlpager{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px;margin:8px 0 4px;font-size:11px;color:var(--dim)}
+.mlpager button{min-width:24px;height:24px;padding:0 5px;border:1px solid var(--line2);border-radius:5px;background:var(--panel);color:var(--dim);font:inherit;font-size:11px;cursor:pointer;touch-action:manipulation}
+.mlpager button.on{border-color:var(--blue);color:var(--txt)}
+.mlpager button[disabled]{opacity:.35;cursor:default}
+.mlpager .mldots{padding:0 2px}
+.mlpager .mlrange{margin-left:6px;white-space:nowrap}
+.cview{position:fixed;inset:0;z-index:4300;background:rgba(3,5,10,.97);display:flex;flex-direction:column;color:var(--txt)}
+.cview .cvbar{display:flex;align-items:center;gap:8px;padding:6px 8px;padding-top:calc(6px + env(safe-area-inset-top));border-bottom:1px solid var(--line)}
+.cview .cvbar+.cvbar{border-bottom:0;border-top:1px solid var(--line);padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}
+.cview .mlvname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cview .cvimg{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:auto;-webkit-overflow-scrolling:touch;padding:4px}
+.cview .cvimg img{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;background:#05070e}
+.cvbtn{min-width:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;background:#171c22;border:1px solid var(--line2);color:#c3c0bb;border-radius:8px;cursor:pointer;font:inherit;font-size:16px;text-decoration:none;touch-action:manipulation}
+.cvbtn[disabled]{opacity:.35;cursor:default}
+body.cview-open{overflow:hidden}
+/* full-screen menu viewer 18.49.7 */
+.mlview{position:fixed;inset:0;z-index:4300;display:flex;flex-direction:column;background:#03050a;isolation:isolate;color:var(--txt);animation:mlvIn .14s ease-out}
+@keyframes mlvIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}
+.mlvbar{flex:0 0 auto;display:flex;align-items:center;gap:6px;background:#0a0d12;padding:5px 8px;padding-top:calc(5px + env(safe-area-inset-top));border-bottom:1px solid var(--line)}
+.mlvbar.mlvbot{border-bottom:0;border-top:1px solid var(--line);padding-top:5px;padding-bottom:calc(5px + env(safe-area-inset-bottom))}
+.mlvtt{flex:1;min-width:0}
+.mlvname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlvsub{font-size:10.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlvb{flex:0 0 auto;min-width:34px;height:32px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line2);border-radius:7px;background:#171c22;color:#c3c0bb;font:inherit;font-size:15px;line-height:1;cursor:pointer;text-decoration:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.mlvb[disabled]{opacity:.3;cursor:default}
+.mlvb[hidden]{display:none}
+.mlvz{min-width:50px;font-size:11.5px}
+.mlvpg{font-size:11.5px;color:var(--dim);min-width:40px;text-align:center}
+.mlvsp{flex:1}
+.mlvscroll{flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-x pan-y;background:#05070e;outline:none}
+.mlvscroll.mlvgrab{cursor:grabbing}
+.mlvstage{display:flex;box-sizing:border-box;min-width:100%;min-height:100%;width:max-content;padding:6px}
+.mlvimg{display:block;flex:0 0 auto;margin:auto;max-width:none!important;max-height:none!important;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.5);cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.mlvimg[hidden]{display:none}
+.mlvmsg{margin:auto;padding:24px;font-size:12px;color:var(--dim);text-align:center}
+.mlvmsg:empty{display:none}
+.mlvmsg .mlvb{margin-left:6px;height:26px;font-size:12px}
+.mlcard .mlimg .mltall{position:absolute;left:3px;bottom:3px;padding:1px 4px;border-radius:3px;background:rgba(0,0,0,.7);color:#ddd;font-size:9.5px}
 .card.clik:hover:after{opacity:1;transform:translateX(4px)}
 .lbl{font-size:11px;color:var(--dim);letter-spacing:.05em;text-transform:uppercase}
 .big{font-family:'Instrument Serif',Georgia,serif;font-size:42px;font-weight:400;line-height:1.05;margin:8px 0 3px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
@@ -6172,7 +6268,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.49.4 CORPUS FILTERS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-27.18.49.7 MENU VIEWER ZOOM · COMPACT LIBRARY · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7248,35 +7344,354 @@ function phgPipelineAge(ts){
   if(secs<90)return "updated "+secs+"s ago";
   return "updated "+Math.round(secs/60)+"m ago";
 }
-var CORPUS_BROWSER={open:false,kind:'rendered',busy:false,error:'',rows:[],count:0,next:null,f:{asset_kind:'',menu_scope:'',status:'',q:''}};
+/* MENU LIBRARY (corpus drill-down). 18.49.6 - compact, iPhone-first (PHG-027).
+   Rob: one toolbar row of small dropdowns sized to their text, smallest borders and buttons,
+   multi-select everywhere it makes sense, census demographics alongside city and state, and
+   20 / 50 / 100 records per page. The toolbar scrolls sideways on a phone; each chip opens a
+   checklist (a bottom sheet on a phone). Census bands use the venue ZIP's ACS 2020-2024 figures.
+   Talks to phg-menu-corpus-browser v4: authenticated, filters and paging run in the database,
+   page images arrive as short-lived signed URLs. The browser owns its DOM (corpusDraw) so the
+   dashboard poll cannot wipe a half-typed search: render() only mounts it once. Every request
+   carries a generation number, so a slow older response can never overwrite a newer one.
+   Rob's rule for text filters: a document with no stored menu text is UNKNOWN, never
+   "ingredient absent" - cards say whether text is stored. */
+var CORPUS_BROWSER={open:false,kind:'rendered',busy:false,error:'',rows:[],count:0,capped:false,vals:null,view:null,page:0,size:20,panel:null,
+  f:{q:'',state:[],city:[],venue_type:[],asset_kind:[],menu_scope:[],status:[],cocktail:'',ingredient:'',prep_type:[],income:[],age:[],young:[],affluent:[],edu:[],hisp:[],sort:'recent'}};
 var PHG_CORPUS_BROWSER_URL="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-menu-corpus-browser";
-function corpusOpen(kind){CORPUS_BROWSER.open=true;CORPUS_BROWSER.kind=kind||'rendered';CORPUS_BROWSER.rows=[];CORPUS_BROWSER.next=0;render();corpusLoad(false);}
-function corpusClose(){CORPUS_BROWSER.open=false;render();}
-function corpusSet(k,v){CORPUS_BROWSER.f[k]=v;CORPUS_BROWSER.rows=[];CORPUS_BROWSER.next=0;corpusLoad(false);}
-function corpusLoad(more){
- if(CORPUS_BROWSER.busy)return;CORPUS_BROWSER.busy=true;CORPUS_BROWSER.error='';render();
- var token=(PHGAUTH&&PHGAUTH.session&&PHGAUTH.session.access_token)||'';
- fetch(PHG_CORPUS_BROWSER_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(Object.assign({kind:CORPUS_BROWSER.kind,limit:24,offset:more?(CORPUS_BROWSER.next||0):0},CORPUS_BROWSER.f))})
- .then(function(r){if(!r.ok)throw new Error('Menu library returned '+r.status);return r.json()})
- .then(function(j){CORPUS_BROWSER.rows=more?CORPUS_BROWSER.rows.concat(j.rows||[]):(j.rows||[]);CORPUS_BROWSER.count=j.count||0;CORPUS_BROWSER.next=j.next_offset;CORPUS_BROWSER.busy=false;render()})
- .catch(function(e){CORPUS_BROWSER.busy=false;CORPUS_BROWSER.error=e.message;render()});
+var CORPUS_KINDS={rendered:'With images',archived:'All documents',remaining:'Not rendered',candidates:'Candidates'};
+var CORPUS_PREPS=['syrup','infusion','cordial','shrub','puree','bitters','citrus','garnish','foam','tincture','saline','tea','coffee'];
+var CORPUS_CENSUS=['income','age','young','affluent','edu','hisp'];
+var CORPUS_CENSUS_DEF={
+ income:{label:'Income',long:'Median household income',bands:[['lt50','Under $50k'],['50_75','$50–75k'],['75_100','$75–100k'],['100_150','$100–150k'],['150p','$150k+'],['na','No census data']]},
+ age:{label:'Age',long:'Median age',bands:[['lt30','Under 30'],['30_35','30–35'],['35_40','35–40'],['40_45','40–45'],['45p','45+'],['na','No census data']]},
+ young:{label:'21–34',long:'Share of people aged 21–34',bands:[['lt15','Under 15%'],['15_20','15–20%'],['20_30','20–30%'],['30p','30%+'],['na','No census data']]},
+ affluent:{label:'$100k+',long:'Households earning $100k+',bands:[['lt25','Under 25%'],['25_40','25–40%'],['40_60','40–60%'],['60p','60%+'],['na','No census data']]},
+ edu:{label:'Degree',long:'Adults with a bachelor’s degree or higher',bands:[['lt25','Under 25%'],['25_40','25–40%'],['40_60','40–60%'],['60p','60%+'],['na','No census data']]},
+ hisp:{label:'Hispanic',long:'Hispanic or Latino share of population',bands:[['lt10','Under 10%'],['10_25','10–25%'],['25_50','25–50%'],['50p','50%+'],['na','No census data']]}
+};
+var CORPUS_SORTS=[['recent','Newest'],['name','Venue A–Z'],['city','City A–Z'],['income_desc','Income high–low'],['income_asc','Income low–high'],['age_asc','Youngest area'],['age_desc','Oldest area'],['young_desc','Most 21–34'],['affluent_desc','Most $100k+ homes'],['edu_desc','Most degrees'],['hisp_desc','Most Hispanic']];
+var CORPUS_SIZES=[20,50,100];
+var CORPUS_GEN=0,CORPUS_TYPING=null,CORPUS_APPLY=null;
+(function(){try{var p=JSON.parse(localStorage.getItem('phg.menuLibrary.v1')||'{}');
+  if(CORPUS_SIZES.indexOf(p.size)>=0)CORPUS_BROWSER.size=p.size;
+  if(p.sort&&CORPUS_SORTS.some(function(s){return s[0]===p.sort}))CORPUS_BROWSER.f.sort=p.sort;}catch(e){}})();
+function corpusSavePrefs(){try{localStorage.setItem('phg.menuLibrary.v1',JSON.stringify({size:CORPUS_BROWSER.size,sort:CORPUS_BROWSER.f.sort}));}catch(e){}}
+function corpusToken(){return (PHGAUTH&&PHGAUTH.session&&PHGAUTH.session.access_token)||'';}
+function corpusPost(body){
+ return fetch(PHG_CORPUS_BROWSER_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+corpusToken()},body:JSON.stringify(body)})
+  .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(r.status===401?'Sign in to open the menu library':(j&&j.error?j.error:'Menu library returned '+r.status));return j})});
 }
-function corpusOpt(cur,val,label){return '<option value="'+val+'"'+(cur===val?' selected':'')+'>'+label+'</option>';}
-function corpusBrowserPage(){
- var b=CORPUS_BROWSER,f=b.f,h='<div class="sec">Menu Library</div><div class="secsub">'+esc(b.kind)+' · '+n(b.count)+' matching documents</div>';
- h+='<div class="card"><div class="grid g4"><input class="mdcin" placeholder="Search venue" value="'+esc(f.q)+'" onchange="corpusSet(\'q\',this.value)">'
-   +'<select onchange="corpusSet(\'asset_kind\',this.value)">'+corpusOpt(f.asset_kind,'','All formats')+corpusOpt(f.asset_kind,'pdf','PDF')+corpusOpt(f.asset_kind,'html','HTML')+corpusOpt(f.asset_kind,'image','Image')+'</select>'
-   +'<select onchange="corpusSet(\'menu_scope\',this.value)">'+corpusOpt(f.menu_scope,'','All menu types')+corpusOpt(f.menu_scope,'beverage','Beverage')+corpusOpt(f.menu_scope,'food','Food')+corpusOpt(f.menu_scope,'mixed','Mixed')+corpusOpt(f.menu_scope,'unknown','Unknown')+'</select>'
-   +'<select onchange="corpusSet(\'status\',this.value)">'+corpusOpt(f.status,'','All statuses')+corpusOpt(f.status,'ready','Ready')+corpusOpt(f.status,'pending','Pending')+corpusOpt(f.status,'processing','Processing')+corpusOpt(f.status,'retry','Retry')+corpusOpt(f.status,'failed','Failed')+'</select></div><button class="btn" onclick="corpusClose()">Back to pipeline</button></div>';
- if(b.error)h+='<div class="err">'+esc(b.error)+'</div>';if(b.busy&&!b.rows.length)h+='<div class="card">Loading menu library…</div>';
- h+='<div class="grid g3">';
- for(var i=0;i<b.rows.length;i++){var d=b.rows[i],a=d.accounts||{},p=(d.pages||[])[0],candidate=b.kind==='candidates';
-   h+='<div class="card"><div class="lbl">'+esc((candidate?d.source_format:d.asset_kind)||'menu')+' · '+esc(d.menu_scope||d.menu_type||'unknown')+'</div><div class="ttl">'+esc(a.account_name||'Venue')+'</div>'
-    +'<div class="sub">'+esc(candidate?(d.status||d.visual_asset_status||'candidate'):(d.page_render_status||''))+' · '+n(d.page_count||0)+' page(s)'+(candidate&&d.discovery_method?' · '+esc(d.discovery_method):'')+'</div>'
-    +(candidate?'<div class="sub" style="margin-top:14px">Visual asset: '+esc(d.visual_asset_status||'not acquired')+(d.screenshot_pages_ready?' · '+n(d.screenshot_pages_ready)+' image(s) ready':'')+'</div>':(p&&p.id?'<img loading="lazy" src="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/menu-render-chat-preview?page_id='+p.id+'" style="width:100%;max-height:320px;object-fit:contain;margin-top:12px;background:#05070e">':'<div class="sub" style="margin-top:18px">Preview not rendered yet</div>'))+'</div>';
+function corpusNice(s){return String(s==null?'':s).replace(/_/g,' ');}
+function corpusTitle(s){return String(s||'').toLowerCase().replace(/(^|[\s\-\/.'])([a-z])/g,function(m,a,c){return a+c.toUpperCase()});}
+function corpusMoney(v){v=Number(v);if(!isFinite(v)||v<=0)return '';return v>=250000?'$250k+':'$'+Math.round(v/1000)+'k';}
+function corpusActive(k){var v=CORPUS_BROWSER.f[k];return Array.isArray(v)?v.length>0:(k!=='sort'&&!!v);}
+function corpusAnyActive(){var f=CORPUS_BROWSER.f;for(var k in f)if(k!=='sort'&&corpusActive(k))return true;return false;}
+function corpusTextActive(){var f=CORPUS_BROWSER.f;return !!(f.cocktail||f.ingredient||f.prep_type.length);}
+function corpusOpen(kind){var b=CORPUS_BROWSER;b.open=true;b.kind=CORPUS_KINDS[kind]?kind:'rendered';b.rows=[];b.count=0;b.capped=false;b.page=0;b.error='';b.view=null;
+ if(b.kind==='rendered')b.f.status=[];corpusPanelClose();render();corpusLoad();if(!b.vals)corpusValues();}
+function corpusClose(){corpusPanelClose();corpusViewClose();CORPUS_BROWSER.open=false;CORPUS_BROWSER.view=null;document.body.classList.remove('cview-open');render();}
+function corpusValues(){corpusPost({action:'filters'}).then(function(j){CORPUS_BROWSER.vals=j.values||null;corpusDrawChips();corpusPanelRefresh();}).catch(function(){});}
+function corpusBody(){
+ var b=CORPUS_BROWSER,f=b.f,body={action:'list',kind:b.kind,limit:b.size,offset:b.page*b.size};
+ for(var k in f){var v=f[k];if(Array.isArray(v)){if(v.length)body[k]=v.slice();}else if(v)body[k]=v;}
+ if(b.kind==='candidates')delete body.sort;
+ if(b.kind==='rendered')delete body.status;
+ return body;
+}
+function corpusLoad(){
+ var b=CORPUS_BROWSER,gen=++CORPUS_GEN;clearTimeout(CORPUS_APPLY);b.busy=true;b.error='';corpusDraw();
+ corpusPost(corpusBody()).then(function(j){if(gen!==CORPUS_GEN)return;b.rows=j.rows||[];b.count=j.count||0;b.capped=!!j.count_capped;b.busy=false;
+   if(!b.rows.length&&b.page>0&&!b.capped&&b.count>0){b.page=Math.max(0,Math.ceil(b.count/b.size)-1);corpusLoad();return;}corpusDraw();})
+  .catch(function(e){if(gen!==CORPUS_GEN)return;b.busy=false;b.error=(e&&e.message)||'Menu library failed';corpusDraw();});
+}
+function corpusApplySoon(){clearTimeout(CORPUS_APPLY);CORPUS_APPLY=setTimeout(function(){CORPUS_BROWSER.page=0;corpusLoad();},350);}
+function corpusType(k,v){clearTimeout(CORPUS_TYPING);CORPUS_TYPING=setTimeout(function(){var f=CORPUS_BROWSER.f;v=String(v||'').trim();if(f[k]===v)return;f[k]=v;CORPUS_BROWSER.page=0;corpusDrawChips();corpusPanelHead();corpusLoad();},450);}
+function corpusToggle(k,v,on){var a=CORPUS_BROWSER.f[k];if(!Array.isArray(a))return;v=String(v);var i=a.indexOf(v);if(on&&i<0)a.push(v);else if(!on&&i>=0)a.splice(i,1);
+ if(k==='state'&&CORPUS_BROWSER.panel&&CORPUS_BROWSER.panel.k==='state'){/* city list narrows by state on next open */}
+ corpusDrawChips();corpusPanelHead();corpusApplySoon();}
+function corpusClearKey(k){var f=CORPUS_BROWSER.f;if(k==='text'){f.cocktail='';f.ingredient='';f.prep_type=[];}else if(Array.isArray(f[k]))f[k]=[];else f[k]='';
+ CORPUS_BROWSER.page=0;corpusDrawChips();corpusPanelRefresh();corpusLoad();}
+function corpusReset(){var f=CORPUS_BROWSER.f;for(var k in f){if(k==='sort')continue;f[k]=Array.isArray(f[k])?[]:'';}
+ var s=document.getElementById('corpusQ');if(s)s.value='';clearTimeout(CORPUS_TYPING);CORPUS_BROWSER.page=0;corpusPanelClose();corpusDrawChips();corpusLoad();}
+function corpusPick(k,v){
+ var b=CORPUS_BROWSER;corpusPanelClose();
+ if(k==='kind'){if(b.kind===v||!CORPUS_KINDS[v])return;b.kind=v;b.f.status=[];b.f.asset_kind=[];b.f.menu_scope=[];}
+ else if(k==='size'){v=Number(v);if(b.size===v||CORPUS_SIZES.indexOf(v)<0)return;b.size=v;corpusSavePrefs();}
+ else if(k==='sort'){if(b.f.sort===v)return;b.f.sort=v;corpusSavePrefs();}
+ else return;
+ b.page=0;corpusDrawChips();corpusLoad();
+}
+function corpusGo(p){var b=CORPUS_BROWSER;p=Math.max(0,p|0);if(p===b.page||b.busy&&p===b.page)return;b.page=p;corpusLoad();
+ var h=document.getElementById('corpusHost');if(h&&h.scrollIntoView)try{h.scrollIntoView({block:'start'});}catch(e){h.scrollIntoView();}}
+
+/* ---- dropdown definitions (vocabularies come from action:"filters"; literals are fallbacks) ---- */
+function corpusCounted(list,fallback,fmt){
+ var out=[],src=(list&&list.length)?list:(fallback||[]);
+ for(var i=0;i<src.length;i++){var it=src[i],v=typeof it==='string'?it:it.v;if(v===null||v===undefined||v==='')continue;
+  out.push({v:String(v),l:fmt?fmt(String(v)):String(v),n:typeof it==='string'?null:it.n});}
+ return out;
+}
+function corpusCities(){
+ var b=CORPUS_BROWSER,list=(b.vals&&b.vals.cities)||[],st=b.f.state,by={},order=[];
+ for(var i=0;i<list.length;i++){var c=list[i];if(!c||!c.v)continue;if(st.length&&st.indexOf(c.st)<0)continue;
+  var key=String(c.v);if(!by[key]){by[key]={v:key,st:[],n:0};order.push(key);}if(c.st&&by[key].st.indexOf(c.st)<0)by[key].st.push(c.st);by[key].n+=Number(c.n||0);}
+ var sel=b.f.city;for(var j=0;j<sel.length;j++)if(!by[sel[j]]){by[sel[j]]={v:sel[j],st:[],n:null};order.unshift(sel[j]);}
+ return order.map(function(k){var o=by[k];return {v:o.v,l:corpusTitle(o.v)+(o.st.length?', '+o.st.join('/'):''),n:o.n};});
+}
+function corpusCensusOpts(k){
+ var c=CORPUS_BROWSER.vals&&CORPUS_BROWSER.vals.census&&CORPUS_BROWSER.vals.census[k];
+ if(c&&c.bands&&c.bands.length)return c.bands.map(function(x){return {v:String(x.v),l:x.label,n:x.n}});
+ return CORPUS_CENSUS_DEF[k].bands.map(function(x){return {v:x[0],l:x[1],n:null}});
+}
+function corpusDefs(){
+ var b=CORPUS_BROWSER,v=b.vals||{},cand=b.kind==='candidates',defs=[];
+ defs.push({k:'kind',label:'Show',single:true,cur:b.kind,opts:Object.keys(CORPUS_KINDS).map(function(x){return {v:x,l:CORPUS_KINDS[x]}})});
+ defs.push({k:'state',label:'State',opts:corpusCounted(v.states,['NY','CO','IA'])});
+ defs.push({k:'city',label:'City',search:true,opts:corpusCities()});
+ for(var i=0;i<CORPUS_CENSUS.length;i++){var ck=CORPUS_CENSUS[i];defs.push({k:ck,label:CORPUS_CENSUS_DEF[ck].label,long:CORPUS_CENSUS_DEF[ck].long,census:true,opts:corpusCensusOpts(ck)});}
+ defs.push({k:'venue_type',label:'Type',search:true,opts:corpusCounted(v.venue_types,[],corpusNice)});
+ defs.push({k:'asset_kind',label:'Format',opts:corpusCounted(cand?v.candidate_formats:v.asset_kinds,cand?['html','pdf','image','social','none']:['html','pdf','image'])});
+ defs.push({k:'menu_scope',label:'Menu',opts:corpusCounted(cand?v.candidate_scopes:v.menu_scopes,cand?[]:['beverage','beverage_candidate'],corpusNice)});
+ if(b.kind!=='rendered')defs.push({k:'status',label:'Status',opts:corpusCounted(cand?v.candidate_statuses:v.render_statuses,[],corpusNice)});
+ defs.push({k:'text',label:'Drinks',text:true,long:'Cocktail, ingredient and preparation text'});
+ if(!cand)defs.push({k:'sort',label:'Sort',single:true,cur:b.f.sort,opts:CORPUS_SORTS.map(function(s){return {v:s[0],l:s[1]}})});
+ defs.push({k:'size',label:'Per page',single:true,cur:String(b.size),opts:CORPUS_SIZES.map(function(s){return {v:String(s),l:s+' per page'}})});
+ return defs;
+}
+function corpusDef(k){var d=corpusDefs();for(var i=0;i<d.length;i++)if(d[i].k===k)return d[i];return null;}
+function corpusChipText(d){
+ var f=CORPUS_BROWSER.f;
+ if(d.single){if(d.k==='size')return CORPUS_BROWSER.size+'/page';for(var i=0;i<d.opts.length;i++)if(String(d.opts[i].v)===String(d.cur))return d.opts[i].l;return d.label;}
+ if(d.text){var c=(f.cocktail?1:0)+(f.ingredient?1:0)+f.prep_type.length;return c?d.label+' '+c:d.label;}
+ var sel=f[d.k]||[];if(!sel.length)return d.label;
+ if(sel.length===1){var t=sel[0];for(var j=0;j<d.opts.length;j++)if(d.opts[j].v===sel[0]){t=d.opts[j].l;break;}
+  if(d.k==='city')t=t.replace(/,.*$/,'');if(d.census)t=d.label+' '+t;return t.length>18?t.slice(0,17)+'…':t;}
+ return d.label+' '+sel.length;
+}
+function corpusChipsHtml(){
+ var b=CORPUS_BROWSER,defs=corpusDefs(),h='';
+ for(var i=0;i<defs.length;i++){var d=defs[i],on=d.single?(d.k==='sort'&&b.f.sort!=='recent'):(d.text?corpusTextActive():corpusActive(d.k));
+  h+='<button type="button" class="mlchip'+(on?' on':'')+'" data-k="'+d.k+'" onclick="corpusPanelOpen(\''+d.k+'\',this)" aria-haspopup="dialog" aria-expanded="'+(b.panel&&b.panel.k===d.k?'true':'false')+'">'+esc(corpusChipText(d))+'<span class="mlar" aria-hidden="true">&#9662;</span></button>';}
+ if(corpusAnyActive())h+='<button type="button" class="mlchip mlclr" onclick="corpusReset()">Clear all</button>';
+ return h;
+}
+
+/* ---- dropdown panel: anchored under its chip on wide screens, a bottom sheet on a phone ---- */
+function corpusPanelOpen(k,el){
+ var b=CORPUS_BROWSER;if(b.panel&&b.panel.k===k){corpusPanelClose();corpusDrawChips();return;}
+ corpusPanelClose();if(!corpusDef(k))return;b.panel={k:k,q:''};
+ var scrim=document.createElement('div');scrim.id='corpusScrim';scrim.className='mlscrim';scrim.onclick=function(){corpusPanelClose();corpusDrawChips();};document.body.appendChild(scrim);
+ var p=document.createElement('div');p.id='corpusPanel';p.className='mlpanel';p.setAttribute('role','dialog');p.setAttribute('aria-label',(corpusDef(k)||{}).label||'Filter');document.body.appendChild(p);
+ corpusPanelRefresh();
+ if(el&&el.getBoundingClientRect&&window.innerWidth>600){var r=el.getBoundingClientRect(),w=p.offsetWidth||260;
+  p.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+'px';p.style.top=Math.max(8,Math.min(r.bottom+4,window.innerHeight-160))+'px';
+  var s=p.querySelector('.mlpin');if(s)s.focus();}
+ corpusDrawChips();
+}
+function corpusPanelClose(){var b=CORPUS_BROWSER;b.panel=null;var p=document.getElementById('corpusPanel');if(p&&p.parentNode)p.parentNode.removeChild(p);var s=document.getElementById('corpusScrim');if(s&&s.parentNode)s.parentNode.removeChild(s);}
+function corpusPanelTitle(d){var f=CORPUS_BROWSER.f,sel=Array.isArray(f[d.k])?f[d.k].length:(d.text?(f.cocktail?1:0)+(f.ingredient?1:0)+f.prep_type.length:0);
+ return (d.long||d.label)+(sel&&!d.single?' · '+sel+' selected':'');}
+function corpusPanelHead(){var b=CORPUS_BROWSER,p=document.getElementById('corpusPanel');if(!p||!b.panel)return;var el=p.querySelector('.mlpt'),d=corpusDef(b.panel.k);if(el&&d)el.textContent=corpusPanelTitle(d);}
+function corpusPanelRefresh(){
+ var b=CORPUS_BROWSER,p=document.getElementById('corpusPanel');if(!p||!b.panel)return;
+ var d=corpusDef(b.panel.k);if(!d){corpusPanelClose();return;}
+ var list=document.getElementById('corpusPanelList'),top=list?list.scrollTop:0;
+ p.innerHTML=corpusPanelHtml(d);
+ list=document.getElementById('corpusPanelList');if(list)list.scrollTop=top;
+}
+function corpusOptHtml(k,v,l,cnt,on){
+ return '<label class="mlopt"><input type="checkbox" value="'+esc(String(v))+'"'+(on?' checked':'')+' onchange="corpusToggle(\''+k+'\',this.value,this.checked)"><span class="mll">'+esc(l)+'</span>'+(cnt!=null?'<span class="mln">'+n(cnt)+'</span>':'')+'</label>';
+}
+function corpusPanelListHtml(d){
+ var b=CORPUS_BROWSER,f=b.f,q=String((b.panel&&b.panel.q)||'').toLowerCase().trim(),h='',shown=0,opts=d.opts||[];
+ for(var i=0;i<opts.length;i++){var o=opts[i];
+  if(q&&String(o.l).toLowerCase().indexOf(q)<0&&String(o.v).toLowerCase().indexOf(q)<0)continue;
+  if(++shown>400){h+='<div class="mlpf">Showing the first 400. Type to narrow.</div>';break;}
+  if(d.single)h+='<button type="button" class="mlopt mlsgl'+(String(o.v)===String(d.cur)?' on':'')+'" onclick="corpusPick(\''+d.k+'\',\''+esc(String(o.v))+'\')"><span class="mlk">'+(String(o.v)===String(d.cur)?'&#10003;':'')+'</span><span class="mll">'+esc(o.l)+'</span></button>';
+  else h+=corpusOptHtml(d.k,o.v,o.l,o.n,(f[d.k]||[]).indexOf(String(o.v))>=0);
  }
- h+='</div>';if(b.next!==null)h+='<button class="btn" onclick="corpusLoad(true)">Load more</button>';return h;
+ if(!shown)h+='<div class="mlpf">'+(opts.length?'No matches.':'Loading choices…')+'</div>';
+ return h;
 }
+function corpusPanelFilter(q){var b=CORPUS_BROWSER;if(!b.panel)return;b.panel.q=q;var d=corpusDef(b.panel.k),el=document.getElementById('corpusPanelList');if(d&&el){el.innerHTML=corpusPanelListHtml(d);el.scrollTop=0;}}
+function corpusPanelHtml(d){
+ var b=CORPUS_BROWSER,f=b.f,h='<div class="mlph"><div class="mlpt">'+esc(corpusPanelTitle(d))+'</div>';
+ if(!d.single)h+='<button type="button" class="mlmini" onclick="corpusClearKey(\''+d.k+'\')">Clear</button>';
+ h+='<button type="button" class="mlmini pri" onclick="corpusPanelClose();corpusDrawChips()">Done</button></div>';
+ if(d.text){
+  h+='<div class="mlpl" id="corpusPanelList"><div class="mlgh">Cocktail name</div><input class="mlpin" type="search" placeholder="e.g. margarita" autocomplete="off" value="'+esc(f.cocktail)+'" oninput="corpusType(\'cocktail\',this.value)">'
+   +'<div class="mlgh">Ingredient text</div><input class="mlpin" type="search" placeholder="e.g. mezcal, honey" autocomplete="off" value="'+esc(f.ingredient)+'" oninput="corpusType(\'ingredient\',this.value)">'
+   +'<div class="mlgh">Preparation (any of)</div>';
+  for(var i=0;i<CORPUS_PREPS.length;i++){var pv=CORPUS_PREPS[i];h+=corpusOptHtml('prep_type',pv,pv,null,f.prep_type.indexOf(pv)>=0);}
+  var tc=(b.vals||{}).text_coverage;
+  return h+'</div><div class="mlpf">'+(tc?n(tc.documents_with_cocktail_text)+' of '+n(tc.documents_total)+' documents have stored cocktail text. ':'')+'These filters only search stored menu text. A document without text is unknown, not proof an ingredient is absent.</div>';
+ }
+ if(d.search)h+='<input class="mlpin" type="search" autocomplete="off" placeholder="Search '+esc(d.label.toLowerCase())+'…" value="'+esc((b.panel&&b.panel.q)||'')+'" oninput="corpusPanelFilter(this.value)">';
+ h+='<div class="mlpl" id="corpusPanelList">'+corpusPanelListHtml(d)+'</div>';
+ if(d.census){var cc=(b.vals||{}).census_coverage;h+='<div class="mlpf">US Census ACS 2020–2024, by the venue’s ZIP'+(cc?'. '+n(cc.documents_with_census)+' of '+n(cc.documents_total)+' documents matched':'')+'. Counts cover the whole library.</div>';}
+ else if(d.k==='city'&&b.f.state.length)h+='<div class="mlpf">Showing cities in '+esc(b.f.state.join(', '))+'.</div>';
+ return h;
+}
+
+/* ---- page ---- */
+function corpusRange(){var b=CORPUS_BROWSER;if(!b.count)return b.busy?'Loading…':'0 menus';
+ var s=b.page*b.size+1,e=b.page*b.size+b.rows.length;return (b.rows.length?n(s)+'–'+n(e)+' of ':'')+n(b.count)+(b.capped?'+':'');}
+function corpusHeadHtml(){var b=CORPUS_BROWSER;
+ return '<div class="mlhead" id="corpusHead"><button type="button" class="mlmini" onclick="corpusClose()" aria-label="Back to pipeline">&#8249; Back</button><span class="mltitle">Menu Library</span><span class="mlstat" id="corpusStatus">'+esc(corpusRange())+(b.busy?' · loading…':'')+'</span></div>';}
+function corpusErrHtml(){var e=CORPUS_BROWSER.error;return e?'<div class="mlerr">'+esc(e)+' · <a href="#" onclick="corpusLoad();return false">Retry</a></div>':'';}
+function corpusCensusLine(c,brief){if(!c)return 'No census data';var p=[],m=corpusMoney(c.median_household_income);if(m)p.push(m);
+ if(c.median_age!=null)p.push('age '+Math.round(Number(c.median_age)));if(!brief&&c.pop_21_34_pct!=null)p.push(Math.round(Number(c.pop_21_34_pct))+'% 21–34');return p.join(' · ')||'No census data';}
+function corpusImgFail(img){var d=document.createElement('div');d.className='mlnone';d.innerHTML='Link expired · <a href="#" onclick="corpusLoad();return false">Refresh</a>';var box=img.parentNode;if(box&&box.parentNode)box.parentNode.replaceChild(d,box);}
+function corpusCardsHtml(){
+ var b=CORPUS_BROWSER,h='',cand=b.kind==='candidates';
+ if(b.busy&&!b.rows.length)return '<div class="mlmsg">Loading menu library…</div>';
+ if(!b.rows.length)return b.error?'':'<div class="mlmsg">No matching menus. Try fewer filters. Text filters only see documents with stored menu text.</div>';
+ for(var i=0;i<b.rows.length;i++){var d=b.rows[i],a=d.accounts||{},t=d.thumb,where=[d.city?corpusTitle(d.city):'',d.state].filter(Boolean).join(', '),type=d.venue_type?corpusNice(d.venue_type):'';
+  var name=a.account_name||'Venue';
+  if(cand){
+   h+='<div class="mlcard"><div class="mlbody"><div class="mlname" title="'+esc(name)+'">'+esc(name)+'</div><div class="mlmeta">'+esc(where)+(type?' · '+esc(type):'')+'</div>'
+    +'<div class="mlmeta">'+esc(d.source_format||'?')+' · '+esc(corpusNice(d.status||'candidate'))+(d.menu_scope?' · '+esc(corpusNice(d.menu_scope)):'')+'</div>'
+    +'<div class="mlcen" title="'+esc(corpusCensusLine(d.census))+'">'+esc(corpusCensusLine(d.census,true))+'</div>'
+    +(d.visual_document_id?'<div class="mlmeta"><a href="#" onclick="corpusView('+Number(d.visual_document_id)+');return false">Open document</a></div>':'')+'</div></div>';
+   continue;
+  }
+  var total=(d.pages||[]).length||d.page_count||0,ready=d.ready_page_count||0;
+  h+='<div class="mlcard">';
+  if(t&&t.signed_url)h+='<div class="mlimg" role="button" tabindex="0" aria-label="Open '+esc(name)+' menu" onclick="corpusView('+Number(d.id)+')" onkeydown="if(event.key===\'Enter\')corpusView('+Number(d.id)+')"><img loading="lazy" decoding="async" alt="'+esc(name+' menu page '+(t.page_number||1))+'" src="'+esc(t.signed_url)+'" onerror="corpusImgFail(this)">'+(total>1?'<span class="mlpg">'+n(ready)+'/'+n(total)+'</span>':'')+(t.width&&t.height&&t.height>3*t.width?'<span class="mltall">long page</span>':'')+'</div>';
+  else h+='<div class="mlnone">'+(d.page_render_status==='ready'?'Preview unavailable':'Not rendered yet')+'</div>';
+  h+='<div class="mlbody"><div class="mlname" title="'+esc(name)+'">'+esc(name)+'</div><div class="mlmeta">'+esc(where)+(type?' · '+esc(type):'')+'</div>'
+   +'<div class="mlcen" title="'+esc(corpusCensusLine(d.census))+'">'+esc(corpusCensusLine(d.census,true))+'</div>'
+   +'<div class="mlmeta">'+esc(d.asset_kind||'menu')+' · '+(d.text_coverage?'text stored':'no stored text')+'</div>';
+  if((d.matched_items||[]).length)h+='<div class="mlmeta mlmatch">'+esc(d.matched_items.slice(0,2).join(' · '))+(d.matched_items.length>2?' …':'')+'</div>';
+  h+='</div></div>';
+ }
+ return h;
+}
+function corpusPagerHtml(){
+ var b=CORPUS_BROWSER;if(!b.rows.length)return '';
+ var pages=b.capped?0:Math.max(1,Math.ceil(b.count/b.size)),cur=b.page,hasNext=b.capped?b.rows.length===b.size:cur<pages-1,list=[],h='<div class="mlpager" role="navigation" aria-label="Pages">';
+ if(pages){var lo=Math.max(0,cur-2),hi=Math.min(pages-1,cur+2);if(lo>0){list.push(0);if(lo>1)list.push(-1);}for(var i=lo;i<=hi;i++)list.push(i);if(hi<pages-1){if(hi<pages-2)list.push(-1);list.push(pages-1);}}
+ else{for(var j=Math.max(0,cur-2);j<=cur;j++)list.push(j);if(hasNext)list.push(-1);}
+ h+='<button type="button" onclick="corpusGo('+(cur-1)+')"'+(cur<=0?' disabled':'')+' aria-label="Previous page">&#8249;</button>';
+ for(var k=0;k<list.length;k++){var p=list[k];h+=p<0?'<span class="mldots">…</span>':'<button type="button"'+(p===cur?' class="on" aria-current="page"':'')+' onclick="corpusGo('+p+')">'+(p+1)+'</button>';}
+ h+='<button type="button" onclick="corpusGo('+(cur+1)+')"'+(hasNext?'':' disabled')+' aria-label="Next page">&#8250;</button>';
+ return h+'<span class="mlrange">'+esc(corpusRange())+'</span></div>';
+}
+function corpusBrowserPage(){
+ var b=CORPUS_BROWSER;
+ return '<div id="corpusHost">'+corpusHeadHtml()
+  +'<div class="mlbar" id="corpusBar"><input id="corpusQ" class="mlsearch" type="search" placeholder="Venue…" aria-label="Search venue name" autocomplete="off" enterkeyhint="search" value="'+esc(b.f.q)+'" oninput="corpusType(\'q\',this.value)"><span id="corpusChips" class="mlchips">'+corpusChipsHtml()+'</span></div>'
+  +'<div id="corpusErr">'+corpusErrHtml()+'</div><div class="mlgrid" id="corpusGrid">'+corpusCardsHtml()+'</div><div id="corpusPager">'+corpusPagerHtml()+'</div>'+corpusViewerHtml()+'</div>';
+}
+function corpusDrawChips(){var el=document.getElementById('corpusChips');if(el)el.innerHTML=corpusChipsHtml();}
+function corpusDraw(){
+ var b=CORPUS_BROWSER,host=document.getElementById('corpusHost');if(!host){if(b.open)render();return;}
+ var el=document.getElementById('corpusHead');if(el)el.outerHTML=corpusHeadHtml();
+ corpusDrawChips();
+ el=document.getElementById('corpusErr');if(el)el.innerHTML=corpusErrHtml();
+ el=document.getElementById('corpusGrid');
+ if(el){if(b.busy&&b.rows.length)el.classList.add('mlbusy');else{el.classList.remove('mlbusy');el.innerHTML=corpusCardsHtml();}}
+ el=document.getElementById('corpusPager');if(el&&!(b.busy&&b.rows.length))el.innerHTML=corpusPagerHtml();
+}
+/* Full-screen menu viewer (18.49.7, Rob: "click any image and it splashes out; scroll, zoom in and out,
+   without losing render quality"). Opens at fit-to-width so tall website screenshots (up to 1400x48,046)
+   scroll instead of shrinking to a sliver. Pinch, double-tap, Ctrl/trackpad wheel and the +/- buttons
+   zoom by changing the image's layout width, so the browser always paints from the full-resolution
+   file (no blurry CSS scaling). One finger pans natively; the page itself never zooms. Fit toggles
+   between fit width and whole page. Links are signed for 15 minutes; an expired page offers a reload. */
+var MLV=null;
+function corpusView(id,keepIdx){
+ var b=CORPUS_BROWSER,idx=(keepIdx&&b.view&&b.view.id===id)?b.view.idx:null;corpusPanelClose();
+ b.view={id:id,busy:true,error:'',doc:null,pages:[],idx:0,census:null};mlvMount();mlvRender();
+ corpusPost({action:'document',document_id:id}).then(function(j){
+   if(!b.view||b.view.id!==id)return;var pg=j.pages||[],first=0;for(var i=0;i<pg.length;i++)if(pg[i].signed_url){first=i;break;}
+   if(idx!==null&&idx<pg.length)first=idx;
+   b.view={id:id,busy:false,error:'',doc:j.document||{},pages:pg,idx:first,census:j.census||null};mlvRender();})
+ .catch(function(e){if(!b.view||b.view.id!==id)return;b.view.busy=false;b.view.error=(e&&e.message)||'Could not open this menu';mlvRender();});
+}
+function corpusViewClose(){CORPUS_BROWSER.view=null;if(MLV&&MLV.el&&MLV.el.parentNode)MLV.el.parentNode.removeChild(MLV.el);MLV=null;document.body.classList.remove('cview-open');}
+function corpusViewStep(d){var v=CORPUS_BROWSER.view;if(!v||!v.pages.length)return;var i=Math.max(0,Math.min(v.pages.length-1,v.idx+d));if(i===v.idx)return;v.idx=i;mlvRender();}
+function corpusViewerHtml(){return '';}
+function mlvMount(){
+ if(MLV&&MLV.el&&MLV.el.parentNode)return;
+ var el=document.createElement('div');el.id='mlViewer';el.className='mlview';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Menu viewer');
+ el.innerHTML='<div class="mlvbar"><button type="button" class="mlvb" data-a="close" aria-label="Close">&#10005;</button><div class="mlvtt"><div class="mlvname"></div><div class="mlvsub"></div></div><a class="mlvb mlvsrc" target="_blank" rel="noopener" aria-label="Open the original menu" hidden>&#8599;</a></div>'
+  +'<div class="mlvscroll" tabindex="0"><div class="mlvstage"><div class="mlvmsg"></div><img class="mlvimg" alt="" draggable="false" hidden></div></div>'
+  +'<div class="mlvbar mlvbot"><button type="button" class="mlvb" data-a="prev" aria-label="Previous page">&#8249;</button><span class="mlvpg"></span><button type="button" class="mlvb" data-a="next" aria-label="Next page">&#8250;</button><span class="mlvsp"></span>'
+  +'<button type="button" class="mlvb" data-a="out" aria-label="Zoom out">&minus;</button><button type="button" class="mlvb mlvz" data-a="fit" aria-label="Fit width or whole page">Fit</button><button type="button" class="mlvb" data-a="in" aria-label="Zoom in">+</button></div>';
+ document.body.appendChild(el);document.body.classList.add('cview-open');
+ MLV={el:el,scroll:el.querySelector('.mlvscroll'),img:el.querySelector('.mlvimg'),msg:el.querySelector('.mlvmsg'),s:1,nw:0,nh:0,src:'',pinch:null,tap:null,drag:null,raf:0};
+ el.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('[data-a]'):null;if(!t||t.disabled)return;var a=t.getAttribute('data-a'),r=MLV.scroll.getBoundingClientRect();
+  if(a==='close')corpusViewClose();else if(a==='prev')corpusViewStep(-1);else if(a==='next')corpusViewStep(1);
+  else if(a==='in')mlvZoomAt(MLV.s*1.4,r.left+r.width/2,r.top+r.height/2);else if(a==='out')mlvZoomAt(MLV.s/1.4,r.left+r.width/2,r.top+r.height/2);
+  else if(a==='fit')mlvFitToggle();else if(a==='reload'){var v=CORPUS_BROWSER.view;if(v)corpusView(v.id,true);}});
+ var sc=MLV.scroll,img=MLV.img;
+ img.addEventListener('load',function(){if(!MLV||MLV.img!==img)return;MLV.nw=img.naturalWidth||MLV.nw;MLV.nh=img.naturalHeight||MLV.nh;MLV.s=1;img.hidden=false;MLV.msg.textContent='';mlvApply();sc.scrollTop=0;sc.scrollLeft=0;mlvPreload();});
+ img.addEventListener('error',function(){if(!MLV||MLV.img!==img||!MLV.src)return;img.hidden=true;MLV.msg.innerHTML='This page link expired or could not load. <button type="button" class="mlvb" data-a="reload">Reload</button>';});
+ function dist(a,b){var x=a.clientX-b.clientX,y=a.clientY-b.clientY;return Math.sqrt(x*x+y*y)||1;}
+ sc.addEventListener('touchstart',function(e){
+  if(e.touches.length===2){var a=e.touches[0],b=e.touches[1],cx=(a.clientX+b.clientX)/2,cy=(a.clientY+b.clientY)/2,r=img.getBoundingClientRect();
+   MLV.pinch={d0:dist(a,b),s0:MLV.s,fx:r.width?(cx-r.left)/r.width:.5,fy:r.height?(cy-r.top)/r.height:.5};MLV.tap=null;e.preventDefault();return;}
+  if(e.touches.length===1){var t=e.touches[0],now=Date.now();
+   if(MLV.tap&&now-MLV.tap.t<320&&Math.abs(t.clientX-MLV.tap.x)<30&&Math.abs(t.clientY-MLV.tap.y)<30){e.preventDefault();MLV.tap=null;mlvZoomAt(MLV.s>1.3?1:2.5,t.clientX,t.clientY);}
+   else MLV.tap={t:now,x:t.clientX,y:t.clientY};}
+ },{passive:false});
+ sc.addEventListener('touchmove',function(e){
+  if(!MLV.pinch||e.touches.length!==2)return;e.preventDefault();
+  var a=e.touches[0],b=e.touches[1],p=MLV.pinch,ns=p.s0*dist(a,b)/p.d0,cx=(a.clientX+b.clientX)/2,cy=(a.clientY+b.clientY)/2;
+  if(MLV.raf)cancelAnimationFrame(MLV.raf);
+  MLV.raf=requestAnimationFrame(function(){MLV.raf=0;mlvSetScale(ns);var r=img.getBoundingClientRect();sc.scrollLeft+=r.left+p.fx*r.width-cx;sc.scrollTop+=r.top+p.fy*r.height-cy;});
+ },{passive:false});
+ sc.addEventListener('touchend',function(e){if(e.touches.length<2)MLV.pinch=null;});
+ sc.addEventListener('wheel',function(e){if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();mlvZoomAt(MLV.s*Math.exp(-e.deltaY*0.01),e.clientX,e.clientY);},{passive:false});
+ sc.addEventListener('dblclick',function(e){mlvZoomAt(MLV.s>1.3?1:2.5,e.clientX,e.clientY);});
+ sc.addEventListener('mousedown',function(e){if(e.button!==0||(e.target!==img&&!(e.target.classList&&e.target.classList.contains('mlvstage'))))return;MLV.drag={x:e.clientX,y:e.clientY,l:sc.scrollLeft,t:sc.scrollTop};sc.classList.add('mlvgrab');e.preventDefault();});
+ window.addEventListener('mousemove',mlvDragMove);window.addEventListener('mouseup',mlvDragEnd);
+}
+function mlvDragMove(e){if(!MLV||!MLV.drag)return;MLV.scroll.scrollLeft=MLV.drag.l-(e.clientX-MLV.drag.x);MLV.scroll.scrollTop=MLV.drag.t-(e.clientY-MLV.drag.y);}
+function mlvDragEnd(){if(!MLV||!MLV.drag)return;MLV.drag=null;MLV.scroll.classList.remove('mlvgrab');}
+function mlvBase(){var w=MLV.scroll.clientWidth-12;return Math.max(120,window.innerWidth>700?Math.min(w,1000):w);}
+function mlvFitPage(){if(!MLV.nw||!MLV.nh)return 1;var h=MLV.scroll.clientHeight-12;return Math.min(1,(h*MLV.nw/MLV.nh)/mlvBase());}
+function mlvMax(){return Math.max(4,MLV.nw?MLV.nw*2.5/mlvBase():4);}
+function mlvSetScale(s){var lo=Math.min(1,mlvFitPage());MLV.s=Math.max(lo,Math.min(mlvMax(),s));mlvApply();}
+function mlvApply(){
+ if(!MLV)return;var w=mlvBase()*MLV.s,img=MLV.img;img.style.width=Math.round(w)+'px';
+ img.style.height=MLV.nw&&MLV.nh?Math.round(w*MLV.nh/MLV.nw)+'px':'auto';
+ var z=MLV.el.querySelector('.mlvz');if(z)z.textContent=Math.abs(MLV.s-1)<0.02?'Fit':Math.round(MLV.s*100)+'%';
+}
+function mlvZoomAt(ns,cx,cy){if(!MLV||MLV.img.hidden)return;var img=MLV.img,sc=MLV.scroll,r=img.getBoundingClientRect(),fx=r.width?(cx-r.left)/r.width:.5,fy=r.height?(cy-r.top)/r.height:.5;
+ fx=Math.max(0,Math.min(1,fx));fy=Math.max(0,Math.min(1,fy));mlvSetScale(ns);var n=img.getBoundingClientRect();sc.scrollLeft+=n.left+fx*n.width-cx;sc.scrollTop+=n.top+fy*n.height-cy;}
+function mlvFitToggle(){if(!MLV||MLV.img.hidden)return;var fp=mlvFitPage();
+ if(Math.abs(MLV.s-1)<0.02&&fp<0.98){mlvSetScale(fp);MLV.scroll.scrollTop=0;MLV.scroll.scrollLeft=0;}
+ else{var sc=MLV.scroll,r=MLV.scroll.getBoundingClientRect();mlvZoomAt(1,r.left+r.width/2,r.top+Math.min(r.height/2,40));sc.scrollLeft=0;}}
+function mlvPreload(){var v=CORPUS_BROWSER.view;if(!v)return;[v.idx-1,v.idx+1].forEach(function(i){var p=v.pages[i];if(p&&p.signed_url){var im=new Image();im.decoding='async';im.src=p.signed_url;}});}
+function mlvRender(){
+ if(!MLV)return;var v=CORPUS_BROWSER.view;if(!v){corpusViewClose();return;}
+ var doc=v.doc||{},a=doc.accounts||{},p=v.pages[v.idx]||null,el=MLV.el;
+ el.querySelector('.mlvname').textContent=a.account_name||'Menu';
+ var sub=[];if(v.pages.length)sub.push('Page '+(v.idx+1)+' of '+v.pages.length);if(doc.asset_kind)sub.push(doc.asset_kind);if(v.census)sub.push(corpusCensusLine(v.census));
+ if(p&&p.width&&p.height&&p.height>3*p.width)sub.push('long page · scroll');
+ el.querySelector('.mlvsub').textContent=sub.join(' · ');
+ var src=el.querySelector('.mlvsrc');if(doc.original_menu_url&&/^https?:\/\//i.test(doc.original_menu_url)){src.href=doc.original_menu_url;src.hidden=false;}else src.hidden=true;
+ el.querySelector('[data-a="prev"]').disabled=v.idx<=0;el.querySelector('[data-a="next"]').disabled=v.idx>=v.pages.length-1;
+ el.querySelector('.mlvpg').textContent=v.pages.length?(v.idx+1)+' / '+v.pages.length:'';
+ el.querySelector('.mlvbot').style.visibility=v.busy||v.error?'hidden':'';
+ var img=MLV.img,msg=MLV.msg;
+ if(v.busy){img.hidden=true;MLV.src='';img.removeAttribute('src');msg.textContent='Loading menu…';return;}
+ if(v.error){img.hidden=true;MLV.src='';img.removeAttribute('src');msg.innerHTML=esc(v.error)+' <button type="button" class="mlvb" data-a="reload">Retry</button>';return;}
+ if(!p||!p.signed_url){img.hidden=true;MLV.src='';img.removeAttribute('src');msg.textContent=p?'Page '+(p.page_number||v.idx+1)+' is '+(p.render_status||'pending')+' and not rendered yet.':'No rendered pages yet.';return;}
+ if(MLV.src!==p.signed_url){MLV.src=p.signed_url;MLV.nw=p.width||0;MLV.nh=p.height||0;MLV.s=1;img.hidden=true;img.alt=(a.account_name||'Menu')+' page '+(p.page_number||v.idx+1);
+  msg.textContent='Loading full-resolution page…';img.src=p.signed_url;}
+}
+document.addEventListener('gesturestart',function(e){if(MLV)e.preventDefault();},{passive:false});
+window.addEventListener('resize',function(){if(MLV&&!MLV.img.hidden)mlvApply();});
+document.addEventListener('keydown',function(e){
+ if(CORPUS_BROWSER.panel&&e.key==='Escape'){corpusPanelClose();corpusDrawChips();return;}
+ if(!MLV)return;var r=MLV.scroll.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+ if(e.key==='Escape')corpusViewClose();else if(e.key==='ArrowLeft')corpusViewStep(-1);else if(e.key==='ArrowRight')corpusViewStep(1);
+ else if(e.key==='+'||e.key==='=')mlvZoomAt(MLV.s*1.4,cx,cy);else if(e.key==='-'||e.key==='_')mlvZoomAt(MLV.s/1.4,cx,cy);else if(e.key==='0')mlvFitToggle();});
+window.addEventListener('resize',function(){if(CORPUS_BROWSER.panel&&window.innerWidth>600){corpusPanelClose();corpusDrawChips();}});
+document.addEventListener('scroll',function(e){var p=document.getElementById('corpusPanel');if(!p||window.innerWidth<=600)return;if(e.target&&e.target.nodeType===1&&p.contains(e.target))return;corpusPanelClose();corpusDrawChips();},true);
 function pipelineCorpusCard(){
   var p=PIPESTATS;
   if(!p){
@@ -22138,6 +22553,9 @@ function render(){
   if(!st.venues){
     document.getElementById("ptitle").textContent=(page==="home"?"Pipeline":
       (SECTIONS.filter(function(x){return x.k===page})[0]||SECTIONS[0]).label);
+    /* the corpus tiles must still open the library when the venue views are
+       down - that outage is exactly when the pipeline card is all that loads */
+    if(page==="home"&&CORPUS_BROWSER.open){if(!document.getElementById("corpusHost"))v.innerHTML=corpusBrowserPage();return;}
     v.innerHTML=(page==="home"?pipelineCorpusCard():"")+emptyState();
     return;
   }
@@ -22145,7 +22563,7 @@ function render(){
   var sec=SECTIONS.filter(function(s){return s.k===page})[0]||SECTIONS[0];
   document.getElementById("ptitle").textContent=page==="home"?"Pipeline":sec.label;
   if(page==="home"){
-    if(CORPUS_BROWSER.open){v.innerHTML=corpusBrowserPage();return;}
+    if(CORPUS_BROWSER.open){if(!document.getElementById("corpusHost"))v.innerHTML=corpusBrowserPage();return;}
     v.innerHTML=(STATE==="ALL")?countryHome():homePage();
     tick("mV",S.venues);tick("mP",S.places_done);tick("mS",S.websites);tick("mI",S.drink_items);
   }else if(page==="competitors"||page==="map"){
