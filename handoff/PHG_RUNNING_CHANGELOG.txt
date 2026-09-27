@@ -311,3 +311,19 @@ PHG-20260927-0022 | MEASUREMENTS + DRAFT FIX — items 2, 3, 4 | 15:33-15:45Z
 - Job 23 (item 2): phg_internal.refresh_public_batches_cache aggregate = 2.05 s uncontended
   (58 s under the Sep-26 contention). Plan: every 15 min, statement_timeout 30s, lock_timeout 500ms.
 - Launched review workflow wf_4f72b646-736 (locking / correctness / operations reviewers) before apply.
+
+------------------------------------------------------------------------------
+PHG-20260927-0023 | PRODUCTION CHANGES — cron headroom + job 23 | 15:36-15:42Z
+(Rob approved: "fix all of these, except five". Recorded in supabase/cron/2026-09-27_cron_changes.sql
+with previous values for rollback.)
+- Index phg_accounts_state_stats_cover_idx ON accounts(account_id) INCLUDE (account_status,
+  account_types, places_looked_up_at, website_url, menu_status), built CONCURRENTLY, valid, 7.7 MB.
+  Job-5 account_map scan 778 ms -> 110 ms (index-only); job-23 aggregate 2,050 ms -> 94 ms.
+- Job 5: statement_timeout 5s -> 20s (schedule unchanged 2-57/5).
+- Job 23: re-enabled, '4-54/10 * * * *', timeout 15s, lock_timeout 500ms. Ran once manually:
+  phg_public_batches_cache 24 rows refreshed 15:36:29Z (28,855 venues); v_public_batches 24 rows.
+- Job 13: statement_timeout 5s -> 10s.
+- PR #3 (claude/phg-gallery-html-render-j246dy -> main) was opened 15:25Z by the robsloma-sudo
+  account, not by this agent; title only mentions handoff logs although it carries 18.49.5 +
+  supabase/ + logs. Also new: user branch fix/mobile-navigation-20260927 (14:06-14:09Z) adds only
+  .github/workflows/navigation-audit.yml; GitHub main and Netlify production unchanged (a739f56).
