@@ -854,3 +854,21 @@ PHG-036 designer hand-off (migration 20260928020000, applied; additive only):
   released, applied; duplicate request collapsed; unsaved and old revisions refused.
 - Brief + agent definition updated to the real tables and the Menu Studio document format.
 Next: Menu Studio UI (Ask the designer / proposals / Apply), then the designer runtime.
+
+------------------------------------------------------------------------------
+PHG-20260928-0061 | USER_PROMPTS + CHANGES | ~00:05Z
+Rob: "create two other review agents who will spec it and who will give multiple reviews up to five each. You are not
+allowed to publish anything until they each give on average above 80% score."
+- Reviewer roles .claude/agents/spec-reviewer.md + safety-reviewer.md; gate + log handoff/reviews/PHG-026_REVIEW_LOG.md.
+  Round 1 running for both. Nothing published meanwhile (the design score-gate migration 20260928030000 is written,
+  NOT applied, and joins the review).
+Rob: another session ("Menu design from voice inputs", branch claude/menu-design-voice-inputs-pdsr9j) - pull from it.
+- Branch not pushed yet; the session is not reachable for messages from here. Gave Rob a paste-in note for it.
+Rob: design scoring must be upper-echelon: lines line up, appealing / eye-popping colour and numbers, headers and
+  subheaders aligned, prices matching and aligned, coherent flow, equal margins, elevating design elements, proper items
+  with descriptions and ingredient names.
+- handoff/agents/MENU_DESIGN_SCORECARD.md (10 criteria, bands, required layout geometry, measured checks);
+  reviewers .claude/agents/design-critic.md + menu-content-reviewer.md; gate: each averages > 80 (DB-enforced once the
+  score-gate migration passes review). Descriptions may be written only from known ingredients; unknowns are flagged.
+- Pre-gate independent review of PHG-026 returned: 1 blocker (repair ranking shrank 23 venues) + should-fix items;
+  all fixed (see review log). 185/185 venues restored at least as large.

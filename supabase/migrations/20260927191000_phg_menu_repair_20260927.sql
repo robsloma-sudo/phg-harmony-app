@@ -3,8 +3,10 @@
 --
 -- Step 1  backfill menus.source_key / item_keys / item_set_hash (12,229 rows, ~16 s)
 -- Step 2  one best current menu per venue touched since 2026-09-27 00:00Z
---         rank: beverage items desc, distinct items desc, not an item/event page, oldest first
---         (restores the 185 venues whose larger older menu was replaced by an item-page copy)
+--         rank: distinct items desc, drinks items desc (typed items + items in drinks sections), not an
+--         item/event page, newest first (fresher prices on ties). Review round 1: the old rank put drinks items
+--         first and counted only cocktail/spirit items, so full beer/wine menus scored 0 and 23 venues kept a
+--         smaller menu. Acceptance: every one of the 185 venues gets back a menu at least as large as its old one.
 -- Step 3  staging duplicates: live staging rows re-staged from sibling pages with the identical item
 --         set are marked superseded (reason duplicate_item_set_of_sibling); one page per set survives
 --         (not an item page first, then the earliest). Inflated cocktail counts in staging-based views
@@ -38,7 +40,7 @@ m as (
 ),
 ranked as (
   select m.*, row_number() over (partition by account_id
-                                 order by bev desc, n desc, itemish asc, created_at asc, id) as rk
+                                 order by n desc, bev desc, itemish asc, created_at desc, id) as rk
   from m
 )
 select id, account_id, was_current, (rk = 1) as make_current,
@@ -55,35 +57,57 @@ update public.menus m
   from public.phg_repair_plan_menus_20260927 p
  where p.id = m.id and m.is_current is distinct from p.make_current;
 
--- ---------- Step 3 ----------
+-- ---------- Step 3 (batched; review round 1: one statement over ~1M staging rows timed out) ----------
+-- Only venues whose staging changed since 2026-09-27; 300 venues per call; progress kept in
+-- phg_repair_step3_done so the runbook loops:  select public.phg_repair_step3_batch(300);  until it returns 0.
 create table if not exists public.phg_backup_staging_dupes_20260927 (
   staging_id bigint primary key, account_id text, menu_page_url text, kept_page_url text, backed_up_at timestamptz default now());
 alter table public.phg_backup_staging_dupes_20260927 enable row level security;
 revoke all on public.phg_backup_staging_dupes_20260927 from anon, authenticated;
+create table if not exists public.phg_repair_step3_done (account_id text primary key, dup_rows int, done_at timestamptz default now());
+alter table public.phg_repair_step3_done enable row level security;
+revoke all on public.phg_repair_step3_done from anon, authenticated;
 
-with pages as (
-  select account_id, menu_page_url, min(id) as first_id,
-         public.phg_menu_key_set_hash(array_agg(distinct public.phg_menu_item_key(item_name, item_price) order by public.phg_menu_item_key(item_name, item_price))) as set_hash
-  from public.staging_menu_extract
-  where superseded_at is null and account_id is not null and item_type <> 'summary'
-  group by account_id, menu_page_url
-),
-ranked as (
-  select p.*, row_number() over (partition by account_id, set_hash
-                                 order by public.phg_menu_url_is_item_page(menu_page_url) asc, first_id) as rk,
-         first_value(menu_page_url) over (partition by account_id, set_hash
-                                 order by public.phg_menu_url_is_item_page(menu_page_url) asc, first_id) as kept_url
-  from pages p
-)
-insert into public.phg_backup_staging_dupes_20260927 (staging_id, account_id, menu_page_url, kept_page_url)
-select s.id, s.account_id, s.menu_page_url, r.kept_url
-from ranked r
-join public.staging_menu_extract s on s.account_id = r.account_id and s.menu_page_url = r.menu_page_url and s.superseded_at is null
-where r.rk > 1
-on conflict (staging_id) do nothing;
--- Applied in batches (see runbook):
--- update public.staging_menu_extract s set superseded_at = now(), superseded_reason = 'duplicate_item_set_of_sibling'
---   from public.phg_backup_staging_dupes_20260927 b where b.staging_id = s.id and s.superseded_at is null and s.id between X and Y;
+create or replace function public.phg_repair_step3_batch(p_accounts int default 300)
+returns int language plpgsql security definer set search_path to 'public', 'pg_temp' as $$
+declare v_accts text[]; v_n int;
+begin
+  set local statement_timeout = '110s';
+  select array_agg(account_id) into v_accts from (
+    select distinct s.account_id from public.staging_menu_extract s
+     where s.superseded_at is null and s.account_id is not null and s.loaded_at >= '2026-09-27'
+       and not exists (select 1 from public.phg_repair_step3_done d where d.account_id = s.account_id)
+     order by s.account_id limit greatest(1, p_accounts)) a;
+  if v_accts is null then return 0; end if;
+  with pages as (
+    select account_id, menu_page_url, min(id) as first_id,
+           public.phg_menu_key_set_hash(array_agg(distinct public.phg_menu_item_key(item_name, item_price)
+                                                  order by public.phg_menu_item_key(item_name, item_price))) as set_hash
+    from public.staging_menu_extract
+    where superseded_at is null and account_id = any (v_accts) and item_type <> 'summary'
+    group by account_id, menu_page_url),
+  ranked as (
+    select p.*, row_number() over w as rk, first_value(menu_page_url) over w as kept_url
+    from pages p
+    window w as (partition by account_id, set_hash order by public.phg_menu_url_is_item_page(menu_page_url) asc, first_id))
+  insert into public.phg_backup_staging_dupes_20260927 (staging_id, account_id, menu_page_url, kept_page_url)
+  select s.id, s.account_id, s.menu_page_url, r.kept_url
+  from ranked r
+  join public.staging_menu_extract s on s.account_id = r.account_id and s.menu_page_url = r.menu_page_url and s.superseded_at is null
+  where r.rk > 1
+  on conflict (staging_id) do nothing;
+  update public.staging_menu_extract s set superseded_at = now(), superseded_reason = 'duplicate_item_set_of_sibling'
+    from public.phg_backup_staging_dupes_20260927 b
+   where b.staging_id = s.id and b.account_id = any (v_accts) and s.superseded_at is null;
+  get diagnostics v_n = row_count;
+  insert into public.phg_repair_step3_done (account_id, dup_rows)
+  select a, (select count(*) from public.phg_backup_staging_dupes_20260927 b where b.account_id = a) from unnest(v_accts) a
+  on conflict (account_id) do nothing;
+  return cardinality(v_accts);
+end $$;
+revoke all on function public.phg_repair_step3_batch(int) from public, anon, authenticated;
+
+-- Runbook: repeat  select public.phg_repair_step3_batch(300);  until it returns 0.
 
 -- ---------- Step 4 ----------
 -- update public.menu_source_candidates c set item_set_hash = x.set_hash

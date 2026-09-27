@@ -17,14 +17,24 @@
 --   same source (canonical URL)      -> re-capture replaces, unless identical or a strict subset
 --   other source, >=90% contained    -> duplicate, nothing inserted
 --   zero-item capture beside a menu  -> ignored
---   item/event/product page          -> never replaces an existing current menu (stored as alternate)
---   other source, more beverage items (then more items) -> replaces; otherwise stored as alternate
+--   item/event/product page          -> never replaces a non-empty current menu (stored as alternate), even
+--                                       when it shares the menu's source key (?item= is stripped from the key)
+--   same source, less than half the items -> partial re-capture, stored as alternate
+--   other source, more distinct items (then more drinks items) -> replaces; otherwise stored as alternate
+-- "Drinks items" = cocktail / spirit_pour items plus every item in a cocktails / wine / beer / spirits section
+-- (beer and wine are stored as item_type 'other' inside typed sections).
 -- Alternates are real rows with is_current=false and superseded_reason, so nothing is lost.
--- Menus are never deleted. Every writer for one account is serialized.
+-- Menus are never deleted. submit_menu locks the account row first (the same lock the extraction save takes),
+-- then an advisory lock, so both writers of one account queue behind each other.
+--
+-- Review round 1 fixes (2026-09-28): drinks count includes typed sections; size decides before drinks count;
+-- item-page and partial-recapture guards on the same-source branch; empty current menus can be replaced;
+-- extraction duplicate branch supersedes the candidate's own stale rows and never matches an empty duplicate;
+-- helpers inlinable (no SET) so the repair can run at table scale.
 --
 -- Apply with cron 7 (promotion) and 13 (extraction) PAUSED. Data repair is a separate script.
 
-set lock_timeout = '3s';
+set local lock_timeout = '3s';
 
 -- ---------- A. schema additions (nullable, no defaults: metadata-only, no table rewrite) ----------
 alter table public.menus
@@ -77,9 +87,9 @@ $$;
 
 -- One comparable key per item: normalized name + normalized price.
 create or replace function public.phg_menu_item_key(p_name text, p_price numeric)
-returns text language sql immutable parallel safe set search_path = '' as $$
-  select nullif(regexp_replace(lower(btrim(coalesce(p_name, ''))), '\s+', ' ', 'g'), '')
-         || '|' || coalesce(trim_scale(p_price)::text, '')
+returns text language sql immutable parallel safe as $$
+  select nullif(pg_catalog.regexp_replace(pg_catalog.lower(pg_catalog.btrim(coalesce(p_name, ''))), '\s+', ' ', 'g'), '')
+         || '|' || coalesce(pg_catalog.trim_scale(p_price)::text, '')
 $$;
 
 -- Keys of a submit_menu payload (same '(unnamed)' fallback submit_menu stores).
@@ -94,13 +104,14 @@ returns text[] language sql immutable set search_path = '' as $$
   ) x where k is not null
 $$;
 
--- Beverage (cocktail + spirit pour) item count of a payload.
+-- Drinks item count of a payload: typed drinks items plus every item in a drinks section.
 create or replace function public.phg_menu_payload_bev_count(p_sections jsonb)
 returns integer language sql immutable set search_path = '' as $$
   select count(*)::int
   from jsonb_array_elements(coalesce(p_sections, '[]'::jsonb)) as s,
        jsonb_array_elements(coalesce(s->'items', '[]'::jsonb)) as it
-  where coalesce(it->>'item_type', '') in ('cocktail', 'spirit_pour')
+  where coalesce(it->>'item_type', '') in ('cocktail', 'spirit_pour', 'beer', 'wine')
+     or coalesce(s->>'section_type', '') in ('cocktails', 'wine', 'beer', 'spirits')
 $$;
 
 -- Keys of an extraction payload (phg_save_menu_candidate_extraction items: item_name, item_price).
@@ -123,17 +134,18 @@ returns text[] language sql stable set search_path = '' as $$
   ) x where k is not null
 $$;
 
--- Beverage item count of a stored menu.
+-- Drinks item count of a stored menu (beer / wine are item_type 'other' inside typed sections).
 create or replace function public.phg_menu_bev_count(p_menu_id uuid)
 returns integer language sql stable set search_path = '' as $$
   select count(*)::int
   from public.menu_sections s join public.menu_items i on i.section_id = s.id
-  where s.menu_id = p_menu_id and i.item_type in ('cocktail', 'spirit_pour')
+  where s.menu_id = p_menu_id
+    and (i.item_type in ('cocktail', 'spirit_pour', 'beer', 'wine') or s.section_type in ('cocktails', 'wine', 'beer', 'spirits'))
 $$;
 
 create or replace function public.phg_menu_key_set_hash(p_keys text[])
-returns text language sql immutable parallel safe set search_path = '' as $$
-  select md5(array_to_string(coalesce(p_keys, '{}'::text[]), '~'))
+returns text language sql immutable parallel safe as $$
+  select pg_catalog.md5(pg_catalog.array_to_string(coalesce(p_keys, '{}'::text[]), '~'))
 $$;
 
 revoke all on function public.phg_menu_source_key(text), public.phg_menu_url_is_item_page(text),
@@ -155,8 +167,10 @@ declare v_menu_id uuid;v_menu_code text;v_source_id uuid;v_section jsonb;v_item 
  v_make_current boolean := true; v_alt_of uuid; v_reason text; v_supersede uuid[] := '{}';
  c_dup_ratio constant numeric := 0.9;
 begin
- if not exists(select 1 from public.accounts where account_id=p_account_id) then raise exception 'unknown account_id %',p_account_id;end if;
- -- Serialize every writer for one account (promotion cron and the submit-menu Edge function).
+ -- Lock the account row first: the extraction save locks the same row, so the two writers queue instead of
+ -- deadlocking; the advisory lock then serializes promotion with the submit-menu Edge function.
+ perform 1 from public.accounts where account_id=p_account_id for no key update;
+ if not found then raise exception 'unknown account_id %',p_account_id;end if;
  perform pg_advisory_xact_lock(hashtextextended('phg_submit_menu:'||p_account_id, 0));
  select id into v_source_id from public.sources where source_code=p_source_code;
  if p_content_hash is not null then
@@ -190,7 +204,15 @@ begin
    if v_n = 0 and c_n > 0 then
     return jsonb_build_object('status','empty_capture_ignored','menu_id',c.id,'items',0,'message','zero-item re-capture ignored; current menu kept');
    end if;
-   v_supersede := v_supersede || c.id; v_reason := coalesce(v_reason, 'same_source_recapture');
+   if v_itemish and c_n > 0 and not (v_n >= c_n and v_ov >= ceil(c_dup_ratio * c_n)) then
+    -- an item page shares the menu's key (?item= is stripped) but is not a fuller copy of it
+    v_make_current := false; v_alt_of := c.id; v_reason := 'alternate_item_page';
+   elsif c_n > 0 and v_n < ceil(0.5 * c_n) then
+    -- a partial parse of the same page must not replace the full menu
+    v_make_current := false; v_alt_of := c.id; v_reason := 'alternate_partial_recapture';
+   else
+    v_supersede := v_supersede || c.id; v_reason := coalesce(v_reason, 'same_source_recapture');
+   end if;
   else
    -- Other source: (near-)contained in an equal-or-larger current menu is a duplicate.
    if v_n > 0 and c_n >= v_n and v_ov >= ceil(c_dup_ratio * v_n) then
@@ -201,9 +223,9 @@ begin
     return jsonb_build_object('status','empty_capture_ignored','menu_id',c.id,'items',0,'message','zero-item capture not promoted beside an existing current menu');
    end if;
    c_bev := public.phg_menu_bev_count(c.id);
-   if v_itemish then
+   if v_itemish and c_n > 0 then
     v_make_current := false; v_alt_of := c.id; v_reason := 'alternate_item_page';
-   elsif (v_bev, v_n) > (c_bev, c_n) then
+   elsif (v_n, v_bev) > (c_n, c_bev) then
     v_supersede := v_supersede || c.id;
     v_reason := coalesce(v_reason, case when c_n > 0 and v_ov >= ceil(c_dup_ratio * c_n) then 'contained_in_larger_capture' else 'larger_beverage_capture' end);
    else
@@ -346,12 +368,19 @@ begin
  -- Account lock first, so two workers saving sibling pages of one venue cannot both miss each other.
  perform 1 from public.accounts where account_id=c.account_id for update;
  v_set := public.phg_menu_key_set_hash(public.phg_menu_extract_item_keys(p_items));
+ -- the sibling must be an original (not itself a duplicate) whose items are still staged
  select s.id into v_dup from public.menu_source_candidates s
   where s.account_id=c.account_id and s.id<>c.id and s.item_set_hash=v_set and s.source_url is distinct from c.source_url
+    and s.duplicate_of_candidate_id is null
+    and exists (select 1 from public.staging_menu_extract x where x.account_id=s.account_id and x.menu_page_url=s.source_url and x.superseded_at is null)
   order by s.id limit 1;
  if v_dup is not null then
+   -- this page's own earlier staged set is stale now; retire it so it is not promoted
+   update public.staging_menu_extract set superseded_at=now(), superseded_reason='duplicate_item_set_of_sibling'
+    where account_id=c.account_id and menu_page_url=c.source_url and superseded_at is null;
+   -- no item_set_hash on a duplicate, so later pages never match an empty duplicate
    update public.menu_source_candidates
-      set status='review', content_hash=v_hash, item_set_hash=v_set, duplicate_of_candidate_id=v_dup,
+      set status='review', content_hash=v_hash, item_set_hash=null, duplicate_of_candidate_id=v_dup,
           last_error='Same priced items as candidate '||v_dup||' of this venue; not re-staged (source text archived)',
           extraction_next_retry_at=null
     where id=c.id;
