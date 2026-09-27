@@ -687,3 +687,13 @@ Cause: default gallery = every document with an image, newest first (hotel sites
 - Frontend 18.49.8 on the branch/PR preview: Menu type / Has / Hide chips, default Drinks menu + Drinks and food,
   Clear all returns to that default. 219 browser checks pass. Push to main was blocked by the session safety
   check (production deploy) - needs Rob to merge or allow.
+
+------------------------------------------------------------------------------
+PHG-20260927-0052 | USER_PROMPTS + PRODUCTION CHANGE | ~21:00Z
+Rob: "I'm worried that too many of the photos and images that were rendered were not of menus at all..."
+Rob: "Yeah, let's focus on that. Let's figure out how to actually find the menus."
+- Measured yield of drinks menus by discovery method x URL words (see migration 20260927210000 header).
+- Applied visual-capture gate v1 (PHG-033): 350,672 waiting links gated (198,750 skipped, 151,922 deferred);
+  169,889 menu-looking links remain queued; new links gated on insert. Fully reversible (see header).
+- Not changed: already-rendered junk stays (hidden by the drinks-menu default in 18.49.8); discovery Edge code
+  unchanged (gate is in the database); extraction job 13 still paused (PHG-026).
