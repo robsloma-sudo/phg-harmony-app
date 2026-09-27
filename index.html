@@ -6172,7 +6172,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.49.1 SNAP NODE NAV · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.49.2 FRONT NODE GEOMETRY · PHG</span></div>
   </main>
 </div>
 <script>
@@ -22820,7 +22820,7 @@ function n3Tumble(){
   if (N3.rx < -3.1416) N3.rx += 6.2832;
 }
 
-var N3 = { ART_EVERY:4, artDirty:true, rx:-0.22, ry:0, spin:N3_SPIN, drag:null, raf:null, t:0, dt:1, frames:0, bursts:[] };
+var N3 = { ART_EVERY:4, artDirty:true, rx:-0.08, ry:0, spin:0, drag:null, raf:null, t:0, dt:1, frames:0, bursts:[] };
 
 function n3Project(p0){
   /* Scale the whole assembly to fit before projecting. Each level blooms
@@ -23478,7 +23478,7 @@ function n3Tick(){
      dims toward a dot still says a path exists; a node that vanishes says
      the tree ends, which would be an assertion the map cannot support. The
      existing backLv >= 3 rule already does exactly this and is left alone. */
-  var K_FLOOR = 0.55;
+  var K_FLOOR = _profile==='phone' ? 0.72 : (_profile==='tablet' ? 0.66 : 0.60);
   var k = Math.max(K_FLOOR, Math.min(1, LIMIT/rad));
   /* EASE TOWARD THE TARGET SO A BRANCH OPENING GLIDES INTO PLACE.
 
@@ -23667,7 +23667,7 @@ function n3Tick(){
        I added the banding to stop children hiding behind their parents. Pure
        depth does that anyway, because a child in front IS in front. Arming
        lifts a node slightly, not above the geometry. */
-    var z = 1000 + Math.round(q.z * 2) + (armed ? 60 : 0);
+    var z = 1000 + tier*1200 + Math.round(q.z * 0.25) + (armed ? 120 : 0);
     var zi = (tier === 0 && N3.somaHover && N3.canHover) ? '9000' : String(z);
     if (btns[i].__zi !== zi){ btns[i].style.zIndex = zi; btns[i].__zi = zi; }
 
@@ -24114,7 +24114,7 @@ function neuroUp(){
      scrim's job, and a centre that sometimes dismisses the whole thing is a
      control doing two different jobs depending on where you are. */
   NEURO.armed = null; NEURO.focus = null; NEURO.top = true; NEURO.depth = 1;
-  N3.rx = -0.22; N3.ry = 0;
+  N3.rx = -0.08; N3.ry = 0;
   /* Collapse what the sidebar has open too, so coming back to the top really
      is the top - not the top with three branches still hanging off it. */
   var open = document.querySelectorAll('#navlist .navgrp.open'), i;
@@ -24207,7 +24207,7 @@ function n3Bloom(parent, i, n, out, rad){
      camera rotates. Pointing the cap there puts every child at the same
      depth, spread across the screen plane. Same function, different pole -
      which is why they sent both pieces as one drop. */
-  var pole = dir;
+  var pole = (typeof fvCameraPole === 'function') ? fvCameraPole(N3.ry || 0, N3.rx || 0) : dir;
   if (typeof FLATV !== 'undefined' && FLATV.on && typeof fvCameraPole === 'function'){
     /* with rx at a true zero this is the horizontal direction that faces the
        viewer, so the fan lies flat across the screen rather than raked */
@@ -24234,8 +24234,8 @@ function n3Bloom(parent, i, n, out, rad){
      diameter apart allows the 10% overlap Rob specified and no more. That is
      converted back through the fit to model units here, so the on-screen
      result is the same however deep the model goes. */
-  var DRAWN = 97;                       /* a live node's diameter in px */
-  var OVERLAP = 0.94;                   /* 10% is the ceiling, so sit under it at ~6% */
+  var DRAWN = 118;
+  var OVERLAP = 1.16;                   /* 10% is the ceiling, so sit under it at ~6% */
   var needPx = DRAWN * OVERLAP;
   /* BOTH SCALES, NOT ONE.
 
@@ -24266,7 +24266,7 @@ function n3Bloom(parent, i, n, out, rad){
   /* A cap seen flat-on has no depth to spread into, so the same angular
      spread covers less screen. Widen it to compensate rather than letting
      them crowd. */
-  var flatBoost = (typeof FLATV !== 'undefined' && FLATV.on) ? 1.35 : 1;
+  var flatBoost = (typeof FLATV !== 'undefined' && FLATV.on) ? 1.48 : 1.32;
   var R = rhCapRadius(n) * (needPx / 64) / fit * flatBoost;
 
   return { x: parent.x + v.x * R,
