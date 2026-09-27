@@ -825,3 +825,12 @@ tequila and whiskey ... Every spirit needs to be treated equally. Every single c
 - handoff/DRINKS_MENU_SPEC.md: the rules for Rob to review.
 - Menu designer agent: handoff/agents/MENU_DESIGNER_BRIEF.md + .claude/agents/menu-designer.md (create-only; tasks in
   agent_tasks task_type 'menu_design'; submits agent_proposals proposal_type 'menu_design'; Coordinator publishes).
+
+------------------------------------------------------------------------------
+PHG-20260928-0059 | USER_PROMPT + CHANGES | ~23:10Z
+Rob: "resume." -> continued filter R&D on real library data (no scraping, no spend).
+- Sampled 18,000 real spirit lines: food/page text mislabeled as spirits, mixed headings deciding for items, beer
+  brands in liquor lists, unknown frequent brands. Rules v3 (migration 20260928010000 + in-place patches):
+  junk guard, item-first then heading, cocktails named inside spirits lists, beer/seltzer brands, ~80 more brands.
+- Result: type-not-stated spirit lines down to 8.7%; 1,045 food/page lines excluded. Reclassified 22,666 docs.
+- Test suite 17/17 (5 new cases from real data). Spec updated.

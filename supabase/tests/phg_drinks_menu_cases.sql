@@ -69,6 +69,16 @@ insert into public.phg_drinks_menu_cases (name, page_text, expect_kind, expect_l
 ('specials_page', E'WEEKLY SPECIALS\nTaco Tuesday $3 tacos\nWing Wednesday $0.75 wings\nTrivia Thursday\nFriday Fish Fry $16',
   'specials', '{}', '{}', 'Rob: specials pages are their own type'),
 ('cocktail_photo_gallery', E'Our cocktails\nPhoto\nPhoto\nPhoto\nFollow us @ourbar',
-  'unread', '{}', '{}', 'Rob: photos of a cocktail are not a menu')
+  'unread', '{}', '{}', 'Rob: photos of a cocktail are not a menu'),
+('mixed_heading_item_decides', E'TEQUILA & MEZCAL\nDon Julio Reposado $14\nCasamigos Blanco $13\nDel Maguey Vida $12\nRUM & COGNAC\nMalibu $9\nHennessy VS $14\nCOCKTAILS\nMargarita $13\nPaloma $13',
+  'beverage', '{tequila,mezcal,rum,brandy_cognac,cocktails}', '{}', 'real data: Don Julio under Tequila & Mezcal was filed as mezcal'),
+('food_in_spirits_list', E'SPIRITS\nMacallan 12 $18\nReuben on Marble Rye $16\nVodka Pizza Slice $5\nPenne alla Vodka $19\nTito''s $10\nBulleit Rye $12\nGrey Goose $12\nWoodford Reserve $13\nKetel One $11',
+  'beverage', '{whiskey,vodka}', '{food}', 'real data: sandwiches and pasta extracted as spirits must not count'),
+('beer_brands_in_spirits', E'LIQUOR & BEER\nCoors Light $5\nBudweiser $5\nCorona $6\nWhite Claw $6\nJack Daniel''s $10\nFireball $7\nSouthern Comfort $8',
+  'beverage', '{beer,cider_seltzer,whiskey,liqueur_amaro}', '{}', 'real data: beer and seltzer brands inside a liquor list count as beer / seltzer'),
+('new_brands', E'SPIRITS\nMilagro Silver $10\nTres Generaciones $14\nWhistle Pig 10 $18\nRedbreast 12 $16\nThree Olives $9\nProcera $14\nZacapa Centenario 23 $15\nBailey''s $8',
+  'beverage', '{tequila,whiskey,vodka,gin,rum,liqueur_amaro}', '{}', 'most frequent unsorted names in the library'),
+('cocktails_and_food_in_spirits', E'SPIRITS\nGin & Tonic $11\nCutwater Vodka Mule $12\nBrandy Alexander $13\nCreamy cognac sauce w/ jumbo shrimp $28\nDunville''s Sherry Cask $16\nPrichard''s Double Barrel $14\nMacallan 12 $18\nTito''s $10',
+  'beverage', '{cocktails,whiskey,vodka}', '{brandy_cognac,liqueur_amaro}', 'real data: cocktails and a cognac-sauce dish inside spirits lists')
 on conflict (name) do update set page_text = excluded.page_text, expect_kind = excluded.expect_kind,
   expect_lists = excluded.expect_lists, forbid_lists = excluded.forbid_lists, note = excluded.note;

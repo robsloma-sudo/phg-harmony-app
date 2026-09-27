@@ -1,7 +1,7 @@
 # What makes a drinks menu: PHG filter spec (v2, 2026-09-28)
 
 For Rob to review. This is exactly what the classifier looks for. Test suite: `supabase/tests/phg_drinks_menu_cases.sql`
-(`select * from phg_drinks_menu_cases_run();`, which currently passes 12 of 12).
+(`select * from phg_drinks_menu_cases_run();`, which currently passes 17 of 17; v3 rules, 2026-09-28).
 
 ## 1. Menu types (one per page)
 
@@ -32,6 +32,11 @@ A category is found in two ways:
 
 A spirit named inside a cocktail's ingredients ("vodka, strawberry cordial") is **not** a spirits list.
 
+The drink's own name decides before the heading does: Don Julio under "Tequila & Mezcal" is tequila, Malibu under "Rum &
+Cognac" is rum, Coors Light under "Liquor & Beer" is beer, and "Gin & Tonic" or "Vodka Mule" inside a spirits list is a
+cocktail. Food and page text mislabeled as drinks ("Reuben on Marble Rye", "Penne alla Vodka", "cognac sauce w/ shrimp",
+hotel check-in text) are ignored.
+
 ## 3. How a page is read
 
 - A **heading** is a short line (up to 40 characters, 5 words), capitalised, with no comma or number.
@@ -48,7 +53,8 @@ drinks · delivery-app listings · pages that only link to a menu.
 
 - **12,356 documents have no text yet** (mostly images and PDFs). They stay "Not read yet" until read, which means
   either re-capture with text (HTML pages) or reading the image (vision; costs money, needs your approval).
-- Brand lists cover the most common brands; unknown brands under a generic "Spirits" heading fall into
+- Brand lists cover the most common brands, grown from the library's most frequent unsorted names (8.7% of spirit
+  lines are still "type not stated"); unknown brands under a generic "Spirits" heading fall into
   "Spirits (type not stated)". The list grows as we find misses.
 - Wine is one category. Say if you want Red / White / Rosé / Sparkling as separate equal filters.
 - Cocktails are one category. Say if you want them split by base spirit (tequila cocktails, gin cocktails ...).
