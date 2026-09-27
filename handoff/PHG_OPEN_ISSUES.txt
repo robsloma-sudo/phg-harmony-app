@@ -28,7 +28,7 @@ PHG-017 OPEN        P2  HTML "Download is starting" pages are actually file down
 PHG-018 OPEN        P0  Supabase cron redesign — 8 jobs RE-ENABLED by someone else ~04:00Z (4 at 20 s); job 5 timing out
 PHG-019 OPEN        P2  Cron jobs 1 & 2 (gtt-ingest-iowa, gtt-enrich-places) still ACTIVE — not in paused list
 PHG-020 OPEN        P1  Home -> Menu Studio -> Financial -> Market freeze re-test
-PHG-021 RESOLVED    P0  Gallery thumbnails 404 (preview allow-list of 6 ids) — fixed in 18.49.5 + corpus-browser v3
+PHG-021 REOPENED    P0  LIVE gallery shows broken images (live 18.49.4 uses 6-id preview service); fix is on branch, needs merge to main
 PHG-022 OPEN        P1  Corpus/library Edge functions have no account-level authorization
 PHG-023 OPEN        P2  phg-menu-library-search bugs: or() escaping, no ORDER BY, 3x over-fetch (not used by frontend)
 PHG-024 OPEN        P1  Job 5 gtt-refresh-state-stats failing 56/72 runs (5 s statement timeout) since re-enable
@@ -177,7 +177,17 @@ PHG-018 | OPEN P0 | Someone re-enabled jobs 5,7,12,13,15,16,18,22 at ~04:00Z (7,
   without this agent. No deadlocks in 6 h, 19 connections, jobs 15/18 now sub-second (verify whether
   they were rewritten). Dispatcher design (advisory lock, one connection, per-step timeouts, merged
   accounts counters) still recommended; draft not written (agent rate-limited). Ask Rob who changed it.
-PHG-021 | RESOLVED | Root cause: index.html used menu-render-chat-preview (6-id allow-list). Fixed on branch.
+PHG-021 | REOPENED (live) | P0 | Root cause: live index.html 18.49.4 loads card thumbnails from
+  menu-render-chat-preview v1, which serves only page ids 778,783,784,786,793,797 and only
+  capture_method railway_pymupdf_jpeg. Every other card 404s (Rob's screenshot 2026-09-27: all
+  McGillicuddys Tap House cards broken; those 4 documents each have a ready html_download_link image).
+  Fixed on branch in 18.49.5 (signed URLs from corpus-browser v3) and carried into 18.50.1.
+  Two ways to fix production, both need Rob's decision:
+   (a) merge the branch build to main (Netlify production deploy), preferred; images stay behind
+       short-lived signed URLs; or
+   (b) server hotfix: let the preview service serve any ready page image by id, without sign-in.
+       Attempted 2026-09-27 ~16:20Z; blocked by the session's safety check as widening
+       unauthenticated access to stored images. Not deployed. Needs Rob's explicit approval.
 PHG-022 | OPEN | corpus-browser v3 and library-search v1 authorize only "is an Auth user"; any signed-in user
   sees every venue. Add account/role check (phg_language_context pattern) before wider rollout.
 PHG-023 | OPEN | library-search v1: esc() leaves , ( ) unescaped in PostgREST or() (filter injection), no

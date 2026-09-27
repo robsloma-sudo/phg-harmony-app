@@ -477,3 +477,24 @@ PHG-20260927-0033 | STATUS + CHANGE | 16:06Z
   ('9,39 * * * *'), statement_timeout 30s.
 - Workflows: 18.50 review 2/4 reviewers done (engine, documents), tests pending; dedupe
   investigation 0/4 done.
+
+------------------------------------------------------------------------------
+PHG-20260927-0034 | USER_PROMPT | ~16:10Z
+Metadata: {"verbatim": false, "attachment": "screenshot of live Menu Library"}
+menu gallery is showing up as with no images, C attached.
+(Screenshot: cards "IMAGE · BEVERAGE / MCGILLICUDDYS TAP HOUSE / ready · 1 page(s)" with broken images.)
+
+------------------------------------------------------------------------------
+PHG-20260927-0035 | DIAGNOSIS — live gallery broken images (PHG-021 reopened) | ~16:20Z
+- Live site is main a739f56, build 18.49.4. Its cards load
+  functions/v1/menu-render-chat-preview?page_id=<first page id>.
+- menu-render-chat-preview v1 (verify_jwt=false) serves only 6 hard-coded page ids and only
+  capture_method railway_pymupdf_jpeg; everything else returns 404, so nearly every card is broken.
+- The images exist: the 4 McGillicuddys Tap House documents (1044, 6084, 6085, 6086) each have 1 ready
+  page captured by html_download_link. Ready pages by method: playwright 9,238, pymupdf 5,712,
+  direct download 2,992 (jpg/png/webp), html_download_link 237, firecrawl 137, pdfium 54.
+- Fix already on branch: 18.49.5 (and 18.50.1 in scratch) uses short-lived signed URLs from
+  phg-menu-corpus-browser v3. Not live because main has not been merged (needs Rob's permission).
+- Attempted server hotfix (preview service v2 serving any ready page by id, no sign-in) was blocked
+  by the session safety check as widening unauthenticated access to stored images. Nothing was
+  deployed or changed; chat-preview is still v1. Left for Rob to decide.
