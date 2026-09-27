@@ -914,8 +914,7 @@ button:active:after{width:280%;height:280%;opacity:.18;transition:none}
   display:flex;align-items:center;justify-content:center;text-align:center;
   font:inherit;font-weight:600;line-height:1.15;cursor:pointer;padding:6px;
   transform:translate(calc(-50% + var(--nx)),calc(-50% + var(--ny)));
-  transition:transform .45s cubic-bezier(.2,.9,.3,1.25),background .2s ease,
-             box-shadow .25s ease,border-color .2s ease}
+  transition:background .08s linear,box-shadow .08s linear,border-color .08s linear}
 .nNode span{display:block;max-width:100%}
 .nNode:active{filter:brightness(1.2)}
 
@@ -6173,7 +6172,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.49.0 UX PERFORMANCE CLEANUP · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.49.1 SNAP NODE NAV · PHG</span></div>
   </main>
 </div>
 <script>
@@ -22607,7 +22606,7 @@ function neuroFire(key,kind,label){
 
   neuroPulse(key,function(){});
   neuroOpen(false);
-  if(fn)setTimeout(fn,55);
+  if(fn)fn();
 }
 
 /* Is this group already expanded in the sidebar? The handler is a toggle, so
@@ -22871,8 +22870,8 @@ function neuroBuild(){
   /* a new layout gets one chance to re-space itself against its own fit */
   N3.kSnapPending = true;
   if (N3.kSnap === undefined) N3.kSnap = 1;
-  /* and an interaction hands the map its momentum back - see n3Tick */
-  N3.spin = N3_SPIN;
+  /* Navigation nodes are controls, not ambient particles: hold them still. */
+  N3.spin = 0;
   if (typeof flatSolve === 'function') setTimeout(flatSolve, 0);
   N3.artDirty = true;   /* redraw the ornament now, not on the next tick */
   var host = document.getElementById('neuro');
@@ -23011,29 +23010,14 @@ function neuroBuild(){
     }
   }
 
-  /* Give every node a starting point and a target. One it had before stays
-     put and slides to its new place; one that has just appeared grows out of
-     the node it hangs from rather than popping into existence. */
+  /* SNAP LAYOUT. Navigation targets appear at their final coordinates on the
+     first frame. No parent-to-child bloom, no temporary overlap, no moving
+     hit targets while the user is trying to tap. */
   for (i=0;i<N3.nodes.length;i++){
     var nd0 = N3.nodes[i];
     nd0.tp = { x:nd0.p.x, y:nd0.p.y, z:nd0.p.z };
-    var prev = N3.wasAt[nd0.id];
-    if (prev){
-      nd0.p = { x:prev.x, y:prev.y, z:prev.z };
-    } else if (i > 0){
-      var par = null, ei;
-      for (ei=0; ei<N3.edges.length; ei++) if (N3.edges[ei].b === i) par = N3.nodes[N3.edges[ei].a];
-      var from = (par && N3.wasAt[par.id]) || (par && par.p) || { x:0, y:0, z:0 };
-      /* Start 40% of the way out, not on top of the parent. Every new node
-         beginning at the same point meant they all overlapped for the first
-         frames and had to unstack while you were already trying to read them.
-         At 40% they emerge already separated and only have to finish. */
-      nd0.p = { x: from.x + (nd0.tp.x - from.x) * 0.40,
-                y: from.y + (nd0.tp.y - from.y) * 0.40,
-                z: from.z + (nd0.tp.z - from.z) * 0.40 };
-      /* and a small per-node offset, so siblings never travel as one block */
-      nd0.lead = 1 + ((i * 37) % 11) * 0.035;
-    }
+    nd0.p = { x:nd0.tp.x, y:nd0.tp.y, z:nd0.tp.z };
+    nd0.lead = 1;
   }
 
   /* THE OTHER APPS' SECTIONS, ONCE YOU ARE PAST THAT LEVEL.
@@ -23384,36 +23368,7 @@ function n3Tick(){
   var proj = [], i;
   for (i=0;i<N3.nodes.length;i++){
     var nd = N3.nodes[i];
-    if (nd.tp){
-      /* Fast while far, gentle on arrival. A flat rate spent its first frames
-         crawling out of the pile, which is where the overlap was worst; this
-         clears the stack quickly and still lands softly. */
-      var dx = nd.tp.x - nd.p.x, dy = nd.tp.y - nd.p.y, dz = nd.tp.z - nd.p.z;
-      var far = Math.sqrt(dx*dx + dy*dy + dz*dz);
-      var rate = (far > 120 ? 0.34 : far > 40 ? 0.26 : 0.19) * (nd.lead || 1);
-      if (rate > 0.55) rate = 0.55;
-      /* AND IT ARRIVES.
-
-         This was the third exponential approach in this file with no
-         threshold, and the only one still open: the camera snaps at 0.002
-         of k and 0.35px of centre, flat view's tilt snaps at 0.01 radians,
-         and both carry a comment about an asymptote leaving the thing
-         permanently fractionally wrong. This one had the same fault and was
-         hidden by the map turning underneath it. Take the turn away and a
-         creeping node is the only thing moving.
-
-         0.4 MODEL UNITS, not pixels. The position is in model space, and
-         converting per node per frame to test a pixel is work for nothing.
-         At current fits 0.4 model units is comfortably sub-pixel, the same
-         order as the camera's 0.35px. */
-      if (far < 0.4){
-        nd.p.x = nd.tp.x; nd.p.y = nd.tp.y; nd.p.z = nd.tp.z;
-      } else {
-        nd.p.x += dx * rate;
-        nd.p.y += dy * rate;
-        nd.p.z += dz * rate;
-      }
-    }
+    if (nd.tp){ nd.p.x=nd.tp.x; nd.p.y=nd.tp.y; nd.p.z=nd.tp.z; }
     proj.push(n3Project(nd.p));
   }
 
@@ -23540,16 +23495,9 @@ function n3Tick(){
      flat view had with rx. Thresholds are below what one frame can show:
      0.002 of k is 0.66px at the 330px frame edge, and 0.35px of centre
      is sub-pixel. */
-  var CAM = 0.14;
-  if (N3.k === undefined){ N3.k = k; N3.cx = cx; N3.cy = cy; }
-  else {
-    N3.k  += (k  - N3.k ) * CAM;
-    N3.cx += (cx - N3.cx) * CAM;
-    N3.cy += (cy - N3.cy) * CAM;
-    if (Math.abs(k  - N3.k ) < 0.002) N3.k  = k;
-    if (Math.abs(cx - N3.cx) < 0.35)  N3.cx = cx;
-    if (Math.abs(cy - N3.cy) < 0.35)  N3.cy = cy;
-  }
+  /* Camera snaps with the nodes. Stable geometry means stable hit targets. */
+  var CAM = 1;
+  N3.k = k; N3.cx = cx; N3.cy = cy;
 
   /* THE SPACING SNAPSHOT — TAKEN AFTER THE SETTLE, ONCE PER LAYOUT.
 
@@ -24120,33 +24068,9 @@ setInterval(n3Watch, 1000);
 
 /* Firing: burst the fibre, and swing the assembly toward the node. */
 function neuroPulse(key, done){
-  /* The strand feeding this node lights up, and so do any leaving it - the
-     charge carries on through rather than stopping at the node. */
-  N3.bursts[key] = 26;
-  var i, tgtIdx = -1;
-  for (i=0;i<N3.nodes.length;i++) if (N3.nodes[i].key === key) tgtIdx = i;
-  if (tgtIdx >= 0)
-    for (i=0;i<N3.edges.length;i++)
-      if (N3.edges[i].a === tgtIdx) N3.bursts[N3.edges[i].key] = 20;
-  var i, tgt = null;
-  for (i=0;i<N3.nodes.length;i++) if (N3.nodes[i].key === key) tgt = N3.nodes[i];
-  if (tgt){
-    /* Bring it to the FRONT. The previous formula was right only for nodes
-       already on the x axis; a node at the back of a ring ended at 0.81x
-       instead of 1.31x - it rotated away from you, which is why a fired node
-       sank and greyed out instead of coming forward.
-       Maximising z after the Y rotation gives atan2(-x, z). */
-    var want = Math.atan2(-tgt.p.x, tgt.p.z);
-    var from = N3.ry, d0 = Date.now();
-    (function ease(){
-      var p = Math.min(1,(Date.now()-d0)/477);
-      /* a gentler curve over a longer window, and only part of the way there:
-         swinging the whole assembly to face a node was a jump in itself */
-      N3.ry = from + (want-from)*0.55*(1-Math.pow(1-p,3));
-      if (p<1) requestAnimationFrame(ease);
-    })();
-  }
-  setTimeout(function(){ if (done) done(); }, 430);
+  N3.bursts[key]=10;
+  /* Visual acknowledgement only. Do not rotate or delay navigation. */
+  if(done) requestAnimationFrame(done);
 }
 
 /* Drag turns both axes. */
