@@ -12,6 +12,7 @@ You are not allowed to publish anything until they each give on average above 80
 
 | Round | Spec score | Safety score | Spec average | Safety average | Changes made after the round |
 |---|---|---|---|---|---|
+| 1 | 62.5 (pre-fix files) | 78 (a323e16) | 62.5 | 78 | see "Round 1 findings" |
 
 ## Pre-gate independent review (started before the gate rule): 1 blocker, 4 should-fix, 4 minor
 Fixed before round 2 (both files):
@@ -25,3 +26,17 @@ Fixed before round 2 (both files):
   only matches an original sibling that still has live staged rows.
 - repair Step 3: batched function phg_repair_step3_batch(300) with a progress table (was one statement over ~1M rows).
 - helpers phg_menu_item_key / phg_menu_key_set_hash inlinable (no SET, pg_catalog-qualified).
+
+## Round 1 findings still open after the pre-gate fixes (being fixed for round 2)
+Spec (S1-S16) and Safety (B1, S1-S7) overlap on:
+- rollback: save the 4 pre-change function bodies; scope the menus rollback to repair-changed rows, never produce two
+  current menus; staging rollback skips pages re-extracted since
+- DB-enforced one current menu per venue (unique partial index)
+- Step 2: keep the current menu on ties (was_current first among equals); lock + postcondition check
+- other-source 90% rule drops newer prices -> drop only true subsets, else alternate
+- missing price = unknown in item keys
+- Step 4 batched; CONCURRENTLY index as a runbook step
+- verification queries with expected values; reconcile 185 / 119 / 180 / 407 counts
+- 10-arg overload cannot be called ('not unique') -> drop after checking callers
+- promotion batch account locks: document / smaller batch
+- staging views that ignore superseded_at: correct the claim
