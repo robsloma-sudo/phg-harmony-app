@@ -18,11 +18,11 @@ jobs:
         run: |
           mkdir -p navigation-baseline
           git show HEAD:index.html > navigation-baseline/index.html
-          cp package.json netlify.toml navigation-baseline/
           git rev-parse HEAD > navigation-baseline/commit.txt
           git rev-parse HEAD:index.html > navigation-baseline/expected-blob.txt
           git hash-object navigation-baseline/index.html > navigation-baseline/actual-blob.txt
           cmp navigation-baseline/expected-blob.txt navigation-baseline/actual-blob.txt
+          git ls-tree -r HEAD > navigation-baseline/tree.txt
           wc -c navigation-baseline/index.html
       - uses: actions/upload-artifact@v4
         with:
