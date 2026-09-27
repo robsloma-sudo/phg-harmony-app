@@ -327,3 +327,25 @@ with previous values for rollback.)
   account, not by this agent; title only mentions handoff logs although it carries 18.49.5 +
   supabase/ + logs. Also new: user branch fix/mobile-navigation-20260927 (14:06-14:09Z) adds only
   .github/workflows/navigation-audit.yml; GitHub main and Netlify production unchanged (a739f56).
+
+------------------------------------------------------------------------------
+PHG-20260927-0024 | USER_PROMPT | ~15:50Z
+Metadata: {"verbatim": true}
+Just keep doing what you were doing. Never mind.
+Are we missing attempts? Like 38,000 attempts if I don't have payment? Are we, do we, are we gonna get those back?
+
+------------------------------------------------------------------------------
+PHG-20260927-0025 | ANALYSIS — free-path extraction outcomes since 03:40Z | ~15:52Z
+menu_source_candidates with last_attempt_at > 03:40Z: 38,483.
+ extracted 6,661 (596,645 items) + scope_check 3,643 (219,025 items) = 10,304 with items (~815k items)
+ review 24,337: 18,057 'No confident priced items parsed; source text archived' | 2,554 review w/o
+   error (items found, scope review) | 2,459 blocked 401/403/429 | 652 gone 404/410 | 604 not HTML
+   (PDF/image) | 7 unsafe url | 2 too large
+ retry 3,833: 3,590 empty page (auto-retry hourly, <=4 attempts) + ~240 misc (bad URLs, 3xx, timeouts)
+ menu_extraction_sources: 30,915 archived page texts.
+ 'No priced items' text-length bands: <500 chars 5,907 (likely JS-rendered); 500-3k 8,862;
+   3k-20k 3,146; >20k 152. Contain '$<digit>': 1,089. Mention cocktail terms: 2,275.
+Conclusion given to Rob: nothing is lost; recoverable without payment via (a) re-parsing archived
+text with a parser that accepts unpriced drink items, (b) Railway Playwright render for JS-empty and
+some blocked pages, (c) PDF text for the 604 non-HTML; paid Firecrawl mainly for ~2.5k blocked sites.
+Only the 652 dead pages are unrecoverable.

@@ -185,3 +185,15 @@ PHG-023 | OPEN | library-search v1: esc() leaves , ( ) unescaped in PostgREST or
 PHG-024 | OPEN | Job 5 refresh_state_stats: 56/72 runs hit a 5.0 s statement timeout since re-enable
   (avg 4.5 s). Public state stats (v_public_states/v_public_stats) refresh unreliably. Either raise the
   per-step timeout to ~15 s and run every 10 min, or make the function incremental.
+
+PHG-025 | OPEN | P1 | Recoverable extraction backlog from the free-only path (added 2026-09-27T15:52Z)
+Evidence: since 03:40Z, 38,483 candidates attempted with allow_paid=false; 10,304 produced items.
+  Recoverable without paid calls: 18,057 'no confident priced items' (text archived in
+  menu_extraction_sources; ~2,275 mention cocktails; parser requires prices), 5,907 of those are
+  near-empty (<500 chars, likely JS-rendered) -> render via Railway Playwright; 3,590 'empty page' in
+  auto-retry; 604 PDF/image -> PDF text path. Paid Firecrawl mainly for 2,492 blocked (401/403/429).
+  Unrecoverable: 652 (404/410).
+Next: (1) parser v5 that keeps unpriced items in drink sections and re-run it over archived text
+  (no refetch); (2) route near-empty/JS pages to the Railway renderer for DOM text capture (pairs with
+  PHG-011 text capture); (3) when PHG-006 billing is restored, re-queue blocked + still-empty rows
+  with allow_paid=true under a credit cap.
