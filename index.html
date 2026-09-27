@@ -232,6 +232,29 @@ h1{font-family:'Instrument Serif',Georgia,serif;font-size:34px;font-weight:400;l
 .cvbtn{min-width:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;background:#171c22;border:1px solid var(--line2);color:#c3c0bb;border-radius:8px;cursor:pointer;font:inherit;font-size:16px;text-decoration:none;touch-action:manipulation}
 .cvbtn[disabled]{opacity:.35;cursor:default}
 body.cview-open{overflow:hidden}
+/* full-screen menu viewer 18.49.7 */
+.mlview{position:fixed;inset:0;z-index:4300;display:flex;flex-direction:column;background:#03050a;isolation:isolate;color:var(--txt);animation:mlvIn .14s ease-out}
+@keyframes mlvIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}
+.mlvbar{flex:0 0 auto;display:flex;align-items:center;gap:6px;background:#0a0d12;padding:5px 8px;padding-top:calc(5px + env(safe-area-inset-top));border-bottom:1px solid var(--line)}
+.mlvbar.mlvbot{border-bottom:0;border-top:1px solid var(--line);padding-top:5px;padding-bottom:calc(5px + env(safe-area-inset-bottom))}
+.mlvtt{flex:1;min-width:0}
+.mlvname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlvsub{font-size:10.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlvb{flex:0 0 auto;min-width:34px;height:32px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line2);border-radius:7px;background:#171c22;color:#c3c0bb;font:inherit;font-size:15px;line-height:1;cursor:pointer;text-decoration:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.mlvb[disabled]{opacity:.3;cursor:default}
+.mlvb[hidden]{display:none}
+.mlvz{min-width:50px;font-size:11.5px}
+.mlvpg{font-size:11.5px;color:var(--dim);min-width:40px;text-align:center}
+.mlvsp{flex:1}
+.mlvscroll{flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-x pan-y;background:#05070e;outline:none}
+.mlvscroll.mlvgrab{cursor:grabbing}
+.mlvstage{display:flex;box-sizing:border-box;min-width:100%;min-height:100%;width:max-content;padding:6px}
+.mlvimg{display:block;flex:0 0 auto;margin:auto;max-width:none!important;max-height:none!important;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.5);cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.mlvimg[hidden]{display:none}
+.mlvmsg{margin:auto;padding:24px;font-size:12px;color:var(--dim);text-align:center}
+.mlvmsg:empty{display:none}
+.mlvmsg .mlvb{margin-left:6px;height:26px;font-size:12px}
+.mlcard .mlimg .mltall{position:absolute;left:3px;bottom:3px;padding:1px 4px;border-radius:3px;background:rgba(0,0,0,.7);color:#ddd;font-size:9.5px}
 .card.clik:hover:after{opacity:1;transform:translateX(4px)}
 .lbl{font-size:11px;color:var(--dim);letter-spacing:.05em;text-transform:uppercase}
 .big{font-family:'Instrument Serif',Georgia,serif;font-size:42px;font-weight:400;line-height:1.05;margin:8px 0 3px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
@@ -6245,7 +6268,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-27.18.49.6 COMPACT MENU LIBRARY · CENSUS FILTERS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-27.18.49.7 MENU VIEWER ZOOM · COMPACT LIBRARY · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7366,7 +7389,7 @@ function corpusAnyActive(){var f=CORPUS_BROWSER.f;for(var k in f)if(k!=='sort'&&
 function corpusTextActive(){var f=CORPUS_BROWSER.f;return !!(f.cocktail||f.ingredient||f.prep_type.length);}
 function corpusOpen(kind){var b=CORPUS_BROWSER;b.open=true;b.kind=CORPUS_KINDS[kind]?kind:'rendered';b.rows=[];b.count=0;b.capped=false;b.page=0;b.error='';b.view=null;
  if(b.kind==='rendered')b.f.status=[];corpusPanelClose();render();corpusLoad();if(!b.vals)corpusValues();}
-function corpusClose(){corpusPanelClose();CORPUS_BROWSER.open=false;CORPUS_BROWSER.view=null;document.body.classList.remove('cview-open');render();}
+function corpusClose(){corpusPanelClose();corpusViewClose();CORPUS_BROWSER.open=false;CORPUS_BROWSER.view=null;document.body.classList.remove('cview-open');render();}
 function corpusValues(){corpusPost({action:'filters'}).then(function(j){CORPUS_BROWSER.vals=j.values||null;corpusDrawChips();corpusPanelRefresh();}).catch(function(){});}
 function corpusBody(){
  var b=CORPUS_BROWSER,f=b.f,body={action:'list',kind:b.kind,limit:b.size,offset:b.page*b.size};
@@ -7534,7 +7557,7 @@ function corpusCardsHtml(){
   }
   var total=(d.pages||[]).length||d.page_count||0,ready=d.ready_page_count||0;
   h+='<div class="mlcard">';
-  if(t&&t.signed_url)h+='<div class="mlimg" role="button" tabindex="0" aria-label="Open '+esc(name)+' menu" onclick="corpusView('+Number(d.id)+')" onkeydown="if(event.key===\'Enter\')corpusView('+Number(d.id)+')"><img loading="lazy" decoding="async" alt="'+esc(name+' menu page '+(t.page_number||1))+'" src="'+esc(t.signed_url)+'" onerror="corpusImgFail(this)">'+(total>1?'<span class="mlpg">'+n(ready)+'/'+n(total)+'</span>':'')+'</div>';
+  if(t&&t.signed_url)h+='<div class="mlimg" role="button" tabindex="0" aria-label="Open '+esc(name)+' menu" onclick="corpusView('+Number(d.id)+')" onkeydown="if(event.key===\'Enter\')corpusView('+Number(d.id)+')"><img loading="lazy" decoding="async" alt="'+esc(name+' menu page '+(t.page_number||1))+'" src="'+esc(t.signed_url)+'" onerror="corpusImgFail(this)">'+(total>1?'<span class="mlpg">'+n(ready)+'/'+n(total)+'</span>':'')+(t.width&&t.height&&t.height>3*t.width?'<span class="mltall">long page</span>':'')+'</div>';
   else h+='<div class="mlnone">'+(d.page_render_status==='ready'?'Preview unavailable':'Not rendered yet')+'</div>';
   h+='<div class="mlbody"><div class="mlname" title="'+esc(name)+'">'+esc(name)+'</div><div class="mlmeta">'+esc(where)+(type?' · '+esc(type):'')+'</div>'
    +'<div class="mlcen" title="'+esc(corpusCensusLine(d.census))+'">'+esc(corpusCensusLine(d.census,true))+'</div>'
@@ -7569,34 +7592,104 @@ function corpusDraw(){
  el=document.getElementById('corpusGrid');
  if(el){if(b.busy&&b.rows.length)el.classList.add('mlbusy');else{el.classList.remove('mlbusy');el.innerHTML=corpusCardsHtml();}}
  el=document.getElementById('corpusPager');if(el&&!(b.busy&&b.rows.length))el.innerHTML=corpusPagerHtml();
- el=document.getElementById('corpusViewer');if(el)el.outerHTML=corpusViewerHtml();
 }
-/* Page viewer: one document, every rendered page, prev/next, pinch-zoom via native
-   scrolling. Signed links last 15 minutes; a failed image offers a refresh. */
-function corpusView(id){var b=CORPUS_BROWSER;corpusPanelClose();b.view={id:id,busy:true,error:'',doc:null,pages:[],idx:0,census:null};corpusDraw();document.body.classList.add('cview-open');
- corpusPost({action:'document',document_id:id}).then(function(j){var pg=(j.pages||[]),first=0;for(var i=0;i<pg.length;i++)if(pg[i].signed_url){first=i;break;}
-  if(!b.view||b.view.id!==id)return;b.view={id:id,busy:false,error:'',doc:j.document||{},pages:pg,idx:first,census:j.census||null};corpusDraw();})
- .catch(function(e){if(!b.view||b.view.id!==id)return;b.view.busy=false;b.view.error=e.message;corpusDraw();});
+/* Full-screen menu viewer (18.49.7, Rob: "click any image and it splashes out; scroll, zoom in and out,
+   without losing render quality"). Opens at fit-to-width so tall website screenshots (up to 1400x48,046)
+   scroll instead of shrinking to a sliver. Pinch, double-tap, Ctrl/trackpad wheel and the +/- buttons
+   zoom by changing the image's layout width, so the browser always paints from the full-resolution
+   file (no blurry CSS scaling). One finger pans natively; the page itself never zooms. Fit toggles
+   between fit width and whole page. Links are signed for 15 minutes; an expired page offers a reload. */
+var MLV=null;
+function corpusView(id,keepIdx){
+ var b=CORPUS_BROWSER,idx=(keepIdx&&b.view&&b.view.id===id)?b.view.idx:null;corpusPanelClose();
+ b.view={id:id,busy:true,error:'',doc:null,pages:[],idx:0,census:null};mlvMount();mlvRender();
+ corpusPost({action:'document',document_id:id}).then(function(j){
+   if(!b.view||b.view.id!==id)return;var pg=j.pages||[],first=0;for(var i=0;i<pg.length;i++)if(pg[i].signed_url){first=i;break;}
+   if(idx!==null&&idx<pg.length)first=idx;
+   b.view={id:id,busy:false,error:'',doc:j.document||{},pages:pg,idx:first,census:j.census||null};mlvRender();})
+ .catch(function(e){if(!b.view||b.view.id!==id)return;b.view.busy=false;b.view.error=(e&&e.message)||'Could not open this menu';mlvRender();});
 }
-function corpusViewClose(){CORPUS_BROWSER.view=null;document.body.classList.remove('cview-open');corpusDraw();}
-function corpusViewStep(d){var v=CORPUS_BROWSER.view;if(!v||!v.pages.length)return;v.idx=Math.max(0,Math.min(v.pages.length-1,v.idx+d));corpusDraw();}
-function corpusViewerHtml(){
- var v=CORPUS_BROWSER.view;if(!v)return '<div id="corpusViewer"></div>';
- var doc=v.doc||{},a=doc.accounts||{},p=v.pages[v.idx]||null,h='<div id="corpusViewer" class="cview" role="dialog" aria-label="Menu page viewer">';
- h+='<div class="cvbar"><button type="button" class="cvbtn" onclick="corpusViewClose()" aria-label="Close">&#10005;</button><div style="flex:1;min-width:0"><div class="mlvname">'+esc(a.account_name||'Menu')+'</div><div class="sub">'+(v.pages.length?'Page '+(v.idx+1)+' of '+v.pages.length:'')+(doc.asset_kind?' · '+esc(doc.asset_kind):'')+(v.census?' · '+esc(corpusCensusLine(v.census)):'')+'</div></div>'
-  +(doc.original_menu_url?'<a class="cvbtn" href="'+esc(doc.original_menu_url)+'" target="_blank" rel="noopener" aria-label="Open source menu">&#8599;</a>':'')+'</div>';
- h+='<div class="cvimg">';
- if(v.busy)h+='<div class="sub">Loading pages…</div>';
- else if(v.error)h+='<div class="err">'+esc(v.error)+'</div>';
- else if(p&&p.signed_url)h+='<img src="'+esc(p.signed_url)+'" alt="Menu page '+n(p.page_number)+'" onerror="this.outerHTML=\'<div class=&quot;sub&quot;>Link expired. Close and reopen this menu.</div>\'">';
- else h+='<div class="sub">'+(p?'Page '+n(p.page_number)+' is '+esc(p.render_status||'pending')+' - not rendered yet':'No rendered pages yet')+'</div>';
- h+='</div>';
- if(v.pages.length>1)h+='<div class="cvbar" style="justify-content:center"><button type="button" class="cvbtn" onclick="corpusViewStep(-1)" aria-label="Previous page"'+(v.idx<=0?' disabled':'')+'>&#8592;</button><button type="button" class="cvbtn" onclick="corpusViewStep(1)" aria-label="Next page"'+(v.idx>=v.pages.length-1?' disabled':'')+'>&#8594;</button></div>';
- return h+'</div>';
+function corpusViewClose(){CORPUS_BROWSER.view=null;if(MLV&&MLV.el&&MLV.el.parentNode)MLV.el.parentNode.removeChild(MLV.el);MLV=null;document.body.classList.remove('cview-open');}
+function corpusViewStep(d){var v=CORPUS_BROWSER.view;if(!v||!v.pages.length)return;var i=Math.max(0,Math.min(v.pages.length-1,v.idx+d));if(i===v.idx)return;v.idx=i;mlvRender();}
+function corpusViewerHtml(){return '';}
+function mlvMount(){
+ if(MLV&&MLV.el&&MLV.el.parentNode)return;
+ var el=document.createElement('div');el.id='mlViewer';el.className='mlview';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Menu viewer');
+ el.innerHTML='<div class="mlvbar"><button type="button" class="mlvb" data-a="close" aria-label="Close">&#10005;</button><div class="mlvtt"><div class="mlvname"></div><div class="mlvsub"></div></div><a class="mlvb mlvsrc" target="_blank" rel="noopener" aria-label="Open the original menu" hidden>&#8599;</a></div>'
+  +'<div class="mlvscroll" tabindex="0"><div class="mlvstage"><div class="mlvmsg"></div><img class="mlvimg" alt="" draggable="false" hidden></div></div>'
+  +'<div class="mlvbar mlvbot"><button type="button" class="mlvb" data-a="prev" aria-label="Previous page">&#8249;</button><span class="mlvpg"></span><button type="button" class="mlvb" data-a="next" aria-label="Next page">&#8250;</button><span class="mlvsp"></span>'
+  +'<button type="button" class="mlvb" data-a="out" aria-label="Zoom out">&minus;</button><button type="button" class="mlvb mlvz" data-a="fit" aria-label="Fit width or whole page">Fit</button><button type="button" class="mlvb" data-a="in" aria-label="Zoom in">+</button></div>';
+ document.body.appendChild(el);document.body.classList.add('cview-open');
+ MLV={el:el,scroll:el.querySelector('.mlvscroll'),img:el.querySelector('.mlvimg'),msg:el.querySelector('.mlvmsg'),s:1,nw:0,nh:0,src:'',pinch:null,tap:null,drag:null,raf:0};
+ el.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('[data-a]'):null;if(!t||t.disabled)return;var a=t.getAttribute('data-a'),r=MLV.scroll.getBoundingClientRect();
+  if(a==='close')corpusViewClose();else if(a==='prev')corpusViewStep(-1);else if(a==='next')corpusViewStep(1);
+  else if(a==='in')mlvZoomAt(MLV.s*1.4,r.left+r.width/2,r.top+r.height/2);else if(a==='out')mlvZoomAt(MLV.s/1.4,r.left+r.width/2,r.top+r.height/2);
+  else if(a==='fit')mlvFitToggle();else if(a==='reload'){var v=CORPUS_BROWSER.view;if(v)corpusView(v.id,true);}});
+ var sc=MLV.scroll,img=MLV.img;
+ img.addEventListener('load',function(){if(!MLV||MLV.img!==img)return;MLV.nw=img.naturalWidth||MLV.nw;MLV.nh=img.naturalHeight||MLV.nh;MLV.s=1;img.hidden=false;MLV.msg.textContent='';mlvApply();sc.scrollTop=0;sc.scrollLeft=0;mlvPreload();});
+ img.addEventListener('error',function(){if(!MLV||MLV.img!==img||!MLV.src)return;img.hidden=true;MLV.msg.innerHTML='This page link expired or could not load. <button type="button" class="mlvb" data-a="reload">Reload</button>';});
+ function dist(a,b){var x=a.clientX-b.clientX,y=a.clientY-b.clientY;return Math.sqrt(x*x+y*y)||1;}
+ sc.addEventListener('touchstart',function(e){
+  if(e.touches.length===2){var a=e.touches[0],b=e.touches[1],cx=(a.clientX+b.clientX)/2,cy=(a.clientY+b.clientY)/2,r=img.getBoundingClientRect();
+   MLV.pinch={d0:dist(a,b),s0:MLV.s,fx:r.width?(cx-r.left)/r.width:.5,fy:r.height?(cy-r.top)/r.height:.5};MLV.tap=null;e.preventDefault();return;}
+  if(e.touches.length===1){var t=e.touches[0],now=Date.now();
+   if(MLV.tap&&now-MLV.tap.t<320&&Math.abs(t.clientX-MLV.tap.x)<30&&Math.abs(t.clientY-MLV.tap.y)<30){e.preventDefault();MLV.tap=null;mlvZoomAt(MLV.s>1.3?1:2.5,t.clientX,t.clientY);}
+   else MLV.tap={t:now,x:t.clientX,y:t.clientY};}
+ },{passive:false});
+ sc.addEventListener('touchmove',function(e){
+  if(!MLV.pinch||e.touches.length!==2)return;e.preventDefault();
+  var a=e.touches[0],b=e.touches[1],p=MLV.pinch,ns=p.s0*dist(a,b)/p.d0,cx=(a.clientX+b.clientX)/2,cy=(a.clientY+b.clientY)/2;
+  if(MLV.raf)cancelAnimationFrame(MLV.raf);
+  MLV.raf=requestAnimationFrame(function(){MLV.raf=0;mlvSetScale(ns);var r=img.getBoundingClientRect();sc.scrollLeft+=r.left+p.fx*r.width-cx;sc.scrollTop+=r.top+p.fy*r.height-cy;});
+ },{passive:false});
+ sc.addEventListener('touchend',function(e){if(e.touches.length<2)MLV.pinch=null;});
+ sc.addEventListener('wheel',function(e){if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();mlvZoomAt(MLV.s*Math.exp(-e.deltaY*0.01),e.clientX,e.clientY);},{passive:false});
+ sc.addEventListener('dblclick',function(e){mlvZoomAt(MLV.s>1.3?1:2.5,e.clientX,e.clientY);});
+ sc.addEventListener('mousedown',function(e){if(e.button!==0||(e.target!==img&&!(e.target.classList&&e.target.classList.contains('mlvstage'))))return;MLV.drag={x:e.clientX,y:e.clientY,l:sc.scrollLeft,t:sc.scrollTop};sc.classList.add('mlvgrab');e.preventDefault();});
+ window.addEventListener('mousemove',mlvDragMove);window.addEventListener('mouseup',mlvDragEnd);
 }
+function mlvDragMove(e){if(!MLV||!MLV.drag)return;MLV.scroll.scrollLeft=MLV.drag.l-(e.clientX-MLV.drag.x);MLV.scroll.scrollTop=MLV.drag.t-(e.clientY-MLV.drag.y);}
+function mlvDragEnd(){if(!MLV||!MLV.drag)return;MLV.drag=null;MLV.scroll.classList.remove('mlvgrab');}
+function mlvBase(){var w=MLV.scroll.clientWidth-12;return Math.max(120,window.innerWidth>700?Math.min(w,1000):w);}
+function mlvFitPage(){if(!MLV.nw||!MLV.nh)return 1;var h=MLV.scroll.clientHeight-12;return Math.min(1,(h*MLV.nw/MLV.nh)/mlvBase());}
+function mlvMax(){return Math.max(4,MLV.nw?MLV.nw*2.5/mlvBase():4);}
+function mlvSetScale(s){var lo=Math.min(1,mlvFitPage());MLV.s=Math.max(lo,Math.min(mlvMax(),s));mlvApply();}
+function mlvApply(){
+ if(!MLV)return;var w=mlvBase()*MLV.s,img=MLV.img;img.style.width=Math.round(w)+'px';
+ img.style.height=MLV.nw&&MLV.nh?Math.round(w*MLV.nh/MLV.nw)+'px':'auto';
+ var z=MLV.el.querySelector('.mlvz');if(z)z.textContent=Math.abs(MLV.s-1)<0.02?'Fit':Math.round(MLV.s*100)+'%';
+}
+function mlvZoomAt(ns,cx,cy){if(!MLV||MLV.img.hidden)return;var img=MLV.img,sc=MLV.scroll,r=img.getBoundingClientRect(),fx=r.width?(cx-r.left)/r.width:.5,fy=r.height?(cy-r.top)/r.height:.5;
+ fx=Math.max(0,Math.min(1,fx));fy=Math.max(0,Math.min(1,fy));mlvSetScale(ns);var n=img.getBoundingClientRect();sc.scrollLeft+=n.left+fx*n.width-cx;sc.scrollTop+=n.top+fy*n.height-cy;}
+function mlvFitToggle(){if(!MLV||MLV.img.hidden)return;var fp=mlvFitPage();
+ if(Math.abs(MLV.s-1)<0.02&&fp<0.98){mlvSetScale(fp);MLV.scroll.scrollTop=0;MLV.scroll.scrollLeft=0;}
+ else{var sc=MLV.scroll,r=MLV.scroll.getBoundingClientRect();mlvZoomAt(1,r.left+r.width/2,r.top+Math.min(r.height/2,40));sc.scrollLeft=0;}}
+function mlvPreload(){var v=CORPUS_BROWSER.view;if(!v)return;[v.idx-1,v.idx+1].forEach(function(i){var p=v.pages[i];if(p&&p.signed_url){var im=new Image();im.decoding='async';im.src=p.signed_url;}});}
+function mlvRender(){
+ if(!MLV)return;var v=CORPUS_BROWSER.view;if(!v){corpusViewClose();return;}
+ var doc=v.doc||{},a=doc.accounts||{},p=v.pages[v.idx]||null,el=MLV.el;
+ el.querySelector('.mlvname').textContent=a.account_name||'Menu';
+ var sub=[];if(v.pages.length)sub.push('Page '+(v.idx+1)+' of '+v.pages.length);if(doc.asset_kind)sub.push(doc.asset_kind);if(v.census)sub.push(corpusCensusLine(v.census));
+ if(p&&p.width&&p.height&&p.height>3*p.width)sub.push('long page · scroll');
+ el.querySelector('.mlvsub').textContent=sub.join(' · ');
+ var src=el.querySelector('.mlvsrc');if(doc.original_menu_url&&/^https?:\/\//i.test(doc.original_menu_url)){src.href=doc.original_menu_url;src.hidden=false;}else src.hidden=true;
+ el.querySelector('[data-a="prev"]').disabled=v.idx<=0;el.querySelector('[data-a="next"]').disabled=v.idx>=v.pages.length-1;
+ el.querySelector('.mlvpg').textContent=v.pages.length?(v.idx+1)+' / '+v.pages.length:'';
+ el.querySelector('.mlvbot').style.visibility=v.busy||v.error?'hidden':'';
+ var img=MLV.img,msg=MLV.msg;
+ if(v.busy){img.hidden=true;MLV.src='';img.removeAttribute('src');msg.textContent='Loading menu…';return;}
+ if(v.error){img.hidden=true;MLV.src='';img.removeAttribute('src');msg.innerHTML=esc(v.error)+' <button type="button" class="mlvb" data-a="reload">Retry</button>';return;}
+ if(!p||!p.signed_url){img.hidden=true;MLV.src='';img.removeAttribute('src');msg.textContent=p?'Page '+(p.page_number||v.idx+1)+' is '+(p.render_status||'pending')+' and not rendered yet.':'No rendered pages yet.';return;}
+ if(MLV.src!==p.signed_url){MLV.src=p.signed_url;MLV.nw=p.width||0;MLV.nh=p.height||0;MLV.s=1;img.hidden=true;img.alt=(a.account_name||'Menu')+' page '+(p.page_number||v.idx+1);
+  msg.textContent='Loading full-resolution page…';img.src=p.signed_url;}
+}
+document.addEventListener('gesturestart',function(e){if(MLV)e.preventDefault();},{passive:false});
+window.addEventListener('resize',function(){if(MLV&&!MLV.img.hidden)mlvApply();});
 document.addEventListener('keydown',function(e){
  if(CORPUS_BROWSER.panel&&e.key==='Escape'){corpusPanelClose();corpusDrawChips();return;}
- if(!CORPUS_BROWSER.view)return;if(e.key==='Escape')corpusViewClose();else if(e.key==='ArrowLeft')corpusViewStep(-1);else if(e.key==='ArrowRight')corpusViewStep(1);});
+ if(!MLV)return;var r=MLV.scroll.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+ if(e.key==='Escape')corpusViewClose();else if(e.key==='ArrowLeft')corpusViewStep(-1);else if(e.key==='ArrowRight')corpusViewStep(1);
+ else if(e.key==='+'||e.key==='=')mlvZoomAt(MLV.s*1.4,cx,cy);else if(e.key==='-'||e.key==='_')mlvZoomAt(MLV.s/1.4,cx,cy);else if(e.key==='0')mlvFitToggle();});
 window.addEventListener('resize',function(){if(CORPUS_BROWSER.panel&&window.innerWidth>600){corpusPanelClose();corpusDrawChips();}});
 document.addEventListener('scroll',function(e){var p=document.getElementById('corpusPanel');if(!p||window.innerWidth<=600)return;if(e.target&&e.target.nodeType===1&&p.contains(e.target))return;corpusPanelClose();corpusDrawChips();},true);
 function pipelineCorpusCard(){
