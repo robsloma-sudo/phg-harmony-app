@@ -766,3 +766,18 @@ Railway is unreachable from this workspace (egress policy, no Railway login), so
   Watershed 1614->5032 with 4 tabs, Blue Stag 2062->7001, El Born 3552->8218, La Piovra 7234->13009).
   first_screen_batch1 so far: 73 done (48 now taller), 21 CAPTCHA/bot-check (refused, will retry), 55 waiting.
   => a large share of the old 1000-px "menus" are bot-check screens, not menus.
+
+------------------------------------------------------------------------------
+PHG-20260927-0056 | USER_PROMPT + PRODUCTION CHANGES | ~22:00Z
+Rob: "Just make sure you take everything I just told you about those specific cases ... and apply them to the broad
+overall database ... Those are common problems I've seen occurring a lot, not just the one time."
+Applied (migration record 20260927233000):
+- Duplicate links: phg_url_key; 1,769 queued duplicates -> skipped_duplicate_url; gate trigger now skips new ones.
+- Sibling drinks pages first: visual acquisition dispatch puts up to 4 links/dispatch from venues that already
+  have a drinks menu ahead of the rest (Adrift case, applied everywhere).
+- Capture v2 behaviour (full page, tabs, lazy content, embedded beer lists, pop-ups, bot-check refusal) is in the
+  worker and applies to every page it captures.
+NOT applied (stopped by the session safety check, needs Rob's explicit OK): migration 20260927234000 =
+  phg_capture_v2_topup + cron every 5 min to re-capture all ~14,000 existing HTML screenshots with v2 in priority
+  order (first-screen-only, then drinks, then rest) and class old bot-check captures as not_menu/bot_check.
+Also pending Rob: running v2 continuously (workflow schedule on main, or Railway service).
