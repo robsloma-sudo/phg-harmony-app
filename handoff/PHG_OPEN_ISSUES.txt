@@ -113,6 +113,9 @@ Snapshot 2026-09-27T01:20:20Z (direct menu_visual_pages):
   railway_external_html_screenshot ready 943 | retry 415 | processing 1
   other ready: pdf 4,071; original image 315; local pdf 50+4; firecrawl 31+106; download 1+7
 At ~380/h the pending set needs ~9–10 h, then retries.
+Update 2026-09-27T01:37:30Z (HTML strategies combined, railway + firecrawl_after_download_check):
+  ready 1,185 | pending 3,363 | retry 418 | processing 1. +136 ready in 17 min (~480/h).
+  Package snapshot 01:30:28Z (HTML ready 1,155 / pending 3,424 / retry 418) is consistent.
 CONSTRAINT: do NOT lower render resolution (target_width 1400) to improve throughput.
 
 PHG-016 | OPEN | P1 | HTML retry population = mostly orphaned claims
@@ -138,8 +141,11 @@ Paused (verified active=false 2026-09-27T01:20Z): 5,6,7,12,13,14,15,16,17,18,20,
 Next: Serialize via advisory lock / single dispatcher; stagger schedules; enable one job at a time with
   monitoring of auth latency. DO NOT bulk-enable.
 
-PHG-019 | OPEN | P2 | Cron jobs still active that were not in the handoff list
-Evidence: job 1 gtt-ingest-iowa (*/3) and job 2 gtt-enrich-places (*/2) are active=true.
+PHG-019 | OPEN | P2 | Cron jobs 1 and 2 still active
+Evidence: job 1 gtt-ingest-iowa (*/3) and job 2 gtt-enrich-places (*/2) are active=true (verified
+  2026-09-27T01:20Z). CORRECTION 01:40Z: the CEO changeover package (PHG_CEO_CHANGEOVER_2026-09-26.zip,
+  TWO_DAY_UPDATE §2) does list these two as ACTIVE; my earlier note that they were "not mentioned" was
+  wrong — they were omitted only from the pasted summary.
 Next: Confirm they are light and not contributing to lock contention; include in PHG-018 schedule design.
 
 PHG-020 | OPEN | P1 | Navigation freeze re-test

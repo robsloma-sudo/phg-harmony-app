@@ -115,3 +115,38 @@ Created handoff/ in repo with PHG_RUNNING_CHANGELOG.txt, PHG_OPEN_ISSUES.txt,
 PHG_CURRENT_SOURCE_POINTER.txt. Open issues consolidated (PHG-001..014 carried, PHG-002 marked
 RESOLVED per 00:08Z redeploy evidence, new PHG-015..020). index.html NOT modified.
 No production code, data, schedules, credentials or deployments changed in this entry.
+
+------------------------------------------------------------------------------
+PHG-20260927-0007 | USER_PROMPT | ~01:34Z
+Metadata: {"verbatim": false}
+Rob uploaded PHG_CEO_CHANGEOVER_2026-09-26.zip (5,911 bytes; 5 files: README.txt, SOURCE_OF_TRUTH.txt,
+PHG_CEO_CHANGEOVER_TWO_DAY_UPDATE.txt, PHG_RUNNING_CHANGELOG.txt, PHG_OPEN_ISSUES.txt). Session model
+switched to claude-fable-5-1; ultracode (multi-agent workflow) mode on.
+
+------------------------------------------------------------------------------
+PHG-20260927-0008 | ACTION_RESULT | 01:35Z
+Tool: zip inspection (scratchpad; no unsafe paths; extracted unchanged)
+Package content agrees with live verification in 0002–0005: canonical main a739f56; jobs 1 and 2
+ACTIVE, 3,5–18,20,22,23 inactive; HTML snapshot 01:30:28Z ready 1,155 / pending 3,424 / retry 418 /
+processing 1; PDF 4,125; image 323. Package's own changelog/open-issues are short summaries; the
+repo copies (handoff/) remain the detailed record. Priorities per package: P0 cron redesign,
+P0 real-device node geometry, P1 gallery drill-down/filters, P1 HTML rendering + retry causes,
+P1 ingredient/menu-text linkage, P2 iPhone->iPad->desktop QA. DO-NOT list recorded (no bloom, no
+whole-country mobile downloads, no financial clutter on Home, candidates != rendered, missing text
+!= absence, no bulk cron enable, never overwrite main from Sep 25 archive).
+Correction: PHG-019 note amended — jobs 1/2 WERE listed as active in the package.
+
+------------------------------------------------------------------------------
+PHG-20260927-0009 | QUEUE_SNAPSHOT | 2026-09-27T01:37:30Z
+HTML strategies combined: ready 1,185 | pending 3,363 | retry 418 | processing 1 (~480/h last 17 min).
+
+------------------------------------------------------------------------------
+PHG-20260927-0010 | ACTION_RESULT | 01:38Z
+Tool: Workflow (run wf_1502abbe-85b, 'phg-understand') launched — five read-only readers
+(gallery frontend, node geometry, Edge functions, filter schema, cron jobs) each followed by two
+independent skeptics per consequential claim. Read-only rules enforced in every prompt (no deploy,
+no DDL/DML, no cron change, no secret values).
+Tool: Playwright — global playwright@1.56.1 + /opt/pw-browsers/chromium (141.0.7390.37) launches with
+iPhone 390x844 touch context. Emulated viewport checks are possible in this session (PHG-013 workaround).
+Tasks opened: cron plan (PHG-018), emulated node geometry check (PHG-003), gallery filters (PHG-001),
+HTML retry classes (PHG-016/017), ingredient linkage (PHG-011), log upkeep (PHG-010).
