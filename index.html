@@ -6172,7 +6172,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.49.2 FRONT NODE GEOMETRY · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.49.3 CORPUS DRILLDOWN · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7248,6 +7248,34 @@ function phgPipelineAge(ts){
   if(secs<90)return "updated "+secs+"s ago";
   return "updated "+Math.round(secs/60)+"m ago";
 }
+var CORPUS_BROWSER={open:false,kind:'rendered',busy:false,error:'',rows:[],count:0,next:null,f:{asset_kind:'',menu_scope:'',status:'',q:''}};
+var PHG_CORPUS_BROWSER_URL="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-menu-corpus-browser";
+function corpusOpen(kind){CORPUS_BROWSER.open=true;CORPUS_BROWSER.kind=kind||'rendered';CORPUS_BROWSER.rows=[];CORPUS_BROWSER.next=0;render();corpusLoad(false);}
+function corpusClose(){CORPUS_BROWSER.open=false;render();}
+function corpusSet(k,v){CORPUS_BROWSER.f[k]=v;CORPUS_BROWSER.rows=[];CORPUS_BROWSER.next=0;corpusLoad(false);}
+function corpusLoad(more){
+ if(CORPUS_BROWSER.busy)return;CORPUS_BROWSER.busy=true;CORPUS_BROWSER.error='';render();
+ var token=(PHGAUTH&&PHGAUTH.session&&PHGAUTH.session.access_token)||'';
+ fetch(PHG_CORPUS_BROWSER_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(Object.assign({kind:CORPUS_BROWSER.kind,limit:24,offset:more?(CORPUS_BROWSER.next||0):0},CORPUS_BROWSER.f))})
+ .then(function(r){if(!r.ok)throw new Error('Menu library returned '+r.status);return r.json()})
+ .then(function(j){CORPUS_BROWSER.rows=more?CORPUS_BROWSER.rows.concat(j.rows||[]):(j.rows||[]);CORPUS_BROWSER.count=j.count||0;CORPUS_BROWSER.next=j.next_offset;CORPUS_BROWSER.busy=false;render()})
+ .catch(function(e){CORPUS_BROWSER.busy=false;CORPUS_BROWSER.error=e.message;render()});
+}
+function corpusOpt(cur,val,label){return '<option value="'+val+'"'+(cur===val?' selected':'')+'>'+label+'</option>';}
+function corpusBrowserPage(){
+ var b=CORPUS_BROWSER,f=b.f,h='<div class="sec">Menu Library</div><div class="secsub">'+esc(b.kind)+' · '+n(b.count)+' matching documents</div>';
+ h+='<div class="card"><div class="grid g4"><input class="mdcin" placeholder="Search venue" value="'+esc(f.q)+'" onchange="corpusSet(\'q\',this.value)">'
+   +'<select onchange="corpusSet(\'asset_kind\',this.value)">'+corpusOpt(f.asset_kind,'','All formats')+corpusOpt(f.asset_kind,'pdf','PDF')+corpusOpt(f.asset_kind,'html','HTML')+corpusOpt(f.asset_kind,'image','Image')+'</select>'
+   +'<select onchange="corpusSet(\'menu_scope\',this.value)">'+corpusOpt(f.menu_scope,'','All menu types')+corpusOpt(f.menu_scope,'beverage','Beverage')+corpusOpt(f.menu_scope,'food','Food')+corpusOpt(f.menu_scope,'mixed','Mixed')+corpusOpt(f.menu_scope,'unknown','Unknown')+'</select>'
+   +'<select onchange="corpusSet(\'status\',this.value)">'+corpusOpt(f.status,'','All statuses')+corpusOpt(f.status,'ready','Ready')+corpusOpt(f.status,'pending','Pending')+corpusOpt(f.status,'processing','Processing')+corpusOpt(f.status,'retry','Retry')+corpusOpt(f.status,'failed','Failed')+'</select></div><button class="btn" onclick="corpusClose()">Back to pipeline</button></div>';
+ if(b.error)h+='<div class="err">'+esc(b.error)+'</div>';if(b.busy&&!b.rows.length)h+='<div class="card">Loading menu library…</div>';
+ h+='<div class="grid g3">';
+ for(var i=0;i<b.rows.length;i++){var d=b.rows[i],a=d.accounts||{},p=(d.pages||[])[0];
+   h+='<div class="card"><div class="lbl">'+esc(d.asset_kind||'menu')+' · '+esc(d.menu_scope||'unknown')+'</div><div class="ttl">'+esc(a.account_name||'Venue')+'</div><div class="sub">'+esc(d.page_render_status||'')+' · '+n(d.page_count||0)+' page(s)</div>'
+    +(p&&p.id?'<img loading="lazy" src="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/menu-render-chat-preview?page_id='+p.id+'" style="width:100%;max-height:320px;object-fit:contain;margin-top:12px;background:#05070e">':'<div class="sub" style="margin-top:18px">Preview not rendered yet</div>')+'</div>';
+ }
+ h+='</div>';if(b.next!==null)h+='<button class="btn" onclick="corpusLoad(true)">Load more</button>';return h;
+}
 function pipelineCorpusCard(){
   var p=PIPESTATS;
   if(!p){
@@ -7259,10 +7287,10 @@ function pipelineCorpusCard(){
     '<div class="pdesc">Pipeline totals from the active PHG menu archive.</div>'+
     '<div class="bar" style="margin:10px 0 14px"><div class="fill" style="width:'+pct.toFixed(1)+'%;background:'+GREEN+'"></div></div>'+
     '<div class="grid g4">'+
-      '<div class="card" style="background:#11161b"><div class="lbl">Menu candidates</div><div class="big" style="font-size:28px;color:'+BLUE+'">'+n(p.menu_candidates)+'</div><div class="sub">discovered sources</div></div>'+
-      '<div class="card" style="background:#11161b"><div class="lbl">Archived documents</div><div class="big" style="font-size:28px;color:'+ORANGE+'">'+n(p.visual_documents)+'</div><div class="sub">PDF, image and HTML</div></div>'+
-      '<div class="card" style="background:#11161b"><div class="lbl">Rendered pages</div><div class="big" style="font-size:28px;color:'+GREEN+'">'+n(ready)+'</div><div class="sub">'+pct.toFixed(1)+'% of required pages</div></div>'+
-      '<div class="card" style="background:#11161b"><div class="lbl">Remaining pages</div><div class="big" style="font-size:28px;color:'+PINK+'">'+n(pending)+'</div><div class="sub">waiting for visual render</div></div>'+
+      '<div class="card clik" onclick="corpusOpen(&quot;candidates&quot;)" style="background:#11161b"><div class="lbl">Menu candidates</div><div class="big" style="font-size:28px;color:'+BLUE+'">'+n(p.menu_candidates)+'</div><div class="sub">discovered sources</div></div>'+
+      '<div class="card clik" onclick="corpusOpen(&quot;archived&quot;)" style="background:#11161b"><div class="lbl">Archived documents</div><div class="big" style="font-size:28px;color:'+ORANGE+'">'+n(p.visual_documents)+'</div><div class="sub">PDF, image and HTML</div></div>'+
+      '<div class="card clik" onclick="corpusOpen(&quot;rendered&quot;)" style="background:#11161b"><div class="lbl">Rendered pages</div><div class="big" style="font-size:28px;color:'+GREEN+'">'+n(ready)+'</div><div class="sub">'+pct.toFixed(1)+'% of required pages</div></div>'+
+      '<div class="card clik" onclick="corpusOpen(&quot;remaining&quot;)" style="background:#11161b"><div class="lbl">Remaining pages</div><div class="big" style="font-size:28px;color:'+PINK+'">'+n(pending)+'</div><div class="sub">waiting for visual render</div></div>'+
     '</div>'+
     '<div class="row"><span>PDF documents</span><b>'+n(p.pdf_documents)+'</b></div>'+
     '<div class="row"><span>Image documents</span><b>'+n(p.image_documents)+'</b></div>'+
@@ -22116,6 +22144,7 @@ function render(){
   var sec=SECTIONS.filter(function(s){return s.k===page})[0]||SECTIONS[0];
   document.getElementById("ptitle").textContent=page==="home"?"Pipeline":sec.label;
   if(page==="home"){
+    if(CORPUS_BROWSER.open){v.innerHTML=corpusBrowserPage();return;}
     v.innerHTML=(STATE==="ALL")?countryHome():homePage();
     tick("mV",S.venues);tick("mP",S.places_done);tick("mS",S.websites);tick("mI",S.drink_items);
   }else if(page==="competitors"||page==="map"){
