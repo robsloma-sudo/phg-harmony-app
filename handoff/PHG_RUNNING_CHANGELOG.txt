@@ -549,3 +549,45 @@ PHG-20260927-0039 | STATUS — live gallery images | ~16:50Z
   index.html 18.49.5 onto main. The session safety check blocked that push as a production deploy;
   nothing was pushed to main. Needs Rob to allow it or merge himself.
 - Committed/pushed menu-render-chat-preview v2 source + v1 rollback on the branch (68d3693).
+
+------------------------------------------------------------------------------
+PHG-20260927-0040 | CHANGE — preview hides internal folders; PR text | ~16:55Z
+- netlify.toml (51d222c) on the branch: 404 for /handoff/*, /supabase/*, /netlify.toml. Netlify deploy
+  6ab9440860b9dc0008871750 (deploy-preview-3) reports "3 redirect rules processed" without errors.
+- PR #3 title/body updated to describe what a merge would ship (18.49.5 + netlify.toml).
+- Told Rob the deploy preview (https://deploy-preview-3--prismatic-rugelach-777e48.netlify.app) shows
+  every image with the full page viewer while main stays on 18.49.4.
+
+------------------------------------------------------------------------------
+PHG-20260927-0041 | PRODUCTION CHANGE — census by ZIP | ~17:10Z
+- Migrations phg_census_zcta + phg_census_zcta_censusreporter: tables phg_census_zcta, phg_census_fetch
+  (RLS on, no policies, anon/authenticated revoked); loader/compute functions (service only).
+- api.census.gov refused ("Missing Key"; no key stored). The container cannot reach the Census API
+  (network policy), so the database fetched Census Reporter JSON via pg_net: 9 requests
+  (3 table groups x IA/CO/NY), release acs2024_5yr checked. 3,326 ZCTAs loaded and computed.
+- Spot checks: 10001 $129,852 / 57.7% HH $100k+; 10451 $38,770 / 49.9% Hispanic; 80202 49.4% aged 21-34.
+- Coverage of menu documents by venue ZIP: CO 8,530/8,561, IA 3,507/3,509, NY 5,259/5,288.
+
+------------------------------------------------------------------------------
+PHG-20260927-0042 | PRODUCTION CHANGE — browse SQL v2 + corpus-browser v4 | ~17:25Z
+- Migration phg_corpus_browse_v2 (file 20260927180000): multi-select (string or array), census band
+  filters, sort, limit <= 100, filter vocabularies v2 (all cities with state, census band counts,
+  sorts, page sizes), phg_corpus_filter_cache + phg_corpus_filter_values_cached (15 min).
+- Verified first in a rolled-back dry run (13 list calls, 3 validation errors, filter values).
+  Perf fixes before applying: candidates base CTE NOT MATERIALIZED (15 s -> 72 ms; v3 was 6.2 s);
+  phg_census_band without SET so it inlines (filter values 10.8 s -> 5.6 s, then cached).
+- phg-menu-corpus-browser v4 deployed (verify_jwt true, unchanged): arrays, census keys, sort,
+  limit 100, cached filters, census in document action. v3 source kept as v3.rollback.index.ts.
+- Rollback: re-apply functions from 20260927020000_phg_corpus_browse.sql and redeploy v3 source.
+
+------------------------------------------------------------------------------
+PHG-20260927-0043 | BUILD — 18.49.6 compact Menu Library (branch, not pushed yet) | ~17:40Z
+- Rewrote the gallery block (classes prefixed ml*; the old .cbar/.chead names collided with chart
+  styles): one-row chip toolbar that scrolls sideways, multi-select bottom sheets on phone / anchored
+  dropdowns on desktop, census chips (Income, Age, 21-34, $100k+, Degree, Hispanic), Drinks panel
+  (cocktail, ingredient, prep any-of), sort, 20/50/100 per page (remembered), numbered pager,
+  3-column 108px+ cards on phone, page header hidden while the library is open, 36px viewer buttons,
+  generation guard so a slow older response never overwrites a newer one.
+- Browser tests (mock v4 backend): 180 checks pass on iPhone 390, iPhone SE 375 and desktop 1440.
+- Adversarial review workflow wf_76caf8a3-5ae running before push.
+

@@ -1,6 +1,6 @@
 PERFECT HARMONY GROUP — OPEN ISSUES & RESOLUTION LOG
 =============================================================
-Last updated (UTC): 2026-09-27T15:20Z — gallery 18.49.5 on branch; corpus-browser v3 + SQL live
+Last updated (UTC): 2026-09-27T17:40Z — gallery 18.49.6 (compact, census) under review; corpus-browser v4 + browse SQL v2 + census live
 Mandatory handoff companions: PHG_RUNNING_CHANGELOG.txt + PHG_OPEN_ISSUES.txt.
 Status reflects actual verification, not intent. Resolved entries and historical evidence are kept.
 Canonical frontend: main a739f56 (18.49.4), index.html blob fbf293d.
@@ -28,7 +28,10 @@ PHG-017 OPEN        P2  HTML "Download is starting" pages are actually file down
 PHG-018 OPEN        P0  Supabase cron redesign — 8 jobs RE-ENABLED by someone else ~04:00Z (4 at 20 s); job 5 timing out
 PHG-019 OPEN        P2  Cron jobs 1 & 2 (gtt-ingest-iowa, gtt-enrich-places) still ACTIVE — not in paused list
 PHG-020 OPEN        P1  Home -> Menu Studio -> Financial -> Market freeze re-test
-PHG-021 REOPENED    P0  LIVE gallery shows broken images (live 18.49.4 uses 6-id preview service); fix is on branch, needs merge to main
+PHG-021 MITIGATED   P0  Live 18.49.4 thumbnails served by chat-preview v2 (0 errors since 16:36Z); proper fix = ship branch build to main
+PHG-027 IN PROGRESS P1  Compact iPhone Menu Library + census filters + 20/50/100 paging: backend live, 18.49.6 built/tested, in review
+PHG-028 OPEN        P2  Old Netlify deploy-preview permalinks (before 51d222c) still serve /handoff and /supabase files
+PHG-029 OPEN        P2  Census data via Census Reporter (api.census.gov needs a key); refresh is manual; ZIP != ZCTA caveat
 PHG-022 OPEN        P1  Corpus/library Edge functions have no account-level authorization
 PHG-023 OPEN        P2  phg-menu-library-search bugs: or() escaping, no ORDER BY, 3x over-fetch (not used by frontend)
 PHG-024 OPEN        P1  Job 5 gtt-refresh-state-stats failing 56/72 runs (5 s statement timeout) since re-enable
@@ -192,8 +195,29 @@ PHG-021 | REOPENED (live) | P0 | Root cause: live index.html 18.49.4 loads card 
 PHG-027 | OPEN | P1 | Menu Library iPhone-compact redesign (Rob, 2026-09-27 ~16:30Z)
   Ask: one-row toolbar of compact dropdowns sized to their text; smallest borders and buttons;
   multi-select filters; 20/50/100 records per page; filter/view by census demographics as well as
-  city and state; iPhone-first for this display. Census source: geography_demographics (ACS
-  2020-2024: 1,026 places, 99 counties, 1 state) joined through accounts.geography_id.
+  city and state; iPhone-first for this display.
+  Status 17:40Z:
+  - Census: existing geography_demographics covered Iowa only. Loaded ACS 2024 5-year (2020-2024) by
+    ZIP Code Tabulation Area for IA/CO/NY into phg_census_zcta (3,326 ZCTAs); 17,395 of 17,457 menu
+    documents match by venue ZIP. Metrics: median household income, median age, share 21-34,
+    share of households $100k+, bachelor's+ (25+), Hispanic/Latino share.
+  - Backend live: phg_corpus_browse_documents/candidates v2 (string or array filters, census bands,
+    sort, limit <= 100), filter vocabularies v2 + 15-minute cache, phg-menu-corpus-browser v4.
+    Backward compatible with 18.49.4/18.49.5 request bodies (dry-run verified).
+    Timings: documents 0.4-1.0 s, candidates unfiltered 72 ms (v3: 6.2 s), filters cached.
+  - Frontend 18.49.6 in index.html (branch, not yet pushed): one-row chip toolbar, multi-select
+    bottom sheets on phone, 3-column compact cards, census chips, sort, 20/50/100 + numbered pages,
+    page header hidden while the library is open. 180 browser checks pass (iPhone, iPhone SE,
+    desktop, mock backend). Adversarial review workflow wf_76caf8a3-5ae running.
+  - Remaining: fix confirmed review findings, push branch (updates PR #3 preview), port to 18.50.x,
+    release to main needs Rob's go-ahead (the safety check blocks my push to main).
+PHG-028 | OPEN | P2 | Netlify publishes the repo root. netlify.toml (51d222c) now 404s /handoff/*, /supabase/*
+  and /netlify.toml, but earlier deploy-preview permalinks for PR #3 still serve those files. No secrets
+  are in them (internal notes and SQL). Rob can delete old deploys in Netlify if wanted.
+PHG-029 | OPEN | P2 | Census source: api.census.gov now answers "Missing Key"; data was loaded from
+  api.censusreporter.org (same ACS 2024 5-year tables, release checked). A free Census API key would let
+  the loader use the Bureau directly. Refresh is manual (pg_net requests + phg_census_zcta_apply_cr +
+  phg_census_zcta_compute). ZIP codes that are not ZCTAs (PO boxes) show "No census data".
 PHG-022 | OPEN | corpus-browser v3 and library-search v1 authorize only "is an Auth user"; any signed-in user
   sees every venue. Add account/role check (phg_language_context pattern) before wider rollout.
 PHG-023 | OPEN | library-search v1: esc() leaves , ( ) unescaped in PostgREST or() (filter injection), no
