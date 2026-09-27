@@ -926,18 +926,18 @@ button:active:after{width:280%;height:280%;opacity:.18;transition:none}
 @keyframes nBreathe{0%,100%{box-shadow:0 0 0 10px rgba(255,255,255,.04),0 0 40px rgba(255,255,255,.10)}
   50%{box-shadow:0 0 0 18px rgba(255,255,255,.02),0 0 60px rgba(255,255,255,.16)}}
 
-.nApp{width:92px;height:92px;font-size:12px;
+.nApp{width:108px;height:108px;font-size:13px;
   border:2px solid var(--teal);color:var(--teal);background:rgba(18,12,26,.82)}
 .nApp.on{background:var(--teal);color:#042a26}
 .nApp.armed{box-shadow:0 0 0 5px rgba(45,212,191,.35),0 0 26px rgba(45,212,191,.5)}
 
-.nSec{width:80px;height:80px;font-size:10.5px;
+.nSec{width:98px;height:98px;font-size:11.5px;
   border:2px solid var(--amber);color:var(--amber);background:rgba(18,12,26,.82)}
 .nSec.grp{border-style:dashed}
 .nSec.on{background:var(--amber);color:#2b1a05}
 .nSec.armed{box-shadow:0 0 0 5px rgba(245,166,35,.35),0 0 26px rgba(245,166,35,.5)}
 
-.nLeaf{width:70px;height:70px;font-size:10px;
+.nLeaf{width:88px;height:88px;font-size:10.5px;
   border:1.5px solid var(--violet);color:#d9c8ff;background:rgba(18,12,26,.86)}
 .nLeaf.on{background:var(--violet);color:#1a0f2e}
 .nLeaf.armed{box-shadow:0 0 0 5px rgba(167,139,250,.35),0 0 26px rgba(167,139,250,.5)}
@@ -971,9 +971,9 @@ button:active:after{width:280%;height:280%;opacity:.18;transition:none}
 
 @media(max-width:900px){
   .nSoma{width:92px;height:92px;font-size:12px}
-  .nApp{width:78px;height:78px;font-size:11px}
-  .nSec{width:68px;height:68px;font-size:10px}
-  .nLeaf{width:60px;height:60px;font-size:9.5px}
+  .nApp{width:108px;height:108px;font-size:13px}
+  .nSec{width:98px;height:98px;font-size:11.5px}
+  .nLeaf{width:88px;height:88px;font-size:10.5px}
 }
 @media(prefers-reduced-motion:reduce){
   .nSyn,.nSoma,.neuroHub span{animation:none!important}
@@ -6172,7 +6172,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.49.1 SNAP NODE NAV · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.49.2 FRONT NODE + CORPUS DRILLDOWN · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7248,6 +7248,22 @@ function phgPipelineAge(ts){
   if(secs<90)return "updated "+secs+"s ago";
   return "updated "+Math.round(secs/60)+"m ago";
 }
+var CORPUS_BROWSER={open:false,kind:'rendered',busy:false,error:'',rows:[],count:0,next:null,f:{asset_kind:'',menu_scope:'',status:'',q:''}};
+var PHG_CORPUS_BROWSER_URL="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-menu-corpus-browser";
+function corpusOpen(kind){CORPUS_BROWSER.open=true;CORPUS_BROWSER.kind=kind||'rendered';CORPUS_BROWSER.rows=[];CORPUS_BROWSER.next=0;render();corpusLoad(false);}
+function corpusClose(){CORPUS_BROWSER.open=false;render();}
+function corpusSet(k,v){CORPUS_BROWSER.f[k]=v;CORPUS_BROWSER.rows=[];CORPUS_BROWSER.next=0;corpusLoad(false);}
+function corpusLoad(more){
+  if(CORPUS_BROWSER.busy)return;CORPUS_BROWSER.busy=true;CORPUS_BROWSER.error='';render();
+  var token=(PHGAUTH&&PHGAUTH.session&&PHGAUTH.session.access_token)||'';
+  fetch(PHG_CORPUS_BROWSER_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(Object.assign({kind:CORPUS_BROWSER.kind,limit:24,offset:more?(CORPUS_BROWSER.next||0):0},CORPUS_BROWSER.f))}).then(function(r){if(!r.ok)throw new Error('browser returned '+r.status);return r.json()}).then(function(j){CORPUS_BROWSER.rows=more?CORPUS_BROWSER.rows.concat(j.rows||[]):(j.rows||[]);CORPUS_BROWSER.count=j.count||0;CORPUS_BROWSER.next=j.next_offset;CORPUS_BROWSER.busy=false;render()}).catch(function(e){CORPUS_BROWSER.busy=false;CORPUS_BROWSER.error=e.message;render()});
+}
+function corpusBrowserPage(){
+ var b=CORPUS_BROWSER,f=b.f,h='<div class="sec">Menu Library</div><div class="secsub">'+esc(b.kind)+' · '+n(b.count)+' matching documents</div>';
+ h+='<div class="card"><div class="grid g4"><input class="mdcin" placeholder="Search venue" value="'+esc(f.q)+'" onchange="corpusSet(\'q\',this.value)"><select onchange="corpusSet(\'asset_kind\',this.value)"><option value="">All formats</option><option>pdf</option><option>html</option><option>image</option></select><select onchange="corpusSet(\'menu_scope\',this.value)"><option value="">All menu types</option><option>beverage</option><option>food</option><option>mixed</option><option>unknown</option></select><select onchange="corpusSet(\'status\',this.value)"><option value="">All statuses</option><option>ready</option><option>pending</option><option>processing</option><option>retry</option><option>failed</option></select></div><button class="btn" onclick="corpusClose()">Back to pipeline</button></div>';
+ if(b.error)h+='<div class="err">'+esc(b.error)+'</div>';if(b.busy&&!b.rows.length)h+='<div class="card">Loading menu library…</div>';
+ h+='<div class="grid g3">';for(var i=0;i<b.rows.length;i++){var d=b.rows[i],a=d.accounts||{},p=(d.pages||[])[0];h+='<div class="card clik"><div class="lbl">'+esc(d.asset_kind||'menu')+' · '+esc(d.menu_scope||'unknown')+'</div><div class="ttl">'+esc(a.account_name||'Venue')+'</div><div class="sub">'+esc(d.page_render_status||'')+' · '+n(d.page_count||0)+' page(s)</div>'+(p&&p.id?'<img loading="lazy" src="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/menu-render-chat-preview?page_id='+p.id+'" style="width:100%;max-height:320px;object-fit:contain;margin-top:12px;background:#05070e">':'<div class="sub" style="margin-top:18px">Preview not rendered yet</div>')+'</div>'}h+='</div>';if(b.next!==null)h+='<button class="btn" onclick="corpusLoad(true)">Load more</button>';return h;
+}
 function pipelineCorpusCard(){
   var p=PIPESTATS;
   if(!p){
@@ -7259,10 +7275,10 @@ function pipelineCorpusCard(){
     '<div class="pdesc">Pipeline totals from the active PHG menu archive.</div>'+
     '<div class="bar" style="margin:10px 0 14px"><div class="fill" style="width:'+pct.toFixed(1)+'%;background:'+GREEN+'"></div></div>'+
     '<div class="grid g4">'+
-      '<div class="card" style="background:#11161b"><div class="lbl">Menu candidates</div><div class="big" style="font-size:28px;color:'+BLUE+'">'+n(p.menu_candidates)+'</div><div class="sub">discovered sources</div></div>'+
-      '<div class="card" style="background:#11161b"><div class="lbl">Archived documents</div><div class="big" style="font-size:28px;color:'+ORANGE+'">'+n(p.visual_documents)+'</div><div class="sub">PDF, image and HTML</div></div>'+
-      '<div class="card" style="background:#11161b"><div class="lbl">Rendered pages</div><div class="big" style="font-size:28px;color:'+GREEN+'">'+n(ready)+'</div><div class="sub">'+pct.toFixed(1)+'% of required pages</div></div>'+
-      '<div class="card" style="background:#11161b"><div class="lbl">Remaining pages</div><div class="big" style="font-size:28px;color:'+PINK+'">'+n(pending)+'</div><div class="sub">waiting for visual render</div></div>'+
+      '<div class="card clik" onclick="corpusOpen('candidates')" style="background:#11161b"><div class="lbl">Menu candidates</div><div class="big" style="font-size:28px;color:'+BLUE+'">'+n(p.menu_candidates)+'</div><div class="sub">discovered sources</div></div>'+
+      '<div class="card clik" onclick="corpusOpen('archived')" style="background:#11161b"><div class="lbl">Archived documents</div><div class="big" style="font-size:28px;color:'+ORANGE+'">'+n(p.visual_documents)+'</div><div class="sub">PDF, image and HTML</div></div>'+
+      '<div class="card clik" onclick="corpusOpen('rendered')" style="background:#11161b"><div class="lbl">Rendered pages</div><div class="big" style="font-size:28px;color:'+GREEN+'">'+n(ready)+'</div><div class="sub">'+pct.toFixed(1)+'% of required pages</div></div>'+
+      '<div class="card clik" onclick="corpusOpen('remaining')" style="background:#11161b"><div class="lbl">Remaining pages</div><div class="big" style="font-size:28px;color:'+PINK+'">'+n(pending)+'</div><div class="sub">waiting for visual render</div></div>'+
     '</div>'+
     '<div class="row"><span>PDF documents</span><b>'+n(p.pdf_documents)+'</b></div>'+
     '<div class="row"><span>Image documents</span><b>'+n(p.image_documents)+'</b></div>'+
@@ -22116,6 +22132,7 @@ function render(){
   var sec=SECTIONS.filter(function(s){return s.k===page})[0]||SECTIONS[0];
   document.getElementById("ptitle").textContent=page==="home"?"Pipeline":sec.label;
   if(page==="home"){
+    if(CORPUS_BROWSER.open){v.innerHTML=corpusBrowserPage();return;}
     v.innerHTML=(STATE==="ALL")?countryHome():homePage();
     tick("mV",S.venues);tick("mP",S.places_done);tick("mS",S.websites);tick("mI",S.drink_items);
   }else if(page==="competitors"||page==="map"){
@@ -22820,7 +22837,7 @@ function n3Tumble(){
   if (N3.rx < -3.1416) N3.rx += 6.2832;
 }
 
-var N3 = { ART_EVERY:4, artDirty:true, rx:-0.22, ry:0, spin:N3_SPIN, drag:null, raf:null, t:0, dt:1, frames:0, bursts:[] };
+var N3 = { ART_EVERY:4, artDirty:true, rx:-0.08, ry:0, spin:0, drag:null, raf:null, t:0, dt:1, frames:0, bursts:[] };
 
 function n3Project(p0){
   /* Scale the whole assembly to fit before projecting. Each level blooms
@@ -23478,7 +23495,7 @@ function n3Tick(){
      dims toward a dot still says a path exists; a node that vanishes says
      the tree ends, which would be an assertion the map cannot support. The
      existing backLv >= 3 rule already does exactly this and is left alone. */
-  var K_FLOOR = 0.55;
+  var K_FLOOR = _profile==='phone' ? 0.72 : (_profile==='tablet' ? 0.66 : 0.60);
   var k = Math.max(K_FLOOR, Math.min(1, LIMIT/rad));
   /* EASE TOWARD THE TARGET SO A BRANCH OPENING GLIDES INTO PLACE.
 
@@ -23667,7 +23684,9 @@ function n3Tick(){
        I added the banding to stop children hiding behind their parents. Pure
        depth does that anyway, because a child in front IS in front. Arming
        lifts a node slightly, not above the geometry. */
-    var z = 1000 + Math.round(q.z * 2) + (armed ? 60 : 0);
+    /* Functional hierarchy wins over perspective for clickability: a child
+       tier always paints above its parent; depth only orders siblings. */
+    var z = 1000 + tier*1200 + Math.round(q.z * 0.25) + (armed ? 120 : 0);
     var zi = (tier === 0 && N3.somaHover && N3.canHover) ? '9000' : String(z);
     if (btns[i].__zi !== zi){ btns[i].style.zIndex = zi; btns[i].__zi = zi; }
 
@@ -24114,7 +24133,7 @@ function neuroUp(){
      scrim's job, and a centre that sometimes dismisses the whole thing is a
      control doing two different jobs depending on where you are. */
   NEURO.armed = null; NEURO.focus = null; NEURO.top = true; NEURO.depth = 1;
-  N3.rx = -0.22; N3.ry = 0;
+  N3.rx = -0.08; N3.ry = 0;
   /* Collapse what the sidebar has open too, so coming back to the top really
      is the top - not the top with three branches still hanging off it. */
   var open = document.querySelectorAll('#navlist .navgrp.open'), i;
@@ -24207,7 +24226,10 @@ function n3Bloom(parent, i, n, out, rad){
      camera rotates. Pointing the cap there puts every child at the same
      depth, spread across the screen plane. Same function, different pole -
      which is why they sent both pieces as one drop. */
-  var pole = dir;
+  /* Navigation branches face the camera even while the overall field retains
+     shallow 3D depth. This keeps labels/front faces readable and prevents a
+     branch from collapsing edge-on. */
+  var pole = (typeof fvCameraPole === 'function') ? fvCameraPole(N3.ry || 0, N3.rx || 0) : dir;
   if (typeof FLATV !== 'undefined' && FLATV.on && typeof fvCameraPole === 'function'){
     /* with rx at a true zero this is the horizontal direction that faces the
        viewer, so the fan lies flat across the screen rather than raked */
@@ -24234,8 +24256,8 @@ function n3Bloom(parent, i, n, out, rad){
      diameter apart allows the 10% overlap Rob specified and no more. That is
      converted back through the fit to model units here, so the on-screen
      result is the same however deep the model goes. */
-  var DRAWN = 97;                       /* a live node's diameter in px */
-  var OVERLAP = 0.94;                   /* 10% is the ceiling, so sit under it at ~6% */
+  var DRAWN = 118;                      /* larger phone-first control diameter */
+  var OVERLAP = 1.16;                   /* 10% is the ceiling, so sit under it at ~6% */
   var needPx = DRAWN * OVERLAP;
   /* BOTH SCALES, NOT ONE.
 
@@ -24266,7 +24288,7 @@ function n3Bloom(parent, i, n, out, rad){
   /* A cap seen flat-on has no depth to spread into, so the same angular
      spread covers less screen. Widen it to compensate rather than letting
      them crowd. */
-  var flatBoost = (typeof FLATV !== 'undefined' && FLATV.on) ? 1.35 : 1;
+  var flatBoost = (typeof FLATV !== 'undefined' && FLATV.on) ? 1.48 : 1.32;
   var R = rhCapRadius(n) * (needPx / 64) / fit * flatBoost;
 
   return { x: parent.x + v.x * R,
