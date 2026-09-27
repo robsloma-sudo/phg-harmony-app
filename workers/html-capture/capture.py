@@ -226,6 +226,38 @@ async def _scroll_through(page, notes: list, max_steps: int = 80) -> None:
     await page.wait_for_timeout(250)
 
 
+async def _paint_iframes(page, out: Image.Image, top: int) -> int:
+    """Cross-origin iframes (Untappd beer lists, wine widgets) below the first screen come out blank in a
+    full-page shot; screenshot each one in view and paste it at its place on the page."""
+    n = 0
+    frames = page.locator("iframe")
+    for i in range(min(await frames.count(), 12)):
+        el = frames.nth(i)
+        try:
+            box = await el.bounding_box()
+            if not box or box["height"] < 150 or box["width"] < 200:
+                continue
+            src = (await el.get_attribute("src") or "")
+            if "google.com/maps" in src or "youtube" in src or "facebook" in src:
+                continue
+            await el.scroll_into_view_if_needed(timeout=2000)
+            await page.wait_for_timeout(600)
+            y_doc = await el.evaluate("e => e.getBoundingClientRect().top + window.scrollY")
+            x_doc = await el.evaluate("e => e.getBoundingClientRect().left + window.scrollX")
+            png = await el.screenshot(type="png", timeout=10000)
+            im = Image.open(io.BytesIO(png)).convert("RGB")
+            y = int(round(y_doc)) - top
+            if y + im.height <= 0 or y >= out.height:
+                continue
+            out.paste(im, (int(round(x_doc)), y))
+            n += 1
+        except Exception:
+            continue
+    if n:
+        await _ev(page, "window.scrollTo(0, 0)")
+    return n
+
+
 async def _shot(page, top: int = 0) -> Image.Image:
     """Full-page screenshot from `top` down, in slices (no texture-size limit)."""
     width = page.viewport_size["width"]
@@ -238,6 +270,7 @@ async def _shot(page, top: int = 0) -> Image.Image:
         png = await page.screenshot(full_page=True, clip={"x": 0, "y": y, "width": width, "height": h}, type="png")
         out.paste(Image.open(io.BytesIO(png)).convert("RGB"), (0, y - top))
         y += h
+    await _paint_iframes(page, out, top)
     return out
 
 

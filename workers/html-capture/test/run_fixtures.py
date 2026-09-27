@@ -19,7 +19,7 @@ async def main():
             import glob; c = glob.glob(exe + '/**/chrome', recursive=True); exe = c[0] if c else None
         b = await p.chromium.launch(executable_path=exe, args=['--no-sandbox'])
         for name, expect in [('cookie_lock', ['Cocktail 30']), ('lazy', ['Signature Cocktail 7']), ('tabs', ['Wine 10', 'Cocktail 12', 'Whiskey 15']),
-                             ('inner_scroll', ['Cocktail 40']), ('fixed_wrapper', ['Cocktail 35']), ('sticky_bar', ['Cocktail 25'])]:
+                             ('inner_scroll', ['Cocktail 40']), ('fixed_wrapper', ['Cocktail 35']), ('sticky_bar', ['Cocktail 25']), ('beer_embed', ['Draft Beer'])]:
             url = 'file://' + os.path.join(HERE, 'fixtures', name + '.html')
             # old: what the current worker appears to do
             pg = await b.new_page(viewport={'width': 1400, 'height': 1000})
@@ -36,6 +36,12 @@ async def main():
             if name == 'tabs':
                 tabs = [n for n in cap.notes if n.startswith('tab:')]
                 ok = ok and len(tabs) == 3 and not any('ORDER' in t for t in tabs)
+            if name == 'beer_embed':
+                im = Image.open(io.BytesIO(cap.jpeg)).convert('RGB')
+                y = im.height - 900  # inside the iframe area near the bottom
+                px = im.getpixel((100, y))
+                ok = abs(px[0] - 245) < 20 and abs(px[2] - 200) < 25
+                print('   beer iframe pixel', px)
             if name == 'sticky_bar':
                 ok = any(n.startswith('overlays_hidden') for n in cap.notes)
             if name == 'cookie_lock':
