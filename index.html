@@ -159,18 +159,77 @@ h1{font-family:'Instrument Serif',Georgia,serif;font-size:34px;font-weight:400;l
 .clik{cursor:pointer;position:relative}
 .card.clik:hover{border-color:var(--blue);transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.4),0 0 0 1px rgba(90,169,255,.2)}
 .card.clik:after{content:"\2192";position:absolute;top:16px;right:18px;color:var(--blue);font-size:15px;opacity:.4;transition:.2s}
-/* menu library (corpus drill-down) */
-.cfilters{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
-.cfilters .mdcin{margin:0}
-.ccov{font-size:11px;color:var(--faint);margin-top:10px;line-height:1.5}
-.cbadge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid var(--line2);color:var(--dim);margin:0 6px 4px 0;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:top}
-.cthumb{display:block;width:100%;max-height:320px;object-fit:contain;margin-top:12px;background:#05070e;border-radius:10px;cursor:zoom-in}
+/* menu library (corpus drill-down) 18.49.6: compact, iPhone-first. Own classes on purpose:
+   the global .grid/.card/.mdcin rules force one column, 18px padding and 46px inputs on mobile. */
+#corpusHost{max-width:1180px;margin:0 auto}
+/* the library has its own compact header; hide the big page title while it is on screen */
+.main:has(#corpusHost)>.hd{display:none}
+.mlhead{display:flex;align-items:center;gap:6px;margin:0 0 4px;min-width:0}
+.mlhead .mltitle{font-size:14px;font-weight:600;color:var(--txt);white-space:nowrap}
+.mlhead .mlstat{flex:1;min-width:0;font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlbar{display:flex;flex-wrap:nowrap;align-items:center;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:none;padding:3px 0 5px;margin:0 0 5px;position:sticky;top:0;z-index:30;background:var(--bg)}
+.mlbar::-webkit-scrollbar{display:none}
+.mlchips{display:contents}
+.mlchip{flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 6px;border:1px solid var(--line2);border-radius:5px;background:var(--panel);color:var(--dim);font:inherit;font-size:11.5px;line-height:1;white-space:nowrap;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.mlchip .mlar{font-size:8px;opacity:.6}
+.mlchip.on{border-color:var(--blue);color:var(--txt);background:rgba(90,169,255,.12)}
+.mlchip.mlclr{color:var(--faint);border-style:dashed}
+.mlsearch{flex:0 0 auto;width:92px;height:24px;box-sizing:border-box;padding:0 6px;border:1px solid var(--line2);border-radius:5px;background:var(--panel);color:var(--txt);font:inherit;font-size:12px;outline:none;-webkit-appearance:none;appearance:none;transition:width .15s}
+.mlsearch:focus{width:150px;border-color:var(--blue)}
+.mlmini{height:22px;padding:0 7px;border:1px solid var(--line2);border-radius:5px;background:transparent;color:var(--dim);font:inherit;font-size:11px;line-height:1;white-space:nowrap;cursor:pointer;touch-action:manipulation}
+.mlmini.pri{border-color:var(--blue);color:var(--txt)}
+.mlscrim{position:fixed;inset:0;z-index:4190;background:transparent}
+.mlpanel{position:fixed;z-index:4200;display:flex;flex-direction:column;width:260px;max-height:min(70vh,440px);overflow:hidden;background:var(--panel2);border:1px solid var(--line2);border-radius:7px;box-shadow:0 12px 32px rgba(0,0,0,.55);color:var(--txt)}
+.mlpanel .mlph{display:flex;align-items:center;gap:5px;padding:5px 6px 5px 9px;border-bottom:1px solid var(--line)}
+.mlpanel .mlpt{flex:1;min-width:0;font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlpanel .mlpl{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:2px 0}
+.mlpanel .mlpf{padding:5px 9px;font-size:10.5px;line-height:1.4;color:var(--faint);border-top:1px solid var(--line)}
+.mlpanel .mlpl .mlpf{border-top:0}
+.mlpanel .mlgh{padding:6px 9px 2px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.mlpanel .mlpin{display:block;box-sizing:border-box;width:calc(100% - 14px);height:26px;margin:5px 7px 3px;padding:0 7px;border:1px solid var(--line2);border-radius:5px;background:var(--panel);color:var(--txt);font:inherit;font-size:12px;outline:none;-webkit-appearance:none;appearance:none}
+.mlpanel .mlpin:focus{border-color:var(--blue)}
+.mlopt{display:flex;align-items:center;gap:7px;width:100%;box-sizing:border-box;padding:5px 9px;border:0;background:transparent;color:var(--txt);font:inherit;font-size:12px;text-align:left;cursor:pointer;user-select:none;-webkit-user-select:none}
+.mlopt:hover{background:rgba(255,255,255,.04)}
+.mlopt input{margin:0;width:14px;height:14px;flex:0 0 auto;accent-color:var(--blue)}
+.mlopt .mll{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mlopt .mln{margin-left:auto;padding-left:6px;font-size:10.5px;color:var(--faint)}
+.mlopt .mlk{width:14px;flex:0 0 auto;color:var(--blue);text-align:center}
+.mlopt.mlsgl.on{color:var(--blue)}
+@media (max-width:600px){
+ .mlscrim{background:rgba(0,0,0,.4)}
+ .mlpanel{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:auto!important;max-height:72vh;border-radius:12px 12px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+ .mlopt{padding:8px 12px;font-size:13px}
+ .mlpanel .mlph{padding:8px 8px 8px 12px}
+}
+@media (pointer:coarse){.mlsearch,.mlpanel .mlpin{font-size:16px}}
+.mlerr{font-size:11.5px;color:#ff9b9b;padding:5px 8px;border:1px solid rgba(255,90,90,.28);border-radius:5px;margin:0 0 5px}
+.mlmsg{grid-column:1/-1;font-size:11.5px;color:var(--dim);padding:10px 2px}
+.mlgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;transition:opacity .15s}
+.mlgrid.mlbusy{opacity:.5;pointer-events:none}
+@media (max-width:600px){.mlgrid{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:5px}}
+.mlcard{display:flex;flex-direction:column;min-width:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.mlcard .mlimg{position:relative;aspect-ratio:3/4;overflow:hidden;background:#05070e;cursor:zoom-in}
+.mlcard .mlimg img{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}
+.mlcard .mlimg .mlpg{position:absolute;right:3px;bottom:3px;padding:1px 4px;border-radius:3px;background:rgba(0,0,0,.7);color:#ddd;font-size:9.5px}
+.mlcard .mlnone{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;padding:6px;text-align:center;font-size:10.5px;color:var(--faint);background:#0b0e12}
+.mlcard .mlbody{padding:4px 6px 5px;min-width:0}
+.mlcard .mlname{font-size:11.5px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlcard .mlmeta,.mlcard .mlcen{margin-top:1px;font-size:10px;line-height:1.35;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlcard .mlcen{color:var(--faint)}
+.mlcard .mlmatch{color:var(--blue)}
+.mlpager{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px;margin:8px 0 4px;font-size:11px;color:var(--dim)}
+.mlpager button{min-width:24px;height:24px;padding:0 5px;border:1px solid var(--line2);border-radius:5px;background:var(--panel);color:var(--dim);font:inherit;font-size:11px;cursor:pointer;touch-action:manipulation}
+.mlpager button.on{border-color:var(--blue);color:var(--txt)}
+.mlpager button[disabled]{opacity:.35;cursor:default}
+.mlpager .mldots{padding:0 2px}
+.mlpager .mlrange{margin-left:6px;white-space:nowrap}
 .cview{position:fixed;inset:0;z-index:4300;background:rgba(3,5,10,.97);display:flex;flex-direction:column;color:var(--txt)}
-.cview .cvbar{display:flex;align-items:center;gap:10px;padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top));border-bottom:1px solid var(--line)}
-.cview .cvbar+.cvbar{border-bottom:0;border-top:1px solid var(--line);padding-bottom:calc(10px + env(safe-area-inset-bottom))}
-.cview .cvimg{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px}
-.cview .cvimg img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px;background:#05070e}
-.cvbtn{min-width:48px;min-height:48px;display:inline-flex;align-items:center;justify-content:center;background:#171c22;border:1px solid var(--line2);color:#c3c0bb;border-radius:12px;cursor:pointer;font:inherit;font-size:18px;text-decoration:none;touch-action:manipulation}
+.cview .cvbar{display:flex;align-items:center;gap:8px;padding:6px 8px;padding-top:calc(6px + env(safe-area-inset-top));border-bottom:1px solid var(--line)}
+.cview .cvbar+.cvbar{border-bottom:0;border-top:1px solid var(--line);padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}
+.cview .mlvname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cview .cvimg{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:auto;-webkit-overflow-scrolling:touch;padding:4px}
+.cview .cvimg img{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;background:#05070e}
+.cvbtn{min-width:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;background:#171c22;border:1px solid var(--line2);color:#c3c0bb;border-radius:8px;cursor:pointer;font:inherit;font-size:16px;text-decoration:none;touch-action:manipulation}
 .cvbtn[disabled]{opacity:.35;cursor:default}
 body.cview-open{overflow:hidden}
 .card.clik:hover:after{opacity:1;transform:translateX(4px)}
@@ -6186,7 +6245,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-27.18.49.5 GALLERY IMAGES + FILTERS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-27.18.49.6 COMPACT MENU LIBRARY · CENSUS FILTERS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7262,105 +7321,261 @@ function phgPipelineAge(ts){
   if(secs<90)return "updated "+secs+"s ago";
   return "updated "+Math.round(secs/60)+"m ago";
 }
-/* MENU LIBRARY (corpus drill-down). 18.49.5.
-   The four Live Menu Corpus tiles open this browser. Everything here talks to the
-   authenticated phg-menu-corpus-browser function (v3): filters run in the database,
-   24 rows a page, and page images arrive as short-lived signed URLs. The browser
-   manages its own DOM (corpusDraw) so the 15s dashboard poll cannot wipe a half-typed
-   search or reset the scroll: render() only mounts it once (see the page==="home" hook).
+/* MENU LIBRARY (corpus drill-down). 18.49.6 - compact, iPhone-first (PHG-027).
+   Rob: one toolbar row of small dropdowns sized to their text, smallest borders and buttons,
+   multi-select everywhere it makes sense, census demographics alongside city and state, and
+   20 / 50 / 100 records per page. The toolbar scrolls sideways on a phone; each chip opens a
+   checklist (a bottom sheet on a phone). Census bands use the venue ZIP's ACS 2020-2024 figures.
+   Talks to phg-menu-corpus-browser v4: authenticated, filters and paging run in the database,
+   page images arrive as short-lived signed URLs. The browser owns its DOM (corpusDraw) so the
+   dashboard poll cannot wipe a half-typed search: render() only mounts it once. Every request
+   carries a generation number, so a slow older response can never overwrite a newer one.
    Rob's rule for text filters: a document with no stored menu text is UNKNOWN, never
-   "ingredient absent" - text_coverage is shown on every card. */
-var CORPUS_BROWSER={open:false,kind:'rendered',busy:false,error:'',rows:[],count:0,capped:false,next:null,vals:null,note:'',view:null,
-  f:{q:'',state:'',city:'',venue_type:'',asset_kind:'',menu_scope:'',status:'',cocktail:'',ingredient:'',prep_type:''}};
+   "ingredient absent" - cards say whether text is stored. */
+var CORPUS_BROWSER={open:false,kind:'rendered',busy:false,error:'',rows:[],count:0,capped:false,vals:null,view:null,page:0,size:20,panel:null,
+  f:{q:'',state:[],city:[],venue_type:[],asset_kind:[],menu_scope:[],status:[],cocktail:'',ingredient:'',prep_type:[],income:[],age:[],young:[],affluent:[],edu:[],hisp:[],sort:'recent'}};
 var PHG_CORPUS_BROWSER_URL="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-menu-corpus-browser";
-var CORPUS_PAGE=24,CORPUS_TYPING=null;
-var CORPUS_KINDS={candidates:'Menu candidates',archived:'Archived documents',rendered:'Rendered pages',remaining:'Remaining pages'};
+var CORPUS_KINDS={rendered:'With images',archived:'All documents',remaining:'Not rendered',candidates:'Candidates'};
 var CORPUS_PREPS=['syrup','infusion','cordial','shrub','puree','bitters','citrus','garnish','foam','tincture','saline','tea','coffee'];
+var CORPUS_CENSUS=['income','age','young','affluent','edu','hisp'];
+var CORPUS_CENSUS_DEF={
+ income:{label:'Income',long:'Median household income',bands:[['lt50','Under $50k'],['50_75','$50–75k'],['75_100','$75–100k'],['100_150','$100–150k'],['150p','$150k+'],['na','No census data']]},
+ age:{label:'Age',long:'Median age',bands:[['lt30','Under 30'],['30_35','30–35'],['35_40','35–40'],['40_45','40–45'],['45p','45+'],['na','No census data']]},
+ young:{label:'21–34',long:'Share of people aged 21–34',bands:[['lt15','Under 15%'],['15_20','15–20%'],['20_30','20–30%'],['30p','30%+'],['na','No census data']]},
+ affluent:{label:'$100k+',long:'Households earning $100k+',bands:[['lt25','Under 25%'],['25_40','25–40%'],['40_60','40–60%'],['60p','60%+'],['na','No census data']]},
+ edu:{label:'Degree',long:'Adults with a bachelor’s degree or higher',bands:[['lt25','Under 25%'],['25_40','25–40%'],['40_60','40–60%'],['60p','60%+'],['na','No census data']]},
+ hisp:{label:'Hispanic',long:'Hispanic or Latino share of population',bands:[['lt10','Under 10%'],['10_25','10–25%'],['25_50','25–50%'],['50p','50%+'],['na','No census data']]}
+};
+var CORPUS_SORTS=[['recent','Newest'],['name','Venue A–Z'],['city','City A–Z'],['income_desc','Income high–low'],['income_asc','Income low–high'],['age_asc','Youngest area'],['age_desc','Oldest area'],['young_desc','Most 21–34'],['affluent_desc','Most $100k+ homes'],['edu_desc','Most degrees'],['hisp_desc','Most Hispanic']];
+var CORPUS_SIZES=[20,50,100];
+var CORPUS_GEN=0,CORPUS_TYPING=null,CORPUS_APPLY=null;
+(function(){try{var p=JSON.parse(localStorage.getItem('phg.menuLibrary.v1')||'{}');
+  if(CORPUS_SIZES.indexOf(p.size)>=0)CORPUS_BROWSER.size=p.size;
+  if(p.sort&&CORPUS_SORTS.some(function(s){return s[0]===p.sort}))CORPUS_BROWSER.f.sort=p.sort;}catch(e){}})();
+function corpusSavePrefs(){try{localStorage.setItem('phg.menuLibrary.v1',JSON.stringify({size:CORPUS_BROWSER.size,sort:CORPUS_BROWSER.f.sort}));}catch(e){}}
 function corpusToken(){return (PHGAUTH&&PHGAUTH.session&&PHGAUTH.session.access_token)||'';}
 function corpusPost(body){
  return fetch(PHG_CORPUS_BROWSER_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+corpusToken()},body:JSON.stringify(body)})
   .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(r.status===401?'Sign in to open the menu library':(j&&j.error?j.error:'Menu library returned '+r.status));return j})});
 }
-function corpusOpen(kind){var b=CORPUS_BROWSER;b.open=true;b.kind=CORPUS_KINDS[kind]?kind:'rendered';b.rows=[];b.count=0;b.capped=false;b.next=null;b.error='';b.view=null;render();corpusLoad(false);if(!b.vals)corpusValues();}
-function corpusClose(){CORPUS_BROWSER.open=false;CORPUS_BROWSER.view=null;render();}
-function corpusSet(k,v){var b=CORPUS_BROWSER;v=String(v||'');if(b.f[k]===v)return;b.f[k]=v;b.rows=[];b.next=null;corpusLoad(false);}
-function corpusType(k,v){clearTimeout(CORPUS_TYPING);CORPUS_TYPING=setTimeout(function(){corpusSet(k,v)},450);}
-function corpusReset(){var f=CORPUS_BROWSER.f,changed=false;for(var k in f)if(f[k]){f[k]='';changed=true;}var box=document.getElementById('corpusFilters');if(box)box.outerHTML=corpusFiltersHtml();if(changed){CORPUS_BROWSER.rows=[];CORPUS_BROWSER.next=null;corpusLoad(false);}}
-function corpusValues(){corpusPost({action:'filters'}).then(function(j){CORPUS_BROWSER.vals=j.values||null;if(!CORPUS_BROWSER.note)CORPUS_BROWSER.note=j.coverage_note||'';var box=document.getElementById('corpusFilters');if(box)box.outerHTML=corpusFiltersHtml();corpusDraw();}).catch(function(){});}
-function corpusLoad(more){
- var b=CORPUS_BROWSER;if(b.busy)return;b.busy=true;b.error='';corpusDraw();
- var body={action:'list',kind:b.kind,limit:CORPUS_PAGE,offset:more?(b.next||0):0};
- for(var k in b.f)if(b.f[k])body[k]=b.f[k];
- corpusPost(body)
-  .then(function(j){b.rows=more?b.rows.concat(j.rows||[]):(j.rows||[]);b.count=j.count||0;b.capped=!!j.count_capped;b.next=(j.next_offset===undefined)?null:j.next_offset;if(j.coverage_note)b.note=j.coverage_note;b.busy=false;corpusDraw();})
-  .catch(function(e){b.busy=false;b.error=e.message;corpusDraw();});
+function corpusNice(s){return String(s==null?'':s).replace(/_/g,' ');}
+function corpusTitle(s){return String(s||'').toLowerCase().replace(/(^|[\s\-\/.'])([a-z])/g,function(m,a,c){return a+c.toUpperCase()});}
+function corpusMoney(v){v=Number(v);if(!isFinite(v)||v<=0)return '';return v>=250000?'$250k+':'$'+Math.round(v/1000)+'k';}
+function corpusActive(k){var v=CORPUS_BROWSER.f[k];return Array.isArray(v)?v.length>0:(k!=='sort'&&!!v);}
+function corpusAnyActive(){var f=CORPUS_BROWSER.f;for(var k in f)if(k!=='sort'&&corpusActive(k))return true;return false;}
+function corpusTextActive(){var f=CORPUS_BROWSER.f;return !!(f.cocktail||f.ingredient||f.prep_type.length);}
+function corpusOpen(kind){var b=CORPUS_BROWSER;b.open=true;b.kind=CORPUS_KINDS[kind]?kind:'rendered';b.rows=[];b.count=0;b.capped=false;b.page=0;b.error='';b.view=null;
+ if(b.kind==='rendered')b.f.status=[];corpusPanelClose();render();corpusLoad();if(!b.vals)corpusValues();}
+function corpusClose(){corpusPanelClose();CORPUS_BROWSER.open=false;CORPUS_BROWSER.view=null;document.body.classList.remove('cview-open');render();}
+function corpusValues(){corpusPost({action:'filters'}).then(function(j){CORPUS_BROWSER.vals=j.values||null;corpusDrawChips();corpusPanelRefresh();}).catch(function(){});}
+function corpusBody(){
+ var b=CORPUS_BROWSER,f=b.f,body={action:'list',kind:b.kind,limit:b.size,offset:b.page*b.size};
+ for(var k in f){var v=f[k];if(Array.isArray(v)){if(v.length)body[k]=v.slice();}else if(v)body[k]=v;}
+ if(b.kind==='candidates')delete body.sort;
+ if(b.kind==='rendered')delete body.status;
+ return body;
 }
-function corpusOpt(cur,val,label){return '<option value="'+esc(val)+'"'+(cur===val?' selected':'')+'>'+esc(label)+'</option>';}
-function corpusSel(key,label,list,fmt){
- var f=CORPUS_BROWSER.f,h='<select class="mdcin" aria-label="'+esc(label)+'" onchange="corpusSet(\''+key+'\',this.value)">'+corpusOpt(f[key],'',label);
- for(var i=0;i<(list||[]).length;i++){var it=list[i],v=typeof it==='string'?it:it.v,nn=typeof it==='string'?null:it.n;if(v===null||v===undefined||v==='')continue;h+=corpusOpt(f[key],String(v),(fmt?fmt(String(v)):String(v))+(nn?' ('+n(nn)+')':''));}
- if(f[key]&&!(list||[]).some(function(it){return String(typeof it==='string'?it:it.v)===f[key]}))h+=corpusOpt(f[key],f[key],f[key]);
- return h+'</select>';
+function corpusLoad(){
+ var b=CORPUS_BROWSER,gen=++CORPUS_GEN;clearTimeout(CORPUS_APPLY);b.busy=true;b.error='';corpusDraw();
+ corpusPost(corpusBody()).then(function(j){if(gen!==CORPUS_GEN)return;b.rows=j.rows||[];b.count=j.count||0;b.capped=!!j.count_capped;b.busy=false;
+   if(!b.rows.length&&b.page>0&&!b.capped&&b.count>0){b.page=Math.max(0,Math.ceil(b.count/b.size)-1);corpusLoad();return;}corpusDraw();})
+  .catch(function(e){if(gen!==CORPUS_GEN)return;b.busy=false;b.error=(e&&e.message)||'Menu library failed';corpusDraw();});
 }
-function corpusFiltersHtml(){
- var b=CORPUS_BROWSER,f=b.f,v=b.vals||{},cand=b.kind==='candidates',nice=function(s){return s.replace(/_/g,' ')};
- var h='<div id="corpusFilters" class="card" data-vals="'+(b.vals?'1':'0')+'"><div class="cfilters">'
-  +'<input class="mdcin" placeholder="Venue name" value="'+esc(f.q)+'" oninput="corpusType(\'q\',this.value)" onchange="corpusSet(\'q\',this.value)">'
-  +corpusSel('state','All states',v.states||['NY','CO','IA'])
-  +corpusSel('city','All cities',v.cities||[],function(s){return s.toLowerCase().replace(/\b\w/g,function(c){return c.toUpperCase()})})
-  +corpusSel('venue_type','All venue types',v.venue_types||[],nice)
-  +(cand?corpusSel('asset_kind','All formats',v.candidate_formats||['html','pdf','image','social','none']):corpusSel('asset_kind','All formats',v.asset_kinds||['html','pdf','image']))
-  +(cand?corpusSel('menu_scope','All menu scopes',v.candidate_scopes||[],nice):corpusSel('menu_scope','All menu scopes',v.menu_scopes||['beverage','beverage_candidate'],nice))
-  +(cand?corpusSel('status','All statuses',v.candidate_statuses||[],nice):(b.kind==='archived'?corpusSel('status','All render states',v.render_statuses||['ready','pending'],nice):''))
-  +'<input class="mdcin" placeholder="Cocktail name (e.g. margarita)" value="'+esc(f.cocktail)+'" oninput="corpusType(\'cocktail\',this.value)" onchange="corpusSet(\'cocktail\',this.value)">'
-  +'<input class="mdcin" placeholder="Ingredient text (e.g. mezcal, honey)" value="'+esc(f.ingredient)+'" oninput="corpusType(\'ingredient\',this.value)" onchange="corpusSet(\'ingredient\',this.value)">'
-  +corpusSel('prep_type','Any preparation',v.prep_types||CORPUS_PREPS)
-  +'</div>';
- var tc=v.text_coverage;
- h+='<div class="ccov">'+(tc?n(tc.documents_with_cocktail_text)+' of '+n(tc.documents_total)+' archived documents have stored cocktail text. ':'')+'Cocktail, ingredient and preparation filters only search stored menu text; a document without text is unknown, not proof an ingredient is absent.</div>';
- h+='<div style="margin-top:12px"><button class="btn" onclick="corpusReset()">Clear filters</button><button class="btn" onclick="corpusClose()">Back to pipeline</button></div></div>';
+function corpusApplySoon(){clearTimeout(CORPUS_APPLY);CORPUS_APPLY=setTimeout(function(){CORPUS_BROWSER.page=0;corpusLoad();},350);}
+function corpusType(k,v){clearTimeout(CORPUS_TYPING);CORPUS_TYPING=setTimeout(function(){var f=CORPUS_BROWSER.f;v=String(v||'').trim();if(f[k]===v)return;f[k]=v;CORPUS_BROWSER.page=0;corpusDrawChips();corpusPanelHead();corpusLoad();},450);}
+function corpusToggle(k,v,on){var a=CORPUS_BROWSER.f[k];if(!Array.isArray(a))return;v=String(v);var i=a.indexOf(v);if(on&&i<0)a.push(v);else if(!on&&i>=0)a.splice(i,1);
+ if(k==='state'&&CORPUS_BROWSER.panel&&CORPUS_BROWSER.panel.k==='state'){/* city list narrows by state on next open */}
+ corpusDrawChips();corpusPanelHead();corpusApplySoon();}
+function corpusClearKey(k){var f=CORPUS_BROWSER.f;if(k==='text'){f.cocktail='';f.ingredient='';f.prep_type=[];}else if(Array.isArray(f[k]))f[k]=[];else f[k]='';
+ CORPUS_BROWSER.page=0;corpusDrawChips();corpusPanelRefresh();corpusLoad();}
+function corpusReset(){var f=CORPUS_BROWSER.f;for(var k in f){if(k==='sort')continue;f[k]=Array.isArray(f[k])?[]:'';}
+ var s=document.getElementById('corpusQ');if(s)s.value='';clearTimeout(CORPUS_TYPING);CORPUS_BROWSER.page=0;corpusPanelClose();corpusDrawChips();corpusLoad();}
+function corpusPick(k,v){
+ var b=CORPUS_BROWSER;corpusPanelClose();
+ if(k==='kind'){if(b.kind===v||!CORPUS_KINDS[v])return;b.kind=v;b.f.status=[];b.f.asset_kind=[];b.f.menu_scope=[];}
+ else if(k==='size'){v=Number(v);if(b.size===v||CORPUS_SIZES.indexOf(v)<0)return;b.size=v;corpusSavePrefs();}
+ else if(k==='sort'){if(b.f.sort===v)return;b.f.sort=v;corpusSavePrefs();}
+ else return;
+ b.page=0;corpusDrawChips();corpusLoad();
+}
+function corpusGo(p){var b=CORPUS_BROWSER;p=Math.max(0,p|0);if(p===b.page||b.busy&&p===b.page)return;b.page=p;corpusLoad();
+ var h=document.getElementById('corpusHost');if(h&&h.scrollIntoView)try{h.scrollIntoView({block:'start'});}catch(e){h.scrollIntoView();}}
+
+/* ---- dropdown definitions (vocabularies come from action:"filters"; literals are fallbacks) ---- */
+function corpusCounted(list,fallback,fmt){
+ var out=[],src=(list&&list.length)?list:(fallback||[]);
+ for(var i=0;i<src.length;i++){var it=src[i],v=typeof it==='string'?it:it.v;if(v===null||v===undefined||v==='')continue;
+  out.push({v:String(v),l:fmt?fmt(String(v)):String(v),n:typeof it==='string'?null:it.n});}
+ return out;
+}
+function corpusCities(){
+ var b=CORPUS_BROWSER,list=(b.vals&&b.vals.cities)||[],st=b.f.state,by={},order=[];
+ for(var i=0;i<list.length;i++){var c=list[i];if(!c||!c.v)continue;if(st.length&&st.indexOf(c.st)<0)continue;
+  var key=String(c.v);if(!by[key]){by[key]={v:key,st:[],n:0};order.push(key);}if(c.st&&by[key].st.indexOf(c.st)<0)by[key].st.push(c.st);by[key].n+=Number(c.n||0);}
+ var sel=b.f.city;for(var j=0;j<sel.length;j++)if(!by[sel[j]]){by[sel[j]]={v:sel[j],st:[],n:null};order.unshift(sel[j]);}
+ return order.map(function(k){var o=by[k];return {v:o.v,l:corpusTitle(o.v)+(o.st.length?', '+o.st.join('/'):''),n:o.n};});
+}
+function corpusCensusOpts(k){
+ var c=CORPUS_BROWSER.vals&&CORPUS_BROWSER.vals.census&&CORPUS_BROWSER.vals.census[k];
+ if(c&&c.bands&&c.bands.length)return c.bands.map(function(x){return {v:String(x.v),l:x.label,n:x.n}});
+ return CORPUS_CENSUS_DEF[k].bands.map(function(x){return {v:x[0],l:x[1],n:null}});
+}
+function corpusDefs(){
+ var b=CORPUS_BROWSER,v=b.vals||{},cand=b.kind==='candidates',defs=[];
+ defs.push({k:'kind',label:'Show',single:true,cur:b.kind,opts:Object.keys(CORPUS_KINDS).map(function(x){return {v:x,l:CORPUS_KINDS[x]}})});
+ defs.push({k:'state',label:'State',opts:corpusCounted(v.states,['NY','CO','IA'])});
+ defs.push({k:'city',label:'City',search:true,opts:corpusCities()});
+ for(var i=0;i<CORPUS_CENSUS.length;i++){var ck=CORPUS_CENSUS[i];defs.push({k:ck,label:CORPUS_CENSUS_DEF[ck].label,long:CORPUS_CENSUS_DEF[ck].long,census:true,opts:corpusCensusOpts(ck)});}
+ defs.push({k:'venue_type',label:'Type',search:true,opts:corpusCounted(v.venue_types,[],corpusNice)});
+ defs.push({k:'asset_kind',label:'Format',opts:corpusCounted(cand?v.candidate_formats:v.asset_kinds,cand?['html','pdf','image','social','none']:['html','pdf','image'])});
+ defs.push({k:'menu_scope',label:'Menu',opts:corpusCounted(cand?v.candidate_scopes:v.menu_scopes,cand?[]:['beverage','beverage_candidate'],corpusNice)});
+ if(b.kind!=='rendered')defs.push({k:'status',label:'Status',opts:corpusCounted(cand?v.candidate_statuses:v.render_statuses,[],corpusNice)});
+ defs.push({k:'text',label:'Drinks',text:true,long:'Cocktail, ingredient and preparation text'});
+ if(!cand)defs.push({k:'sort',label:'Sort',single:true,cur:b.f.sort,opts:CORPUS_SORTS.map(function(s){return {v:s[0],l:s[1]}})});
+ defs.push({k:'size',label:'Per page',single:true,cur:String(b.size),opts:CORPUS_SIZES.map(function(s){return {v:String(s),l:s+' per page'}})});
+ return defs;
+}
+function corpusDef(k){var d=corpusDefs();for(var i=0;i<d.length;i++)if(d[i].k===k)return d[i];return null;}
+function corpusChipText(d){
+ var f=CORPUS_BROWSER.f;
+ if(d.single){if(d.k==='size')return CORPUS_BROWSER.size+'/page';for(var i=0;i<d.opts.length;i++)if(String(d.opts[i].v)===String(d.cur))return d.opts[i].l;return d.label;}
+ if(d.text){var c=(f.cocktail?1:0)+(f.ingredient?1:0)+f.prep_type.length;return c?d.label+' '+c:d.label;}
+ var sel=f[d.k]||[];if(!sel.length)return d.label;
+ if(sel.length===1){var t=sel[0];for(var j=0;j<d.opts.length;j++)if(d.opts[j].v===sel[0]){t=d.opts[j].l;break;}
+  if(d.k==='city')t=t.replace(/,.*$/,'');if(d.census)t=d.label+' '+t;return t.length>18?t.slice(0,17)+'…':t;}
+ return d.label+' '+sel.length;
+}
+function corpusChipsHtml(){
+ var b=CORPUS_BROWSER,defs=corpusDefs(),h='';
+ for(var i=0;i<defs.length;i++){var d=defs[i],on=d.single?(d.k==='sort'&&b.f.sort!=='recent'):(d.text?corpusTextActive():corpusActive(d.k));
+  h+='<button type="button" class="mlchip'+(on?' on':'')+'" data-k="'+d.k+'" onclick="corpusPanelOpen(\''+d.k+'\',this)" aria-haspopup="dialog" aria-expanded="'+(b.panel&&b.panel.k===d.k?'true':'false')+'">'+esc(corpusChipText(d))+'<span class="mlar" aria-hidden="true">&#9662;</span></button>';}
+ if(corpusAnyActive())h+='<button type="button" class="mlchip mlclr" onclick="corpusReset()">Clear all</button>';
  return h;
 }
-function corpusStatusHtml(){var b=CORPUS_BROWSER;return esc(CORPUS_KINDS[b.kind]||b.kind)+' · '+n(b.count)+(b.capped?'+':'')+' matching'+(b.busy?' · loading…':'');}
-function corpusImgFail(img){var d=document.createElement('div');d.className='sub';d.style.marginTop='18px';d.innerHTML='Preview link expired. <a href="#" onclick="corpusLoad(false);return false">Refresh</a>';img.parentNode.replaceChild(d,img);}
+
+/* ---- dropdown panel: anchored under its chip on wide screens, a bottom sheet on a phone ---- */
+function corpusPanelOpen(k,el){
+ var b=CORPUS_BROWSER;if(b.panel&&b.panel.k===k){corpusPanelClose();corpusDrawChips();return;}
+ corpusPanelClose();if(!corpusDef(k))return;b.panel={k:k,q:''};
+ var scrim=document.createElement('div');scrim.id='corpusScrim';scrim.className='mlscrim';scrim.onclick=function(){corpusPanelClose();corpusDrawChips();};document.body.appendChild(scrim);
+ var p=document.createElement('div');p.id='corpusPanel';p.className='mlpanel';p.setAttribute('role','dialog');p.setAttribute('aria-label',(corpusDef(k)||{}).label||'Filter');document.body.appendChild(p);
+ corpusPanelRefresh();
+ if(el&&el.getBoundingClientRect&&window.innerWidth>600){var r=el.getBoundingClientRect(),w=p.offsetWidth||260;
+  p.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+'px';p.style.top=Math.max(8,Math.min(r.bottom+4,window.innerHeight-160))+'px';
+  var s=p.querySelector('.mlpin');if(s)s.focus();}
+ corpusDrawChips();
+}
+function corpusPanelClose(){var b=CORPUS_BROWSER;b.panel=null;var p=document.getElementById('corpusPanel');if(p&&p.parentNode)p.parentNode.removeChild(p);var s=document.getElementById('corpusScrim');if(s&&s.parentNode)s.parentNode.removeChild(s);}
+function corpusPanelTitle(d){var f=CORPUS_BROWSER.f,sel=Array.isArray(f[d.k])?f[d.k].length:(d.text?(f.cocktail?1:0)+(f.ingredient?1:0)+f.prep_type.length:0);
+ return (d.long||d.label)+(sel&&!d.single?' · '+sel+' selected':'');}
+function corpusPanelHead(){var b=CORPUS_BROWSER,p=document.getElementById('corpusPanel');if(!p||!b.panel)return;var el=p.querySelector('.mlpt'),d=corpusDef(b.panel.k);if(el&&d)el.textContent=corpusPanelTitle(d);}
+function corpusPanelRefresh(){
+ var b=CORPUS_BROWSER,p=document.getElementById('corpusPanel');if(!p||!b.panel)return;
+ var d=corpusDef(b.panel.k);if(!d){corpusPanelClose();return;}
+ var list=document.getElementById('corpusPanelList'),top=list?list.scrollTop:0;
+ p.innerHTML=corpusPanelHtml(d);
+ list=document.getElementById('corpusPanelList');if(list)list.scrollTop=top;
+}
+function corpusOptHtml(k,v,l,cnt,on){
+ return '<label class="mlopt"><input type="checkbox" value="'+esc(String(v))+'"'+(on?' checked':'')+' onchange="corpusToggle(\''+k+'\',this.value,this.checked)"><span class="mll">'+esc(l)+'</span>'+(cnt!=null?'<span class="mln">'+n(cnt)+'</span>':'')+'</label>';
+}
+function corpusPanelListHtml(d){
+ var b=CORPUS_BROWSER,f=b.f,q=String((b.panel&&b.panel.q)||'').toLowerCase().trim(),h='',shown=0,opts=d.opts||[];
+ for(var i=0;i<opts.length;i++){var o=opts[i];
+  if(q&&String(o.l).toLowerCase().indexOf(q)<0&&String(o.v).toLowerCase().indexOf(q)<0)continue;
+  if(++shown>400){h+='<div class="mlpf">Showing the first 400. Type to narrow.</div>';break;}
+  if(d.single)h+='<button type="button" class="mlopt mlsgl'+(String(o.v)===String(d.cur)?' on':'')+'" onclick="corpusPick(\''+d.k+'\',\''+esc(String(o.v))+'\')"><span class="mlk">'+(String(o.v)===String(d.cur)?'&#10003;':'')+'</span><span class="mll">'+esc(o.l)+'</span></button>';
+  else h+=corpusOptHtml(d.k,o.v,o.l,o.n,(f[d.k]||[]).indexOf(String(o.v))>=0);
+ }
+ if(!shown)h+='<div class="mlpf">'+(opts.length?'No matches.':'Loading choices…')+'</div>';
+ return h;
+}
+function corpusPanelFilter(q){var b=CORPUS_BROWSER;if(!b.panel)return;b.panel.q=q;var d=corpusDef(b.panel.k),el=document.getElementById('corpusPanelList');if(d&&el){el.innerHTML=corpusPanelListHtml(d);el.scrollTop=0;}}
+function corpusPanelHtml(d){
+ var b=CORPUS_BROWSER,f=b.f,h='<div class="mlph"><div class="mlpt">'+esc(corpusPanelTitle(d))+'</div>';
+ if(!d.single)h+='<button type="button" class="mlmini" onclick="corpusClearKey(\''+d.k+'\')">Clear</button>';
+ h+='<button type="button" class="mlmini pri" onclick="corpusPanelClose();corpusDrawChips()">Done</button></div>';
+ if(d.text){
+  h+='<div class="mlpl" id="corpusPanelList"><div class="mlgh">Cocktail name</div><input class="mlpin" type="search" placeholder="e.g. margarita" autocomplete="off" value="'+esc(f.cocktail)+'" oninput="corpusType(\'cocktail\',this.value)">'
+   +'<div class="mlgh">Ingredient text</div><input class="mlpin" type="search" placeholder="e.g. mezcal, honey" autocomplete="off" value="'+esc(f.ingredient)+'" oninput="corpusType(\'ingredient\',this.value)">'
+   +'<div class="mlgh">Preparation (any of)</div>';
+  for(var i=0;i<CORPUS_PREPS.length;i++){var pv=CORPUS_PREPS[i];h+=corpusOptHtml('prep_type',pv,pv,null,f.prep_type.indexOf(pv)>=0);}
+  var tc=(b.vals||{}).text_coverage;
+  return h+'</div><div class="mlpf">'+(tc?n(tc.documents_with_cocktail_text)+' of '+n(tc.documents_total)+' documents have stored cocktail text. ':'')+'These filters only search stored menu text. A document without text is unknown, not proof an ingredient is absent.</div>';
+ }
+ if(d.search)h+='<input class="mlpin" type="search" autocomplete="off" placeholder="Search '+esc(d.label.toLowerCase())+'…" value="'+esc((b.panel&&b.panel.q)||'')+'" oninput="corpusPanelFilter(this.value)">';
+ h+='<div class="mlpl" id="corpusPanelList">'+corpusPanelListHtml(d)+'</div>';
+ if(d.census){var cc=(b.vals||{}).census_coverage;h+='<div class="mlpf">US Census ACS 2020–2024, by the venue’s ZIP'+(cc?'. '+n(cc.documents_with_census)+' of '+n(cc.documents_total)+' documents matched':'')+'. Counts cover the whole library.</div>';}
+ else if(d.k==='city'&&b.f.state.length)h+='<div class="mlpf">Showing cities in '+esc(b.f.state.join(', '))+'.</div>';
+ return h;
+}
+
+/* ---- page ---- */
+function corpusRange(){var b=CORPUS_BROWSER;if(!b.count)return b.busy?'Loading…':'0 menus';
+ var s=b.page*b.size+1,e=b.page*b.size+b.rows.length;return (b.rows.length?n(s)+'–'+n(e)+' of ':'')+n(b.count)+(b.capped?'+':'');}
+function corpusHeadHtml(){var b=CORPUS_BROWSER;
+ return '<div class="mlhead" id="corpusHead"><button type="button" class="mlmini" onclick="corpusClose()" aria-label="Back to pipeline">&#8249; Back</button><span class="mltitle">Menu Library</span><span class="mlstat" id="corpusStatus">'+esc(corpusRange())+(b.busy?' · loading…':'')+'</span></div>';}
+function corpusErrHtml(){var e=CORPUS_BROWSER.error;return e?'<div class="mlerr">'+esc(e)+' · <a href="#" onclick="corpusLoad();return false">Retry</a></div>':'';}
+function corpusCensusLine(c,brief){if(!c)return 'No census data';var p=[],m=corpusMoney(c.median_household_income);if(m)p.push(m);
+ if(c.median_age!=null)p.push('age '+Math.round(Number(c.median_age)));if(!brief&&c.pop_21_34_pct!=null)p.push(Math.round(Number(c.pop_21_34_pct))+'% 21–34');return p.join(' · ')||'No census data';}
+function corpusImgFail(img){var d=document.createElement('div');d.className='mlnone';d.innerHTML='Link expired · <a href="#" onclick="corpusLoad();return false">Refresh</a>';var box=img.parentNode;if(box&&box.parentNode)box.parentNode.replaceChild(d,box);}
 function corpusCardsHtml(){
  var b=CORPUS_BROWSER,h='',cand=b.kind==='candidates';
- if(b.error)h+='<div class="err" style="grid-column:1/-1">'+esc(b.error)+'</div>';
- if(b.busy&&!b.rows.length)h+='<div class="card" style="grid-column:1/-1">Loading menu library…</div>';
- if(!b.busy&&!b.error&&!b.rows.length)h+='<div class="card" style="grid-column:1/-1"><div class="ttl">No matching documents</div><div class="sub">Try fewer filters. Text filters only see documents with stored menu text.</div></div>';
- for(var i=0;i<b.rows.length;i++){var d=b.rows[i],a=d.accounts||{},t=d.thumb,where=[d.city,d.state].filter(Boolean).join(', ');
-  h+='<div class="card">'
-   +'<div class="lbl">'+esc((cand?d.source_format:d.asset_kind)||'menu')+' · '+esc(d.menu_scope||d.menu_type||'unknown')+(d.venue_type?' · '+esc(String(d.venue_type).replace(/_/g,' ')):'')+'</div>'
-   +'<div class="ttl">'+esc(a.account_name||'Venue')+'</div>'
-   +'<div class="sub">'+(where?esc(where)+' · ':'')+esc(cand?(d.status||d.visual_asset_status||'candidate'):(d.page_render_status||''))
-   +(cand?' · '+n(d.page_count||0)+' page(s)'+(d.discovery_method?' · '+esc(d.discovery_method):''):' · '+n(d.ready_page_count||0)+' of '+n((d.pages||[]).length||d.page_count||0)+' page(s) rendered')+'</div>'
-   +'<div class="sub" style="margin-top:6px"><span class="cbadge">'+(d.text_coverage?'menu text stored':'no stored text')+'</span>'
-   +((d.matched_items||[]).length?'<span class="cbadge">'+esc(d.matched_items.slice(0,3).join(' · '))+(d.matched_items.length>3?' …':'')+'</span>':'')+'</div>';
-  if(cand)h+='<div class="sub" style="margin-top:14px">Visual asset: '+esc(d.visual_asset_status||'not acquired')+(d.screenshot_pages_ready?' · '+n(d.screenshot_pages_ready)+' image(s) ready':'')+(d.visual_document_id?' · <a href="#" onclick="corpusView('+Number(d.visual_document_id)+');return false">open document</a>':'')+'</div>';
-  else if(t&&t.signed_url)h+='<img class="cthumb" loading="lazy" alt="Menu page '+n(t.page_number||1)+'" src="'+esc(t.signed_url)+'" onclick="corpusView('+Number(d.id)+')" onerror="corpusImgFail(this)">';
-  else h+='<div class="sub" style="margin-top:18px">'+(d.page_render_status==='ready'?'Preview unavailable':'Preview not rendered yet')+'</div>';
-  h+='</div>';
+ if(b.busy&&!b.rows.length)return '<div class="mlmsg">Loading menu library…</div>';
+ if(!b.rows.length)return b.error?'':'<div class="mlmsg">No matching menus. Try fewer filters. Text filters only see documents with stored menu text.</div>';
+ for(var i=0;i<b.rows.length;i++){var d=b.rows[i],a=d.accounts||{},t=d.thumb,where=[d.city?corpusTitle(d.city):'',d.state].filter(Boolean).join(', '),type=d.venue_type?corpusNice(d.venue_type):'';
+  var name=a.account_name||'Venue';
+  if(cand){
+   h+='<div class="mlcard"><div class="mlbody"><div class="mlname" title="'+esc(name)+'">'+esc(name)+'</div><div class="mlmeta">'+esc(where)+(type?' · '+esc(type):'')+'</div>'
+    +'<div class="mlmeta">'+esc(d.source_format||'?')+' · '+esc(corpusNice(d.status||'candidate'))+(d.menu_scope?' · '+esc(corpusNice(d.menu_scope)):'')+'</div>'
+    +'<div class="mlcen" title="'+esc(corpusCensusLine(d.census))+'">'+esc(corpusCensusLine(d.census,true))+'</div>'
+    +(d.visual_document_id?'<div class="mlmeta"><a href="#" onclick="corpusView('+Number(d.visual_document_id)+');return false">Open document</a></div>':'')+'</div></div>';
+   continue;
+  }
+  var total=(d.pages||[]).length||d.page_count||0,ready=d.ready_page_count||0;
+  h+='<div class="mlcard">';
+  if(t&&t.signed_url)h+='<div class="mlimg" role="button" tabindex="0" aria-label="Open '+esc(name)+' menu" onclick="corpusView('+Number(d.id)+')" onkeydown="if(event.key===\'Enter\')corpusView('+Number(d.id)+')"><img loading="lazy" decoding="async" alt="'+esc(name+' menu page '+(t.page_number||1))+'" src="'+esc(t.signed_url)+'" onerror="corpusImgFail(this)">'+(total>1?'<span class="mlpg">'+n(ready)+'/'+n(total)+'</span>':'')+'</div>';
+  else h+='<div class="mlnone">'+(d.page_render_status==='ready'?'Preview unavailable':'Not rendered yet')+'</div>';
+  h+='<div class="mlbody"><div class="mlname" title="'+esc(name)+'">'+esc(name)+'</div><div class="mlmeta">'+esc(where)+(type?' · '+esc(type):'')+'</div>'
+   +'<div class="mlcen" title="'+esc(corpusCensusLine(d.census))+'">'+esc(corpusCensusLine(d.census,true))+'</div>'
+   +'<div class="mlmeta">'+esc(d.asset_kind||'menu')+' · '+(d.text_coverage?'text stored':'no stored text')+'</div>';
+  if((d.matched_items||[]).length)h+='<div class="mlmeta mlmatch">'+esc(d.matched_items.slice(0,2).join(' · '))+(d.matched_items.length>2?' …':'')+'</div>';
+  h+='</div></div>';
  }
  return h;
 }
-function corpusMoreHtml(){var b=CORPUS_BROWSER;return (b.next!==null&&!b.busy)?'<button class="btn" onclick="corpusLoad(true)">Load more</button>':(b.busy&&b.rows.length?'<div class="sub">Loading…</div>':'');}
+function corpusPagerHtml(){
+ var b=CORPUS_BROWSER;if(!b.rows.length)return '';
+ var pages=b.capped?0:Math.max(1,Math.ceil(b.count/b.size)),cur=b.page,hasNext=b.capped?b.rows.length===b.size:cur<pages-1,list=[],h='<div class="mlpager" role="navigation" aria-label="Pages">';
+ if(pages){var lo=Math.max(0,cur-2),hi=Math.min(pages-1,cur+2);if(lo>0){list.push(0);if(lo>1)list.push(-1);}for(var i=lo;i<=hi;i++)list.push(i);if(hi<pages-1){if(hi<pages-2)list.push(-1);list.push(pages-1);}}
+ else{for(var j=Math.max(0,cur-2);j<=cur;j++)list.push(j);if(hasNext)list.push(-1);}
+ h+='<button type="button" onclick="corpusGo('+(cur-1)+')"'+(cur<=0?' disabled':'')+' aria-label="Previous page">&#8249;</button>';
+ for(var k=0;k<list.length;k++){var p=list[k];h+=p<0?'<span class="mldots">…</span>':'<button type="button"'+(p===cur?' class="on" aria-current="page"':'')+' onclick="corpusGo('+p+')">'+(p+1)+'</button>';}
+ h+='<button type="button" onclick="corpusGo('+(cur+1)+')"'+(hasNext?'':' disabled')+' aria-label="Next page">&#8250;</button>';
+ return h+'<span class="mlrange">'+esc(corpusRange())+'</span></div>';
+}
 function corpusBrowserPage(){
  var b=CORPUS_BROWSER;
- return '<div id="corpusHost"><div class="sec">Menu Library</div><div class="secsub" id="corpusStatus">'+corpusStatusHtml()+'</div>'
-  +corpusFiltersHtml()+'<div class="grid g3" id="corpusGrid">'+corpusCardsHtml()+'</div><div id="corpusMore">'+corpusMoreHtml()+'</div>'+corpusViewerHtml()+'</div>';
+ return '<div id="corpusHost">'+corpusHeadHtml()
+  +'<div class="mlbar" id="corpusBar"><input id="corpusQ" class="mlsearch" type="search" placeholder="Venue…" aria-label="Search venue name" autocomplete="off" enterkeyhint="search" value="'+esc(b.f.q)+'" oninput="corpusType(\'q\',this.value)"><span id="corpusChips" class="mlchips">'+corpusChipsHtml()+'</span></div>'
+  +'<div id="corpusErr">'+corpusErrHtml()+'</div><div class="mlgrid" id="corpusGrid">'+corpusCardsHtml()+'</div><div id="corpusPager">'+corpusPagerHtml()+'</div>'+corpusViewerHtml()+'</div>';
 }
+function corpusDrawChips(){var el=document.getElementById('corpusChips');if(el)el.innerHTML=corpusChipsHtml();}
 function corpusDraw(){
- var host=document.getElementById('corpusHost');if(!host){if(CORPUS_BROWSER.open)render();return;}
- var el=document.getElementById('corpusStatus');if(el)el.innerHTML=corpusStatusHtml();
- el=document.getElementById('corpusGrid');if(el)el.innerHTML=corpusCardsHtml();
- el=document.getElementById('corpusMore');if(el)el.innerHTML=corpusMoreHtml();
+ var b=CORPUS_BROWSER,host=document.getElementById('corpusHost');if(!host){if(b.open)render();return;}
+ var el=document.getElementById('corpusHead');if(el)el.outerHTML=corpusHeadHtml();
+ corpusDrawChips();
+ el=document.getElementById('corpusErr');if(el)el.innerHTML=corpusErrHtml();
+ el=document.getElementById('corpusGrid');
+ if(el){if(b.busy&&b.rows.length)el.classList.add('mlbusy');else{el.classList.remove('mlbusy');el.innerHTML=corpusCardsHtml();}}
+ el=document.getElementById('corpusPager');if(el&&!(b.busy&&b.rows.length))el.innerHTML=corpusPagerHtml();
  el=document.getElementById('corpusViewer');if(el)el.outerHTML=corpusViewerHtml();
 }
 /* Page viewer: one document, every rendered page, prev/next, pinch-zoom via native
    scrolling. Signed links last 15 minutes; a failed image offers a refresh. */
-function corpusView(id){var b=CORPUS_BROWSER;b.view={id:id,busy:true,error:'',doc:null,pages:[],idx:0};corpusDraw();
+function corpusView(id){var b=CORPUS_BROWSER;corpusPanelClose();b.view={id:id,busy:true,error:'',doc:null,pages:[],idx:0,census:null};corpusDraw();document.body.classList.add('cview-open');
  corpusPost({action:'document',document_id:id}).then(function(j){var pg=(j.pages||[]),first=0;for(var i=0;i<pg.length;i++)if(pg[i].signed_url){first=i;break;}
-  if(!b.view||b.view.id!==id)return;b.view={id:id,busy:false,error:'',doc:j.document||{},pages:pg,idx:first};corpusDraw();document.body.classList.add('cview-open');})
+  if(!b.view||b.view.id!==id)return;b.view={id:id,busy:false,error:'',doc:j.document||{},pages:pg,idx:first,census:j.census||null};corpusDraw();})
  .catch(function(e){if(!b.view||b.view.id!==id)return;b.view.busy=false;b.view.error=e.message;corpusDraw();});
 }
 function corpusViewClose(){CORPUS_BROWSER.view=null;document.body.classList.remove('cview-open');corpusDraw();}
@@ -7368,18 +7583,22 @@ function corpusViewStep(d){var v=CORPUS_BROWSER.view;if(!v||!v.pages.length)retu
 function corpusViewerHtml(){
  var v=CORPUS_BROWSER.view;if(!v)return '<div id="corpusViewer"></div>';
  var doc=v.doc||{},a=doc.accounts||{},p=v.pages[v.idx]||null,h='<div id="corpusViewer" class="cview" role="dialog" aria-label="Menu page viewer">';
- h+='<div class="cvbar"><button class="cvbtn" onclick="corpusViewClose()" aria-label="Close">&#10005;</button><div style="flex:1;min-width:0"><div class="ttl" style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(a.account_name||'Menu')+'</div><div class="sub">'+(v.pages.length?'Page '+(v.idx+1)+' of '+v.pages.length:'')+(doc.asset_kind?' · '+esc(doc.asset_kind):'')+(p&&p.capture_method?' · '+esc(String(p.capture_method).replace(/_/g,' ')):'')+'</div></div>'
+ h+='<div class="cvbar"><button type="button" class="cvbtn" onclick="corpusViewClose()" aria-label="Close">&#10005;</button><div style="flex:1;min-width:0"><div class="mlvname">'+esc(a.account_name||'Menu')+'</div><div class="sub">'+(v.pages.length?'Page '+(v.idx+1)+' of '+v.pages.length:'')+(doc.asset_kind?' · '+esc(doc.asset_kind):'')+(v.census?' · '+esc(corpusCensusLine(v.census)):'')+'</div></div>'
   +(doc.original_menu_url?'<a class="cvbtn" href="'+esc(doc.original_menu_url)+'" target="_blank" rel="noopener" aria-label="Open source menu">&#8599;</a>':'')+'</div>';
  h+='<div class="cvimg">';
  if(v.busy)h+='<div class="sub">Loading pages…</div>';
  else if(v.error)h+='<div class="err">'+esc(v.error)+'</div>';
- else if(p&&p.signed_url)h+='<img src="'+esc(p.signed_url)+'" alt="Menu page '+n(p.page_number)+'" onerror="corpusImgFail(this)">';
+ else if(p&&p.signed_url)h+='<img src="'+esc(p.signed_url)+'" alt="Menu page '+n(p.page_number)+'" onerror="this.outerHTML=\'<div class=&quot;sub&quot;>Link expired. Close and reopen this menu.</div>\'">';
  else h+='<div class="sub">'+(p?'Page '+n(p.page_number)+' is '+esc(p.render_status||'pending')+' - not rendered yet':'No rendered pages yet')+'</div>';
  h+='</div>';
- if(v.pages.length>1)h+='<div class="cvbar" style="justify-content:center"><button class="cvbtn" onclick="corpusViewStep(-1)" aria-label="Previous page"'+(v.idx<=0?' disabled':'')+'>&#8592;</button><button class="cvbtn" onclick="corpusViewStep(1)" aria-label="Next page"'+(v.idx>=v.pages.length-1?' disabled':'')+'>&#8594;</button></div>';
+ if(v.pages.length>1)h+='<div class="cvbar" style="justify-content:center"><button type="button" class="cvbtn" onclick="corpusViewStep(-1)" aria-label="Previous page"'+(v.idx<=0?' disabled':'')+'>&#8592;</button><button type="button" class="cvbtn" onclick="corpusViewStep(1)" aria-label="Next page"'+(v.idx>=v.pages.length-1?' disabled':'')+'>&#8594;</button></div>';
  return h+'</div>';
 }
-document.addEventListener('keydown',function(e){if(!CORPUS_BROWSER.view)return;if(e.key==='Escape')corpusViewClose();else if(e.key==='ArrowLeft')corpusViewStep(-1);else if(e.key==='ArrowRight')corpusViewStep(1);});
+document.addEventListener('keydown',function(e){
+ if(CORPUS_BROWSER.panel&&e.key==='Escape'){corpusPanelClose();corpusDrawChips();return;}
+ if(!CORPUS_BROWSER.view)return;if(e.key==='Escape')corpusViewClose();else if(e.key==='ArrowLeft')corpusViewStep(-1);else if(e.key==='ArrowRight')corpusViewStep(1);});
+window.addEventListener('resize',function(){if(CORPUS_BROWSER.panel&&window.innerWidth>600){corpusPanelClose();corpusDrawChips();}});
+document.addEventListener('scroll',function(e){var p=document.getElementById('corpusPanel');if(!p||window.innerWidth<=600)return;if(e.target&&e.target.nodeType===1&&p.contains(e.target))return;corpusPanelClose();corpusDrawChips();},true);
 function pipelineCorpusCard(){
   var p=PIPESTATS;
   if(!p){
