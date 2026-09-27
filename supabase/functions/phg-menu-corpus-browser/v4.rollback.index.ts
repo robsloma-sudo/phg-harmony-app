@@ -1,4 +1,3 @@
-// phg-menu-corpus-browser v5 (2026-09-27, PHG-030): + menu_kind / has / hide (phg_menu_doc_class). v4 = v4.rollback.index.ts
 // phg-menu-corpus-browser v4 (2026-09-27, PHG-027)
 // Authenticated corpus/gallery drill-down for the Menu Library.
 //
@@ -165,12 +164,6 @@ Deno.serve(async (req: Request) => {
     sort: SORTS.includes(sortIn) ? sortIn : "recent",
   };
   for (const k of CENSUS_KEYS) params[k] = list(b[k], 10, 10);
-  const KINDS = ["beverage","mixed","food","happy_hour","specials","delivery","not_menu","little_text","unread"];
-  const TAGS = ["cocktails","beer","wine","spirits","sake_soju","non_alcoholic","food","happy_hour","specials","brunch","events","delivery"];
-  params.menu_kind = list(b.menu_kind, 10, 20)?.filter((x) => KINDS.includes(x));
-  params.has = list(b.has, 12, 20)?.filter((x) => TAGS.includes(x));
-  params.hide = list(b.hide, 12, 20)?.filter((x) => TAGS.includes(x));
-  for (const k of ["menu_kind", "has", "hide"]) if (!(params[k] as string[] | undefined)?.length) delete params[k];
   for (const k of Object.keys(params)) if (params[k] === undefined || params[k] === "") delete params[k];
   const sign = str(b.sign || "first", 10).toLowerCase(); // first | none
 

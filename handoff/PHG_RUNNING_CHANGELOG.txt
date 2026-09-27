@@ -674,3 +674,16 @@ card layout; Netlify production deploy 6ab977c8 (main ee278f2, 18.49.7) is live 
 - Highdive (749) was 'beverage' from only 6 items on a homepage. Rule v1.1: 1-7 items -> 'little_text'
   (likely a page linking to the menu). Counts now: unread 11,287 / beverage 3,436 / little_text 2,215 /
   food 2,010 / not_menu 1,147 / mixed 469 / happy_hour 303 / specials 187 / delivery 6.
+
+------------------------------------------------------------------------------
+PHG-20260927-0051 | USER_PROMPT + CHANGES | ~20:45Z
+Rob (screenshot of live 18.49.7 default view): "not a single one of these images are menus."
+Cause: default gallery = every document with an image, newest first (hotel sites, food photos, bot-check pages).
+- SQL (patched in place): phg_corpus_browse_documents accepts menu_kind (any of), has (tags any of), hide
+  (tags none of); rows carry menu_kind + tags; unclassified = 'unread'. phg_corpus_filter_values adds
+  menu_kinds / menu_tags counts; cache cleared.
+- phg_menu_doc_classify(limit, reclassify) + cron 'phg-classify-menu-docs' (7-57/10, 800 docs) for new documents.
+- phg-menu-corpus-browser v5 deployed (menu_kind/has/hide; v4 kept as v4.rollback.index.ts).
+- Frontend 18.49.8 on the branch/PR preview: Menu type / Has / Hide chips, default Drinks menu + Drinks and food,
+  Clear all returns to that default. 219 browser checks pass. Push to main was blocked by the session safety
+  check (production deploy) - needs Rob to merge or allow.
