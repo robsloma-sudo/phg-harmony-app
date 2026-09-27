@@ -6172,7 +6172,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.49.3 CORPUS DRILLDOWN · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.49.4 CORPUS FILTERS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7270,9 +7270,10 @@ function corpusBrowserPage(){
    +'<select onchange="corpusSet(\'status\',this.value)">'+corpusOpt(f.status,'','All statuses')+corpusOpt(f.status,'ready','Ready')+corpusOpt(f.status,'pending','Pending')+corpusOpt(f.status,'processing','Processing')+corpusOpt(f.status,'retry','Retry')+corpusOpt(f.status,'failed','Failed')+'</select></div><button class="btn" onclick="corpusClose()">Back to pipeline</button></div>';
  if(b.error)h+='<div class="err">'+esc(b.error)+'</div>';if(b.busy&&!b.rows.length)h+='<div class="card">Loading menu library…</div>';
  h+='<div class="grid g3">';
- for(var i=0;i<b.rows.length;i++){var d=b.rows[i],a=d.accounts||{},p=(d.pages||[])[0];
-   h+='<div class="card"><div class="lbl">'+esc(d.asset_kind||'menu')+' · '+esc(d.menu_scope||'unknown')+'</div><div class="ttl">'+esc(a.account_name||'Venue')+'</div><div class="sub">'+esc(d.page_render_status||'')+' · '+n(d.page_count||0)+' page(s)</div>'
-    +(p&&p.id?'<img loading="lazy" src="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/menu-render-chat-preview?page_id='+p.id+'" style="width:100%;max-height:320px;object-fit:contain;margin-top:12px;background:#05070e">':'<div class="sub" style="margin-top:18px">Preview not rendered yet</div>')+'</div>';
+ for(var i=0;i<b.rows.length;i++){var d=b.rows[i],a=d.accounts||{},p=(d.pages||[])[0],candidate=b.kind==='candidates';
+   h+='<div class="card"><div class="lbl">'+esc((candidate?d.source_format:d.asset_kind)||'menu')+' · '+esc(d.menu_scope||d.menu_type||'unknown')+'</div><div class="ttl">'+esc(a.account_name||'Venue')+'</div>'
+    +'<div class="sub">'+esc(candidate?(d.status||d.visual_asset_status||'candidate'):(d.page_render_status||''))+' · '+n(d.page_count||0)+' page(s)'+(candidate&&d.discovery_method?' · '+esc(d.discovery_method):'')+'</div>'
+    +(candidate?'<div class="sub" style="margin-top:14px">Visual asset: '+esc(d.visual_asset_status||'not acquired')+(d.screenshot_pages_ready?' · '+n(d.screenshot_pages_ready)+' image(s) ready':'')+'</div>':(p&&p.id?'<img loading="lazy" src="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/menu-render-chat-preview?page_id='+p.id+'" style="width:100%;max-height:320px;object-fit:contain;margin-top:12px;background:#05070e">':'<div class="sub" style="margin-top:18px">Preview not rendered yet</div>'))+'</div>';
  }
  h+='</div>';if(b.next!==null)h+='<button class="btn" onclick="corpusLoad(true)">Load more</button>';return h;
 }
