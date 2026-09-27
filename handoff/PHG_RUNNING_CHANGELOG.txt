@@ -663,3 +663,14 @@ different menus on how I talked about earlier and" (message cut off).
   unread 11,287 / beverage 5,253 / food 2,406 / not_menu 1,147 / mixed 471 / happy_hour 303 / specials 187 /
   delivery 6. Examples classify correctly. Not yet wired into the gallery filters (next: browse SQL + Edge +
   the parked chip patch), then the free text passes (PDF text layer, web page text).
+
+------------------------------------------------------------------------------
+PHG-20260927-0050 | USER_PROMPT + CHANGE | ~20:30Z
+Rob (5 screenshots): "see attached for images of supposed menus that were included in beverage menus. These are
+not beverage menus. One is a logo, one is some photos, and another is food." (Silverton Mountain logo, Highdive
+homepage photo grid, UMI SUSHI sushi/rolls images, Lob Denver cocktail photo.) Screenshots show the OLD 18.49.4
+card layout; Netlify production deploy 6ab977c8 (main ee278f2, 18.49.7) is live since 20:08:47Z - stale tab.
+- New classifier already has the logo, sushi images and cocktail photo as 'unread' (never beverage).
+- Highdive (749) was 'beverage' from only 6 items on a homepage. Rule v1.1: 1-7 items -> 'little_text'
+  (likely a page linking to the menu). Counts now: unread 11,287 / beverage 3,436 / little_text 2,215 /
+  food 2,010 / not_menu 1,147 / mixed 469 / happy_hour 303 / specials 187 / delivery 6.
