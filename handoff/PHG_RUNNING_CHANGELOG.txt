@@ -834,3 +834,23 @@ Rob: "resume." -> continued filter R&D on real library data (no scraping, no spe
   junk guard, item-first then heading, cocktails named inside spirits lists, beer/seltzer brands, ~80 more brands.
 - Result: type-not-stated spirit lines down to 8.7%; 1,045 food/page lines excluded. Reclassified 22,666 docs.
 - Test suite 17/17 (5 new cases from real data). Spec updated.
+
+------------------------------------------------------------------------------
+PHG-20260928-0060 | USER_PROMPT + CHANGES | ~23:40Z
+Rob: "Let's work on the duplicate menu fix and then the designer handoff plumbing."
+PHG-026: live submit_menu / promote_clean_menu_batch / phg_save_menu_candidate_extraction unchanged since the fix was
+  written (no drift); anon/authenticated already have no EXECUTE on them; jobs 7 and 13 still paused; promotion queue 0.
+  Adversarial review re-launched (the first one died on the usage limit). Not applied yet.
+PHG-036 designer hand-off (migration 20260928020000, applied; additive only):
+- phg.menu_design_tasks / phg.menu_design_proposals (RLS on, no anon/authenticated grants). Separate from
+  public.agent_tasks/agent_proposals, which belong to the brand/product system (strict type/target constraints).
+- phg_design_task_create (snapshot of the draft + inputs, per-minute dedupe), phg_design_proposal_submit (automatic
+  checks: shape, no invented items, no new/changed prices), phg_design_proposal_review (Coordinator; re-checks),
+  phg_design_status, phg_design_take_approved, phg_design_mark_applied (needs a saved revision newer than the task's).
+- Edge phg-menu-design v1 (verify_jwt; signed-in user + Menu Studio project token via phg_menu_authorize):
+  request_design / design_status / take_approved / mark_applied. No submit or approve actions for app users.
+- The draft is only written by the app's own phg_menu_sync (project token + revision check), never by the designer.
+- Rehearsal on the one live project (rolled back): invented item + changed price auto-rejected; clean proposal approved,
+  released, applied; duplicate request collapsed; unsaved and old revisions refused.
+- Brief + agent definition updated to the real tables and the Menu Studio document format.
+Next: Menu Studio UI (Ask the designer / proposals / Apply), then the designer runtime.

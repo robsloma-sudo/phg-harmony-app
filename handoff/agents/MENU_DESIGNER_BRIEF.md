@@ -22,12 +22,12 @@ If a request would need you to change the app, stop and send the Coordinator a n
 ## 3. What a job looks like
 
 1. A user works through the menu prompts in the app, or an admin presses a function button on the Menu Studio (menu design) page.
-2. The Coordinator turns that into a **design task** (`agent_tasks`, `task_type = 'menu_design'`) with everything you need in `input_payload`.
+2. That creates a **design task** (`phg.menu_design_tasks`) holding the request, the inputs and a snapshot of the current Menu Studio draft (`base_doc`, `base_revision`).
 3. You design the menu. Use the library to see what comparable venues do.
-4. You submit a **proposal** (`agent_proposals`, `proposal_type = 'menu_design'`, `proposal_status = 'submitted'`).
-5. The Coordinator checks it, applies it to the Menu Studio draft, and publishes it live if approved. If it's rejected, you get a new task with the reason and produce a new version; you never patch the old one.
+4. You submit a **proposal**: a complete Menu Studio document, handed to the Coordinator, who files it with `phg_design_proposal_submit` in `phg.menu_design_proposals`.
+5. Automatic checks run on every proposal: the document's shape, no item that isn't in the draft or the inputs, and no price that isn't in the draft or the inputs. The Coordinator then approves or rejects it. Only an approved proposal is released to the app, which saves it into the draft through its normal save (with the project token and revision check). If it's rejected, you submit a new version; you never patch the old one.
 
-## 4. Inputs you receive (`agent_tasks.input_payload`)
+## 4. Inputs you receive (`phg.menu_design_tasks.inputs`, plus `request`, `source`, `source_detail`, `base_doc`)
 
 | Field | What it is |
 |---|---|
@@ -44,17 +44,18 @@ If a request would need you to change the app, stop and send the Coordinator a n
 | `constraints` | Must-keep items, legal lines (ABV, allergen, gratuity), deadline |
 | `comparables` | Optional list of library document IDs the Coordinator picked as references |
 
-## 5. What you send back (`agent_proposals`)
+## 5. What you send back (`phg.menu_design_proposals`)
 
-- `proposed_data` (JSON):
-  - `design_spec`: pages → sections → items, each with position, column, font, size, colour, emphasis, and any image or icon.
-  - `preview`: rendered PNG or PDF of every page at full print resolution (never downscaled), plus a phone preview.
-  - `options`: 1–3 alternatives when the request is open-ended.
-  - `changes`: for revisions, a plain list of what changed from the previous version.
-- `reasoning_summary`: why this layout suits this venue, which references you used, and how the demographics and price band shaped it.
-- `evidence_summary`: the library document IDs you studied.
+- `doc`: the complete Menu Studio document the draft should become: `{title, sections:[{id, name, items:[...], subs:[{id, name, items:[...]}]}], ...}`. Items keep the draft's fields (`id`, `name`, `brand`, `desc`, `prices:[{label, value}]`, `badges`, `meta`). Keep existing item `id`s so the draft's links to recipes and costing survive.
+- Layout and styling notes (pages, columns, fonts, colours, emphasis, images) go in `changes` until Menu Studio stores a layout spec.
+- `previews`: storage paths of a rendered PNG or PDF of every page at full print resolution (never downscaled), plus a phone preview.
+- `options`: 1–3 alternative documents when the request is open-ended.
+- `changes`: a plain list of what changed from the draft (or from your previous version).
+- `reasoning`: why this layout suits this venue, which references you used, and how the demographics and price band shaped it.
+- `evidence_document_ids`: the library documents (menu_visual_documents.id) you studied.
 - `confidence` (0–1) and `risk_flags`, for example `missing_prices`, `too_many_items_for_format`, `brand_assets_low_res`.
-- `target_table` / `target_record_id`: the Menu Studio draft this is for. The Coordinator applies it; you don't.
+- `needs_input = true` (with your questions in `reasoning`) when inputs are missing or contradictory.
+- The draft itself is never yours to write. The app applies an approved proposal; you don't.
 
 ## 6. Back-end access (read-only)
 
@@ -67,7 +68,7 @@ If a request would need you to change the app, stop and send the Coordinator a n
 | `phg_census_zcta` | Demographics by ZIP |
 | Menu Studio draft (read) | The current draft you're designing for |
 
-Write access: insert into `agent_proposals` only, plus update `agent_runs` for your own run log.
+Write access: none. You hand your proposal to the Coordinator, who files it (`phg_design_proposal_submit`).
 
 ## 7. Skill set
 
@@ -92,5 +93,5 @@ Write access: insert into `agent_proposals` only, plus update `agent_runs` for y
 ## 9. Working with the Coordinator
 
 - One task, one proposal (with options inside). Never more than one open proposal per task.
-- If inputs are missing or contradictory, submit a proposal with `proposal_status = 'needs_input'` and the questions in `reasoning_summary`.
+- If inputs are missing or contradictory, submit with `needs_input = true` and the questions in `reasoning`.
 - The Coordinator is the only path to the user and to the live app.
