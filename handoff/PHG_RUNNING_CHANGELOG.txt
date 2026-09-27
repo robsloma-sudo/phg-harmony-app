@@ -349,3 +349,18 @@ Conclusion given to Rob: nothing is lost; recoverable without payment via (a) re
 text with a parser that accepts unpriced drink items, (b) Railway Playwright render for JS-empty and
 some blocked pages, (c) PDF text for the 604 non-HTML; paid Firecrawl mainly for ~2.5k blocked sites.
 Only the 652 dead pages are unrecoverable.
+
+------------------------------------------------------------------------------
+PHG-20260927-0026 | REVIEW RESULT + REVISION — counter refresh migration | ~15:55Z
+Review wf_4f72b646-736: correctness = safe_to_apply (minor: lock-skipped recent accounts not retried;
+truncation tie handling); locking = apply_with_changes (MAJOR: old/new bodies lock every picked
+account FOR UPDATE for the whole aggregate, which blocks FK KEY SHARE checks of child inserts;
+MAJOR: raising jobs 15/18 to 15 s would let locks outlive the 8 s writer lock_timeout; MAJOR (not
+acted on, item 5 excluded by Rob): functions remain executable by anon; nit: set lock_timeout for
+the ALTER TABLE). Operations reviewer still running.
+Revision: aggregate first without locks; lock only differing rows FOR NO KEY UPDATE SKIP LOCKED for
+the final UPDATE; jobs 15/18 stay at 5 s; lock-skipped recent accounts pull recent_since back;
+truncated recent pass resumes at newest covered change minus 1 us (limit+1 detection);
+last_locked_skipped column; set local lock_timeout '2s' in the migration.
+Rolled-back dry run of the revision: page 754 ms (1000 picked, 142 changed, 0 lock-skipped);
+visual 1,848 ms then 1,554 ms (2nd batch 54 changed, 0 lock-skipped). NOT yet applied.
