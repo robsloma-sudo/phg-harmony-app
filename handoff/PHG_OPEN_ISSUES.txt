@@ -37,6 +37,9 @@ PHG-031 RESOLVED    P1  Long menus unreadable: 18.49.7 full-screen zoomable view
 PHG-032 OPEN        P1  ~4,700 documents have no text (mostly images): menu type unknown until read by vision/OCR (cost decision)
 PHG-033 IN REVIEW   P0  Finding real menus: capture gate v1 live (keep drink-word links, download/menu-hub links; hold generic "menu"; skip rest). 18.49.9 "Review links" sample awaiting Rob's rejects
 PHG-034 OPEN        P0  HTML captures incomplete (30% first-screen only, lazy photos blank, tabs missed): worker v2 in workers/html-capture, needs Railway deploy
+PHG-035 IN REVIEW   P0  What makes a drinks menu: equal categories + text rules live, 12/12 test cases; 12,356 docs unread (need text); spec in handoff/DRINKS_MENU_SPEC.md awaiting Rob
+PHG-036 OPEN        P1  Menu designer agent: brief written; needs Menu Studio proposal-apply path + task creation from the app
+PHG-037 OPEN        P1  Plaintext Anthropic API key in Rob's Gmail ('PHG n8n Managed Agents'); rotate it
 PHG-022 OPEN        P1  Corpus/library Edge functions have no account-level authorization
 PHG-023 OPEN        P2  phg-menu-library-search bugs: or() escaping, no ORDER BY, 3x over-fetch (not used by frontend)
 PHG-024 OPEN        P1  Job 5 gtt-refresh-state-stats failing 56/72 runs (5 s statement timeout) since re-enable

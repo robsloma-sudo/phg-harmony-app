@@ -802,3 +802,26 @@ Done (PHG-035):
 - Frontend 18.49.10 (branch/preview): Has/Hide gain "Tequila / mezcal", "Whiskey", "Other spirits"; each card shows
   its drinks lists ("Cocktails 23 · Beer 11 · Tequila 7"). Gallery tests 246/246 (a desktop size-chip click is
   intermittently lost ~1 in 5 runs - under watch).
+
+------------------------------------------------------------------------------
+PHG-20260928-0058 | USER_PROMPT + CHANGES | ~22:45Z
+Rob: "keep R&D-ing the filtering process before we try to scrape for any new menus and spend money ... Don't just add
+tequila and whiskey ... Every spirit needs to be treated equally. Every single category treated equally." Also: list of
+22 n8n agents; brief + skill set for a new graphic-design (menu designer) agent.
+- n8n agents: not found in repo, database (agent_* tables empty) or Drive; no n8n connector. Gmail has one self-email
+  "PHG n8n Managed Agents" containing a plaintext Anthropic API key (not used, not copied) - told Rob to rotate it.
+- Equal categories (PHG-035b, migration 20260928000000 + in-place patches): phg_drink_item_category (words + ~150 brand
+  names), section headings for every category, generic spirits lists sorted per item; tequila and mezcal separate;
+  cider & seltzer, brandy & cognac, liqueurs & amari, sake & soju own lists. Reclassified 22,666 documents. Drinks-menu
+  counts: cocktails 3,334 · wine 2,762 · beer 2,726 · non-alcoholic 1,030 · cider/seltzer 845 · whiskey 616 ·
+  tequila 342 · vodka 324 · gin 248 · rum 225 · sake/soju 204 · mezcal 148 · brandy/cognac 138 · liqueurs/amari 128
+  · spirits (type not stated) 334.
+- Test suite supabase/tests/phg_drinks_menu_cases.sql (table phg_drinks_menu_cases + phg_drinks_menu_cases_run):
+  12 cases incl. Rob's negatives (food, homepage, bot check, photo gallery, happy-hour page, specials page); 12/12 pass
+  after the 8-line unpriced minimum.
+- corpus-browser v8 (all categories as tags; v7 rollback kept). Frontend 18.49.11 (branch/preview): Has/Hide list every
+  drinks category alphabetically and equally; card list badges alphabetical. Fixed: desktop filter panels closed on
+  tiny automatic scrolls (the intermittent test failure) - now only on >40px scroll. Gallery tests 247/247 x4.
+- handoff/DRINKS_MENU_SPEC.md: the rules for Rob to review.
+- Menu designer agent: handoff/agents/MENU_DESIGNER_BRIEF.md + .claude/agents/menu-designer.md (create-only; tasks in
+  agent_tasks task_type 'menu_design'; submits agent_proposals proposal_type 'menu_design'; Coordinator publishes).
