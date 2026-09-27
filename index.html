@@ -6271,7 +6271,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.11 EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.12 MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -13238,8 +13238,9 @@ function mdcPhgApplyMappings(list){
   });
 }
 
-function mdcPhgSync(){
-  if(!MDC.doc||MDC.phgBusy)return;
+function mdcPhgSync(done){
+  if(typeof done!=='function')done=null;
+  if(!MDC.doc||MDC.phgBusy){if(done)done(null,'busy');return;}
   var link=mdcPhgDocLink();
   if(!link||!link.menu_project_id){
     MDC.phgMsg='This menu is not connected to PHG. Choose Create PHG Project or Connect Existing PHG Project first.';
@@ -13271,7 +13272,7 @@ function mdcPhgSync(){
         MDC.phgMsg='PHG has a newer revision ('+(e.body.current_revision||'?')+'). Pull PHG before syncing so nothing newer is overwritten.';
         MDPHG.open=true;
       }else MDC.phgMsg='PHG sync failed: '+err;
-      render();return;
+      render();if(done)done(null,err);return;
     }
     if(!MDC.doc.phg)MDC.doc.phg={};
     MDC.doc.phg.menu_project_id=j.menu_project_id;
@@ -13292,6 +13293,7 @@ function mdcPhgSync(){
     if(typeof harmonyComposerUpdate==='function')harmonyComposerUpdate();
     render();
     if(MDPHG.open)setTimeout(function(){mdcPhgRefreshConnection(true);},0);
+    if(done)done(j,null);
   });
 }
 
@@ -13501,6 +13503,7 @@ function mdcStrip(set){
        + '<button class="mdcbtn" onclick="mdcPhgConnectionOpen(\'status\')"'+(MDC.phgBusy?' disabled':'')+'>PHG Connection</button>'
        + '<button class="mdcbtn" onclick="mdcPhgGenerateToggle()"' + (MDC.phgBusy?' disabled':'') + '>Generate PHG</button>'
        + '<button class="mdcbtn" onclick="mdcPhgImportCandidates()"' + (MDC.phgBusy?' disabled':'') + '>Import PHG</button>'
+       + '<button class="mdcbtn' + (MDDES.open?' on':'') + '" onclick="mdcDesignToggle()">Designer</button>'
        : '<button class="mdcbtn" onclick="mdcPhgCreate()"' + (MDC.phgBusy?' disabled':'') + '>Create PHG Project</button>'
        + '<button class="mdcbtn" onclick="mdcPhgConnectionOpen(\'existing\')"'+(MDC.phgBusy?' disabled':'')+'>Connect Existing</button>')
     + '<input type="file" id="mdcFileIn" accept=".json,application/json" '
@@ -13522,8 +13525,96 @@ function mdcStrip(set){
   if (MDC.fileMsg) h += '<div class="mdcfile msg">' + esc(MDC.fileMsg) + '</div>';
   if (MDC.phgMsg) h += '<div class="mdcfile msg">' + esc(MDC.phgMsg) + '</div>';
   h += mdcPhgConnectionPanel();
+  h += mdcDesignPanel();
 
   return h;
+}
+
+/* ==================================================================
+   MENU DESIGNER HAND-OFF (PHG-036)
+   Ask the designer for a design; see its proposals; apply an APPROVED one.
+   The designer never writes the draft. A proposal is released here only after
+   the automatic checks (no invented items, no new prices) and the Coordinator's
+   approval; applying it replaces the draft on screen (with confirmation and
+   undo) and saves it through the normal Sync PHG path with its revision check.
+   ================================================================== */
+var MDC_DESIGN_URL="https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-menu-design";
+var MDDES={open:false,busy:false,msg:'',tasks:null,req:'',loadedFor:null};
+var MDDES_STATUS={queued:'Waiting for the designer',in_progress:'Designer working',proposed:'Proposal waiting for review',approved:'Approved, ready to apply',applied:'Applied',rejected:'Rejected',needs_input:'Designer needs more input',cancelled:'Cancelled',
+  submitted:'Waiting for review',auto_rejected:'Failed the automatic checks',superseded:'Replaced by a newer version'};
+function mdcDesignFetch(action,payload,cb){
+  var link=mdcPhgDocLink();
+  if(!link||!link.menu_project_id){cb('Connect this menu to PHG first.');return;}
+  var cred=mdcPhgCredential(link.menu_project_id,null);
+  if(!cred){cb('No PHG project credential is available. Sign in to the owning account or reconnect the project.');return;}
+  var body=payload||{};body.action=action;body.menu_project_id=link.menu_project_id;body.sync_token=cred;
+  fetch(MDC_DESIGN_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+phgAuthBearer()},body:JSON.stringify(body)})
+   .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok)throw new Error(j&&j.error?j.error:('HTTP '+r.status));return j;});})
+   .then(function(j){cb(null,j);}).catch(function(e){cb(e.message||String(e));});
+}
+function mdcDesignToggle(){MDDES.open=!MDDES.open;if(MDDES.open)mdcDesignLoad();render();}
+function mdcDesignLoad(){
+  MDDES.busy=true;render();
+  mdcDesignFetch('design_status',{},function(err,j){MDDES.busy=false;if(err){MDDES.msg='Designer status failed: '+err;render();return;}
+    MDDES.tasks=j.tasks||[];MDDES.loadedFor=(mdcPhgDocLink()||{}).menu_project_id;render();});
+}
+/* source: 'user_prompt_flow' (typed request) or 'admin_button' with the button name as detail. */
+function mdcDesignRequest(text,source,detail,inputs){
+  text=String(text||'').trim();if(!text){MDDES.msg='Describe what you want the designer to make.';render();return;}
+  if(MDDES.busy)return;MDDES.busy=true;MDDES.msg='Sending to the designer…';render();
+  mdcDesignFetch('request_design',{request:text,source:source||'user_prompt_flow',source_detail:detail||null,inputs:inputs||{}},function(err,j){
+    MDDES.busy=false;
+    if(err){MDDES.msg='Could not send the request: '+err;render();return;}
+    MDDES.req='';MDDES.msg=j.status==='duplicate'?'That request was already sent a moment ago.':'Sent. The designer works from this draft (revision '+(j.base_revision==null?'?':j.base_revision)+').';
+    mdcDesignLoad();
+  });
+}
+function mdcDesignApply(proposalId){
+  if(MDDES.busy||MDC.phgBusy)return;
+  phgConfirm('Applying this design replaces the menu on screen with the designer’s approved version and saves it to PHG. You can undo it afterwards.','Apply design',function(){
+    MDDES.busy=true;MDDES.msg='Loading the approved design…';render();
+    mdcDesignFetch('take_approved',{proposal_id:proposalId},function(err,j){
+      if(err||!j||!j.doc){MDDES.busy=false;MDDES.msg='Could not load the design: '+(err||'no document');render();return;}
+      var link=mdcPhgDocLink()||{};
+      if(link.revision!=null&&j.current_revision!=null&&Number(link.revision)!==Number(j.current_revision)){
+        MDDES.busy=false;MDDES.msg='PHG has a newer revision ('+j.current_revision+') than this screen ('+link.revision+'). Pull PHG first, then apply.';render();return;
+      }
+      var keep=JSON.parse(JSON.stringify(link));
+      mdcRestore(JSON.stringify({doc:j.doc,style:MDC.style,size:MDC.sizeKey}));
+      MDC.doc.phg=keep;MDC.dirty=true;mdcCommit();
+      MDDES.msg='Saving the design to PHG…';render();
+      MDDES.busy=false;
+      mdcPhgSync(function(res,serr){
+        if(!res){MDDES.msg='The design is on screen but was not saved to PHG: '+serr+'. Use Undo to go back, or Sync PHG to retry.';render();return;}
+        mdcDesignFetch('mark_applied',{proposal_id:proposalId,revision:res.revision},function(e2){
+          MDDES.msg=e2?('Saved as revision '+res.revision+', but the design could not be marked applied: '+e2):('Design applied and saved as revision '+res.revision+'.');
+          mdcDesignLoad();
+        });
+      });
+    });
+  });
+}
+function mdcDesignPanel(){
+  if(!MDDES.open)return '';
+  var link=mdcPhgDocLink(),h='<div class="mdcPhgConnection"><div class="mdcPhgConnectionHead"><div><div class="mdcgrph">Menu designer</div><b>Ask for a design</b></div><button onclick="mdcDesignToggle()">×</button></div>';
+  if(!link||!link.menu_project_id)return h+'<div class="mdcfile">Connect this menu to PHG first (Create PHG Project or Connect Existing).</div></div>';
+  h+='<div class="mdcfile">The designer only creates. It sends each design back for checks (no invented items or prices) and approval; nothing changes on your menu until you apply an approved design.</div>'
+    +'<textarea id="mdcDesignReq" rows="3" style="width:100%;box-sizing:border-box" placeholder="e.g. One-page cocktail menu, letter size, signature cocktails first" oninput="MDDES.req=this.value">'+esc(MDDES.req||'')+'</textarea>'
+    +'<div style="display:flex;gap:6px;margin:6px 0"><button class="primary" onclick="mdcDesignRequest(MDDES.req,\'user_prompt_flow\')"'+(MDDES.busy?' disabled':'')+'>Ask the designer</button>'
+    +'<button onclick="mdcDesignLoad()"'+(MDDES.busy?' disabled':'')+'>Refresh</button></div>';
+  if(MDDES.msg)h+='<div class="mdcfile msg">'+esc(MDDES.msg)+'</div>';
+  var ts=MDDES.tasks||[];
+  if(MDDES.tasks&&!ts.length)h+='<div class="mdcfile">No design requests yet.</div>';
+  for(var i=0;i<ts.length;i++){var t=ts[i];
+    h+='<div class="mdcfile" style="text-align:left"><b>'+esc(t.request||'')+'</b><br><span class="mdcdim">'+esc(MDDES_STATUS[t.status]||t.status)+' · '+esc(String(t.created_at||'').slice(0,16).replace('T',' '))+(t.source==='admin_button'&&t.source_detail?' · '+esc(t.source_detail):'')+'</span>';
+    var ps=t.proposals||[];
+    for(var k=0;k<ps.length;k++){var p=ps[k];
+      h+='<div style="margin-top:4px">v'+p.version+' · '+esc(MDDES_STATUS[p.status]||p.status)
+        +(p.status==='approved'?' <button class="primary" onclick="mdcDesignApply(\''+esc(p.proposal_id)+'\')"'+(MDDES.busy||MDC.phgBusy?' disabled':'')+'>Apply to draft</button>':'')
+        +(p.reasoning?'<br><span class="mdcdim">'+esc(String(p.reasoning).slice(0,300))+'</span>':'')
+        +((p.problems&&p.problems.length)?'<br><span class="mdcdim">Checks: '+esc(p.problems.slice(0,3).join('; '))+'</span>':'')+'</div>';}
+    h+='</div>';}
+  return h+'</div>';
 }
 
 function mdcSync(){
