@@ -32,6 +32,9 @@ PHG-021 MITIGATED   P0  Live 18.49.4 thumbnails served by chat-preview v2 (0 err
 PHG-027 IN PROGRESS P1  Compact iPhone Menu Library + census filters + 20/50/100 paging: backend live, 18.49.6 built/tested, in review
 PHG-028 OPEN        P2  Old Netlify deploy-preview permalinks (before 51d222c) still serve /handoff and /supabase files
 PHG-029 OPEN        P2  Census data via Census Reporter (api.census.gov needs a key); refresh is manual; ZIP != ZCTA caveat
+PHG-030 IN PROGRESS P1  Menu-type filtering (beverage vs food/specials/happy hour/delivery/unread, multi-label tags)
+PHG-031 RESOLVED    P1  Long menus unreadable: 18.49.7 full-screen zoomable viewer (preview); >16 MP pages may need tiling
+PHG-032 OPEN        P1  ~4,700 documents have no text (mostly images): menu type unknown until read by vision/OCR (cost decision)
 PHG-022 OPEN        P1  Corpus/library Edge functions have no account-level authorization
 PHG-023 OPEN        P2  phg-menu-library-search bugs: or() escaping, no ORDER BY, 3x over-fetch (not used by frontend)
 PHG-024 OPEN        P1  Job 5 gtt-refresh-state-stats failing 56/72 runs (5 s statement timeout) since re-enable
@@ -211,6 +214,16 @@ PHG-027 | OPEN | P1 | Menu Library iPhone-compact redesign (Rob, 2026-09-27 ~16:
     desktop, mock backend). Adversarial review workflow wf_76caf8a3-5ae running.
   - Remaining: fix confirmed review findings, push branch (updates PR #3 preview), port to 18.50.x,
     release to main needs Rob's go-ahead (the safety check blocks my push to main).
+PHG-030 | IN PROGRESS | P1 | Menu-type filtering (Rob 18:20Z). Beverage filter showed food menus, DoorDash
+  listings, cocktail photos and specials pages. Plan: per-document menu_kind (beverage, mixed, food, happy_hour,
+  specials, delivery, not_menu, unread) + multi-label tags (cocktails, beer, wine, spirits, sake_soju,
+  non_alcoholic, food, happy_hour, specials, brunch, events, delivery) so a page can be several things at once;
+  gallery chips Type (any of), Has (any of), Hide (none of) with notes. Design workflow wf_cbd5691d-568.
+PHG-031 | RESOLVED (preview) | P1 | Long menus shrunk to slivers. 18.49.7 viewer opens fit-to-width with
+  scroll, pinch/double-tap/wheel/button zoom at full resolution. Watch for iOS downsampling on 512 pages >16 MP.
+PHG-032 | OPEN | P1 | ~4,700 documents have no machine-readable text (image 3,123, pdf 616, html ~4,365 minus
+  those with archived page text). Their menu type stays "unread" until a vision/OCR step reads them. Needs Rob's
+  approval of the per-image cost (estimate from wf_cbd5691d-568).
 PHG-028 | OPEN | P2 | Netlify publishes the repo root. netlify.toml (51d222c) now 404s /handoff/*, /supabase/*
   and /netlify.toml, but earlier deploy-preview permalinks for PR #3 still serve those files. No secrets
   are in them (internal notes and SQL). Rob can delete old deploys in Netlify if wanted.

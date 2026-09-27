@@ -591,3 +591,52 @@ PHG-20260927-0043 | BUILD — 18.49.6 compact Menu Library (branch, not pushed y
 - Browser tests (mock v4 backend): 180 checks pass on iPhone 390, iPhone SE 375 and desktop 1440.
 - Adversarial review workflow wf_76caf8a3-5ae running before push.
 
+------------------------------------------------------------------------------
+PHG-20260927-0044 | USER_PROMPT | ~18:05Z
+Metadata: {"verbatim": false, "attachments": "5 screenshots of the live Menu Library"}
+Give me a more simplified version. (Answered with a plain-language status; 18.49.6 pushed to the PR preview.)
+
+------------------------------------------------------------------------------
+PHG-20260927-0045 | USER_PROMPT | ~18:20Z
+Metadata: {"verbatim": true}
+Um, the new service is live. I like where some of it's at, but I do want to add some changes and put some
+notes in there about what's happening. First off, when I go to say select a beverage filter for, and I see a
+lot of menus that are food menus, I see DoorDash images menus, I just see images of a cocktail, um, see attached
+photos. For approved beverage menu types and how to filter it out based on what is not a beverage menu type.
+The first three photos are beverage menus. However, one of them is a specials menu. So we need to have a way to
+filter out specials and happy hour menus. Even though sometimes if this happy hour specials menu is on the same
+page as all other items, such as food or beverage menus, make sure that it still filters the view. Even if you
+want to exclude happy hour menus, it won't let you because it's on the same page. There has to be a uh,
+mutually inclusive factor there. Second off, some of the menus are super long and shrunken down that you can't
+see them. We need to figure out a way that whenever you click on the gallery view on an image, it expands it and
+allows you to scroll without losing quality of image. There's a lot of images. For example, the, there's two
+images, the fourth and the fifth attached image. show the long vertical menu that can't be viewed because it's so
+small. So overall we need a splash image where you click on any image and it splashes out and allows you to
+interact fully with the menu, scroll in, scroll down, zoom out, zoom in, um, and not without losing render quality.
+(Screenshots: UMI SUSHI sake/cocktail image menu, UMI SUSHI wine/beer image menu, The Terrace weekly specials page,
+El Centenario and Downtown Brew long website screenshots shrunk to slivers.)
+
+------------------------------------------------------------------------------
+PHG-20260927-0046 | FINDINGS — menu types and long pages | ~18:30Z
+- Long pages: 2,815 ready screenshot pages are taller than 3x their width; 527 taller than 8x; 512 exceed
+  16 megapixels; tallest 1400 x 48,046. The old viewer and live cards fit the whole page into a box.
+- Text available for classification: html 8,646 of 13,011 documents have staged items; image 247 of 3,370;
+  pdf 1,033 of 1,649. About 4,700 documents (mostly images) have no text at all, so menu type cannot be known
+  without reading the image (vision/OCR). Rule: no text = unknown, never a guess.
+- Examples: The Terrace (doc 225) specials page has dated day sections; Downtown Brew (675) is an Untappd beer
+  list (48 beer items); El Centenario (629) is a whole homepage with a BAR MENU section; UMI SUSHI images
+  (16922-16931) have no text.
+- Launched read-only workflow wf_cbd5691d-568: classifier design with measured precision + image-reading cost.
+
+------------------------------------------------------------------------------
+PHG-20260927-0047 | BUILD — 18.49.7 full-screen zoomable viewer (branch/preview) | ~18:45Z
+- Tap any card image: full-screen viewer opens at fit-to-width, so tall pages scroll and stay readable.
+  Pinch, double-tap, ctrl/trackpad wheel and +/- zoom by changing the image's layout width, so the browser
+  paints from the full-resolution file; Fit toggles fit width / whole page; one-finger pan is native and the
+  page itself never zooms (touch-action pan-x pan-y + gesturestart blocked); page arrows, keyboard, expired
+  link reload; "long page" badge on tall thumbnails. Solid background (no see-through).
+- 219 browser checks pass on iPhone 390, iPhone SE 375 and desktop 1440 (mock backend, synthetic 1400x20000 page).
+- Known limit: iOS Safari may downsample decoded images above its memory limit; 512 pages exceed 16 MP. If
+  Rob sees blur on those, the fix is tiling tall screenshots in the render worker (worker source: PHG-007).
+- Pushed b7c9321 to the branch (PR #3 preview).
+
