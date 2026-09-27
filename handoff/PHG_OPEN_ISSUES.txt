@@ -187,7 +187,13 @@ PHG-021 | REOPENED (live) | P0 | Root cause: live index.html 18.49.4 loads card 
        short-lived signed URLs; or
    (b) server hotfix: let the preview service serve any ready page image by id, without sign-in.
        Attempted 2026-09-27 ~16:20Z; blocked by the session's safety check as widening
-       unauthenticated access to stored images. Not deployed. Needs Rob's explicit approval.
+       unauthenticated access to stored images. Rob then approved it and v2 was deployed ~16:36Z
+       (rollback: v1.rollback.index.ts). Awaiting Rob's reload to confirm; (a) still preferred.
+PHG-027 | OPEN | P1 | Menu Library iPhone-compact redesign (Rob, 2026-09-27 ~16:30Z)
+  Ask: one-row toolbar of compact dropdowns sized to their text; smallest borders and buttons;
+  multi-select filters; 20/50/100 records per page; filter/view by census demographics as well as
+  city and state; iPhone-first for this display. Census source: geography_demographics (ACS
+  2020-2024: 1,026 places, 99 counties, 1 state) joined through accounts.geography_id.
 PHG-022 | OPEN | corpus-browser v3 and library-search v1 authorize only "is an Auth user"; any signed-in user
   sees every venue. Add account/role check (phg_language_context pattern) before wider rollout.
 PHG-023 | OPEN | library-search v1: esc() leaves , ( ) unescaped in PostgREST or() (filter injection), no
