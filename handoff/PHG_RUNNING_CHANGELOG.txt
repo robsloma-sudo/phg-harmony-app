@@ -640,3 +640,15 @@ PHG-20260927-0047 | BUILD — 18.49.7 full-screen zoomable viewer (branch/previe
   Rob sees blur on those, the fix is tiling tall screenshots in the render worker (worker source: PHG-007).
 - Pushed b7c9321 to the branch (PR #3 preview).
 
+
+------------------------------------------------------------------------------
+PHG-20260927-0048 | USER_PROMPT + PRODUCTION DEPLOY | ~20:00Z
+Rob: "Deploy the current build right now before you run out of usage for the day. ... all the formatting
+suggestions and feedback is not integrated. I want that in there." / "Resume"
+- Pushed main ee278f2 = index.html 18.49.7 (from branch b7c9321) + netlify.toml. Netlify builds main.
+  Live now: compact one-row toolbar, multi-select dropdowns, census filters, 20/50/100 paging, 3-column
+  phone cards, full-screen zoom viewer. Rollback: redeploy main a739f56 index.html.
+- Unfinished menu-type chips (Type / Has / Hide) parked as handoff/pending_menu_type_ui.patch until the
+  classifier + browse filter backend exists (PHG-030).
+- Review workflows wf_b63e551b-399 and the classifier-design agent failed on the session usage limit
+  (resets 20:00Z); rerun both. PHG-026 fix + repair still NOT applied; cron 7 and 13 still paused.
