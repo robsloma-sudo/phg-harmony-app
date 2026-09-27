@@ -1,4 +1,4 @@
-# What makes a drinks menu: PHG filter spec (v2, 2026-09-28)
+# What makes a drinks menu: PHG filter spec (v3, 2026-09-28)
 
 For Rob to review. This is exactly what the classifier looks for. Test suite: `supabase/tests/phg_drinks_menu_cases.sql`
 (`select * from phg_drinks_menu_cases_run();`, which currently passes 17 of 17; v3 rules, 2026-09-28).
@@ -51,7 +51,7 @@ drinks · delivery-app listings · pages that only link to a menu.
 
 ## 5. Known gaps (R&D, no scraping or spending)
 
-- **12,356 documents have no text yet** (mostly images and PDFs). They stay "Not read yet" until read, which means
+- **12,477 documents have no text yet** (mostly images and PDFs). They stay "Not read yet" until read, which means
   either re-capture with text (HTML pages) or reading the image (vision; costs money, needs your approval).
 - Brand lists cover the most common brands, grown from the library's most frequent unsorted names (8.7% of spirit
   lines are still "type not stated"); unknown brands under a generic "Spirits" heading fall into
