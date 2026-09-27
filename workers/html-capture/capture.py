@@ -231,6 +231,15 @@ async def _paint_iframes(page, out: Image.Image, top: int) -> int:
     full-page shot; screenshot each one in view and paste it at its place on the page."""
     n = 0
     frames = page.locator("iframe")
+    if not await frames.count():
+        return 0
+    hide_js = """(on) => {
+      if (!on) { for (const el of document.querySelectorAll('[data-phg-hid]')) { el.style.visibility = el.dataset.phgHid; el.removeAttribute('data-phg-hid'); } return; }
+      for (const el of document.querySelectorAll('body *')) {
+        const p = getComputedStyle(el).position;
+        if ((p === 'fixed' || p === 'sticky') && !el.querySelector('iframe')) { el.dataset.phgHid = el.style.visibility || ''; el.style.visibility = 'hidden'; }
+      }
+    }"""
     for i in range(min(await frames.count(), 12)):
         el = frames.nth(i)
         try:
@@ -242,6 +251,7 @@ async def _paint_iframes(page, out: Image.Image, top: int) -> int:
                 continue
             await el.scroll_into_view_if_needed(timeout=2000)
             await page.wait_for_timeout(600)
+            await _ev(page, hide_js, True)  # sticky headers re-appear on scroll
             y_doc = await el.evaluate("e => e.getBoundingClientRect().top + window.scrollY")
             x_doc = await el.evaluate("e => e.getBoundingClientRect().left + window.scrollX")
             png = await el.screenshot(type="png", timeout=10000)
@@ -253,6 +263,7 @@ async def _paint_iframes(page, out: Image.Image, top: int) -> int:
             n += 1
         except Exception:
             continue
+    await _ev(page, hide_js, False)
     if n:
         await _ev(page, "window.scrollTo(0, 0)")
     return n
