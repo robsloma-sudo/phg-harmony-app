@@ -6173,7 +6173,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.48.3 LIVE MENU CORPUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-26.18.49.0 UX PERFORMANCE CLEANUP · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7376,30 +7376,9 @@ function getAll(path,pageSize){
    changes or the underlying counts move. */
 var HEAVY = { state:null, sig:null, loading:false, ready:false };
 
-function heavyNeeded(){
-  /* Which pages read VENUES and EXP. The previous version named 'explorer'
-     and 'venues', NEITHER OF WHICH IS A PAGE - I guessed the keys instead of
-     reading them, so every category page, coverage, competitors and the map
-     silently got empty arrays and rendered nothing.
+function heavyNeeded(){if(typeof APP==='undefined'||APP!=='dash')return false;if(page==='home'||STATE==='ALL')return false;return true;}
 
-     Inverted: everything needs them except the pipeline, which reads only the
-     summary views. Adding a page can no longer break this by omission. */
-  if (typeof APP !== 'undefined' && (APP === 'menu' || APP === 'fin' || APP === 'set' || APP === 'harmony')) return APP === 'menu';
-  return page !== 'home';
-}
-
-function heavyLoad(sig, done){
-  if (HEAVY.loading) return;
-  HEAVY.loading = true;
-  Promise.all([
-    getAll("/v_public_venues?select=*"+(STATE==="ALL"?"":"&state_code=eq."+STATE)),
-    getAll("/mv_drink_explorer?select=*"+(STATE==="ALL"?"":"&state_code=eq."+STATE))
-  ]).then(function(h){
-    VENUES = h[0]||[]; EXP = h[1]||[];
-    HEAVY.state = STATE; HEAVY.sig = sig; HEAVY.ready = true; HEAVY.loading = false;
-    if (done) done();
-  }).catch(function(){ HEAVY.loading = false; });
-}
+function heavyLoad(sig,done){if(HEAVY.loading||STATE==='ALL')return;HEAVY.loading=true;Promise.all([getAll("/v_public_venues?select=state_code,batch_no,venue,city,address,venue_type,rating,reviews,lat,lng,match_status,menu_attempted&state_code=eq."+STATE),getAll("/mv_drink_explorer?select=*&state_code=eq."+STATE)]).then(function(h){VENUES=h[0]||[];EXP=h[1]||[];HEAVY.state=STATE;HEAVY.sig=sig;HEAVY.ready=true;HEAVY.loading=false;if(done)done()}).catch(function(){HEAVY.loading=false})}
 
 function load(){
   phgPipelineStatsRefresh();
@@ -10712,40 +10691,7 @@ function mdInventoryPage(){
   return h+mdInvReconTable(MDINV.recon);
 }
 
-function mdNav(){
-  var v = [
-    {k:'own',      label:'Create your own',     color:PURPLE},
-    {k:'template', label:'Build from template', color:BLUE}
-  ];
-  var out = v.map(function(x){
-    return '<button class="nav' + (MD.view===x.k?' on':'') + '" onclick="mdView(\'' + x.k + '\')">'
-      + '<span class="pipdot" style="background:' + x.color + '"></span>' + x.label + '</button>';
-  }).join("");
-
-  /* Recipe book, nested. It sits under Menu developer rather than beside it
-     because the drink book IS the menu, read a different way. */
-  var open = (MD.view === 'recipes') || MDR.navOpen;
-  out += '<button class="navgrp' + (open?' open':'') + '" onclick="mdrNavToggle()">'
-       + '<span class="caret">' + (open?'&#9662;':'&#9656;') + '</span>Recipe book</button>';
-  if (open){
-    out += '<div class="navsub">';
-    for (var i=0;i<MDR_BOOKS.length;i++){
-      var b = MDR_BOOKS[i];
-      out += '<button class="nav' + (MD.view==='recipes' && MDR.book===b.k ? ' on':'') + '"'
-           + ' onclick="mdrGo(\'' + b.k + '\')">' + esc(b.label)
-           + (b.database ? '<span class="cnt" style="opacity:.65">DB</span>' : (b.derived ? '' : '<span class="cnt" style="opacity:.5">PHG</span>'))
-           + '</button>';
-    }
-    out += '</div>';
-  }
-  out += '<button class="nav' + (MD.view==='training'?' on':'') + '" onclick="mdView(\'training\')">'
-       + '<span class="pipdot" style="background:' + PURPLE + '"></span>Training</button>';
-  out += '<button class="nav' + (MD.view==='costing'?' on':'') + '" onclick="mdView(\'costing\')">'
-       + '<span class="pipdot" style="background:' + ORANGE + '"></span>Costing / COGS</button>';
-  out += '<button class="nav' + (MD.view==='inventory'?' on':'') + '" onclick="mdView(\'inventory\')">'
-       + '<span class="pipdot" style="background:' + GREEN + '"></span>Inventory / variance</button>';
-  return out;
-}
+function mdNav(){var out='<button class="nav'+(MD.view==='own'?' on':'')+'" onclick="mdView(\'own\')"><span class="pipdot" style="background:'+PURPLE+'"></span>Menu workspace</button><button class="nav'+(MD.view==='template'?' on':'')+'" onclick="mdView(\'template\')"><span class="pipdot" style="background:'+BLUE+'"></span>Templates</button>';var open=(MD.view==='recipes')||MDR.navOpen;out+='<button class="navgrp'+(open?' open':'')+'" onclick="mdrNavToggle()"><span class="caret">'+(open?'&#9662;':'&#9656;')+'</span>Recipes & cocktails</button>';if(open){out+='<div class="navsub">';for(var i=0;i<MDR_BOOKS.length;i++){var b=MDR_BOOKS[i];out+='<button class="nav'+(MD.view==='recipes'&&MDR.book===b.k?' on':'')+'" onclick="mdrGo(\''+b.k+'\')">'+esc(b.label)+'</button>'}out+='</div>'}var ops=MD.open.tools||MD.view==='training'||MD.view==='costing'||MD.view==='inventory';out+='<button class="navgrp'+(ops?' open':'')+'" onclick="MD.open.tools=!MD.open.tools;render()"><span class="caret">'+(ops?'&#9662;':'&#9656;')+'</span>Operations</button>';if(ops)out+='<div class="navsub"><button class="nav'+(MD.view==='training'?' on':'')+'" onclick="mdView(\'training\')">Training</button><button class="nav'+(MD.view==='costing'?' on':'')+'" onclick="mdView(\'costing\')">Costing / COGS</button><button class="nav'+(MD.view==='inventory'?' on':'')+'" onclick="mdView(\'inventory\')">Inventory</button></div>';return out;}
 
 function mdrNavToggle(){ MDR.navOpen = !((MD.view === 'recipes') || MDR.navOpen); render(); }
 
@@ -22086,16 +22032,7 @@ function harmonyOpen(app,dest){
     else if(app==='menu'&&dest&&typeof mdView==='function'){mdView(dest);}
   },0);
 }
-function harmonySideNav(){
-  var count=harmonyAttentionItems().length;
-  return '<div class="navlbl">Harmony</div>'
-   +'<button class="nav on" onclick="setApp(\'harmony\')"><span class="pipdot" style="background:var(--teal)"></span>Command center</button>'
-   +'<button class="nav" onclick="harmonyAttentionFocus()"><span class="pipdot" style="background:var(--amber)"></span>Needs attention'+(count?'<span class="v17NavBadge">'+count+'</span>':'')+'</button>'
-   +'<button class="nav" onclick="harmonyOpen(\'fin\',\'mgmt_inbox\')"><span class="pipdot" style="background:var(--magenta)"></span>Administrative inbox</button>'
-   +'<button class="nav" onclick="harmonyOpen(\'fin\',\'mgmt_review\')"><span class="pipdot" style="background:var(--amber)"></span>Period review</button>'
-   +'<button class="nav" onclick="harmonyOpen(\'menu\',\'own\')"><span class="pipdot" style="background:var(--violet)"></span>Menu workspace</button>'
-   +'<button class="nav" onclick="harmonyOpen(\'fin\',\'mgmt_reports\')"><span class="pipdot" style="background:var(--green)"></span>Reports</button>';
-}
+function harmonySideNav(){var count=harmonyAttentionItems().length;return '<div class="navlbl">Harmony</div><button class="nav on" onclick="setApp(\'harmony\')"><span class="pipdot" style="background:var(--teal)"></span>Home</button><button class="nav" onclick="harmonyAttentionFocus()"><span class="pipdot" style="background:var(--amber)"></span>Needs attention'+(count?'<span class="v17NavBadge">'+count+'</span>':'')+'</button><div class="navsep"></div><button class="nav" onclick="harmonyOpen(\'menu\',\'own\')"><span class="pipdot" style="background:var(--violet)"></span>Menu Studio</button><button class="nav" onclick="harmonyOpen(\'fin\',\'mgmt_dashboard\')"><span class="pipdot" style="background:var(--green)"></span>Financial</button><button class="nav" onclick="setApp(\'dash\')"><span class="pipdot" style="background:var(--blue)"></span>Market</button><button class="nav" onclick="setApp(\'set\')"><span class="pipdot" style="background:var(--grey)"></span>Settings</button>';}
 function harmonyWorkflowCard(){
   var w=COMMAND&&COMMAND.workflow,steps=w&&w.steps||[]; if(!w||!w.workflow||!steps.length)return '';
   var done=0;for(var i=0;i<steps.length;i++)if(steps[i].status==='complete')done++;
@@ -22105,39 +22042,7 @@ function harmonyWorkflowCard(){
     +'<div class="v17Subtle">'+done+' of '+steps.length+' steps complete'+(next?' · Next: '+esc(next.label||next.step_key):'')+'</div>'
     +'<div class="bar"><i style="width:'+pct+'%"></i></div></div>';
 }
-function harmonyHomePage(){
-  var link=commandLink(),linked=!!link;
-  if(link)setTimeout(function(){harmonyAttentionEnsure();},0);
-  var wsName=(typeof MDC!=='undefined'&&MDC.doc&&MDC.doc.title)||'Current PHG workspace';
-  var status=linked?'<span class="v17State"><i></i>PHG linked</span>':'<span class="v17State off"><i></i>Sync required</span>';
-  var meta=linked?('Menu project '+esc(String(link.menu_project_id||'').slice(0,8))+'… · deterministic PHG tools available'):'Sign in to PHG to unlock account data, cross-module analysis and approved actions.';
-  var h='<div class="v17Hero"><div class="v17HeroTop"><section class="v17AskCard">'
-    +'<div class="v17Eyebrow">Harmony · PHG operating intelligence</div><h2>What are we working on?</h2>'
-    +'<p>Ask one question across the whole system. Harmony routes analysis to the deterministic PHG engines and moves you into the detailed workspace only when you need to inspect or approve something.</p>'
-    +'<div class="v17AskRow">'
-    +'<button class="harmonyClearBtn" data-harmony-clear="harmonyAsk" aria-label="Clear Harmony prompt" onclick="harmonyClear(\'harmonyAsk\')">'+harmonyClearIcon()+'</button>'
-    +'<input id="harmonyAsk" placeholder="Ask about the menu, COGS, labor, inventory, P&L, training, purchasing…" oninput="harmonyVoiceControlSync()" onkeydown="if(event.key===\'Enter\')harmonySend()">'
-    +'<button class="harmonyMicBtn" data-harmony-mic="harmonyAsk" aria-label="Dictate to Harmony" onclick="harmonyDictate(\'harmonyAsk\')">'+harmonyMicIcon()+'</button>'
-    +'<button class="harmonySendBtn" onclick="harmonySend()">Ask Harmony</button></div>'
-    +harmonyWorkflowCard()+'</section>'
-    +'<aside class="v17Status"><div class="v17Eyebrow">Workspace</div><strong>'+esc(wsName)+'</strong>'+status+'<div class="v17Meta">'+meta+'</div>'
-    +'<div style="margin-top:13px"><button onclick="agentOpen(true)">Open conversation</button></div></aside></div>'
-    +v17Onboarding()
-    +harmonyAttentionSection()
-    +'<div class="v17SectionTitle">Start here</div><div class="v17Quick">'
-    +'<button onclick="harmonyAttentionFocus()"><b>Needs Attention queue</b><span>Approvals, exceptions, stale evidence, invoices and close blockers in one place.</span></button>'
-    +'<button onclick="harmonyQuick(\'Build the daily management brief.\')"><b>Daily management brief</b><span>Current numbers, state changes and exceptions without repetitive noise.</span></button>'
-    +'<button onclick="harmonyQuick(\'Is the current period ready to close?\')"><b>Period close</b><span>Show exactly what blocks close and where to fix it.</span></button>'
-    +'<button onclick="harmonyQuick(\'Why did operating contribution change versus the previous period?\')"><b>Explain performance</b><span>Evidence-backed sales, COGS, labor and OPEX drivers.</span></button>'
-    +'<button onclick="harmonyQuick(\'Build a cocktail under 18% COGS, prepare it for the menu, and build training.\')"><b>Develop a menu item</b><span>Recipe → exact cost → menu → sourced training with approvals.</span></button>'
-    +'<button onclick="harmonyOpen(\'fin\',\'eng_overview\')"><b>Menu profitability</b><span>Sales mix, theoretical contribution and item/category drill-downs.</span></button></div>'
-    +'<div class="v17SectionTitle">Workspaces</div><div class="v17Workspaces">'
-    +'<div class="v17Workspace menu" onclick="harmonyOpen(\'menu\',\'own\')"><b>Menu Studio</b><span>Build the menu, recipes, training, costing and inventory relationships.</span></div>'
-    +'<div class="v17Workspace fin" onclick="harmonyOpen(\'fin\',\'mgmt_dashboard\')"><b>Financial Intelligence</b><span>Administrative operations, purchasing, COGS, labor, budgets, P&L and close workflows.</span></div>'
-    +'<div class="v17Workspace market" onclick="setApp(\'dash\')"><b>Market Intelligence</b><span>Venue, menu and competitive market evidence used by the development system.</span></div>'
-    +'<div class="v17Workspace settings" onclick="setApp(\'set\')"><b>Settings</b><span>Interface, preferences and system controls.</span></div></div></div>';
-  return h;
-}
+function harmonyHomePage(){var link=commandLink(),linked=!!link;if(link)setTimeout(function(){harmonyAttentionEnsure();},0);var wsName=(typeof MDC!=='undefined'&&MDC.doc&&MDC.doc.title)||'Current workspace';var status=linked?'<span class="v17State"><i></i>Connected</span>':'<span class="v17State off"><i></i>Not connected</span>';return '<div class="v17Hero"><div class="v17HeroTop"><section class="v17AskCard"><div class="v17Eyebrow">Harmony</div><h2>What do you want to work on?</h2><p>Ask Harmony, or choose a workspace below.</p><div class="v17AskRow"><button class="harmonyClearBtn" data-harmony-clear="harmonyAsk" aria-label="Clear Harmony prompt" onclick="harmonyClear(\'harmonyAsk\')">'+harmonyClearIcon()+'</button><input id="harmonyAsk" placeholder="Ask Harmony…" oninput="harmonyVoiceControlSync()" onkeydown="if(event.key===\'Enter\')harmonySend()"><button class="harmonyMicBtn" data-harmony-mic="harmonyAsk" aria-label="Dictate to Harmony" onclick="harmonyDictate(\'harmonyAsk\')">'+harmonyMicIcon()+'</button><button class="harmonySendBtn" onclick="harmonySend()">Ask</button></div>'+harmonyWorkflowCard()+'</section><aside class="v17Status"><div class="v17Eyebrow">Workspace</div><strong>'+esc(wsName)+'</strong>'+status+'<div style="margin-top:13px"><button onclick="agentOpen(true)">Open conversation</button></div></aside></div>'+(linked?harmonyAttentionSection():v17Onboarding())+'<div class="v17SectionTitle">Workspaces</div><div class="v17Workspaces"><div class="v17Workspace menu" onclick="harmonyOpen(\'menu\',\'own\')"><b>Menu Studio</b><span>Menus, cocktails, recipes, training and costing.</span></div><div class="v17Workspace fin" onclick="harmonyOpen(\'fin\',\'mgmt_dashboard\')"><b>Financial</b><span>Sales, COGS, labor, budgets, P&amp;L, variance and period review.</span></div><div class="v17Workspace market" onclick="setApp(\'dash\')"><b>Market</b><span>Venues, competitors, menu library and market trends.</span></div><div class="v17Workspace settings" onclick="setApp(\'set\')"><b>Settings</b><span>Account, preferences, integrations and system controls.</span></div></div><div class="v17SectionTitle">Quick actions</div><div class="v17Quick"><button onclick="harmonyOpen(\'menu\',\'own\')"><b>Work on a menu</b><span>Create or edit the current beverage menu.</span></button><button onclick="harmonyAttentionFocus()"><b>Needs attention</b><span>Review items that actually require a decision.</span></button><button onclick="harmonyQuick(\'Build the daily management brief.\')"><b>Daily brief</b><span>Summarize what changed and what matters.</span></button></div></div>';}
 
 function render(){
   setTimeout(function(){
@@ -22208,7 +22113,7 @@ function render(){
     v.innerHTML=(page==="home"?pipelineCorpusCard():"")+emptyState();
     return;
   }
-  var sec=SECTIONS.filter(function(s){return s.k===page})[0]||SECTIONS[0];
+  if(STATE==="ALL"&&page!=="home"){document.getElementById("ptitle").textContent="Market Intelligence";v.innerHTML='<div class="card"><div class="ttl">Choose a state</div><div class="sub">Detailed venue, competitor and menu views load one state at a time. This keeps PHG responsive instead of downloading the entire national venue corpus into the browser.</div><div style="margin-top:14px"><select class="stsel" onchange="if(this.value)setState(this.value)"><option value="">Select a state…</option>'+STATES.filter(function(x){return x.venues>0}).map(function(x){return '<option value="'+esc(x.state_code)+'">'+esc(x.state_name)+' · '+n(x.venues)+' venues</option>'}).join('')+'</select></div></div>';return;}\n  var sec=SECTIONS.filter(function(s){return s.k===page})[0]||SECTIONS[0];
   document.getElementById("ptitle").textContent=page==="home"?"Pipeline":sec.label;
   if(page==="home"){
     v.innerHTML=(STATE==="ALL")?countryHome():homePage();
