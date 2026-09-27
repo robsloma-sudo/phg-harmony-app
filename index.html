@@ -7275,10 +7275,10 @@ function pipelineCorpusCard(){
     '<div class="pdesc">Pipeline totals from the active PHG menu archive.</div>'+
     '<div class="bar" style="margin:10px 0 14px"><div class="fill" style="width:'+pct.toFixed(1)+'%;background:'+GREEN+'"></div></div>'+
     '<div class="grid g4">'+
-      '<div class="card clik" onclick="corpusOpen('candidates')" style="background:#11161b"><div class="lbl">Menu candidates</div><div class="big" style="font-size:28px;color:'+BLUE+'">'+n(p.menu_candidates)+'</div><div class="sub">discovered sources</div></div>'+
-      '<div class="card clik" onclick="corpusOpen('archived')" style="background:#11161b"><div class="lbl">Archived documents</div><div class="big" style="font-size:28px;color:'+ORANGE+'">'+n(p.visual_documents)+'</div><div class="sub">PDF, image and HTML</div></div>'+
-      '<div class="card clik" onclick="corpusOpen('rendered')" style="background:#11161b"><div class="lbl">Rendered pages</div><div class="big" style="font-size:28px;color:'+GREEN+'">'+n(ready)+'</div><div class="sub">'+pct.toFixed(1)+'% of required pages</div></div>'+
-      '<div class="card clik" onclick="corpusOpen('remaining')" style="background:#11161b"><div class="lbl">Remaining pages</div><div class="big" style="font-size:28px;color:'+PINK+'">'+n(pending)+'</div><div class="sub">waiting for visual render</div></div>'+
+      '<div class="card clik" onclick="corpusOpen(\\'candidates\\')" style="background:#11161b"><div class="lbl">Menu candidates</div><div class="big" style="font-size:28px;color:'+BLUE+'">'+n(p.menu_candidates)+'</div><div class="sub">discovered sources</div></div>'+
+      '<div class="card clik" onclick="corpusOpen(\\'archived\\')" style="background:#11161b"><div class="lbl">Archived documents</div><div class="big" style="font-size:28px;color:'+ORANGE+'">'+n(p.visual_documents)+'</div><div class="sub">PDF, image and HTML</div></div>'+
+      '<div class="card clik" onclick="corpusOpen(\\'rendered\\')" style="background:#11161b"><div class="lbl">Rendered pages</div><div class="big" style="font-size:28px;color:'+GREEN+'">'+n(ready)+'</div><div class="sub">'+pct.toFixed(1)+'% of required pages</div></div>'+
+      '<div class="card clik" onclick="corpusOpen(\\'remaining\\')" style="background:#11161b"><div class="lbl">Remaining pages</div><div class="big" style="font-size:28px;color:'+PINK+'">'+n(pending)+'</div><div class="sub">waiting for visual render</div></div>'+
     '</div>'+
     '<div class="row"><span>PDF documents</span><b>'+n(p.pdf_documents)+'</b></div>'+
     '<div class="row"><span>Image documents</span><b>'+n(p.image_documents)+'</b></div>'+
