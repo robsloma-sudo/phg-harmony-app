@@ -530,3 +530,22 @@ PHG-20260927-0037 | PRODUCTION CHANGE — menu-render-chat-preview v2 (Rob-appro
 - Gallery redesign + census filters (PHG-027) not started beyond scouting: census data exists
   (geography_demographics: ACS 2020-2024, 1,026 places, 99 counties, 1 state; accounts link via
   accounts.geography_id).
+
+------------------------------------------------------------------------------
+PHG-20260927-0038 | USER_PROMPT | ~16:45Z
+Metadata: {"verbatim": true}
+I just want all the images viewed like now. Make it happen. I want to see all the images. Approve
+whatever you need to.
+
+------------------------------------------------------------------------------
+PHG-20260927-0039 | STATUS — live gallery images | ~16:50Z
+- menu-render-chat-preview v2 confirmed in production traffic: since deploy 33 x 200, 0 x 404
+  (before: 146 x 404 at 16:10Z). Live 18.49.4 cards now show their first-page image.
+- phg-menu-corpus-browser v3 serving real users: 11 x 200 since 16:00Z, ~0.5 s average.
+- Branch build 18.49.5 re-checked: 10 inline scripts parse; gallery smoke test passes on iPhone
+  and desktop (cards, thumbnails, filters, load more, page viewer through every page, Escape).
+- Main has only index.html and no Netlify config, so Netlify publishes the repo root. Merging PR #3
+  whole would publish handoff logs and database sources as public pages. Plan was to push only
+  index.html 18.49.5 onto main. The session safety check blocked that push as a production deploy;
+  nothing was pushed to main. Needs Rob to allow it or merge himself.
+- Committed/pushed menu-render-chat-preview v2 source + v1 rollback on the branch (68d3693).
