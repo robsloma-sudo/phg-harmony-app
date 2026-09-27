@@ -1,0 +1,287 @@
+"""PHG HTML menu capture v2 (PHG-034).
+
+Fixes the capture faults Rob found on 2026-09-27 (Mymoon, Bonao, 317 Main, Watershed, Adrift):
+  1. Screenshot stops at the first screen (4,137 of 14,008 railway screenshots are exactly 1000 px tall):
+     cookie / age pop-ups lock scrolling (body overflow:hidden) or the page scrolls inside a container.
+     -> dismiss pop-ups, unlock scrolling, expand the scrolling container before measuring.
+  2. Drinks and photos that only load when scrolled into view come out blank.
+     -> scroll the whole page in steps until its height stops growing, force lazy images to load,
+        wait for images to finish.
+  3. Tabbed drinks menus (Beer | Wine | Cocktails | Spirits) keep only the first tab.
+     -> click every drinks tab that changes the page in place and stitch each state under the first.
+  4. Sticky "Order online" bars / chat bubbles stamped over the menu.
+     -> hide small fixed/sticky overlays after the pop-ups are handled.
+
+Resolution is never reduced: the page is laid out at target_width (1400) and saved as JPEG.
+Tall pages are captured in slices and stitched, so there is no Chromium texture limit.
+"""
+from __future__ import annotations
+
+import io
+import re
+from dataclasses import dataclass, field
+
+from PIL import Image
+
+MAX_HEIGHT = 60000          # px; JPEG limit is 65,535
+SLICE = 8000                # px per screenshot slice
+DRINK_TAB_RE = re.compile(
+    r"\b(drinks?|beers?|wines?|cocktails?|spirits?|whiske?y|bourbon|tequila|mezcal|rum|vodka|gin|sake|soju|"
+    r"mocktails?|zero[- ]proof|non[- ]?alcoholic|n/?a|bar|draft|taps?|cans?|bottles?|by the glass|happy hour|"
+    r"sparkling|red|white|ros[eé]|frozen|margaritas?|spritz|seltzers?|ciders?|flights?)\b", re.I)
+NOT_TAB_RE = re.compile(r"\b(order|reserv|book|gift|career|jobs?|login|sign|cart|delivery|catering|contact)\b", re.I)
+CONSENT_RE = r"^\s*(accept( all)?( cookies)?|allow( all)?( cookies)?|i accept|i agree|agree|got it|ok(ay)?|continue|close|dismiss|no thanks|reject all|decline)\s*[.!]?\s*$"
+AGE_RE = r"^\s*(yes|i am 21\+?|i'?m 21\+?|i am of legal drinking age|enter( site)?|21\+|over 21)\s*[.!]?\s*$"
+
+
+@dataclass
+class Capture:
+    jpeg: bytes
+    width: int
+    height: int
+    notes: list = field(default_factory=list)
+
+
+# --------------------------------------------------------------------------- page preparation
+
+JS_UNLOCK = """() => {
+  for (const el of [document.documentElement, document.body]) {
+    if (!el) continue;
+    el.style.setProperty('overflow', 'visible', 'important');
+    el.style.setProperty('overflow-y', 'visible', 'important');
+    el.style.setProperty('height', 'auto', 'important');
+    el.style.setProperty('max-height', 'none', 'important');
+    el.style.setProperty('position', 'static', 'important');
+    el.classList.remove('modal-open', 'no-scroll', 'noscroll', 'overflow-hidden', 'lock-scroll', 'scroll-lock');
+  }
+  // The page scrolls inside a container (html/body stay one screen tall): let it grow.
+  const vh = window.innerHeight; let best = null, bestH = 0;
+  for (const el of document.querySelectorAll('body *')) {
+    const cs = getComputedStyle(el);
+    if (!/(auto|scroll|hidden)/.test(cs.overflowY)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < window.innerWidth * 0.5 || r.height < vh * 0.5) continue;
+    if (el.scrollHeight > el.clientHeight + 200 && el.scrollHeight > bestH) { best = el; bestH = el.scrollHeight; }
+  }
+  if (best && document.documentElement.scrollHeight <= vh + 50) {
+    for (let el = best; el && el !== document.documentElement; el = el.parentElement) {
+      el.style.setProperty('overflow', 'visible', 'important');
+      el.style.setProperty('height', 'auto', 'important');
+      el.style.setProperty('max-height', 'none', 'important');
+    }
+    return 'expanded_scroll_container';
+  }
+  return '';
+}"""
+
+JS_HIDE_OVERLAYS = """() => {
+  const vw = window.innerWidth, vh = window.innerHeight; let n = 0;
+  for (const el of document.querySelectorAll('body *')) {
+    const cs = getComputedStyle(el);
+    if (cs.position !== 'fixed' && cs.position !== 'sticky') continue;
+    const r = el.getBoundingClientRect();
+    const area = (r.width * r.height) / (vw * vh);
+    const txt = (el.innerText || '').toLowerCase();
+    const consent = /cookie|consent|privacy|gdpr|we use|21 or older|legal drinking age/.test(txt);
+    // pop-ups/scrims of any size if they are consent/age walls; otherwise only bars, bubbles and side tabs
+    if (consent || area < 0.35) { el.style.setProperty('display', 'none', 'important'); n++; }
+  }
+  return n;
+}"""
+
+JS_LAZY = """() => {
+  let n = 0;
+  for (const img of document.querySelectorAll('img')) {
+    if (img.loading === 'lazy') { img.loading = 'eager'; n++; }
+    for (const a of ['data-src', 'data-lazy-src', 'data-original', 'data-lazy']) {
+      const v = img.getAttribute(a);
+      if (v && (!img.getAttribute('src') || img.src.startsWith('data:'))) { img.src = v; n++; }
+    }
+    const ss = img.getAttribute('data-srcset') || img.getAttribute('data-lazy-srcset');
+    if (ss && !img.getAttribute('srcset')) { img.srcset = ss; n++; }
+  }
+  for (const el of document.querySelectorAll('[data-bg],[data-background-image]')) {
+    const v = el.getAttribute('data-bg') || el.getAttribute('data-background-image');
+    if (v && !el.style.backgroundImage) { el.style.backgroundImage = 'url(' + JSON.stringify(v) + ')'; n++; }
+  }
+  return n;
+}"""
+
+JS_IMAGES_DONE = """() => [...document.images].every(i => i.complete || i.getBoundingClientRect().height === 0)"""
+
+JS_HEIGHT = """() => Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)"""
+
+
+async def _click_matching(page, pattern: str) -> int:
+    """Click visible buttons/links whose whole label matches pattern (consent / age gates)."""
+    clicked = 0
+    for frame in page.frames:  # consent tools often live in an iframe
+        try:
+            loc = frame.locator("button, a, [role=button], input[type=button], input[type=submit]")
+            count = min(await loc.count(), 200)
+            for i in range(count):
+                el = loc.nth(i)
+                try:
+                    if not await el.is_visible():
+                        continue
+                    label = (await el.inner_text(timeout=500)) or (await el.get_attribute("value")) or ""
+                    if re.match(pattern, label.strip(), re.I) and len(label) < 40:
+                        await el.click(timeout=1500)
+                        clicked += 1
+                        await page.wait_for_timeout(300)
+                        break
+                except Exception:
+                    continue
+        except Exception:
+            continue
+    return clicked
+
+
+async def _scroll_through(page, notes: list, max_steps: int = 80) -> None:
+    """Scroll to the bottom in steps so lazy content loads; stop when height is stable."""
+    await page.evaluate(JS_LAZY)
+    last, stable, y = 0, 0, 0
+    vh = page.viewport_size["height"]
+    for _ in range(max_steps):
+        h = await page.evaluate(JS_HEIGHT)
+        if y >= h - vh:
+            if h == last:
+                stable += 1
+                if stable >= 2:
+                    break
+            else:
+                stable = 0
+            last = h
+            await page.wait_for_timeout(400)
+        y = min(y + int(vh * 0.8), max(0, h - vh))
+        await page.evaluate(f"window.scrollTo(0, {y})")
+        await page.wait_for_timeout(180)
+        if h > MAX_HEIGHT:
+            notes.append("height_capped")
+            break
+    await page.evaluate(JS_LAZY)
+    for _ in range(40):  # up to ~8 s for images to finish
+        if await page.evaluate(JS_IMAGES_DONE):
+            break
+        await page.wait_for_timeout(200)
+    await page.evaluate("window.scrollTo(0, 0)")
+    await page.wait_for_timeout(250)
+
+
+async def _shot(page, top: int = 0) -> Image.Image:
+    """Full-page screenshot from `top` down, in slices (no texture-size limit)."""
+    width = page.viewport_size["width"]
+    height = min(await page.evaluate(JS_HEIGHT), MAX_HEIGHT)
+    top = max(0, min(top, height - 1))
+    out = Image.new("RGB", (width, height - top), "white")
+    y = top
+    while y < height:
+        h = min(SLICE, height - y)
+        png = await page.screenshot(full_page=True, clip={"x": 0, "y": y, "width": width, "height": h}, type="png")
+        out.paste(Image.open(io.BytesIO(png)).convert("RGB"), (0, y - top))
+        y += h
+    return out
+
+
+async def _drink_tabs(page) -> list:
+    """In-page tabs whose labels are drinks (Beer / Wine / Cocktails ...). Links to other pages are not tabs."""
+    js = """(reS) => {
+      const re = new RegExp(reS[0], 'i'), no = new RegExp(reS[1], 'i'), out = [];
+      const cands = document.querySelectorAll('[role=tab], button, a, li, [data-tab], [data-toggle=tab], [data-bs-toggle=tab], [aria-controls]');
+      for (const el of cands) {
+        const t = (el.innerText || '').trim();
+        if (!t || t.length > 30 || !re.test(t) || no.test(t)) continue;
+        const r = el.getBoundingClientRect(); if (r.width === 0 || r.height === 0) continue;
+        if (el.tagName === 'A') {
+          const h = el.getAttribute('href') || '';
+          const inPage = !h || h.startsWith('#') || h.startsWith('javascript') || el.hasAttribute('aria-controls') || el.getAttribute('role') === 'tab' || el.hasAttribute('data-toggle') || el.hasAttribute('data-bs-toggle');
+          if (!inPage) continue;
+        }
+        if (el.closest('nav, header, footer') && el.getAttribute('role') !== 'tab') continue;
+        // keep the innermost clickable (skip an li whose child button is also a candidate)
+        if (el.querySelector('[role=tab], button, a')) continue;
+        el.setAttribute('data-phg-tab', out.length);
+        out.push({i: out.length, text: t, y: Math.round(r.top + window.scrollY)});
+      }
+      return out;
+    }"""
+    try:
+        return await page.evaluate(js, [DRINK_TAB_RE.pattern, NOT_TAB_RE.pattern])
+    except Exception:
+        return []
+
+
+def _thumb(img: Image.Image) -> Image.Image:
+    return img.convert("L").resize((64, max(1, img.height // 40)))
+
+
+def _same(a: Image.Image, b: Image.Image) -> bool:
+    """Same tab state? Tolerates focus rings / hover styling on the clicked tab."""
+    if abs(a.height - b.height) > max(8, 0.02 * a.height):
+        return False
+    ta, tb = _thumb(a), _thumb(b.resize(a.size) if b.size != a.size else b)
+    diff = sum(abs(x - y) for x, y in zip(ta.getdata(), tb.getdata())) / (ta.width * ta.height)
+    return diff < 2.0
+
+
+async def capture(page, url: str, target_width: int = 1400, jpeg_quality: int = 85) -> Capture:
+    notes: list = []
+    await page.set_viewport_size({"width": target_width, "height": 1000})
+    await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+    try:
+        await page.wait_for_load_state("networkidle", timeout=10000)
+    except Exception:
+        notes.append("no_networkidle")
+
+    if await _click_matching(page, AGE_RE):
+        notes.append("age_gate")
+    if await _click_matching(page, CONSENT_RE):
+        notes.append("consent")
+    unlocked = await page.evaluate(JS_UNLOCK)
+    if unlocked:
+        notes.append(unlocked)
+    await _scroll_through(page, notes)
+    hidden = await page.evaluate(JS_HIDE_OVERLAYS)
+    if hidden:
+        notes.append(f"overlays_hidden:{hidden}")
+    await page.evaluate(JS_UNLOCK)
+
+    parts = [await _shot(page)]
+    seen: list = []
+
+    tabs = await _drink_tabs(page)
+    if len(tabs) >= 2:
+        top = max(0, min(t["y"] for t in tabs) - 20)
+        seen.append(parts[0].crop((0, top, parts[0].width, parts[0].height)))  # the tab already showing
+        for t in tabs[:12]:
+            try:
+                await page.locator(f'[data-phg-tab="{t["i"]}"]').first.click(timeout=2000)
+                await page.wait_for_timeout(600)
+                await page.evaluate(JS_UNLOCK)
+                await _scroll_through(page, notes, max_steps=40)
+                await page.evaluate(JS_HIDE_OVERLAYS)
+                img = await _shot(page, top)
+                if any(_same(img, x) for x in seen):
+                    continue
+                seen.append(img)
+                parts.append(img)
+                notes.append("tab:" + t["text"][:20])
+            except Exception:
+                continue
+
+    width = target_width
+    total = min(sum(p.height for p in parts) + 12 * (len(parts) - 1), MAX_HEIGHT)
+    sheet = Image.new("RGB", (width, total), "white")
+    y = 0
+    for i, p in enumerate(parts):
+        if y >= total:
+            notes.append("tabs_truncated")
+            break
+        if i:  # thin divider between tab states
+            sheet.paste(Image.new("RGB", (width, 4), (200, 200, 200)), (0, y + 4))
+            y += 12
+        sheet.paste(p.crop((0, 0, width, min(p.height, total - y))), (0, y))
+        y += p.height
+    buf = io.BytesIO()
+    sheet.save(buf, "JPEG", quality=jpeg_quality, optimize=True)
+    return Capture(buf.getvalue(), width, sheet.height, notes)

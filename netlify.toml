@@ -17,3 +17,9 @@
   to = "/__not_found__"
   status = 404
   force = true
+
+[[redirects]]
+  from = "/workers/*"
+  to = "/__not_found__"
+  status = 404
+  force = true

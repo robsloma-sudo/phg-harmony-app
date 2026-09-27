@@ -699,7 +699,7 @@ Rob: "Yeah, let's focus on that. Let's figure out how to actually find the menus
   unchanged (gate is in the database); extraction job 13 still paused (PHG-026).
 
 ------------------------------------------------------------------------------
-PHG-20260927-0053 | USER_PROMPT + CHANGES | ~21:40Z
+PHG-20260927-0053 | USER_PROMPT + CHANGES | ~20:40Z
 Rob: "attach me specific examples from the existing menu pool of what your ... keywords might actually target ...
 then that way I can approve or reject ... if you ... produce some images that are not a drinks menu I can tell you
 that it's not working"
@@ -713,3 +713,28 @@ that it's not working"
   redraw only on change). 240/240 browser checks, 3 consecutive runs.
 - Rendered documents by rule (read-text kind shares): keep_word 4,871 (drinks ~68% of read ones),
   keep_method 1,099 (~47%), defer 6,632 (~30%), skip 6,915 (~16%). Host-name-only word matches: 278.
+
+------------------------------------------------------------------------------
+PHG-20260927-0054 | USER_PROMPTS + CHANGES | ~21:00Z
+Rob: cost to re-pull menus? -> answered: capture is our own Railway/direct download (no per-page fee); storage
+  ~0.45 MB/page; vision ~0.25c/menu extrapolated; recommended cap 3 best links per venue (169,639 kept links
+  belong to only 9,003 venues). No change made.
+Rob: 10 examples of a drinks menu, then "Show me images" -> chat-preview links for 10 beverage documents.
+Rob (5 screenshots): "Not all these are perfect examples ... Adrift, you caught the one menu, but not the other
+  four ... in the first photo you captured a photo before you scroll down to the actual bar menu ... in the
+  fourth photo you got photos before the cocktails were ever even rendered in." (+ Watershed only Beer tab)
+Findings:
+- 4,137 of 14,008 railway_playwright_screenshot pages are exactly 1000 px tall = first screen only (Mymoon).
+- Lazy-loaded photos/items blank (317 Main); tabbed menus only first tab (Watershed); sticky bars (Bonao).
+- Adrift's other menus (cocktailmenu, spirit-list-flights, happy-hour-menu) ARE discovered and queued
+  (not_started, gate=keep); food-menu deferred. Also a trailing-slash duplicate of cocktails-to-go queued.
+- Container cannot reach venue sites or supabase.co (egress policy), so real-site retests are not possible here.
+Changes:
+- workers/html-capture (new, PHG-034): capture.py (pop-up dismissal, scroll unlock, inner-scroll expansion,
+  scroll-through lazy loading, overlay hiding, drinks-tab clicking + stitching, sliced tall shots, 1400 px JPEG 85),
+  worker.py (same claim_html/complete_html/fail_html protocol), Dockerfile, README with Railway steps.
+  Tests: 5 fixtures old vs new all PASS; mock-API loop PASS.
+- netlify.toml: /workers/* 404.
+Needs Rob: deploy workers/html-capture as a Railway service (README) or share the current worker source.
+After it runs: re-queue the 4,137 first-screen-only pages
+  (menu_visual_pages where capture_method='railway_playwright_screenshot' and height=1000).
