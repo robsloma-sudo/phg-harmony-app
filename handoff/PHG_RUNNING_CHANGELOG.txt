@@ -752,3 +752,17 @@ Railway is unreachable from this workspace (egress policy, no Railway login), so
 - .github/workflows/html-capture-v2.yml: push to this branch (worker paths) or dispatch; 2 runners; fixture tests,
   then the worker until the lane is empty (55 min cap). No stored secret.
 - Queued Rob's 9 HTML examples (reason rob_10_examples; Cantina Rooftop is a PDF). Run 36350703399.
+- 21:12Z first v2 run: 8/9 captured but results poor (317 still 1000 px, Adrift worse, no tabs, Mymoon reload error).
+- Added diagnose workflow (.github/workflows/html-capture-diagnose.yml): real URLs old vs v2 on Actions, previews +
+  diagnostics pushed to branch capture-v2-debug (viewed locally). Iterations:
+  * never hide wrappers holding the page; consent overlays only when short; survive consent reloads;
+  * clickable div/span tabs -> Watershed Beer/Wine/Cocktails/Spirits, Blue Stag, La Piovra, El Born, Blue Agave all tabs;
+  * SiteGround "Checking the site connection security" wait-out -> 317 Main real page;
+  * lazy iframes + painting cross-origin iframes (Untappd beer list on 317 was blank) with sticky headers hidden;
+  * real CAPTCHA (SiteGround /.well-known/captcha on some GitHub runner IPs: Mymoon, Adrift) -> NOT bypassed;
+    job fails with bot_check_blocked, retries later, old image kept. Bot-check pages are never saved as menus.
+- 21:50Z queued: Rob's 9 again (final code) + first_screen_batch1 (150 first-screen-only pages, drink-word links).
+- 21:46Z run 36352304166 (4 runners): Rob's examples 8/9 done, all complete (317 1000->5518, Mymoon 1000->4732,
+  Watershed 1614->5032 with 4 tabs, Blue Stag 2062->7001, El Born 3552->8218, La Piovra 7234->13009).
+  first_screen_batch1 so far: 73 done (48 now taller), 21 CAPTCHA/bot-check (refused, will retry), 55 waiting.
+  => a large share of the old 1000-px "menus" are bot-check screens, not menus.
