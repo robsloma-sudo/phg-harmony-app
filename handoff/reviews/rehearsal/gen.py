@@ -454,6 +454,45 @@ F = DECL + run_file('file3', '$rehearse_f3$', f3) + f"""
     r := r || jsonb_build_object('after_migration', jsonb_build_object('fns', {SIGS},
       'backup_rows', (select count(*) from public.phg_backup_design_fn_defs_20260928),
       'null_layout_is_rejected', (select prosrc ~ 'coalesce\\(jsonb_typeof\\(p_layout' from pg_proc where proname = 'phg_design_proposal_submit')));
+    r := r || jsonb_build_object('backup_privs_service_role', jsonb_build_object(
+       'select', has_table_privilege('service_role','public.phg_backup_design_fn_defs_20260928','SELECT'),
+       'insert', has_table_privilege('service_role','public.phg_backup_design_fn_defs_20260928','INSERT'),
+       'trigger', has_table_privilege('service_role','public.phg_backup_design_fn_defs_20260928','TRIGGER'),
+       'references', has_table_privilege('service_role','public.phg_backup_design_fn_defs_20260928','REFERENCES')));
+    -- approve path (round 4): a throwaway task; everything in this sub-block is rolled back
+    BEGIN
+      ddoc := '{{"sections":[{{"name":"Rehearsal Cocktails","items":[]}}]}}';
+      dlayout := '{{"page":{{"w":612,"h":792}},"elements":[]}}';
+      insert into phg.menu_design_tasks (menu_project_id, source, request, base_doc)
+      values ((select id from phg.menu_projects order by id limit 1), 'coordinator', 'PHG-026 round 4 rehearsal', ddoc) returning id into tid;
+      v := jsonb_build_object('submit_null_layout', public.phg_design_proposal_submit(tid, ddoc)->>'status');
+      res := public.phg_design_proposal_submit(tid, ddoc, p_layout => dlayout);
+      pid := (res->>'proposal_id')::uuid;
+      v := v || jsonb_build_object('submit_with_layout', res->>'status');
+      secs := (select jsonb_object_agg(k::text, 90) from generate_series(1, 14) k);
+      perform public.phg_design_proposal_score(pid, 'design_critic', secs);
+      perform public.phg_design_proposal_score(pid, 'content_reviewer', secs);
+      perform public.phg_design_proposal_score(pid, 'accuracy_reviewer', secs || '{{"10":80,"11":80,"12":80,"13":80,"14":80}}');
+      v := v || jsonb_build_object('approve_accuracy_at_80', public.phg_design_proposal_review(pid, true));
+      perform public.phg_design_proposal_score(pid, 'accuracy_reviewer', secs);
+      update phg.menu_design_proposals set layout = null where id = pid;
+      v := v || jsonb_build_object('approve_layout_null', public.phg_design_proposal_review(pid, true));
+      update phg.menu_design_proposals set layout = '{{"page":{{"w":612}}}}' where id = pid;
+      v := v || jsonb_build_object('approve_layout_no_elements', public.phg_design_proposal_review(pid, true),
+                                   'status_after_blocked', (select status from phg.menu_design_proposals where id = pid));
+      update phg.menu_design_proposals set layout = dlayout where id = pid;
+      v := v || jsonb_build_object('approve_ok', public.phg_design_proposal_review(pid, true),
+                                   'status_after_approve', (select status from phg.menu_design_proposals where id = pid));
+      v := v || jsonb_build_object('pass', v->>'submit_null_layout' = 'auto_rejected' and v->>'submit_with_layout' = 'submitted'
+        and v->'approve_accuracy_at_80'->>'status' = 'blocked_by_score_gate' and (v->'approve_accuracy_at_80'->>'accuracy_reviewer')::numeric = 80
+        and v->'approve_layout_null'->>'status' = 'blocked_by_layout_gate' and v->'approve_layout_no_elements'->>'status' = 'blocked_by_layout_gate'
+        and v->>'status_after_blocked' = 'submitted' and v->'approve_ok'->>'status' = 'approved'
+        and (v->'approve_ok'->>'accuracy_reviewer')::numeric = 90 and (v->'approve_ok'->>'design_critic')::numeric = 90
+        and (v->'approve_ok'->>'content_reviewer')::numeric = 90 and v->>'status_after_approve' = 'approved');
+      r := r || jsonb_build_object('approve_path', v);
+      RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback approve path';
+    EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
+    END;
     r := r || jsonb_build_object('rollback_returns', public.phg_rollback_design_score_gate_20260928());
     r := r || jsonb_build_object('after_rollback', jsonb_build_object('fns', {SIGS},
       'anon_or_auth_exec', (select bool_or(has_function_privilege('anon', p.oid, 'EXECUTE') or has_function_privilege('authenticated', p.oid, 'EXECUTE'))
@@ -464,10 +503,81 @@ F = DECL + run_file('file3', '$rehearse_f3$', f3) + f"""
   EXCEPTION WHEN others THEN {soft_err('ERROR', 'r')}
   END;""" + END
 
-blocks = {'A': A, 'B': B, 'C': C, 'D': D, 'E': E, 'F': F}
+# G (round 4): the rollback skip paths. After Step 2 and one Step 3 call:
+#  - one NEW menu is submitted for a plan venue whose current menu Step 2 changed (skip_acct) -> skipped, untouched;
+#  - the currency backup of another changed plan venue (multi_acct) is forged to show 2 current menus -> skipped and
+#    reported, the rollback does not abort;
+#  - one new staging row is loaded for a backed-up page of a third venue (stg_acct) -> that page's rows stay superseded.
+MENU_SNAP = ("(select jsonb_agg(jsonb_build_object('id',m.id,'c',m.is_current,'by',m.superseded_by,'r',m.superseded_reason,"
+             "'at',m.superseded_at) order by m.id) from public.menus m where m.account_id={a})")
+MSNAP_SKIP = MENU_SNAP.format(a='skip_acct')
+MSNAP_MULTI = MENU_SNAP.format(a='multi_acct')
+G = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(1, 0, 1) + f"""
+  t0 := clock_timestamp();
+  BEGIN
+    select p.account_id into skip_acct from public.phg_repair_plan_menus_20260927 p
+     where p.make_current and not p.was_current
+     order by exists (select 1 from public.phg_backup_staging_dupes_20260927 b where b.account_id = p.account_id) desc, p.account_id limit 1;
+    select id into cur_id from public.menus where account_id = skip_acct and is_current;
+    select jsonb_agg(jsonb_build_object('section_name',s.section_name,'section_type',s.section_type,'section_position',s.section_position,
+             'items',coalesce((select jsonb_agg(jsonb_build_object('item_name',i.item_name,'item_type',i.item_type,'price',i.price) order by i.item_position, i.id)
+                                 from public.menu_items i where i.section_id=s.id),'[]'::jsonb)
+                     || case when s.section_position = (select min(section_position) from public.menu_sections where menu_id=cur_id)
+                             then '[{{"item_name":"Rehearsal Skip-Path Pour","item_type":"spirit_pour","price":13}}]'::jsonb else '[]'::jsonb end) order by s.section_position, s.id)
+      into secs from public.menu_sections s where s.menu_id = cur_id;
+    {call("'https://rehearsal.example.com/skip-path'", 'rehG', 'secs', acct='skip_acct')}
+    g := jsonb_build_object('skip_acct', skip_acct, 'submit', res - 'brand_references' - 'inferred_from_cocktail_reference',
+       'skip_acct_staging_backup_rows', (select count(*) from public.phg_backup_staging_dupes_20260927 where account_id = skip_acct));
+    snap := {MSNAP_SKIP};
+    n1 := (select count(*) from public.staging_menu_extract s join public.phg_backup_staging_dupes_20260927 b on b.staging_id = s.id
+            where b.account_id = skip_acct and s.superseded_reason = 'duplicate_item_set_of_sibling');
+    -- forge a 2-current backup for another changed plan venue
+    select p.account_id into multi_acct from public.phg_repair_plan_menus_20260927 p
+     where p.make_current and not p.was_current and p.account_id <> skip_acct order by p.account_id limit 1;
+    update public.phg_backup_menus_currency_20260927 b set is_current = true
+      from public.phg_repair_plan_menus_20260927 p where p.id = b.id and p.account_id = multi_acct and p.make_current and not p.was_current;
+    snap2 := {MSNAP_MULTI};
+    -- a new staging row for a backed-up page of a venue that will be rolled back (loaded_at explicit: in one
+    -- transaction now() equals backed_up_at; in production they are separate transactions)
+    select b.account_id, b.menu_page_url into stg_acct, stg_url from public.phg_backup_staging_dupes_20260927 b
+     where b.account_id not in (skip_acct, multi_acct) order by b.account_id, b.menu_page_url limit 1;
+    insert into public.staging_menu_extract (menu_page_url, menu_format, account_id, item_type, item_name, item_price, loaded_at)
+    values (stg_url, 'html', stg_acct, 'other', 'Rehearsal Re-extracted Item', 9, clock_timestamp());
+    n2 := (select count(*) from public.phg_backup_staging_dupes_20260927 b where b.account_id = stg_acct and b.menu_page_url = stg_url);
+    g := g || jsonb_build_object('multi_acct', multi_acct, 'stg_acct', stg_acct, 'stg_page_backup_rows', n2);
+    t1 := clock_timestamp();
+    res := public.phg_repair_20260927_rollback();
+    g := g || jsonb_build_object('rollback', res, 'rollback_ms', round(extract(epoch from clock_timestamp()-t1)*1000),
+      'skip_acct_menus_untouched', {MSNAP_SKIP} = snap,
+      'skip_acct_current_is_new_menu', (select id from public.menus where account_id = skip_acct and is_current) = (res->>'menu_id')::uuid,
+      'skip_acct_staging_still_superseded', (select count(*) from public.staging_menu_extract s join public.phg_backup_staging_dupes_20260927 b on b.staging_id = s.id
+            where b.account_id = skip_acct and s.superseded_reason = 'duplicate_item_set_of_sibling') = n1,
+      'multi_acct_menus_untouched', {MSNAP_MULTI} = snap2,
+      'multi_acct_current_count', (select count(*) from public.menus where account_id = multi_acct and is_current),
+      'stg_page_rows_still_superseded', (select count(*) from public.staging_menu_extract s join public.phg_backup_staging_dupes_20260927 b on b.staging_id = s.id
+            where b.account_id = stg_acct and b.menu_page_url = stg_url and s.superseded_reason = 'duplicate_item_set_of_sibling'),
+      'other_backup_rows_not_restored', (select count(*) from public.staging_menu_extract s join public.phg_backup_staging_dupes_20260927 b on b.staging_id = s.id
+            where b.account_id not in (skip_acct, multi_acct) and not (b.account_id = stg_acct and b.menu_page_url = stg_url)
+              and s.superseded_reason = 'duplicate_item_set_of_sibling'),
+      'currency_mismatch_vs_backup_rolled_back_venues', (select count(*) from public.menus m join public.phg_backup_menus_currency_20260927 bk on bk.id = m.id
+            where m.account_id not in (skip_acct, multi_acct)
+              and (m.is_current, m.superseded_by, m.superseded_reason, m.superseded_at)
+                  is distinct from (bk.is_current, bk.superseded_by, bk.superseded_reason, bk.superseded_at)),
+      'multi_current_global', {MULTI});
+    g := g || jsonb_build_object('pass', (res->>'venues_skipped_newer_menu')::int >= 1 and (res->>'venues_skipped_multi_current_backup')::int >= 1
+      and (g->>'skip_acct_menus_untouched')::boolean and (g->>'skip_acct_staging_still_superseded')::boolean
+      and (g->>'multi_acct_menus_untouched')::boolean and (g->>'multi_acct_current_count')::int = 1
+      and (g->>'stg_page_rows_still_superseded')::int = n2 and n2 > 0
+      and (g->>'other_backup_rows_not_restored')::int = 0 and (g->>'currency_mismatch_vs_backup_rolled_back_venues')::int = 0
+      and (g->>'multi_current_global')::int = 0);
+  EXCEPTION WHEN others THEN {soft_err('ERROR', 'g')}
+  END;
+  r := r || jsonb_build_object('G', g, 'G_ms', {MS});""" + END
+
+blocks = {'A': A, 'B': B, 'C': C, 'D': D, 'E': E, 'F': F, 'G': G}
 allsql = []
 for k, sql in blocks.items():
-    (HERE / f'rehearse_round3_{k}.sql').write_text(sql)
+    (HERE / f'rehearse_round4_{k}.sql').write_text(sql)
     allsql.append(f'-- ===== block {k} (run on its own; ends in RAISE EXCEPTION, so everything rolls back) =====\n' + sql)
-(HERE / 'rehearse_round3.sql').write_text('\n'.join(allsql))
+(HERE / 'rehearse_round4.sql').write_text('\n'.join(allsql))
 print({k: len(v) for k, v in blocks.items()})
