@@ -300,6 +300,12 @@ each person gets their own layer inside the project.
 - Action button keys are already tied to one project (`harmony_device_keys.account_id`); a person with several
   projects makes one key per project or says "switch to ..." at the start.
 - The PHG admin (Rob) manages the shared layer and the skeleton, and can enter a project only as a member of it.
+- **What carries over vs what doesn't** (Rob, 2026-09-28): functions, capabilities, templates, the skeleton and
+  shared knowledge work the same in every project and for every user. Anything **created** in a project (folders,
+  files, records, recipes, preps, menus, ingredients, costs, notes) stays in that project and is never carried
+  into another.
+- **Cross-project export (tabled, PHG-043)**: a deliberate, user-started link or export that copies chosen items
+  (e.g. a recipe or a folder) from one project to another the user belongs to, with provenance kept. Not built now.
 
 ## 4D. The profit coach
 

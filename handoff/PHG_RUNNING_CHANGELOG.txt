@@ -1748,3 +1748,11 @@ idea of what this is going to be."
   findings with $ impact, evidence, confidence, ranked; weekly brief + alerts + on-ask; fixes as proposals; outcome
   tracking and learning; guardrails (DB math only, data sufficiency, evidence, opt-in anonymised benchmarks);
   tables coach_detectors / coach_findings / coach_actions on top of management_alert_*. Build phase 8.
+
+------------------------------------------------------------------------------
+PHG-20260928-ISOLATION | USER_PROMPT + DESIGN | 2026-09-28
+Rob: "Certain functions will carry over between both users and both projects, but ... anything created in folders
+and files ... and any recipes created need to not be carried over. There needs to be an option ... for link between
+two files where we can export data from one project to another ... just table it for now as an open issues log."
+- Spec 4C: carry-over rule written (functions/templates/skeleton/shared knowledge shared; created content isolated).
+- PHG-043 logged (tabled): cross-project export/link.

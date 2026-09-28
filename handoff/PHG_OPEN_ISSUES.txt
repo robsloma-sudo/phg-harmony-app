@@ -332,3 +332,9 @@ PHG-041 | OPEN | P1 | needs Rob | Setup skeleton + finance data (spec 4A/4B): se
   Airtable = first test business. Needs migration approval. (2026-09-28, revised same day)
 PHG-042 | OPEN | P1 | security | Airtable "Vendors/People/Login Info" stores usernames and passwords in plain fields.
   Never sync them; recommend moving them to a password manager. (2026-09-28)
+PHG-043 | TABLED | P3 | Cross-project export/link. Rob 2026-09-28: "There needs to be an option ... for link between two
+  files where we can export data from one project to another ... table it for now." Default rule stands: anything
+  created in a project (folders, files, recipes, menus, costs, notes) never carries over; functions, templates,
+  skeleton and shared knowledge do. Later design: user-started export of chosen items (recipe, folder) to another
+  project the user is a member of, copy with provenance (source project/item/version), optional live link that
+  offers updates; respects roles in both projects. Spec 4C.
