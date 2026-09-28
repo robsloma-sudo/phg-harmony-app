@@ -1543,3 +1543,18 @@ repeats that over and over."
 - v5: readBody() accepts JSON, application/x-www-form-urlencoded, multipart/form-data and plain text; field names
   are case-insensitive ("text", "Text"). Tested all six shapes locally with Deno. When no words arrive it now says
   exactly what to fix and which fields it received, instead of the idle line.
+
+------------------------------------------------------------------------------
+PHG-20260928-ORBNOTIFY | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.31, branch)
+Rob: "Can we also have Harmony have an on-screen window notification that activates the phone screen and shows that
+they're doing something in the background and that we can see her talking? Something that is exactly the same as the
+cosmic viewport sort of thing or a black hole or something like that?"
+- Platform limit (told Rob): a Shortcut or web app cannot draw a custom live overlay (Siri glow, Dynamic Island,
+  Live Activity); that needs a native iOS app. What Shortcuts can do: a notification that wakes the screen with
+  her words and an image attachment.
+- img/harmony-orb.gif: recorded from the real #hvTalk black-hole button in its speaking state (cyan/violet/magenta
+  palette, pulse rings, orbit), 24 frames x 100 ms = 2.4 s seamless loop, 300x300, 297 KB.
+- Setup page (scPage) now starts with Get contents of <site>/img/harmony-orb.gif -> Set variable Orb, and adds
+  Show notification [Dictionary Value] (Title "Harmony" chip, Attachment Orb) before Speak. Chips: orb URL, Orb,
+  Harmony added. 375 px check: no overflow, zero page errors.
+- DEPLOY NOTE: img/harmony-orb.gif must be pushed to main with index.html.
