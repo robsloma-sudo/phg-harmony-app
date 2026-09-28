@@ -1006,3 +1006,5 @@ tough scale (best).
   - I2 72.1, G2 70.5, H2 67.8, J2 66.1.
   - All gates pass, and three of the four directions improved by about 7.
   - The ceiling now is the missing venue data: beer ABV, wine region, spirit brand/age/pour.
+- TEST-1 KB rebuild round 3 scored: J3 69.8, G3 70.4, H3 68.3, I3 68.6. I3 regressed, so it reverts to I2 (72.1, still the best).
+  The scores have plateaued at about 70. The blockers are Rob's venue data and raster-art access (media.canva.com).

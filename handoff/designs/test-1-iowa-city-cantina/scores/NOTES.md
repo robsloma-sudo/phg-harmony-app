@@ -146,3 +146,18 @@ Data drift: phg.menu_items has Junmai Ginjo (12), which is not in draft rev 3. F
   - The draft only has name-like text for 10 of the 14 non-cocktail descriptions: beer ABV, wine region and spirit brand/age are all missing.
   - This is a data gap, so we need Rob's venue facts. Design work can't fix it.
 - Reviewer contradiction to note: round 1 penalised stubs ("Toasty"), and round 2 penalises the full draft text as a name echo.
+
+## Round 3 of the KB rebuilds (G3-J3, 3-reviewer screening)
+| Direction | critic | content | accuracy | combined | vs round 2 |
+|---|---|---|---|---|---|
+| J3 Horizon | 68.9 | 73.4 | 67.0 | 69.8 | +3.7 |
+| I3 Night Field | 63.8 | 74.6 | 67.4 | 68.6 | -3.5 (regressed, revert to I2) |
+| H3 Sun & Furrow | 68.2 | 73.2 | 63.6 | 68.3 | +0.5 |
+| G3 Monument | 70.3 | 76.6 | 64.4 | 70.4 | -0.1 (flat, keep G2) |
+
+Best checkpoint across the KB rebuilds is still I2 at 72.1. The round-17 legacy best is 74.1.
+
+Plateau diagnosis:
+1. The description criteria are stuck at 40-62, because 10 of the 14 source descriptions are name-echo sample text. The data comes from Rob.
+2. Critics repeat the same point: the Mexico × Iowa fusion is "written in proposal.md, not visible". Programmatic vector art is hitting its craft ceiling next to Rob's raster references (craft_quality).
+3. Column balancing by padding keeps creating dead islands.
