@@ -2,8 +2,9 @@
  "tag": "-x",
  "opt": {
   "heart": "0.6",
-  "hatch": "3.0",
-  "pmin": "2.5"
+  "hatch": "2.8",
+  "pmin": "2.4",
+  "cw": "0.10"
  },
  "letter_clamped_leaves": [
   [
@@ -85,7 +86,7 @@
     0,
     0
    ],
-   "art_silhouette_pct_of_page": 27.7,
+   "art_silhouette_pct_of_page": 27.9,
    "art_bbox_css": [
     0,
     308,
