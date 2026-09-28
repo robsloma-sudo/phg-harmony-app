@@ -22,12 +22,15 @@ OPT = dict(a.split("=", 1) for a in sys.argv[1:] if "=" in a and not a.startswit
 
 GREEN, IVORY, IVORY2, IVORY3, GOLD = "#10291F", "#EFE6D2", "#C9C2AF", "#A8A796", "#C8A765"
 STROKE = float(OPT.get("stroke", 1.25))       # the one stroke weight (css px; x3.125 at print)
-HATCH = float(OPT.get("hatch", 3.3))          # target hatch pitch (css px)
+HATCH = float(OPT.get("hatch", 2.8))          # target hatch pitch (css px)
 WF = float(OPT.get('wf', 1.8))
-WRAPS = () if OPT.get('wraps') == '0' else (0.18, 0.40, 0.60)
-CONE_L, CONE_W = float(OPT.get('cl', 0.98)), float(OPT.get('cw', 0.085))
-PITCH_MIN = float(OPT.get('pmin', 2.7))
-HEART = float(OPT.get('heart', 0.42))
+WRAPS = (0.18, 0.40, 0.60) if OPT.get('wraps') == '1' else ()
+CREASE = OPT.get('crease', '1') == '1'
+RIBBON_EDGE = OPT.get('redge', '0') == '1'
+CONE_L, CONE_W = float(OPT.get('cl', 0.98)), float(OPT.get('cw', 0.10))
+PITCH_MIN = float(OPT.get('pmin', 1.8))
+TEND0 = float(OPT.get('tend0', 0.6))
+HEART = float(OPT.get('heart', 0.7))
 CLEAR = 23                                    # 6 mm at 96 css px / in
 
 # ---- content -----------------------------------------------------------------------------
@@ -166,7 +169,7 @@ class Leaf:
         n = self.n
         for i in range(int(n * 0.3), int(n * tmax) + 1):
             pitch = self.hw(i / n) * span / (m + 1) * (2 ** lvl)
-            if pitch < PITCH_MIN:
+            if pitch < PITCH_MIN * (0.8 + 0.4 * ((k * 0.618034) % 1)):   # staggered, so no bands
                 return i
         return int(n * tmax) + (1 if tmax >= 1.0 else 0)
 
@@ -177,7 +180,7 @@ class Leaf:
         for i in range(n + 1):
             t = i / n
             left.append(self.at(i, 1)); right.append(self.at(i, -1))
-            if self.teeth and 0.14 < t < (0.9 if not self.ribbon else 0.3) and i % step == 0:
+            if self.teeth and not self.ribbon and 0.14 < t < 0.9 and i % step == 0:
                 tx, ty = self.tan[i]
                 for side, arr in ((1, left), (-1, right)):
                     ex, ey = self.at(i, side)
@@ -204,11 +207,12 @@ class Leaf:
                 out.append([self.at(i, u) for i in range(int(n * 0.10), n + 1)])
             return out
         i0 = int(n * 0.04)
-        out.append([self.at(i, 0.12 * -self.shadow) for i in range(i0, int(n * 0.9))])     # crease
+        if CREASE:
+            out.append([self.at(i, 0.12 * -self.shadow) for i in range(i0, int(n * 0.9))])     # crease
         m = max(2, int(self.W / pitch))
         for k in range(1, m + 1):
             u = self.shadow * k / (m + 1)
-            tend = 0.40 + 0.46 * (k / (m + 1)) ** 0.9     # longest along the shaded edge: the leaf rolls away
+            tend = TEND0 + (0.90 - TEND0) * (k / (m + 1)) ** 0.9     # longest along the shaded edge: the leaf rolls away
             out.append([self.at(i, u) for i in range(i0, min(int(n * tend), self.drop_end(k, m, tend)))])
         if HEART > 0:   # the heart of the rosette is in deep shadow: hatch the lit half too, near the base only
             for k in range(1, m + 1):
@@ -247,8 +251,8 @@ def agave(bx, by, S, text_rects=None, seed=11):
     j = lambda a: a * (1 + rnd.uniform(-0.07, 0.07))
     parts, report = [], {"clamped": []}
     # (angle, length factor, half-width factor, droop, curl)
-    FURROWS = [(-71, 1.9, 0.040, 0.03, 0.018), (-77, 2.1, 0.050, 0.02, -0.012),
-               (-83, 2.3, 0.062, 0.01, 0.010)]
+    FURROWS = [(-75, 1.9, 0.040, 0.03, 0.018), (-80, 2.1, 0.050, 0.02, -0.012),
+               (-85, 2.3, 0.062, 0.01, 0.010)]
     BACK = [(-6, 0.90, .050, .02, 0), (6, 0.94, .052, .03, .01), (-15, 0.80, .052, .05, .02), (15, 0.86, .055, .05, 0)]
     MID = [(-24, 0.64, .060, .06, .02), (-33, 0.60, .060, .09, .03), (24, 0.74, .062, .08, .02),
            (-44, 0.62, .062, .12, .04), (36, 0.66, .064, .10, .03), (-56, 0.66, .064, .14, .05)]
@@ -279,7 +283,7 @@ def agave(bx, by, S, text_rects=None, seed=11):
 
     def emit(lf):
         o = lf.outline()
-        parts.append(f'<path d="{pstr(o)} Z" fill="{GREEN}"/>')
+        parts.append(f'<path d="{pstr(o)} Z" fill="{GREEN}"' + (' stroke="none"' if (lf.ribbon and not RIBBON_EDGE) else '') + '/>')
         ls = lf.lines(HATCH)
         sp = lf.spine()
         if sp:
@@ -340,7 +344,7 @@ h2+h3{{margin-top:0}}
 .ds+.ds{{margin-top:0}}
 body.phone .page{{width:390px}}
 body.phone svg.art{{display:none}}
-body.phone svg.art-phone{{display:block;margin-top:30px}}
+body.phone svg.art-phone{{display:block;margin-top:6px}}
 body.phone header{{position:static;padding-top:46px}}
 body.phone .wm{{font-size:48px;letter-spacing:.3em;padding-left:.3em}}
 body.phone .sub{{font-size:11px}} body.phone .sub.a{{margin-top:14px}}
@@ -427,7 +431,7 @@ def main():
     for it in all_items():
         assert f'data-id="{it["id"]}"' in doc0 and f'<span class="pr">{price(it)}</span>' in doc0, it["id"]
     exe = next(glob.iglob("/opt/pw-browsers/chromium-*/chrome-linux*/chrome"))
-    BX, BY, S = float(OPT.get("bx", 772)), float(OPT.get("by", 1150)), float(OPT.get("S", 860))
+    BX, BY, S = float(OPT.get("bx", 772)), float(OPT.get("by", 1100)), float(OPT.get("S", 860))
     report = {"tag": TAG, "opt": OPT}
     with sync_playwright() as p:
         br = p.chromium.launch(executable_path=exe)
@@ -445,8 +449,8 @@ def main():
         pg.close()
         g, rep = agave(BX, BY, S, rects)
         report["letter_clamped_leaves"] = rep["clamped"]
-        gp, repp = agave(float(OPT.get("pbx", 352)), float(OPT.get("pby", 610)), float(OPT.get("pS", 470)), None)
-        doc = html(svg_wrap(g, PW, PH, "art"), svg_wrap(gp, 390, 540, "art-phone"))
+        gp, repp = agave(float(OPT.get("pbx", 340)), float(OPT.get("pby", 560)), float(OPT.get("pS", 520)), None)
+        doc = html(svg_wrap(g, PW, PH, "art"), svg_wrap(gp, 390, 500, "art-phone"))
         if not TAG:
             (HERE / "menu.html").write_text(doc.replace("{BODYCLASS}", "letter"))
         jobs = [(f"preview-letter{TAG}.png", "letter", PW, PH, 3.125)]

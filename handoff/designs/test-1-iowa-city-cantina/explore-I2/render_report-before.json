@@ -1,17 +1,17 @@
 {
- "tag": "-before",
+ "tag": "-x",
  "opt": {},
  "letter_clamped_leaves": [
   [
    "leaf0",
-   0.94
+   0.88
   ],
   [
    "leaf1",
-   0.91
+   0.82
   ]
  ],
- "preview-letter-before.png": {
+ "preview-letter-x.png": {
   "geometry_css_px": {
    "page": [
     816,
@@ -81,10 +81,10 @@
     0,
     0
    ],
-   "art_silhouette_pct_of_page": 27.7,
+   "art_silhouette_pct_of_page": 30.6,
    "art_bbox_css": [
     0,
-    308,
+    260,
     816,
     1056
    ]

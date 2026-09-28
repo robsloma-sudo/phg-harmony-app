@@ -3,16 +3,12 @@
  "opt": {},
  "letter_clamped_leaves": [
   [
-   "furrow0",
-   0.43
-  ],
-  [
    "leaf0",
-   0.94
+   0.88
   ],
   [
    "leaf1",
-   0.91
+   0.82
   ]
  ],
  "preview-letter.png": {
@@ -85,10 +81,10 @@
     0,
     0
    ],
-   "art_silhouette_pct_of_page": 26.8,
+   "art_silhouette_pct_of_page": 30.6,
    "art_bbox_css": [
     0,
-    248,
+    260,
     816,
     1056
    ]
@@ -884,7 +880,7 @@
   "geometry_css_px": {
    "page": [
     390,
-    1887.96875
+    1823.96875
    ],
    "header": [
     0,
@@ -946,9 +942,9 @@
    ],
    "art_phone": [
     0,
-    1348,
+    1324,
     390,
-    1888
+    1824
    ]
   },
   "price_rows": [
