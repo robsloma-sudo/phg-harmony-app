@@ -181,7 +181,7 @@ h3{{font:italic 400 var(--h3)/26px Fr;color:{MUTED};margin-bottom:6px}}
 .ds{{font:400 var(--ds)/18px Dm;color:{MUTED}}}
 .row{{display:grid;grid-template-columns:repeat(3,1fr);column-gap:24px;align-items:start;margin-top:var(--tiergap)}}
 body.letter .page{{width:816px;height:1056px;
-  --m:60px;--mt:60px;--tw:696px;--rt:{HZ_L + 32}px;--wm:76px;--wmfix:-3px;--subsz:12.5px;--subgap:22px;--h2:12.5px;--h3:15.5px;
+  --m:60px;--mt:50px;--tw:696px;--rt:{HZ_L + 32}px;--wm:76px;--wmfix:-3px;--subsz:12.5px;--subgap:22px;--h2:12.5px;--h3:15.5px;
   --nm:18.5px;--ds:13.5px;--itgap:18px;--grpgap:26px;--tiergap:{{TIERGAP}}px}}
 body.letter .main{{width:456px}}
 body.letter .nm{{white-space:nowrap}}
