@@ -15,3 +15,21 @@ What all three reviewer types agreed on:
 - proposal.md says Espumoso and Por copa, but the render prints Sparkling and By the Glass.
 - Serve cues break across lines.
 Round 11 builds from round 10 (the grid and margins are sound) with a bigger concept change: a real numbered lotería tabla.
+
+## Round 11 (numbered lotería tabla, 2+2 grid, one description style)
+Combined 71.4 (critic 75.2, content 74.7, accuracy 64.4). NEW BEST on the tough scale (the previous best was round 8 at 70.7).
+Round 12 builds from round 11. Round-12 fixes:
+- Remove the "glass / bottle TBC" note from the guest print.
+- Fix the La Rosa verse to "ven que te quiero ahora".
+- Change the DRAFT & CIDER subhead so it makes no draft claim.
+- Rewrite the spirit lines so they don't repeat the name.
+- Put every serve cue on its own line.
+- Change "rye whiskey" to "rye".
+- Change "over one large cube" to "over a large cube".
+- Remove the agave blue so the palette has 4 hues.
+- Put the faces on one template; the La Botella figure matches the others.
+- Line up the lower cards across columns and widen the gutter to 18 pt.
+- Fix the masthead overlap.
+- Order: Margarita first, agave card top-right.
+- Card numbers are distinct from prices.
+- Use Spanish-first subheads.
