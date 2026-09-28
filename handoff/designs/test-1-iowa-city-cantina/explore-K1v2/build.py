@@ -39,7 +39,7 @@ STRAW, STRAW_H = "#C2A46F", "#A68A52"
 LOAM, LOAM_H = "#3A2F28", "#57483C"
 SAGE, SAGE_H = "#6F8E84", "#557168"
 EARTH, EARTH_H = "#86603F", "#735236"   # Jalisco earth: browner, lower chroma, away from survey red
-AGV, AGV_L, AGV_D, AGV_S = "#6D9A97", "#9CC1BA", "#3E6A66", "#4E3B2A"
+AGV, AGV_L, AGV_D, AGV_S = "#6F9894", "#8DB2AB", "#4A726D", "#3E2E22"
 RULE = "#8C7A63"       # strip edges in the reading area
 FURROW = {"straw": "#BDA571", "sage": "#8FAAA2", "loam": "#A48A73", "table": "#CDBFA6"}
 
@@ -49,7 +49,7 @@ def smooth(a, b, t):
     return u * u * (3 - 2 * u)
 
 def terrain(X, Y, T):
-    B = np.zeros_like(X)
+    B = np.zeros_like(X, dtype=float)
     for (a, cx, cy, sx, sy) in T["hills"]:
         B += a * np.exp(-(((X - cx) / sx) ** 2 + ((Y - cy) / sy) ** 2))
     w = 1 - smooth(T["wa"], T["wb"], Y)
@@ -61,7 +61,7 @@ T_FRONT = {"hills": [(150, 470, 0, 130, 88), (100, 70, -40, 125, 72), (-45, 292,
            "wa": 150, "wb": 520}
 # phone, css px (390 wide): same family of forms, scaled to the frame
 T_PHONE = {"hills": [(110, 300, 0, 90, 70), (70, 30, -30, 88, 58), (-32, 170, 34, 60, 86),
-                     (11, 330, 230, 110, 160), (-9, 140, 250, 90, 160)],
+                     (17, 330, 240, 110, 170), (-14, 120, 260, 90, 170)],
            "wa": 170, "wb": 900}
 T_BACK = {"hills": [], "wa": 0, "wb": 1}
 
@@ -82,7 +82,7 @@ def lines(gen, lv):
 def rosette_symbols():
     """Three plan-view agave variants: lanceolate leaves in two whorls, a cast shadow to the south-east."""
     out = []
-    for v, (n1, n2, rot) in enumerate([(13, 8, 0.0), (15, 9, 0.2), (11, 7, 0.45)]):
+    for v, (n1, n2, rot) in enumerate([(11, 7, 0.0), (12, 8, 0.2), (10, 6, 0.45)]):
         def whorl(n, L, w, r0, col):
             s = []
             for k in range(n):
@@ -94,8 +94,8 @@ def rosette_symbols():
                 s.append(f'M{b1[0]:.2f} {b1[1]:.2f} Q{c1[0]:.2f} {c1[1]:.2f} {t[0]:.2f} {t[1]:.2f} Q{c2[0]:.2f} {c2[1]:.2f} {b1[0]:.2f} {b1[1]:.2f}Z')
             return f'<path d="{"".join(s)}" fill="{col}"/>'
         out.append(f'<symbol id="ag{v}" viewBox="-6 -6 12 12" overflow="visible">'
-                   f'<ellipse cx=".9" cy=".9" rx="4.2" ry="3.9" fill="{AGV_S}" fill-opacity=".38"/>'
-                   + whorl(n1, 5.0, 0.75, rot, AGV) + whorl(n2, 3.1, 0.7, rot + 0.3, AGV_L)
+                   f'<ellipse cx=".7" cy=".8" rx="4.1" ry="3.8" fill="{AGV_S}" fill-opacity=".22"/>'
+                   + whorl(n1, 4.6, 1.05, rot, AGV) + whorl(n2, 2.9, .95, rot + 0.3, AGV_L)
                    + f'<circle r=".75" fill="{AGV_D}"/></symbol>')
     return "".join(out)
 
@@ -125,7 +125,7 @@ def field_svg(P, T, cls, css):
     gen = contourpy.contour_generator(xs, ys, H, fill_type=contourpy.FillType.OuterOffset, line_type=contourpy.LineType.Separate)
     bounds, kinds = P["bounds"], P["kinds"]           # kinds has len(bounds)+1; last = region below the last bound
     ref_x = P.get("ref_x", X0)
-    cs = [float(terrain(np.array([ref_x]), np.array([b]), T)[0]) for b in bounds]   # levels through (ref_x, bound)
+    cs = [float(terrain(np.array([ref_x], dtype=float), np.array([b], dtype=float), T)[0]) for b in bounds]   # levels through (ref_x, bound)
     top = float(H.max()) + 1
     levels = [top] + cs
     col = {"straw": STRAW, "loam": LOAM, "sage": SAGE, "earth": EARTH}
@@ -165,20 +165,20 @@ def field_svg(P, T, cls, css):
     return (f'<svg class="{cls}" viewBox="{vb}" style="{css}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + "".join(g) + "</svg>")
 
 # strips: straight-row y of each boundary at ref_x (pt), varied widths; fewer, wider strips than v1
-HERO_F = {"frame": (-9, -9, 621, 176), "ref_x": 0,
-          "bounds": [-150, -118, -100, -64, -44, -8, 12, 40, 56, 88, 104, 128, 150],
-          "kinds": ["straw", "loam", "sage", "straw", "loam", "earth", "straw", "loam", "earth", "straw", "sage", "earth", "straw", "loam"],
-          "furrows": {"straw": 7, "loam": 5, "sage": 5, "earth": 4}, "fw": .5, "pitch": 12.5, "pscale": 1.0, "two_rows": 24}
+HERO_F = {"frame": (-9, -9, 621, 162), "ref_x": 0,
+          "bounds": [-150, -118, -100, -64, -44, -10, 10, 40, 58, 84, 100, 124, 142],
+          "kinds": ["straw", "loam", "sage", "straw", "loam", "earth", "straw", "loam", "earth", "straw", "sage", "earth", "loam", "straw"],
+          "furrows": {"straw": 7, "loam": 5, "sage": 5, "earth": 4}, "fw": .5, "pitch": 13, "pscale": 1.12, "two_rows": 30}
 HERO_P = {"frame": (0, 0, 390, 250), "ref_x": 0,
           "bounds": [-150, -118, -98, -64, -42, -6, 16, 46, 64, 98, 116, 146, 170, 204, 222],
-          "kinds": ["straw", "loam", "sage", "straw", "loam", "earth", "straw", "loam", "earth", "straw", "sage", "earth", "straw", "earth", "straw", "loam"],
-          "furrows": {"straw": 6, "loam": 4, "sage": 4, "earth": 4}, "fw": .55, "pitch": 14, "pscale": 1.15, "two_rows": 28}
+          "kinds": ["straw", "loam", "sage", "straw", "loam", "earth", "straw", "loam", "earth", "straw", "sage", "earth", "straw", "earth", "loam", "straw"],
+          "furrows": {"straw": 6, "loam": 4, "sage": 4, "earth": 4}, "fw": .55, "pitch": 16, "pscale": 1.05, "two_rows": 34}
 
 def back_field(width, height, cls, css=""):
     """Back head band: the field fully straightened (Jalisco hileras) between thin Iowa stubble strips.
     Plants vary in scale and spacing; two earth strips carry two rows each."""
     g, y = [], 0.0
-    plan = [("straw", 9), ("earth", 26), ("loam", 5), ("straw", 7), ("earth", 17), ("sage", 5), ("earth", 26), ("straw", 8)]
+    plan = [("earth", 30), ("loam", 4), ("straw", 9), ("earth", 19), ("sage", 4), ("straw", 6)]
     sc = height / sum(h for _, h in plan)
     col = {"straw": STRAW, "loam": LOAM, "sage": SAGE, "earth": EARTH}
     hcol = {"straw": STRAW_H, "loam": LOAM_H, "sage": SAGE_H, "earth": EARTH_H}
@@ -286,7 +286,7 @@ def bw_item(it, serve, flags):
     fl = f"{NB}· ".join(f'<span class="flag">{E(glue(f))}</span>' for f in flags)
     return (f'<article class="item bwi" data-name="{E(it["name"])}" data-status="{it["status"]}">' + name_row(it)
             + f'<p class="sd tx">{E(it["sensory"])}</p>'
-            + f'<p class="gg sv tx"><span class="svl">{E(serve)}</span>{NB}· {fl}</p></article>')
+            + f'<p class="gg sv tx">' + (f'<span class="svl">{E(serve)}</span>{NB}· ' if serve else "") + f'{fl}</p></article>')
 
 # oak marks: NOM-006 class ranges for tequila; Cognac VSOP has its own off-scale mark; mezcal is off the axis
 AXW = 108.0
@@ -359,7 +359,7 @@ def key_block(back=False):
                 '<span class="li"><span class="sq k"></span><span class="tx">TBC · price to be set</span></span></footer>')
     return ('<div class="key kf">'
             '<p class="li"><span class="ring k"></span><span class="tx">proposed — pending approval</span></p>'
-            '<p class="li"><span class="tx fl">to confirm: </span><span class="tx">detail to be confirmed before print</span></p></div>')
+            '</div>')
 
 # ------------------------------------------------------------------ assembly
 def build_html():
@@ -380,14 +380,14 @@ def build_html():
         for it in items: bw.append(bw_item(it, serve_of(g), ["ABV — to confirm"]))
     for g, items in Wn.items():
         for it in items:
-            fl = ["region to confirm"] + (["glass / bottle TBC"] if it["name"] == "Brut Rosé" else [])
-            bw.append(bw_item(it, serve_of(g), fl))
+            fl = (["glass / bottle TBC"] if it["name"] == "Brut Rosé" else []) + ["region to confirm"]
+            bw.append(bw_item(it, None, fl))
     bw_html = "".join('<div class="hl">' + "".join(bw[i:i + 3]) + "</div>" for i in range(0, len(bw), 3))
     th = ('<div class="th"><div class="c-nm">' + head("Destilados · Spirits") + '</div>'
           '<p class="c-cl"><span class="tx">CLASS</span></p><p class="c-nom"><span class="tx">NOM</span></p><p class="c-rg"><span class="tx">REGION</span></p>'
           '<p class="c-oak">' + "".join('<span class="axn tx" style="left:%.2fpt">%d</span>' % (2.2 + m * AXW / 36, m) for m in (0, 12, 24, 36))
           + '<span class="axu tx" style="left:%.2fpt">MO OAK</span></p><p class="c-pr"></p></div>' % (2.2 + AXW + 8))
-    grid = "".join('<i class="grid" style="left:%.2fpt"></i>' % (372.67 + 2.2 + m * AXW / 36) for m in (12, 24, 36))
+    grid = "".join('<i class="grid" style="left:%.2fpt"></i>' % (372 + 2.2 + m * AXW / 36) for m in (12, 24, 36))
     back = (f'<section class="band spirits" data-crop="table" data-bg="paper">{th}<div class="tbody">{grid}{spirits_table()}</div></section>'
             f'<section class="band tint bw" data-crop="straw" data-bg="tint">{head("Cerveza, sidra y vino · Beer, cider & wine")}{bw_html}</section>')
     fonts_css = (HERE / "fonts" / "fonts.css").read_text().replace("url(", "url(fonts/")
@@ -404,14 +404,14 @@ def build_html():
 {css}</style></head>
 <body>{defs}
 <div class="page front" data-terrain="front">
- {field_svg(HERO_F, T_FRONT, "field lt", "position:absolute;left:-9pt;top:-9pt;width:630pt;height:185pt")}
+ {field_svg(HERO_F, T_FRONT, "field lt", "position:absolute;left:-9pt;top:-9pt;width:630pt;height:171pt")}
  {field_svg(HERO_P, T_PHONE, "field ph", "")}
  <div class="hl wmrow" data-crop="loam"><header class="wm"><h1 class="tx big">Cantina<span class="fw"></span></h1><p class="tx sub">&amp; Cocktail Bar · Iowa City, Iowa</p></header></div>
  <div class="ph-key">{key_block()}</div>
  <main class="menu">{front}</main>
 </div>
 <div class="page back" data-terrain="back">
- {back_field(630, 60, "bfield", "")}
+ {back_field(630, 50, "bfield", "")}
  <main class="menu">{back}</main>
  {key_block(True)}
 </div>
@@ -462,6 +462,7 @@ function layout() {
     const lineAt = (c, y0, x0, x1) => { const pts = xs.filter(x => x >= x0 - 1e-6 && x <= x1 + 1e-6); return pts.map((x, i) => (i ? 'L' : 'M') + x.toFixed(2) + ' ' + levelY(T, x, c, y0).toFixed(2)).join(' '); };
     const bands = [...pg.querySelectorAll('.band')].filter(b => b.offsetParent);
     const tops = bands.map(b => { const r = b.getBoundingClientRect(); const y = (r.top - pr.top) * K; return {b, c: Hf(T, 0, y), y}; });
+    tops.sort((a, b) => a.y - b.y);
     tops.forEach((t, i) => {
       const next = tops[i + 1];
       const top = xs.map(x => [x, levelY(T, x, t.c, t.y)]);
@@ -476,12 +477,17 @@ function layout() {
       const col = getComputedStyle(r.band).getPropertyValue('--furrow').trim() || '#A48A73';
       // segments: one per item (its column), the first from the left bleed, the last to the right bleed;
       // each ends at its column edge, so a rule never runs on into the next drink's ring
-      const segs = r.items.map((it, j) => { const b = it.getBoundingClientRect(); return [j === 0 ? -bl : ((b.left - pr.left) * K - 12), j === r.items.length - 1 ? Wp + bl : (b.right - pr.left) * K]; });
-      if (r.hl.querySelector('.slot2') && !phone) segs[segs.length - 1][1] = Wp + bl;
-      for (const [x0, x1] of segs) svg.appendChild(mk('path', {d: lineAt(r.c, r.y0, x0, x1), fill: 'none', stroke: col, 'stroke-width': phone ? 1 : .6}));
+      const wm = r.items[0].classList.contains('wm');
+      if (wm) {  // a set lock-up: the furrow runs flat under the words, and leaves on the land's level lines either side
+        const b = r.items[0].getBoundingClientRect(); const xl = (b.left - pr.left) * K - 6, xr = (b.left - pr.left) * K + [...r.items[0].children].reduce((m, e) => Math.max(m, (e.getBoundingClientRect().right - b.left) * K), 0) + 6;
+        const cl = Hf(T, xl, r.y0), cr = Hf(T, xr, r.y0);
+        const d = lineAt(cl, r.y0, -bl, xl) + ` L${xr.toFixed(2)} ${r.y0.toFixed(2)} ` + lineAt(cr, r.y0, xr, Wp + bl).replace(/^M/, 'L');
+        svg.appendChild(mk('path', {d, fill: 'none', stroke: col, 'stroke-width': phone ? 1.2 : .8}));
+      } else svg.appendChild(mk('path', {d: lineAt(r.c, r.y0, -bl, Wp + bl), fill: 'none', stroke: col, 'stroke-width': phone ? 1 : .6}));
     }
     // table rows (straight hileras): one furrow under each row
-    pg.querySelectorAll('.tr .fw').forEach(m => { if (!m.offsetParent) return; const y = (m.getBoundingClientRect().bottom - pr.top) * K + (phone ? 4 : 3.3);
+    pg.querySelectorAll('.tr .fw').forEach(m => { if (!m.offsetParent) return;
+      const y = phone ? (m.closest('.tr').getBoundingClientRect().bottom - pr.top - 6) : (m.getBoundingClientRect().bottom - pr.top) * K + .3;
       svg.appendChild(mk('path', {d: `M${-bl} ${y.toFixed(2)} H${Wp + bl}`, stroke: getComputedStyle(m.closest('[data-crop]')).getPropertyValue('--furrow').trim(), 'stroke-width': phone ? 1 : .6})); });
     pg.insertBefore(svg, pg.firstChild.nextSibling);
   });
@@ -506,17 +512,17 @@ body{font-family:'Newsreader',serif;color:var(--ink);-webkit-font-smoothing:anti
 .band[data-crop=loam],.wmrow{--furrow:%F_loam%}
 .band[data-crop=table]{--furrow:%F_table%}
 /* grid: 3 equal columns of 166.33 pt, 20 pt gutters, from x = 36.5 pt */
-.menu{position:absolute;left:36.5pt;width:539pt;z-index:1}
-.front .menu{top:252pt}
-.hl{display:grid;grid-template-columns:repeat(3,1fr);column-gap:20pt;padding:0 0 13pt;position:relative;z-index:1}
+.menu{position:absolute;left:37pt;width:538pt;z-index:1}
+.front .menu{top:228pt}
+.hl{display:grid;grid-template-columns:repeat(3,1fr);column-gap:20pt;padding:0 0 10pt;position:relative;z-index:1}
 /* wordmark lock-up: sits on the first furrow */
-.wmrow{position:absolute;left:36.5pt;top:176pt;width:539pt;display:block;padding:0;z-index:3}
+.wmrow{position:absolute;left:37pt;top:166pt;width:538pt;display:block;padding:0;z-index:3}
 .wm{display:flex;align-items:baseline;gap:12pt}
 .wm .big{font-weight:420;font-size:62pt;line-height:62pt;letter-spacing:-.018em;font-variation-settings:'opsz' 72;background:var(--paper);padding:0 7pt;margin-left:-7pt}
 .wm .sub{font-size:10.5pt;font-weight:500;letter-spacing:.035em;background:var(--paper);padding:0 4pt;margin-left:-4pt}
 .fw{display:inline-block;width:0;height:0;vertical-align:baseline}
 /* heads: level 1 = 20 pt serif (1.67x names); level 2 = tracked caps <= 3 words */
-h2{font-weight:500;font-size:20pt;line-height:24pt;padding:10pt 0 8pt;letter-spacing:-.005em;position:relative;z-index:2}
+h2{font-weight:500;font-size:20pt;line-height:24pt;padding:6pt 0 5pt;letter-spacing:-.005em;position:relative;z-index:2}
 h2 i{font-weight:500}
 h2 .dot{color:var(--ink3)}
 h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
@@ -527,9 +533,9 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
 .pr{color:var(--red);font-weight:500;font-size:11pt;font-variant-numeric:tabular-nums lining-nums;background:var(--bg);padding:0 3pt 0 3.5pt}
 .pr.tbc{color:var(--ink3);letter-spacing:.06em;font-size:9.5pt}
 .sq{display:inline-block;width:5pt;height:5pt;border:.6pt solid var(--ink3);margin-left:1pt;vertical-align:.5pt;background:var(--bg);position:relative;z-index:2}
-.ring{position:absolute;left:-10pt;top:6.2pt;width:5.6pt;height:5.6pt;border:.6pt solid var(--ink3);border-radius:50%;background:var(--bg);z-index:2}
-.sd{font-style:italic;font-size:10.5pt;line-height:13pt;color:var(--ink2);margin-top:1.5pt;font-variation-settings:'opsz' 11;text-wrap:balance}
-.ig{font-size:9.5pt;line-height:12pt;margin-top:1.5pt;text-wrap:balance}
+.ring{position:absolute;left:-10pt;top:6.2pt;width:5.6pt;height:5.6pt;border:.6pt solid var(--ink3);border-radius:50%;background:var(--bg);z-index:2;box-shadow:0 0 0 2.5pt var(--bg)}
+.sd{font-style:italic;font-size:10.5pt;line-height:13pt;color:var(--ink2);margin-top:1.5pt;font-variation-settings:'opsz' 11;text-wrap:pretty}
+.ig{font-size:9.5pt;line-height:12pt;margin-top:1.5pt;text-wrap:pretty}
 .i{white-space:nowrap}
 .flag{font-style:italic;color:var(--ink3);white-space:nowrap}
 .gg{font-size:9pt;line-height:12pt;color:var(--ink3);margin-top:auto;padding-top:2pt;position:relative}
@@ -537,32 +543,34 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
 .gg .tx span{white-space:nowrap}
 .sv{color:var(--ink3)}
 .slot2{grid-column:2 / 4;display:flex;align-items:flex-end}
+.zp .ig{margin-top:auto;padding-top:2pt}
 .key{font-size:8.5pt;line-height:12pt;color:var(--ink3)}
 .kf{display:flex;flex-direction:column;gap:1pt;padding-left:0}
 .kf .li{display:flex;align-items:center;gap:6pt}
 .kf .fl{font-style:italic}
-.ring.k{position:relative;left:0;top:0;display:inline-block}
+.ring.k{position:relative;left:0;top:0;display:inline-block;box-shadow:none;background:transparent}
 .sq.k{margin:0}
 /* back */
-.bfield{position:absolute;left:-9pt;top:-9pt;width:630pt;height:60pt}
-.back .menu{top:51pt}
-.th,.tr{display:grid;grid-template-columns:186.33pt 90pt 34pt 62.33pt 128pt 1fr;column-gap:0}
+.bfield{position:absolute;left:-9pt;top:-9pt;width:630pt;height:50pt}
+.back .menu{top:43pt}
+.th,.tr{display:grid;grid-template-columns:186pt 90pt 34pt 62pt 128pt 1fr;column-gap:0}
 .th{align-items:end;padding:0 0 3pt;font-size:8pt;line-height:10pt;color:var(--ink3);letter-spacing:.1em}
-.th h2{padding:8pt 0 1pt;white-space:nowrap;letter-spacing:-.005em}
+.th h2{color:var(--ink)}
+.th h2{font-family:'Newsreader',serif;letter-spacing:-.005em;padding:4pt 0 1pt;white-space:nowrap}
 .th .c-oak{position:relative;height:10pt}
 .axn{position:absolute;bottom:0;transform:translateX(-50%);letter-spacing:0}
 .axu{position:absolute;bottom:0;white-space:nowrap}
 .tbody{position:relative}
 .grid{position:absolute;top:0;bottom:0;width:.5pt;background:#E0D6C4;z-index:0}
-.tg{display:flex;align-items:baseline;gap:8pt;padding:7pt 0 1pt;position:relative;z-index:2}
+.tg{display:flex;align-items:baseline;gap:8pt;padding:5pt 0 0;position:relative;z-index:2}
 .gsd{font-style:italic;font-size:9.5pt;color:var(--ink2);font-variation-settings:'opsz' 10}
 .tr{font-size:9pt;align-items:start;position:relative}
-.tr>p{line-height:12.8pt}
-.tr>.c-cl,.tr>.c-nom,.tr>.c-rg,.tr>.c-pr,.tr>.c-oak{margin-top:-1.5pt}
+.tr>p{line-height:12.5pt}
+.tr>.c-pr{margin-top:-1.5pt}
 .tr .c-nm{position:relative;font-size:10.5pt}
 .tr .nm{font-size:10.5pt;font-weight:500;font-variation-settings:'opsz' 12;background:none;padding:0;margin:0}
 .tr .ring{top:4.4pt}
-.tr .fw{vertical-align:-3.3pt}
+.tr .fw{vertical-align:-3pt}
 .c-cl,.c-rg,.c-nom{color:var(--ink2)}
 .c-nom{font-variant-numeric:tabular-nums}
 .c-pr{text-align:right}
@@ -574,11 +582,11 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
 .vs{position:absolute;left:125pt;top:0;font-size:8.5pt;color:var(--ink3);white-space:nowrap}
 .c-oak{position:relative}
 .ssd{grid-column:1 / -1;font-style:italic;font-size:9.5pt;line-height:11pt;color:var(--ink2);padding:0 0 3pt;font-variation-settings:'opsz' 10;position:relative;z-index:2}
-.ssd .fw{vertical-align:-3.3pt}
-.bw h2{padding-top:12pt}
-.bw .hl{padding-bottom:9pt}
+.ssd .fw{vertical-align:-3pt}
+.bw h2{padding-top:6pt}
+.bw .hl{padding-bottom:7pt}
 .bwi .sd{font-size:10pt;line-height:12.5pt}
-.key.kb{position:absolute;left:36.5pt;right:36.5pt;bottom:37pt;display:flex;align-items:flex-end;gap:18pt;z-index:2}
+.key.kb{position:absolute;left:37pt;right:37pt;bottom:37pt;display:flex;align-items:flex-end;gap:18pt;z-index:2}
 .kb .li{display:flex;align-items:center;gap:5pt}
 .kb .li:first-child{margin-right:auto}
 .scwrap{display:inline-flex;flex-direction:column;align-items:flex-start;gap:1pt;position:relative}
@@ -593,7 +601,7 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
  .page{width:100%;height:auto;overflow:hidden;padding:0 24px 8px}
  .field.lt{display:none}
  .field.ph{display:block;width:calc(100% + 48px);height:250px;margin:0 -24px}
- .wmrow{position:static;width:auto;padding:22px 0 0}
+ .wmrow{position:static;width:auto;padding:30px 0 0}
  .wm{flex-direction:column;align-items:flex-start;gap:6px}
  .wm .big{font-size:64px;line-height:60px;margin-left:-5px;padding:0 5px}
  .wm .sub{font-size:14px}

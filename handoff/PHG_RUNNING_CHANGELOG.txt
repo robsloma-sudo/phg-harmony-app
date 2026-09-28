@@ -1101,3 +1101,16 @@ tough scale (best).
   Critic scores: K1 72.5, K2 61.3, K3 65.2, R21 70.3.
   Recommendation: take K1 forward, with manifest fixes. Details in scores/BENCHMARK_K_PANEL.md.
 2026-09-28 — K3 phone map bug fixed (variable collision SW; glyph stroke 522px on phone). Phone axes restored; new gate map_dark_share (letter 0.294 vs phone 0.278) passes. Verified by the coordinator visually before resending.
+2026-09-28 — Rob: "more spirit pours in different ounce sizes and price pours; tasting lines between names and
+  ingredients; real prices on everything; wine glass + bottle; brewery on every beer."
+  Built expanded-v2/manifest.json from the PHG corpus (public.menu_items current menus; Iowa = postal 50–52):
+  - 33 spirit pours (+8: El Jimador, Maestro Dobel Diamante, Gran Coramino, Cincoro, Vago, Sombra, El Silencio,
+    Chichicapa). Each has 1 / 1.5 / 2 oz prices: 1.5 oz = real brand corpus median; 1 oz and 2 oz linear.
+  - 3 flights (3 × 1 oz; corpus flight median $22, n=174).
+  - Mezcal placeholders replaced with real medians: Vida 14 (n=37), Ilegal 15, Montelobos 16, 400 Conejos 11.
+  - Proposed cocktails at corpus medians (Paloma 12, Ranch Water 12, Carajillo 15, Spicy Pineapple 14, Milpa 16, Loess 16).
+  - Every beer names a brewery. Adds Backpocket (Coralville) Mexican lager, Pacifico, Victoria, Negra Modelo.
+    Approved beers get brewery proposals (style match; confirm).
+  - Wine glass/bottle: 12/42, 11/40, 13/45 (corpus bottle-at-glass medians, n=67/45/66). Producers seen on Iowa menus.
+  - Zero-proof at Iowa medians.
+  Approved item names and prices are unchanged.
