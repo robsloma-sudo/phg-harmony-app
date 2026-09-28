@@ -1,6 +1,6 @@
 PERFECT HARMONY GROUP — OPEN ISSUES & RESOLUTION LOG
 =============================================================
-Last updated (UTC): 2026-09-27T17:40Z — gallery 18.49.6 (compact, census) under review; corpus-browser v4 + browse SQL v2 + census live
+Last updated (UTC): 2026-09-28 — design-intelligence audit + benchmark plan; prior: 2026-09-27T17:40Z — gallery 18.49.6 (compact, census) under review; corpus-browser v4 + browse SQL v2 + census live
 Mandatory handoff companions: PHG_RUNNING_CHANGELOG.txt + PHG_OPEN_ISSUES.txt.
 Status reflects actual verification, not intent. Resolved entries and historical evidence are kept.
 Canonical frontend: main a739f56 (18.49.4), index.html blob fbf293d.
@@ -8,6 +8,11 @@ Canonical frontend: main a739f56 (18.49.4), index.html blob fbf293d.
 -------------------------------------------------------------
 CURRENT STATUS SUMMARY (2026-09-27T01:20Z)
 -------------------------------------------------------------
+PHG-DI-01 OPEN P0  Design KB not wired into generation (no caller of phg_design_packet/knowledge) — see design-intelligence/AUDITED_STATUS...
+PHG-DI-02 OPEN P0  Ingredient display-role order not persisted — migration proposed, awaiting Rob approval
+PHG-DI-03 OPEN P1  phg_design_packet returns a generic packet for an unknown profile_key (should error)
+PHG-DI-04 OPEN P1  Controlled KB benchmark (plan written 2026-09-28) awaiting Rob go + Arm D choice
+PHG-DI-05 OPEN P1  Handoff files 02/04/05/09 + visual_examples + media not received
 PHG-001 IN PROGRESS P1  Menu Library: 18.49.5 on branch (images fixed, filters expanded); device acceptance + release open
 PHG-002 RESOLVED    P0  HTML worker closed-browser incident (redeploy 144c7bdb, 2026-09-27T00:08Z)
 PHG-003 OPEN        P1  Physical iPhone/iPad/desktop acceptance (node geometry, gallery, transitions)

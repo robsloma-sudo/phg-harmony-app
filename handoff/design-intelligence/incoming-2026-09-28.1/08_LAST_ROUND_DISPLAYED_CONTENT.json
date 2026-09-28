@@ -1,0 +1,241 @@
+{
+  "status": "Visual transcription of packaged final raster; draft concepts, NOT approved recipes or service prices",
+  "source_files": [
+    "The_Last_Round_Menu_Front_Cocktails.png",
+    "The_Last_Round_Menu_Back_Drinks.png"
+  ],
+  "currency_symbol_displayed": "$",
+  "pour_sizes": "not established by these menu images",
+  "quantities": "not supplied",
+  "front_cocktails": [
+    {
+      "name": "The Fellowship",
+      "price_displayed": 12,
+      "description_as_displayed": "A journey is better together.",
+      "ingredients_as_displayed": [
+        "gin",
+        "elderflower",
+        "lemon",
+        "honey",
+        "a touch of magic"
+      ]
+    },
+    {
+      "name": "Sorcerer’s Apprentice",
+      "price_displayed": 13,
+      "description_as_displayed": "Let go. See what happens.",
+      "ingredients_as_displayed": [
+        "rum",
+        "blue curaçao",
+        "coconut",
+        "pineapple",
+        "citrus"
+      ]
+    },
+    {
+      "name": "The Chosen One",
+      "price_displayed": 13,
+      "description_as_displayed": "Destiny tastes familiar.",
+      "ingredients_as_displayed": [
+        "bourbon",
+        "butterscotch",
+        "spice",
+        "bitters"
+      ]
+    },
+    {
+      "name": "Barbarian",
+      "price_displayed": 14,
+      "description_as_displayed": "Savage by nature, refined by choice.",
+      "ingredients_as_displayed": [
+        "smoked mezcal",
+        "blood orange",
+        "chili",
+        "black salt"
+      ]
+    },
+    {
+      "name": "Breaking Dawn",
+      "price_displayed": 13,
+      "description_as_displayed": "Forbidden never tasted so sweet.",
+      "ingredients_as_displayed": [
+        "tequila",
+        "pomegranate",
+        "blackberry",
+        "lime"
+      ]
+    },
+    {
+      "name": "Ring Bearer",
+      "price_displayed": 14,
+      "description_as_displayed": "Small sips. Big journeys.",
+      "ingredients_as_displayed": [
+        "peaty scotch",
+        "honey",
+        "herbs",
+        "bitters"
+      ]
+    },
+    {
+      "name": "The Volturi",
+      "price_displayed": 13,
+      "description_as_displayed": "Seductive. Ruthless. Dangerously smooth.",
+      "ingredients_as_displayed": [
+        "espresso vodka",
+        "amaro",
+        "black cherry",
+        "chocolate"
+      ]
+    },
+    {
+      "name": "The Dark Lord",
+      "price_displayed": 14,
+      "description_as_displayed": "All shall fall... eventually.",
+      "ingredients_as_displayed": [
+        "black rum",
+        "charcoal",
+        "blackberry",
+        "sage",
+        "lemon"
+      ]
+    },
+    {
+      "name": "Jumanji",
+      "price_displayed": 12,
+      "description_as_displayed": "Roll the dice.",
+      "ingredients_as_displayed": [
+        "spiced rum",
+        "pineapple",
+        "mango",
+        "lime",
+        "falernum"
+      ]
+    },
+    {
+      "name": "Second Chance",
+      "price_displayed": 12,
+      "description_as_displayed": "For those who find their way back.",
+      "ingredients_as_displayed": [
+        "reposado tequila",
+        "cucumber",
+        "green chartreuse",
+        "lime",
+        "mint"
+      ]
+    }
+  ],
+  "back_beer": [
+    {
+      "name": "Jungle Lager",
+      "price_displayed": 7
+    },
+    {
+      "name": "Ranger IPA",
+      "price_displayed": 8
+    },
+    {
+      "name": "Mithril Wheat",
+      "price_displayed": 7
+    },
+    {
+      "name": "Dark Forest Stout",
+      "price_displayed": 8
+    },
+    {
+      "name": "Explorer Pils",
+      "price_displayed": 7
+    },
+    {
+      "name": "Ring Road Pale Ale",
+      "price_displayed": 7
+    }
+  ],
+  "back_wine": [
+    {
+      "name": "The Shire White",
+      "price_displayed": 9,
+      "style_as_displayed": "Sauvignon Blanc"
+    },
+    {
+      "name": "Rivendell Rosé",
+      "price_displayed": 9,
+      "style_as_displayed": "Dry Rosé"
+    },
+    {
+      "name": "Gondor Red",
+      "price_displayed": 10,
+      "style_as_displayed": "Red Blend"
+    },
+    {
+      "name": "Isengard Reserve",
+      "price_displayed": 11,
+      "style_as_displayed": "Cabernet Sauvignon"
+    },
+    {
+      "name": "Mirkwood Sparkling",
+      "price_displayed": 9,
+      "style_as_displayed": "Brut"
+    }
+  ],
+  "back_non_alcoholic": [
+    {
+      "name": "Forbidden Fruit",
+      "price_displayed": 6,
+      "ingredients_as_displayed": [
+        "pomegranate",
+        "lemon",
+        "soda"
+      ]
+    },
+    {
+      "name": "Elven Tonic",
+      "price_displayed": 6,
+      "ingredients_as_displayed": [
+        "cucumber",
+        "mint",
+        "tonic"
+      ]
+    },
+    {
+      "name": "Temple Cooler",
+      "price_displayed": 6,
+      "ingredients_as_displayed": [
+        "pineapple",
+        "coconut",
+        "lime"
+      ]
+    },
+    {
+      "name": "Safe Passage",
+      "price_displayed": 6,
+      "ingredients_as_displayed": [
+        "hibiscus",
+        "honey",
+        "citrus"
+      ]
+    },
+    {
+      "name": "Second Chance",
+      "price_displayed": 6,
+      "ingredients_as_displayed": [
+        "zero-proof spritz"
+      ]
+    },
+    {
+      "name": "Phoenix Rising",
+      "price_displayed": 6,
+      "ingredients_as_displayed": [
+        "ginger",
+        "orange",
+        "soda"
+      ]
+    }
+  ],
+  "cautions": [
+    "Text includes placeholders and unvalidated preparations.",
+    "Descriptions often communicate theme rather than sensory evidence.",
+    "Display ordering does not consistently match Rob’s requested ingredient-role order.",
+    "Earlier expanded counts were not fully carried into this raster.",
+    "Do not infer wine brands, country, vintage, serving size, ABV, allergen-free or 0.0% status from styling."
+  ]
+}
