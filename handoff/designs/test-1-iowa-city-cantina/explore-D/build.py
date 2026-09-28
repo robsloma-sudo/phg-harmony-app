@@ -125,7 +125,7 @@ DRAW = {
 
 # ---- cocktail plates (TEXT layer in HTML; leaders in SVG) -----------------------------
 ROMAN = ["I", "II", "III", "IV"]
-LBL_X = 160  # label column start (px within plate body)
+LBL_X = 150  # label column start (px within plate body)
 
 def plate(n, sec, sub, it):
     iid = it["id"]; rv = RV[iid]
@@ -134,24 +134,24 @@ def plate(n, sec, sub, it):
     show_qty = it["meta"]["public_visibility"].get("house_recipe", True)
     garn = [c for c in comps if c["role"] == "Garnish"]
     meas = [c for c in comps if c["role"] != "Garnish"]
-    body_h = 176
+    body_h = 158
     art, anchors = DRAW[iid]
-    svg = [f'<svg class="art" width="{LBL_X}" height="{body_h}" viewBox="0 0 {LBL_X} {body_h}">{DEFS}<g transform="translate(0,2)">{art()}</g>']
+    svg = [f'<svg class="art" width="{LBL_X}" height="{body_h}" viewBox="0 0 {LBL_X} {body_h}">{DEFS}<g transform="translate(4,0) scale(.9)">{art()}</g>']
     labels = []
     # garnish label (top row). Garnish name: component if present, else recipe_versions.
     gname = garn[0]["name"] if garn else rv["garnish"]
     gsrc = "garnish" + ("" if garn else "")
-    gy = 16
-    ax, ay = anchors["garnish"]; ay += 2
+    gy = 12
+    ax, ay = anchors["garnish"]; ax, ay = 4 + ax*.9, ay*.9
     svg.append(f'<polyline points="{ax},{ay} {ax+8},{gy} {LBL_X-4},{gy}" fill="none" stroke="{GREEN}" stroke-width=".8"/>'
                f'<circle cx="{ax}" cy="{ay}" r="1.8" fill="{GREEN}"/>')
     gq = qty(garn[0]) + " · " if (garn and show_qty) else ""
     labels.append((gy, f'<b class="q">{esc(gq)}</b>{esc(gname)}', "garnish"))
     # measured components: graduated scale when quantities are public
-    ys = [52 + i * ((body_h - 64) / max(1, len(meas) - 1) if len(meas) > 1 else 0) for i in range(len(meas))]
+    ys = [46 + i * ((body_h - 56) / max(1, len(meas) - 1) if len(meas) > 1 else 0) for i in range(len(meas))]
     order = list(reversed(meas))  # top of scale first
     if show_qty:
-        SX, B, PPO = 118, 170, 29.0
+        SX, B, PPO = 116, 154, 25.0
         svg.append(f'<line x1="{SX}" y1="{B}" x2="{SX}" y2="{B-4*PPO}" stroke="{SEPIA}" stroke-width=".8"/>')
         for k in range(0, 9):
             y = B - k * PPO / 2
@@ -173,7 +173,7 @@ def plate(n, sec, sub, it):
     else:
         pts = [anchors["top"], (60, 118), anchors["liq"]]
         for i, c in enumerate(order):
-            px, py = pts[i % 3]; py += 2
+            px, py = pts[i % 3]; px, py = 4 + px*.9, py*.9
             ly = ys[i]
             svg.append(f'<polyline points="{px},{py} {px+14},{py} {LBL_X-12},{ly:.1f} {LBL_X-4},{ly:.1f}" fill="none" stroke="{SEPIA}" stroke-width=".7"/>'
                        f'<circle cx="{px}" cy="{py}" r="1.6" fill="{SEPIA}"/>')
@@ -239,28 +239,28 @@ def build(proof=True):
 *{{box-sizing:border-box;margin:0;padding:0}}
 html,body{{background:{IVORY}}}
 .page{{width:816px;height:1056px;position:relative;overflow:hidden;color:{SEPIA};font-family:Fr;
- background:radial-gradient(ellipse at 50% 45%, {IVORY} 60%, {IVORY_D} 100%);padding:48px 52px}}
+ background:radial-gradient(ellipse at 50% 45%, {IVORY} 60%, {IVORY_D} 100%);padding:50px 54px}}
 .page:before{{content:"";position:absolute;inset:0;pointer-events:none;opacity:.06;
  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .12 0 0 0 1 0'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>")}}
 .frame{{position:absolute;inset:40px;border:1px solid {SEPIA};pointer-events:none}}
 .frame:after{{content:"";position:absolute;inset:3px;border:.5px solid {SEPIA2}}}
 header{{position:relative;display:grid;grid-template-columns:1fr auto;align-items:end;border-bottom:1.5px solid {SEPIA};padding:8px 6px 8px}}
 .kick{{font-family:Dm;font-weight:700;font-size:10px;letter-spacing:.32em;color:{GREEN};text-transform:uppercase}}
-h1{{font-weight:700;font-size:46px;letter-spacing:.34em;line-height:1.05;text-transform:uppercase;margin-top:4px}}
-.sub{{font-style:italic;font-size:13px;color:{SEPIA2};margin-top:2px}}
+h1{{font-weight:700;font-size:40px;letter-spacing:.34em;line-height:1.05;text-transform:uppercase;margin-top:4px}}
+.sub{{font-style:italic;font-size:13px;color:{SEPIA2};margin-top:0}}
 .key{{font-family:Dm;font-size:9.5px;line-height:1.45;color:{SEPIA2};text-align:right;border-left:1px solid {SEPIA2};padding-left:12px}}
 .key b{{color:{SEPIA};letter-spacing:.2em;font-weight:700}}
-.sect{{display:flex;align-items:center;gap:10px;margin:10px 6px 6px;font-family:Dm;font-weight:700;font-size:10.5px;letter-spacing:.3em;text-transform:uppercase}}
+.sect{{display:flex;align-items:center;gap:10px;margin:7px 6px 5px;font-family:Dm;font-weight:700;font-size:10.5px;letter-spacing:.3em;text-transform:uppercase}}
 .sect:after,.sect:before{{content:"";flex:1;height:0;border-top:.8px solid {SEPIA}}}
 .sect:before{{flex:0 0 18px}}
-.grid{{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;padding:0 6px}}
+.grid{{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 14px;padding:0 6px}}
 .plate{{border:1px solid {SEPIA};outline:.5px solid {SEPIA2};outline-offset:-4px;padding:9px 14px 8px;background:rgba(244,237,220,.9)}}
 .ph{{display:flex;justify-content:space-between;font-family:Dm;font-weight:700;font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:{GREEN}}}
 .row{{display:flex;align-items:baseline;gap:6px}}
-.nm{{font-weight:700;font-size:16.5px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}}
+.nm{{font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}}
 .ld{{flex:1;border-bottom:1.2px dotted {SEPIA2};transform:translateY(-4px);min-width:14px}}
 .pr{{font-weight:700;font-size:19px}}
-.body{{position:relative;height:178px;margin-top:2px}}
+.body{{position:relative;height:160px;margin-top:2px}}
 .art{{position:absolute;left:0;top:0}}
 .lab{{position:absolute;left:{LBL_X}px;right:0;transform:translateY(-50%);font-size:12.5px;line-height:1.12}}
 .lab.garnish{{color:{GREEN}}}
@@ -276,18 +276,18 @@ h1{{font-weight:700;font-size:46px;letter-spacing:.34em;line-height:1.05;text-tr
 .rc+.rc{{border-left:.5px solid {SEPIA2};padding-left:14px}}
 h3{{font-family:Dm;font-weight:700;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:{GREEN};border-bottom:.8px solid {SEPIA};padding-bottom:2px;margin:2px 0 4px}}
 h4{{font-family:Dm;font-weight:500;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:{SEPIA2};margin:4px 0 1px}}
-.re{{margin-bottom:5px}}
+.re{{margin-bottom:3px}}
 .no{{font-family:Dm;font-weight:700;font-size:9px;color:{GREEN};width:16px}}
 .nm2{{font-weight:700;font-size:13.5px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}}
 .pr2{{font-weight:700;font-size:15px}}
-.ds{{font-style:italic;font-size:12px;padding-left:22px;color:{SEPIA}}}
+.ds{{font-style:italic;font-size:12px;line-height:1.2;padding-left:22px;color:{SEPIA}}}
 .lat{{color:{GREEN};font-size:11px}}
 .miss{{display:flex;gap:8px;padding-left:22px;margin-top:1px;font-family:Dm;font-size:8.5px;color:{SEPIA2}}}
 .miss span{{display:flex;gap:3px;align-items:baseline}}
 .miss em{{font-style:normal;letter-spacing:.14em;text-transform:uppercase}}
 .miss u{{text-decoration:none;border-bottom:.6px solid {SEPIA2};min-width:26px;text-align:center}}
 footer{{position:absolute;left:58px;right:58px;bottom:50px;display:flex;justify-content:space-between;font-family:Dm;font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:{SEPIA2};border-top:.8px solid {SEPIA};padding-top:4px}}
-.proofnote{{position:absolute;left:58px;right:58px;bottom:66px;font-family:Dm;font-size:8.5px;color:{SEPIA2};text-align:center}}
+.proofnote{{position:absolute;left:58px;right:58px;bottom:64px;font-family:Dm;font-size:8.5px;color:{SEPIA2};text-align:center}}
 /* phone */
 body.phone .page{{width:390px;height:auto;padding:22px 16px 60px}}
 body.phone .frame{{inset:10px}}
@@ -335,8 +335,8 @@ def contrast_check(page, scale, tag):
     for b in boxes:
         rgb = tuple(int(float(v)) for v in re.findall(r"[\d.]+", b["c"])[:3])
         L1 = lum(rgb)
-        x0, y0 = max(0, int((b["x"] - 2) * scale)), max(0, int((b["y"] - 2) * scale))
-        x1, y1 = min(img.width, int((b["x"] + b["w"] + 2) * scale)), min(img.height, int((b["y"] + b["h"] + 2) * scale))
+        x0, y0 = max(0, int((b["x"] + 1) * scale)), max(0, int((b["y"] + 1) * scale))
+        x1, y1 = min(img.width, int((b["x"] + b["w"] - 1) * scale)), min(img.height, int((b["y"] + b["h"] - 1) * scale))
         crop = img.crop((x0, y0, x1, y1)).resize((max(1, (x1 - x0) // 2), max(1, (y1 - y0) // 2)), Image.NEAREST)
         worst = 99
         for px in set(crop.getdata()):
@@ -358,7 +358,7 @@ def main():
                                           ("preview-letter-guest.png", guest, "letter", 816, 1056, 3.125),
                                           ("preview-phone.png", proof, "phone", 390, 800, 3)]:
             pg = b.new_page(viewport={"width": w, "height": h}, device_scale_factor=dsf)
-            pg.set_content(doc.replace("{BODYCLASS}", cls)); pg.wait_for_timeout(400)
+            tmp = HERE / f".render-{cls}.html"; tmp.write_text(doc.replace("{BODYCLASS}", cls)); pg.goto(tmp.as_uri()); pg.evaluate('document.fonts.ready'); pg.wait_for_timeout(500); tmp.unlink()
             ov = pg.evaluate("() => { const p=document.querySelector('.page'); const r=[];"
                              "document.querySelectorAll('.plate,.reg,header,footer,.proofnote').forEach(e=>{const b=e.getBoundingClientRect(); r.push([e.className||e.tagName,b.top,b.bottom,b.left,b.right])}); return {h:p.scrollHeight, r} }")
             report[name + ":geometry"] = ov
