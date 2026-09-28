@@ -6291,7 +6291,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.19 ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.20 VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -21865,6 +21865,10 @@ function harmonyStyleAgentText(text){
   return t;
 }
 function harmonyShouldSpeak(text){
+  if(document.body.classList.contains('phg-view-open')&&text&&HARMONY_PREFS.output!=='text'){
+    if(typeof VOICE!=='undefined'){VOICE.on=true;VOICE.muted=false;}
+    return true;
+  }
   if(typeof VOICE==='undefined'||!VOICE.canSpeak||!VOICE.on||VOICE.muted)return false;
   if(HARMONY_PREFS.output==='text')return false;
   if(HARMONY_PREFS.output==='all')return true;
@@ -27353,6 +27357,31 @@ var PHG_AI_AUDIO=window.PHG_AI_AUDIO={
   audio:null,url:null,ctx:null,source:null,analyser:null,data:null,raf:null,
   level:0,playing:false,busy:false,request:0
 };
+/* 18.49.20 iOS AUDIO UNLOCK.
+   Safari only lets a page start sound from inside a tap. Harmony's voice
+   arrives from the server a second later and was played in a brand-new
+   Audio() each time - which iOS blocks silently. Now one element is unlocked
+   on the first tap (a 50 ms silent clip) and reused for every reply, and the
+   device speech engine is primed in the same tap for the fallback voice. */
+var PHG_AUDIO={el:null,unlocked:false,ss:false};
+var PHG_SILENT_WAV='data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA';
+function phgAudioEl(){
+  if(!PHG_AUDIO.el){var a=new Audio();a.setAttribute('playsinline','');a.preload='auto';PHG_AUDIO.el=a;}
+  return PHG_AUDIO.el;
+}
+function phgAudioUnlock(){
+  try{
+    var el=phgAudioEl();
+    if(!PHG_AUDIO.unlocked&&!PHG_AI_AUDIO.playing){
+      el.muted=false;el.src=PHG_SILENT_WAV;
+      var p=el.play();if(p&&p.then)p.then(function(){PHG_AUDIO.unlocked=true;}).catch(function(){});else PHG_AUDIO.unlocked=true;
+    }
+    if(!PHG_AUDIO.ss&&window.speechSynthesis&&window.SpeechSynthesisUtterance){
+      var u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);PHG_AUDIO.ss=true;
+    }
+  }catch(e){}
+}
+['touchend','click','keydown'].forEach(function(ev){document.addEventListener(ev,function(){if(!PHG_AUDIO.unlocked||!PHG_AUDIO.ss)phgAudioUnlock();},{capture:true,passive:true});});
 function harmonyAIStop(){
   PHG_AI_AUDIO.request++;
   PHG_AI_AUDIO.busy=false;
@@ -27369,6 +27398,15 @@ function harmonyAIStop(){
   if(window.PHG_ENV)PHG_ENV.stop();
 }
 function harmonyAIVisualize(audio){
+  if(audio===PHG_AUDIO.el){
+    (function tick(){
+      if(!PHG_AI_AUDIO.playing)return;
+      var t=performance.now()/1000,l=.35+.25*Math.sin(t*9.1)*Math.sin(t*3.7)+.15*Math.sin(t*17.3);
+      PHG_AI_AUDIO.level+=(Math.max(.05,Math.min(1,l))-PHG_AI_AUDIO.level)*.35;
+      PHG_AI_AUDIO.raf=requestAnimationFrame(tick);
+    })();
+    return;
+  }
   var AC=window.AudioContext||window.webkitAudioContext;
   if(!AC)return;
   try{
@@ -27446,7 +27484,7 @@ function harmonyAISpeakOpenAI(text,opts){
     return r.blob();
   }).then(function(blob){
     if(request!==PHG_AI_AUDIO.request)return;
-    var url=URL.createObjectURL(blob),audio=new Audio(url);
+    var url=URL.createObjectURL(blob),audio=phgAudioEl();audio.src=url;
     PHG_AI_AUDIO.audio=audio;PHG_AI_AUDIO.url=url;PHG_AI_AUDIO.busy=false;AI_VOICE.busy=false;
     audio.preload='auto';
     audio.onplay=function(){if(request!==PHG_AI_AUDIO.request)return;PHG_AI_AUDIO.playing=true;PHG_AI_AUDIO.level=.06;harmonyAIVisualize(audio);if(typeof harmonyComposerStatus==='function'&&!opts.preview)harmonyComposerStatus('Harmony · speaking…');};
