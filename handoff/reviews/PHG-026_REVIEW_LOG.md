@@ -294,3 +294,31 @@ all rolled back, all pass; read-only check afterwards: no PHG-026 object exists 
 Timings this round: file 2 steps 1-2 6.9-8.9 s (one run 14.4 s); Step 3 14.6-17.0 s per 100 venues (~5 min total);
 Step 4 14.3 s per 500 (~10 min) or 12-13 s per 200; release gate 6.3 s; repair rollback 7.7-8.2 s; function rollback
 15-24 ms; monitor 2.7 s.
+
+## Round 4 (2026-09-28, head 38dc7c0)
+### Spec Reviewer: 89.2, no blockers
+- Rounds so far: 62.5, 76.7, 86.3, 89.2. Average 78.7.
+- Round 5 must score above 85.3 for the average to pass 80.
+
+Per criterion:
+- C1 91, C2 88, C3 92, C4 92, C5 94, C6 93, C7 90, C8 88, C9 91
+- C10 85, C11 82, C12 89, C13 88, C14 88, C15 91, C16 90, C17 85, C18 88
+
+Should-fix:
+1. C1: the 7-day damping also holds a real page behind an item-page current menu. Add `and not (c.itemish and not v_itemish)` (file 1, around lines 323-324) and a rehearsal scenario s11.
+2. C7/C13: the roll-forward must null `menu_source_candidates.item_set_hash` and `duplicate_of_candidate_id` (file 2, lines 19-24).
+3. C12: submit_menu has no lock_timeout, yet this log says it does (line 65). Add `set local lock_timeout='5s'` or correct the log.
+
+Minor:
+- C14: fix the lock-time header in file 2 (7-9 s, one run 14.4 s).
+- C1: compare against an item-page current by (items, drinks).
+- C18:
+  - reject an empty `elements` array;
+  - re-grant EXECUTE on rollback;
+  - set lock_timeout before the ALTER;
+  - add a header note that it is not part of the PHG-026 publish.
+- C11: keep the Edge function on the post-release list.
+- C16/C5: add a runbook note that Edge traffic stays idle until the release gate has run.
+- Evidence: the reviewer had no live DB access. Round 5 should paste pg_get_functiondef output for the C10 and C17 functions.
+
+### Safety Reviewer: pending
