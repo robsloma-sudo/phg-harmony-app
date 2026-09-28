@@ -119,6 +119,69 @@ Allowed data is a whitelist in the map. Never readable: `internal_secrets`, sess
 auth, raw staging tables, logs, other accounts' house data. House data (recipes, costs, sales,
 labor) is always filtered to Rob's account.
 
+## 4A. Operations and finance: one open database Harmony can ask
+
+Goal (Rob, 2026-09-28): "show me comp percent on the POS report for last week", "labor percentage for last
+month", "my current week's declining budget on food expenses". Everything lands in Supabase, and Harmony asks it.
+
+### 4A.1 What exists
+
+- **PHG tables already built, nearly empty**: `phg.sales_imports / sales_daily / sales_items` (POS), `labor_*`
+  (employees, roles, pay rates, shifts), `operating_expenses`, `expense_categories` (19), `budget_plans`
+  (declining budget), `reporting_periods`, `pl_snapshots`, `inventory_*`, `purchase_invoices`. Capabilities
+  `sales_analysis`, `labor_analysis`, `budget_forecasting`, `expense_analysis`, `pl_intelligence`,
+  `management_dashboard`, `management_variance`, `period_review` are registered. Today: 1 sales import,
+  1 budget plan, no labor or expenses.
+- **Rob's Airtable base "Parkway FH"** already holds the working data:
+
+| Airtable table | What's in it | Goes to (Supabase) |
+|---|---|---|
+| Bar Inventory/Pricing | item, bottle/unit cost, case size and price, oz price, type, distributor, par, counts by location, sale prices and COGS by pour size | `ingredients`, `procurement_catalog_items`, `purchase_costs`, `vendors`, `inventory_counts` |
+| Bar Recipes | cocktail, ingredients (linked), volumes, cost, sale price, COGS, status | `recipe_projects`, `recipe_versions`, `recipe_components` |
+| Invoices | date, vendor, invoice number, photo, amounts split by GL account (5100-01 Liquor ... 6540 Rewards), due/delivery dates | `purchase_invoices`, `operating_expenses` by GL account |
+| Manager (daily log) | bar and hall net sales, hours by role, hourly labor $ and %, weather, shift notes, repairs | `sales_daily`, labor hours by role, `harmony_notes`-style shift notes |
+| Financial (weekly) | revenue, purchases by category, beginning/ending inventory, COGS by category, budgets and **declining budgets** by GL group, budgeted daily sales, labor %, CC fees, net ordinary income, variance | `budget_plans`, `reporting_periods`, `pl_snapshots` |
+| Events/Marketing, Catering/TripleSeat | events, band cost, event sales, catering subtotals, taxes | later: events tables |
+| Employees | staff, job title, onboarding checklist (Toast, 7shifts, Paychex, TIPS expiry) | `labor_employees` (no personal contact data unless Rob asks) |
+| Vendors/People/Login Info | vendor contacts, delivery days ... and **usernames and passwords** | vendors only; **login fields are never copied** |
+
+The Airtable data gives real ingredient prices now, so recipe costing can start before invoice photos.
+
+### 4A.2 Chart of accounts and metric definitions
+
+- Rob's invoices already use a restaurant chart of accounts (5100 bar cost, 5200 bar mix, 5420 N/A bev, 6100 labor,
+  6200 food hall, 6300 facility, 6400 G&A, 6500 marketing), in the style of the Uniform System of Accounts for
+  Restaurants. Load it as `phg.gl_accounts` (code, name, parent, type) and map every expense to it.
+- Every number Harmony says is a **named metric** defined once as a database function, never model arithmetic:
+  net sales, comp %, discount %, void %, labor $ and %, hourly vs management labor, COGS $ and % by category
+  (liquor, beer, wine, N/A), prime cost, declining budget remaining (budget - spent to date, by GL group, by week),
+  budget vs actual variance, sales per labor hour, average check. Each metric has: definition, formula, source
+  tables, period rules (week starts Monday?), and a target/range Rob sets.
+- Harmony's time words map to reporting periods: "last week", "this week", "last month", "period to date", "same
+  week last year".
+
+### 4A.3 Getting data in (connectors)
+
+| Source | Holds | How | Priority |
+|---|---|---|---|
+| Airtable (connected) | inventory, pricing, recipes, invoices, daily log, weekly financials | Scheduled sync into Supabase (one-way, Airtable stays the entry tool for now) | First |
+| Toast POS | sales, comps, voids, discounts, item mix, tips, clock-ins | No Claude connector exists. Options: Toast's nightly data export (SFTP) or scheduled emailed reports read through the connected Gmail, or Toast API partner access | Second |
+| QuickBooks Online (Intuit connector exists) | books of record: P&L, bills, vendors, bank, cash flow; has industry benchmarking | Read-only connect, sync P&L and bills monthly | If Rob uses QuickBooks |
+| 7shifts / Paychex | schedules, labor cost, payroll | No connectors; CSV exports or API later | Later |
+| Invoice photos | line-item prices | Vision model (PHG-039) | Later |
+
+### 4A.4 How Harmony learns finance and how to present it
+
+- A **finance knowledge set** (like `phg_design` for menu design): metric definitions, healthy ranges for a bar and
+  food hall, what to look at when a number moves (labor % up: sales down or hours up? which role?), and the order
+  to explain a variance. Sources: USAR, Rob's own targets, and his history once synced.
+- **Presentation rules**: headline number first with the period and the target ("Labor was 24.1% last week,
+  target 22"), then the one driver that explains most of the gap, then offer the detail (by day, by role).
+  Declining budget always as "left to spend this week" plus a pace bar. Money rounded to dollars in speech,
+  exact on screen.
+- Questions follow the same rules as section 5: "which location?" only if more than one; "gross or net?" only if
+  the metric needs it.
+
 ---
 
 ## 5. How Harmony talks: jobs, slots and questions
@@ -375,7 +438,8 @@ native iPhone app later.
 | 4 | **Folders workspace** (folders, links, records, templates, Finance/Training views) | Migration: workspace tables + new write actions |
 | 5 | **Voice building** of recipes and preps (capture loop, ingredient matching, nested preps, save to folder, cost pending) | New Command Center actions |
 | 6 | **Talk-over** in the app (option 1, then maybe realtime) | Frontend + tuning on Rob's phone |
-| 7 | **Costing live** in Finance views as prices arrive | Price source |
+| 2A | **Finance data**: Airtable sync, chart of accounts, metric functions, finance knowledge set | Migration + Rob's metric targets |
+| 7 | **Costing live** in Finance views as prices arrive | Airtable prices first, invoices later |
 | Later | Invoice photos -> vision model -> prices; food side; native iPhone app | Separate decisions |
 
 Each phase ships with conversation tests (existing `conversation_tests` table) covering the dialogs

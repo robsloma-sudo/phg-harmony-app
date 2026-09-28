@@ -1696,3 +1696,21 @@ vision prices: "table that", build the financial links now.
   nested preps, cost pending, one-yes save); screen command bus (map zoom/focus/filter/select, brand card, library,
   folders, studio); barge-in (in-app listener during speech first, realtime voice model later; not possible from
   the Action button); safety; 7-phase plan; 6 decisions for Rob.
+
+------------------------------------------------------------------------------
+PHG-20260928-FINDATA | USER_PROMPT + DESIGN (no code, no migration) | 2026-09-28
+Rob: "all data needs to get stored in the Supabase ... 'show me comp percent ... on the POS report for last week',
+'labor percentage for last month', 'my current week's budget on my declining budget ... food expenses' ... an open
+database that we can just pull from as we talk. You're connected to my Airtable account for a lot of that stuff.
+What's another good financial connector ... maybe QuickBooks ... how can Harmony learn the best about finances and
+how to present info?"
+- Read-only look at Airtable base "Parkway FH" (schema only, no records): Bar Inventory/Pricing (bottle costs,
+  distributors, par, counts, COGS by pour), Bar Recipes (cost, COGS), Invoices (GL-coded 5100-6540), Manager daily
+  log (net sales, hours by role, labor %), Financial weekly (budgets, declining budgets, COGS, variance), Events,
+  Catering, Employees (Toast, 7shifts, Paychex), Vendors/People/Login Info (contains username/password fields).
+- PHG side: sales/labor/expense/budget/P&L tables and 8 finance capabilities exist; data is nearly empty (1 sales
+  import, 1 budget plan, 19 expense categories).
+- Connector directory: Intuit QuickBooks (official) and Xero exist; no Toast, 7shifts or Paychex connectors.
+- Spec section 4A added: Airtable -> Supabase sync map, chart of accounts table, named metric functions (comp %,
+  labor %, declining budget remaining ...), time-word -> period mapping, connectors table, finance knowledge set
+  and presentation rules; build phase 2A. Page republished.
