@@ -310,3 +310,11 @@ PHG-FLV-011 | OPEN | P2 | Two knowledge-base source registries: phg_design.sourc
   independent of public.sources / phg_flavor. Do not merge implicitly; decide a shared rights model later.
 PHG-FLV-012 | OPEN | P2 | = GLOBAL/validation-tasting, GLOBAL/coverage-expansion, GLOBAL/security-review-existing
   carried as-is from phg_flavor.work_items (queued). The new flavor gateway must add zero advisor findings.
+PHG-037r | OPEN | P2 | Recipe standards: cocktail_reference has no per-recipe sources, glass/garnish on 1/150, no
+  technique fields; 279 spec-source rows are "Claude general knowledge". Needs a recipe/technique standards table
+  (owner-set stir/shake rules, glass, garnish, dilution) and a sourced cleanup. Rob to discuss. (2026-09-28)
+PHG-038 | OPEN | P1 | needs Rob | Harmony "ask anything in Supabase by conversation". Today phg-harmony-data answers
+  only 12 fixed sources; follow-ups outside them fail. Proposal: data dictionary + tool-using agent (search catalog,
+  describe table, sample distinct values, read-only SQL through a gateway like phg_designer_query, ask the user) with
+  grounded clarifying questions, account scoping, PII/secret exclusions. Needs Rob's scope decisions and a migration
+  approval (read-only role + dictionary). (2026-09-28)

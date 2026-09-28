@@ -1636,3 +1636,38 @@ Netlify 6abaf55b8a43870008d0a6a9 ready 23:16:51Z.
 - Setup page 18.49.33: the Shortcut is now a Repeat loop (Context variable in, Reply/Context/Next out; If Next is
   open -> Open URLs + stop; If Next is end -> stop). 22 copy chips; 375 px no overflow; zero page errors (fixed an
   apostrophe that broke the panel script before commit).
+
+------------------------------------------------------------------------------
+PHG-20260928-VOICEFIX | USER_PROMPT + CHANGE | 2026-09-28
+(phg-harmony-inbox v12 -> v15 live; no migration; no frontend deploy)
+Rob: "she said stir for 30 seconds. That is wrong. It should be stir for like six to eight seconds. I'm curious where
+we got our cocktail recipes from." / "I don't want it to actually ever open the app unless Harmony asks the question
+of, would you like to open the app? And I say yes" / "I'm trying to get a chocolate Manhattan recipe from the internet
+and Harmony keeps going back to just a classic Manhattan recipe." / "pull any information possible from Supabase ...
+20 tables deep ... We need to figure out that model."
+- Recipe provenance (read-only audit): public.cocktail_reference = 150 rows loaded 2026-09-09; source_basis is a label
+  ("IBA + U.S. consensus"), not linked sources; method filled on 113/150, glass and garnish on 1/150.
+  cocktail_spec_sources: 279 "Claude general knowledge, 11 Sep 2026", 150 "cocktail_reference table (source basis not
+  itemised)", 20 "Observed on scraped Iowa menus". No stir times stored anywhere: "30 seconds" was the voice model
+  filling a gap. Rob's house recipes (phg.recipe_versions) are the only owner-authored specs.
+- v12: house technique rule in the recipe voice: stirred drinks = six to eight seconds; no other stir/shake time,
+  dilution or temperature unless in the given spec; shaken = "shake hard". Planner + recipe model gpt-4o-mini ->
+  gpt-4.1. Modifier rule (a chocolate Manhattan is not a Manhattan; twists go to internet/create, never the base
+  classic); never re-ask what was answered; internet search gets the full request.
+- v12: never open unasked. "url" is non-empty ONLY when next = "open" (old Shortcuts opened any non-empty url, which is
+  why the app opened every time); the link moved to app_url. open_screen is allowed only when the previous turn asked
+  "Want me to open it in the Harmony app?" (context.offered) and they agree.
+- v13: house lookup strips filler ("my house Manhattan" -> "Manhattan"), then tries each longer word.
+- v14: PHG data questions (even "show me NOM 1610 on a map") look up the data FIRST and say the real answer, then ask
+  to open. Before this, "no, just tell me" was answered from model memory with the wrong company. The planner may not
+  answer distillery/venue/menu/price facts from memory.
+- v15: "yes" opens exactly the link that was offered (context.last.url).
+- Live tests with temporary keys (both deleted after): chocolate Manhattan from the internet -> rye, sweet vermouth,
+  creme de cacao, chocolate bitters, "stir six to eight seconds", source named, url empty. "Walk me through my house
+  Manhattan" -> Rob's house spec, six to eight seconds, coupe, cherry. "Show me where NOM 1610 is on a map" -> "Casa
+  Tequilera Dinastia Arandina, registered in Zapopan, Jalisco ... 10 brands ... Want me to open it in the Harmony
+  app?", url empty; "Yeah, open it" -> next=open with the map link; "No thanks ..." -> next=listen, nothing opened.
+- Known gap (-> PHG-038): a follow-up the fixed catalog can't answer ("what other brands do they make?") repeats the
+  summary. That is the deep-data model Rob asked for; proposal sent to Rob, needs decisions.
+- Source for v12-v15 committed (supabase/functions/phg-harmony-inbox/index.ts). 18.49.33 (Shortcut loop setup page)
+  still waits for "deploy".
