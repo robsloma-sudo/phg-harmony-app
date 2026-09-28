@@ -1714,3 +1714,15 @@ how to present info?"
 - Spec section 4A added: Airtable -> Supabase sync map, chart of accounts table, named metric functions (comp %,
   labor %, declining budget remaining ...), time-word -> period mapping, connectors table, finance knowledge set
   and presentation rules; build phase 2A. Page republished.
+
+------------------------------------------------------------------------------
+PHG-20260928-SKELETON | USER_PROMPT + DESIGN (no code, no migration) | 2026-09-28
+Rob: "I'm just an administrator setting up this app ... there could be all sorts of POS, it could be different days
+of the week ... we need to set up a structure, a model, a skeletal system that we talk through and people can ...
+set this up as we go and Harmony becomes them."
+- Spec section 4B added: admin-owned setting definitions (key, group, type, question, options, default, needed-by,
+  ask-when, infer-from); per-account settings with source/confidence/history; setup by conversation (just in time,
+  guided setup, infer-then-confirm, connect a data source by talking with reusable column mappings via
+  phg.sales_import_mappings, "what's left to set up"); per-business memory (glossary, facts/preferences, habits,
+  "What Harmony knows about you"); admin layer. Section 4A made business-neutral (Parkway FH = first test business,
+  chart of accounts = default template). Decisions reduced to phase order, migrations, voice approval, model cost.

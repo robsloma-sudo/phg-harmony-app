@@ -132,7 +132,7 @@ month", "my current week's declining budget on food expenses". Everything lands 
   `sales_analysis`, `labor_analysis`, `budget_forecasting`, `expense_analysis`, `pl_intelligence`,
   `management_dashboard`, `management_variance`, `period_review` are registered. Today: 1 sales import,
   1 budget plan, no labor or expenses.
-- **Rob's Airtable base "Parkway FH"** already holds the working data:
+- **First test business: Rob's Airtable base "Parkway FH"** (one data-source adapter among many; other businesses may use spreadsheets, other POS systems or nothing yet):
 
 | Airtable table | What's in it | Goes to (Supabase) |
 |---|---|---|
@@ -149,14 +149,14 @@ The Airtable data gives real ingredient prices now, so recipe costing can start 
 
 ### 4A.2 Chart of accounts and metric definitions
 
-- Rob's invoices already use a restaurant chart of accounts (5100 bar cost, 5200 bar mix, 5420 N/A bev, 6100 labor,
+- The first test business (Parkway FH) already uses a restaurant chart of accounts (5100 bar cost, 5200 bar mix, 5420 N/A bev, 6100 labor,
   6200 food hall, 6300 facility, 6400 G&A, 6500 marketing), in the style of the Uniform System of Accounts for
-  Restaurants. Load it as `phg.gl_accounts` (code, name, parent, type) and map every expense to it.
+  Restaurants. Ship it as the default template in `phg.gl_accounts` (code, name, parent, type, per account); each business renames or adds accounts by talking.
 - Every number Harmony says is a **named metric** defined once as a database function, never model arithmetic:
   net sales, comp %, discount %, void %, labor $ and %, hourly vs management labor, COGS $ and % by category
   (liquor, beer, wine, N/A), prime cost, declining budget remaining (budget - spent to date, by GL group, by week),
   budget vs actual variance, sales per labor hour, average check. Each metric has: definition, formula, source
-  tables, period rules (week starts Monday?), and a target/range Rob sets.
+  tables, period rules (from the business's calendar settings, 4B), and a target/range the business sets.
 - Harmony's time words map to reporting periods: "last week", "this week", "last month", "period to date", "same
   week last year".
 
@@ -174,13 +174,93 @@ The Airtable data gives real ingredient prices now, so recipe costing can start 
 
 - A **finance knowledge set** (like `phg_design` for menu design): metric definitions, healthy ranges for a bar and
   food hall, what to look at when a number moves (labor % up: sales down or hours up? which role?), and the order
-  to explain a variance. Sources: USAR, Rob's own targets, and his history once synced.
+  to explain a variance. Sources: USAR, each business's own targets (4B), and its history once synced.
 - **Presentation rules**: headline number first with the period and the target ("Labor was 24.1% last week,
   target 22"), then the one driver that explains most of the gap, then offer the detail (by day, by role).
   Declining budget always as "left to spend this week" plus a pace bar. Money rounded to dollars in speech,
   exact on screen.
 - Questions follow the same rules as section 5: "which location?" only if more than one; "gross or net?" only if
   the metric needs it.
+
+## 4B. The setup skeleton: every business sets itself up by talking to Harmony
+
+PHG is a product for many businesses. Rob is the administrator, not the only customer. Nothing specific to one
+business (its POS, week start, chart of accounts, targets, revenue centers, words it uses) is built into code.
+Instead there is a **skeleton**: a list of everything Harmony needs to know about a business, each item with the
+question to ask. Harmony fills it by talking, when it's first needed, and keeps learning. Over time Harmony
+"becomes" that business: it knows its places, words, numbers and habits.
+
+### 4B.1 Setting definitions (the skeleton, owned by the admin)
+
+`phg.setting_definitions`, edited by Rob as admin, no code change to add one:
+
+| Field | Example |
+|---|---|
+| key | `calendar.week_start` |
+| group | Calendar, Locations, Sales/POS, Labor, Purchasing, Accounting, Menus, Targets, Voice, People |
+| type | choice / number / percent / text / list / mapping / connector |
+| question | "What day does your week start?" |
+| options | Monday ... Sunday (or pulled from data) |
+| default + source | Monday (asked, can change) |
+| needed by | `labor_pct`, `declining_budget`, `sales_by_week` |
+| ask when | first use / setup interview / never (infer only) |
+| can infer from | "sales export dates", "Airtable Financial.Week" |
+
+Starter skeleton (examples, not final):
+
+- **Business**: name, type (bar, restaurant, food hall, hotel, group), locations, time zone, currency.
+- **Locations**: each location's name, address, revenue centers (bar, hall, patio, events, catering), outlets/stalls.
+- **Calendar**: week start, fiscal year start, period type (weekly, 4-4-5, monthly), day close time.
+- **Sales / POS**: which POS (Toast, Square, Clover, Lightspeed, SpotOn, other, spreadsheet), how data arrives
+  (connector, nightly export, emailed report, CSV upload), what counts as net sales, how comps/voids/discounts appear.
+- **Labor**: roles, hourly vs salaried, scheduling tool, payroll tool, whether tips are in labor %.
+- **Purchasing**: vendors/distributors, delivery days, how invoices arrive, where prices live today (spreadsheet,
+  Airtable, accounting system).
+- **Accounting**: chart of accounts (start from a restaurant template, rename/add by talking), accounting system.
+- **Targets**: labor %, COGS % per category, comp % limit, prime cost, weekly budgets by account group.
+- **Menus and recipes**: menu types, seasons, folder template preferences, units (oz vs ml), house pour sizes,
+  house technique rules (e.g. stir 6 to 8 seconds).
+- **People and permissions**: who can approve prices, publish menus, see labor and pay.
+- **Voice and style**: how much detail, spoken number style, name Harmony uses for them, when to open the app.
+
+### 4B.2 Account settings (the answers, per business)
+
+`phg.account_settings`: `account_id, key, value, source (asked | inferred | imported | default), confidence,
+confirmed_by, confirmed_at, history`. Harmony can always say where a value came from and change it on request
+("actually our week starts Tuesday").
+
+### 4B.3 How setup happens in conversation
+
+1. **Just in time** (default): when a question needs a missing setting, Harmony asks it once, then answers.
+   "Labor % needs your week. Does your week start Monday?" -> "Tuesday" -> saved -> answer.
+2. **Guided setup** (optional): "Harmony, let's set up my business" runs the skeleton group by group, skipping
+   anything it can infer, and can stop and resume any time ("let's finish setup").
+3. **Infer, then confirm**: from an uploaded POS export, Airtable base or spreadsheet, Harmony proposes values
+   ("Your exports show weeks starting Monday and two revenue centers, Bar and Hall. Right?").
+4. **Connect a data source by talking**: "Which POS do you use?" -> picks the adapter for that POS (or "other") ->
+   "How can you get me the data: a connection, a nightly export, an emailed report, or uploading a file?" ->
+   Rob/owner provides a sample -> Harmony proposes the column mapping (uses the existing
+   `phg.sales_import_mappings`) -> owner confirms -> saved and reused for every future import.
+5. **Setup status**: "What's left to set up?" lists missing settings by what they unlock ("Add your labor
+   targets to get labor alerts").
+
+### 4B.4 Harmony learns the business (memory)
+
+- **Glossary**: the business's own words mapped to PHG things ("hall" = revenue center Hall; "the stalls" =
+  outlets; "well vodka" = house pour item). Learned when Harmony asks "By 'hall' do you mean the Hall revenue
+  center?" and gets a yes.
+- **Facts and preferences**: "prices are always rounded to the dollar", "Fridays have live music", "don't read
+  me decimals". Stored with source and date; shown in a "What Harmony knows about you" page where anything can
+  be corrected or deleted.
+- **Habits**: frequent questions become one-tap shortcuts and faster defaults (always Bar revenue center,
+  always last week).
+- Memory is per business and per person; never shared across accounts.
+
+### 4B.5 Admin layer (Rob)
+
+Rob manages the skeleton itself: setting definitions, question wording, folder templates, chart-of-accounts
+templates, metric definitions, POS adapters, and the question bank. Each business only answers; the admin
+decides what can be asked. Changes apply to every business without code.
 
 ---
 
@@ -438,7 +518,7 @@ native iPhone app later.
 | 4 | **Folders workspace** (folders, links, records, templates, Finance/Training views) | Migration: workspace tables + new write actions |
 | 5 | **Voice building** of recipes and preps (capture loop, ingredient matching, nested preps, save to folder, cost pending) | New Command Center actions |
 | 6 | **Talk-over** in the app (option 1, then maybe realtime) | Frontend + tuning on Rob's phone |
-| 2A | **Finance data**: Airtable sync, chart of accounts, metric functions, finance knowledge set | Migration + Rob's metric targets |
+| 2A | **Setup skeleton + finance data**: setting definitions, account settings, glossary/memory, guided setup, data-source adapters and mappings, chart-of-accounts template, metric functions | Migration; Rob as admin writes the first skeleton with Harmony |
 | 7 | **Costing live** in Finance views as prices arrive | Airtable prices first, invoices later |
 | Later | Invoice photos -> vision model -> prices; food side; native iPhone app | Separate decisions |
 
@@ -447,13 +527,13 @@ above, run before every deploy.
 
 ---
 
-## 12. Decisions for Rob
+## 12. Decisions for Rob (as admin)
 
-1. Start order: recommend Phase 1 (map control, no migration) and Phase 2 (knowledge map) in parallel.
-2. Approve the migrations as each phase starts (read-only gateway; workspace tables; new write actions).
-3. Voice approval: is a spoken "yes" enough for creating drafts, folders and ingredients? (Recommended yes;
+1. Start order: recommend Phase 1 (map control, no migration), Phase 2 (knowledge map) and Phase 2A (setup
+   skeleton) together, since every later feature reads settings.
+2. Approve the migrations as each phase starts.
+3. Voice approval: is a spoken "yes" enough for drafts, folders, ingredients and settings? (Recommended yes;
    prices, publishing and deletes stay on-screen.)
-4. Model cost: stronger model for the dialogue manager and navigator (recommended), and later the
-   realtime voice option.
-5. Off-limits data beyond the default list (staff, sales, labor details?).
-6. Folder templates: confirm the Seasonal menu layout in 6.2 or change it.
+4. Model cost: stronger model for the dialogue manager and navigator (recommended).
+5. Business-specific details (POS, week start, targets, accounting system) are **not decided here**: each business
+   answers them through Harmony. Rob's Parkway FH Airtable is the first test business.

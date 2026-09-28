@@ -326,8 +326,9 @@ PHG-039 | OPEN | P2 | Invoice photos -> vision model -> purchase_costs. Deferred
   Costing schema is ready and empty; recipes save with "cost pending" until then.
 PHG-040 | OPEN | P1 | Live-only sources: phg-command-center, phg-language-interpreter, phg-conversation,
   phg-orchestrator, phg-capability-router, phg-harmony-reason (and ~70 others) are not in git. Pull before editing.
-PHG-041 | OPEN | P1 | needs Rob | Finance data into Supabase: approve Airtable "Parkway FH" -> Supabase sync (one-way),
-  gl_accounts + metric functions migration; confirm accounting system (QuickBooks?), Toast export route
-  (SFTP export or emailed reports via Gmail), week start day and metric targets. (2026-09-28)
+PHG-041 | OPEN | P1 | needs Rob | Setup skeleton + finance data (spec 4A/4B): setting_definitions, account_settings,
+  glossary/memory, data-source adapters + mappings, gl_accounts template, metric functions. Business details (POS,
+  week start, targets, accounting system) are answered per business through Harmony, not decided by Rob. Parkway FH
+  Airtable = first test business. Needs migration approval. (2026-09-28, revised same day)
 PHG-042 | OPEN | P1 | security | Airtable "Vendors/People/Login Info" stores usernames and passwords in plain fields.
   Never sync them; recommend moving them to a password manager. (2026-09-28)
