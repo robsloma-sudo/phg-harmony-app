@@ -76,3 +76,26 @@ that no PHG-026 object exists). Script: handoff/reviews/rehearsal/rehearse_all.s
   returned 4 and restored the 10-arg overload.
 - Header estimate corrected to ~350 (348) and the 7.7 s lock documented.
 - Note: empty_capture_ignored returns the current menu's id as menu_id (intended: the caller keeps pointing at it).
+
+## Round 2 (2026-09-28, commit 97a738b)
+| Reviewer | R1 | R2 | Average | Gate (>80) |
+|---|---|---|---|---|
+| Spec | 62.5 | 76.7 | 69.6 | not met |
+| Safety | 78 | 78 | 78.0 | not met |
+
+Blocking:
+- SB1 / spec C17 (live designer gateway role escape): CONFIRMED live and FIXED + applied the same day (migrations
+  20260928050000 security-definer owned by phg_menu_designer; 20260928051000 refuses session-side-effect functions:
+  advisory locks, set_config, notify, sleep, signalling, lo_, dblink, net/cron/vault). Re-probed live: refused.
+- SB2 / spec C7: function rollback must drop menus_one_current_per_account first (live 10-arg body inserts before it
+  demotes), re-apply revokes, and be rehearsed with a real submit_menu call afterwards.
+- Spec C16 / safety SF6: verification script false-fails after cron resumes; split into release gate + monitor.
+- Spec C15/C8/C9 / safety SF4: rehearse steps 3-4 (timed), staging rollback, promote_clean_menu_batch(1), one
+  sibling-duplicate extraction save, and the verification SQL.
+Non-blocking (to be addressed in round 3): SF1 price enrichment treated as duplicate; SF2 lock_timeout + one-transaction
+runbook note; SF3 rollback skip test by backup membership + full row restore; SF5 revokes + service_role write on def
+backup; SF7 enforce p_pages <= 5; SF8 enumerate other is_current writers; SF10 score-gate NULL layout check;
+spec: persist round-1 spec text, independent 119-damaged-venue check, report item-page / old-menu picks, caller
+status handling evidence, near-identical flip-flop damping, migration ordering vs db push.
+Note: neither reviewer could reach the database this round (no Supabase tool in their sessions); round 3 hands them the
+rehearsal output instead.
