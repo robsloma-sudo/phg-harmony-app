@@ -960,7 +960,7 @@
           "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
           "figure": "cantarito",
           "featured": true,
-          "card_h_pt": 480,
+          "card_h_pt": 354,
           "face_h_pt": 117,
           "figure_pt": 105,
           "items": [
@@ -981,7 +981,7 @@
           "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
           "figure": "bottle",
           "featured": false,
-          "card_h_pt": 360,
+          "card_h_pt": 276,
           "face_h_pt": 117,
           "figure_pt": 105,
           "items": [
@@ -1001,7 +1001,7 @@
           "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
           "figure": "rose",
           "featured": false,
-          "card_h_pt": 360,
+          "card_h_pt": 264,
           "face_h_pt": 117,
           "figure_pt": 105,
           "items": [
@@ -1021,7 +1021,7 @@
           "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
           "figure": "barrel",
           "featured": false,
-          "card_h_pt": 360,
+          "card_h_pt": 306,
           "face_h_pt": 117,
           "figure_pt": 105,
           "items": [
@@ -1215,7 +1215,7 @@
       "manhattan": "'Rye, sweet vermouth and aromatic bitters.' (the venue's own menu_description words). 'Spirit-forward' (a class label) dropped; 'rye whiskey' shortened to 'rye'.",
       "brut_rose_price": "Prints like every other price under 'Espumoso · Sparkling', unlabelled. The empty glass / bottle label is asked in needs_input only.",
       "structure_changes": "The draft's own subheads are restored in one pattern, SPANISH · English ('y' only in Spanish, '&' only in English): Cocktails 'Clásicos · Classics' (Margarita first) then 'De la Casa · House Originals'; Spirits 'Agave · Agave' then 'Brandy · Brandy'; Beer 'De Barril · Draft' then the draft's own Cider section as 'Sidra · Cider'; Wine 'Por Copa · By the Glass' then 'Espumoso · Sparkling'. No section or subsection is merged in doc.json. 'Tintos, Blancos y Espumoso' and 'Cerveza & Sidra' are gone.",
-      "card_layout": "2 + 2 tabla with a per-column break: columns 261 / 261 pt, 18 pt gutter, 12 pt between cards. Column 1: El Cantarito 480 pt + 12 + La Rosa 360 pt; column 2: La Botella 360 pt + 12 + El Barril 360 pt; deck 900 pt on a 6 pt row grid. Card tops, faces, name bands, subheads and item rows all sit on 6 pt steps from the deck top.",
+      "card_layout": "2 + 2 tabla with a per-column break: columns 261 / 261 pt, 18 pt gutter, 12 pt between cards. Column 1: El Cantarito 354 pt + 12 + La Rosa 264 pt; column 2: La Botella 276 pt + 12 + El Barril 306 pt; deck 630 pt on a 6 pt row grid. Card tops, faces, name bands, subheads and item rows all sit on 6 pt steps from the deck top.",
       "break_note": "Shared rows cannot hold 12 pt or less of empty space per card with this content (El Cantarito needs about 90 pt more than La Botella), and El Barril (4 items, 2 subheads) under El Cantarito would make column 1 about 138 pt taller than column 2. So each column breaks at its own line and La Rosa sits under El Cantarito, El Barril under La Botella; the lower name bands are therefore not aligned across the gutter.",
       "retired_junmai_ginjo": "Junmai Ginjo is a phg.menu_items row that is not in draft_doc.json; it is intentionally left off pending the venue's decision.",
       "palette_note": "Four hues: terracotta (El Cantarito), ink (La Botella), agave green (El Barril), lotería rosa (La Rosa); marigold is the accent (papel picado and figure details). La Botella's prices and subhead rules are deep marigold #8C5A00 (5.41:1 on the card) so they no longer print flat black like its names."

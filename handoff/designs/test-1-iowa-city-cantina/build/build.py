@@ -237,9 +237,9 @@ body { -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:'
 .page { width:612pt; height:792pt; padding:36pt; background:$cream; display:flex; flex-direction:column; margin:0 auto; }
 .banner { display:block; width:540pt; height:36pt; flex:none; }
 .banner-m, .tabs { display:none; }
-.title { font-family:'Fraunces', serif; font-weight:700; font-size:24pt; line-height:30pt; height:30pt; letter-spacing:-0.3pt; text-align:center; margin:12pt 0 0; }
+.title { font-family:'Fraunces', serif; font-weight:700; font-size:24pt; line-height:30pt; height:30pt; letter-spacing:-0.3pt; text-align:center; margin:6pt 0 0; }
 .title .amp { color:$terra; font-style:italic; font-weight:600; }
-.loc { text-align:center; font-size:8.5pt; line-height:12pt; height:12pt; letter-spacing:3pt; text-transform:uppercase; color:$muted; font-weight:500; margin:6pt 0 18pt; }
+.loc { text-align:center; font-size:8.5pt; line-height:12pt; height:12pt; letter-spacing:3pt; text-transform:uppercase; color:$muted; font-weight:500; margin:0 0 6pt; }
 .num { font-family:'Fraunces', serif; font-weight:700; color:var(--pc, var(--c, $terra)); font-variant-numeric:lining-nums tabular-nums; font-feature-settings:'tnum' 1,'lnum' 1; }
 .nw { white-space:nowrap; }
 .deck { flex:none; display:grid; grid-template-columns:261pt 261pt; grid-template-rows:repeat(${nrows}, 6pt); column-gap:18pt; row-gap:0; height:${deck}pt; }
