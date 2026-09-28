@@ -5,7 +5,7 @@ DECLARE
   cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x uuid;
   rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
   secs10 jsonb; gres jsonb := '{}'; skip_acct text; multi_acct text; stg_acct text; stg_url text; snap jsonb; snap2 jsonb;
-  n1 int; n2 int; tid uuid; pid uuid; dlayout jsonb; ddoc jsonb; secs11 jsonb; w jsonb; mon_sql text;
+  n1 int; n2 int; tid uuid; pid uuid; dlayout jsonb; ddoc jsonb; secs11 jsonb; wres jsonb; mon_sql text;
   e_state text; e_msg text; e_ctx text; e_det text;
 BEGIN
   set local statement_timeout = '58s';
@@ -954,7 +954,7 @@ $rehearse_f2$;
      'venues_done', (select count(*) from public.phg_repair_step3_done)));
   -- Step 4: phg_repair_step4_batch(200)
   calls := '[]'; rem := -1;
-  WHILE rem <> 0 and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 1 LOOP
+  WHILE rem <> 0 and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 0 LOOP
     t0 := clock_timestamp();
     rem := public.phg_repair_step4_batch(200);
     calls := calls || jsonb_build_object('ms', round(extract(epoch from clock_timestamp()-t0)*1000), 'remaining_venues', rem);
@@ -1109,7 +1109,7 @@ select * from (values
   ('cron 7 and 13 exist and are still paused',                      (select ok from cron_paused),       (select v from cron_paused))
 ) v(check_name, pass, value)
 $rehearse_rbc$ || ') g' INTO v;
-    w := jsonb_build_object('checks', v, 'checks_all_pass', (select bool_and((x->>'pass')::boolean) from jsonb_array_elements(v) x), 'checks_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
+    wres := jsonb_build_object('checks', v, 'checks_all_pass', (select bool_and((x->>'pass')::boolean) from jsonb_array_elements(v) x), 'checks_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
     t0 := clock_timestamp();
     EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || $rehearse_rbc$
 -- Skipped venues (the rollback left them exactly as they were) and backed-up staging pages still superseded by the
@@ -1135,12 +1135,12 @@ select b.account_id, 'staging_page_not_restored',
  group by b.account_id, b.menu_page_url
  order by 1, 2, 3
 $rehearse_rbc$ || ') g' INTO v;
-    w := w || jsonb_build_object('review_candidates', coalesce(v, '[]'::jsonb), 'review_candidates_n', coalesce(jsonb_array_length(v), 0), 'review_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
+    wres := wres || jsonb_build_object('review_candidates', coalesce(v, '[]'::jsonb), 'review_candidates_n', coalesce(jsonb_array_length(v), 0), 'review_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
   EXCEPTION WHEN others THEN 
       GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-      w := w || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
+      wres := wres || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
   END;
-  r := r || jsonb_build_object('rollback_check', w); w := '{}';
+  r := r || jsonb_build_object('rollback_check', wres); wres := '{}';
   -- function rollback, then ONE submit_menu call (the restored live 15-arg body) on a venue with a current menu
   t0 := clock_timestamp();
   BEGIN
@@ -1178,6 +1178,10 @@ $rehearse_rbc$ || ') g' INTO v;
                  jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
            where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
        'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
+  v := v || jsonb_build_object('step3', r->'step3', 'gate', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 50), 'pass', x->'pass', 'v', left(x->>'value', 400))) from jsonb_array_elements(r->'release_gate') x),
+    'rollback', r->'repair_rollback'->'result', 'rollback_check', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 70), 'pass', x->'pass', 'v', left(x->>'value', 300))) from jsonb_array_elements(r->'rollback_check'->'checks') x),
+    'rbc_all_pass', r->'rollback_check'->'checks_all_pass', 'review_candidates_n', r->'rollback_check'->'review_candidates_n', 'rbc_ms', jsonb_build_object('checks', r->'rollback_check'->'checks_ms', 'review', r->'rollback_check'->'review_ms'),
+    'fn_rb', r->'function_rollback_and_submit' - 'submit_after_rollback', 'submit_after', (r->'function_rollback_and_submit'->'submit_after_rollback')->>'status');
   RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;

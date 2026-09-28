@@ -1,1 +1,1 @@
-{"row1": 360, "row2": 258, "deck": 630, "xg": {"1": 0, "2": 0, "3": 0, "4": 0}, "face": {"1": 105, "2": 177, "3": 105, "4": 141}}
+{"order": "beer_top", "row1": 366, "row2": 252, "deck": 630, "face": {"row1": 99, "row2": 99}, "foot": {"sec_cocktails": 0, "sec_beer": 84, "sec_wine": 0, "sec_spirits": 0}, "order_note": "content heights (no face, no foot) {'sec_cocktails': 267, 'sec_beer': 183, 'sec_wine': 153, 'sec_spirits': 153}; agave_top: needs 660 pt with 99 pt faces; deck is 630 pt; beer_top: fits"}

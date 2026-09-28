@@ -5,7 +5,7 @@ DECLARE
   cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x uuid;
   rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
   secs10 jsonb; gres jsonb := '{}'; skip_acct text; multi_acct text; stg_acct text; stg_url text; snap jsonb; snap2 jsonb;
-  n1 int; n2 int; tid uuid; pid uuid; dlayout jsonb; ddoc jsonb; secs11 jsonb; w jsonb; mon_sql text;
+  n1 int; n2 int; tid uuid; pid uuid; dlayout jsonb; ddoc jsonb; secs11 jsonb; wres jsonb; mon_sql text;
   e_state text; e_msg text; e_ctx text; e_det text;
 BEGIN
   set local statement_timeout = '58s';
@@ -1085,7 +1085,7 @@ select * from (values
   ('cron 7 and 13 exist and are still paused',                      (select ok from cron_paused),       (select v from cron_paused))
 ) v(check_name, pass, value)
 $rehearse_rbc$ || ') g' INTO v;
-    w := jsonb_build_object('checks', v, 'checks_all_pass', (select bool_and((x->>'pass')::boolean) from jsonb_array_elements(v) x), 'checks_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
+    wres := jsonb_build_object('checks', v, 'checks_all_pass', (select bool_and((x->>'pass')::boolean) from jsonb_array_elements(v) x), 'checks_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
     t0 := clock_timestamp();
     EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || $rehearse_rbc$
 -- Skipped venues (the rollback left them exactly as they were) and backed-up staging pages still superseded by the
@@ -1111,12 +1111,12 @@ select b.account_id, 'staging_page_not_restored',
  group by b.account_id, b.menu_page_url
  order by 1, 2, 3
 $rehearse_rbc$ || ') g' INTO v;
-    w := w || jsonb_build_object('review_candidates', coalesce(v, '[]'::jsonb), 'review_candidates_n', coalesce(jsonb_array_length(v), 0), 'review_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
+    wres := wres || jsonb_build_object('review_candidates', coalesce(v, '[]'::jsonb), 'review_candidates_n', coalesce(jsonb_array_length(v), 0), 'review_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
   EXCEPTION WHEN others THEN 
       GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-      w := w || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
+      wres := wres || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
   END;
-  r := r || jsonb_build_object('rollback_check', w); w := '{}';
+  r := r || jsonb_build_object('rollback_check', wres); wres := '{}';
   -- the review list must name the two skipped venues and the re-extracted page
   r := r || jsonb_build_object('G_review_list_pass', coalesce((r->'rollback_check'->>'checks_all_pass')::boolean, false)
         and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = skip_acct and x->>'review_reason' = 'skipped_newer_menu')

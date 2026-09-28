@@ -92,7 +92,7 @@ DECLARE
   cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x uuid;
   rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
   secs10 jsonb; gres jsonb := '{{}}'; skip_acct text; multi_acct text; stg_acct text; stg_url text; snap jsonb; snap2 jsonb;
-  n1 int; n2 int; tid uuid; pid uuid; dlayout jsonb; ddoc jsonb; secs11 jsonb; w jsonb; mon_sql text;
+  n1 int; n2 int; tid uuid; pid uuid; dlayout jsonb; ddoc jsonb; secs11 jsonb; wres jsonb; mon_sql text;
   e_state text; e_msg text; e_ctx text; e_det text;
 BEGIN
   set local statement_timeout = '58s';"""
@@ -449,21 +449,21 @@ $rehearse_mon$;
       update public.menus set is_current = false, superseded_by = cur2, superseded_reason = 'rehearsal_forged', superseded_at = clock_timestamp() where id = cur_id;
       update public.menus set is_current = true, superseded_by = null, superseded_reason = null, superseded_at = null where id = cur2;
       EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g where g.check_name ~ ' || quote_literal('smaller') INTO v;
-      w := jsonb_build_object('venue', skip_acct, 'shrunk_forged', v);
+      wres := jsonb_build_object('venue', skip_acct, 'shrunk_forged', v);
       update public.menus set superseded_reason = 'same_source_recapture' where id = cur_id;
       EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g where g.check_name ~ ' || quote_literal('smaller') INTO v;
-      w := w || jsonb_build_object('shrunk_same_page_allowed', v);
+      wres := wres || jsonb_build_object('shrunk_same_page_allowed', v);
       update public.menus m set superseded_at = clock_timestamp(), superseded_reason = 'newer_near_identical_capture'
        where m.id in (select id from public.menus where account_id = '{ACCT}' order by id limit 1)
           or m.id in (select id from public.menus where account_id = '{PROMO_ACCT}' and not is_current order by id limit 3);
       EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g where g.check_name ~ ' || quote_literal('flip-flop') INTO v;
-      w := w || jsonb_build_object('flipflop_forged', v);
-      w := w || jsonb_build_object('pass', not (w->'shrunk_forged'->0->>'pass')::boolean and (w->'shrunk_same_page_allowed'->0->>'pass')::boolean
-                                        and not (w->'flipflop_forged'->0->>'pass')::boolean);
+      wres := wres || jsonb_build_object('flipflop_forged', v);
+      wres := wres || jsonb_build_object('pass', not (wres->'shrunk_forged'->0->>'pass')::boolean and (wres->'shrunk_same_page_allowed'->0->>'pass')::boolean
+                                        and not (wres->'flipflop_forged'->0->>'pass')::boolean);
       RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback forged monitor';
     EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
     END;
-    c := c || jsonb_build_object('monitor_new_rows_forged', w);
+    c := c || jsonb_build_object('monitor_new_rows_forged', wres);
     update public.phg_repair_run_20260927 set ran_at = '2026-09-27 00:00:00+00' where step = 'step2';
     EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g' INTO v;
     c := c || jsonb_build_object('monitor_replay_incident_window', v);
@@ -555,14 +555,14 @@ RBC = f"""
   BEGIN
     EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || $rehearse_rbc${rbc1}
 $rehearse_rbc$ || ') g' INTO v;
-    w := jsonb_build_object('checks', v, 'checks_all_pass', (select bool_and((x->>'pass')::boolean) from jsonb_array_elements(v) x), 'checks_ms', {MS});
+    wres := jsonb_build_object('checks', v, 'checks_all_pass', (select bool_and((x->>'pass')::boolean) from jsonb_array_elements(v) x), 'checks_ms', {MS});
     t0 := clock_timestamp();
     EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || $rehearse_rbc${rbc2}
 $rehearse_rbc$ || ') g' INTO v;
-    w := w || jsonb_build_object('review_candidates', coalesce(v, '[]'::jsonb), 'review_candidates_n', coalesce(jsonb_array_length(v), 0), 'review_ms', {MS});
-  EXCEPTION WHEN others THEN {soft_err('ERROR', 'w')}
+    wres := wres || jsonb_build_object('review_candidates', coalesce(v, '[]'::jsonb), 'review_candidates_n', coalesce(jsonb_array_length(v), 0), 'review_ms', {MS});
+  EXCEPTION WHEN others THEN {soft_err('ERROR', 'wres')}
   END;
-  r := r || jsonb_build_object('rollback_check', w); w := '{{}}';"""
+  r := r || jsonb_build_object('rollback_check', wres); wres := '{{}}';"""
 
 
 FN_RB = f"""
@@ -616,7 +616,12 @@ ROLLFWD = f"""
 C = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(1, 1, 1, 500) + END
 # D: a few batches of each step, then the gate, the repair rollback (with staging restore), function rollback + submit
 # D: one Step 3 call and one Step 4 call, then the gate, the repair rollback (with staging restore), function rollback + submit
-D = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(1, 1, 1) + GATE + REPAIR_RB + RBC + FN_RB + END
+# round 5: D skips the Step 4 call (timed in C and E) to make room for phg_026_rollback_check.sql under the 58 s limit
+D = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(1, 0, 1) + GATE + REPAIR_RB + RBC + FN_RB + END.replace("  RAISE EXCEPTION 'REHEARSAL SUMMARY", """  v := v || jsonb_build_object('step3', r->'step3', 'gate', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 50), 'pass', x->'pass', 'v', left(x->>'value', 400))) from jsonb_array_elements(r->'release_gate') x),
+    'rollback', r->'repair_rollback'->'result', 'rollback_check', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 70), 'pass', x->'pass', 'v', left(x->>'value', 300))) from jsonb_array_elements(r->'rollback_check'->'checks') x),
+    'rbc_all_pass', r->'rollback_check'->'checks_all_pass', 'review_candidates_n', r->'rollback_check'->'review_candidates_n', 'rbc_ms', jsonb_build_object('checks', r->'rollback_check'->'checks_ms', 'review', r->'rollback_check'->'review_ms'),
+    'fn_rb', r->'function_rollback_and_submit' - 'submit_after_rollback', 'submit_after', (r->'function_rollback_and_submit'->'submit_after_rollback')->>'status');
+  RAISE EXCEPTION 'REHEARSAL SUMMARY""")
 # E: promote_clean_menu_batch(1) on a re-staged incident sibling page, one more Step 4 call, then the function
 #    rollback + submit_menu again (its catalog check fixed to run in a separate statement)
 E = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + PROMOTE + steps(0, 1, 0) + ROLLFWD + FN_RB + END

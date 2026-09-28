@@ -5,7 +5,7 @@ DECLARE
   cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x uuid;
   rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
   secs10 jsonb; gres jsonb := '{}'; skip_acct text; multi_acct text; stg_acct text; stg_url text; snap jsonb; snap2 jsonb;
-  n1 int; n2 int; tid uuid; pid uuid; dlayout jsonb; ddoc jsonb; secs11 jsonb; w jsonb; mon_sql text;
+  n1 int; n2 int; tid uuid; pid uuid; dlayout jsonb; ddoc jsonb; secs11 jsonb; wres jsonb; mon_sql text;
   e_state text; e_msg text; e_ctx text; e_det text;
 BEGIN
   set local statement_timeout = '58s';
@@ -1128,21 +1128,21 @@ $rehearse_mon$;
       update public.menus set is_current = false, superseded_by = cur2, superseded_reason = 'rehearsal_forged', superseded_at = clock_timestamp() where id = cur_id;
       update public.menus set is_current = true, superseded_by = null, superseded_reason = null, superseded_at = null where id = cur2;
       EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g where g.check_name ~ ' || quote_literal('smaller') INTO v;
-      w := jsonb_build_object('venue', skip_acct, 'shrunk_forged', v);
+      wres := jsonb_build_object('venue', skip_acct, 'shrunk_forged', v);
       update public.menus set superseded_reason = 'same_source_recapture' where id = cur_id;
       EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g where g.check_name ~ ' || quote_literal('smaller') INTO v;
-      w := w || jsonb_build_object('shrunk_same_page_allowed', v);
+      wres := wres || jsonb_build_object('shrunk_same_page_allowed', v);
       update public.menus m set superseded_at = clock_timestamp(), superseded_reason = 'newer_near_identical_capture'
        where m.id in (select id from public.menus where account_id = 'ACC-CO-LED-03-25486' order by id limit 1)
           or m.id in (select id from public.menus where account_id = 'ACC-CO-LED-03-06531' and not is_current order by id limit 3);
       EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g where g.check_name ~ ' || quote_literal('flip-flop') INTO v;
-      w := w || jsonb_build_object('flipflop_forged', v);
-      w := w || jsonb_build_object('pass', not (w->'shrunk_forged'->0->>'pass')::boolean and (w->'shrunk_same_page_allowed'->0->>'pass')::boolean
-                                        and not (w->'flipflop_forged'->0->>'pass')::boolean);
+      wres := wres || jsonb_build_object('flipflop_forged', v);
+      wres := wres || jsonb_build_object('pass', not (wres->'shrunk_forged'->0->>'pass')::boolean and (wres->'shrunk_same_page_allowed'->0->>'pass')::boolean
+                                        and not (wres->'flipflop_forged'->0->>'pass')::boolean);
       RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback forged monitor';
     EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
     END;
-    c := c || jsonb_build_object('monitor_new_rows_forged', w);
+    c := c || jsonb_build_object('monitor_new_rows_forged', wres);
     update public.phg_repair_run_20260927 set ran_at = '2026-09-27 00:00:00+00' where step = 'step2';
     EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g' INTO v;
     c := c || jsonb_build_object('monitor_replay_incident_window', v);
