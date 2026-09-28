@@ -95,3 +95,11 @@ Round 16:
 - Cocktail leads from method rows.
 - Put doc.json section order in line with print.
 - Try agave top-right.
+
+## Round 16 (shared band line, card foot, method leads, Manhattan follows the draft)
+Combined 72.399 (critic 73.6, content 74.0, accuracy 69.6). Not above round 15 (72.597), so round 15 stays best.
+- Aligning the bands raised the critic score.
+- Accuracy fell. The "poured straight" serve on the spirits has no source (the recipe fields are null), and the name-echo tags ("Malbec · dry red") auto-fail criterion 12.
+- The El Barril foot reads as filler.
+- 13 of the 15 reviews were re-run after a usage-limit stop (06:00 UTC reset).
+Paused after round 16: Rob has loaded the phg_design knowledge base (938 records) and new reference concepts. The loop resumes once the designer and critics have been updated from it.
