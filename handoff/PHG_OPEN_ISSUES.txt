@@ -318,3 +318,11 @@ PHG-038 | OPEN | P1 | needs Rob | Harmony "ask anything in Supabase by conversat
   describe table, sample distinct values, read-only SQL through a gateway like phg_designer_query, ask the user) with
   grounded clarifying questions, account scoping, PII/secret exclusions. Needs Rob's scope decisions and a migration
   approval (read-only role + dictionary). (2026-09-28)
+PHG-038 (update 2026-09-28) | Full design in handoff/HARMONY_CONVERSATION_MODEL.md. Phases: 0 pull live-only sources
+  into git; 1 screen command bus + controllable map (frontend only); 2 knowledge map + navigator (migration);
+  3 dialogue manager (jobs/slots/parking, wire goals/referents); 4 folders workspace (migration); 5 voice recipe
+  building (new Command Center actions); 6 in-app talk-over; 7 live costing. Needs Rob's decisions (section 12).
+PHG-039 | OPEN | P2 | Invoice photos -> vision model -> purchase_costs. Deferred by Rob 2026-09-28 ("table that").
+  Costing schema is ready and empty; recipes save with "cost pending" until then.
+PHG-040 | OPEN | P1 | Live-only sources: phg-command-center, phg-language-interpreter, phg-conversation,
+  phg-orchestrator, phg-capability-router, phg-harmony-reason (and ~70 others) are not in git. Pull before editing.

@@ -1671,3 +1671,28 @@ and Harmony keeps going back to just a classic Manhattan recipe." / "pull any in
   summary. That is the deep-data model Rob asked for; proposal sent to Rob, needs decisions.
 - Source for v12-v15 committed (supabase/functions/phg-harmony-inbox/index.ts). 18.49.33 (Shortcut loop setup page)
   still waits for "deploy".
+
+------------------------------------------------------------------------------
+PHG-20260928-CONVMODEL | USER_PROMPT + DESIGN (no code, no migration) | 2026-09-28
+Rob asked to expand the "any data by conversation" model much further: "give me all the margaritas on a specific
+venue from a specific city, from a specific state"; "add a new house cocktail to my seasonal cocktail 2026 folder";
+nested folders for menus, recipes, recipe books, ingredients and seasons, with Finance and Training folders inside
+a seasonal menu ("this needs to be an all open ended open database system that we build out as we talk through it");
+"let's build a new dish ... I start with 800 grams of salt and I add that to one liter of water" with read-back,
+ingredient matching, auto costing and distributors; map control by voice ("zoom in", "zoom in on Don Julio",
+"filter out venues"); and "always stop talking whenever I start talking again". Food can wait. Invoice photos ->
+vision prices: "table that", build the financial links now.
+- Research (read-only): ~300 tables (phg 137, public 123, phg_design 21, phg_flavor 15). Existing foundation:
+  33-capability registry; Command Center proposal/token writes (9 action keys); phg-language-interpreter;
+  conversations/goals/plans/tasks/conversation_referents built 2026-09-20 but not wired to the app; costing schema
+  (units, prep_recipes nestable, recipe_components, vendors, procurement_catalog_items, purchase_costs,
+  recipe_cost_snapshots) exists but is empty; menu_projects.season is flat text; no folders anywhere. App: talk mode
+  is turn-based (mic off while speaking, tap to interrupt); data-canvas map has no programmatic zoom/focus/filter
+  and does not keep pins. Most command/interpreter/conversation function sources are live-only, not in git.
+- Wrote handoff/HARMONY_CONVERSATION_MODEL.md (also published as a page for Rob): jobs + slots + question rules +
+  question bank; knowledge map of ~35 things over the tables, join paths, navigator loop with read-only gateway and
+  whitelist; folders workspace (folders, links, open entity types, free-form records, templates, computed Finance /
+  Training views); voice building of preps and drinks (capture loop, units, corrections, ingredient matching,
+  nested preps, cost pending, one-yes save); screen command bus (map zoom/focus/filter/select, brand card, library,
+  folders, studio); barge-in (in-app listener during speech first, realtime voice model later; not possible from
+  the Action button); safety; 7-phase plan; 6 decisions for Rob.
