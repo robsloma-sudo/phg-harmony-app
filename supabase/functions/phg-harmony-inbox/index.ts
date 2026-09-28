@@ -6,7 +6,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
    AUTH (deployed with verify_jwt=false; this function authenticates itself):
      - the app:      Authorization: Bearer <user JWT>   (validated with auth.getUser)
-     - the Shortcut: x-harmony-key: <personal key>      (SHA-256 looked up in
+     - the Shortcut: x-api-key (or x-harmony-key, or body "key"): <personal key>  (SHA-256 looked up in
                      phg.harmony_device_keys; never stored in plaintext)
    Key management (issue/list/revoke) requires the app login, never a key.
 
@@ -23,7 +23,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-harmony-key",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-harmony-key, x-api-key",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const json = (x: unknown, s = 200) =>
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
   // ---- who is calling
   let userId: string | null = null, accountId: string | null = null, via: "app" | "shortcut" = "app";
   const bearer = (req.headers.get("Authorization") || "").replace(/^bearer\s+/i, "").trim();
-  const hkey = (req.headers.get("x-harmony-key") || String(b.key || "")).trim();
+  const hkey = (req.headers.get("x-harmony-key") || req.headers.get("x-api-key") || String(b.key || "")).trim();
   if (hkey) {
     if (!/^hk_[A-Za-z0-9_-]{30,}$/.test(hkey)) return json({ ok: false, speak: "That Harmony key doesn't look right.", error: "bad key" }, 401);
     let k: any = null;

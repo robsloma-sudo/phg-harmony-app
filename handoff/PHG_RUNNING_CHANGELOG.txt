@@ -1509,3 +1509,17 @@ look instead of walking through people through steps. Make it easy on people."
   so Headers stay empty. handoff/harmony_shortcut_finished.png is the annotated version sent in chat.
 - Also in this build: stale error banners clear on retry (faf8d1c).
 - DEPLOY NOTE: img/harmony-shortcut.jpg must be pushed to main with index.html.
+
+------------------------------------------------------------------------------
+PHG-20260928-SHORTCUTLIVE | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.30, branch; phg-harmony-inbox v4 live)
+Rob: "Now wrap the URL and the font and text that's off the page and end it in the boxes it's supposed to be filled
+in for. And then make it scrollable ... still keep the address and the key click copyable ... Also add x-api-key as
+another copy clickable string of text."
+- The picture is replaced by a live HTML copy of the finished Shortcut page inside the Action button panel
+  (scPage): every value wraps inside its own box, the panel scrolls, and each value you type into Shortcuts is a
+  tap-to-copy chip in the box it belongs in: address, header name x-api-key, your key (appears in the Headers box
+  right after Create my key; scrolls into view), and the field names text, speak, url. img/harmony-shortcut.jpg removed.
+- phg-harmony-inbox v4: accepts the key from the x-api-key header (also x-harmony-key or body "key"); CORS allows
+  x-api-key. Live check via pg_net with x-api-key and an unknown key -> 401 "isn't valid anymore" (lookup ran).
+- Headless check at 375px: no horizontal overflow (scrollWidth = clientWidth 351), panel scrolls (1686 > 592),
+  all 6 chips copy the right strings, zero page errors.

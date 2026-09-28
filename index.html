@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.29 ACTION BUTTON FIX + PICTURE SETUP · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.30 ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -40510,8 +40510,30 @@ body.pms-open .hvxSheet button.nomenu{display:none!important}
 .hvxCopy code{flex:1;min-width:0;font:500 12px/1.4 'JetBrains Mono',monospace;color:#e0f7ff;word-break:break-all}
 .hvxCopy button{flex:0 0 auto;height:34px;padding:0 14px;border-radius:17px;border:0;background:#0e7490;color:#fff;font:600 13px 'Inter',sans-serif;cursor:pointer}
 .hvxWarn{margin:6px 0;padding:10px 12px;border-radius:12px;background:rgba(253,230,138,.10);color:#fde68a;font-size:13px;line-height:1.4}
-.hvxShot{display:block;margin:16px 0 0;border-radius:18px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(103,232,249,.22),0 10px 30px rgba(0,0,0,.5);background:#000}
-.hvxShot img{display:block;width:100%;height:auto}
+.scPage{margin:0;padding:14px 10px 16px;border-radius:20px;background:#000;box-shadow:inset 0 0 0 1px rgba(103,232,249,.22);font-family:'Inter',system-ui,-apple-system,sans-serif;color:#fff;display:flex;flex-direction:column;gap:10px;min-width:0}
+.scTop{display:flex;justify-content:space-between;align-items:center;padding:0 4px 4px;font-size:15px}.scTop span{color:#0a84ff}.scTop b{font-weight:600}
+.scCard{background:#1c1c1e;border-radius:16px;padding:11px 12px;font-size:16px;line-height:1.45;font-weight:500;min-width:0;overflow-wrap:anywhere}
+.scCard.in{margin-left:18px}.scCard.dim{color:#8e8e93;font-size:15px}
+.scH{display:flex;align-items:center;gap:8px;min-width:0}.scH.wrap{flex-wrap:wrap;row-gap:6px}
+.scIc{flex:none;width:24px;height:24px;border-radius:7px;display:inline-block}
+.scIc.mic{background:#5ac8fa}.scIc.web{background:#34c759}.scIc.dict{background:#ff9f0a}.scIc.spk{box-shadow:inset 0 0 0 2px #636366}.scIc.iff{background:#8e8e93}.scIc.saf{background:#0a84ff}
+.scVar .scIc{width:16px;height:16px;border-radius:4px}
+.scRow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0 0;margin-top:9px;border-top:1px solid #38383a;font-size:15px}
+.scRow.col{flex-direction:column;align-items:stretch}
+.scDim{color:#8e8e93}
+.scBox{margin-top:9px}
+.scField{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:#2c2c2e;border-radius:12px;padding:8px 10px;min-width:0}
+.scField small{color:#8e8e93;font-size:12px;min-width:30px}
+.scEq{color:#8e8e93}
+.scVar,.scTok{display:inline-flex;align-items:center;gap:5px;color:#0a84ff;background:#2c2c2e;border-radius:7px;padding:1px 7px;max-width:100%}
+.scField .scVar{background:#3a3a3c}
+.scChip{display:inline-flex;align-items:center;gap:8px;max-width:100%;min-width:0;border:0;cursor:pointer;text-align:left;padding:5px 6px 5px 9px;border-radius:9px;background:rgba(10,132,255,.14);box-shadow:inset 0 0 0 1px rgba(10,132,255,.45);color:#64b5ff;font:500 14px/1.35 'JetBrains Mono',ui-monospace,monospace;-webkit-tap-highlight-color:transparent}
+.scChip span{min-width:0;overflow-wrap:anywhere;word-break:break-all;text-align:left}
+.scChip em{flex:none;font:600 11px/1 'Inter',sans-serif;font-style:normal;color:#fff;background:#0a84ff;border-radius:6px;padding:5px 7px}
+.scChip.ok{box-shadow:inset 0 0 0 1px #34c759}.scChip.ok em{background:#34c759}
+.scChip.url,.scChip.key{display:flex;width:100%}.scChip.url span,.scChip.key span{flex:1}
+.scField .scChip.key{flex:1 1 100%}
+.scNeed{color:#fde68a;font-size:13px;line-height:1.35}
 .hvxSteps{margin:16px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5;color:#cbd5e1}
 .hvxSteps b{color:#f1f5f9}.hvxSteps code,.hvxLead code{font:500 12px 'JetBrains Mono',monospace;color:#a5f3fc;background:rgba(103,232,249,.08);padding:1px 5px;border-radius:5px}
 .hvxKey{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid rgba(148,163,184,.12)}
@@ -40710,23 +40732,58 @@ function copyBtn(label,value){return '<div class="hvxCopy"><code>'+esc(value)+'<
 function wireCopy(root){Array.prototype.forEach.call(root.querySelectorAll('[data-copy]'),function(b){b.onclick=function(){var v=b.getAttribute('data-copy');
   var done=function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1500);};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(done,function(){prompt('Copy this',v);});else prompt('Copy this',v);};});}
+/* 18.49.30: the Action button setup is a live, scrollable copy of the finished
+   Shortcut page. Every value you type into Shortcuts (address, header name,
+   key, field names) is a tap-to-copy chip sitting in the box it belongs in. */
+var SC_KEY=null;
+function scChip(v,cls,label){return '<button type="button" class="scChip'+(cls?' '+cls:'')+'" data-copy="'+esc(v)+'"><span>'+esc(label||v)+'</span><em>Copy</em></button>';}
+function scVar(ic,t){return '<span class="scVar"><i class="scIc '+ic+'"></i>'+t+'</span>';}
+function scPage(){
+  var key=SC_KEY?scChip(SC_KEY,'key'):'<span class="scNeed">Tap <b>Create my key</b> above, then copy it here</span>';
+  return '<div class="scPage" aria-label="The finished Harmony shortcut">'
+   +'<div class="scTop"><span>‹ Shortcuts</span><b>Harmony</b><span>Done</span></div>'
+   +'<div class="scCard"><div class="scH"><i class="scIc mic"></i>Dictate text</div><div class="scRow"><span>Stop Listening</span><span class="scDim">After Pause</span></div></div>'
+   +'<div class="scCard"><div class="scH"><i class="scIc web"></i>Get contents of</div>'
+     +'<div class="scBox">'+scChip(INBOX_URL,'url')+'</div>'
+     +'<div class="scRow"><span>Method</span><span class="scDim">POST</span></div>'
+     +'<div class="scRow col"><span>Headers</span>'
+       +'<div class="scField"><small>Key</small>'+scChip('x-api-key')+'</div>'
+       +'<div class="scField"><small>Text</small>'+key+'</div></div>'
+     +'<div class="scRow col"><span>Request Body <span class="scDim">· JSON</span></span>'
+       +'<div class="scField"><small>Text</small>'+scChip('text')+'<span class="scEq">=</span>'+scVar('mic','Dictated Text')+'</div></div>'
+   +'</div>'
+   +'<div class="scCard"><div class="scH wrap"><i class="scIc dict"></i>Get <span class="scTok">Value</span> for '+scChip('speak')+' in '+scVar('web','Contents of URL')+'</div></div>'
+   +'<div class="scCard"><div class="scH wrap"><i class="scIc spk"></i>Speak '+scVar('dict','Dictionary Value')+'</div></div>'
+   +'<div class="scCard"><div class="scH wrap"><i class="scIc dict"></i>Get <span class="scTok">Value</span> for '+scChip('url')+' in '+scVar('web','Contents of URL')+'</div></div>'
+   +'<div class="scCard"><div class="scH wrap"><i class="scIc iff"></i>If '+scVar('dict','Dictionary Value')+' <span class="scTok">has any value</span></div></div>'
+   +'<div class="scCard in"><div class="scH wrap"><i class="scIc saf"></i>Open URLs '+scVar('dict','Dictionary Value')+'</div></div>'
+   +'<div class="scCard dim">Otherwise</div><div class="scCard dim">End If</div>'
+   +'</div>';
+}
+function scWire(root){Array.prototype.forEach.call(root.querySelectorAll('.scChip[data-copy]'),function(b){b.onclick=function(e){e.stopPropagation();
+  var v=b.getAttribute('data-copy'),em=b.querySelector('em');
+  var done=function(){b.classList.add('ok');if(em)em.textContent='Copied';setTimeout(function(){b.classList.remove('ok');if(em)em.textContent='Copy';},1500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(done,function(){prompt('Copy this',v);});else prompt('Copy this',v);};});}
 function openShortcut(){
-  /* 18.49.29: a picture of the finished Shortcut instead of written steps */
-  var steps='<a class="hvxShot" href="img/harmony-shortcut.jpg" target="_blank" rel="noopener" aria-label="Open the finished Shortcut picture full size">'
-    +'<img src="img/harmony-shortcut.jpg" alt="The finished Harmony shortcut in the Shortcuts app: Dictate text; Get contents of the address with Method POST and a JSON body with text = Dictated Text and key = your key; Get Value for speak; Speak; Get Value for url; If it has any value, Open it." loading="lazy"></a>'
-    +'<p class="hvxLead" style="margin-top:12px">Make this in the <b>Shortcuts</b> app, then <b>Settings → Action Button → Shortcut → Harmony</b>.</p>';
   var p=panel('shortcut','iPhone · Action button',
     '<p class="hvxLead">Press the Action button and talk. Harmony logs notes, answers out loud, or opens the app when you ask to see something.</p>'
-    +'<div id="hvxKeyBox"><button class="hvxBig" id="hvxMakeKey">Create my key</button></div>'+steps
+    +'<div id="hvxKeyBox">'+(SC_KEY?'<div class="hvxWarn">Your key is in the Headers box below. Copy it now: it will not be shown again.</div>':'<button class="hvxBig" id="hvxMakeKey">Create my key</button>')+'</div>'
+    +'<p class="hvxLead" style="margin:16px 0 8px">Make this in the <b>Shortcuts</b> app. Tap any chip to copy it.</p>'
+    +'<div id="scWrap">'+scPage()+'</div>'
+    +'<p class="hvxLead" style="margin-top:14px">Then <b>Settings → Action Button → Shortcut → Harmony</b>.</p>'
     +'<div class="hvxSheetHead" style="padding-left:0;margin-top:14px">Your keys</div><div id="hvxKeys" class="hvxEmpty">Loading…</div>'
     +'<p class="hvxFine">A key only lets that Shortcut log notes and talk to Harmony as you. It is shown once and stored scrambled. Revoke it here any time. Add to Home Screen from Safari’s Share menu to get the Harmony app icon.</p>');
   if(!p)return;
-  p.querySelector('#hvxMakeKey').onclick=function(){
+  scWire(p);
+  var mk=p.querySelector('#hvxMakeKey');
+  if(mk)mk.onclick=function(){
     var btn=this;btn.disabled=true;btn.textContent='Creating…';Array.prototype.forEach.call(p.querySelectorAll('.hvxErr'),function(x){x.remove();});
     inbox({action:'issue_key',name:'iPhone Shortcut'}).then(function(j){
-      var box=p.querySelector('#hvxKeyBox');
-      box.innerHTML='<div class="hvxWarn">Copy your key now: it will not be shown again.</div>'+copyBtn('Copy',j.key)+'<div class="hvxSheetHead" style="padding-left:0;margin-top:10px">Address</div>'+copyBtn('Copy',j.endpoint);
-      wireCopy(box);loadKeys();
+      SC_KEY=j.key;
+      p.querySelector('#hvxKeyBox').innerHTML='<div class="hvxWarn">Your key is in the Headers box below. Copy it now: it will not be shown again.</div>';
+      var w=p.querySelector('#scWrap');w.innerHTML=scPage();scWire(w);
+      var kc=w.querySelector('.scChip.key');if(kc&&kc.scrollIntoView)kc.scrollIntoView({block:'center',behavior:'smooth'});
+      loadKeys();
     }).catch(function(e){btn.disabled=false;btn.textContent='Create my key';alertInline(p,'Could not create a key: '+(e&&e.message||e));});
   };
   loadKeys();
