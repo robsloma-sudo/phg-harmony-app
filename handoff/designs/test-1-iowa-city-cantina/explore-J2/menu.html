@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Cantina — bar menu (explore-J2 Horizon)</title>
+<style>
+@font-face{font-family:Fr;font-weight:400 900;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/build/fonts/fraunces.woff2) format("woff2")}
+@font-face{font-family:Fr;font-style:italic;font-weight:400 700;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/build/fonts/fraunces-i.woff2) format("woff2")}
+@font-face{font-family:Dm;font-weight:400 800;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/build/fonts/dmsans.woff2) format("woff2")}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#F4EDE1}
+.page{position:relative;background:#F4EDE1;color:#221C22;overflow:hidden}
+.art-l,.art-p{display:none}
+body.letter .art-l, body.phone .art-p{display:block}
+.mast{position:absolute;color:#F4EDE1}
+.wm{font:430 var(--wm)/1 Fr;letter-spacing:.14em;font-variation-settings:"opsz" 144,"SOFT" 0,"WONK" 0}
+.sub{font:400 var(--subsz)/1 Dm;letter-spacing:.2em;margin-top:var(--subgap);color:#E9E1D6}
+.read{position:absolute;left:var(--mx);right:var(--mx);display:flex;flex-direction:column;justify-content:space-between}
+h2{font:600 var(--h2)/16px Dm;letter-spacing:.3em;text-transform:uppercase;color:#8F4F10;margin-bottom:var(--h2gap)}
+h3{font:italic 400 var(--h3)/24px Fr;color:#5B5058;margin:var(--h3top) 0 4px}
+h2+h3{margin-top:0}
+.it{margin-bottom:var(--itgap)}
+.it:last-child{margin-bottom:0}
+.nm{font:500 var(--nm)/24px Fr;font-variation-settings:"opsz" 18;color:#221C22;font-variant-numeric:lining-nums tabular-nums}
+.nm .p{font-weight:400;color:#5B5058;margin-left:1em}
+.ds{font:400 var(--ds)/16px Dm;color:#5B5058}
+.main{text-align:center}
+.main h2{margin-right:-.3em}
+.row{display:grid;grid-template-columns:repeat(3,1fr);column-gap:var(--gut);align-items:start}
+.col .sec+.sec{margin-top:var(--secgap)}
+
+body.letter .page{width:816px;height:1056px;
+  --wm:92px;--subsz:12.5px;--subgap:20px;--mx:72px;--h2:12.5px;--h2gap:16px;--h3:15px;--h3top:16px;
+  --nm:18.5px;--ds:13px;--itgap:16px;--secgap:24px;--gut:40px}
+body.letter .mast{left:68px;top:74px}
+body.letter .read{top:372px;bottom:52px}
+body.letter .main{width:600px;margin:0 auto}
+body.phone .page{width:390px;
+  --wm:44px;--subsz:10.5px;--subgap:12px;--mx:28px;--h2:12px;--h2gap:14px;--h3:14.5px;--h3top:14px;
+  --nm:17.5px;--ds:13px;--itgap:14px;--secgap:40px;--gut:0px}
+body.phone .art-p{position:relative;height:212px}
+body.phone .mast{left:26px;top:40px}
+body.phone .read{position:relative;left:auto;right:auto;padding:68px var(--mx) 56px;display:block}
+body.phone .row{display:block;margin-top:48px}
+body.phone .col+.col{margin-top:40px}
+</style></head><body class="letter"><div class="page">
+<div class="art-l"><svg class="art" width="816" height="300" viewBox="0 0 816 300" aria-hidden="true" style="position:absolute;left:0;top:0;overflow:visible"><rect x="-12" y="-12" width="840" height="236" fill="#1E2147"/><rect x="-12" y="224" width="840" height="76" fill="#D98A2E"/><path d="M430.0,300.0 L430.0,286.0 L452.0,286.0 L452.0,272.0 L474.0,272.0 L474.0,258.0 L496.0,258.0 L536.0,258.0 L536.0,248.0 L548.0,248.0 L548.0,238.0 L560.0,238.0 L560.0,228.0 L572.0,228.0 L586.0,228.0 L586.0,238.0 L598.0,238.0 L598.0,248.0 L610.0,248.0 L610.0,258.0 L622.0,258.0 L662.0,258.0 L662.0,34.0 L722.0,34.0 L722.0,104.0 A17.7,9.9 0 0 1 757.3,104.0 A17.7,9.9 0 0 1 792.7,104.0 A17.7,9.9 0 0 1 828.0,104.0 L828.0,300.0 Z" fill="#5A2B4F"/></svg></div><div class="art-p"><svg class="art" width="390" height="212" viewBox="0 0 390 212" aria-hidden="true" style="position:absolute;left:0;top:0;overflow:visible"><rect x="-12" y="-12" width="414" height="176" fill="#1E2147"/><rect x="-12" y="164" width="414" height="48" fill="#D98A2E"/><path d="M196.0,212.0 L196.0,203.3 L209.6,203.3 L209.6,194.6 L223.3,194.6 L223.3,186.0 L236.9,186.0 L261.7,186.0 L261.7,179.8 L269.2,179.8 L269.2,173.6 L276.6,173.6 L276.6,167.4 L284.0,167.4 L292.7,167.4 L292.7,173.6 L300.2,173.6 L300.2,179.8 L307.6,179.8 L307.6,186.0 L315.0,186.0 L339.8,186.0 L339.8,21.1 L377.0,21.1 L377.0,64.5 A4.2,2.3 0 0 1 385.4,64.5 A4.2,2.3 0 0 1 393.7,64.5 A4.2,2.3 0 0 1 402.0,64.5 L402.0,212.0 Z" fill="#5A2B4F"/></svg></div>
+<header class="mast"><div class="wm">CANTINA</div><div class="sub">&amp; cocktail bar · Iowa City, Iowa</div></header>
+<main class="read">
+<section class="sec main" id="sec_cocktails"><h2>Cocktails</h2><h3>Classics</h3><div class="it" data-id="beta_margarita"><div class="nm"><span class="n">Margarita</span><span class="p">15</span></div><div class="ds">Tequila blanco · fresh lime juice · orange liqueur · agave syrup · lime wheel</div><div class="ds">Bright and citrus-forward</div></div><div class="it" data-id="beta_manhattan"><div class="nm"><span class="n">Manhattan</span><span class="p">15</span></div><div class="ds">Rye whiskey · sweet vermouth · cocktail cherry</div></div><h3>House Originals</h3><div class="it" data-id="beta_daiquiri"><div class="nm"><span class="n">House Daiquiri</span><span class="p">14</span></div><div class="ds">White rum · fresh lime juice · demerara syrup · lime coin</div></div><div class="it" data-id="beta_old_fashioned"><div class="nm"><span class="n">Brown Butter Old Fashioned</span><span class="p">16</span></div><div class="ds">Brown butter-washed bourbon · demerara syrup · aromatic bitters · orange peel</div></div></section>
+<div class="row"><div class="col"><section class="sec" id="sec_spirits"><h2>Spirits</h2><h3>Agave</h3><div class="it" data-id="beta_blanco_tequila"><div class="nm"><span class="n">Blanco Tequila</span><span class="p">12</span></div><div class="ds">Blanco tequila pour</div></div><div class="it" data-id="beta_anejo_tequila"><div class="nm"><span class="n">Añejo Tequila</span><span class="p">16</span></div><div class="ds">Añejo tequila pour</div></div><h3>Brandy</h3><div class="it" data-id="beta_cognac_vsop"><div class="nm"><span class="n">Cognac VSOP</span><span class="p">18</span></div><div class="ds">VSOP Cognac pour</div></div></section></div><div class="col"><section class="sec" id="sec_wine"><h2>Wine</h2><h3>By the Glass</h3><div class="it" data-id="beta_malbec"><div class="nm"><span class="n">Malbec</span><span class="p">12</span></div><div class="ds">Dry red wine</div></div><div class="it" data-id="beta_pinot_grigio"><div class="nm"><span class="n">Pinot Grigio</span><span class="p">11</span></div><div class="ds">Dry white wine</div></div><h3>Sparkling</h3><div class="it" data-id="beta_brut_rose"><div class="nm"><span class="n">Brut Rosé</span><span class="p">13</span></div><div class="ds">Dry sparkling rosé</div></div></section></div><div class="col"><section class="sec" id="sec_beer"><h2>Draft Beer</h2><div class="it" data-id="beta_czech_pilsner"><div class="nm"><span class="n">Czech Pilsner</span><span class="p">7</span></div><div class="ds">Crisp pale lager</div></div><div class="it" data-id="beta_dry_hopped_ipa"><div class="nm"><span class="n">Dry-Hopped IPA</span><span class="p">8</span></div><div class="ds">Hop-forward draft IPA</div></div><div class="it" data-id="beta_amber_lager"><div class="nm"><span class="n">Amber Lager</span><span class="p">7</span></div><div class="ds">Toasty amber lager</div></div></section><section class="sec" id="sec_cider"><h2>Cider</h2><div class="it" data-id="beta_dry_cider"><div class="nm"><span class="n">Dry Cider</span><span class="p">8</span></div><div class="ds">Dry sparkling cider</div></div></section></div></div>
+</main></div></body></html>
