@@ -936,3 +936,18 @@ pg_advisory_unlock_all() after every call (success and error). Rehearsed rolled 
 OK, 0 advisory locks left), then applied (migration 20260928052000).
 PHG-026 review round 3: spec 86.3 (avg 75.2, no blockers); safety pending. TEST-1 design loop: round 8 = 70.7 on the
 tough scale (best).
+
+2026-09-28 PHG-026 round 4 submitted (not applied live)
+- Rollback: restores staging only for the venues it rolls back; skips and reports venues with a newer menu and
+  venues whose backup has more than one current menu (so one such venue cannot abort it). Rehearsed skip path
+  (new block G): 1 skipped for a newer menu, 1 for a forged 2-current backup, 1 re-extracted page kept; all else restored.
+- File 2 header: cron 7/13 stay paused during and after a rollback; 40P01/55P03 safe to re-run; exact drop statement
+  to roll forward (keep phg_backup_function_defs_20260927).
+- Step 3/4 batch functions: lock_timeout 5s per call; retry on 40P01/55P03 (Step 4 meets cron 16).
+- Backup tables SELECT-only for service_role (no TRIGGER/REFERENCES). Release gate: cron check requires both jobs.
+- submit_menu (C1): a same-source item page replaces a real-page current menu only when strictly larger (same order as
+  Step 2); a same-size one is kept as an alternate. Rehearsed s10/s10b.
+- Score gate 20260928030000: three reviewers in the header; approve re-checks layout page+elements and returns
+  accuracy_reviewer. Rehearsed approve path + rollback.
+- Monitor baseline: 1.000 menus per venue item set before the incident, 2.892 during it; threshold 1.2.
+- Results: handoff/reviews/rehearsal/results_round4.md (blocks A-G all pass; nothing left live; cron untouched).

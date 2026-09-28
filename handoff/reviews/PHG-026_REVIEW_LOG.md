@@ -235,3 +235,62 @@ part of the PHG-026 publish."
 Already fixed after round 3 (applied live, 20260928052000): SF9 / C17 designer denylist bypass - string-executing
 functions (*_to_xml, ts_stat, ts_rewrite, xmltable) and U&/UESCAPE refused, and pg_advisory_unlock_all() after every
 call (success and error); rehearsed: bypasses refused, normal reads OK, 0 advisory locks left.
+
+## Changes after round 3 (submitted for round 4)
+Files: 20260927190000, 20260927191000, 20260928030000 (score gate), supabase/tests/phg_026_release_gate.sql.
+The designer gateway (20260928052000) is untouched. Rehearsal: handoff/reviews/rehearsal/results_round4.md (blocks A-G,
+all rolled back, all pass; read-only check afterwards: no PHG-026 object exists live). Nothing applied.
+
+1. Rollback skip path (C7).
+   - The rollback's scope is now plan venues whose current menu Step 2 changed plus the Step-3 staging venues. A venue
+     with any menu not in the currency backup is skipped for both menus and staging; the staging restore is limited to
+     the venues actually rolled back (rb_accts), and still skips pages re-extracted since the backup.
+   - Rehearsed (block G): after Step 2 and one Step 3 call, one new menu for plan venue ACC-CO-LED-03-00124 ->
+     `venues_skipped_newer_menu` 1, that venue's menus identical before and after, its backed-up staging row not
+     restored; one new staging row for a backed-up page of another venue -> that page's rows not restored; everything
+     else restored (30,124 of 30,126 rows); 0 multi-current.
+2. Rollback robustness: a venue whose backup has more than one current menu is excluded and reported
+   (`venues_skipped_multi_current_backup`), so it cannot abort the rollback on the unique index. Real venues like that
+   today: 0; rehearsed with a forged backup (block G): skipped 1, rollback completes, venue untouched.
+3. Runbook text in file 2's header: cron 7 and 13 stay paused before and during either rollback and until the
+   functions are rolled back too or the change is re-applied; a 40P01 / 55P03 against an in-flight submit_menu in file 2
+   or either rollback is safe to re-run; to roll forward after a rollback, the exact statement
+   `drop table if exists public.phg_repair_plan_menus_20260927, public.phg_backup_menus_currency_20260927,
+   public.phg_backup_staging_dupes_20260927, public.phg_repair_damaged_20260927, public.phg_repair_run_20260927,
+   public.phg_repair_step3_done, public.phg_repair_step4_done;` and a warning NOT to drop
+   phg_backup_function_defs_20260927 (it holds the only copy of the original bodies).
+4. Step 3 / Step 4 batch functions: `set lock_timeout to '5s'` as a function-level setting (applies per call, reset on
+   return; rehearsed: proconfig shows lock_timeout=5s). Their comments and the runbook say 40P01 / 55P03 is safe to
+   retry; Step 4 contends with cron 16 on menu_source_candidates.
+5. v_smaller postcondition uses the `'2026-09-27 00:00:00+00'` literal (the two Step 3 `loaded_at` comparisons too).
+6. File 1 header: "119 damaged venues out of 185 with a pre-incident menu".
+7. Release gate: the cron row asserts both jobs exist (`count(*) = 2`) and are inactive; a missing job fails. Rehearsed
+   value `2 jobs; 7:false,13:false`.
+8. Backup tables (function defs, menus currency, staging dupes, and the score gate's design fn defs): `revoke all ...
+   from ... service_role` then `grant select`. Rehearsed: select true; insert, update, delete, truncate, trigger,
+   references all false.
+9. Score gate 20260928030000 (C18): header names the three reviewers; approve re-checks that the stored layout has a page
+   object and an elements array (`blocked_by_layout_gate`, status unchanged; a proposal stored before the migration has
+   layout NULL and is blocked, not approved); the approved result returns accuracy_reviewer too. Block F re-rehearsed
+   with the full approve path (score gate at 80 blocks, layout NULL / no elements blocks, all at 90 approves and
+   returns all three averages), then the rollback (returns 3).
+10. C1, same-source item page with a fuller item set: changed, not just documented. Before: a same-source item page
+    (`?item=` is stripped from the key) that was at least as large as a real-page current menu replaced it, so the
+    venue's current menu took the item-page URL. Now, over a REAL page, an item page must be strictly larger by
+    (distinct items, drinks items) to replace; otherwise it is stored as `alternate_item_page`. Over a current menu that
+    is itself an item page the old rule stays (at least as large replaces).
+    Why:
+    - It is the order Step 2 uses (items, then drinks items, then real page before item page). Without it, the first
+      cron cycle could undo the repair's 36 tie picks where a real page replaced an item page.
+    - Nothing is lost: the item page is kept as an alternate. A strictly larger capture (new items) still becomes
+      current, so newer content is not held back.
+    - Price-only changes from an item page wait for the real page's own re-capture, which is the source we want as
+      current.
+    Rehearsed: s10 (same size, one price changed) -> alternate, current unchanged; s10b (one more item) -> created.
+11. Monitor: phg_026_monitor.sql ran in the rehearsed post-repair state (6 rows, all pass; ratio null until menus are
+    created). Baseline for the 1.2 threshold: 1.000 before the incident (4,800 menus / 4,800 venue item sets; 09-25 and
+    09-26 both 1.000); incident window 2.892 (7,429 / 2,569, the "about 3.0"). The monitor replayed over the incident
+    window fails at 2.892, so it catches a repeat; 1.2 leaves 20% room for legitimate same-set re-captures.
+Timings this round: file 2 steps 1-2 6.9-8.9 s (one run 14.4 s); Step 3 14.6-17.0 s per 100 venues (~5 min total);
+Step 4 14.3 s per 500 (~10 min) or 12-13 s per 200; release gate 6.3 s; repair rollback 7.7-8.2 s; function rollback
+15-24 ms; monitor 2.7 s.
