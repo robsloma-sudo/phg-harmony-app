@@ -175,28 +175,24 @@ HERO_P = {"frame": (0, 0, 390, 250), "ref_x": 0,
           "furrows": {"straw": 6, "loam": 4, "sage": 4, "earth": 4}, "fw": .55, "pitch": 16, "pscale": 1.05, "two_rows": 34}
 
 def back_field(width, height, cls, css=""):
-    """Back head band: the field fully straightened (Jalisco hileras) between thin Iowa stubble strips.
-    Plants vary in scale and spacing; two earth strips carry two rows each."""
-    g, y = [], 0.0
-    plan = [("earth", 30), ("loam", 4), ("straw", 9), ("earth", 19), ("sage", 4), ("straw", 6)]
-    sc = height / sum(h for _, h in plan)
-    col = {"straw": STRAW, "loam": LOAM, "sage": SAGE, "earth": EARTH}
-    hcol = {"straw": STRAW_H, "loam": LOAM_H, "sage": SAGE_H, "earth": EARTH_H}
-    for j, (kind, h) in enumerate(plan):
-        h *= sc
-        g.append(f'<rect x="-2" y="{y:.2f}" width="{width + 4}" height="{h + .05:.2f}" fill="{col[kind]}"/>')
-        if kind == "earth":
-            nrow = 2 if h > 20 else 1
-            for k in range(nrow):
-                yy = y + h * (k + 1) / (nrow + 1)
-                s = min(1.25, h / (nrow * 11.5))
-                seg = np.array([[-8, yy], [width + 8, yy]])
-                g.append(plant_along(seg, 12.5 * s, s, 31 * j + k))
-        else:
-            for k in range(1, 4):
-                yy = y + h * k / 4
-                g.append(f'<line x1="-2" x2="{width + 2}" y1="{yy:.2f}" y2="{yy:.2f}" stroke="{hcol[kind]}" stroke-width=".5"/>')
-        y += h
+    """Back head band: the field fully straightened, one planted block of Jalisco earth (three staggered hileras of
+    plan-view agave at varied size, with gaps where plants are missing), edged by an Iowa stubble strip."""
+    r = rng(1102)
+    g = [f'<rect x="-2" y="0" width="{width + 4}" height="{height}" fill="{EARTH}"/>']
+    edge = height - 7
+    g.append(f'<rect x="-2" y="{edge:.2f}" width="{width + 4}" height="7" fill="{STRAW}"/>')
+    for k in range(1, 3):
+        g.append(f'<line x1="-2" x2="{width + 2}" y1="{edge + 7 * k / 3:.2f}" y2="{edge + 7 * k / 3:.2f}" stroke="{STRAW_H}" stroke-width=".5"/>')
+    for k in range(4):   # earth furrows between the rows
+        yy = edge * (k + .02) / 3
+        g.append(f'<line x1="-2" x2="{width + 2}" y1="{yy:.2f}" y2="{yy:.2f}" stroke="{EARTH_H}" stroke-width=".5"/>')
+    for k, yy in enumerate((edge * 1 / 6, edge * 3 / 6, edge * 5 / 6)):
+        x = r.uniform(0, 8) + 7 * (k % 2)
+        while x < width + 8:
+            if r.uniform() > .07:
+                s = r.uniform(.95, 1.45)
+                g.append(plant(x, yy + r.uniform(-.8, .8), s, r.uniform(0, 360), int(r.integers(0, 3))))
+            x += 14.5 * r.uniform(.85, 1.15)
     return (f'<svg class="{cls}" viewBox="0 0 {width} {height}" preserveAspectRatio="xMinYMin slice" style="{css}" aria-hidden="true">' + "".join(g) + "</svg>")
 
 # ------------------------------------------------------------------ glass glyphs: hairline family (contour-line grammar)
