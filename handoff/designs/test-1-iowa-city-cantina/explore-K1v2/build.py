@@ -330,7 +330,7 @@ def spirit_row(it):
 
 def table_head():
     u = AXS / 36
-    ticks = "".join('<span class="axn" style="left:%.2fpt">%d</span>' % (1.5 + m * u, m) for m in (0, 12, 24, 36))
+    ticks = "".join('<span class="axn" style="left:%.2fpt">%d</span>' % (2 + (1.5 + m * u) * 52 / 56, m) for m in (0, 12, 24, 36))
     return ('<div class="sh"><p class="s-nm"></p><p class="s-nom"><span class="tx">NOM</span></p>'
             f'<p class="s-oak"><span class="axl tx">{ticks}</span></p>'
             + "".join(f'<p class="s-p s{j}">' + (ring(True) if j == 2 else "") + f'<span class="tx">{E(POUR_LABEL[P])}</span></p>' for j, P in enumerate(POURS))
@@ -391,7 +391,7 @@ def build_html():
     c3 = [wine_item(it) for it in wines] + [k1, k2]
     heads = (f'<div class="bwh">{caps("De barril · Draft")}{caps("En lata · Cans")}'
              f'<div class="wh">{caps("Vino · Wine")}<span class="wph tx"><span>copa</span><span>botella</span></span></div></div>')
-    bw_html = heads + "".join(f'<div class="hl">{c1[i]}{c2[i]}{c3[i]}</div>' for i in range(5))
+    bw_html = heads + "".join(f'<div class="hl{" hh" if i == 4 else ""}">{c1[i]}{c2[i]}{c3[i]}</div>' for i in range(5))
     back = (f'<section class="band spirits" data-crop="table" data-bg="paper">{head("Destilados · Spirits")}<div class="tcols">{spirits_cols()}</div></section>'
             f'<section class="band tint bw" data-crop="straw" data-bg="tint">{head("Cerveza, sidra y vino · Beer, cider & wine")}{bw_html}</section>')
     fonts_css = (HERE / "fonts" / "fonts.css").read_text().replace("url(", "url(fonts/")
@@ -559,6 +559,7 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
 /* back */
 .bfield{position:absolute;left:-9pt;top:-9pt;width:630pt;height:21pt}
 .back .menu{top:14pt}
+.back h2{font-size:18pt;line-height:21pt}
 .spirits>h2{padding:3pt 0 0}
 .tcols{display:grid;grid-template-columns:1fr 1fr;column-gap:20pt;position:relative}
 .tcol{position:relative}
@@ -571,18 +572,18 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
 .sh .ring{left:auto;right:-8.5pt;top:2.3pt;width:5pt;height:5pt}
 .tg{padding:4pt 0 0;position:relative;z-index:2}
 .sr{position:relative}
-.s-nm{font-size:9.5pt;line-height:10.5pt;white-space:nowrap;position:relative;letter-spacing:-.008em}
+.s-nm{font-size:9pt;line-height:10pt;white-space:nowrap;position:relative;letter-spacing:-.008em}
 .sr .nm{font-weight:500;font-variation-settings:'opsz' 11;background:none;padding:0;margin:0}
-.sr .ring{top:2.8pt}
-.s-nom{font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8.5pt;line-height:10.5pt;color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right;margin-top:-.75pt}
+.sr .ring{top:2.5pt}
+.s-nom{font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8.5pt;line-height:10pt;padding-right:3pt;color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right;margin-top:-.75pt}
 .s-oak{position:relative;white-space:nowrap}
-.s-oak .oak{display:inline-block;width:56pt;height:9pt;vertical-align:-1.4pt}
+.s-oak .oak{display:inline-block;width:52pt;height:8.4pt;vertical-align:-1.4pt;margin-left:2pt}
 .vs{position:absolute;left:34pt;top:-7.5pt;font-family:'IBM Plex Sans Condensed',sans-serif;font-size:7.5pt;color:var(--ink3);background:var(--paper);padding:0 1pt}
-.s-p{text-align:right;line-height:10.5pt;margin-top:-1.5pt}
-.s-oak{line-height:10.5pt}
-.sr .pr{font-size:9.5pt;padding:0;background:none;font-weight:400}
+.s-p{text-align:right;line-height:10pt;margin-top:-1.2pt}
+.s-oak{line-height:10pt}
+.sr .pr{font-size:9pt;padding:0;background:none;font-weight:400}
 .sr .pr.std{font-weight:600}
-.s-sd{grid-column:1 / -1;font-size:8.5pt;line-height:9pt;padding:0 0 1.2pt}
+.s-sd{grid-column:1 / -1;font-size:8.5pt;line-height:8.8pt;padding:0 0 1.1pt}
 .ssd{font-style:italic;color:var(--ink2);font-variation-settings:'opsz' 9}
 .rg{font-family:'IBM Plex Sans Condensed',sans-serif;color:var(--ink3)}
 .s-sd .fw,.s-it .fw{vertical-align:-2.6pt}
@@ -594,17 +595,19 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
 .wh{display:flex;justify-content:space-between;align-items:baseline}
 .wph{display:flex;font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
 .wph span{width:36pt;text-align:right}
-.bw .hl{padding-bottom:4.5pt}
-.bwi .np{font-size:11pt;line-height:13pt}
-.bwi .pr{font-size:10.5pt}
-.brw{font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8.5pt;line-height:10pt;color:var(--ink3);position:relative;margin-top:.5pt}
+.bw .hl{padding-bottom:3.5pt}
+.bwi .np{font-size:10.5pt;line-height:12.5pt}
+.bwi .pr{font-size:10pt}
+.brw{font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8.5pt;line-height:9.5pt;color:var(--ink3);position:relative;margin-top:.5pt}
 .brw .ring{left:-10pt;top:2.2pt;width:5pt;height:5pt}
-.bwi .sd{font-size:9.5pt;line-height:11pt;margin-top:auto}
+.bwi .sd{font-size:9pt;line-height:10pt;margin-top:auto;padding-top:.5pt}
 .wn .np{display:flex;align-items:baseline}
 .wp{margin-left:auto;display:flex}
 .wp .pr{width:36pt;text-align:right;padding:0 0 0 3pt;background:var(--bg)}
 .wp .wb{font-weight:400}
-.cellh h3{margin:-12pt 0 1pt}
+.cellh h3{margin:0 0 1pt;line-height:10pt}
+.hl.hh>.item{padding-top:11pt}
+.hl.hh>.key{padding-top:11pt}
 .cellh{display:flex;flex-direction:column}
 .cellh .item{flex:1}
 .key{font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8.5pt;line-height:11pt;color:var(--ink3);position:relative;z-index:2}
@@ -634,6 +637,7 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
  .sq{width:8px;height:8px;border-width:1px}
  .menu{position:static;width:auto}
  .hl,.bw .hl{display:block;padding:0}
+ .hl.hh>.item,.hl.hh>.key{padding-top:0}
  .slot2{display:none}
  h2{font-size:28px;line-height:32px;padding:26px 0 12px}
  .item{padding:0 0 20px}
