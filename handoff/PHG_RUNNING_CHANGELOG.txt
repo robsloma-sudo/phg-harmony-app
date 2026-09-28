@@ -928,3 +928,11 @@ related, if they're being the menu designer."
   Results: handoff/reviews/rehearsal/results_round3.md.
 - Score-gate migration 20260928030000 was reverted to the Coordinator's text. The coalesce fix (SF10) was already
   there. Rehearsed; not applied.
+
+2026-09-28 PHG-036d (4) designer gateway hardened (applied live): the regex denylist could be bypassed with dynamic
+SQL (query_to_xml('select pg_'||'advisory_lock(1)'), ts_stat, U&"..." identifiers) - found by PHG-026 spec review
+round 3 (C17). Now refuses *_to_xml / to_xmlschema / ts_stat / ts_rewrite / xmltable / U& / uescape and calls
+pg_advisory_unlock_all() after every call (success and error). Rehearsed rolled back (bypasses refused, normal reads
+OK, 0 advisory locks left), then applied (migration 20260928052000).
+PHG-026 review round 3: spec 86.3 (avg 75.2, no blockers); safety pending. TEST-1 design loop: round 8 = 70.7 on the
+tough scale (best).
