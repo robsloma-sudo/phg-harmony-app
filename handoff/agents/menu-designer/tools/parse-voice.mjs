@@ -202,6 +202,33 @@ export function parsePourScheme(sent) {
   return uniq.length >= 2 ? uniq : null;
 }
 
+// Follow-up answer about a known item (panel round 2). Returns true when the sentence was consumed.
+export function answerFor(sent, sections) {
+  if (/\b(dollars|bucks)\b/i.test(sent)) return false;
+  const all = sections.flatMap(x => x.items).filter(i => i.name).sort((a, b) => b.name.length - a.name.length);
+  for (const it of all) {
+    const m = sent.match(new RegExp(`^(?:the\\s+|our\\s+)?${esc(it.name)}\\s*(?::|,|\\bis\\b|\\bare\\b|\\bgets\\b|\\bhas\\b)\\s*(.+)$`, 'i'));
+    if (!m) continue;
+    let rest = m[1].trim();
+    const abv = rest.match(/,?\s*(\d{1,2}(?:\.\d)?)\s*(?:%|percent|per cent)(?:\s*(?:abv|alcohol))?/i);
+    if (abv) rest = rest.replace(abv[0], '').trim();
+    if (/\d/.test(rest)) return false;                     // a number left over is a price or a pour: not an answer
+    if (/\d/.test(wordsToDigits(rest))) return false;       // "Paloma, twelve": a price in words
+    let garnish = null;
+    const g = rest.match(/,?\s*(?:and\s+)?(?:garnished with|served with|finished with|with a garnish of)\s+(.+)$/i);
+    if (g) { garnish = g[1].replace(/\b(?:a|an)\s+/gi, '').replace(/[\s,]+$/, '').trim(); rest = rest.slice(0, g.index).trim(); }
+    const desc = rest.replace(/^(?:a|an)\s+/i, '').replace(/[\s,;:-]+$/, '').trim();
+    if (!desc && !garnish && !abv) return false;
+    if (desc) it.description = desc.charAt(0).toUpperCase() + desc.slice(1);
+    if (abv) it.abv = Number(abv[1]);
+    if (garnish) it.garnish = garnish;
+    it.heard += ' | ' + sent;
+    it.answered = true;
+    return true;
+  }
+  return false;
+}
+
 export function parseItem(raw, listKey, pours = null) {
   let seg = raw.trim().replace(/^(?:and|also|plus|then|the next one is|next is|we(?:'ve| have)? got|we have|there'?s)\s+/i, '').trim();
   if (!seg) return null;
@@ -315,6 +342,12 @@ export function parseTranscript(transcript, ctx = {}) {
       pourNotes.push({ lists: [...keys, ...(/\bdraft|\bon tap/.test(low) ? ['beer:Draft'] : [])], pours: ps, heard: sent });
       continue;
     }
+    // Answers to the designer's questions about an item already heard (the venue's follow-up): "The House Margarita is
+    // blanco tequila, orange liqueur, fresh lime and agave, served with a salt rim", "Modelo is Modelo Especial, Mexican
+    // lager, 4.4 percent". No price in the sentence and the item must exist; it fills description, ABV and garnish.
+    if (answerFor(sent, sections)) continue;
+    // "Answers to the designer's questions", "here are the answers": a header for the follow-up, never an item.
+    if (/^(?:here (?:are|is)\s+)?(?:the\s+)?answers?\b.*\bquestions?\b/i.test(sent) || /^(?:here (?:are|is)\s+)?(?:the\s+|our\s+)?answers?$/i.test(sent)) continue;
     const em = sent.match(EDIT);
     if (em && !/\d/.test(sent) && em[1].split(/\s+/).length <= 6 && !DIRECTIVE.test(em[1])) {
       const fl = new Set(detectFlags(sent));

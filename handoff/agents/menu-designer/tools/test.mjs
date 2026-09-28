@@ -17,7 +17,7 @@ for (const [a, b] of [['twelve fifty', '12.50'], ['fourteen', '14'], ['eleven se
 const casa = parseTranscript(fs.readFileSync(new URL('../examples/casa-luna.voice.txt', import.meta.url), 'utf8'));
 t('venue name', () => assert.equal(casa.venue_name, 'Casa Luna'));
 t('venue type', () => assert.equal(casa.venue_type, 'latin_cantina'));
-t('description split', () => assert.equal(find(casa, 'Paloma').description, 'Tequila, grapefruit, lime and soda'));
+t('description split', () => { const first = parseTranscript(fs.readFileSync(new URL('../examples/casa-luna.voice.txt', import.meta.url), 'utf8').split('\n')[0]); assert.equal(find(first, 'Paloma').description, 'Tequila, grapefruit, lime and soda'); });
 t('spoken cents', () => assert.deepEqual(find(casa, 'Ranch Water').prices, [{ label: '', value: 11.5 }]));
 t('follow-on flag attaches to previous item', () => assert.ok(find(casa, 'House Margarita').flags.includes('house_special')));
 t('no phantom item from follow-on', () => assert.ok(!items(casa).some(i => /^That/i.test(i.name))));
@@ -81,8 +81,44 @@ t('fits one page', () => { for (const o of res.options) assert.equal(o.fit.pages
 t('footer pinned inside the margins', () => { for (const o of res.options) { const f = o.menu_studio_file.doc.sections.find(x => x.designer_role === 'footer'); if (f) { assert.ok(f.pos.x > 0.03 && f.pos.y > 0.8 && f.pos.y < 0.97, JSON.stringify(f.pos)); } } });
 t('non-alcoholic is the last list', () => { for (const o of res.options) { const n = o.menu_studio_file.doc.sections.filter(x => !x.designer_role).map(x => x.name); assert.match(n[n.length - 1], /Zero Proof|Non-Alcoholic/); } });
 t('small fresh menus are flat (equal space above every header)', () => { for (const o of res.options) assert.ok(o.menu_studio_file.doc.sections.every(x => !(x.subs || []).length)); });
-t('folded serve formats become facts on the line', () => { const d = res.options[0].menu_studio_file.doc; const all = d.sections.flatMap(x => x.items); assert.equal(all.find(i => i.name === 'Tecate').desc, 'Can'); assert.equal(all.find(i => i.name === 'Siete Leguas').desc, 'Blanco tequila'); assert.match(all.find(i => i.name === 'Lagunitas IPA').desc, /^Draft · 6.2% ABV$/); });
+t('folded serve formats become facts on the line', () => { const d = res.options[0].menu_studio_file.doc; const all = d.sections.flatMap(x => x.items); assert.equal(all.find(i => i.name === 'Tecate').desc, 'Can · Mexican lager · 4.5% ABV'); assert.equal(all.find(i => i.name === 'Siete Leguas').desc, 'Blanco · Los Altos, Jalisco · 40% ABV'); assert.match(all.find(i => i.name === 'Lagunitas IPA').desc, /^Draft · West Coast IPA, Petaluma, California · 6.2% ABV$/); });
 t('missing prices -> needs input flag', () => assert.ok(design(missing).risk_flags.includes('missing_prices')));
 
+
+// Panel round 2
+import { answerFor } from './parse-voice.mjs';
+import { contentGaps } from './draft.mjs';
+t('answers fill description, garnish and ABV of a known item, never a price', () => {
+  const secs = [{ key: 'cocktails', items: [{ name: 'Paloma', description: 'Tequila, grapefruit', prices: [{ value: 12 }], heard: '' }, { name: 'Modelo', description: null, prices: [{ value: 7 }], heard: '' }] }];
+  assert.ok(answerFor('The Paloma is blanco tequila, grapefruit, lime and soda, garnished with a grapefruit wedge', secs));
+  assert.equal(secs[0].items[0].description, 'Blanco tequila, grapefruit, lime and soda'); assert.equal(secs[0].items[0].garnish, 'grapefruit wedge');
+  assert.ok(answerFor('Modelo is Modelo Especial, Mexican lager, 4.4 percent', secs)); assert.equal(secs[0].items[1].abv, 4.4);
+  assert.equal(answerFor('Paloma, twelve', secs), false); assert.equal(answerFor('Paloma 12 dollars', secs), false);
+});
+t('garnish prints after a middle dot and counts as answered; HOUSE badge dropped beside "House …"', () => {
+  const all = res.options[0].menu_studio_file.doc.sections.flatMap(x => [...x.items, ...(x.subs || []).flatMap(b => b.items)]);
+  const hm = all.find(i => i.name === 'House Margarita');
+  assert.match(hm.desc, /agave · salt rim$/); assert.ok(!hm.badges.includes('house'));
+  assert.ok(!res.questions.some(q => /^Garnish:/.test(q)));
+});
+t('wine: glass/bottle key once under the heading, bare prices, no redundant colour tag', () => {
+  const wine = res.options[0].menu_studio_file.doc.sections.find(x => /wine/i.test(x.name));
+  const items = [...wine.items, ...(wine.subs || []).flatMap(b => b.items)];
+  assert.match([wine.desc, ...(wine.subs || []).map(b => b.desc)].join(' '), /Glass\s+·\s+Bottle/);
+  assert.ok(items.every(i => i.prices.every(p => !p.label)));
+  assert.ok(!/^Red\b/.test(items.find(i => i.name === 'House Cabernet').desc));
+});
+t('subtitle floor and tracking; centred footer under a centred masthead', () => {
+  const o = res.options[0]; const st = o.menu_studio_file.style || o.menu_studio_file.doc.style;
+  if (st) { assert.ok(st.subtitle.s >= 11); assert.ok(st.subtitle.sp <= 120); }
+  const f = o.menu_studio_file.doc.sections.find(x => x.designer_role === 'footer');
+  if (f && st && st.title.al === 'center' && !f.desc) assert.ok(f.pos.x > st.page.margin * 96 / (8.5 * 96) + 0.05);
+});
+t('printed ABV and a Blanco subsection answer the spirit questions ("\\b%\\b" never matched)', () => {
+  assert.deepEqual(contentGaps({ name: 'Siete Leguas', desc: 'Los Altos, Jalisco · 40% ABV' }, 'tequila', 'Blanco'), []);
+  assert.equal(contentGaps({ name: 'Siete Leguas', desc: '' }, 'tequila', 'Blanco').length, 1);
+  assert.ok(!res.questions.some(q => /which expression/.test(q)));
+  assert.ok(!items(casa).some(i => /^Answers/i.test(i.name)));
+});
 console.log(`${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

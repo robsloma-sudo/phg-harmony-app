@@ -50,6 +50,12 @@ function tick() {
     // a round's reviews are complete when all 15 answered, or when its improve step / the next round has started
     const done = R.reviews.length >= 15 || R.improveStarted || r < maxRound;
     if (done && !state.emitted.includes(r)) {
+      const scored = R.reviews.filter(v => v && typeof v.score === 'number').length;
+      if (!scored) {
+        // Every review errored (usage limit, API failure): nothing was judged, so nothing is saved and nothing "fails".
+        console.log(`ROUND ${r} · ${R.menu} · NOT RUN · 0/15 reviews returned a score (agent errors) · no snapshot saved`);
+        state.emitted.push(r); save(); continue;
+      }
       const dir = path.join(ROUNDS, `r${pad(r)}-${R.menu}`);
       if (!fs.existsSync(path.join(dir, 'page-1.png'))) {
         const pend = path.join(PENDING, R.menu);
@@ -66,10 +72,11 @@ function tick() {
       const weakest = Object.entries(subs).map(([k, v]) => [k, Math.round(v.reduce((a, b) => a + b, 0) / v.length)]).sort((a, b) => a[1] - b[1]).slice(0, 4).map(([k, v]) => `${k} ${v}`).join(', ');
       fs.writeFileSync(path.join(dir, 'scores.json'), JSON.stringify({ round: r, menu: R.menu, pass, by, lowest: all.length ? Math.min(...all) : null, weakest, reviews: R.reviews }, null, 2));
       const files = fs.readdirSync(dir).filter(f => /^page-\d+\.png$/.test(f)).map(f => path.join(dir, f)).join(',');
-      console.log(`ROUND ${r} · ${R.menu} · ${pass ? 'PASS' : 'FAIL'} · ${parts.join(' · ')} · lowest ${all.length ? Math.min(...all) : '—'} · weakest: ${weakest} · files: ${files}`);
+      const verdict = pass ? 'PASS' : all.length < 15 ? `INCOMPLETE (${all.length}/15 scored)` : 'FAIL';
+      console.log(`ROUND ${r} · ${R.menu} · ${verdict} · ${parts.join(' · ')} · lowest ${all.length ? Math.min(...all) : '—'} · weakest: ${weakest} · files: ${files}`);
       state.emitted.push(r); save();
     }
-    if (R.improve !== undefined && !state.improved.includes(r)) {
+    if (R.improve !== undefined && R.improve !== null && !state.improved.includes(r)) {
       // improve finished (re-render + commit done): these renders are what the next round reviews
       for (const m of MENUS) { fs.rmSync(path.join(PENDING, m), { recursive: true, force: true }); copyRender(m, path.join(PENDING, m)); }
       const ch = (R.improve && R.improve.changes) || [];

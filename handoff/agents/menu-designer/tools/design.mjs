@@ -13,7 +13,8 @@ export const MDC_FILE_VERSION = 2;
 const BADGE_FOR_FLAG = { house_special: 'house', new: 'new', seasonal: 'seasonal' };   // MDC_BADGES subset
 // Print legibility floor (px @96 dpi; pt = px x 0.75): names/prices 10.5 pt, descriptions 8.25 pt, labels 6.75 pt.
 // Butterick: body 10–12 pt in print, never below 8 pt; Sensory Trust clear print prefers 12 pt+ (knowledge/01 [16], 02).
-const FLOOR = { name: 14, desc: 11, price: 14, section: 13, sub: 11 };
+// Round 2: the subtitle deck has a floor too (11 px = 8.25 pt; 6.75 pt tracked caps vanished in bar light).
+const FLOOR = { name: 14, desc: 11, price: 14, section: 13, sub: 11, subtitle: 11 };
 
 // ---------------------------------------------------------------- request normalisation
 // Accepts brief-style payloads ({venue, menu_type, lists, items, brand, format, constraints, demographics})
@@ -24,7 +25,7 @@ export function normalizeRequest(input = {}) {
   const p = input.input_payload || input;
   const items = (p.items || []).map(it => ({
     name: it.name, description: it.description || it.desc || null, list: normList(it.list),
-    sub: it.sub || it.serve_format || null, abv: it.abv ?? null, brand: it.brand || '',
+    sub: it.sub || it.serve_format || null, abv: it.abv ?? null, garnish: it.garnish || null, brand: it.brand || '',
     prices: Array.isArray(it.prices) ? it.prices.map(x => ({ label: x.label || '', value: Number(x.value) }))
       : (it.price !== undefined && it.price !== null && it.price !== '') ? [{ label: '', value: Number(it.price) }] : [],
     flags: Array.isArray(it.flags) ? it.flags : Object.keys(it.flags || {}).filter(k => it.flags[k]),
@@ -129,8 +130,14 @@ let seq = 0;
 const id = p => `${p}_d${++seq}`;
 
 function mdcItem(it, accent, emphasise) {
-  const badges = [...new Set((it.flags || []).map(f => BADGE_FOR_FLAG[f]).filter(Boolean))];
+  // A HOUSE badge beside a name that already says "House" repeats itself (panel round 2); the accent carries it.
+  const badges = [...new Set((it.flags || []).map(f => BADGE_FOR_FLAG[f]).filter(Boolean))].filter(b => !(b === 'house' && /^house\b/i.test(it.name || '')));
   let desc = it.description || '';
+  // Garnish from the venue's answer closes the line after a middle dot ("… agave · salt rim"), one line kept.
+  const garnish = String(it.garnish || '').trim();
+  // Printed unless the whole phrase is already in the line ("lime wedge" still prints after "fresh lime"); the speaker's
+  // casing is kept so proper nouns survive (Tajín rim).
+  if (garnish && !desc.toLowerCase().includes(garnish.toLowerCase())) desc = (desc ? `${desc} · ` : '') + garnish;
   // Beer convention: style/description first, then ABV ("Oatmeal stout with coffee · 6.2% ABV").
   if (it.abv !== null && it.abv !== undefined && it.abv !== '') desc = (desc ? `${desc} · ` : '') + `${it.abv}% ABV`;
   const node = {
@@ -143,6 +150,7 @@ function mdcItem(it, accent, emphasise) {
             public_visibility: { item: true, description: true, price: true, brand: true, ingredients: true, house_recipe: true },
             public_components: {} },
     evidence: null,
+    ...(garnish ? { components: [{ role: 'garnish', name: garnish }] } : {}),
   };
   // Featured / house items: accent the name. Menu Studio honours node.format[level] overrides (menuNodeStyleOverride).
   if (emphasise && (it.flags || []).some(f => f === 'featured' || f === 'house_special')) node.format = { name: { c: accent, w: 'bold' } };
@@ -308,6 +316,7 @@ export function tuneStyle(req, look, style) {
   // little wider as display labels, but not the 300–480 of fashion mastheads (title only). Trebuchet is on Butterick's
   // avoid list; Georgia's oldstyle figures make price columns uneven.
   for (const lvl of ['section', 'sub', 'subtitle']) if (style[lvl].cs === 'upper' && style[lvl].sp > 180) style[lvl].sp = 180;
+  if (style.subtitle.cs === 'upper' && style.subtitle.sp > 120) style.subtitle.sp = 120;
   if (style.title.cs === 'upper' && style.title.sp > 300) style.title.sp = 300;
   for (const lvl of Object.keys(style)) if (lvl !== 'page' && style[lvl].f === 5) style[lvl].f = 3;
   if (style.price.f === 0) style.price.f = style.name.f === 0 ? 2 : style.name.f;
@@ -438,6 +447,19 @@ export function fit(doc, S, sizeKey, want) {
   // - hierarchy: section headers at least 1.3 x item names (critic: "hierarchy relies on colour alone");
   // - a single column wider than ~5.5 in gets leader dots so the eye can travel from name to price.
   S.section.s = Math.max(S.section.s, Math.round(S.name.s * 1.3));
+  // Round 2: every lens objected to 150 mm leaders across a full-width column. First narrow the measure toward ~5.5 in
+  // with wider side margins (Menu Studio's margin is one value, so top and bottom grow too) while it still fits;
+  // only a column that stays wide gets leader dots.
+  if (S.page.cols === 1 && measure(doc, S, sizeKey).colW > 528) {
+    const w = MDC_SIZES[sizeKey][0], m0 = S.page.margin;
+    for (const mg of [1.5, 1.4, 1.3, 1.25, 1.15, 1.0]) {
+      if (mg <= m0 || mg * 2 >= w - 3) continue;
+      S.page.margin = mg;
+      const r = measure(doc, S, sizeKey);
+      if (r.pages <= budget && !r.wide.length && r.fill - (r.pages - 1) <= 0.97) { log.push(`narrowed the measure: ${mg}" side margins (column ${(r.colW / 96).toFixed(2)} in)`); break; }
+      S.page.margin = m0;
+    }
+  }
   if (S.page.cols === 1 && measure(doc, S, sizeKey).colW > 528 && !S.page.dots) { S.page.dots = true; log.push('leader dots on: a wide single column needs a path from name to price'); }
   m = measure(doc, S, sizeKey);
   if (m.pages > budget) { S.section.s = Math.max(S.name.s + 2, S.section.s - 3); m = measure(doc, S, sizeKey); }
@@ -507,6 +529,8 @@ function knownFacts(doc) {
 // mixing sections with and without subsections can never have equal space above its headers (scorecard ±0.5 mm).
 // When every subsection is short, the subsection name moves into each item's line as a fact ("Draft · …",
 // "Blanco tequila") and the page gets one clean level of headers. Suggestion S7 would make this unnecessary.
+const OBVIOUS_WINE = { red: /cabernet|merlot|pinot noir|malbec|syrah|shiraz|zinfandel|tempranillo|sangiovese|grenache/i,
+  white: /chardonnay|sauvignon blanc|pinot gri|riesling|albari|verdejo|gr[uü]ner/i, sparkling: /prosecco|champagne|cava|cr[eé]mant|\bbrut\b/i };
 function flattenSubs(doc) {
   const secs = doc.sections.filter(x => !x.designer_role);
   const total = secs.reduce((a, x) => a + countItems(x), 0);
@@ -523,6 +547,8 @@ function flattenSubs(doc) {
         if (!new RegExp(tag, 'i').test(d)) it.desc = d ? `${tag} · ${d}` : `${tag} ${/mezcal/i.test(b.name) ? 'mezcal' : 'tequila'}`;
       } else if (agave && /^(tequila|mezcal)$/i.test(b.name)) {
         if (!d) it.desc = b.name.charAt(0).toUpperCase() + b.name.slice(1).toLowerCase();
+      } else if (OBVIOUS_WINE[tag.toLowerCase()]?.test(`${it.name} ${d}`)) {
+        // "House Cabernet / Red" says nothing new (panel round 2): the grape already names the colour.
       } else if (!/^by the glass/i.test(b.name) || !(it.prices || []).some(p => p.label)) {
         if (!new RegExp('^' + tag, 'i').test(d)) it.desc = d ? `${tag} · ${d}` : tag;
       }
@@ -545,13 +571,15 @@ function pourHeaders(doc) {
   for (const sec of doc.sections) for (const holder of [sec, ...(sec.subs || [])]) {
     const items = holder.items || [];
     if (!items.length || holder.designer_role) continue;
-    const sig = it => (it.prices || []).map(p => p.label || '').join('|');
-    const first = sig(items[0]);
-    if (!first || (items[0].prices || []).length < 2 || !items.every(it => sig(it) === first)) continue;
+    // Items may carry a prefix of the longest ladder (wine: "Glass 11 / Bottle 40" beside "Glass 10", panel round 2):
+    // the key reads "Glass · Bottle" and a single value sits under the first label.
+    const labs = it => (it.prices || []).map(p => p.label || '');
+    const widest = items.reduce((a, it) => labs(it).length > labs(a).length ? it : a, items[0]);
+    const labels = labs(widest);
+    if (labels.length < 2 || labels.some(l => !l) || !items.every(it => labs(it).length && labs(it).every((l, i) => l === labels[i]))) continue;
     if (String(holder.desc || '').trim()) continue;
-    const labels = items[0].prices.map(p => p.label);
     holder.desc = labels.join('  ·  ');
-    for (const it of items) { it.meta = { ...(it.meta || {}), price_labels: labels }; it.prices = it.prices.map(p => ({ ...p, label: '' })); }
+    for (const it of items) { it.meta = { ...(it.meta || {}), price_labels: labs(it) }; it.prices = it.prices.map(p => ({ ...p, label: '' })); }
     changes.push(`${holder.name}: ${labels.join(' / ')} printed once under the heading; each line shows the prices in that order (labels kept in meta.price_labels).`);
   }
   // Every subsection of a section carries the same labels (wine: Glass · Bottle): say it once, under the section heading.
@@ -624,11 +652,15 @@ function placeFooter(doc, S, sizeKey) {
   const f = doc.sections.find(x => x.designer_role === 'footer');
   if (!f) return null;
   const [wIn, hIn] = MDC_SIZES[sizeKey]; const W = wIn * MDC_DPI, H = hIn * MDC_DPI, M = S.page.margin * MDC_DPI;
-  f.format = { section: { f: S.sub.f, s: Math.max(9, S.sub.s), w: S.sub.w, i: false, sp: 60, c: S.sub.c, cs: 'none' } };   // keeps "RiNo" as spelled
+  f.format = { section: { f: S.sub.f, s: Math.max(11, S.sub.s), w: S.sub.w, i: false, sp: 20, c: S.sub.c, cs: 'none' } };   // keeps "RiNo" as spelled; lowercase takes no tracking
+  // One axis (panel round 2): a centred masthead gets a centred sign-off. Pinned headings draw left-aligned at pos.x, so
+  // the x is solved from the measured line width. A footer with legal copy stays flush left (long lines read better).
+  const centred = S.title.al === 'center' && !f.desc;
   const vis = f.desc ? S.section.s + 11 + S.desc.s * 1.16 : f.format.section.s * 1.16;
   const top = H - M - vis;
   const pages = layout({ doc, style: S, size: sizeKey }).pages;
-  f.pos = { page: Math.max(0, pages - 1), x: +(M / W).toFixed(5), y: +(top / H).toFixed(5) };
+  const x = centred ? Math.max(M, (W - textW(f.name, f.format.section)) / 2) : M;
+  f.pos = { page: Math.max(0, pages - 1), x: +(x / W).toFixed(5), y: +(top / H).toFixed(5) };
   return top;
 }
 
@@ -684,11 +716,11 @@ export function design(input, options = {}) {
     if (built.questions) for (const q of built.questions) questions.push(q);
     if (built.flags) for (const f of built.flags) risk.add(f);
     for (const c of knownFacts(doc)) changes.push(c);
-    const noGarnish = itemsOf(doc).filter(({ it, s }) => ['cocktails', 'non_alcoholic'].includes(it.meta?.section || '') && it.desc && (it.meta?.section === 'cocktails' || /,/.test(it.desc)) && !(it.components || []).some(c => /garnish/i.test(c.role || '')));
+    const noGarnish = itemsOf(doc).filter(({ it, s }) => ['cocktails', 'non_alcoholic'].includes(it.meta?.section || '') && it.desc && (it.meta?.section === 'cocktails' || (/,/.test(it.desc) && !/\bor\b/.test(it.desc))) && !(it.components || []).some(c => /garnish/i.test(c.role || '')));
     if (noGarnish.length) questions.push(`Garnish: which garnish goes on ${noGarnish.map(x => `"${x.it.name}"`).join(', ')}? (Printed garnishes are a scorecard requirement for cocktails.)`);
     if (!fromDraft) for (const { it, s, sub } of itemsOf(doc)) {
       if (s.designer_role) continue;
-      for (const q of contentGaps(it, it.meta?.section || listForName(sub?.name || s.name))) { questions.push(q); risk.add(gapFlag(q)); }
+      for (const q of contentGaps(it, it.meta?.section || listForName(sub?.name || s.name), sub?.name || '')) { questions.push(q); risk.add(gapFlag(q)); }
     }
     if (!fromDraft && options.flatten !== false) {
       const fl = flattenSubs(doc);

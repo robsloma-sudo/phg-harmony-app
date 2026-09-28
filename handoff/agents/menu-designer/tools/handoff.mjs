@@ -54,6 +54,7 @@ function voiceItem(it, list) {
   if (it.description) out.description = it.description;
   if (it.sub) out.sub = it.sub;
   if (it.abv !== null && it.abv !== undefined) out.abv = it.abv;
+  if (it.garnish) out.garnish = it.garnish;
   if (it.flags && it.flags.length) out.flags = it.flags;
   Object.defineProperty(out, '_heard', { value: it.heard, enumerable: false });
   return out;
@@ -70,7 +71,7 @@ export function taskToRequest(task) {
     const labels = Array.isArray(x.price_labels) ? x.price_labels
       : Array.isArray(x.prices) ? x.prices.map(p => (p && typeof p === 'object') ? (p.label || '') : '') : [];
     return { edit: !!x.edit, name: x.name || x.item_name, description: x.description || x.desc || null, list: x.list || null, sub: x.sub || null,
-             abv: x.abv ?? null, brand: x.brand || '', flags: x.flags || [],
+             abv: x.abv ?? null, garnish: x.garnish || null, brand: x.brand || '', flags: x.flags || [],
              prices: vals.filter(v => isFinite(v)).map((v, i) => ({ label: labels[i] || '', value: v })) };
   });
   return {

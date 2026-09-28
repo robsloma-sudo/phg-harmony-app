@@ -175,7 +175,8 @@ export const LOOK_BY_KEY = Object.fromEntries(LOOKS.map(l => [l.k, l]));
 
 // Letterspacing ceilings in 1/1000 em (Bringhurst 3.2.2; panel round 1: title at 300+ fell apart into letters, caps
 // heads at 300 lost their word spaces). Display lines may open up a little; text-size caps stay in the 50-120 range.
-export const TRACKING_MAX = { title: 150, subtitle: 180, section: 120, sub: 110, name: 60, brand: 60, desc: 40, price: 40 };
+// Round 2: the subtitle is text-size caps, so it takes the 50-120 text band too (was 180).
+export const TRACKING_MAX = { title: 150, subtitle: 120, section: 120, sub: 110, name: 60, brand: 60, desc: 40, price: 40 };
 // Prices sit one step under the item name and in the description ink so the name stays primary (panel round 1).
 export function quietPrices(s) {
   if (s.price.s >= s.name.s) s.price.s = Math.max(s.desc.s, s.name.s - 2);

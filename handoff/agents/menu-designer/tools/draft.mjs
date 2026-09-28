@@ -52,9 +52,10 @@ export function describeFromComponents(it) {
 }
 
 // Content gaps the Menu Content Reviewer scores (criterion 8). Returns human questions; never fills the gap.
-export function contentGaps(it, list) {
+export function contentGaps(it, list, holder = '') {
   // Category-specific questions (Content Reviewer, round 1): ask for what that list prints, never "ingredients, style, origin".
-  const d = String(it.desc || ''), n = `"${it.name}"`;
+  // `holder` is the subsection the item sits under ("Blanco"): it already states the expression.
+  const d = String(it.desc || ''), n = `"${it.name}"`, known = `${d} ${holder || ''}`;
   const q = [];
   const spirit = ['tequila', 'mezcal', 'whiskey', 'rum', 'gin', 'vodka', 'brandy_cognac', 'liqueurs_amari', 'sake_soju', 'spirits'].includes(list);
   if (list === 'beer') {
@@ -67,8 +68,10 @@ export function contentGaps(it, list) {
     if (!d.trim() || !/[A-Z][a-z]+,?\s+(?:[A-Z][a-z]+|\d{4})|valley|coast|france|italy|spain|california|oregon|washington|argentina|chile|australia|new zealand|germany|portugal|mendoza|napa|sonoma|doc|docg|aoc/i.test(d))
       q.push(`${n}: which producer and region should print${/cabernet|merlot|pinot|malbec|syrah|shiraz|zinfandel|chardonnay|sauvignon|riesling|grigio|tempranillo|sangiovese|nebbiolo|grenache|garnacha/i.test(it.name) ? '' : ' (and the grape)'}${/prosecco|champagne|cava|sparkling|brut/i.test(it.name + d) ? ' (for sparkling: producer and DOC/region)' : ''}?`);
   } else if (spirit) {
-    if (/\b(blanco|reposado|a[nñ]ejo|joven|extra)\b/i.test(d) && !/\b(proof|%|abv|year|aged)\b/i.test(d)) q.push(`${n}: ${d.trim()} is printed; any proof, ABV or age to add?`);
-    else if (!/\b(year|yr|aged|blanco|reposado|a[nñ]ejo|joven|espad[ií]n|tobal[aá]|vsop|xo|vs|proof|%|single|small batch|bottled|cask|barrel)\b/i.test(d + ' ' + it.name))
+    // "%" sits outside the \b groups: there is no word boundary after it, so "\b%\b" never matched a printed ABV.
+    const strength = /\b(proof|abv|year|aged)\b|\d\s*%/i.test(d);
+    if (/\b(blanco|reposado|a[nñ]ejo|joven|extra)\b/i.test(known) && !strength) q.push(`${n}: ${(d.trim() || holder)} is printed; any proof, ABV or age to add?`);
+    else if (!strength && !/\b(year|yr|aged|blanco|reposado|a[nñ]ejo|joven|espad[ií]n|tobal[aá]|vsop|xo|vs|proof|single|small batch|bottled|cask|barrel)\b/i.test(known + ' ' + it.name))
       q.push(list === 'mezcal' ? `${n}: which agave and style (joven, reposado…), and its ABV?`
            : list === 'tequila' ? `${n}: which expression (blanco, reposado, añejo) and any age or proof to print?`
            : `${n}: what type, age or proof should print?`);
@@ -144,7 +147,7 @@ export function buildDocFromBase(req, look, opts = {}) {
   // 3. Content gaps -> questions (criterion 8), never guesses.
   for (const { it, s, sub } of itemsOf(doc)) {
     const list = it.meta?.section ? normMeta(it.meta.section, sub?.name || s.name) : listForName(sub?.name || s.name);
-    for (const q of contentGaps(it, list)) { questions.push(q); flags.add(gapFlag(q)); }
+    for (const q of contentGaps(it, list, sub?.name || '')) { questions.push(q); flags.add(gapFlag(q)); }
   }
 
   // 4. Menu engineering inside each list: house/featured first.
