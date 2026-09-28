@@ -321,4 +321,27 @@ Minor:
 - C16/C5: add a runbook note that Edge traffic stays idle until the release gate has run.
 - Evidence: the reviewer had no live DB access. Round 5 should paste pg_get_functiondef output for the C10 and C17 functions.
 
-### Safety Reviewer: pending
+### Safety Reviewer: 85.5, no blockers
+- Rounds so far: 78, 78, 82.7, 85.5. Average 81.1, which is above 80.
+
+Area scores:
+- Data 90, Correctness 84, Concurrency 85, Performance 87, Security 80, Reversibility 87.
+
+Should-fix:
+- SF-A: make the repair plan/run/damaged/step-done tables SELECT-only for service_role (file 2, lines 86, 91, 111, 174, 223).
+- SF-B: revoke service_role EXECUTE on step3_batch, step4_batch and the rollback (lines 218, 251, 330).
+- SF-C: add two monitor rows:
+  - plan venues whose current menu is smaller than their largest pre-incident menu;
+  - venue churn, made pass/fail.
+- SF-D: an item page over an item-page current menu needs to be strictly larger, unless the URL is identical (file 1, line 294).
+- SF-E: add supabase/tests/phg_026_rollback_check.sql, and make the rollback return skipped_accounts.
+
+Minor:
+- M1: count distinct drinks keys.
+- M2: add a query that lists review candidates after a rollback.
+- M3: add a runbook note on Edge in-flight calls.
+- M4: set lock_timeout in the score gate.
+- M5: keep score history instead of overwriting.
+- M6: use a function-level lock_timeout for the rollback.
+
+Gate status after round 4: Safety 81.1 passes; Spec 78.7 does not. Round 5 needs Spec above 85.3 while Safety holds above 80.

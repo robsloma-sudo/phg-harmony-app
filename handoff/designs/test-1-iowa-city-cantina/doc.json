@@ -178,7 +178,7 @@
         {
           "id": "sub_cocktails_house_originals",
           "desc": "",
-          "name": "De la Casa · House",
+          "name": "De la Casa · House Originals",
           "items": [
             {
               "id": "beta_old_fashioned",
@@ -329,14 +329,190 @@
       "items": []
     },
     {
+      "id": "sec_spirits",
+      "desc": "Straight pours by category.",
+      "name": "Spirits",
+      "subs": [
+        {
+          "id": "sub_spirits_agave",
+          "desc": "",
+          "name": "Agave · Agave",
+          "items": [
+            {
+              "id": "beta_blanco_tequila",
+              "phg": {
+                "menu_item_id": "19d79518-edde-4331-b64a-0b7c21f30c79",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "Blanco tequila, poured straight.",
+              "meta": {
+                "family": null,
+                "section": "spirits",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "agave",
+                "serve_format": null,
+                "venue_heading": "Spirits",
+                "identity_class": "spirit",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "brand",
+                  "pour size"
+                ]
+              },
+              "name": "Blanco Tequila",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_blanco_tequila",
+                  "label": "",
+                  "value": 12,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            },
+            {
+              "id": "beta_anejo_tequila",
+              "phg": {
+                "menu_item_id": "124f8949-6661-4c84-8333-b07754dbf859",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "Añejo tequila, poured straight.",
+              "meta": {
+                "family": null,
+                "section": "spirits",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "agave",
+                "serve_format": null,
+                "venue_heading": "Spirits",
+                "identity_class": "spirit",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "brand",
+                  "age statement",
+                  "pour size"
+                ]
+              },
+              "name": "Añejo Tequila",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_anejo_tequila",
+                  "label": "",
+                  "value": 16,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            }
+          ]
+        },
+        {
+          "id": "sub_spirits_brandy",
+          "desc": "",
+          "name": "Brandy · Brandy",
+          "items": [
+            {
+              "id": "beta_cognac_vsop",
+              "phg": {
+                "menu_item_id": "75501d63-42c4-45cc-8a86-d8cdb30d8909",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "VSOP Cognac, poured straight.",
+              "meta": {
+                "family": null,
+                "section": "spirits",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "brandy",
+                "serve_format": null,
+                "venue_heading": "Spirits",
+                "identity_class": "spirit",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "brand / house",
+                  "pour size"
+                ]
+              },
+              "name": "Cognac VSOP",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_cognac_vsop",
+                  "label": "",
+                  "value": 18,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            }
+          ]
+        }
+      ],
+      "items": []
+    },
+    {
       "id": "sec_beer",
       "desc": "Draft beer selections.",
-      "name": "Beer & Cider",
+      "name": "Beer",
       "subs": [
         {
           "id": "sub_beer_draft",
           "desc": "",
-          "name": "Cerveza & Sidra",
+          "name": "De Barril · Draft",
           "items": [
             {
               "id": "beta_czech_pilsner",
@@ -369,8 +545,7 @@
                 "missing_ingredients": [
                   "brewery",
                   "ABV",
-                  "pour size",
-                  "format (draft or can)"
+                  "pour size"
                 ]
               },
               "name": "Czech Pilsner",
@@ -474,8 +649,7 @@
                 "missing_ingredients": [
                   "brewery",
                   "ABV",
-                  "pour size",
-                  "format (draft or can)"
+                  "pour size"
                 ]
               },
               "name": "Amber Lager",
@@ -495,58 +669,6 @@
               ],
               "source": "manual",
               "components": []
-            },
-            {
-              "id": "beta_dry_cider",
-              "phg": {
-                "menu_item_id": "65c39a14-647f-40d9-b85b-64868341f464",
-                "recipe_stale": false,
-                "recipe_project_id": null,
-                "recipe_version_id": null
-              },
-              "desc": "Dry sparkling cider.",
-              "meta": {
-                "family": null,
-                "section": "cider",
-                "beta_seed": true,
-                "canonical": null,
-                "subfamily": null,
-                "serve_format": null,
-                "venue_heading": "Cider",
-                "identity_class": "cider",
-                "sample_content": true,
-                "public_components": {},
-                "public_visibility": {
-                  "item": true,
-                  "brand": true,
-                  "price": true,
-                  "description": true,
-                  "ingredients": true,
-                  "house_recipe": true
-                },
-                "missing_ingredients": [
-                  "producer",
-                  "ABV",
-                  "format (draft or can)"
-                ]
-              },
-              "name": "Dry Cider",
-              "brand": "",
-              "badges": [],
-              "origin": {
-                "item_name": null,
-                "venue_key": null
-              },
-              "prices": [
-                {
-                  "id": "p_beta_dry_cider",
-                  "label": "",
-                  "value": 8,
-                  "source": "manual"
-                }
-              ],
-              "source": "manual",
-              "components": []
             }
           ]
         }
@@ -554,176 +676,64 @@
       "items": []
     },
     {
-      "id": "sec_spirits",
-      "desc": "Straight pours by category.",
-      "name": "Spirits",
-      "subs": [
+      "id": "sec_cider",
+      "desc": "Cider selection.",
+      "name": "Sidra · Cider",
+      "subs": [],
+      "items": [
         {
-          "id": "sub_spirits_agave",
-          "desc": "",
-          "name": "Agave & Brandy",
-          "items": [
-            {
-              "id": "beta_blanco_tequila",
-              "phg": {
-                "menu_item_id": "19d79518-edde-4331-b64a-0b7c21f30c79",
-                "recipe_stale": false,
-                "recipe_project_id": null,
-                "recipe_version_id": null
-              },
-              "desc": "",
-              "meta": {
-                "family": null,
-                "section": "spirits",
-                "beta_seed": true,
-                "canonical": null,
-                "subfamily": "agave",
-                "serve_format": null,
-                "venue_heading": "Spirits",
-                "identity_class": "spirit",
-                "sample_content": true,
-                "public_components": {},
-                "public_visibility": {
-                  "item": true,
-                  "brand": true,
-                  "price": true,
-                  "description": true,
-                  "ingredients": true,
-                  "house_recipe": true
-                },
-                "missing_ingredients": [
-                  "guest line (no defining row)",
-                  "brand",
-                  "pour size"
-                ]
-              },
-              "name": "Blanco Tequila",
-              "brand": "",
-              "badges": [],
-              "origin": {
-                "item_name": null,
-                "venue_key": null
-              },
-              "prices": [
-                {
-                  "id": "p_beta_blanco_tequila",
-                  "label": "",
-                  "value": 12,
-                  "source": "manual"
-                }
-              ],
-              "source": "manual",
-              "components": []
+          "id": "beta_dry_cider",
+          "phg": {
+            "menu_item_id": "65c39a14-647f-40d9-b85b-64868341f464",
+            "recipe_stale": false,
+            "recipe_project_id": null,
+            "recipe_version_id": null
+          },
+          "desc": "Dry sparkling cider.",
+          "meta": {
+            "family": null,
+            "section": "cider",
+            "beta_seed": true,
+            "canonical": null,
+            "subfamily": null,
+            "serve_format": null,
+            "venue_heading": "Cider",
+            "identity_class": "cider",
+            "sample_content": true,
+            "public_components": {},
+            "public_visibility": {
+              "item": true,
+              "brand": true,
+              "price": true,
+              "description": true,
+              "ingredients": true,
+              "house_recipe": true
             },
+            "missing_ingredients": [
+              "producer",
+              "ABV",
+              "format (draft or can)"
+            ]
+          },
+          "name": "Dry Cider",
+          "brand": "",
+          "badges": [],
+          "origin": {
+            "item_name": null,
+            "venue_key": null
+          },
+          "prices": [
             {
-              "id": "beta_anejo_tequila",
-              "phg": {
-                "menu_item_id": "124f8949-6661-4c84-8333-b07754dbf859",
-                "recipe_stale": false,
-                "recipe_project_id": null,
-                "recipe_version_id": null
-              },
-              "desc": "",
-              "meta": {
-                "family": null,
-                "section": "spirits",
-                "beta_seed": true,
-                "canonical": null,
-                "subfamily": "agave",
-                "serve_format": null,
-                "venue_heading": "Spirits",
-                "identity_class": "spirit",
-                "sample_content": true,
-                "public_components": {},
-                "public_visibility": {
-                  "item": true,
-                  "brand": true,
-                  "price": true,
-                  "description": true,
-                  "ingredients": true,
-                  "house_recipe": true
-                },
-                "missing_ingredients": [
-                  "guest line (no defining row)",
-                  "brand",
-                  "age statement",
-                  "pour size"
-                ]
-              },
-              "name": "Añejo Tequila",
-              "brand": "",
-              "badges": [],
-              "origin": {
-                "item_name": null,
-                "venue_key": null
-              },
-              "prices": [
-                {
-                  "id": "p_beta_anejo_tequila",
-                  "label": "",
-                  "value": 16,
-                  "source": "manual"
-                }
-              ],
-              "source": "manual",
-              "components": []
-            },
-            {
-              "id": "beta_cognac_vsop",
-              "phg": {
-                "menu_item_id": "75501d63-42c4-45cc-8a86-d8cdb30d8909",
-                "recipe_stale": false,
-                "recipe_project_id": null,
-                "recipe_version_id": null
-              },
-              "desc": "",
-              "meta": {
-                "family": null,
-                "section": "spirits",
-                "beta_seed": true,
-                "canonical": null,
-                "subfamily": "brandy",
-                "serve_format": null,
-                "venue_heading": "Spirits",
-                "identity_class": "spirit",
-                "sample_content": true,
-                "public_components": {},
-                "public_visibility": {
-                  "item": true,
-                  "brand": true,
-                  "price": true,
-                  "description": true,
-                  "ingredients": true,
-                  "house_recipe": true
-                },
-                "missing_ingredients": [
-                  "guest line (no defining row)",
-                  "brand / house",
-                  "pour size"
-                ]
-              },
-              "name": "Cognac VSOP",
-              "brand": "",
-              "badges": [],
-              "origin": {
-                "item_name": null,
-                "venue_key": null
-              },
-              "prices": [
-                {
-                  "id": "p_beta_cognac_vsop",
-                  "label": "",
-                  "value": 18,
-                  "source": "manual"
-                }
-              ],
-              "source": "manual",
-              "components": []
+              "id": "p_beta_dry_cider",
+              "label": "",
+              "value": 8,
+              "source": "manual"
             }
-          ]
+          ],
+          "source": "manual",
+          "components": []
         }
-      ],
-      "items": []
+      ]
     },
     {
       "id": "sec_wine",
@@ -733,7 +743,7 @@
         {
           "id": "sub_wine_by_the_glass",
           "desc": "",
-          "name": "Tintos, Blancos y Espumoso",
+          "name": "Por Copa · By the Glass",
           "items": [
             {
               "id": "beta_malbec",
@@ -840,7 +850,14 @@
               ],
               "source": "manual",
               "components": []
-            },
+            }
+          ]
+        },
+        {
+          "id": "sub_wine_sparkling",
+          "desc": "",
+          "name": "Espumoso · Sparkling",
+          "items": [
             {
               "id": "beta_brut_rose",
               "phg": {
@@ -903,7 +920,7 @@
   "subtitle": "Iowa City, Iowa",
   "meta": {
     "designer_notes": {
-      "round": 12,
+      "round": 13,
       "recipe_versions": {
         "beta_old_fashioned": [
           "7095fd3d-58fb-43f5-8e8f-1a0afadeafa7",
@@ -930,7 +947,7 @@
           "Cocktail cherry"
         ]
       },
-      "concept": "Lotería de la Cantina, a real tabla of four cards read in rows: El Cantarito (44, cocktails, Margarita first) and El Barril (9, beer & cider) on top; La Botella (8, agave & brandy) and La Rosa (41, wine) below, on one shared break line. Every card: 3 pt frame in its colour; one face template (105 pt cut-paper figure at the same x on every card, its traditional Don Clemente number as an italic ink numeral in the figure's top-left corner, cantor verse and name band in a column at the same x offset); the drinks list below.",
+      "concept": "Lotería de la Cantina, a real tabla of four cards. Top: El Cantarito (44, cocktails, Margarita first) and La Botella (8, agave & brandy); below: La Rosa (41, wine) under El Cantarito and El Barril (9, beer & cider) under La Botella. Every card: 3 pt frame in its colour; one face template (105 pt cut-paper figure at the same x on every card, its traditional Don Clemente number as a 12 pt italic ink numeral in the figure's top-left corner, cantor verse and name band in a column at the same x offset); the drinks list below under the draft's own subheads, SPANISH · English.",
       "cards": [
         {
           "n": 1,
@@ -943,7 +960,7 @@
           "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
           "figure": "cantarito",
           "featured": true,
-          "card_h_pt": 354,
+          "card_h_pt": 480,
           "face_h_pt": 117,
           "figure_pt": 105,
           "items": [
@@ -955,27 +972,6 @@
         },
         {
           "n": 2,
-          "ref": "sec_beer",
-          "name": "Beer & Cider",
-          "loteria_name": "EL BARRIL",
-          "loteria_number": 9,
-          "number_source": "traditional Don Clemente lotería numbering",
-          "cantor_verse": "Tanto bebió el albañil, que quedó como barril.",
-          "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
-          "figure": "barrel",
-          "featured": false,
-          "card_h_pt": 354,
-          "face_h_pt": 117,
-          "figure_pt": 105,
-          "items": [
-            "beta_czech_pilsner",
-            "beta_dry_hopped_ipa",
-            "beta_amber_lager",
-            "beta_dry_cider"
-          ]
-        },
-        {
-          "n": 3,
           "ref": "sec_spirits",
           "name": "Spirits",
           "loteria_name": "LA BOTELLA",
@@ -985,7 +981,7 @@
           "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
           "figure": "bottle",
           "featured": false,
-          "card_h_pt": 240,
+          "card_h_pt": 360,
           "face_h_pt": 117,
           "figure_pt": 105,
           "items": [
@@ -995,7 +991,7 @@
           ]
         },
         {
-          "n": 4,
+          "n": 3,
           "ref": "sec_wine",
           "name": "Wine",
           "loteria_name": "LA ROSA",
@@ -1005,13 +1001,34 @@
           "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
           "figure": "rose",
           "featured": false,
-          "card_h_pt": 240,
+          "card_h_pt": 360,
           "face_h_pt": 117,
           "figure_pt": 105,
           "items": [
             "beta_malbec",
             "beta_pinot_grigio",
             "beta_brut_rose"
+          ]
+        },
+        {
+          "n": 4,
+          "ref": "sec_beer",
+          "name": "Beer & Cider",
+          "loteria_name": "EL BARRIL",
+          "loteria_number": 9,
+          "number_source": "traditional Don Clemente lotería numbering",
+          "cantor_verse": "Tanto bebió el albañil, que quedó como barril.",
+          "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
+          "figure": "barrel",
+          "featured": false,
+          "card_h_pt": 360,
+          "face_h_pt": 117,
+          "figure_pt": 105,
+          "items": [
+            "beta_czech_pilsner",
+            "beta_dry_hopped_ipa",
+            "beta_amber_lager",
+            "beta_dry_cider"
           ]
         }
       ],
@@ -1055,48 +1072,45 @@
           "missing": []
         },
         "beta_blanco_tequila": {
-          "printed": "",
+          "printed": "Blanco tequila, poured straight.",
           "serve_cue": "",
           "serve_cue_source": "",
           "recipe_version_id": null,
-          "words_from": "name only: no gateway row defines blanco / plata (see gateway rows)",
+          "words_from": "draft menu_description 'Blanco tequila pour.' reworded; 'poured straight' from the draft Spirits section desc 'Straight pours by category.' (no new fact)",
           "gateway_rows": [
             "beverage_categories 04d72e1f-650d-490c-8ad8-54a6eb8aa766 'Blanco / plata' (notes null; authority_note 'NOM-006-SCFI-2012 §5, clase.')"
           ],
           "missing": [
-            "guest line (no defining row)",
             "brand",
             "pour size"
           ]
         },
         "beta_anejo_tequila": {
-          "printed": "",
+          "printed": "Añejo tequila, poured straight.",
           "serve_cue": "",
           "serve_cue_source": "",
           "recipe_version_id": null,
-          "words_from": "name only: no gateway row defines añejo (see gateway rows)",
+          "words_from": "draft menu_description 'Añejo tequila pour.' reworded; 'poured straight' from the draft Spirits section desc 'Straight pours by category.' (no new fact)",
           "gateway_rows": [
             "beverage_categories 9f4dae69-e84c-4b65-b7d9-1b417658b78d 'Añejo' (notes null; authority_note 'NOM-006-SCFI-2012 §5, clase.')"
           ],
           "missing": [
-            "guest line (no defining row)",
             "brand",
             "age statement",
             "pour size"
           ]
         },
         "beta_cognac_vsop": {
-          "printed": "",
+          "printed": "VSOP Cognac, poured straight.",
           "serve_cue": "",
           "serve_cue_source": "",
           "recipe_version_id": null,
-          "words_from": "name only: no gateway row defines VSOP (see gateway rows)",
+          "words_from": "draft menu_description 'VSOP Cognac pour.' reworded; 'poured straight' from the draft Spirits section desc 'Straight pours by category.' (no new fact)",
           "gateway_rows": [
             "beverage_categories a88f6e79-9438-6e3d-2656-406fad2b829f 'Cognac' (notes null)",
             "beverage_categories bec5063c-5274-9534-91da-53a2f10c8255 'VSOP' (notes null, no age statement)"
           ],
           "missing": [
-            "guest line (no defining row)",
             "brand / house",
             "pour size"
           ]
@@ -1111,8 +1125,7 @@
           "missing": [
             "brewery",
             "ABV",
-            "pour size",
-            "format (draft or can)"
+            "pour size"
           ]
         },
         "beta_dry_hopped_ipa": {
@@ -1138,8 +1151,7 @@
           "missing": [
             "brewery",
             "ABV",
-            "pour size",
-            "format (draft or can)"
+            "pour size"
           ]
         },
         "beta_dry_cider": {
@@ -1199,13 +1211,14 @@
         }
       },
       "gateway_query": "Round 12 gateway calls (public.phg_designer_query): log_id 167 (beverage_categories 04d72e1f, 9f4dae69, a88f6e79, bec5063c), log_id 168 (phg.menu_items joined to phg.recipe_versions on current_recipe_version_id: glassware, garnish, method), log_id 169 (spirit_lexicon terms blanco / añejo / VSOP / plata: 0 rows), log_id 170 (spirit_lexicon columns: term, family, subfamily, notes; no definitions), log_id 171 (every beverage_categories row under tequila and cognac: blanco, añejo and VSOP have notes = null).",
-      "spirits_name_only": "No gateway row defines blanco / plata, añejo or VSOP (beverage_categories notes are null; spirit_lexicon has no such terms), so the three spirits print their name and price only and are flagged. 'by the pour' is gone.",
+      "spirits_copy": "Each spirit prints its own draft description reworded into guest voice with no new fact: 'Blanco tequila pour.' -> 'Blanco tequila, poured straight.'; 'Añejo tequila pour.' -> 'Añejo tequila, poured straight.'; 'VSOP Cognac pour.' -> 'VSOP Cognac, poured straight.'. 'poured straight' is the draft Spirits section desc 'Straight pours by category.'.",
       "manhattan": "'Rye, sweet vermouth and aromatic bitters.' (the venue's own menu_description words). 'Spirit-forward' (a class label) dropped; 'rye whiskey' shortened to 'rye'.",
-      "brut_rose_price": "Prints like every other price. The empty glass / bottle label is asked in needs_input only.",
-      "structure_changes": "Cocktails: 'Clásicos · Classics' (Margarita, Manhattan) leads, then 'De la Casa · House' (Old Fashioned, Daiquiri). Spirits: 'Agave & Brandy'. Beer: 'Cerveza & Sidra' (cider folded in). Wine: 'Tintos, Blancos y Espumoso'.",
-      "card_layout": "2 + 2 tabla read in rows; columns 261 / 261 pt, 18 pt gutter, 12 pt between rows. Top row 354 pt (El Cantarito | El Barril); lower row 240 pt (La Botella | La Rosa); 354 + 12 + 240 = 606. Card tops, faces, name bands, subheads and item rows all sit on 6 pt steps from the deck top.",
-      "retired_junmai_ginjo": "Retired Junmai Ginjo ($12) in phg.menu_items is not in the draft and is left off (please confirm).",
-      "palette_note": "Four hues: terracotta (El Cantarito), ink (La Botella), agave green (El Barril), lotería rosa (La Rosa); marigold is the accent (papel picado and figure details). Agave blue dropped."
+      "brut_rose_price": "Prints like every other price under 'Espumoso · Sparkling', unlabelled. The empty glass / bottle label is asked in needs_input only.",
+      "structure_changes": "The draft's own subheads are restored in one pattern, SPANISH · English ('y' only in Spanish, '&' only in English): Cocktails 'Clásicos · Classics' (Margarita first) then 'De la Casa · House Originals'; Spirits 'Agave · Agave' then 'Brandy · Brandy'; Beer 'De Barril · Draft' then the draft's own Cider section as 'Sidra · Cider'; Wine 'Por Copa · By the Glass' then 'Espumoso · Sparkling'. No section or subsection is merged in doc.json. 'Tintos, Blancos y Espumoso' and 'Cerveza & Sidra' are gone.",
+      "card_layout": "2 + 2 tabla with a per-column break: columns 261 / 261 pt, 18 pt gutter, 12 pt between cards. Column 1: El Cantarito 480 pt + 12 + La Rosa 360 pt; column 2: La Botella 360 pt + 12 + El Barril 360 pt; deck 900 pt on a 6 pt row grid. Card tops, faces, name bands, subheads and item rows all sit on 6 pt steps from the deck top.",
+      "break_note": "Shared rows cannot hold 12 pt or less of empty space per card with this content (El Cantarito needs about 90 pt more than La Botella), and El Barril (4 items, 2 subheads) under El Cantarito would make column 1 about 138 pt taller than column 2. So each column breaks at its own line and La Rosa sits under El Cantarito, El Barril under La Botella; the lower name bands are therefore not aligned across the gutter.",
+      "retired_junmai_ginjo": "Junmai Ginjo is a phg.menu_items row that is not in draft_doc.json; it is intentionally left off pending the venue's decision.",
+      "palette_note": "Four hues: terracotta (El Cantarito), ink (La Botella), agave green (El Barril), lotería rosa (La Rosa); marigold is the accent (papel picado and figure details). La Botella's prices and subhead rules are deep marigold #8C5A00 (5.41:1 on the card) so they no longer print flat black like its names."
     }
   }
 }
