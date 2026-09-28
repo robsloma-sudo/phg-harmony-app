@@ -1,0 +1,4110 @@
+{
+ "M": {
+  "page": {
+   "w": 612,
+   "h": 792
+  },
+  "els": [
+   {
+    "kind": "title",
+    "text": "CANTINA",
+    "x": 165.498046875,
+    "y": 33.1171875,
+    "w": 118.5,
+    "h": 438.8203125,
+    "lines": 1,
+    "line_rects": [
+     [
+      165.498046875,
+      33.1171875,
+      118.5,
+      438.8203125
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 96,
+    "weight": "380",
+    "style": "normal",
+    "tracking_em": 0.075,
+    "ref": "title",
+    "note": "vertical display wordmark (writing-mode vertical-rl)"
+   },
+   {
+    "kind": "tagline",
+    "text": "& COCKTAIL BAR · IOWA CITY, IOWA",
+    "x": 219.24609375,
+    "y": 503.6484375,
+    "w": 10.5,
+    "h": 252.3515625,
+    "lines": 1,
+    "line_rects": [
+     [
+      219.24609375,
+      503.6484375,
+      10.5,
+      252.3515625
+     ]
+    ],
+    "color": "rgb(110, 47, 29)",
+    "font": "DM Sans",
+    "size_pt": 8.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0.4199986875041016,
+    "ref": "subtitle",
+    "note": "venue line + location, vertical"
+   },
+   {
+    "kind": "header",
+    "text": "Cócteles · Cocktails",
+    "x": 282,
+    "y": 31.875,
+    "w": 151.11328125,
+    "h": 21,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      31.875,
+      64.04296875,
+      21
+     ],
+     [
+      282,
+      31.875,
+      64.04296875,
+      21
+     ],
+     [
+      346.04296875,
+      31.875,
+      12.0234375,
+      21
+     ],
+     [
+      346.04296875,
+      31.875,
+      12.0234375,
+      21
+     ],
+     [
+      358.06640625,
+      31.875,
+      75.046875,
+      21
+     ],
+     [
+      358.06640625,
+      31.875,
+      75.046875,
+      21
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 17.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "sec_cocktails",
+    "column": "full"
+   },
+   {
+    "kind": "divider",
+    "ref": "sec_cocktails",
+    "column": "full",
+    "note": "0.75 pt section rule",
+    "x": 282,
+    "y": 59.12109375,
+    "w": 294,
+    "h": 0.75
+   },
+   {
+    "kind": "header",
+    "text": "Cerveza y Sidra · Beer & Cider",
+    "x": 282,
+    "y": 325.86328125,
+    "w": 240.2109375,
+    "h": 21,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      325.86328125,
+      122.765625,
+      21
+     ],
+     [
+      282,
+      325.86328125,
+      122.765625,
+      21
+     ],
+     [
+      404.765625,
+      325.86328125,
+      12.0234375,
+      21
+     ],
+     [
+      404.765625,
+      325.86328125,
+      12.0234375,
+      21
+     ],
+     [
+      416.7890625,
+      325.86328125,
+      105.421875,
+      21
+     ],
+     [
+      416.7890625,
+      325.86328125,
+      105.421875,
+      21
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 17.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "sec_beer",
+    "column": "full"
+   },
+   {
+    "kind": "divider",
+    "ref": "sec_beer",
+    "column": "full",
+    "note": "0.75 pt section rule",
+    "x": 282,
+    "y": 353.109375,
+    "w": 294,
+    "h": 0.75
+   },
+   {
+    "kind": "header",
+    "text": "Vino · Wine",
+    "x": 282,
+    "y": 479.8125,
+    "w": 89.35546875,
+    "h": 21,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      479.8125,
+      35.63671875,
+      21
+     ],
+     [
+      282,
+      479.8125,
+      35.63671875,
+      21
+     ],
+     [
+      317.63671875,
+      479.8125,
+      12.0234375,
+      21
+     ],
+     [
+      317.63671875,
+      479.8125,
+      12.0234375,
+      21
+     ],
+     [
+      329.66015625,
+      479.8125,
+      41.6953125,
+      21
+     ],
+     [
+      329.66015625,
+      479.8125,
+      41.6953125,
+      21
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 17.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "sec_wine",
+    "column": "full"
+   },
+   {
+    "kind": "divider",
+    "ref": "sec_wine",
+    "column": "full",
+    "note": "0.75 pt section rule",
+    "x": 282,
+    "y": 507.05859375,
+    "w": 294,
+    "h": 0.75
+   },
+   {
+    "kind": "header",
+    "text": "Destilados · Spirits",
+    "x": 282,
+    "y": 612.7734375,
+    "w": 147.4921875,
+    "h": 21,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      612.7734375,
+      81.85546875,
+      21
+     ],
+     [
+      282,
+      612.7734375,
+      81.85546875,
+      21
+     ],
+     [
+      363.85546875,
+      612.7734375,
+      12.0234375,
+      21
+     ],
+     [
+      363.85546875,
+      612.7734375,
+      12.0234375,
+      21
+     ],
+     [
+      375.87890625,
+      612.7734375,
+      53.61328125,
+      21
+     ],
+     [
+      375.87890625,
+      612.7734375,
+      53.61328125,
+      21
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 17.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "sec_spirits",
+    "column": "full"
+   },
+   {
+    "kind": "divider",
+    "ref": "sec_spirits",
+    "column": "full",
+    "note": "0.75 pt section rule",
+    "x": 282,
+    "y": 640.01953125,
+    "w": 294,
+    "h": 0.75
+   },
+   {
+    "kind": "subheader",
+    "text": "CLÁSICOS · CLASSICS",
+    "x": 282,
+    "y": 67.6171875,
+    "w": 120.66796875,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      67.6171875,
+      54.6328125,
+      12
+     ],
+     [
+      282,
+      67.6171875,
+      54.6328125,
+      12
+     ],
+     [
+      336.6328125,
+      67.6171875,
+      10.921875,
+      12
+     ],
+     [
+      336.6328125,
+      67.6171875,
+      10.921875,
+      12
+     ],
+     [
+      347.5546875,
+      67.6171875,
+      55.11328125,
+      12
+     ],
+     [
+      347.5546875,
+      67.6171875,
+      55.11328125,
+      12
+     ]
+    ],
+    "color": "rgb(154, 59, 34)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "700",
+    "style": "normal",
+    "tracking_em": 0.16,
+    "ref": "sub_cocktails_classics",
+    "column": "full"
+   },
+   {
+    "kind": "subheader",
+    "text": "DE LA CASA · HOUSE",
+    "x": 282,
+    "y": 193.6171875,
+    "w": 113.33203125,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      193.6171875,
+      64.875,
+      12
+     ],
+     [
+      282,
+      193.6171875,
+      64.875,
+      12
+     ],
+     [
+      346.875,
+      193.6171875,
+      10.921875,
+      12
+     ],
+     [
+      346.875,
+      193.6171875,
+      10.921875,
+      12
+     ],
+     [
+      357.796875,
+      193.6171875,
+      37.53515625,
+      12
+     ],
+     [
+      357.796875,
+      193.6171875,
+      37.53515625,
+      12
+     ]
+    ],
+    "color": "rgb(154, 59, 34)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "700",
+    "style": "normal",
+    "tracking_em": 0.16,
+    "ref": "sub_cocktails_house_originals",
+    "column": "full"
+   },
+   {
+    "kind": "subheader",
+    "text": "DE BARRIL · DRAFT",
+    "x": 282,
+    "y": 361.60546875,
+    "w": 102.515625,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      361.60546875,
+      55.55859375,
+      12
+     ],
+     [
+      282,
+      361.60546875,
+      55.55859375,
+      12
+     ],
+     [
+      337.55859375,
+      361.60546875,
+      10.921875,
+      12
+     ],
+     [
+      337.55859375,
+      361.60546875,
+      10.921875,
+      12
+     ],
+     [
+      348.48046875,
+      361.60546875,
+      36.03515625,
+      12
+     ],
+     [
+      348.48046875,
+      361.60546875,
+      36.03515625,
+      12
+     ]
+    ],
+    "color": "rgb(154, 59, 34)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "700",
+    "style": "normal",
+    "tracking_em": 0.16,
+    "ref": "sub_beer_draft",
+    "column": "full"
+   },
+   {
+    "kind": "subheader",
+    "text": "SIDRA · CIDER",
+    "x": 282,
+    "y": 438.57421875,
+    "w": 76.5703125,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      438.57421875,
+      32.0625,
+      12
+     ],
+     [
+      282,
+      438.57421875,
+      32.0625,
+      12
+     ],
+     [
+      314.0625,
+      438.57421875,
+      10.921875,
+      12
+     ],
+     [
+      314.0625,
+      438.57421875,
+      10.921875,
+      12
+     ],
+     [
+      324.984375,
+      438.57421875,
+      33.5859375,
+      12
+     ],
+     [
+      324.984375,
+      438.57421875,
+      33.5859375,
+      12
+     ]
+    ],
+    "color": "rgb(154, 59, 34)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "700",
+    "style": "normal",
+    "tracking_em": 0.16,
+    "ref": "sec_cider",
+    "column": "full"
+   },
+   {
+    "kind": "subheader",
+    "text": "POR COPA · BY THE GLASS",
+    "x": 282,
+    "y": 515.5546875,
+    "w": 145.79296875,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      515.5546875,
+      55.53515625,
+      12
+     ],
+     [
+      282,
+      515.5546875,
+      55.53515625,
+      12
+     ],
+     [
+      337.53515625,
+      515.5546875,
+      10.921875,
+      12
+     ],
+     [
+      337.53515625,
+      515.5546875,
+      10.921875,
+      12
+     ],
+     [
+      348.45703125,
+      515.5546875,
+      79.3359375,
+      12
+     ],
+     [
+      348.45703125,
+      515.5546875,
+      79.3359375,
+      12
+     ]
+    ],
+    "color": "rgb(154, 59, 34)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "700",
+    "style": "normal",
+    "tracking_em": 0.16,
+    "ref": "sub_wine_by_the_glass",
+    "column": "full"
+   },
+   {
+    "kind": "subheader",
+    "text": "ESPUMOSOS · SPARKLING",
+    "x": 282,
+    "y": 571.53515625,
+    "w": 139.6875,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      571.53515625,
+      66.2109375,
+      12
+     ],
+     [
+      282,
+      571.53515625,
+      66.2109375,
+      12
+     ],
+     [
+      348.2109375,
+      571.53515625,
+      10.921875,
+      12
+     ],
+     [
+      348.2109375,
+      571.53515625,
+      10.921875,
+      12
+     ],
+     [
+      359.1328125,
+      571.53515625,
+      62.5546875,
+      12
+     ],
+     [
+      359.1328125,
+      571.53515625,
+      62.5546875,
+      12
+     ]
+    ],
+    "color": "rgb(154, 59, 34)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "700",
+    "style": "normal",
+    "tracking_em": 0.16,
+    "ref": "sub_wine_sparkling",
+    "column": "full"
+   },
+   {
+    "kind": "subheader",
+    "text": "DESTILADOS DE AGAVE · AGAVE",
+    "x": 282,
+    "y": 648.515625,
+    "w": 173.02734375,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      648.515625,
+      124.59375,
+      12
+     ],
+     [
+      282,
+      648.515625,
+      124.59375,
+      12
+     ],
+     [
+      406.59375,
+      648.515625,
+      10.921875,
+      12
+     ],
+     [
+      406.59375,
+      648.515625,
+      10.921875,
+      12
+     ],
+     [
+      417.515625,
+      648.515625,
+      37.51171875,
+      12
+     ],
+     [
+      417.515625,
+      648.515625,
+      37.51171875,
+      12
+     ]
+    ],
+    "color": "rgb(154, 59, 34)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "700",
+    "style": "normal",
+    "tracking_em": 0.16,
+    "ref": "sub_spirits_agave",
+    "column": "full"
+   },
+   {
+    "kind": "subheader",
+    "text": "BRANDY · BRANDY",
+    "x": 282,
+    "y": 704.49609375,
+    "w": 98.4609375,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      704.49609375,
+      42.796875,
+      12
+     ],
+     [
+      282,
+      704.49609375,
+      42.796875,
+      12
+     ],
+     [
+      324.796875,
+      704.49609375,
+      10.921875,
+      12
+     ],
+     [
+      324.796875,
+      704.49609375,
+      10.921875,
+      12
+     ],
+     [
+      335.71875,
+      704.49609375,
+      44.7421875,
+      12
+     ],
+     [
+      335.71875,
+      704.49609375,
+      44.7421875,
+      12
+     ]
+    ],
+    "color": "rgb(154, 59, 34)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "700",
+    "style": "normal",
+    "tracking_em": 0.16,
+    "ref": "sub_spirits_brandy",
+    "column": "full"
+   },
+   {
+    "kind": "item_name",
+    "text": "Margarita",
+    "x": 282,
+    "y": 80.87109375,
+    "w": 53.296875,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      80.87109375,
+      53.296875,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_margarita",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "15",
+    "x": 346.2890625,
+    "y": 80.87109375,
+    "w": 11.3671875,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      346.2890625,
+      80.87109375,
+      11.3671875,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_margarita",
+    "column": "full"
+   },
+   {
+    "kind": "description",
+    "text": "tequila blanco · orange liqueur · agave syrup · fresh lime LIME WHEEL · ROCKS",
+    "x": 282,
+    "y": 108.8671875,
+    "w": 294,
+    "h": 28.0078125,
+    "lines": 3,
+    "line_rects": [
+     [
+      282,
+      108.8671875,
+      149.4609375,
+      13.5
+     ],
+     [
+      431.4609375,
+      108.8671875,
+      7.60546875,
+      13.5
+     ],
+     [
+      431.4609375,
+      108.8671875,
+      7.60546875,
+      13.5
+     ],
+     [
+      439.06640625,
+      108.8671875,
+      116.02734375,
+      13.5
+     ],
+     [
+      282,
+      122.87109375,
+      294,
+      14.00390625
+     ],
+     [
+      282,
+      123.62109375,
+      62.44921875,
+      12
+     ],
+     [
+      344.44921875,
+      123.62109375,
+      9.31640625,
+      12
+     ],
+     [
+      353.765625,
+      123.62109375,
+      34.734375,
+      12
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "Fraunces",
+    "size_pt": 10.5,
+    "weight": "400",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_margarita",
+    "column": "full",
+    "note": "ingredient lines under the name"
+   },
+   {
+    "kind": "serve_label",
+    "text": "ROCKS",
+    "x": 353.765625,
+    "y": 123.62109375,
+    "w": 34.734375,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      353.765625,
+      123.62109375,
+      34.734375,
+      12
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0.09999999999999999,
+    "ref": "beta_margarita",
+    "column": "full",
+    "note": "glassware from phg.recipe_versions, serve slot after the ingredients"
+   },
+   {
+    "kind": "garnish",
+    "text": "LIME WHEEL",
+    "x": 282,
+    "y": 123.62109375,
+    "w": 62.44921875,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      123.62109375,
+      62.44921875,
+      12
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0.09999999999999999,
+    "ref": "beta_margarita",
+    "column": "full",
+    "note": "garnish from phg.recipe_versions, serve slot (not an ingredient)"
+   },
+   {
+    "kind": "description",
+    "text": "Bright, citrus-forward",
+    "x": 282,
+    "y": 94.86328125,
+    "w": 104.58984375,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      94.86328125,
+      104.58984375,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 10.5,
+    "weight": "400",
+    "style": "italic",
+    "tracking_em": 0,
+    "ref": "beta_margarita",
+    "column": "full",
+    "note": "sensory description (draft), between name and ingredients"
+   },
+   {
+    "kind": "item_name",
+    "text": "Manhattan",
+    "x": 282,
+    "y": 143.87109375,
+    "w": 58.3828125,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      143.87109375,
+      58.3828125,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_manhattan",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "15",
+    "x": 351.375,
+    "y": 143.87109375,
+    "w": 11.3671875,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      351.375,
+      143.87109375,
+      11.3671875,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_manhattan",
+    "column": "full"
+   },
+   {
+    "kind": "description",
+    "text": "rye whiskey · sweet vermouth COCKTAIL CHERRY · COUPE",
+    "x": 282,
+    "y": 157.86328125,
+    "w": 294,
+    "h": 28.0078125,
+    "lines": 3,
+    "line_rects": [
+     [
+      282,
+      157.86328125,
+      145.5703125,
+      13.5
+     ],
+     [
+      282,
+      171.8671875,
+      294,
+      14.00390625
+     ],
+     [
+      282,
+      172.6171875,
+      94.4765625,
+      12
+     ],
+     [
+      376.4765625,
+      172.6171875,
+      9.31640625,
+      12
+     ],
+     [
+      385.79296875,
+      172.6171875,
+      34.76953125,
+      12
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "Fraunces",
+    "size_pt": 10.5,
+    "weight": "400",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_manhattan",
+    "column": "full",
+    "note": "ingredient lines under the name"
+   },
+   {
+    "kind": "serve_label",
+    "text": "COUPE",
+    "x": 385.79296875,
+    "y": 172.6171875,
+    "w": 34.76953125,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      385.79296875,
+      172.6171875,
+      34.76953125,
+      12
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0.09999999999999999,
+    "ref": "beta_manhattan",
+    "column": "full",
+    "note": "glassware from phg.recipe_versions, serve slot after the ingredients"
+   },
+   {
+    "kind": "garnish",
+    "text": "COCKTAIL CHERRY",
+    "x": 282,
+    "y": 172.6171875,
+    "w": 94.4765625,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      172.6171875,
+      94.4765625,
+      12
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0.09999999999999999,
+    "ref": "beta_manhattan",
+    "column": "full",
+    "note": "garnish from phg.recipe_versions, serve slot (not an ingredient)"
+   },
+   {
+    "kind": "item_name",
+    "text": "Brown Butter Old Fashioned",
+    "x": 282,
+    "y": 206.87109375,
+    "w": 151.04296875,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      206.87109375,
+      151.04296875,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_old_fashioned",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "16",
+    "x": 444.03515625,
+    "y": 206.87109375,
+    "w": 11.6953125,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      444.03515625,
+      206.87109375,
+      11.6953125,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_old_fashioned",
+    "column": "full"
+   },
+   {
+    "kind": "description",
+    "text": "brown butter-washed bourbon · house demerara syrup aromatic bitters ORANGE PEEL · ROCKS",
+    "x": 282,
+    "y": 220.86328125,
+    "w": 294,
+    "h": 42.01171875,
+    "lines": 4,
+    "line_rects": [
+     [
+      282,
+      220.86328125,
+      151.3359375,
+      13.5
+     ],
+     [
+      433.3359375,
+      220.86328125,
+      7.60546875,
+      13.5
+     ],
+     [
+      433.3359375,
+      220.86328125,
+      7.60546875,
+      13.5
+     ],
+     [
+      440.94140625,
+      220.86328125,
+      110.5078125,
+      13.5
+     ],
+     [
+      282,
+      234.8671875,
+      79.0078125,
+      13.5
+     ],
+     [
+      282,
+      248.87109375,
+      294,
+      14.00390625
+     ],
+     [
+      282,
+      249.62109375,
+      70.5234375,
+      12
+     ],
+     [
+      352.5234375,
+      249.62109375,
+      9.31640625,
+      12
+     ],
+     [
+      361.83984375,
+      249.62109375,
+      34.734375,
+      12
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "Fraunces",
+    "size_pt": 10.5,
+    "weight": "400",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_old_fashioned",
+    "column": "full",
+    "note": "ingredient lines under the name"
+   },
+   {
+    "kind": "serve_label",
+    "text": "ROCKS",
+    "x": 361.83984375,
+    "y": 249.62109375,
+    "w": 34.734375,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      361.83984375,
+      249.62109375,
+      34.734375,
+      12
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0.09999999999999999,
+    "ref": "beta_old_fashioned",
+    "column": "full",
+    "note": "glassware from phg.recipe_versions, serve slot after the ingredients"
+   },
+   {
+    "kind": "garnish",
+    "text": "ORANGE PEEL",
+    "x": 282,
+    "y": 249.62109375,
+    "w": 70.5234375,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      249.62109375,
+      70.5234375,
+      12
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0.09999999999999999,
+    "ref": "beta_old_fashioned",
+    "column": "full",
+    "note": "garnish from phg.recipe_versions, serve slot (not an ingredient)"
+   },
+   {
+    "kind": "item_name",
+    "text": "House Daiquiri",
+    "x": 282,
+    "y": 269.87109375,
+    "w": 80.671875,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      269.87109375,
+      80.671875,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_daiquiri",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "14",
+    "x": 373.6640625,
+    "y": 269.87109375,
+    "w": 11.765625,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      373.6640625,
+      269.87109375,
+      11.765625,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_daiquiri",
+    "column": "full"
+   },
+   {
+    "kind": "description",
+    "text": "white rum · house demerara syrup · fresh lime LIME COIN · COUPE",
+    "x": 282,
+    "y": 283.86328125,
+    "w": 294,
+    "h": 28.0078125,
+    "lines": 3,
+    "line_rects": [
+     [
+      282,
+      283.86328125,
+      226.1484375,
+      13.5
+     ],
+     [
+      282,
+      297.8671875,
+      294,
+      14.00390625
+     ],
+     [
+      282,
+      298.6171875,
+      53.0859375,
+      12
+     ],
+     [
+      335.0859375,
+      298.6171875,
+      9.31640625,
+      12
+     ],
+     [
+      344.40234375,
+      298.6171875,
+      34.76953125,
+      12
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "Fraunces",
+    "size_pt": 10.5,
+    "weight": "400",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_daiquiri",
+    "column": "full",
+    "note": "ingredient lines under the name"
+   },
+   {
+    "kind": "serve_label",
+    "text": "COUPE",
+    "x": 344.40234375,
+    "y": 298.6171875,
+    "w": 34.76953125,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      344.40234375,
+      298.6171875,
+      34.76953125,
+      12
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0.09999999999999999,
+    "ref": "beta_daiquiri",
+    "column": "full",
+    "note": "glassware from phg.recipe_versions, serve slot after the ingredients"
+   },
+   {
+    "kind": "garnish",
+    "text": "LIME COIN",
+    "x": 282,
+    "y": 298.6171875,
+    "w": 53.0859375,
+    "h": 12,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      298.6171875,
+      53.0859375,
+      12
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "DM Sans",
+    "size_pt": 9,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0.09999999999999999,
+    "ref": "beta_daiquiri",
+    "column": "full",
+    "note": "garnish from phg.recipe_versions, serve slot (not an ingredient)"
+   },
+   {
+    "kind": "item_name",
+    "text": "Czech Pilsner",
+    "x": 282,
+    "y": 374.859375,
+    "w": 72.41015625,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      374.859375,
+      72.41015625,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_czech_pilsner",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "7",
+    "x": 468.0234375,
+    "y": 374.859375,
+    "w": 5.68359375,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      468.0234375,
+      374.859375,
+      5.68359375,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_czech_pilsner",
+    "column": "full"
+   },
+   {
+    "kind": "description",
+    "text": "crisp pale lager",
+    "x": 381.99609375,
+    "y": 374.859375,
+    "w": 75.03515625,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      381.99609375,
+      374.859375,
+      75.03515625,
+      13.5
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "Fraunces",
+    "size_pt": 10.5,
+    "weight": "400",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_czech_pilsner",
+    "column": "full",
+    "note": "draft descriptor on the tab stop (94 pt)"
+   },
+   {
+    "kind": "item_name",
+    "text": "Dry-Hopped IPA",
+    "x": 282,
+    "y": 395.84765625,
+    "w": 89.26171875,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      395.84765625,
+      89.26171875,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_dry_hopped_ipa",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "8",
+    "x": 476.71875,
+    "y": 395.84765625,
+    "w": 6.5859375,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      476.71875,
+      395.84765625,
+      6.5859375,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_dry_hopped_ipa",
+    "column": "full"
+   },
+   {
+    "kind": "description",
+    "text": "hop-forward IPA",
+    "x": 381.99609375,
+    "y": 395.84765625,
+    "w": 83.73046875,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      381.99609375,
+      395.84765625,
+      83.73046875,
+      13.5
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "Fraunces",
+    "size_pt": 10.5,
+    "weight": "400",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_dry_hopped_ipa",
+    "column": "full",
+    "note": "draft descriptor on the tab stop (94 pt)"
+   },
+   {
+    "kind": "item_name",
+    "text": "Amber Lager",
+    "x": 282,
+    "y": 416.8359375,
+    "w": 69.43359375,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      416.8359375,
+      69.43359375,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_amber_lager",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "7",
+    "x": 484.93359375,
+    "y": 416.8359375,
+    "w": 5.68359375,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      484.93359375,
+      416.8359375,
+      5.68359375,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_amber_lager",
+    "column": "full"
+   },
+   {
+    "kind": "description",
+    "text": "toasty amber lager",
+    "x": 381.99609375,
+    "y": 416.8359375,
+    "w": 91.9453125,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      381.99609375,
+      416.8359375,
+      91.9453125,
+      13.5
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "Fraunces",
+    "size_pt": 10.5,
+    "weight": "400",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_amber_lager",
+    "column": "full",
+    "note": "draft descriptor on the tab stop (94 pt)"
+   },
+   {
+    "kind": "item_name",
+    "text": "Dry Cider",
+    "x": 282,
+    "y": 451.828125,
+    "w": 51.84375,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      451.828125,
+      51.84375,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_dry_cider",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "8",
+    "x": 486.52734375,
+    "y": 451.828125,
+    "w": 6.5859375,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      486.52734375,
+      451.828125,
+      6.5859375,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_dry_cider",
+    "column": "full"
+   },
+   {
+    "kind": "description",
+    "text": "dry sparkling cider",
+    "x": 381.99609375,
+    "y": 451.828125,
+    "w": 93.5390625,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      381.99609375,
+      451.828125,
+      93.5390625,
+      13.5
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "Fraunces",
+    "size_pt": 10.5,
+    "weight": "400",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_dry_cider",
+    "column": "full",
+    "note": "draft descriptor on the tab stop (94 pt)"
+   },
+   {
+    "kind": "item_name",
+    "text": "Malbec",
+    "x": 282,
+    "y": 528.80859375,
+    "w": 38.28515625,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      528.80859375,
+      38.28515625,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_malbec",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "12",
+    "x": 454.9453125,
+    "y": 528.80859375,
+    "w": 11.70703125,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      454.9453125,
+      528.80859375,
+      11.70703125,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_malbec",
+    "column": "full"
+   },
+   {
+    "kind": "description",
+    "text": "dry red wine",
+    "x": 381.99609375,
+    "y": 528.80859375,
+    "w": 61.95703125,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      381.99609375,
+      528.80859375,
+      61.95703125,
+      13.5
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "Fraunces",
+    "size_pt": 10.5,
+    "weight": "400",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_malbec",
+    "column": "full",
+    "note": "draft descriptor on the tab stop (94 pt)"
+   },
+   {
+    "kind": "item_name",
+    "text": "Pinot Grigio",
+    "x": 282,
+    "y": 549.796875,
+    "w": 64.96875,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      549.796875,
+      64.96875,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_pinot_grigio",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "11",
+    "x": 465.87890625,
+    "y": 549.796875,
+    "w": 10.078125,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      465.87890625,
+      549.796875,
+      10.078125,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_pinot_grigio",
+    "column": "full"
+   },
+   {
+    "kind": "description",
+    "text": "dry white wine",
+    "x": 381.99609375,
+    "y": 549.796875,
+    "w": 72.890625,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      381.99609375,
+      549.796875,
+      72.890625,
+      13.5
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "Fraunces",
+    "size_pt": 10.5,
+    "weight": "400",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_pinot_grigio",
+    "column": "full",
+    "note": "draft descriptor on the tab stop (94 pt)"
+   },
+   {
+    "kind": "item_name",
+    "text": "Brut Rosé",
+    "x": 282,
+    "y": 584.7890625,
+    "w": 52.640625,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      584.7890625,
+      52.640625,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_brut_rose",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "13",
+    "x": 482.70703125,
+    "y": 584.7890625,
+    "w": 11.09765625,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      482.70703125,
+      584.7890625,
+      11.09765625,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_brut_rose",
+    "column": "full"
+   },
+   {
+    "kind": "description",
+    "text": "dry sparkling rosé",
+    "x": 381.99609375,
+    "y": 584.7890625,
+    "w": 89.71875,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      381.99609375,
+      584.7890625,
+      89.71875,
+      13.5
+     ]
+    ],
+    "color": "rgb(64, 53, 45)",
+    "font": "Fraunces",
+    "size_pt": 10.5,
+    "weight": "400",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_brut_rose",
+    "column": "full",
+    "note": "draft descriptor on the tab stop (94 pt)"
+   },
+   {
+    "kind": "item_name",
+    "text": "Blanco Tequila",
+    "x": 282,
+    "y": 661.76953125,
+    "w": 78.94921875,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      661.76953125,
+      78.94921875,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_blanco_tequila",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "12",
+    "x": 371.94140625,
+    "y": 661.76953125,
+    "w": 11.70703125,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      371.94140625,
+      661.76953125,
+      11.70703125,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_blanco_tequila",
+    "column": "full"
+   },
+   {
+    "kind": "item_name",
+    "text": "Añejo Tequila",
+    "x": 282,
+    "y": 682.7578125,
+    "w": 73.18359375,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      682.7578125,
+      73.18359375,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_anejo_tequila",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "16",
+    "x": 366.17578125,
+    "y": 682.7578125,
+    "w": 11.6953125,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      366.17578125,
+      682.7578125,
+      11.6953125,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_anejo_tequila",
+    "column": "full"
+   },
+   {
+    "kind": "item_name",
+    "text": "Cognac VSOP",
+    "x": 282,
+    "y": 717.75,
+    "w": 72.9140625,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      717.75,
+      72.9140625,
+      13.5
+     ]
+    ],
+    "color": "rgb(29, 24, 21)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "600",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_cognac_vsop",
+    "column": "full"
+   },
+   {
+    "kind": "price",
+    "text": "18",
+    "x": 365.90625,
+    "y": 717.75,
+    "w": 11.625,
+    "h": 13.5,
+    "lines": 1,
+    "line_rects": [
+     [
+      365.90625,
+      717.75,
+      11.625,
+      13.5
+     ]
+    ],
+    "color": "rgb(90, 75, 63)",
+    "font": "Fraunces",
+    "size_pt": 11.000025,
+    "weight": "500",
+    "style": "normal",
+    "tracking_em": 0,
+    "ref": "beta_cognac_vsop",
+    "column": "full"
+   },
+   {
+    "kind": "legal",
+    "text": "Please tell your server about any allergies.",
+    "x": 282,
+    "y": 744.9140625,
+    "w": 177.8203125,
+    "h": 11.25,
+    "lines": 1,
+    "line_rects": [
+     [
+      282,
+      744.9140625,
+      177.8203125,
+      11.25
+     ]
+    ],
+    "color": "rgb(79, 66, 56)",
+    "font": "Fraunces",
+    "size_pt": 9.500025,
+    "weight": "400",
+    "style": "italic",
+    "tracking_em": 0,
+    "ref": "allergen_line",
+    "column": "full",
+    "note": "generic guest allergen line"
+   }
+  ],
+  "pairs": [
+   {
+    "ref": "beta_margarita",
+    "column": "full",
+    "name_right": 335.296875,
+    "row_text_right": 335.296875,
+    "price_left": 346.2890625,
+    "price_right": 357.65625,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.037388392857142856,
+    "leader_w": 0,
+    "block_top": 80.87109375,
+    "block_bottom": 136.875,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_manhattan",
+    "column": "full",
+    "name_right": 340.3828125,
+    "row_text_right": 340.3828125,
+    "price_left": 351.375,
+    "price_right": 362.7421875,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.037388392857142856,
+    "leader_w": 0,
+    "block_top": 143.87109375,
+    "block_bottom": 185.87109375,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_old_fashioned",
+    "column": "full",
+    "name_right": 433.04296875,
+    "row_text_right": 433.04296875,
+    "price_left": 444.03515625,
+    "price_right": 455.73046875,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.037388392857142856,
+    "leader_w": 0,
+    "block_top": 206.87109375,
+    "block_bottom": 262.875,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_daiquiri",
+    "column": "full",
+    "name_right": 362.671875,
+    "row_text_right": 362.671875,
+    "price_left": 373.6640625,
+    "price_right": 385.4296875,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.037388392857142856,
+    "leader_w": 0,
+    "block_top": 269.87109375,
+    "block_bottom": 311.87109375,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_czech_pilsner",
+    "column": "full",
+    "name_right": 354.41015625,
+    "row_text_right": 457.03125,
+    "price_left": 468.0234375,
+    "price_right": 473.70703125,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.38643973214285715,
+    "leader_w": 0,
+    "block_top": 374.859375,
+    "block_bottom": 388.8515625,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_dry_hopped_ipa",
+    "column": "full",
+    "name_right": 371.26171875,
+    "row_text_right": 465.7265625,
+    "price_left": 476.71875,
+    "price_right": 483.3046875,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.3586973852040816,
+    "leader_w": 0,
+    "block_top": 395.84765625,
+    "block_bottom": 409.83984375,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_amber_lager",
+    "column": "full",
+    "name_right": 351.43359375,
+    "row_text_right": 473.94140625,
+    "price_left": 484.93359375,
+    "price_right": 490.6171875,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.45408163265306123,
+    "leader_w": 0,
+    "block_top": 416.8359375,
+    "block_bottom": 430.828125,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_dry_cider",
+    "column": "full",
+    "name_right": 333.84375,
+    "row_text_right": 475.53515625,
+    "price_left": 486.52734375,
+    "price_right": 493.11328125,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.5193319515306123,
+    "leader_w": 0,
+    "block_top": 451.828125,
+    "block_bottom": 465.8203125,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_malbec",
+    "column": "full",
+    "name_right": 320.28515625,
+    "row_text_right": 443.953125,
+    "price_left": 454.9453125,
+    "price_right": 466.65234375,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.45802774234693877,
+    "leader_w": 0,
+    "block_top": 528.80859375,
+    "block_bottom": 542.80078125,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_pinot_grigio",
+    "column": "full",
+    "name_right": 346.96875,
+    "row_text_right": 454.88671875,
+    "price_left": 465.87890625,
+    "price_right": 475.95703125,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.4044563137755102,
+    "leader_w": 0,
+    "block_top": 549.796875,
+    "block_bottom": 563.7890625,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_brut_rose",
+    "column": "full",
+    "name_right": 334.640625,
+    "row_text_right": 471.71484375,
+    "price_left": 482.70703125,
+    "price_right": 493.8046875,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.5036272321428571,
+    "leader_w": 0,
+    "block_top": 584.7890625,
+    "block_bottom": 598.78125,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_blanco_tequila",
+    "column": "full",
+    "name_right": 360.94921875,
+    "row_text_right": 360.94921875,
+    "price_left": 371.94140625,
+    "price_right": 383.6484375,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.037388392857142856,
+    "leader_w": 0,
+    "block_top": 661.76953125,
+    "block_bottom": 675.76171875,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_anejo_tequila",
+    "column": "full",
+    "name_right": 355.18359375,
+    "row_text_right": 355.18359375,
+    "price_left": 366.17578125,
+    "price_right": 377.87109375,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.037388392857142856,
+    "leader_w": 0,
+    "block_top": 682.7578125,
+    "block_bottom": 696.75,
+    "name_x": 282
+   },
+   {
+    "ref": "beta_cognac_vsop",
+    "column": "full",
+    "name_right": 354.9140625,
+    "row_text_right": 354.9140625,
+    "price_left": 365.90625,
+    "price_right": 377.53125,
+    "column_w": 294,
+    "travel_pt": 10.9921875,
+    "travel_frac": 0.037388392857142856,
+    "name_to_price_frac": 0.037388392857142856,
+    "leader_w": 0,
+    "block_top": 717.75,
+    "block_bottom": 731.7421875,
+    "name_x": 282
+   }
+  ],
+  "leg": {
+   "item_name": {
+    "size_pt": 11.000025,
+    "x_height_pt": 5.25,
+    "cap_height_pt": 7.5
+   },
+   "price": {
+    "size_pt": 11.000025,
+    "x_height_pt": 5.25,
+    "cap_height_pt": 7.5
+   },
+   "description": {
+    "size_pt": 10.5,
+    "x_height_pt": 5.25,
+    "cap_height_pt": 7.5
+   },
+   "subheader": {
+    "size_pt": 9,
+    "x_height_pt": 4.5,
+    "cap_height_pt": 6
+   },
+   "header": {
+    "size_pt": 17.000025,
+    "x_height_pt": 8.25,
+    "cap_height_pt": 12
+   },
+   "serve_label": {
+    "size_pt": 9,
+    "x_height_pt": 4.5,
+    "cap_height_pt": 6
+   },
+   "legal": {
+    "size_pt": 9.500025,
+    "x_height_pt": 4.5,
+    "cap_height_pt": 6.75
+   }
+  },
+  "art": {
+   "x": -9,
+   "y": -9,
+   "w": 630,
+   "h": 810
+  },
+  "secs": [
+   {
+    "x": 282,
+    "y": 31.875,
+    "w": 294,
+    "h": 279.99609375
+   },
+   {
+    "x": 282,
+    "y": 325.86328125,
+    "w": 294,
+    "h": 139.95703125
+   },
+   {
+    "x": 282,
+    "y": 479.8125,
+    "w": 294,
+    "h": 118.96875
+   },
+   {
+    "x": 282,
+    "y": 612.7734375,
+    "w": 294,
+    "h": 118.96875
+   },
+   {
+    "x": 282,
+    "y": 744.1640625,
+    "w": 294,
+    "h": 14.00390625
+   }
+  ],
+  "item_gaps": [
+   [
+    6.99609375,
+    21,
+    6.99609375
+   ],
+   [
+    6.99609375,
+    6.99609375,
+    21
+   ],
+   [
+    6.99609375,
+    21
+   ],
+   [
+    6.99609375,
+    21
+   ]
+  ],
+  "menu": {
+   "x": 282,
+   "y": 31.875,
+   "w": 294,
+   "h": 727.9921875
+  }
+ },
+ "PH": {
+  "scrollWidth": 390,
+  "height": 2208,
+  "min_font_px": 12,
+  "serve_min_px": 12,
+  "grid8": [
+   [
+    {},
+    0,
+    true
+   ],
+   [
+    "big tx",
+    432,
+    true
+   ],
+   [
+    "rl tx",
+    496,
+    true
+   ],
+   [
+    "hrow",
+    552,
+    true
+   ],
+   [
+    "tx",
+    640,
+    true
+   ],
+   [
+    "item c",
+    664,
+    true
+   ],
+   [
+    "row",
+    664,
+    true
+   ],
+   [
+    "sd tx",
+    688,
+    true
+   ],
+   [
+    "desc tx",
+    712,
+    true
+   ],
+   [
+    "item c",
+    800,
+    true
+   ],
+   [
+    "row",
+    800,
+    true
+   ],
+   [
+    "desc tx",
+    824,
+    true
+   ],
+   [
+    "tx",
+    896,
+    true
+   ],
+   [
+    "item c",
+    920,
+    true
+   ],
+   [
+    "row",
+    920,
+    true
+   ],
+   [
+    "desc tx",
+    944,
+    true
+   ],
+   [
+    "item c",
+    1032,
+    true
+   ],
+   [
+    "row",
+    1032,
+    true
+   ],
+   [
+    "desc tx",
+    1056,
+    true
+   ],
+   [
+    "hrow",
+    1144,
+    true
+   ],
+   [
+    "tx",
+    1232,
+    true
+   ],
+   [
+    "item r",
+    1256,
+    true
+   ],
+   [
+    "row",
+    1256,
+    true
+   ],
+   [
+    "item r",
+    1296,
+    true
+   ],
+   [
+    "row",
+    1296,
+    true
+   ],
+   [
+    "item r",
+    1336,
+    true
+   ],
+   [
+    "row",
+    1336,
+    true
+   ],
+   [
+    "tx",
+    1384,
+    true
+   ],
+   [
+    "item r",
+    1408,
+    true
+   ],
+   [
+    "row",
+    1408,
+    true
+   ],
+   [
+    "hrow",
+    1472,
+    true
+   ],
+   [
+    "tx",
+    1560,
+    true
+   ],
+   [
+    "item r",
+    1584,
+    true
+   ],
+   [
+    "row",
+    1584,
+    true
+   ],
+   [
+    "item r",
+    1624,
+    true
+   ],
+   [
+    "row",
+    1624,
+    true
+   ],
+   [
+    "tx",
+    1672,
+    true
+   ],
+   [
+    "item r",
+    1696,
+    true
+   ],
+   [
+    "row",
+    1696,
+    true
+   ],
+   [
+    "hrow",
+    1760,
+    true
+   ],
+   [
+    "tx",
+    1848,
+    true
+   ],
+   [
+    "item s",
+    1872,
+    true
+   ],
+   [
+    "row",
+    1872,
+    true
+   ],
+   [
+    "item s",
+    1912,
+    true
+   ],
+   [
+    "row",
+    1912,
+    true
+   ],
+   [
+    "tx",
+    1960,
+    true
+   ],
+   [
+    "item s",
+    1984,
+    true
+   ],
+   [
+    "row",
+    1984,
+    true
+   ],
+   [
+    "legal tx",
+    2048,
+    true
+   ],
+   [
+    {},
+    2112,
+    true
+   ]
+  ],
+  "pairs": [
+   {
+    "ref": "beta_margarita",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_manhattan",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_old_fashioned",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_daiquiri",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_czech_pilsner",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_dry_hopped_ipa",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_amber_lager",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_dry_cider",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_malbec",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_pinot_grigio",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_brut_rose",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_blanco_tequila",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_anejo_tequila",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   },
+   {
+    "ref": "beta_cognac_vsop",
+    "travel_frac": 0.04678362573099415,
+    "same_row": true,
+    "row_h": 24
+   }
+  ]
+ },
+ "contrast": [
+  {
+   "kind": "title",
+   "ref": "title",
+   "text": "CANTINA",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    231,
+    221,
+    202
+   ],
+   "worst_ratio": 13.06
+  },
+  {
+   "kind": "tagline",
+   "ref": "subtitle",
+   "text": "& COCKTAIL BAR · IOWA CITY, IOWA",
+   "text_rgb": [
+    110,
+    47,
+    29
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 7.59
+  },
+  {
+   "kind": "header",
+   "ref": "sec_cocktails",
+   "text": "Cócteles · Cocktails",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    231,
+    222,
+    202
+   ],
+   "worst_ratio": 13.15
+  },
+  {
+   "kind": "header",
+   "ref": "sec_beer",
+   "text": "Cerveza y Sidra · Beer & Cider",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 13.19
+  },
+  {
+   "kind": "header",
+   "ref": "sec_wine",
+   "text": "Vino · Wine",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 13.19
+  },
+  {
+   "kind": "header",
+   "ref": "sec_spirits",
+   "text": "Destilados · Spirits",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 13.19
+  },
+  {
+   "kind": "subheader",
+   "ref": "sub_cocktails_classics",
+   "text": "CLÁSICOS · CLASSICS",
+   "text_rgb": [
+    154,
+    59,
+    34
+   ],
+   "worst_bg_rgb": [
+    231,
+    222,
+    202
+   ],
+   "worst_ratio": 5.19
+  },
+  {
+   "kind": "subheader",
+   "ref": "sub_cocktails_house_originals",
+   "text": "DE LA CASA · HOUSE",
+   "text_rgb": [
+    154,
+    59,
+    34
+   ],
+   "worst_bg_rgb": [
+    231,
+    222,
+    202
+   ],
+   "worst_ratio": 5.19
+  },
+  {
+   "kind": "subheader",
+   "ref": "sub_beer_draft",
+   "text": "DE BARRIL · DRAFT",
+   "text_rgb": [
+    154,
+    59,
+    34
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    203
+   ],
+   "worst_ratio": 5.25
+  },
+  {
+   "kind": "subheader",
+   "ref": "sec_cider",
+   "text": "SIDRA · CIDER",
+   "text_rgb": [
+    154,
+    59,
+    34
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 5.21
+  },
+  {
+   "kind": "subheader",
+   "ref": "sub_wine_by_the_glass",
+   "text": "POR COPA · BY THE GLASS",
+   "text_rgb": [
+    154,
+    59,
+    34
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 5.21
+  },
+  {
+   "kind": "subheader",
+   "ref": "sub_wine_sparkling",
+   "text": "ESPUMOSOS · SPARKLING",
+   "text_rgb": [
+    154,
+    59,
+    34
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 5.24
+  },
+  {
+   "kind": "subheader",
+   "ref": "sub_spirits_agave",
+   "text": "DESTILADOS DE AGAVE · AGAVE",
+   "text_rgb": [
+    154,
+    59,
+    34
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 5.24
+  },
+  {
+   "kind": "subheader",
+   "ref": "sub_spirits_brandy",
+   "text": "BRANDY · BRANDY",
+   "text_rgb": [
+    154,
+    59,
+    34
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 5.24
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_margarita",
+   "text": "Margarita",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    203
+   ],
+   "worst_ratio": 13.3
+  },
+  {
+   "kind": "price",
+   "ref": "beta_margarita",
+   "text": "15",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    204
+   ],
+   "worst_ratio": 6.32
+  },
+  {
+   "kind": "description",
+   "ref": "beta_margarita",
+   "text": "tequila blanco · orange liqueur · agave ",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 8.92
+  },
+  {
+   "kind": "serve_label",
+   "ref": "beta_margarita",
+   "text": "ROCKS",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    203
+   ],
+   "worst_ratio": 9.0
+  },
+  {
+   "kind": "garnish",
+   "ref": "beta_margarita",
+   "text": "LIME WHEEL",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 8.98
+  },
+  {
+   "kind": "description",
+   "ref": "beta_margarita",
+   "text": "Bright, citrus-forward",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    202
+   ],
+   "worst_ratio": 6.26
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_manhattan",
+   "text": "Manhattan",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    204
+   ],
+   "worst_ratio": 13.31
+  },
+  {
+   "kind": "price",
+   "ref": "beta_manhattan",
+   "text": "15",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 6.31
+  },
+  {
+   "kind": "description",
+   "ref": "beta_manhattan",
+   "text": "rye whiskey · sweet vermouth COCKTAIL CH",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 8.92
+  },
+  {
+   "kind": "serve_label",
+   "ref": "beta_manhattan",
+   "text": "COUPE",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    204
+   ],
+   "worst_ratio": 9.0
+  },
+  {
+   "kind": "garnish",
+   "ref": "beta_manhattan",
+   "text": "COCKTAIL CHERRY",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 8.98
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_old_fashioned",
+   "text": "Brown Butter Old Fashioned",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 13.28
+  },
+  {
+   "kind": "price",
+   "ref": "beta_old_fashioned",
+   "text": "16",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    204
+   ],
+   "worst_ratio": 6.32
+  },
+  {
+   "kind": "description",
+   "ref": "beta_old_fashioned",
+   "text": "brown butter-washed bourbon · house deme",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 8.92
+  },
+  {
+   "kind": "serve_label",
+   "ref": "beta_old_fashioned",
+   "text": "ROCKS",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    204
+   ],
+   "worst_ratio": 9.0
+  },
+  {
+   "kind": "garnish",
+   "ref": "beta_old_fashioned",
+   "text": "ORANGE PEEL",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    204
+   ],
+   "worst_ratio": 9.0
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_daiquiri",
+   "text": "House Daiquiri",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 13.28
+  },
+  {
+   "kind": "price",
+   "ref": "beta_daiquiri",
+   "text": "14",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    233,
+    224,
+    204
+   ],
+   "worst_ratio": 6.37
+  },
+  {
+   "kind": "description",
+   "ref": "beta_daiquiri",
+   "text": "white rum · house demerara syrup · fresh",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 8.92
+  },
+  {
+   "kind": "serve_label",
+   "ref": "beta_daiquiri",
+   "text": "COUPE",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 8.92
+  },
+  {
+   "kind": "garnish",
+   "ref": "beta_daiquiri",
+   "text": "LIME COIN",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    204
+   ],
+   "worst_ratio": 9.0
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_czech_pilsner",
+   "text": "Czech Pilsner",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 13.19
+  },
+  {
+   "kind": "price",
+   "ref": "beta_czech_pilsner",
+   "text": "7",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    234,
+    224,
+    205
+   ],
+   "worst_ratio": 6.38
+  },
+  {
+   "kind": "description",
+   "ref": "beta_czech_pilsner",
+   "text": "crisp pale lager",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 8.92
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_dry_hopped_ipa",
+   "text": "Dry-Hopped IPA",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 13.28
+  },
+  {
+   "kind": "price",
+   "ref": "beta_dry_hopped_ipa",
+   "text": "8",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    233,
+    224,
+    204
+   ],
+   "worst_ratio": 6.37
+  },
+  {
+   "kind": "description",
+   "ref": "beta_dry_hopped_ipa",
+   "text": "hop-forward IPA",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 8.92
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_amber_lager",
+   "text": "Amber Lager",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 13.28
+  },
+  {
+   "kind": "price",
+   "ref": "beta_amber_lager",
+   "text": "7",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    204
+   ],
+   "worst_ratio": 6.32
+  },
+  {
+   "kind": "description",
+   "ref": "beta_amber_lager",
+   "text": "toasty amber lager",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 8.98
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_dry_cider",
+   "text": "Dry Cider",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    203
+   ],
+   "worst_ratio": 13.3
+  },
+  {
+   "kind": "price",
+   "ref": "beta_dry_cider",
+   "text": "8",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 6.31
+  },
+  {
+   "kind": "description",
+   "ref": "beta_dry_cider",
+   "text": "dry sparkling cider",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 8.92
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_malbec",
+   "text": "Malbec",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    204
+   ],
+   "worst_ratio": 13.31
+  },
+  {
+   "kind": "price",
+   "ref": "beta_malbec",
+   "text": "12",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    204
+   ],
+   "worst_ratio": 6.32
+  },
+  {
+   "kind": "description",
+   "ref": "beta_malbec",
+   "text": "dry red wine",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 8.92
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_pinot_grigio",
+   "text": "Pinot Grigio",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    231,
+    222,
+    202
+   ],
+   "worst_ratio": 13.15
+  },
+  {
+   "kind": "price",
+   "ref": "beta_pinot_grigio",
+   "text": "11",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    233,
+    224,
+    204
+   ],
+   "worst_ratio": 6.37
+  },
+  {
+   "kind": "description",
+   "ref": "beta_pinot_grigio",
+   "text": "dry white wine",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 8.98
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_brut_rose",
+   "text": "Brut Rosé",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 13.28
+  },
+  {
+   "kind": "price",
+   "ref": "beta_brut_rose",
+   "text": "13",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 6.26
+  },
+  {
+   "kind": "description",
+   "ref": "beta_brut_rose",
+   "text": "dry sparkling rosé",
+   "text_rgb": [
+    64,
+    53,
+    45
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 8.92
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_blanco_tequila",
+   "text": "Blanco Tequila",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    232,
+    223,
+    203
+   ],
+   "worst_ratio": 13.28
+  },
+  {
+   "kind": "price",
+   "ref": "beta_blanco_tequila",
+   "text": "12",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    204
+   ],
+   "worst_ratio": 6.32
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_anejo_tequila",
+   "text": "Añejo Tequila",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 13.19
+  },
+  {
+   "kind": "price",
+   "ref": "beta_anejo_tequila",
+   "text": "16",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    233,
+    223,
+    204
+   ],
+   "worst_ratio": 6.32
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_cognac_vsop",
+   "text": "Cognac VSOP",
+   "text_rgb": [
+    29,
+    24,
+    21
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 13.19
+  },
+  {
+   "kind": "price",
+   "ref": "beta_cognac_vsop",
+   "text": "18",
+   "text_rgb": [
+    90,
+    75,
+    63
+   ],
+   "worst_bg_rgb": [
+    233,
+    224,
+    204
+   ],
+   "worst_ratio": 6.37
+  },
+  {
+   "kind": "legal",
+   "ref": "allergen_line",
+   "text": "Please tell your server about any allerg",
+   "text_rgb": [
+    79,
+    66,
+    56
+   ],
+   "worst_bg_rgb": [
+    232,
+    222,
+    203
+   ],
+   "worst_ratio": 7.26
+  }
+ ],
+ "phone_contrast": [
+  {
+   "text": "CANTINA",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "& COCKTAIL BAR · IOWA CITY, IOWA",
+   "worst_ratio": 8.34
+  },
+  {
+   "text": "Cócteles\nCocktails",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "CLÁSICOS · CLASSICS",
+   "worst_ratio": 5.76
+  },
+  {
+   "text": "Margarita",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "15",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "Bright, citrus-forward",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "tequila blanco · orange liqueur\nagave sy",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "LIME WHEEL",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "·",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "ROCKS",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "Manhattan",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "15",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "rye whiskey · sweet vermouth\nCOCKTAIL CH",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "COCKTAIL CHERRY",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "·",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "COUPE",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "DE LA CASA · HOUSE",
+   "worst_ratio": 5.76
+  },
+  {
+   "text": "Brown Butter Old Fashioned",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "16",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "brown butter-washed bourbon\nhouse demera",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "ORANGE PEEL",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "·",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "ROCKS",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "House Daiquiri",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "14",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "white rum · house demerara syrup · fresh",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "LIME COIN",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "·",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "COUPE",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "Cerveza y Sidra\nBeer & Cider",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "DE BARRIL · DRAFT",
+   "worst_ratio": 5.76
+  },
+  {
+   "text": "Czech Pilsner",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "crisp pale lager",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "7",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "Dry-Hopped IPA",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "hop-forward IPA",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "8",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "Amber Lager",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "toasty amber lager",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "7",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "SIDRA · CIDER",
+   "worst_ratio": 5.76
+  },
+  {
+   "text": "Dry Cider",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "dry sparkling cider",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "8",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "Vino\nWine",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "POR COPA · BY THE GLASS",
+   "worst_ratio": 5.76
+  },
+  {
+   "text": "Malbec",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "dry red wine",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "12",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "Pinot Grigio",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "dry white wine",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "11",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "ESPUMOSOS · SPARKLING",
+   "worst_ratio": 5.76
+  },
+  {
+   "text": "Brut Rosé",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "dry sparkling rosé",
+   "worst_ratio": 9.86
+  },
+  {
+   "text": "13",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "Destilados\nSpirits",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "DESTILADOS DE AGAVE · AGAVE",
+   "worst_ratio": 5.76
+  },
+  {
+   "text": "Blanco Tequila",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "12",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "Añejo Tequila",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "16",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "BRANDY · BRANDY",
+   "worst_ratio": 5.76
+  },
+  {
+   "text": "Cognac VSOP",
+   "worst_ratio": 14.58
+  },
+  {
+   "text": "18",
+   "worst_ratio": 6.92
+  },
+  {
+   "text": "Please tell your server about any allerg",
+   "worst_ratio": 8.02
+  }
+ ],
+ "ink": {
+  "left": 188.64,
+  "top": 36.0,
+  "right": 57.36,
+  "bottom": 35.76
+ },
+ "fonts": 4,
+ "png": [
+  2550,
+  3300
+ ],
+ "phone_png": [
+  1170,
+  6624
+ ]
+}
