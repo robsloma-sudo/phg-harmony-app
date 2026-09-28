@@ -36,7 +36,9 @@ step4_left as (select count(*) n from (
                     and c.first_discovered_at < run.t) a
                 where not exists (select 1 from public.phg_repair_step4_done d where d.account_id = a.account_id)),
 cand_idx as (select count(*) n from pg_indexes where schemaname = 'public' and indexname = 'menu_source_candidates_item_set_idx'),
-cron_paused as (select coalesce(bool_and(not active), true) ok, string_agg(jobid || ':' || active, ',' order by jobid) v
+-- both jobs must exist (count = 2) and both be inactive: a missing job is a failure, not a pass
+cron_paused as (select count(*) = 2 and coalesce(bool_and(not active), false) ok,
+                       count(*) || ' jobs; ' || coalesce(string_agg(jobid || ':' || active, ',' order by jobid), '') v
                   from cron.job where jobid in (7, 13))
 select * from (values
   ('0 accounts with more than one current menu',                   (select n from multi) = 0,        (select n from multi)::text),
@@ -50,5 +52,5 @@ select * from (values
   ('step 3 finished for venues staged before the repair',          (select n from step3_left) = 0,   (select n from step3_left)::text),
   ('step 4 finished for candidates found before the repair',       (select n from step4_left) = 0,   (select n from step4_left)::text),
   ('candidate item-set index exists',                              (select n from cand_idx) = 1,     (select n from cand_idx)::text),
-  ('cron 7 and 13 still paused (re-enable only after this gate)',  (select ok from cron_paused),     (select v from cron_paused))
+  ('cron 7 and 13 exist and are still paused (re-enable only after this gate)', (select ok from cron_paused),     (select v from cron_paused))
 ) v(check_name, pass, value)

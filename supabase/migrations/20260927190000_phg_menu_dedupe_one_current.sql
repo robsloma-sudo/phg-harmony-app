@@ -5,8 +5,8 @@
 --    dozens of online-ordering item pages (?item=..., /order/<menu>/<cat>/<item>) never matched the
 --    submit_menu duplicate check, and
 --  * submit_menu superseded EVERY current menu of the account unconditionally, so each item page
---    replaced the venue's menu; the last page promoted won. 185 venues lost a larger pre-existing
---    menu; 7,429 menus were created today from only ~2,500 distinct item sets.
+--    replaced the venue's menu; the last page promoted won. 119 damaged venues out of 185 with a
+--    pre-incident menu (their current menu became smaller than their largest pre-incident one); 7,429 menus were created today from only ~2,500 distinct item sets.
 --  * Upstream, phg_save_menu_candidate_extraction re-stages the full item list for every sibling
 --    page (85% of today's staging rows are copies).
 --
@@ -43,6 +43,12 @@
 -- captures from another source do not replace a current menu created in the last 7 days (flip-flop damping);
 -- promote_clean_menu_batch takes at most 5 pages per call.
 --
+-- Review round 4 fixes (2026-09-28): the definition backup is SELECT-only for service_role (revoke all, grant select);
+-- an item page from the SAME source replaces a real-page current menu only when it is strictly larger by
+-- (distinct items, drinks items) - the same order the repair's Step 2 uses - so a same-size item page never takes the
+-- real page's place (it is kept as an alternate). An item page still replaces a current menu that is itself an item
+-- page when it is at least as large (unchanged).
+--
 -- Apply with cron 7 (promotion) and 13 (extraction) PAUSED. Data repair is a separate script.
 -- Apply through the runbook (apply_migration, or psql -1 -f), in order: this file, then 20260927191000. Not with
 -- `supabase db push`: newer migrations (20260927200000 and later) are already applied, so db push would refuse or
@@ -54,8 +60,8 @@ set local lock_timeout = '3s';
 create table if not exists public.phg_backup_function_defs_20260927 (
   signature text primary key, definition text not null, acl text, saved_at timestamptz not null default now());
 alter table public.phg_backup_function_defs_20260927 enable row level security;
-revoke all on public.phg_backup_function_defs_20260927 from anon, authenticated;
-revoke insert, update, delete, truncate on public.phg_backup_function_defs_20260927 from service_role;
+revoke all on public.phg_backup_function_defs_20260927 from anon, authenticated, service_role;
+grant select on public.phg_backup_function_defs_20260927 to service_role;
 insert into public.phg_backup_function_defs_20260927 (signature, definition, acl)
 select p.oid::regprocedure::text, pg_get_functiondef(p.oid), p.proacl::text
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -264,7 +270,8 @@ begin
  v_itemish    := public.phg_menu_url_is_item_page(p_evidence_url);
 
  -- Decide against the current menu(s) before writing anything.
- for c in select m.id, coalesce(m.source_key, public.phg_menu_source_key(m.evidence_url)) as source_key, m.item_keys, m.created_at
+ for c in select m.id, coalesce(m.source_key, public.phg_menu_source_key(m.evidence_url)) as source_key, m.item_keys, m.created_at,
+                  public.phg_menu_url_is_item_page(m.evidence_url) as itemish
             from public.menus m where m.account_id=p_account_id and m.is_current
            order by m.created_at desc, m.id for update loop
   c_keys := coalesce(c.item_keys, public.phg_menu_item_keys(c.id));
@@ -283,8 +290,12 @@ begin
    if v_n = 0 and c_n > 0 then
     return jsonb_build_object('status','empty_capture_ignored','menu_id',c.id,'items',0,'message','zero-item re-capture ignored; current menu kept');
    end if;
-   if v_itemish and c_n > 0 and not (v_n >= c_n and v_ov >= ceil(c_dup_ratio * c_n)) then
-    -- an item page shares the menu's key (?item= is stripped) but is not a fuller copy of it
+   if v_itemish and c_n > 0 and not (v_ov >= ceil(c_dup_ratio * c_n)
+                                     and case when c.itemish then v_n >= c_n
+                                              else (v_n, v_bev) > (c_n, public.phg_menu_bev_count(c.id)) end) then
+    -- an item page shares the menu's key (?item= is stripped) but is not a fuller copy of it. Over a REAL page it must
+    -- be strictly larger (items, then drinks items: Step 2's order), so a same-size item page never takes the real
+    -- page's URL as current (C1, round 4); over another item page, at least as large is enough.
     v_make_current := false; v_alt_of := c.id; v_reason := 'alternate_item_page';
    elsif c_n > 0 and v_n < ceil(0.5 * c_n) then
     -- a partial parse of the same page must not replace the full menu

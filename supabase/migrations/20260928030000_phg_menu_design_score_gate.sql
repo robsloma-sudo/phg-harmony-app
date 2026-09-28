@@ -1,16 +1,19 @@
 -- PHG-036b: Rob's design scorecard as a hard gate (handoff/agents/MENU_DESIGN_SCORECARD.md).
--- A proposal carries its layout geometry; two design reviewers (design_critic, content_reviewer) score it per
--- criterion; phg_design_proposal_review refuses to approve unless EACH reviewer's average is above 80.
+-- A proposal carries its layout geometry; three reviewers (design_critic, content_reviewer, accuracy_reviewer) score it
+-- per criterion; phg_design_proposal_review refuses to approve unless EACH reviewer's average is above 80 and the
+-- stored layout still has its page and elements.
 
 -- Review (PHG-026 round 3, SF10): the layout check treats a missing key as missing (coalesce), and the three
 -- functions this file replaces are saved first; phg_rollback_design_score_gate_20260928() puts them back.
+-- Review (PHG-026 round 4, C18): header names the three reviewers; approve re-checks the layout (page + elements) and
+-- returns accuracy_reviewer too; the definition backup is SELECT-only for service_role (revoke all, grant select).
 
 -- ---------- 0. save the definitions this migration replaces ----------
 create table if not exists public.phg_backup_design_fn_defs_20260928 (
   signature text primary key, definition text not null, saved_at timestamptz not null default now());
 alter table public.phg_backup_design_fn_defs_20260928 enable row level security;
-revoke all on public.phg_backup_design_fn_defs_20260928 from anon, authenticated;
-revoke insert, update, delete, truncate on public.phg_backup_design_fn_defs_20260928 from service_role;
+revoke all on public.phg_backup_design_fn_defs_20260928 from anon, authenticated, service_role;
+grant select on public.phg_backup_design_fn_defs_20260928 to service_role;
 insert into public.phg_backup_design_fn_defs_20260928 (signature, definition)
 select p.oid::regprocedure::text, pg_get_functiondef(p.oid)
   from pg_proc p
@@ -102,7 +105,8 @@ begin
   return jsonb_build_object('reviewer', p_reviewer, 'average', v_avg, 'passes', v_avg > 80);
 end $$;
 
--- Review: approval now also needs both reviewers' averages above 80.
+-- Review: approval now also needs all three reviewers' averages above 80, and the stored layout must still have a page
+-- object and an elements array (a proposal stored before this migration has layout NULL: it is blocked, not approved).
 create or replace function public.phg_design_proposal_review(p_proposal_id uuid, p_approve boolean, p_note text default null)
 returns jsonb language plpgsql security definer set search_path to 'public', 'pg_temp' as $$
 declare v_pr phg.menu_design_proposals%rowtype; v_t phg.menu_design_tasks%rowtype; v_chk jsonb; v_c numeric; v_m numeric; v_a numeric;
@@ -117,6 +121,11 @@ begin
       update phg.menu_design_proposals set status = 'auto_rejected', check_result = v_chk, reviewed_at = now(), review_note = p_note where id = v_pr.id;
       return jsonb_build_object('status','auto_rejected','check',v_chk);
     end if;
+    if v_pr.layout is null or coalesce(jsonb_typeof(v_pr.layout->'elements'), '') <> 'array'
+       or coalesce(jsonb_typeof(v_pr.layout->'page'), '') <> 'object' then
+      return jsonb_build_object('status','blocked_by_layout_gate','proposal_id',v_pr.id,
+        'rule','layout geometry missing (page + elements required by the scorecard); re-submit with p_layout');
+    end if;
     v_c := (v_pr.review_scores->'design_critic'->>'average')::numeric;
     v_m := (v_pr.review_scores->'content_reviewer'->>'average')::numeric;
     v_a := (v_pr.review_scores->'accuracy_reviewer'->>'average')::numeric;
@@ -130,7 +139,7 @@ begin
   update phg.menu_design_tasks set status = case when p_approve then 'approved' else 'in_progress' end, updated_at = now()
    where id = v_t.id;
   return jsonb_build_object('status', case when p_approve then 'approved' else 'rejected' end, 'proposal_id', v_pr.id,
-                            'design_critic', v_c, 'content_reviewer', v_m);
+                            'design_critic', v_c, 'content_reviewer', v_m, 'accuracy_reviewer', v_a);
 end $$;
 
 -- The app sees the scores and fixes (not the raw geometry).
