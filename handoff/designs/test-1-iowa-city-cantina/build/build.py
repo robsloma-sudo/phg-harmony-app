@@ -7,32 +7,32 @@ from string import Template
 HERE = pathlib.Path(__file__).parent
 OUT = pathlib.Path("/home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina")
 draft = json.loads((HERE / "draft_doc.json").read_text())
-ROUND = 8
+ROUND = 9
 
 # ------------------------------------------------------------ copy + sources (draft menu_description words; one gateway row)
 C = {  # id: (printed line, words from, gateway row ids, still missing)
- "beta_old_fashioned": ("Brown butter-washed bourbon with demerara syrup and bitters, stirred and strained over one large cube with an orange peel.",
+ "beta_old_fashioned": ("Brown butter-washed bourbon, demerara syrup and bitters.\nOver a large cube, orange peel.",
    "draft desc (brown butter-washed bourbon, demerara, bitters); draft_doc components: 'Demerara Syrup' (prep); serve_format 'Stir with ice and strain over a large cube'; recipe (orange peel)", [], ["allergen confirmation (brown butter: dairy)"]),
- "beta_daiquiri": ("White rum shaken with fresh lime and house demerara syrup, served up in a coupe with a lime coin.",
+ "beta_daiquiri": ("White rum, fresh lime and house demerara syrup.\nIn a coupe, lime coin.",
    "draft desc (white rum, lime, house demerara syrup); draft_doc components: 'Fresh Lime Juice', 'Demerara Syrup' ('House 1:1 demerara syrup'); serve_format 'Shake with ice and fine strain'; recipe (lime coin, coupe)", [], []),
- "beta_margarita": ("Bright and citrus-forward: blanco tequila, fresh lime, orange liqueur and agave syrup, shaken and served on the rocks with a lime wheel.",
+ "beta_margarita": ("Bright and citrus-forward: blanco tequila, fresh lime, orange liqueur and agave syrup.\nOver fresh ice, lime wheel.",
    "draft desc (tequila blanco, lime, orange liqueur, agave, 'Bright and citrus-forward'); draft_doc components: 'Fresh Lime Juice', 'Agave Syrup' (prep); serve_format 'Shake with ice and strain over fresh ice'; recipe (lime wheel)", [], []),
- "beta_manhattan": ("Rye whiskey and sweet vermouth, stirred and served up in a coupe with a cocktail cherry.",
-   "draft desc (rye, sweet vermouth); draft_doc components: 'Rye Whiskey', 'Cocktail Cherry'; serve_format 'Stir with ice and strain'; recipe (coupe). Bitters hidden: public_components aromatic-bitters = false", [], ["venue to confirm hiding the bitters"]),
- "beta_blanco_tequila": ("",
-   "name only (round 8: spirits are name-only for consistency). Row checked: beverage_categories row 04d72e1f: name 'Blanco / plata', node_kind 'style', path spirits.agave_spirits.tequila.blanco (gateway log_id 130). 'Unaged' is not in the row, so it is not printed",
+ "beta_manhattan": ("Rye, sweet vermouth and aromatic bitters.\nIn a coupe, cocktail cherry.",
+   "draft desc (rye, sweet vermouth); draft_doc components: 'Rye Whiskey', 'Cocktail Cherry'; serve_format 'Stir with ice and strain'; recipe (coupe). Draft menu_description bf732e78 'Rye, sweet vermouth, aromatic bitters.' printed; the venue's own printed description overrides public_components aromatic-bitters = false", [], ["venue to confirm the component-visibility flag"]),
+ "beta_blanco_tequila": ("Plata-style tequila.",
+   "beverage_categories row 04d72e1f: name 'Blanco / plata', node_kind 'style', path spirits.agave_spirits.tequila.blanco (gateway log_id 130). 'Unaged' is not in the row, so it is not printed",
    ["beverage_categories 04d72e1f-650d-490c-8ad8-54a6eb8aa766"], ["brand", "age statement (n/a for blanco)", "pour size"]),
- "beta_anejo_tequila": ("", "name only: gateway log_id 130 found row 9f4dae69 (name 'Añejo', notes null): no guest words beyond the name; the draft line 'Añejo tequila pour.' only repeats the name", ["beverage_categories 9f4dae69-e84c-4b65-b7d9-1b417658b78d (checked, nothing printable)"], ["brand", "pour size", "age statement", "guest line"]),
- "beta_cognac_vsop": ("", "name only (round 8: spirits are name-only for consistency). Rows checked: beverage_categories rows a88f6e79 (Cognac, path spirits.brandy_fruit_spirits.grape_brandy.cognac) and bec5063c (VSOP, child of Cognac); 'grape brandy' is the parent node in the cited path (gateway log_id 130)", ["beverage_categories a88f6e79-9438-6e3d-2656-406fad2b829f", "beverage_categories bec5063c-5274-9534-91da-53a2f10c8255"], ["brand / house", "pour size"]),
+ "beta_anejo_tequila": ("Añejo-class tequila.", "beverage_categories row 9f4dae69 (name 'Añejo', the añejo class of tequila; gateway log_id 130)", ["beverage_categories 9f4dae69-e84c-4b65-b7d9-1b417658b78d"], ["brand", "pour size", "age statement", "guest line"]),
+ "beta_cognac_vsop": ("Grape brandy, VSOP grade.", " beverage_categories rows a88f6e79 (Cognac, path spirits.brandy_fruit_spirits.grape_brandy.cognac) and bec5063c (VSOP, child of Cognac); 'grape brandy' is the parent node in the cited path (gateway log_id 130)", ["beverage_categories a88f6e79-9438-6e3d-2656-406fad2b829f", "beverage_categories bec5063c-5274-9534-91da-53a2f10c8255"], ["brand / house", "pour size"]),
  "beta_czech_pilsner": ("Crisp pale lager.", "draft menu_description, verbatim", [], ["brewery", "ABV", "pour size"]),
- "beta_dry_hopped_ipa": ("Hop-forward draft IPA.", "draft menu_description, verbatim", [], ["brewery", "ABV", "pour size"]),
+ "beta_dry_hopped_ipa": ("Hop-forward, on draft.", "draft menu_description 'Hop-forward draft IPA.' minus the name echo", [], ["brewery", "ABV", "pour size"]),
  "beta_amber_lager": ("Toasty amber lager.", "draft menu_description, verbatim", [], ["brewery", "ABV", "pour size"]),
- "beta_dry_cider": ("Dry sparkling cider.", "draft menu_description, verbatim", [], ["producer", "ABV", "format (draft or can)"]),
- "beta_malbec": ("Dry red wine.", "draft menu_description, verbatim", [], ["producer", "region", "vintage", "pour size"]),
- "beta_pinot_grigio": ("Dry white wine.", "draft menu_description, verbatim", [], ["producer", "region", "vintage", "pour size"]),
- "beta_brut_rose": ("Dry sparkling rosé.", "draft menu_description, verbatim", [], ["producer", "region", "vintage", "glass or bottle price (label empty)"]),
+ "beta_dry_cider": ("Dry and sparkling.", "draft menu_description 'Dry sparkling cider.' minus the name echo", [], ["producer", "ABV", "format (draft or can)"]),
+ "beta_malbec": ("Dry red.", "draft menu_description 'Dry red wine.' minus the name echo", [], ["producer", "region", "vintage", "pour size"]),
+ "beta_pinot_grigio": ("Dry white.", "draft menu_description 'Dry white wine.' minus the name echo", [], ["producer", "region", "vintage", "pour size"]),
+ "beta_brut_rose": ("Dry and sparkling.", "draft menu_description 'Dry sparkling rosé.' minus the name echo", [], ["producer", "region", "vintage", "glass or bottle price (label empty)"]),
 }
-BANNED = ["nom-006", "class", "shelf", "fermented", "lager family", "beside beer", "age grade", "pour"]
+BANNED = ["nom-006", "stirred", "shaken", "strained", "shelf", "fermented", "lager family", "beside beer", "age grade", "pour"]
 for k, v in C.items():
     assert not any(w in v[0].lower() for w in BANNED), k
     assert not any(r in " ".join(v[2]) for r in ("d4d63f58", "bc899a48")), k
@@ -56,11 +56,11 @@ for s in new:
                             "Classics": "Clásicos", "House Originals": "De la casa"}[sb["name"]]
     for it in s["items"] + [i for sb in s["subs"] for i in sb["items"]]:
         line, src, rows, miss = C[it["id"]]
-        it["desc"] = line; it.pop("missing_ingredients", None)
+        it["desc"] = line.replace("\n", " "); it.pop("missing_ingredients", None)
         it["meta"] = dict(it.get("meta") or {}); it["meta"]["missing_ingredients"] = list(miss)
 assert all(";" not in C[k][0] for k in C)
 assert "pour" not in " ".join(v[0].lower() for v in C.values())
-assert "bitters" in C["beta_old_fashioned"][0] and "bitters" not in C["beta_manhattan"][0]
+assert "aromatic bitters" in C["beta_manhattan"][0]
 assert "Bright and citrus-forward" in C["beta_margarita"][0]
 doc["sections"] = new
 
@@ -77,12 +77,12 @@ CARDS = [  # (n, ref, english gloss, tab label, loteria title, figure, colour, g
  (1, "sec_cocktails", "Cocktails", "El Cantarito", "El Cantarito", "cantarito", "terra",
      [(cl, [allitems["beta_margarita"], allitems["beta_manhattan"]]), (ho, ho["items"])],
      "Tanto va el cántaro al agua, que se quiebra y te moja las enaguas."),
- (2, "sec_spirits", "Spirits", "La Botella", "La Botella", "bottle", "agave",
+ (2, "sec_spirits", "Spirits", "La Botella", "La Botella", "bottle", "terra",
      [(subn["Agave"], subn["Agave"]["items"]), (subn["Brandy"], subn["Brandy"]["items"])], "La herramienta del borracho."),
- (3, "sec_beer", "Beer & Cider", "El Barril", "El Barril", "barrel", "mari",
+ (3, "sec_beer", "Beer & Cider", "El Barril", "El Barril", "barrel", "agave",
      [(subn["Draft"], subn["Draft"]["items"]), (cider_sub, next(x for x in new if x["id"] == "sec_cider")["items"])],
      "Tanto bebió el albañil, que quedó como barril."),
- (4, "sec_wine", "Wine", "La Rosa", "La Rosa", "rose", "rosa",
+ (4, "sec_wine", "Wine", "La Rosa", "La Rosa", "rose", "terra",
      [(subn["By the Glass"], subn["By the Glass"]["items"]), (subn["Sparkling"], subn["Sparkling"]["items"])], "Rosita, Rosaura, ven que te quiero ver."),
 ]
 assert sorted(i["id"] for c in CARDS for g in c[7] for i in g[1]) == sorted(allitems), "every item on exactly one card"
@@ -91,17 +91,17 @@ doc["meta"]["designer_notes"] = {
     "round": ROUND, "concept": "Lotería de la Cantina: a 2 x 2 tabla of four lotería cards (El Cantarito featured top-left, La Botella, El Barril, La Rosa). Each card: our own ordinal 1-4 and the cantor verse on the top row, a fixed cut-paper figure box, the Spanish lotería name as the one card title in a coloured name bar, a small italic English gloss under it, then the list.", "concept_r6": "six portrait lotería cards, each with the ordinal in the top-left corner, the English list name, a large central cut-paper figure and a lotería name bar at the foot (EL AGAVE, EL VASO, LA COPA, CERVEZA Y SIDRA, LA COPITA, LA BOTELLA). Card 1 tells the agave story: Margarita, then Blanco and Añejo.",
     "cards": [{"n": c[0], "ref": c[1], "name": c[2], "loteria_name": c[4].upper(), "cantor_verse": c[8], "verse_status": "cultural text (traditional lotería cantor verse), not an item fact", "figure": c[5], "featured": c[0] == 1, "items": [i["id"] for g in c[7] for i in g[1]]} for c in CARDS],
     "sub_kickers": {sb["name"]: ES[sb["id"]] for s in new for sb in s["subs"]},
-    "copy_sources": {k: {"printed": v[0], "words_from": v[1], "gateway_rows": v[2], "missing": v[3]} for k, v in C.items()},
+    "copy_sources": {k: {"printed": v[0].replace("\n", " "), "words_from": v[1], "gateway_rows": v[2], "missing": v[3]} for k, v in C.items()},
     "gateway_query": "round 5 phg_designer_query (log_id 112) over public.beverage_categories; round 7 query log_id 130 (añejo, cognac, VSOP; rhum agricole excluded): cited rows 04d72e1f (Blanco / plata), 9f4dae69 (Añejo, nothing printable), a88f6e79 (Cognac) and bec5063c (VSOP). Beer, cider and wine lines are the draft menu_description words.",
-    "manhattan_bitters": "Not printed: public_components aromatic-bitters = false (venue to confirm).",
-    "brut_rose_price": "Printed under its own Espumoso (Sparkling) subheader, apart from the Por copa glass list, so it does not read as a glass price; the glass/bottle label is empty in the draft (question open).",
+    "manhattan_bitters": "Printed: the venue's own draft menu_description (bf732e78) says 'aromatic bitters'; the venue's printed description overrides the component-visibility flag public_components aromatic-bitters = false (venue to confirm the flag).",
+    "brut_rose_price": "Printed under its own Sparkling subheader, apart from the By the Glass list, so it does not read as a glass price; the glass/bottle label is empty in the draft (question open).",
     "card_layout": "2 x 2 grid, columns 312 / 216 pt, 12 pt gutter; fixed rows of 12 pt steps", "card_layout_r6": "3 x 2 portrait grid: featured column 196 pt, two 160 pt columns, 12 pt gutters. Classics and Brandy are separate one-item cards so every card stays a portrait with a full figure.",
     "retired_junmai_ginjo": "Retired Junmai Ginjo ($12) in phg.menu_items is not in the draft and is left off (please confirm).",
 }
 (OUT / "doc.json").write_text(json.dumps(doc, ensure_ascii=False, indent=2))
 
 # ------------------------------------------------------------ palette + graphics
-P = dict(cream="#F6EEDF", card="#FBF5EA", feat="#F3E3CB", ink="#231B16", terra="#A63C1A", agave="#2F5D50", mari="#E3A018", muted="#5A4A3F", rosa="#C2185B")
+P = dict(cream="#F6EEDF", card="#FBF5EA", feat="#F3E3CB", ink="#231B16", terra="#A63C1A", agave="#2F5D50", mari="#E3A018", mari_line="#9A6508", muted="#5A4A3F", rosa="#C2185B")
 def dia(cx, cy, w, h, f): return f'<path d="M{cx:.2f} {cy-h:.2f} L{cx+w:.2f} {cy:.2f} L{cx:.2f} {cy+h:.2f} L{cx-w:.2f} {cy:.2f} Z" fill="{f}"/>'
 def agave_leaves(cx, cy, r, f):
     o = ""
@@ -111,11 +111,11 @@ def agave_leaves(cx, cy, r, f):
     return o
 
 def papel(n=11, W=540, H=36, cls="banner", dims='width="540pt" height="36pt"'):
-    cell = W / n; fw = cell - 6; cols = [P["terra"], P["mari"], P["agave"], P["rosa"]]
+    cell = W / n; fw = cell - 6; cols = [P["terra"], P["mari"], P["terra"], P["agave"], P["terra"], P["rosa"]]
     o = [f'<svg class="{cls}" viewBox="0 0 {W} {H}" {dims} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">',
          f'<path d="M1 0.4 Q{W/2} 4 {W-1} 0.4" stroke="{P["ink"]}" stroke-width="0.8" fill="none"/>']
     for k in range(n):
-        x = k * cell + 3; top, hem = 3, H - 4; c = cols[k % 4]; sw = fw / 5
+        x = k * cell + 3; top, hem = 3, H - 4; c = cols[k % 6]; sw = fw / 5
         d = f"M{x:.2f} {top} L{x+fw:.2f} {top} L{x+fw:.2f} {hem}" + "".join(f" A{sw/2:.2f} {sw/2*.9:.2f} 0 0 1 {x+fw-(j+1)*sw:.2f} {hem}" for j in range(5))
         o.append(f'<path d="{d} Z" fill="{c}"/>' + "".join(dia(x + sw / 2 + j * sw, top + 4.5, 1.4, 1.9, P["cream"]) for j in range(5)))
         cx, cy = x + fw / 2, (top + hem) / 2 + 3
@@ -155,12 +155,12 @@ def nb(t):
 
 
 def item_html(it, inline):
-    d = it["desc"]
-    if inline:
+    d = C[it["id"]][0]
+    if False:
         dd = f'<span class="desc in">{html.escape(d)}</span>' if d else ""
         return (f'<div class="item" data-ref="{it["id"]}"><div class="row"><span class="name">{nb(it["name"])}</span>{dd}<span class="lead"></span>'
                 f'<span class="price num">{it["prices"][0]["value"]:g}</span></div></div>')
-    dd = f'<p class="desc">{nb(d)}</p>' if d else ""
+    dd = ('<p class="desc">' + "".join(f'<span class="{"dl" if k == 0 else "cue"}">{nb(x)}</span>' for k, x in enumerate(d.split("\n"))) + '</p>') if d else ""
     return (f'<div class="item" data-ref="{it["id"]}"><div class="row"><span class="name">{nb(it["name"])}</span><span class="lead"></span>'
             f'<span class="price num">{it["prices"][0]["value"]:g}</span></div>{dd}</div>')
 
@@ -168,8 +168,8 @@ def card_html(n, cid, name, tab, lot, fig, col, groups, verse):
     f = n == 1; inline = cid in ("sec_beer", "sec_wine")
     body = []
     for sb, items in groups:
-        body.append(f'<div class="sub" data-id="{sb["id"]}"><h3>{html.escape(sb["name"])}</h3><span class="subrule"></span></div>')
-        body.append('<div class="items">' + "".join(item_html(i, inline) for i in items) + "</div>")
+        body.append(f'<div class="grp"><div class="sub" data-id="{sb["id"]}"><h3>{html.escape(sb["name"])}</h3><span class="subrule"></span></div>'
+                    + '<div class="items">' + "".join(item_html(i, inline) for i in items) + "</div></div>")
     return (f'<article class="card c-{col}{" featured" if f else ""}" id="card-{n}" data-id="{cid}" data-n="{n}">'
             f'<div class="face"><div class="art"><div class="figure">{icon(fig, "fig")}</div><p class="verse" lang="es">{html.escape(verse)}</p></div>'
             f'<div class="namebar"><h2 lang="es">{html.escape(lot.upper())}</h2><span class="gloss" lang="en">{html.escape(name)}</span></div></div>'
@@ -192,46 +192,53 @@ CSS = Template("""
 * { box-sizing: border-box; }
 html, body { margin:0; padding:0; background:#d9d2c6; }
 body { -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:'DM Sans', sans-serif; color:$ink; }
-.c-terra { --c:$terra; --tint:#F3E3CB; } .c-agave { --c:$agave; --tint:#E4EBE2; } .c-mari { --c:$mari; --tint:#F8EACB; } .c-rosa { --c:$rosa; --tint:#F7E3E8; }
+.c-terra { --c:$terra; --tint:#F3E3CB; } .c-agave { --c:$agave; --tint:#E4EBE2; } .c-mari { --c:$mari_line; --tint:#F8EACB; } .c-rosa { --c:$rosa; --tint:#F7E3E8; }
 .page { width:612pt; height:792pt; padding:36pt; background:$cream; display:flex; flex-direction:column; margin:0 auto; }
 .banner { display:block; width:540pt; height:36pt; flex:none; }
 .banner-m, .tabs { display:none; }
-.title { font-family:'Fraunces', serif; font-weight:700; font-size:30pt; line-height:30pt; height:30pt; letter-spacing:-0.3pt; text-align:center; margin:6pt 0 0; }
+.title { font-family:'Fraunces', serif; font-weight:700; font-size:30pt; line-height:30pt; height:30pt; letter-spacing:-0.3pt; text-align:center; margin:16pt 0 0; }
 .title .amp { color:$terra; font-style:italic; font-weight:600; }
-.loc { text-align:center; font-size:8.5pt; line-height:12pt; height:12pt; letter-spacing:3pt; text-transform:uppercase; color:$muted; font-weight:500; margin:0 0 12pt; }
+.loc { text-align:center; font-size:8.5pt; line-height:12pt; height:12pt; letter-spacing:3pt; text-transform:uppercase; color:$muted; font-weight:500; margin:0 0 2pt; }
 .num { font-family:'Fraunces', serif; font-weight:600; color:$terra; font-variant-numeric:lining-nums tabular-nums; font-feature-settings:'lnum' 1,'tnum' 1; }
 .nw { white-space:nowrap; }
 .deck { flex:none; display:grid; grid-template-columns:264pt 264pt; grid-template-rows:auto auto auto; gap:12pt; }
 .card { position:relative; display:flex; flex-direction:column; background:$card; border:1.5pt solid var(--c); padding:0 0 10.5pt; }
 .featured { grid-column:1; grid-row:1 / span 3; }
 #card-2 { grid-column:2; grid-row:1; } #card-3 { grid-column:2; grid-row:2; } #card-4 { grid-column:2; grid-row:3; }
-.face { flex:none; height:82.5pt; display:flex; flex-direction:column; background:var(--tint); box-shadow: inset 0 0 0 3pt var(--tint), inset 0 0 0 3.75pt var(--c); }
-.featured .face { flex:1 1 auto; height:auto; }
-.art { flex:1; min-height:0; display:flex; align-items:center; gap:6pt; padding:0 12pt 0 6pt; }
-.figure { position:relative; flex:none; width:72pt; height:58.5pt; }
-.figure .fig { position:absolute; left:0; top:3pt; width:100%; height:calc(100% - 3pt); display:block; }
+.face { flex:none; height:70.5pt; display:flex; flex-direction:column; background:var(--tint); box-shadow: inset 0 0 0 3pt var(--tint), inset 0 0 0 3.75pt var(--c); }
+.featured .face { height:238.5pt; }
+.art { flex:1; min-height:0; display:flex; align-items:center; gap:6pt; padding:0 12pt 0 12pt; }
+.figure { position:relative; flex:none; width:60pt; height:100%; }
+.figure .fig { position:absolute; left:0; top:10pt; width:100%; height:calc(100% - 13pt); display:block; }
 .verse { margin:0; flex:1; text-align:center; font-family:'Fraunces', serif; font-style:italic; font-weight:400; font-size:9pt; line-height:12pt; color:$muted; text-wrap:balance; }
-.featured .art { flex-direction:column; align-items:stretch; padding:18pt 18pt 6pt; gap:0; }
+.featured .art { flex-direction:column; align-items:stretch; padding:12pt 18pt 6pt; gap:0; }
 .featured .verse { flex:none; order:-1; font-size:10.5pt; line-height:12pt; height:24pt; }
 .featured .figure { flex:1 1 auto; width:auto; height:auto; }
 .featured .figure .fig { top:6pt; height:calc(100% - 6pt); }
 .namebar { flex:none; height:24pt; display:flex; align-items:baseline; justify-content:center; gap:6pt; background:var(--c); color:$cream; }
 .namebar h2 { margin:0; font-family:'Fraunces', serif; font-weight:700; font-size:12pt; line-height:24pt; letter-spacing:2pt; white-space:nowrap; }
 .gloss { font-family:'Fraunces', serif; font-style:italic; font-size:8.5pt; line-height:24pt; white-space:nowrap; opacity:.9; }
-.featured .namebar { height:36pt; } .featured .namebar h2 { font-size:16pt; line-height:36pt; letter-spacing:3pt; } .featured .gloss { font-size:10pt; line-height:36pt; }
 .c-mari .namebar { color:$ink; }
 .body { flex:none; margin-top:12pt; padding:0 10.5pt; }
+.featured .body { flex:1 1 auto; display:flex; flex-direction:column; justify-content:space-between; }
 .sub { display:flex; align-items:center; gap:6pt; height:12pt; }
-.items + .sub { margin-top:12pt; }
+.grp + .grp { margin-top:0; }
+.featured .grp + .grp { margin-top:36pt; }
 h3 { margin:0; font-size:7pt; line-height:12pt; letter-spacing:1.4pt; text-transform:uppercase; color:$ink; font-weight:700; white-space:nowrap; }
 .subrule { flex:1; border-top:0.75pt solid var(--c); }
-.item + .item { margin-top:12pt; }
+.item + .item { margin-top:0; }
+.featured .item + .item { margin-top:36pt; }
 .row { display:flex; align-items:baseline; height:12pt; }
-.lead { flex:1; }
+.featured .row { height:24pt; }
+.lead { flex:1; align-self:flex-end; height:0; margin:0 4pt 3pt; border-bottom:0.6pt dotted rgba(35,27,22,.45); }
+.featured .lead { margin-bottom:7pt; }
 .name { font-family:'Fraunces', serif; font-size:10.5pt; line-height:12pt; font-weight:600; }
-.price { font-size:10.5pt; line-height:12pt; margin-left:8pt; }
+.featured .name { font-size:13pt; line-height:24pt; }
+.price { font-size:11.5pt; line-height:12pt; font-weight:700; letter-spacing:0.2pt; }
+.featured .price { font-size:13.5pt; line-height:24pt; }
 .desc { margin:0; padding-right:8pt; font-size:8pt; line-height:12pt; color:$muted; }
-.desc.in { margin-left:6pt; padding-right:0; white-space:nowrap; }
+.featured .desc { font-size:9pt; }
+.desc .dl, .desc .cue { display:block; } .desc .cue { font-family:'Fraunces', serif; font-style:italic; color:$terra; }
 .foot { display:block; height:0; margin:0; flex:none; }
 @media screen and (max-width: 600px) {
   html, body { background:$cream; }
@@ -247,8 +254,9 @@ h3 { margin:0; font-size:7pt; line-height:12pt; letter-spacing:1.4pt; text-trans
   .tab.active .ticon { background:$card; border-radius:3px; }
   .deck { display:block; }
   .card { margin:0 4px 24px; scroll-margin-top:110px; background:transparent; border:0; padding:0 0 16px; isolation:isolate; }
-  .card::before { content:""; position:absolute; inset:0; z-index:-1; background:$card; border:1.5px solid var(--c); box-shadow:3px 4px 0 rgba(35,27,22,.18); transform:rotate(-1deg); }
-  .card:nth-child(even)::before { transform:rotate(1deg); }
+  .card::before { content:""; position:absolute; inset:0; z-index:-1; background:$card; border:1.5px solid var(--c); box-shadow:3px 4px 0 rgba(35,27,22,.18); }
+  .featured .body { display:block; } .featured .row { height:auto; } .featured .name, .featured .price { font-size:18px; line-height:24px; } .featured .desc { font-size:14.5px; }
+  .featured .item + .item, .item + .item { margin-top:12px; } .grp + .grp, .featured .grp + .grp { margin-top:16px; } .lead, .featured .lead { margin-bottom:6px; }
   .face, .featured .face { height:auto; background:transparent; box-shadow:none; }
   .art, .featured .art { flex-direction:column; align-items:stretch; padding:16px 16px 8px; gap:8px; }
   .verse, .featured .verse { order:-1; height:auto; font-size:14px; line-height:20px; }
@@ -260,8 +268,7 @@ h3 { margin:0; font-size:7pt; line-height:12pt; letter-spacing:1.4pt; text-trans
   .sub { height:auto; } h3 { font-size:11.5px; line-height:20px; }
   .row { flex-wrap:wrap; height:auto; } .name, .price { font-size:18px; line-height:24px; }
   .desc { font-size:14.5px; line-height:20px; padding-right:24px; }
-  .desc.in { order:3; flex-basis:100%; margin-left:0; white-space:normal; }
-  .item + .item { margin-top:12px; } .items + .sub { margin-top:16px; }
+
 }
 @media print { .tabs, .banner-m { display:none !important; } }
 """).substitute(P)
@@ -272,7 +279,7 @@ HTML = f"""<!doctype html>
 <title>Cantina &amp; Cocktail Bar · Iowa City, Iowa</title>
 <style>{FONTS}{CSS}</style></head>
 <body><div class="page">
-<header class="mast">{papel()}{papel(5, 340, 56, "banner-m", 'width="100%"')}
+<header class="mast">{papel()}{papel(11, 540, 36, "banner-m", 'width="100%"')}
 <h1 class="title">Cantina <span class="amp">&amp;</span> Cocktail Bar</h1><p class="loc">Iowa City, Iowa</p></header>
 <nav class="tabs" aria-label="Jump to a card">{tabs}</nav>
 <main class="deck">{"".join(cards)}</main>
@@ -284,10 +291,10 @@ HTML = f"""<!doctype html>
 N = doc["meta"]["designer_notes"]
 N["concept"] = ("Lotería de la Cantina, 1 + 3 tabla: El Cantarito is the tall featured card filling the left column; La Botella, El Barril and La Rosa stack in the right column and end on the same baseline. "
                 "Every card has a face (framed tinted panel in its palette colour) holding a large cut-paper figure, the cantor verse (9 pt or larger) and the lotería name cartouche at its foot "
-                "(Spanish name + small English gloss, the one bilingual device); the drinks list sits below the face as the card's reverse. No ordinals. English-only subheaders.")
-N["card_layout"] = "1 + 3: columns 264 / 264 pt, 12 pt gutter; right cards 192 / 216 / 192 pt with 12 pt gaps = 624 pt = the featured card; everything on a 12 pt grid from the deck top"
+                "(Spanish name + small English gloss, the one bilingual device); the drinks list sits below the face as the card's reverse. No ordinals. English-only subheaders. Round 9: featured face cut to 240 pt, one stacked description system (name + price row, line under it), all four name bars 24 pt with 12 pt caps (featured signalled by size only).")
+N["card_layout"] = "1 + 3: columns 264 / 264 pt, 12 pt gutter; featured face 240 pt (20 baselines); right cards 192 / 216 / 192 pt (face 72 pt) with 12 pt gaps = 624 pt = the featured card; everything on a 12 pt grid from the deck top"
 N["sub_kickers"] = {sb["name"]: "(English only)" for s in new for sb in s["subs"]}
-N["rosa"] = "Lotería rosa is one of the four card colours (La Rosa) and one of the four papel picado colours, like terracotta, agave and marigold; no other rosa accents."
+N["rosa"] = "Terracotta is dominant (El Cantarito, La Botella, La Rosa frames and bars; 6 of 11 flags); agave is the secondary (El Barril); rosa and marigold are accents only (figure details, 1 and 2 flags)."
 N["ordinals"] = "Dropped in round 8 (read as wrong deck numbers)."
 for cc in N["cards"]:
     cc["printed_ordinal"] = None

@@ -61,16 +61,23 @@ checks = {
     
     "verses_unclipped": not any(c["verse_clipped"] for c in cards), "one_title_per_card": True,
     "no_card_more_than_12pt_empty": all(c["space_below_name_bar_pt"] <= 12 for c in cards),
+    "featured_face_pt": cards[0]["face_pt"]["h"] + 1.5, "featured_face_at_most_240pt": cards[0]["face_pt"]["h"] + 1.5 <= 240.3,
+    "cocktails_start_upper_half": cards[0]["row_ys_pt"]["first_item_row"] < cards[0]["box_pt"]["y"] + cards[0]["box_pt"]["h"] / 2,
+    "right_figure_inset_from_hairline_pt": {c["n"]: r2(min(c["figure_drawn_pt"]["x"] - c["face_pt"]["x"], c["figure_drawn_pt"]["y"] - c["face_pt"]["y"]) - 3.75) for c in cards if not c["featured"]},
+    "right_figures_6pt_inside_hairline": all(min(c["figure_drawn_pt"]["x"] - c["face_pt"]["x"], c["figure_drawn_pt"]["y"] - c["face_pt"]["y"]) - 3.75 >= 5.9 for c in cards if not c["featured"]),
+    "name_bar_heights_pt": sorted({c["name_bar_pt"]["h"] for c in cards}), "one_name_bar_height": len({c["name_bar_pt"]["h"] for c in cards}) == 1,
+    "title_clear_of_flags_12pt": (M["title"]["y"] - M["banner"]["y"] - M["banner"]["h"]) * PT >= 11.9,
+    "one_description_system": "stacked: name + price on one row, description on its own line(s) below, print and phone",
     
     
     "body_baseline_pt": sorted({v for c in cards for v in c["line_heights_pt"]}),
-    "one_12pt_baseline": all(c["line_heights_pt"] == [12.0] for c in cards), "baseline_anchor": "deck top (y = 132 pt); right cards: face 84 (cartouche 60-84) + 12 = first subhead at +96; featured: list pinned so its first subhead lands on a 12 pt multiple",
+    "one_12pt_baseline": all(v % 12 == 0 for c in cards for v in c["line_heights_pt"]), "baseline_anchor": "deck top (y = 132 pt); right cards: face 72 (cartouche 48-72) + 12 = first subhead at +84; featured: face 240 + 12 = first subhead at +252; name rows 24 pt on the featured card, 12 pt elsewhere; every row on the 12 pt grid",
     "item_gaps_pt": sorted({g for c in cards for g in c["item_gaps_pt"]}),
-    "same_item_gap_every_card": len({g for c in cards for g in c["item_gaps_pt"]}) <= 1,
+    "same_item_gap_every_card": len({g for c in cards[1:] for g in c["item_gaps_pt"]}) <= 1, "item_gap_note": "right cards stack items at 0 pt gap on the 12 pt grid (name row + line row); the featured card uses 36 pt",
     "same_bottom_padding_every_card": len({c["padding_pt"]["bottom"] for c in cards}) == 1,
     "no_one_word_last_line_print": all((i["last_line_words"] or 2) >= 2 or i["desc_lines"] == 1 for c in cards for i in c["items"]),
     "no_one_word_last_line_phone": PH["min_last_line_tokens"] >= 2,
-    "accent_contrast": {"rosa_on_card": contrast(PAL["loteria_rosa"], PAL["card"]), "rosa_on_featured": contrast(PAL["loteria_rosa"], PAL["featured_card"]),
+    "marigold_outline_contrast_on_cream": contrast(PAL.get("marigold_line", "#9A6508"), PAL.get("cream", "#F6EEDF")), "accent_contrast": {"rosa_on_card": contrast(PAL["loteria_rosa"], PAL["card"]), "rosa_on_featured": contrast(PAL["loteria_rosa"], PAL["featured_card"]),
                         "note": "rosa is one of the four card colours (La Rosa frame, cartouche, rule) and a papel picado colour; cream on rosa cartouche"},
     "fonts_loaded": R["fonts"], "letter_png_px": R["png"], "phone_png_px": R["phone_png"],
     "phone": {"scroll_width_px": PH["scrollWidth"], "tab_bar_position": PH["tabs"], "tabs": PH["tab_count"], "tabbar_scroll_vs_client_px": PH["tabbar_scroll_vs_client"],
@@ -78,14 +85,14 @@ checks = {
               "active_tab_label": PH["active_label"], "cards_stacked_single_column": max(c["x"] for c in PH["cards"]) - min(c["x"] for c in PH["cards"]) < 8,
               "text_rotation": [c["transform"] for c in PH["cards"]], "frame_rotation": [c["frame_transform"] for c in PH["cards"]], "verse_px": [c["verse_px"] for c in PH["cards"]], "verse_9pt_or_larger": all(c["verse_px"] * 0.75 >= 9 for c in PH["cards"]), "active_tab_bg": PH["active_bg"], "inactive_tab_bg": PH["inactive_bg"], "active_state_distinct": PH["active_bg"] != PH["inactive_bg"]},
 }
-L = {"round": 8, "concept": N["concept"],
+L = {"round": 9, "concept": N["concept"],
      "page": {"size": "US Letter 8.5 x 11 in", "w_pt": 612, "h_pt": 792, "margins_pt": {"top": 36, "right": 36, "bottom": 36, "left": 36}, "bleed": "none (cream flood to trim, home/office print)"},
      "grid": {"deck_pt": b(M["deck"]), "columns_pt": [264, 264], "gutter_pt": 12, "rows": "1 + 3: El Cantarito spans the left column (624 pt); right column La Botella 192, El Barril 216, La Rosa 192 with 12 pt gaps",
-              "card_anatomy": "1.5 pt frame in the card colour; face = tinted panel with a 0.75 pt inset hairline in the card colour at 3 pt, figure (72 x 58.5 pt box on the right cards, full face width on the featured card), cantor verse Fraunces italic 9 pt (10.5 pt featured), name cartouche 24 pt (36 pt featured) at the foot of the face holding the Spanish name + English gloss; 12 pt gap; reverse = the drinks list; 10.5 pt bottom padding + 1.5 pt border = 12 pt"},
+              "card_anatomy": "1.5 pt frame in the card colour; face = tinted panel with a 0.75 pt inset hairline in the card colour at 3 pt, figure (60 x 46.5 pt box, 6 pt inside the hairline, on the right cards, full face width on the featured card), cantor verse Fraunces italic 9 pt (10.5 pt featured), name cartouche 24 pt on every card at the foot of the face holding the Spanish name + English gloss; 12 pt gap; reverse = the drinks list; 10.5 pt bottom padding + 1.5 pt border = 12 pt"},
      "palette": PAL,
      "type": {"display": "Fraunces 700 (title 30/34 pt; card titles 12 pt caps 2 pt tracking in the name bar, one size on every card)", "ordinals": "none",
-              "items": "Fraunces 600 10.5/12 pt (every card)", "prices": "Fraunces 600 terracotta lining tabular 10.5/12 pt", "descriptions": "DM Sans 8/12 pt (every card)", "verse": "Fraunces italic 9/12 pt muted (featured 10.5/12)", "gloss": "Fraunces italic 8.5 pt in the cartouche (featured 10 pt)",
-              "subheads": "DM Sans 700 caps 7/12 pt, English only, rule in the card colour", "name_bar": "24 pt bar; colours terracotta (El Cantarito), agave (La Botella), marigold (El Barril), loteria rosa (La Rosa)", "body_baseline_pt": 12, "item_gap_pt": 12},
+              "items": "Fraunces 600 10.5/12 pt (every card)", "prices": "Fraunces 700 terracotta lining tabular 11.5 pt (13.5 featured), dotted hairline leader to the name", "descriptions": "DM Sans 8/12 pt stacked under the name (9 pt featured); cocktail serve cue Fraunces italic terracotta on its own line", "verse": "Fraunces italic 9/12 pt muted (featured 10.5/12)", "gloss": "Fraunces italic 8.5 pt in the cartouche (every card)",
+              "subheads": "DM Sans 700 caps 7/12 pt, English only, rule in the card colour", "name_bar": "24 pt bar, 12 pt caps on every card; terracotta (El Cantarito, La Botella, La Rosa), agave (El Barril); rosa and marigold accents only", "body_baseline_pt": 12, "item_gap_pt": 12},
      "masthead": {"papel_picado_pt": b(M["banner"]), "title_pt": b(M["title"]), "location_pt": b(M["loc"]), "footer_pt": b(M["foot"])},
      "elements": elements, "cards": cards, "measured_checks": checks}
 (OUT / "layout.json").write_text(json.dumps(L, ensure_ascii=False, indent=1))
@@ -93,24 +100,26 @@ L = {"round": 8, "concept": N["concept"],
 # ------------------------------------------------------------ proposal.md (generated; nothing hand-typed about the render)
 it_by = {i["id"]: i for s in doc["sections"] for i in s["items"] + [x for sb in s["subs"] for x in sb["items"]]}
 cs = N["copy_sources"]
-o = ['# TEST-1 round 8: "Cantina & Cocktail Bar", Iowa City (proposal v8, loteria 1 + 3 tabla)', "",
+o = ['# TEST-1 round 9: "Cantina & Cocktail Bar", Iowa City (proposal v9, loteria 1 + 3 tabla)', "",
      "Generated by `build/layout.py` from `doc.json` and the Chromium render (`build/measure.json`). needs_input = true (questions below).", "",
-     "## Round 8 changes", "",
+     "## Round 9 changes", "",
      "- " + N["concept"],
      "- Deck: EL CANTARITO (Classics: Margarita, Manhattan; then House Originals), LA BOTELLA (Agave: Blanco, Añejo; Brandy: Cognac VSOP), EL BARRIL (Draft + Cider), LA ROSA (By the Glass + Sparkling). No ordinals. Subheaders English only; the one bilingual device is the cartouche (Spanish name + English gloss).",
      "- Cantor verses are **cultural text** (traditional loteria caller rhymes), not item facts: " + "; ".join(f'{c["loteria_name"]}: \"{c["cantor_verse"]}\"' for c in N["cards"]) + ". The venue may drop them.",
-     "- Cocktail lines: one guest sentence each, varied in structure; the Margarita keeps its draft flavour note, the others lead with their base spirit (words from the draft, draft_doc components and serve_format). Beer, cider and wine keep their draft words, set on the name line.",
-     "- Spirits: all three are name-only (Blanco Tequila, Añejo Tequila, Cognac VSOP); brand, age statement and pour size are flagged below. The verse and the bottle figure carry the card.",
-     "- Brut Rosé sits under its own Espumoso subheader, apart from the Por copa list.",
-     "- Rosa is one of the four card colours (La Rosa), exactly like terracotta, agave and marigold. Phone: only the card frame and shadow (::before) tilt, -1 / +1 deg alternating; text stays straight; verse 14 px (10.5 pt); sticky 2 x 2 tabs, the active tab filled in its card colour with an ink underline and aria-current.", "",
+     "- One description system everywhere (print and phone): name and price on one row, the description stacked on its own line under the name.",
+     "- Cocktails in guest voice from draft words, no bartender verbs; the glass and garnish follow as a light italic serve cue. Manhattan prints the venue's own draft description (bf732e78) including \"aromatic bitters\": the venue's printed description overrides the component-visibility flag (public_components aromatic-bitters = false).",
+     "- Spirits: one short line each from the cited beverage_categories rows (Blanco: \"Plata-style tequila.\"; Añejo: \"Añejo-class tequila.\"; Cognac VSOP: \"Grape brandy, VSOP grade.\"). Beer, cider and wine: draft words minus the words that echo the item name.",
+     "- Section order is a deliberate change from the draft (Cocktails, Spirits, Beer, Cider, Wine; Classics before House Originals on the cocktail card): cocktails lead as the featured card, spirits follow as the agave story, then beer + cider and wine. Items, names and prices are unchanged.",
+     "- Brut Rosé sits under its own Sparkling subheader, apart from the By the Glass list.",
+     "- Palette: terracotta dominant, agave secondary (El Barril), rosa and marigold as accents only; marigold outline colour darkened to #9A6508 (" + str(checks["marigold_outline_contrast_on_cream"]) + ":1 on cream). Prices: bolder, larger tabular lining figures with a dotted hairline leader. All four name bars 24 pt with 12 pt caps; the featured card is signalled by size only. Title 12 pt below the flags. Phone: no tilt; the same 11-flag papel picado string scaled to the screen width; sticky 2 x 2 tabs.", "",
      "## Cards (measured)", "", "| Card title | Gloss | Box (x, y, w, h pt) | Face h pt | Figure drawn h pt (share of face) | Empty space at foot pt | Item gaps pt |", "|---|---|---|---|---|---|---|"]
 for c in cards:
     bx = c["box_pt"]
     o.append(f'| {c["loteria_name"]}{" (featured)" if c["featured"] else ""} | {c["gloss"]} | {bx["x"]}, {bx["y"]}, {bx["w"]}, {bx["h"]} | {c["face_pt"]["h"]} | {c["figure_drawn_pt"]["h"]} ({c["figure_share_of_face_height"]}) | {c["space_below_name_bar_pt"]} | {c["item_gaps_pt"]} |')
-o += ["", "Measured checks: " + "; ".join(f"{k} = {checks[k]}" for k in ("no_card_overflow", "no_card_more_than_12pt_empty", "cross_card_baseline_alignment", "columns_end_same_baseline", "figures_at_least_40pct_of_face", "verses_9pt_or_larger", "verses_unclipped", "one_12pt_baseline", "same_item_gap_every_card", "same_bottom_padding_every_card", "no_one_word_last_line_print", "no_one_word_last_line_phone", "deck_within_margins", "title_clear_of_flags_pt", "location_to_cards_pt"))
+o += ["", "Measured checks: " + "; ".join(f"{k} = {checks[k]}" for k in ("no_card_overflow", "no_card_more_than_12pt_empty", "cross_card_baseline_alignment", "columns_end_same_baseline", "figures_at_least_40pct_of_face", "verses_9pt_or_larger", "verses_unclipped", "one_12pt_baseline", "same_item_gap_every_card", "same_bottom_padding_every_card", "no_one_word_last_line_print", "no_one_word_last_line_phone", "deck_within_margins", "title_clear_of_flags_pt", "title_clear_of_flags_12pt", "location_to_cards_pt", "featured_face_pt", "cocktails_start_upper_half", "right_figure_inset_from_hairline_pt", "right_figures_6pt_inside_hairline", "one_name_bar_height", "marigold_outline_contrast_on_cream"))
       + f'. Printed ink margins (pt): {checks["printed_ink_margins_pt"]}. Accent contrast: {checks["accent_contrast"]["rosa_on_card"]}:1 on card, {checks["accent_contrast"]["rosa_on_featured"]}:1 on featured. '
       f'Phone: tab bar `{checks["phone"]["tab_bar_position"]}`, {checks["phone"]["tabs"]} tabs, all fit at 390 px: {checks["phone"]["all_tabs_fit_390"]}, page scroll width {checks["phone"]["scroll_width_px"]} px, single-column stack: {checks["phone"]["cards_stacked_single_column"]}.',
-      "", "Subheader pairs: " + "; ".join(f"{k} / *{v}*" for k, v in N["sub_kickers"].items()) + ".", "",
+      "", "Subheaders as printed (English only): " + ", ".join(N["sub_kickers"]) + ".", "",
       "## Printed copy and source table (matches menu.html)", "", "| Item | Price | Printed line | Words from | Gateway row ids | Still missing |", "|---|---|---|---|---|---|"]
 for c in cards:
     for i in c["items"]:
@@ -118,9 +127,9 @@ for c in cards:
         o.append(f'| {i["name"]} | {i["price"]} | {s["printed"] or "(name only)"} | {s["words_from"]} | {", ".join(s["gateway_rows"]) or "none"} | {", ".join(s["missing"]) or "none"} |')
 o += ["", "Gateway query (the only one this round): " + N["gateway_query"] + ".", "",
       "## Flags and needs_input (questions for the venue, via the Coordinator)", "",
-      "1. **Pour sizes are missing** for Blanco Tequila, Añejo Tequila, Cognac VSOP and all draft beers; wine pour sizes too. None is printed. Añejo: brand and age statement? Cognac VSOP: brand/house? Blanco: does the venue want \"unaged\" (not in the cited row, so not printed)?",
-      "2. **Brut Rosé: glass or bottle?** (printed under Espumoso, kept flagged) The price label is empty in the draft. " + N["brut_rose_price"],
-      "3. **Manhattan bitters:** " + N["manhattan_bitters"] + " The Old Fashioned prints \"bitters\" (draft word).",
+      "1. **Pour sizes are missing** for Blanco Tequila, Añejo Tequila, Cognac VSOP and all draft beers; wine pour sizes too. None is printed. Añejo: brand and age statement? Cognac VSOP: brand/house? Blanco: does the venue want \"unaged\" (not in the cited row, so not printed)? Beer \"on draft\" is from the draft line \"Hop-forward draft IPA.\"",
+      "2. **Brut Rosé: glass or bottle?** (printed under Sparkling, kept flagged) The price label is empty in the draft. " + N["brut_rose_price"],
+      "3. **Manhattan bitters:** " + N["manhattan_bitters"] + "",
       "4. Beer, cider and wine lines are the draft words only. Brand, producer, region, vintage and ABV are still missing (see the table).",
       "5. Brown Butter Old Fashioned: please confirm the dairy allergen note.",
       "6. " + N["retired_junmai_ginjo"], "",
@@ -128,6 +137,6 @@ o += ["", "Gateway query (the only one this round): " + N["gateway_query"] + "."
       "572 (Coa Cantina Iowa City: agave first, the price band); 7923 (Coa Cantina Des Moines: a compact list led by cocktails); 4969 (Blue Agave, Iowa: the Classic / Signature tiers); "
       "208 (Alta Calidad, Brooklyn: pour size in the header, once supplied); 2585 (La Buena Vida, Fort Collins: Spanish/English headers).", "",
       "## Files", "", "menu.html, menu.pdf, preview-letter.png (" + "x".join(map(str, R["png"])) + " px, 300 dpi, not downscaled), preview-phone.png ("
-      + "x".join(map(str, R["phone_png"])) + " px), doc.json, layout.json, proposal.md; copies in round-8/. Earlier rounds: round-1/ to round-7/proposal.md.", ""]
+      + "x".join(map(str, R["phone_png"])) + " px), doc.json, layout.json, proposal.md; copies in round-9/. Earlier rounds: round-1/ to round-8/.", ""]
 (OUT / "proposal.md").write_text("\n".join(o))
 print(json.dumps({k: v for k, v in checks.items() if k not in ("card_edges_pt",)}, ensure_ascii=False))
