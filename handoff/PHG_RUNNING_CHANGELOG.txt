@@ -1586,3 +1586,23 @@ is in different stages and then I want a button ... that allows someone to click
   works; spoken "open" replies say to tap Open Harmony.
 - Setup page rebuilt with stage headings; 375 px: no overflow, all 17 chips copy, zero page errors.
 - DEPLOY NOTE: img/harmony-orb.gif and img/harmony-orb-thinking.gif must go to main with index.html.
+
+------------------------------------------------------------------------------
+PHG-20260928-VOICEDATA | USER_PROMPT + CHANGE | 2026-09-28 (phg-harmony-inbox v9 + phg-harmony-data v3 live)
+Rob: "I also can't call Harmony for cocktail recipes yet ... she's not able to show real menus ... pull up the map view
+or do anything else. It'd be cool to just like when my phone is closed say, hey Harmony, how do you make a Manhattan?
+And she just walks through the recipe and the exact specifications of a Manhattan while the phone is closed."
+- Logs: Shortcut words now arrive every time (v6), but the Action-button Harmony only had note/answer/open with a
+  1-2 sentence reply and no access to PHG data. No in-app phg-harmony-data calls since the 18.49.30 deploy.
+- inbox v8/v9: new routes. recipe -> looks up public.cocktail_reference, then a second model pass (RECIPE_VOICE)
+  speaks ingredients with exact measures, method, glass and garnish (60-120 words, no sign-off); url opens the recipe
+  card. data -> calls phg-harmony-data server-to-server and speaks its answer from real numbers + "Tap Open Harmony to
+  see it on the map / full view"; url carries the question so the app opens on that view. Menu lookups hand off to
+  the app via Open Harmony.
+- phg-harmony-data v2/v3: accepts internal calls (x-phg-internal = service-role key, never leaves Supabase), deployed
+  verify_jwt false because it authenticates itself (app login still required otherwise). v3 fixes producer-name
+  trimming: the legal-suffix rule cut "CASA TEQUILERA..." to "Ca"; now only ", S.A. DE C.V." style suffixes go.
+- Live end-to-end test with a temporary key on Rob's account (created, used, then deleted; recipe/data questions only,
+  no notes written): Manhattan -> spoken spec (2 oz rye/bourbon, 1 oz sweet vermouth, 2 dashes Angostura, stir ~30 s,
+  strain, cherry); NOM 1610 -> Casa Tequilera Dinastia Arandina, Zapopan, 10 brands, map link; "average margarita
+  price in Denver" -> 69 priced, avg $12.43, median $12; "show me Eatery A menu in Des Moines" -> Open Harmony link.

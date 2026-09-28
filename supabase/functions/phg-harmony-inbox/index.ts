@@ -45,17 +45,29 @@ const ROUTER = [
   "The user pressed a button on their iPhone and spoke one sentence. Decide what they want and return JSON only.",
   "route = 'note' when they are telling you something to remember or log: notes, tasks, to-dos, ideas, reminders, observations (e.g. 'log that the Tito's delivery was two cases short', 'remind me to call the Sysco rep Friday', 'idea: a smoked pineapple margarita').",
   "route = 'answer' for questions or conversation you can answer in speech, including questions about their saved notes (their recent notes are provided).",
-  "route = 'open' when they want to see or do something on screen in the app: design or show a menu, show photos, open the dashboard, show reports, maps. open_query is the request to run in the app.",
+  "route = 'recipe' when they ask how to make a drink, for a cocktail recipe, spec or build, or what's in a cocktail; cocktail = the drink's name.",
+  "route = 'data' for questions about PHG's data that the app can look up: where a NOM distillery or tequila producer is, distilleries in a town, venues or bars in a city, a specific venue's real menu, drink prices and averages, top brands, spirit categories on menus, a venue's drinks profile, ZIP code census demographics, label approvals, how much data PHG has. data_query = their question, cleaned up.",
+  "route = 'open' only for things to DO on screen that are not data lookups: design or edit a menu in Menu Studio, show their photos, open the dashboard, run business reports (sales, labor, costs, P&L). open_query is the request to run in the app.",
   "For notes: kind is task (something to do), reminder (time-bound), idea, or note; note_text is their content cleaned up (no 'log that'/'remind me to' prefix, keep names and numbers exactly); due_iso only if they gave a time, in ISO 8601 with offset for their time zone; tags are 0-3 short lowercase words.",
   "reply is what you say out loud: one or two short, warm, natural sentences. For a note, confirm briefly (e.g. 'Got it, I logged that the Tito's delivery was two cases short.'). For open, say what's ready and that they can tap Open Harmony to see it. Plain text, no markdown.",
   "Never invent business figures. If they ask for live numbers, route to open with their request so the app runs the report.",
 ].join(" ");
 
+/* v8: recipes are walked through out loud with exact specs (our cocktail_reference first) */
+const RECIPE_VOICE = [
+  "You are Harmony, a warm, expert bartender voice assistant. The user asked how to make a drink with their phone locked, so everything you say is heard, not seen.",
+  "Walk them through it in natural speech: first the ingredients with exact measurements in ounces (and dashes/barspoons), then the method step by step (build, stir or shake, how long, strain, ice), then the glass and the garnish.",
+  "If a PHG reference spec is given, follow it; fill any missing measurements with the widely accepted classic spec and say it's the classic spec. Mention one common variation only if it's truly standard (e.g. dry or perfect Manhattan).",
+  "Plain spoken sentences, no lists, no markdown, no symbols like ½ (say 'three quarters of an ounce'). 60 to 120 words. End with the garnish; no sign-off, no 'enjoy', no filler.",
+].join(" ");
+
 const SCHEMA = {
   type: "object", additionalProperties: false,
-  required: ["route", "kind", "note_text", "tags", "due_iso", "reply", "open_query"],
+  required: ["route", "kind", "note_text", "tags", "due_iso", "reply", "open_query", "cocktail", "data_query"],
   properties: {
-    route: { type: "string", enum: ["note", "answer", "open"] },
+    route: { type: "string", enum: ["note", "answer", "open", "recipe", "data"] },
+    cocktail: { type: ["string", "null"] },
+    data_query: { type: ["string", "null"] },
     kind: { type: "string", enum: KINDS },
     note_text: { type: "string" },
     tags: { type: "array", items: { type: "string" } },
@@ -261,6 +273,44 @@ Deno.serve(async (req) => {
      for an "open" request it carries the request. Nothing opens by itself: the Shortcut asks, and
      iPhone requires Face ID / passcode to open anything from the lock screen. */
   let note = null, link = `${appUrl}/?harmony=1`;
+  const withQ = (q: string) => `${appUrl}/?harmony=1&q=${encodeURIComponent(q)}`;
+  if (out.route === "recipe") {
+    const name = String(out.cocktail || "").replace(/[%_,()]/g, " ").trim();
+    let ref: any = null;
+    if (name) {
+      const { data } = await admin.from("cocktail_reference").select("cocktail_name,base_spirit,consensus_spec,method,glassware,garnish,profile").ilike("cocktail_name", name).limit(1);
+      ref = data?.[0] || null;
+      if (!ref) { const r2 = await admin.from("cocktail_reference").select("cocktail_name,base_spirit,consensus_spec,method,glassware,garnish,profile").ilike("cocktail_name", `%${name}%`).limit(1); ref = r2.data?.[0] || null; }
+    }
+    const rv = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST", headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model, instructions: RECIPE_VOICE, max_output_tokens: 400,
+        input: `They asked: ${text}\nDrink: ${ref?.cocktail_name || name || "(unclear)"}\n` + (ref ? `PHG reference spec: ${JSON.stringify(ref)}` : "No PHG reference spec for this drink; use the classic spec.") }),
+    });
+    const rj = await rv.json().catch(() => ({}));
+    let say = typeof rj.output_text === "string" ? rj.output_text : "";
+    if (!say && Array.isArray(rj.output)) for (const o of rj.output) for (const c of (o?.content || [])) if (c?.type === "output_text") say += c.text || "";
+    return json({ ok: true, route: "recipe", speak: (say || String(out.reply || "")).trim() || "I couldn't pull that recipe just now.", url: withQ(`How do you make a ${ref?.cocktail_name || name}?`) });
+  }
+  if (out.route === "data") {
+    const q = String(out.data_query || text).trim();
+    try {
+      const dr = await fetch(`${url}/functions/v1/phg-harmony-data`, {
+        method: "POST", headers: { "Content-Type": "application/json", apikey: anon, "x-phg-internal": service },
+        body: JSON.stringify({ prompt: q }),
+      });
+      const dj = await dr.json().catch(() => ({}));
+      if (dr.ok && dj.source === "menu_lookup") {
+        return json({ ok: true, route: "data", speak: "I can pull up that menu for you. Tap Open Harmony and it will be on screen.", url: withQ(q) });
+      }
+      if (dr.ok && dj.speak && dj.source !== "none") {
+        const t = dj.view?.type;
+        const see = t === "map" ? " Tap Open Harmony to see it on the map." : t && t !== "empty" ? " Tap Open Harmony to see the full view." : "";
+        return json({ ok: true, route: "data", speak: String(dj.speak) + see, url: withQ(q) });
+      }
+    } catch (e) { console.log(JSON.stringify({ data_error: String(e) })); }
+    // no data answer: fall through with the router's own reply
+  }
   if (out.route === "note") {
     try { note = await saveNote(out.note_text || text, out.kind, out.tags, out.due_iso); }
     catch (e) { return json({ ok: false, route: "note", speak: "I couldn't save that note.", url: link, error: String(e) }, 500); }

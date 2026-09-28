@@ -63,6 +63,8 @@ function addressOf(notes: string | null) {
 }
 const title = (s: string) => s.toLowerCase().replace(/(^|[\s(\-/])([a-zà-ÿ])/g, (_a, p, ch) => p + ch.toUpperCase());
 const money = (n: unknown) => (n == null || !isFinite(Number(n)) ? null : Math.round(Number(n) * 100) / 100);
+/* legal-form suffix only: ", S.A. DE C.V.", "SAPI DE CV", "S. DE R.L. DE C.V." - never "CASA" or "SAN" */
+const LEGAL = /,?\s+(S\.?\s?A\.?(\s?P\.?\s?I\.?)?|S\.?\s?DE\s+R\.?\s?L\.?|S\.?\s?C\.?)(\s+DE\s+C\.?\s?V\.?)?\.?\s*$/i;
 const esc = (s: string) => s.replace(/[%_,()]/g, " ").trim();
 
 /* ---------------- the catalog ---------------- */
@@ -92,7 +94,7 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
       const o = orgs[0], a = addressOf(o.notes);
       const { data: brands } = await db.from("brands").select("brand_name,category,brand_status").eq("primary_nom", o.nom).order("brand_name").limit(40);
       const names = (brands || []).map((b: any) => b.brand_name);
-      const name = title(String(o.organization_name).replace(/,?\s*S\.?\s*A\.?.*$/i, ""));
+      const name = title(String(o.organization_name).replace(LEGAL, ""));
       const pins = a.coord ? [{ lat: a.coord[0], lng: a.coord[1], label: `NOM ${o.nom} · ${name}`, sub: a.muni ? title(a.muni) + ", " + title(a.state) : "", approx: a.approx }] : [];
       return {
         speak: `NOM ${o.nom} is ${name}${a.muni ? `, registered in ${title(a.muni)}, ${title(a.state)}` : ""}.` +
@@ -113,7 +115,7 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
       const want = String(p.town || p.state || p.q || "").toUpperCase().trim();
       const rows = (data || []).map((o: any) => ({ o, a: addressOf(o.notes) })).filter((r: any) => r.a.coord && (!want || r.a.muni.includes(want) || r.a.state.includes(want)));
       const jitter = (i: number) => ((i * 7919) % 100) / 100 - 0.5;
-      const pins = rows.map((r: any, i: number) => ({ lat: r.a.coord[0] + jitter(i) * 0.03, lng: r.a.coord[1] + jitter(i + 13) * 0.03, label: `NOM ${r.o.nom} · ${title(String(r.o.organization_name).replace(/,?\s*S\.?\s*A\.?.*$/i, ""))}`, sub: title(r.a.muni), nom: r.o.nom }));
+      const pins = rows.map((r: any, i: number) => ({ lat: r.a.coord[0] + jitter(i) * 0.03, lng: r.a.coord[1] + jitter(i + 13) * 0.03, label: `NOM ${r.o.nom} · ${title(String(r.o.organization_name).replace(LEGAL, ""))}`, sub: title(r.a.muni), nom: r.o.nom }));
       const by: Record<string, number> = {};
       rows.forEach((r: any) => { const k = title(r.a.muni); by[k] = (by[k] || 0) + 1; });
       const bars = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([label, value]) => ({ label, value }));
@@ -323,11 +325,16 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "POST required" }, 405);
   const url = Deno.env.get("SUPABASE_URL"), anon = Deno.env.get("SUPABASE_ANON_KEY"), svc = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"), oa = Deno.env.get("OPENAI_API_KEY");
   if (!url || !anon || !svc) return json({ error: "runtime configuration missing" }, 500);
-  const auth = req.headers.get("Authorization") || "";
-  if (!auth.toLowerCase().startsWith("bearer ")) return json({ error: "login required" }, 401);
-  const sbu = createClient(url, anon, { auth: { persistSession: false }, global: { headers: { Authorization: auth } } });
-  const { data: ud, error: ue } = await sbu.auth.getUser(auth.slice(7).trim());
-  if (ue || !ud?.user) return json({ error: "invalid or expired login" }, 401);
+  /* v2: server-to-server calls from phg-harmony-inbox (the Action button, which has no app login)
+     prove themselves with the service-role key in x-phg-internal; it never leaves Supabase. */
+  const internal = (req.headers.get("x-phg-internal") || "") === svc;
+  if (!internal) {
+    const auth = req.headers.get("Authorization") || "";
+    if (!auth.toLowerCase().startsWith("bearer ")) return json({ error: "login required" }, 401);
+    const sbu = createClient(url, anon, { auth: { persistSession: false }, global: { headers: { Authorization: auth } } });
+    const { data: ud, error: ue } = await sbu.auth.getUser(auth.slice(7).trim());
+    if (ue || !ud?.user) return json({ error: "invalid or expired login" }, 401);
+  }
   const db = createClient(url, svc, { auth: { persistSession: false } });
 
   const b = await req.json().catch(() => ({}));
