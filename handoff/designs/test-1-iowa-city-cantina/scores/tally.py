@@ -8,7 +8,8 @@ out, by = [], {}
 for x in rows:
     k = x['reviewer']; vals = [float(x['scores'][c]) for c in KEYS[k] if c in x['scores']]
     avg = sum(vals) / len(vals); by.setdefault(k, []).append(avg)
-    out.append(f"| {k} | {x.get('lens','')} | {' '.join(f'{c}:{x['scores'].get(c)}' for c in KEYS[k])} | {avg:.1f} |")
+    sc = ' '.join('%s:%s' % (c, x['scores'].get(c)) for c in KEYS[k])
+    out.append('| %s | %s | %s | %.1f |' % (k, x.get('lens','')[:60], sc, avg))
 allv = [a for v in by.values() for a in v]
 comb = sum(allv) / len(allv)
 hist_p = here / 'history.json'
