@@ -138,10 +138,12 @@ def ground_svg():
     g.append('<rect x="-20" y="236" width="856" height="40" fill="#1a2350" opacity=".35"/>')
     for x in range(0, 840, 62):
         g.append(agave(x + rnd.uniform(-12, 12), 318 + rnd.uniform(-6, 6), 62, "#16293d", "#7f9bd0", n=11))
-    g.append('<rect x="-20" y="300" width="856" height="130" fill="#0b1422"/>')
-    for x, s, ln in ((40, 150, 8), (250, 118, -4), (520, 132, 5), (790, 160, -8)):
-        g.append(agave(x, 432, s, "#0a121d", "#9fb5e6", n=13, lean=ln))
-    g.append(fireflies(34, 10, 806, 150, 400))
+    g.append('<linearGradient id="gnd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#132238"/><stop offset="1" stop-color="#070d18"/></linearGradient><rect x="-20" y="300" width="856" height="130" fill="url(#gnd)"/>')
+    for x in range(-20, 840, 48):
+        g.append(agave(x + rnd.uniform(-10, 10), 372 + rnd.uniform(-6, 6), 70, "#1d3550", "#8fa9dc", n=11))
+    for x, s, ln in ((30, 170, 8), (230, 120, -4), (560, 136, 5), (800, 176, -8)):
+        g.append(agave(x, 440, s, "#0e1b2c", "#b4c6f0", n=13, lean=ln))
+    g.append(fireflies(46, 10, 806, 120, 400))
     g.append('</svg>')
     return "".join(g)
 
@@ -215,14 +217,14 @@ h3{{font:700 19px/1 Fraunces,serif;letter-spacing:.2em;text-transform:uppercase;
 .board{{position:absolute;background:linear-gradient(180deg,var(--wood),var(--wood2));color:var(--cream);font:700 13px/1.3 DMSans,sans-serif;letter-spacing:.3em;
   text-transform:uppercase;padding:10px 16px;border-radius:3px;box-shadow:inset 0 0 0 2px #2a170d,0 10px 20px rgba(0,0,0,.6);text-align:center}}
 .post{{position:absolute;width:9px;background:#2a1a14}}
-.lantern{{position:absolute;width:120px;height:220px}}
+.lantern{{position:absolute;width:120px;height:220px;overflow:visible}}
 /* letter geometry: 36 pt = 48 CSS px safe margin */
 .L #c-cocktails{{left:48px;top:170px;width:720px}}
 .L #c-beer{{left:48px;top:512px;width:230px}}
 .L #c-wine{{left:293px;top:512px;width:230px}}
 .L #c-spirits{{left:538px;top:512px;width:230px}}
-.L .lantern{{left:40px;bottom:36px}}
-.L .tag.t1{{left:110px;bottom:52px;transform:rotate(-5deg)}}
+.L .lantern{{left:292px;bottom:30px}}
+.L .tag.t1{{left:362px;bottom:52px;transform:rotate(-5deg)}}
 .L .board.b1{{right:70px;bottom:62px;transform:rotate(2deg)}}
 .L .post.p1{{right:150px;bottom:0;height:70px}}
 /* phone */

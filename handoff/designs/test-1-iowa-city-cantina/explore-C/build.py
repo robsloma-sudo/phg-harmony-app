@@ -150,11 +150,11 @@ random.seed(7)
 W, H = 816, 1056
 art_top = (
     halftone(agave(690, 250, 280), 400, -12, 430, 280, 7.2, PINK, 15, "ht pink")
-    + halftone(coupe(560, 120, 190), 450, 20, 220, 160, 6.4, TEAL, 75, "ht teal mis")
+    + halftone(coupe(470, 118, 180), 380, 20, 200, 160, 6.4, TEAL, 75, "ht teal mis")
 )
 art_bot = (
-    halftone(rocks(470, 985, 150), 380, 900, 190, 150, 6.4, TEAL, 75, "ht teal mis")
-    + halftone(agave(560, 1090, 230), 380, 890, 300, 180, 7.2, PINK, 15, "ht pink")
+    halftone(rocks(470, 955, 140), 380, 880, 190, 140, 6.4, TEAL, 75, "ht teal mis")
+    + halftone(agave(580, 1070, 230), 390, 870, 330, 200, 7.2, PINK, 15, "ht pink")
 )
 
 # stamp: rough circle via displacement filter
@@ -195,8 +195,11 @@ svg.art .mis{{transform:translate(3px,-2px)}}
 .ld{{flex:1;border-bottom:2px dotted {INK};transform:translateY(-4px);min-width:14px}}
 .pr{{font:700 18px/1 DMS}}
 .ck{{margin:0 0 9px}}
+.ck .nm{{white-space:nowrap;letter-spacing:.9px}}
+.si .nm{{white-space:nowrap;letter-spacing:1px}}
 .tags{{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}}
 .tag{{display:inline-flex;align-items:baseline;gap:5px;border:1.6px solid {INK};padding:3px 5px 2px;font:700 11px/1.1 DMS;letter-spacing:1.1px;background:{PAPER}}}
+.tag{{white-space:nowrap}}
 .tag i{{font:400 11px/1 'Liberation Mono',monospace;font-style:normal;letter-spacing:0}}
 .tag.gar{{border-style:dashed}}
 .serve{{margin-top:5px;font:600 italic 13px/1.2 FR;letter-spacing:.3px}}
@@ -214,6 +217,9 @@ svg.art .mis{{transform:translate(3px,-2px)}}
   .blk{{margin:22px 6px 0 0}}
   .wm{{font-size:86px}}
   .phart{{display:block!important}}
+  #b-cock > div:last-child{{grid-template-columns:1fr!important}}
+  .ck .nm{{white-space:normal}}
+  .page{{overflow:hidden}}
   .tagline{{display:inline-block;margin-top:22px}}
   .foot{{margin-top:22px;flex-direction:column;gap:6px}}
 }}
@@ -223,24 +229,24 @@ svg.art .mis{{transform:translate(3px,-2px)}}
 S = {"sections": {s["id"]: s for s in doc["sections"]}}
 subs = {sub["id"]: sub for s in doc["sections"] for sub in s.get("subs", [])}
 
-cock = f'''<div class="blk" id="b-cock" style="left:0;top:178px;width:720px;transform:rotate(-1deg)">
+cock = f'''<div class="blk" id="b-cock" style="left:0;top:214px;width:720px;transform:rotate(-1deg)">
  <div class="hd">{stamp(1, OVER, -12)}<h2>Cocktails</h2></div>
  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 30px">
   <div><div class="sub">{subs["sub_cocktails_classics"]["name"]}</div>{cocktail("beta_margarita")}{cocktail("beta_manhattan")}</div>
   <div><div class="sub">{subs["sub_cocktails_house_originals"]["name"]}</div>{cocktail("beta_daiquiri")}{cocktail("beta_old_fashioned")}</div>
  </div></div>'''
-beer = f'''<div class="blk" id="b-beer" style="left:0;top:556px;width:228px;transform:rotate(1.3deg)">
+beer = f'''<div class="blk" id="b-beer" style="left:0;top:590px;width:228px;transform:rotate(1.3deg)">
  <div class="hd">{stamp(2, OVER, 9)}<h2>Beer</h2></div><div class="sub">{subs["sub_beer_draft"]["name"]}</div>
  {simple("beta_czech_pilsner")}{simple("beta_dry_hopped_ipa")}{simple("beta_amber_lager")}</div>'''
-wine = f'''<div class="blk" id="b-wine" style="left:246px;top:548px;width:228px;transform:rotate(-1.5deg)">
+wine = f'''<div class="blk" id="b-wine" style="left:246px;top:582px;width:228px;transform:rotate(-1.5deg)">
  <div class="hd">{stamp(3, OVER, 6)}<h2>Wine</h2></div><div class="sub">{subs["sub_wine_by_the_glass"]["name"]}</div>
  {simple("beta_malbec")}{simple("beta_pinot_grigio")}<div class="sub">{subs["sub_wine_sparkling"]["name"]}</div>{simple("beta_brut_rose")}</div>'''
-spir = f'''<div class="blk" id="b-spir" style="left:492px;top:560px;width:228px;transform:rotate(1deg)">
+spir = f'''<div class="blk" id="b-spir" style="left:492px;top:594px;width:228px;transform:rotate(1deg)">
  <div class="hd">{stamp(4, OVER, -8)}<h2>Spirits</h2></div>
  <div style="display:grid;grid-template-columns:1fr;gap:0">
  <div class="sub">{subs["sub_spirits_agave"]["name"]}</div>{simple("beta_blanco_tequila")}{simple("beta_anejo_tequila")}
  <div class="sub">{subs["sub_spirits_brandy"]["name"]}</div>{simple("beta_cognac_vsop")}</div></div>'''
-cider = f'''<div class="blk" id="b-cider" style="left:486px;top:40px;width:220px;transform:rotate(3deg)">
+cider = f'''<div class="blk" id="b-cider" style="left:506px;top:56px;width:214px;transform:rotate(3deg)">
  <div class="hd">{stamp(5, OVER, 14)}<h2>Cider</h2></div>{simple("beta_dry_cider")}</div>'''
 
 phone_art = f'<svg class="phart" viewBox="440 -12 390 330" preserveAspectRatio="xMidYMid slice" width="100%" height="170">{art_top}</svg>'
@@ -255,7 +261,7 @@ HTML = f"""<!doctype html><html><head><meta charset="utf-8"><title>{html.escape(
   <div class="kick">IOWA CITY · LATE</div></div>
  {phone_art}
  {cock}{beer}{wine}{spir}{cider}
- <div class="tagline" id="b-tag" style="left:40px;top:846px;transform:rotate(-3deg)">Good drinks<br>Good company</div>
+ <div class="tagline" id="b-tag" style="left:30px;top:870px;transform:rotate(-3deg)">Good drinks<br>Good company</div>
  <div class="foot" id="b-foot"><b>{html.escape(doc['subtitle'])}</b><b>Nº 1 · Printed in two inks</b></div>
 </div></div></body></html>"""
 

@@ -112,7 +112,7 @@ body{{background:#777}}
 </style></head><body><div class="page">
 <header class="mast"><div class="word">CANTINA</div><div class="kick">&amp; COCKTAIL BAR<br>IOWA CITY, IOWA<br>{E(DOC["title"].upper())}</div></header>
 <section class="band"><div class="bh"><span class="t"><span class="ix">01</span>{E(ck["name"].upper())}</span><span class="d">{E(ck["desc"])}</span></div>{ckhtml}</section>
-<div class="low"><div class="stack">{lower("sec_beer","02")}{lower("sec_cider","05")}</div>{lower("sec_wine","03")}{lower("sec_spirits","04")}</div>
+<div class="low"><div class="stack">{lower("sec_beer","02")}{lower("sec_cider","03")}</div>{lower("sec_wine","04")}{lower("sec_spirits","05")}</div>
 <footer class="foot"><span>GOOD DRINKS / GOOD COMPANY</span><span class="m">{E(DOC.get("subtitle",""))}</span></footer>
 </div></body></html>'''
 (HERE / "menu.html").write_text(HTML)

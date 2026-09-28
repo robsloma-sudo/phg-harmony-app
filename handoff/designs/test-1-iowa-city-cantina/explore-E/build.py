@@ -87,7 +87,7 @@ def cocktail_card(it):
   <h3 class="t name">{it["name"].upper()}</h3>
   <p class="t spec">{spec_line(it)}</p>
   <p class="t serve">— {SERVE[it["id"]]}</p>
-</div>{burst(p, size=66)}</div>'''
+</div>{burst(p, size=62)}</div>'''
 
 
 def row(it):
@@ -131,7 +131,7 @@ def build_html():
 html,body{{background:{WALL}}}
 /* page 816x1056 css px = 612x792 pt; 36 pt safe margin = 48 px */
 .page{{width:816px;height:1056px;padding:48px;position:relative;overflow:hidden;
-  background:{WALL};display:flex;flex-direction:column;gap:14px;font-family:'DM Sans',sans-serif;color:{INK}}}
+  background:{WALL};display:flex;flex-direction:column;justify-content:space-between;gap:10px;font-family:'DM Sans',sans-serif;color:{INK}}}
 /* ART layer: painted wall trim, full bleed (+3 mm past trim handled by bleed box) */
 .page::before{{content:"";position:absolute;inset:-12px;border:26px solid {GRN};
   box-shadow:inset 0 0 0 5px {WALL},inset 0 0 0 9px {RED};pointer-events:none}}
@@ -139,7 +139,7 @@ html,body{{background:{WALL}}}
 /* header sign */
 .marquee{{background:{RED};border:4px solid {WHT};outline:3px solid {INK};border-radius:14px;
   padding:10px 20px 10px;text-align:center}}
-.wm{{font-family:Fraunces;font-weight:700;font-size:78px;line-height:.95;letter-spacing:4px;color:{YEL};
+.wm{{font-family:Fraunces;font-weight:700;font-size:90px;line-height:.95;letter-spacing:4px;color:{YEL};
   -webkit-text-stroke:2.5px {INK};paint-order:stroke fill;
   text-shadow:2px 2px 0 {INK},4px 4px 0 {INK},6px 6px 0 {INK},8px 8px 0 {WHT},10px 10px 0 {INK}}}
 .sub-wm{{display:flex;justify-content:center;gap:14px;margin-top:6px}}
@@ -159,26 +159,26 @@ html,body{{background:{WALL}}}
 .sub{{margin:4px 0 4px}}
 .tab{{display:inline-block;font-weight:700;font-size:13px;letter-spacing:3px;background:{WHT};color:{INK};
   padding:3px 10px;border-radius:4px}}
-.ckgrid{{display:grid;grid-template-columns:1fr 1fr;gap:8px 26px;margin-bottom:4px}}
+.ckgrid{{display:grid;grid-template-columns:1fr 1fr;gap:6px 26px;margin-bottom:2px}}
 .ck,.row{{display:flex;align-items:center;justify-content:space-between;gap:10px}}
 .ck{{align-items:flex-start;gap:8px}} .ck .burst{{margin-top:-4px}}
 .name{{font-weight:700;font-size:18px;letter-spacing:1.6px;line-height:1.15}}
-.spec{{font-weight:500;font-size:13.5px;letter-spacing:.6px;line-height:1.3;margin-top:2px}}
+.spec{{font-weight:500;font-size:13.5px;letter-spacing:.5px;line-height:1.28;margin-top:2px}}
 .serve{{font-weight:700;font-size:12.5px;letter-spacing:1px;line-height:1.3;margin-top:3px;color:{YEL}}}
 .burst{{position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;
   filter:drop-shadow(3px 3px 0 {INK})}}
 .burst svg{{position:absolute;inset:0;width:100%;height:100%}}
 .price{{position:relative;font-family:Fraunces;font-weight:700;font-size:30px;color:{INK};line-height:1}}
-.oval{{flex:none;display:inline-flex;align-items:center;justify-content:center;width:56px;height:40px;
+.oval{{flex:none;display:inline-flex;align-items:center;justify-content:center;width:48px;height:36px;
   border-radius:50%;background:{YEL};border:2.5px solid {INK};box-shadow:3px 3px 0 {INK}}}
-.oval .price{{font-size:24px}}
+.oval .price{{font-size:22px}}
 .row{{padding:4px 0;border-bottom:2px dashed rgba(255,255,255,.55)}}
 .row:last-child{{border-bottom:0}}
 .yel .row{{border-bottom-color:rgba(27,21,18,.45)}}
 .yel .tab{{background:{INK};color:{YEL}}}
-.yel .signtxt{{color:{RED};-webkit-text-stroke-color:{INK}}}
+.yel .signtxt{{color:{WHT};text-shadow:2px 2px 0 {INK},4px 4px 0 {RED},5px 5px 0 {INK}}}
 .pair{{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}}
-.pair .name{{font-size:16px;letter-spacing:1.2px}} .pair .spec{{font-size:13px}}
+.pair .name{{font-size:15.5px;letter-spacing:1px}} .pair .spec{{font-size:13px;letter-spacing:.3px}} .pair .board{{padding:0 12px 10px}} .pair .row{{gap:6px}}
 .strip{{display:flex;align-items:center;gap:22px;padding:6px 18px}} .strip .sign{{margin:0}} .strip .row{{flex:1}}
 .foot{{display:flex;justify-content:center;margin-top:auto}}
 .foot .pill{{background:{YEL};font-size:14px}}
@@ -195,7 +195,7 @@ html,body{{background:{WALL}}}
 </style></head><body><main class="page">
 <header class="marquee">
   <h1 class="t wm">CANTINA</h1>
-  <div class="sub-wm"><span class="t pill">&amp; COCKTAIL BAR</span><span class="t pill">IOWA CITY, IOWA</span></div>
+  <div class="sub-wm"><span class="t pill">&amp; COCKTAIL BAR</span><span class="t pill">IOWA CITY, IOWA</span><span class="t pill">¡SALUD!</span></div>
 </header>
 {board("COCKTAILS", COB, ck_body)}
 <div class="pair">
@@ -204,7 +204,6 @@ html,body{{background:{WALL}}}
 {board("SPIRITS", INK, simple("sec_spirits"))}
 </div>
 {board("CIDER", YEL, simple("sec_cider"), cls="yel strip")}
-<div class="foot"><span class="t pill">¡SALUD! · GOOD DRINKS · GOOD COMPANY</span></div>
 </main></body></html>'''
 
 
@@ -252,19 +251,27 @@ def render():
         ph.goto(html.as_uri()); ph.wait_for_timeout(400)
         ph.screenshot(path=str(HERE / "preview-phone.png"), full_page=True)
         b.close()
+    from PIL import ImageChops, ImageFilter
     im = Image.open("/tmp/claude-0/e_textfree.png").convert("RGB")
+    full = Image.open(HERE / "preview-letter.png").convert("RGB")
     s = 3.125
     worst = {}
+    STROKED = {"wm", "signtxt"}  # outlined sign lettering: fill is read against its own ink outline
     for bx in boxes:
         col = parse_rgb(bx["col"])
-        x0, y0 = int((bx["x"] - 2) * s), int((bx["y"] - 2) * s)
-        x1, y1 = int((bx["x"] + bx["w"] + 2) * s), int((bx["y"] + bx["h"] + 2) * s)
-        x0, y0 = max(x0, 0), max(y0, 0); x1, y1 = min(x1, im.width), min(y1, im.height)
-        if x1 <= x0 or y1 <= y0: continue
-        crop = im.crop((x0, y0, x1, y1))
-        cols = crop.getcolors(10_000_000)
-        m = min(cr(col, c) for _, c in cols)
         key = bx["cls"].replace("t ", "")
+        if key in STROKED:
+            m = cr(col, parse_rgb("rgb(27,21,18)"))
+        else:
+            x0, y0 = max(int(bx["x"] * s) - 4, 0), max(int(bx["y"] * s) - 4, 0)
+            x1, y1 = min(int((bx["x"] + bx["w"]) * s) + 4, im.width), min(int((bx["y"] + bx["h"]) * s) + 4, im.height)
+            if x1 <= x0 or y1 <= y0: continue
+            bg, fg = im.crop((x0, y0, x1, y1)), full.crop((x0, y0, x1, y1))
+            diff = ImageChops.difference(bg, fg).convert("L").point(lambda v: 255 if v > 40 else 0)
+            mask = diff.filter(ImageFilter.MaxFilter(13))  # ink + ~2 css px
+            px = [c for c, mk in zip(bg.get_flattened_data(), mask.get_flattened_data()) if mk]
+            if not px: continue
+            m = min(cr(col, c) for c in set(px))
         if key not in worst or m < worst[key][0]:
             worst[key] = (round(m, 2), bx["txt"])
     print("overflow scroll/client:", ov)

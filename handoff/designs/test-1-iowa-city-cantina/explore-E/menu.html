@@ -12,7 +12,7 @@
 html,body{background:#F4EAD3}
 /* page 816x1056 css px = 612x792 pt; 36 pt safe margin = 48 px */
 .page{width:816px;height:1056px;padding:48px;position:relative;overflow:hidden;
-  background:#F4EAD3;display:flex;flex-direction:column;gap:14px;font-family:'DM Sans',sans-serif;color:#1B1512}
+  background:#F4EAD3;display:flex;flex-direction:column;justify-content:space-between;gap:10px;font-family:'DM Sans',sans-serif;color:#1B1512}
 /* ART layer: painted wall trim, full bleed (+3 mm past trim handled by bleed box) */
 .page::before{content:"";position:absolute;inset:-12px;border:26px solid #0B6135;
   box-shadow:inset 0 0 0 5px #F4EAD3,inset 0 0 0 9px #B8102A;pointer-events:none}
@@ -20,7 +20,7 @@ html,body{background:#F4EAD3}
 /* header sign */
 .marquee{background:#B8102A;border:4px solid #FFFFFF;outline:3px solid #1B1512;border-radius:14px;
   padding:10px 20px 10px;text-align:center}
-.wm{font-family:Fraunces;font-weight:700;font-size:78px;line-height:.95;letter-spacing:4px;color:#FFC414;
+.wm{font-family:Fraunces;font-weight:700;font-size:90px;line-height:.95;letter-spacing:4px;color:#FFC414;
   -webkit-text-stroke:2.5px #1B1512;paint-order:stroke fill;
   text-shadow:2px 2px 0 #1B1512,4px 4px 0 #1B1512,6px 6px 0 #1B1512,8px 8px 0 #FFFFFF,10px 10px 0 #1B1512}
 .sub-wm{display:flex;justify-content:center;gap:14px;margin-top:6px}
@@ -40,26 +40,26 @@ html,body{background:#F4EAD3}
 .sub{margin:4px 0 4px}
 .tab{display:inline-block;font-weight:700;font-size:13px;letter-spacing:3px;background:#FFFFFF;color:#1B1512;
   padding:3px 10px;border-radius:4px}
-.ckgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 26px;margin-bottom:4px}
+.ckgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 26px;margin-bottom:2px}
 .ck,.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .ck{align-items:flex-start;gap:8px} .ck .burst{margin-top:-4px}
 .name{font-weight:700;font-size:18px;letter-spacing:1.6px;line-height:1.15}
-.spec{font-weight:500;font-size:13.5px;letter-spacing:.6px;line-height:1.3;margin-top:2px}
+.spec{font-weight:500;font-size:13.5px;letter-spacing:.5px;line-height:1.28;margin-top:2px}
 .serve{font-weight:700;font-size:12.5px;letter-spacing:1px;line-height:1.3;margin-top:3px;color:#FFC414}
 .burst{position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;
   filter:drop-shadow(3px 3px 0 #1B1512)}
 .burst svg{position:absolute;inset:0;width:100%;height:100%}
 .price{position:relative;font-family:Fraunces;font-weight:700;font-size:30px;color:#1B1512;line-height:1}
-.oval{flex:none;display:inline-flex;align-items:center;justify-content:center;width:56px;height:40px;
+.oval{flex:none;display:inline-flex;align-items:center;justify-content:center;width:48px;height:36px;
   border-radius:50%;background:#FFC414;border:2.5px solid #1B1512;box-shadow:3px 3px 0 #1B1512}
-.oval .price{font-size:24px}
+.oval .price{font-size:22px}
 .row{padding:4px 0;border-bottom:2px dashed rgba(255,255,255,.55)}
 .row:last-child{border-bottom:0}
 .yel .row{border-bottom-color:rgba(27,21,18,.45)}
 .yel .tab{background:#1B1512;color:#FFC414}
-.yel .signtxt{color:#B8102A;-webkit-text-stroke-color:#1B1512}
+.yel .signtxt{color:#FFFFFF;text-shadow:2px 2px 0 #1B1512,4px 4px 0 #B8102A,5px 5px 0 #1B1512}
 .pair{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.pair .name{font-size:16px;letter-spacing:1.2px} .pair .spec{font-size:13px}
+.pair .name{font-size:15.5px;letter-spacing:1px} .pair .spec{font-size:13px;letter-spacing:.3px} .pair .board{padding:0 12px 10px} .pair .row{gap:6px}
 .strip{display:flex;align-items:center;gap:22px;padding:6px 18px} .strip .sign{margin:0} .strip .row{flex:1}
 .foot{display:flex;justify-content:center;margin-top:auto}
 .foot .pill{background:#FFC414;font-size:14px}
@@ -76,7 +76,7 @@ html,body{background:#F4EAD3}
 </style></head><body><main class="page">
 <header class="marquee">
   <h1 class="t wm">CANTINA</h1>
-  <div class="sub-wm"><span class="t pill">&amp; COCKTAIL BAR</span><span class="t pill">IOWA CITY, IOWA</span></div>
+  <div class="sub-wm"><span class="t pill">&amp; COCKTAIL BAR</span><span class="t pill">IOWA CITY, IOWA</span><span class="t pill">¡SALUD!</span></div>
 </header>
 <section class="board " style="--bg:#173E9A">
   <h2 class="sign"><span class="t signtxt">COCKTAILS</span></h2>
@@ -84,19 +84,19 @@ html,body{background:#F4EAD3}
   <h3 class="t name">MANHATTAN</h3>
   <p class="t spec">2 OZ RYE WHISKEY + 1 OZ SWEET VERMOUTH</p>
   <p class="t serve">— STIRRED · COUPE · COCKTAIL CHERRY</p>
-</div><span class="burst" style="width:66px;height:66px"><svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40.0,2.0 46.9,9.8 56.5,5.8 59.3,15.8 69.7,16.3 67.9,26.5 77.0,31.5 71.0,40.0 77.0,48.5 67.9,53.5 69.7,63.7 59.3,64.2 56.5,74.2 46.9,70.2 40.0,78.0 33.1,70.2 23.5,74.2 20.7,64.2 10.3,63.7 12.1,53.5 3.0,48.5 9.0,40.0 3.0,31.5 12.1,26.5 10.3,16.3 20.7,15.8 23.5,5.8 33.1,9.8" fill="#FFC414" stroke="#1B1512" stroke-width="2.5" stroke-linejoin="round"/></svg><b class="t price">15</b></span></div><div class="ck"><div class="rt">
+</div><span class="burst" style="width:62px;height:62px"><svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40.0,2.0 46.9,9.8 56.5,5.8 59.3,15.8 69.7,16.3 67.9,26.5 77.0,31.5 71.0,40.0 77.0,48.5 67.9,53.5 69.7,63.7 59.3,64.2 56.5,74.2 46.9,70.2 40.0,78.0 33.1,70.2 23.5,74.2 20.7,64.2 10.3,63.7 12.1,53.5 3.0,48.5 9.0,40.0 3.0,31.5 12.1,26.5 10.3,16.3 20.7,15.8 23.5,5.8 33.1,9.8" fill="#FFC414" stroke="#1B1512" stroke-width="2.5" stroke-linejoin="round"/></svg><b class="t price">15</b></span></div><div class="ck"><div class="rt">
   <h3 class="t name">MARGARITA</h3>
   <p class="t spec">2 OZ TEQUILA BLANCO + ¾ OZ FRESH LIME + ¾ OZ ORANGE LIQUEUR + ½ OZ AGAVE SYRUP</p>
   <p class="t serve">— SHAKEN · ON THE ROCKS · LIME WHEEL</p>
-</div><span class="burst" style="width:66px;height:66px"><svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40.0,2.0 46.9,9.8 56.5,5.8 59.3,15.8 69.7,16.3 67.9,26.5 77.0,31.5 71.0,40.0 77.0,48.5 67.9,53.5 69.7,63.7 59.3,64.2 56.5,74.2 46.9,70.2 40.0,78.0 33.1,70.2 23.5,74.2 20.7,64.2 10.3,63.7 12.1,53.5 3.0,48.5 9.0,40.0 3.0,31.5 12.1,26.5 10.3,16.3 20.7,15.8 23.5,5.8 33.1,9.8" fill="#FFC414" stroke="#1B1512" stroke-width="2.5" stroke-linejoin="round"/></svg><b class="t price">15</b></span></div></div><div class="sub"><span class="t tab">HOUSE ORIGINALS</span></div><div class="ckgrid"><div class="ck"><div class="rt">
+</div><span class="burst" style="width:62px;height:62px"><svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40.0,2.0 46.9,9.8 56.5,5.8 59.3,15.8 69.7,16.3 67.9,26.5 77.0,31.5 71.0,40.0 77.0,48.5 67.9,53.5 69.7,63.7 59.3,64.2 56.5,74.2 46.9,70.2 40.0,78.0 33.1,70.2 23.5,74.2 20.7,64.2 10.3,63.7 12.1,53.5 3.0,48.5 9.0,40.0 3.0,31.5 12.1,26.5 10.3,16.3 20.7,15.8 23.5,5.8 33.1,9.8" fill="#FFC414" stroke="#1B1512" stroke-width="2.5" stroke-linejoin="round"/></svg><b class="t price">15</b></span></div></div><div class="sub"><span class="t tab">HOUSE ORIGINALS</span></div><div class="ckgrid"><div class="ck"><div class="rt">
   <h3 class="t name">HOUSE DAIQUIRI</h3>
   <p class="t spec">2 OZ WHITE RUM + ¾ OZ FRESH LIME + ¾ OZ HOUSE DEMERARA SYRUP</p>
   <p class="t serve">— SHAKEN · COUPE · LIME COIN</p>
-</div><span class="burst" style="width:66px;height:66px"><svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40.0,2.0 46.9,9.8 56.5,5.8 59.3,15.8 69.7,16.3 67.9,26.5 77.0,31.5 71.0,40.0 77.0,48.5 67.9,53.5 69.7,63.7 59.3,64.2 56.5,74.2 46.9,70.2 40.0,78.0 33.1,70.2 23.5,74.2 20.7,64.2 10.3,63.7 12.1,53.5 3.0,48.5 9.0,40.0 3.0,31.5 12.1,26.5 10.3,16.3 20.7,15.8 23.5,5.8 33.1,9.8" fill="#FFC414" stroke="#1B1512" stroke-width="2.5" stroke-linejoin="round"/></svg><b class="t price">14</b></span></div><div class="ck"><div class="rt">
+</div><span class="burst" style="width:62px;height:62px"><svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40.0,2.0 46.9,9.8 56.5,5.8 59.3,15.8 69.7,16.3 67.9,26.5 77.0,31.5 71.0,40.0 77.0,48.5 67.9,53.5 69.7,63.7 59.3,64.2 56.5,74.2 46.9,70.2 40.0,78.0 33.1,70.2 23.5,74.2 20.7,64.2 10.3,63.7 12.1,53.5 3.0,48.5 9.0,40.0 3.0,31.5 12.1,26.5 10.3,16.3 20.7,15.8 23.5,5.8 33.1,9.8" fill="#FFC414" stroke="#1B1512" stroke-width="2.5" stroke-linejoin="round"/></svg><b class="t price">14</b></span></div><div class="ck"><div class="rt">
   <h3 class="t name">BROWN BUTTER OLD FASHIONED</h3>
   <p class="t spec">BROWN BUTTER-WASHED BOURBON + DEMERARA SYRUP + AROMATIC BITTERS</p>
   <p class="t serve">— STIRRED · ROCKS · LARGE CUBE · ORANGE PEEL</p>
-</div><span class="burst" style="width:66px;height:66px"><svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40.0,2.0 46.9,9.8 56.5,5.8 59.3,15.8 69.7,16.3 67.9,26.5 77.0,31.5 71.0,40.0 77.0,48.5 67.9,53.5 69.7,63.7 59.3,64.2 56.5,74.2 46.9,70.2 40.0,78.0 33.1,70.2 23.5,74.2 20.7,64.2 10.3,63.7 12.1,53.5 3.0,48.5 9.0,40.0 3.0,31.5 12.1,26.5 10.3,16.3 20.7,15.8 23.5,5.8 33.1,9.8" fill="#FFC414" stroke="#1B1512" stroke-width="2.5" stroke-linejoin="round"/></svg><b class="t price">16</b></span></div></div>
+</div><span class="burst" style="width:62px;height:62px"><svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40.0,2.0 46.9,9.8 56.5,5.8 59.3,15.8 69.7,16.3 67.9,26.5 77.0,31.5 71.0,40.0 77.0,48.5 67.9,53.5 69.7,63.7 59.3,64.2 56.5,74.2 46.9,70.2 40.0,78.0 33.1,70.2 23.5,74.2 20.7,64.2 10.3,63.7 12.1,53.5 3.0,48.5 9.0,40.0 3.0,31.5 12.1,26.5 10.3,16.3 20.7,15.8 23.5,5.8 33.1,9.8" fill="#FFC414" stroke="#1B1512" stroke-width="2.5" stroke-linejoin="round"/></svg><b class="t price">16</b></span></div></div>
 </section>
 <div class="pair">
 <section class="board " style="--bg:#0B6135">
@@ -126,5 +126,4 @@ html,body{background:#F4EAD3}
   <div class="row"><div class="rt"><h3 class="t name">DRY CIDER</h3>
 <p class="t spec">DRY SPARKLING CIDER.</p></div><span class="oval"><b class="t price">8</b></span></div>
 </section>
-<div class="foot"><span class="t pill">¡SALUD! · GOOD DRINKS · GOOD COMPANY</span></div>
 </main></body></html>
