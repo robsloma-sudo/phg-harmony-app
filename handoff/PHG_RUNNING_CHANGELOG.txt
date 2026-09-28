@@ -1134,3 +1134,26 @@ most active version onto Netlify ... I want to be able to talk to Harmony and ha
   image model art layer -> HTML text compose -> render -> proposal through the existing approval flow),
   plus a Harmony intent ("make a menu for ...") -> Menu Studio Designer panel. Blocked on API keys
   (ANTHROPIC_API_KEY + an image provider key as Supabase secrets, added by Rob) and approval to deploy the function.
+
+------------------------------------------------------------------------------
+PHG-20260928-HMS | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.13)
+Rob: "I want the viewport Harmony interface to not be super laggy and glitchy. I want to be able to talk into
+it and it talk back to me ... we build these menus together and she generates them in that view screen and
+I can say next or make changes ... with the splash page"
+- PERFORMANCE (measured, phone emulation, Harmony view open: 15.8 -> 42 fps):
+  hub head/brain loops skip while the view covers them (headDraw rebuilt SVG via innerHTML every frame);
+  phones skip the full-canvas blur bloom and use a 1.5x viewport backing store; Mount.resize only
+  reallocates on a real size change (iOS visualViewport events were blanking the canvas = the flash);
+  viewport canvas pauses under the menu stage / keyboard; backdrop-filter blur removed on coarse-pointer
+  layers over the canvas; glow quantised; duo blend writes on change; diagnostics FPS loop only when on.
+- HARMONY MENU STAGE (script phgMenuStageV1): "make a menu ..." (typed or spoken) or the Menu Studio
+  rail button opens a full stage in the Harmony view: cover/splash + menu pages in 5 directions
+  (Solstice, Glass Garden, Noche, Rejilla, Grabado) + palette variations. Commands: next/back, next page,
+  title/subtitle, "change the splash page to say ...", new splash page, darker/lighter/warmer/cooler,
+  colour accents, bigger/smaller text, serif/modern/bold fonts, paint it (of ...), save this, reset,
+  use my menu, close. Swipe = page, arrows = design. Talk = hands-free loop (VAD listen -> OpenAI
+  transcribe -> act -> she speaks -> listens again; tap Talk while she speaks to interrupt).
+  Content: the Menu Studio doc when it has >=5 items, else the TEST-1 cantina sample (Manhattan bitters
+  and Vuelo Reserva order fixed), labelled SAMPLE. All menu text is live text; art never contains text.
+- NEW EDGE FUNCTION supabase/functions/phg-menu-art: one text-free painted art image per call
+  (OpenAI images, existing OPENAI_API_KEY secret, JWT-gated). Only called on an explicit "paint it".
