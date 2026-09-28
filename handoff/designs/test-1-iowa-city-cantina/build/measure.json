@@ -141,6 +141,9 @@
      "w": 344,
      "h": 304
     },
+    "name_baseline": 304,
+    "gloss_baseline": 304,
+    "plabels": [],
     "namebar": {
      "x": 52,
      "y": 280,
@@ -221,13 +224,25 @@
        "lines": 1
       },
       "desc": {
-       "text": "Bright and citrus-forward: blanco tequila, fresh lime, orange liqueur and agave syrup.",
+       "text": "Bright and citrus-forward: tequila blanco, fresh lime, orange liqueur and agave syrup.",
        "x": 66,
        "y": 369,
-       "w": 209.328125,
+       "w": 255.015625,
        "h": 30,
        "lines": 2,
-       "tokens_on_last_line": 7
+       "tokens_on_last_line": 5,
+       "measure": {
+        "x": 66,
+        "y": 368,
+        "w": 273.328125,
+        "h": 32
+       }
+      },
+      "pcol": {
+       "x": 363.34375,
+       "y": 352,
+       "w": 18.65625,
+       "h": 16
       },
       "cue": {
        "lines": 1,
@@ -266,7 +281,19 @@
        "w": 207.984375,
        "h": 14,
        "lines": 1,
-       "tokens_on_last_line": 6
+       "tokens_on_last_line": 6,
+       "measure": {
+        "x": 66,
+        "y": 440,
+        "w": 273.328125,
+        "h": 16
+       }
+      },
+      "pcol": {
+       "x": 363.34375,
+       "y": 424,
+       "w": 18.65625,
+       "h": 16
       },
       "cue": {
        "lines": 1,
@@ -302,10 +329,22 @@
        "text": "Brown butter-washed bourbon, demerara syrup and aromatic bitters.",
        "x": 66,
        "y": 529,
-       "w": 184.1875,
+       "w": 236.203125,
        "h": 30,
        "lines": 2,
-       "tokens_on_last_line": 5
+       "tokens_on_last_line": 3,
+       "measure": {
+        "x": 66,
+        "y": 528,
+        "w": 273.328125,
+        "h": 32
+       }
+      },
+      "pcol": {
+       "x": 363.34375,
+       "y": 512,
+       "w": 18.65625,
+       "h": 16
       },
       "cue": {
        "lines": 1,
@@ -344,7 +383,19 @@
        "w": 241.984375,
        "h": 14,
        "lines": 1,
-       "tokens_on_last_line": 8
+       "tokens_on_last_line": 8,
+       "measure": {
+        "x": 66,
+        "y": 600,
+        "w": 273.328125,
+        "h": 16
+       }
+      },
+      "pcol": {
+       "x": 363.34375,
+       "y": 584,
+       "w": 18.65625,
+       "h": 16
       },
       "cue": {
        "lines": 1,
@@ -375,7 +426,7 @@
      "x": 420,
      "y": 172,
      "w": 344,
-     "h": 140
+     "h": 236
     },
     "cardno": {
      "x": 432,
@@ -387,25 +438,25 @@
     "fig_svg": {
      "x": 428,
      "y": 180,
-     "w": 92,
-     "h": 92
+     "w": 188,
+     "h": 188
     },
     "rows": [
      {
       "x": 434,
-      "y": 352,
+      "y": 448,
       "w": 316,
       "h": 16
      },
      {
       "x": 434,
-      "y": 424,
+      "y": 488,
       "w": 316,
       "h": 16
      },
      {
       "x": 434,
-      "y": 496,
+      "y": 528,
       "w": 316,
       "h": 16
      },
@@ -419,7 +470,7 @@
     "subboxes": [
      {
       "x": 434,
-      "y": 328,
+      "y": 424,
       "w": 316,
       "h": 16
      },
@@ -434,23 +485,23 @@
     "name": {
      "text": "EL BARRIL",
      "x": 480.3125,
-     "y": 281,
+     "y": 377,
      "w": 151.1875,
      "h": 29,
      "lines": 1
     },
     "verse": {
      "text": "Tanto bebió el albañil, que quedó como barril.",
-     "x": 571.234375,
-     "y": 210,
-     "w": 141.515625,
-     "h": 32,
-     "lines": 6
+     "x": 633.484375,
+     "y": 250,
+     "w": 113.015625,
+     "h": 48,
+     "lines": 12
     },
     "gloss": {
      "text": "Beer & Cider",
      "x": 640.828125,
-     "y": 294,
+     "y": 390,
      "w": 62.84375,
      "h": 13,
      "lines": 1
@@ -459,16 +510,16 @@
     "figure": {
      "x": 428,
      "y": 180,
-     "w": 92,
-     "h": 92
+     "w": 188,
+     "h": 188
     },
     "note": null,
     "orn": null,
     "vcol": {
-     "x": 536,
+     "x": 632,
      "y": 180,
-     "w": 220,
-     "h": 92
+     "w": 124,
+     "h": 188
     },
     "name_clipped": false,
     "cardno_style": {
@@ -486,20 +537,23 @@
     },
     "body": {
      "x": 420,
-     "y": 328,
+     "y": 424,
      "w": 344,
-     "h": 304
+     "h": 208
     },
+    "name_baseline": 400,
+    "gloss_baseline": 400,
+    "plabels": [],
     "namebar": {
      "x": 420,
-     "y": 280,
+     "y": 376,
      "w": 344,
      "h": 32,
      "text": "EL BARRIL\nBeer & Cider"
     },
     "item_gaps_px": [
-     40,
-     40
+     8,
+     8
     ],
     "line_heights_px": [
      16,
@@ -517,8 +571,8 @@
      16,
      16
     ],
-    "first_row_y": 352,
-    "body_rule_y": 328,
+    "first_row_y": 448,
+    "body_rule_y": 424,
     "content_bottom": 632,
     "subs": [
      {
@@ -526,7 +580,7 @@
       "h3": {
        "text": "DE BARRIL · Draft",
        "x": 434,
-       "y": 329,
+       "y": 425,
        "w": 97.421875,
        "h": 13,
        "lines": 1
@@ -549,14 +603,14 @@
       "ref": "beta_czech_pilsner",
       "block": {
        "x": 434,
-       "y": 352,
+       "y": 448,
        "w": 316,
        "h": 32
       },
       "name": {
        "text": "Czech Pilsner",
        "x": 434,
-       "y": 351,
+       "y": 447,
        "w": 92.21875,
        "h": 18,
        "lines": 1
@@ -564,7 +618,7 @@
       "price": {
        "text": "7",
        "x": 741.5625,
-       "y": 350,
+       "y": 446,
        "w": 8.4375,
        "h": 19,
        "lines": 1
@@ -572,11 +626,23 @@
       "desc": {
        "text": "Crisp pale lager.",
        "x": 434,
-       "y": 369,
+       "y": 465,
        "w": 78.328125,
        "h": 14,
        "lines": 1,
-       "tokens_on_last_line": 3
+       "tokens_on_last_line": 3,
+       "measure": {
+        "x": 434,
+        "y": 464,
+        "w": 273.328125,
+        "h": 16
+       }
+      },
+      "pcol": {
+       "x": 731.34375,
+       "y": 448,
+       "w": 18.65625,
+       "h": 16
       },
       "cue": null
      },
@@ -584,14 +650,14 @@
       "ref": "beta_dry_hopped_ipa",
       "block": {
        "x": 434,
-       "y": 424,
+       "y": 488,
        "w": 316,
        "h": 32
       },
       "name": {
        "text": "Dry-Hopped IPA",
        "x": 434,
-       "y": 423,
+       "y": 487,
        "w": 113.703125,
        "h": 18,
        "lines": 1
@@ -599,7 +665,7 @@
       "price": {
        "text": "8",
        "x": 739.96875,
-       "y": 422,
+       "y": 486,
        "w": 10.03125,
        "h": 19,
        "lines": 1
@@ -607,11 +673,23 @@
       "desc": {
        "text": "Hop-forward draft IPA.",
        "x": 434,
-       "y": 441,
+       "y": 505,
        "w": 110.671875,
        "h": 14,
        "lines": 1,
-       "tokens_on_last_line": 3
+       "tokens_on_last_line": 3,
+       "measure": {
+        "x": 434,
+        "y": 504,
+        "w": 273.328125,
+        "h": 16
+       }
+      },
+      "pcol": {
+       "x": 731.34375,
+       "y": 488,
+       "w": 18.65625,
+       "h": 16
       },
       "cue": null
      },
@@ -619,14 +697,14 @@
       "ref": "beta_amber_lager",
       "block": {
        "x": 434,
-       "y": 496,
+       "y": 528,
        "w": 316,
        "h": 32
       },
       "name": {
        "text": "Amber Lager",
        "x": 434,
-       "y": 495,
+       "y": 527,
        "w": 88.4375,
        "h": 18,
        "lines": 1
@@ -634,7 +712,7 @@
       "price": {
        "text": "7",
        "x": 741.5625,
-       "y": 494,
+       "y": 526,
        "w": 8.4375,
        "h": 19,
        "lines": 1
@@ -642,11 +720,23 @@
       "desc": {
        "text": "Toasty amber lager.",
        "x": 434,
-       "y": 513,
+       "y": 545,
        "w": 95.578125,
        "h": 14,
        "lines": 1,
-       "tokens_on_last_line": 3
+       "tokens_on_last_line": 3,
+       "measure": {
+        "x": 434,
+        "y": 544,
+        "w": 273.328125,
+        "h": 16
+       }
+      },
+      "pcol": {
+       "x": 731.34375,
+       "y": 528,
+       "w": 18.65625,
+       "h": 16
       },
       "cue": null
      },
@@ -681,7 +771,19 @@
        "w": 94.015625,
        "h": 14,
        "lines": 1,
-       "tokens_on_last_line": 3
+       "tokens_on_last_line": 3,
+       "measure": {
+        "x": 434,
+        "y": 616,
+        "w": 273.328125,
+        "h": 16
+       }
+      },
+      "pcol": {
+       "x": 731.34375,
+       "y": 600,
+       "w": 18.65625,
+       "h": 16
       },
       "cue": null
      }
@@ -817,6 +919,26 @@
      "w": 344,
      "h": 168
     },
+    "name_baseline": 800,
+    "gloss_baseline": 800,
+    "plabels": [
+     {
+      "x": 335.96875,
+      "y": 850,
+      "w": 23.359375,
+      "h": 16,
+      "text": "copa",
+      "ref": "beta_malbec"
+     },
+     {
+      "x": 338.3125,
+      "y": 890,
+      "w": 23.359375,
+      "h": 16,
+      "text": "copa",
+      "ref": "beta_pinot_grigio"
+     }
+    ],
     "namebar": {
      "x": 52,
      "y": 776,
@@ -899,7 +1021,19 @@
        "w": 64.3125,
        "h": 14,
        "lines": 1,
-       "tokens_on_last_line": 3
+       "tokens_on_last_line": 3,
+       "measure": {
+        "x": 66,
+        "y": 864,
+        "w": 244,
+        "h": 16
+       }
+      },
+      "pcol": {
+       "x": 334,
+       "y": 848,
+       "w": 48,
+       "h": 18
       },
       "cue": null
      },
@@ -934,7 +1068,19 @@
        "w": 74.734375,
        "h": 14,
        "lines": 1,
-       "tokens_on_last_line": 3
+       "tokens_on_last_line": 3,
+       "measure": {
+        "x": 66,
+        "y": 904,
+        "w": 244,
+        "h": 16
+       }
+      },
+      "pcol": {
+       "x": 334,
+       "y": 888,
+       "w": 48,
+       "h": 18
       },
       "cue": null
      },
@@ -969,7 +1115,19 @@
        "w": 90.578125,
        "h": 14,
        "lines": 1,
-       "tokens_on_last_line": 3
+       "tokens_on_last_line": 3,
+       "measure": {
+        "x": 66,
+        "y": 976,
+        "w": 244,
+        "h": 16
+       }
+      },
+      "pcol": {
+       "x": 334,
+       "y": 960,
+       "w": 48,
+       "h": 16
       },
       "cue": null
      }
@@ -996,7 +1154,7 @@
      "x": 420,
      "y": 668,
      "w": 344,
-     "h": 140
+     "h": 188
     },
     "cardno": {
      "x": 432,
@@ -1008,19 +1166,19 @@
     "fig_svg": {
      "x": 428,
      "y": 676,
-     "w": 92,
-     "h": 92
+     "w": 140,
+     "h": 140
     },
     "rows": [
      {
       "x": 434,
-      "y": 880,
+      "y": 896,
       "w": 316,
       "h": 16
      },
      {
       "x": 434,
-      "y": 912,
+      "y": 920,
       "w": 316,
       "h": 16
      },
@@ -1034,7 +1192,7 @@
     "subboxes": [
      {
       "x": 434,
-      "y": 856,
+      "y": 872,
       "w": 316,
       "h": 16
      },
@@ -1048,25 +1206,25 @@
     "verse_pt_size": 9.999975,
     "name": {
      "text": "LA BOTELLA",
-     "x": 483.15625,
-     "y": 777,
+     "x": 444.21875,
+     "y": 825,
      "w": 174.5,
      "h": 29,
      "lines": 1
     },
     "verse": {
      "text": "La herramienta del borracho.",
-     "x": 551.109375,
-     "y": 714,
-     "w": 181.78125,
-     "h": 16,
-     "lines": 6
+     "x": 617.4375,
+     "y": 730,
+     "w": 97.125,
+     "h": 32,
+     "lines": 9
     },
     "gloss": {
-     "text": "Spirits",
-     "x": 666.984375,
-     "y": 790,
-     "w": 33.859375,
+     "text": "Spirits · straight pours",
+     "x": 628.046875,
+     "y": 838,
+     "w": 111.734375,
      "h": 13,
      "lines": 1
     },
@@ -1074,22 +1232,16 @@
     "figure": {
      "x": 428,
      "y": 676,
-     "w": 92,
-     "h": 92
+     "w": 140,
+     "h": 140
     },
-    "note": {
-     "x": 434,
-     "y": 824,
-     "w": 316,
-     "h": 16,
-     "text": "Straight pours."
-    },
+    "note": null,
     "orn": null,
     "vcol": {
-     "x": 536,
+     "x": 584,
      "y": 676,
-     "w": 220,
-     "h": 92
+     "w": 172,
+     "h": 140
     },
     "name_clipped": false,
     "cardno_style": {
@@ -1107,19 +1259,22 @@
     },
     "body": {
      "x": 420,
-     "y": 824,
+     "y": 872,
      "w": 344,
-     "h": 168
+     "h": 120
     },
+    "name_baseline": 848,
+    "gloss_baseline": 848,
+    "plabels": [],
     "namebar": {
      "x": 420,
-     "y": 776,
+     "y": 824,
      "w": 344,
      "h": 32,
-     "text": "LA BOTELLA\nSpirits"
+     "text": "LA BOTELLA\nSpirits · straight pours"
     },
     "item_gaps_px": [
-     16
+     8
     ],
     "line_heights_px": [
      16,
@@ -1131,17 +1286,17 @@
      16,
      16
     ],
-    "first_row_y": 880,
-    "body_rule_y": 824,
+    "first_row_y": 896,
+    "body_rule_y": 872,
     "content_bottom": 992,
     "subs": [
      {
       "ref": "sub_spirits_agave",
       "h3": {
-       "text": "AGAVE · Tequila",
+       "text": "TEQUILA · Agave",
        "x": 434,
-       "y": 857,
-       "w": 85.234375,
+       "y": 873,
+       "w": 91.421875,
        "h": 13,
        "lines": 1
       }
@@ -1149,10 +1304,10 @@
      {
       "ref": "sub_spirits_brandy",
       "h3": {
-       "text": "BRANDY · Cognac",
+       "text": "COÑAC · Brandy",
        "x": 434,
        "y": 953,
-       "w": 95.40625,
+       "w": 87.8125,
        "h": 13,
        "lines": 1
       }
@@ -1163,14 +1318,14 @@
       "ref": "beta_blanco_tequila",
       "block": {
        "x": 434,
-       "y": 880,
+       "y": 896,
        "w": 316,
        "h": 16
       },
       "name": {
        "text": "Blanco Tequila",
        "x": 434,
-       "y": 879,
+       "y": 895,
        "w": 100.5625,
        "h": 18,
        "lines": 1
@@ -1178,26 +1333,32 @@
       "price": {
        "text": "12",
        "x": 732.65625,
-       "y": 878,
+       "y": 894,
        "w": 17.34375,
        "h": 19,
        "lines": 1
       },
       "desc": null,
+      "pcol": {
+       "x": 731.34375,
+       "y": 896,
+       "w": 18.65625,
+       "h": 16
+      },
       "cue": null
      },
      {
       "ref": "beta_anejo_tequila",
       "block": {
        "x": 434,
-       "y": 912,
+       "y": 920,
        "w": 316,
        "h": 16
       },
       "name": {
        "text": "Añejo Tequila",
        "x": 434,
-       "y": 911,
+       "y": 919,
        "w": 93.203125,
        "h": 18,
        "lines": 1
@@ -1205,12 +1366,18 @@
       "price": {
        "text": "16",
        "x": 732.609375,
-       "y": 910,
+       "y": 918,
        "w": 17.390625,
        "h": 19,
        "lines": 1
       },
       "desc": null,
+      "pcol": {
+       "x": 731.34375,
+       "y": 920,
+       "w": 18.65625,
+       "h": 16
+      },
       "cue": null
      },
      {
@@ -1238,6 +1405,12 @@
        "lines": 1
       },
       "desc": null,
+      "pcol": {
+       "x": 731.34375,
+       "y": 976,
+       "w": 18.65625,
+       "h": 16
+      },
       "cue": null
      }
     ]
@@ -1333,7 +1506,7 @@
   "active_label": "El Cantarito",
   "active_bg": "rgb(166, 60, 26)",
   "inactive_bg": "rgb(251, 245, 234)",
-  "min_last_line_tokens": 3,
+  "min_last_line_tokens": 2,
   "cards": [
    {
     "n": 1,
@@ -1344,51 +1517,63 @@
     "frame_transform": "none",
     "verse_px": 14,
     "first_row_bottom_from_card_top": 199,
-    "first_desc_bottom_from_card_top": 259,
+    "first_desc_bottom_from_card_top": 279,
     "figure_px": 72,
-    "cardno_px": 24,
+    "cardno_px": 14,
+    "cardno_style": "italic",
+    "price_px": 19,
+    "gloss_offset_px": 0,
     "face_h": 130
    },
    {
     "n": 2,
     "x": 16,
     "w": 358,
-    "y": 826.953125,
+    "y": 866.953125,
     "transform": "none",
     "frame_transform": "none",
     "verse_px": 14,
     "first_row_bottom_from_card_top": 199,
     "first_desc_bottom_from_card_top": 219,
     "figure_px": 72,
-    "cardno_px": 24,
+    "cardno_px": 14,
+    "cardno_style": "italic",
+    "price_px": 19,
+    "gloss_offset_px": 0,
     "face_h": 130
    },
    {
     "n": 3,
     "x": 16,
     "w": 358,
-    "y": 1290.953125,
+    "y": 1330.953125,
     "transform": "none",
     "frame_transform": "none",
     "verse_px": 14,
-    "first_row_bottom_from_card_top": 199,
-    "first_desc_bottom_from_card_top": 219,
+    "first_row_bottom_from_card_top": 201,
+    "first_desc_bottom_from_card_top": 221,
     "figure_px": 72,
-    "cardno_px": 24,
+    "cardno_px": 14,
+    "cardno_style": "italic",
+    "price_px": 19,
+    "gloss_offset_px": 0,
     "face_h": 130
    },
    {
     "n": 4,
     "x": 16,
     "w": 358,
-    "y": 1697.953125,
+    "y": 1741.953125,
     "transform": "none",
     "frame_transform": "none",
     "verse_px": 14,
-    "first_row_bottom_from_card_top": 231,
-    "first_desc_bottom_from_card_top": 231,
+    "first_row_bottom_from_card_top": 199,
+    "first_desc_bottom_from_card_top": 199,
     "figure_px": 72,
-    "cardno_px": 24,
+    "cardno_px": 14,
+    "cardno_style": "italic",
+    "price_px": 19,
+    "gloss_offset_px": 0,
     "face_h": 130
    }
   ],
@@ -1431,11 +1616,11 @@
   "desc_last_line_tokens": [
    [
     "beta_margarita",
-    7
+    3
    ],
    [
     "beta_manhattan",
-    99
+    2
    ],
    [
     "beta_old_fashioned",
@@ -1443,7 +1628,7 @@
    ],
    [
     "beta_daiquiri",
-    3
+    2
    ],
    [
     "beta_czech_pilsner",
@@ -1488,6 +1673,6 @@
  ],
  "phone_png": [
   1170,
-  6303
+  6339
  ]
 }

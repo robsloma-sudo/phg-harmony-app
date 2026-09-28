@@ -1,4 +1,6 @@
-"""TEST-1 round 14 (from round 13): locked 2 x 2 tabla, shared rows, beer top-right, full-width name bands.
+"""TEST-1 round 15 (from round 14): one item pitch on every card; row differences absorbed in the face (figure scales); La Botella gloss + ochre prices; SPANISH · English subheads; copa labels.
+Round 14 notes follow.
+TEST-1 round 14 (from round 13): locked 2 x 2 tabla, shared rows, beer top-right, full-width name bands.
 Round 13 notes follow.
 TEST-1 round 13 (from round 12): Lotería de la Cantina, a real lotería tabla (2 + 2, read in rows).
 Top row: El Cantarito (44, cocktails, Clásicos first) | La Botella (8, agave & brandy). Lower row, one shared break line: El Barril (9) | La Rosa (41).
@@ -10,7 +12,7 @@ from string import Template
 HERE = pathlib.Path(__file__).parent
 OUT = pathlib.Path("/home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina")
 draft = json.loads((HERE / "draft_doc.json").read_text())
-ROUND = 14
+ROUND = 15
 NBSP = " "
 
 # phg.recipe_versions rows (join phg.menu_items.current_recipe_version_id = phg.recipe_versions.id; gateway log_id 168)
@@ -26,17 +28,17 @@ BC = {"beta_blanco_tequila": ["beverage_categories 04d72e1f-650d-490c-8ad8-54a6e
 
 # ------------------------------------------------------------ copy + sources (draft words only)
 C = {  # id: (description line or "", words from, gateway row ids, still missing)
- "beta_margarita": ("Bright and citrus-forward: blanco tequila, fresh lime, orange liqueur and agave syrup.",
-   "draft desc (tequila blanco, lime, orange liqueur, agave, 'Bright and citrus-forward'); draft_doc components 'Fresh Lime Juice', 'Agave Syrup' (prep)", [], []),
+ "beta_margarita": ("Bright and citrus-forward: tequila blanco, fresh lime, orange liqueur and agave syrup.",
+   "draft desc 'Tequila blanco, lime, orange liqueur, agave. Bright and citrus-forward.' (source word order 'tequila blanco' kept); orange liqueur, agave, 'Bright and citrus-forward'); draft_doc components 'Fresh Lime Juice', 'Agave Syrup' (prep)", [], []),
  "beta_manhattan": ("Rye, sweet vermouth and aromatic bitters.",
    "menu_items.menu_description 'Rye, sweet vermouth, aromatic bitters.' (venue's own words); draft_doc components 'Rye Whiskey', 'Sweet Vermouth', 'Aromatic Bitters'", [], []),
  "beta_old_fashioned": ("Brown butter-washed bourbon, demerara syrup and aromatic bitters.",
-   "draft_doc components verbatim: 'Brown Butter-Washed Bourbon' (prep), 'Demerara Syrup' (prep), 'Aromatic Bitters' (Coordinator-supplied source wording, round 14)", [], ["allergen confirmation (brown butter: dairy)"]),
+   "draft_doc components verbatim: 'Brown Butter-Washed Bourbon' (prep), 'Demerara Syrup' (prep), 'Aromatic Bitters' (draft_doc component: kind ingredient, role 'Bitters', 2 dash)", [], ["allergen confirmation (brown butter: dairy)"]),
  "beta_daiquiri": ("White rum, fresh lime and house demerara syrup.",
    "draft desc (white rum, lime, house demerara syrup); draft_doc components 'Fresh Lime Juice', 'Demerara Syrup' ('House 1:1 demerara syrup')", [], []),
- "beta_blanco_tequila": ("", "name and price only; the card-level note 'Straight pours.' (draft Spirits section desc 'Straight pours by category.') covers the serve", BC["beta_blanco_tequila"], ["brand", "age statement", "pour size"]),
- "beta_anejo_tequila": ("", "name and price only; the card-level note 'Straight pours.' (draft Spirits section desc 'Straight pours by category.') covers the serve", BC["beta_anejo_tequila"], ["brand", "age statement", "pour size"]),
- "beta_cognac_vsop": ("", "name and price only; the card-level note 'Straight pours.' (draft Spirits section desc 'Straight pours by category.') covers the serve", BC["beta_cognac_vsop"], ["brand", "age statement", "pour size"]),
+ "beta_blanco_tequila": ("", "name and price only; the La Botella band gloss 'Spirits · straight pours' (draft Spirits section desc 'Straight pours by category.') covers the serve", BC["beta_blanco_tequila"], ["brand", "age statement", "pour size"]),
+ "beta_anejo_tequila": ("", "name and price only; the La Botella band gloss 'Spirits · straight pours' (draft Spirits section desc 'Straight pours by category.') covers the serve", BC["beta_anejo_tequila"], ["brand", "age statement", "pour size"]),
+ "beta_cognac_vsop": ("", "name and price only; the La Botella band gloss 'Spirits · straight pours' (draft Spirits section desc 'Straight pours by category.') covers the serve", BC["beta_cognac_vsop"], ["brand", "age statement", "pour size"]),
  "beta_czech_pilsner": ("Crisp pale lager.", "draft menu_description, verbatim", [], ["brewery", "ABV", "pour size"]),
  "beta_dry_hopped_ipa": ("Hop-forward draft IPA.", "draft menu_description, verbatim", [], ["brewery", "ABV", "pour size"]),
  "beta_amber_lager": ("Toasty amber lager.", "draft menu_description, verbatim", [], ["brewery", "ABV", "pour size"]),
@@ -55,7 +57,11 @@ CUE_SRC = {"beta_margarita": "glassware 'Rocks' + method 'strain over fresh ice'
 BANNED = ["nom-006", "class", "shelf", "fermented", "by the pour", "tbc", "spirit-forward", "rye whiskey", "one large"]
 for k, v in C.items():
     assert not any(w in (v[0] + SERVE.get(k, "")).lower() for w in BANNED), k
-NOTE = {"sec_spirits": "Straight pours."}   # draft section desc "Straight pours by category." shortened; the one serve cue for the whole card
+NOTE = {}   # round 15: the La Botella serve cue moved into its name band gloss
+GLOSS = {"sec_spirits": "Spirits · straight pours"}   # draft Spirits section desc "Straight pours by category." shortened
+COPA = {"beta_malbec", "beta_pinot_grigio"}   # print label "copa": the items sit under the draft sub "By the Glass"; Brut Rosé stays unlabelled
+PW = {1: 14, 2: 14, 3: 36, 4: 14}   # price column width pt per card (2 tabular digits; La Rosa adds "copa" + 4 pt)
+DESC_GAP = 18
 assert "fresh lime" in C["beta_margarita"][0] and "aromatic bitters" in C["beta_manhattan"][0]
 
 secs = {s["id"]: s for s in draft["sections"]}
@@ -70,7 +76,7 @@ ho["name"] = "De la Casa · House Originals"; ho["items"] = pick(ho, ["beta_old_
 S["sec_cocktails"]["subs"] = [cl, ho]                                    # Clásicos lead: the Margarita is the first drink on the menu
 ag, br = sub("sec_spirits", "sub_spirits_agave"), sub("sec_spirits", "sub_spirits_brandy")
 # round 13: the draft's own subheads are restored (SPANISH · English); no section is merged in doc.json
-ag["name"] = "Agave · Tequila"; ag["items"] = pick(ag, ["beta_blanco_tequila", "beta_anejo_tequila"]); br["name"] = "Brandy · Cognac"; S["sec_spirits"]["subs"] = [ag, br]
+ag["name"] = "Tequila · Agave"; ag["items"] = pick(ag, ["beta_blanco_tequila", "beta_anejo_tequila"]); br["name"] = "Coñac · Brandy"; S["sec_spirits"]["subs"] = [ag, br]
 dr = sub("sec_beer", "sub_beer_draft"); dr["name"] = "De Barril · Draft"
 cid = {"id": "sec_cider", "name": "Sidra · Cider"}   # the draft's own Cider section (no subs); printed as a subhead on El Barril
 S["sec_cider"]["name"] = "Sidra · Cider"
@@ -82,22 +88,25 @@ for s in new:
         line, src, rows, miss = C[it["id"]]
         it["desc"] = (line + " " + SERVE[it["id"]].replace(NBSP, " ")) if it["id"] in SERVE else line; it.pop("missing_ingredients", None)
         it["meta"] = dict(it.get("meta") or {}); it["meta"]["missing_ingredients"] = list(miss)
-        if it["id"] == "beta_manhattan":
-            it["meta"]["public_components"] = {}   # bitters printed: venue's own menu_description names them
+        # round 15: Manhattan meta.public_components stays as the draft has it ({"aromatic-bitters": false}); the print override is recorded in doc.meta
 doc["sections"] = new
 
 def flat(d, skip_pc=False):
     return {i["id"]: (i["name"], json.dumps(i["prices"], sort_keys=True), json.dumps(i.get("phg"), sort_keys=True),
                       json.dumps({k: v for k, v in (i.get("meta") or {}).items() if k not in ("missing_ingredients",) + (("public_components",) if skip_pc else ())}, sort_keys=True), json.dumps(i.get("components"), sort_keys=True))
             for s in d["sections"] for i in s["items"] + [x for sb in s["subs"] for x in sb["items"]]}
-assert flat(doc, True) == flat(draft, True) and len(flat(doc)) == 14, "item/price/meta drift"
+assert flat(doc) == flat(draft) and len(flat(doc)) == 14, "item/price/meta drift"
 for k, (rv, *_r) in RV.items():
     it = next(i for s in doc["sections"] for sb in s["subs"] for i in sb["items"] if i["id"] == k); assert it["phg"]["recipe_version_id"] == rv, k
 
 allitems = {i["id"]: i for s in new for i in s["items"] + [x for sb in s["subs"] for x in sb["items"]]}
 V = {"cantarito": "Tanto va el cántaro al agua, que se quiebra y te moja las enaguas.", "botella": "La herramienta del borracho.",
      "barril": "Tanto bebió el albañil, que quedó como barril.", "rosa": "Rosita, Rosaura, ven que te quiero ahora."}
-FIG = 69; BAND = 24; FACE = 6 + FIG + 6 + BAND   # 105: figure row, 6 pt, full-width 24 pt name band; + 3 pt frame = 108 (a multiple of 6)
+BAND = 24
+HJ0 = json.loads((HERE / "heights.json").read_text())
+FACEH = {int(k): v for k, v in HJ0["face"].items()}   # round 15: face height per card (row difference absorbed here); + 3 pt frame is a multiple of 6
+FIGH = {n: f - 6 - 6 - BAND for n, f in FACEH.items()}  # the figure fills the face above the band
+FACE = min(FACEH.values()); FIG = FACE - 36
 GAP = 12                                        # gutter = row gap = 12 pt
 HJ = json.loads((HERE / "heights.json").read_text())   # {"row1", "row2", "deck", "xg": {card n: extra item spacing pt}}
 DECK = HJ["deck"]
@@ -109,35 +118,40 @@ CARDS = [   # round 14: shared rows. Row 1: El Cantarito | El Barril; row 2: La 
  (3, "sec_wine", "Wine", "La Rosa", 41, "rose", "rosa", [(bg, bg["items"]), (sp, sp["items"])], V["rosa"], 1, HJ["row2"]),
  (4, "sec_spirits", "Spirits", "La Botella", 8, "bottle", "mari", [(ag, ag["items"]), (br, br["items"])], V["botella"], 2, HJ["row2"]),
 ]
-XG = {int(k): v for k, v in HJ["xg"].items()}
+XG = {n: 0 for n in (1, 2, 3, 4)}   # round 15: one item pitch, no added spacing
 assert sorted(i["id"] for c in CARDS for g in c[7] for i in g[1]) == sorted(allitems), "every item on exactly one card"
-assert all(c[10] % 6 == 0 for c in CARDS) and (FACE + 3) % 6 == 0 and HJ["row1"] + GAP + HJ["row2"] == DECK and all(v % 6 == 0 for v in XG.values())
+assert all(c[10] % 6 == 0 for c in CARDS) and all((f + 3) % 6 == 0 for f in FACEH.values()) and HJ["row1"] + GAP + HJ["row2"] == DECK and all(v % 6 == 0 for v in XG.values())
 doc["meta"] = dict(doc.get("meta") or {})
 doc["meta"]["designer_notes"] = {
     "round": ROUND,
     "recipe_versions": {k: list(v) for k, v in RV.items()},
     "concept": ("Lotería de la Cantina, a real tabla of four cards locked in a 2 x 2 grid with shared rows. Top row: El Cantarito (44, cocktails, Margarita first) | El Barril (9, beer & cider); "
                 "bottom row: La Rosa (41, wine) | La Botella (8, agave & brandy). Every card: 3 pt frame in its colour; one face template "
-                "(69 pt cut-paper figure with its traditional Don Clemente number as an 11 pt italic ink numeral in the top-left corner, the cantor verse beside it, "
+                "(cut-paper figure filling the face above the band, 69 pt on the tallest card of each row and scaled up on the shorter one, with its traditional Don Clemente number as an 11 pt italic ink numeral in the top-left corner, the cantor verse beside it, "
                 "and a full-width 24 pt name band at the foot of the face carrying the card name in 18 pt caps, as on the foot strip of a real lotería card); "
                 "the drinks list below under the draft's own subheads, SPANISH · English."),
     "cards": [{"n": c[0], "ref": c[1], "name": c[2], "loteria_name": c[3].upper(), "loteria_number": c[4], "number_source": "traditional Don Clemente lotería numbering",
                "cantor_verse": c[8], "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input", "figure": c[5], "featured": c[0] == 1,
-               "card_h_pt": c[10], "face_h_pt": FACE, "figure_pt": FIG, "items": [i["id"] for g in c[7] for i in g[1]]} for c in CARDS],
+               "card_h_pt": c[10], "face_h_pt": FACEH[c[0]], "figure_pt": FIGH[c[0]], "band_gloss": GLOSS.get(c[1], c[2]), "items": [i["id"] for g in c[7] for i in g[1]]} for c in CARDS],
     "copy_sources": {k: {"printed": v[0], "serve_cue": SERVE.get(k, "").replace(NBSP, " "), "serve_cue_source": (f"phg.recipe_versions {RV[k][0]}: " + CUE_SRC[k]) if k in RV else "",
                          "recipe_version_id": RV[k][0] if k in RV else None, "words_from": v[1], "gateway_rows": v[2], "missing": v[3]} for k, v in C.items()},
     "gateway_query": ("Round 12 gateway calls (public.phg_designer_query): log_id 167 (beverage_categories 04d72e1f, 9f4dae69, a88f6e79, bec5063c), "
                       "log_id 168 (phg.menu_items joined to phg.recipe_versions on current_recipe_version_id: glassware, garnish, method), "
                       "log_id 169 (spirit_lexicon terms blanco / añejo / VSOP / plata: 0 rows), log_id 170 (spirit_lexicon columns: term, family, subfamily, notes; no definitions), "
                       "log_id 171 (every beverage_categories row under tequila and cognac: blanco, añejo and VSOP have notes = null)."),
-    "spirits_copy": "Round 14: the three spirits print name and price only (their item descriptions only repeated the name). One card-level italic serve cue, 'Straight pours.', sits under the La Botella name band above the subheads; it is the draft Spirits section desc 'Straight pours by category.' shortened. Subheads 'Agave · Tequila' and 'Brandy · Cognac' (draft sub names + the category word in each item name). Brand, age statement and pour size are flagged in missing_ingredients.",
+    "spirits_copy": "Round 15: the three spirits print name and price only. The card-level serve cue now sits in the La Botella name band as its italic gloss, 'Spirits · straight pours' (the draft Spirits section desc 'Straight pours by category.' shortened), so the first subhead sits 12 pt below the band as on every card. Subheads 'Tequila · Agave' (the draft sub is 'Agave'; the item names say Tequila) and 'Coñac · Brandy' (the draft sub is 'Brandy'; the item name says Cognac). Brand, age statement and pour size are flagged in missing_ingredients.",
     "manhattan": "'Rye, sweet vermouth and aromatic bitters.' (the venue's own menu_description words). 'Spirit-forward' (a class label) dropped; 'rye whiskey' shortened to 'rye'.",
+    "manhattan_public_components_override": {"item": "beta_manhattan", "draft_value": {"aromatic-bitters": False}, "value_in_this_doc": "unchanged (draft value kept in the item's meta.public_components)",
+        "printed": "aromatic bitters", "reason": "the draft's own menu_description 'Rye, sweet vermouth, aromatic bitters.' lists them; the Coordinator chose to print the venue's own description pending the venue's answer (needs_input)"},
+    "old_fashioned_bitters": "'aromatic bitters' is the draft_doc component name 'Aromatic Bitters' (kind ingredient, role 'Bitters', 2 dash); the draft desc says 'bitters'.",
+    "print_price_labels": {"beta_malbec": "copa", "beta_pinot_grigio": "copa", "source": "both items sit under the draft sub 'By the Glass'; the doc price label stays as the draft has it (empty); Brut Rosé stays unlabelled"},
+    "description_measure": f"one measure per card: text column (237 pt) minus the price column ({PW} pt) minus a fixed {DESC_GAP} pt gap; text-wrap pretty with the last two words bound, so no line ends in a one-word orphan",
     "brut_rose_price": "Prints like every other price under 'Espumoso · Sparkling', unlabelled. The empty glass / bottle label is asked in needs_input only.",
-    "structure_changes": "The draft's own subheads are restored in one pattern, SPANISH · English ('y' only in Spanish, '&' only in English): Cocktails 'Clásicos · Classics' (Margarita first) then 'De la Casa · House Originals'; Spirits 'Agave · Agave' then 'Brandy · Brandy'; Beer 'De Barril · Draft' then the draft's own Cider section as 'Sidra · Cider'; Wine 'Por Copa · By the Glass' then 'Espumoso · Sparkling'. No section or subsection is merged in doc.json. 'Tintos, Blancos y Espumoso' and 'Cerveza & Sidra' are gone.",
-    "card_layout": f"Locked 2 x 2 tabla with shared rows: columns 264 / 264 pt, 12 pt gutter = 12 pt row gap. Row 1: El Cantarito | El Barril, {HJ['row1']} pt; row 2: La Rosa | La Botella, {HJ['row2']} pt; deck {DECK} pt from y = 126 to 756 pt on a 6 pt row grid. Both columns end at 756 pt; the two lower name bands share one y.",
-    "break_note": f"Agave top-right does not fit: El Cantarito + La Rosa/El Barril rows would need about 648 pt against the 630 pt deck. Beer top-right fits exactly. The height difference is taken up inside the lists as item spacing in 6 pt steps: El Barril +{XG[2]} pt on each of its three item-to-item gaps, La Botella +{XG[4]} pt on each of its two item-to-item gaps.",
+    "structure_changes": "One subhead pattern on every card, SPANISH · English with the English as the gloss: 'Clásicos · Classics', 'De la Casa · House Originals', 'De Barril · Draft', 'Sidra · Cider' (the draft's own Cider section, printed as a subhead on El Barril), 'Por Copa · By the Glass', 'Espumoso · Sparkling', 'Tequila · Agave', 'Coñac · Brandy'. No section or subsection is merged in doc.json.",
+    "card_layout": f"Locked 2 x 2 tabla with shared rows: columns 264 / 264 pt, 12 pt gutter = 12 pt row gap. Row 1: El Cantarito | El Barril, {HJ['row1']} pt; row 2: La Rosa | La Botella, {HJ['row2']} pt; deck {DECK} pt from y = 126 to 756 pt on a 6 pt grid. Both columns end at 756 pt. One item pitch on every card (6 pt item gap, 12 pt lines); the row difference is absorbed in the face: face heights {FACEH} pt, figures {FIGH} pt.",
+    "break_note": f"Round 15: El Barril's +24 pt and La Botella's +6 pt item padding are gone. The shorter card in each row takes a taller face instead and its figure scales up to fill it (face {FACEH} pt). Because the name band sits at the foot of the face, the bands inside a row no longer share a y when the faces differ; see needs_input.",
     "retired_junmai_ginjo": "Junmai Ginjo is a phg.menu_items row that is not in draft_doc.json; it is intentionally left off pending the venue's decision.",
-    "palette_note": "Four lotería hues: terracotta (El Cantarito), agave green (El Barril), lotería rosa (La Rosa), marigold (La Botella: marigold frame and name band, ink text and ink prices); ink and cream are the neutrals. The muddy deep marigold #8C5A00 is gone.",
+    "palette_note": "Four lotería hues: terracotta (El Cantarito), agave green (El Barril), lotería rosa (La Rosa), marigold (La Botella: marigold frame and name band with ink text; prices and subhead rules in burnt ochre #8A5A00, 5.46:1 on the card); ink and cream are the neutrals.",
 }
 (OUT / "doc.json").write_text(json.dumps(doc, ensure_ascii=False, indent=2))
 
@@ -199,8 +213,9 @@ def item_html(it):
     dd = f'<p class="desc"><span class="chr">{nb(ln)}</span></p>' if ln else ""
     if it["id"] in SERVE:
         dd += f'<p class="cue">{html.escape(SERVE[it["id"]]).replace(NBSP, "&nbsp;")}</p>'
+    lab = '<span class="plabel" lang="es">copa</span>' if it["id"] in COPA else ""
     return (f'<div class="item" data-ref="{it["id"]}"><div class="row"><span class="name">{nb(it["name"])}</span><span class="lead"></span>'
-            f'<span class="price num">{it["prices"][0]["value"]:g}</span></div>{dd}</div>')
+            f'<span class="pcol">{lab}<span class="price num">{it["prices"][0]["value"]:g}</span></span></div>{dd}</div>')
 
 def h3(name):
     es, _, en = name.partition(" · ")
@@ -213,10 +228,10 @@ def card_html(n, cid, name, lot, num, fig, col, groups, verse, column, h):
         body.append('<div class="items">' + "".join(item_html(i) for i in items) + "</div>")
     orn = ""  # no filler ornament (Coordinator, round 12 fix)
     note = f'<p class="note">{html.escape(NOTE[cid])}</p>' if cid in NOTE else ""
-    return (f'<article class="card c-{col}{" featured" if n == 1 else ""}" id="card-{n}" data-id="{cid}" data-n="{n}" style="--h:{h}pt;--xg:{XG[n]}pt;grid-column:{column};grid-row:{START[n]} / span {h // 6}">'
+    return (f'<article class="card c-{col}{" featured" if n == 1 else ""}" id="card-{n}" data-id="{cid}" data-n="{n}" style="--h:{h}pt;--xg:{XG[n]}pt;--face:{FACEH[n]}pt;--fig:{FIGH[n]}pt;--pw:{PW[n]}pt;grid-column:{column};grid-row:{START[n]} / span {h // 6}">'
             f'<div class="face"><div class="ftop"><div class="figure">{icon(fig, "fig")}<span class="cardno" aria-label="Lotería card {num}">{num}</span></div>'
             f'<div class="vcol"><p class="verse" lang="es">{html.escape(verse)}</p></div></div>'
-            f'<div class="namebar"><h2 lang="es">{html.escape(lot.upper())}</h2><span class="gloss" lang="en">{html.escape(name)}</span></div></div>'
+            f'<div class="namebar"><h2 lang="es">{html.escape(lot.upper())}</h2><span class="gloss" lang="en">{html.escape(GLOSS.get(cid, name))}</span></div></div>'
             f'<div class="body">{note}{"".join(body)}{orn}</div></article>')
 
 cols = {1: [], 2: []}
@@ -239,7 +254,7 @@ CSS = Template("""
 * { box-sizing: border-box; }
 html, body { margin:0; padding:0; background:#d9d2c6; }
 body { -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:'DM Sans', sans-serif; color:$ink; }
-.c-terra { --c:$terra; --tint:#F3E3CB; } .c-agave { --c:$agave; --tint:#E4EBE2; } .c-mari { --c:$mari; --tint:#FAEBC8; --pc:$ink; --on:$ink; } .c-rosa { --c:$rosa; --tint:#F7E3E8; }
+.c-terra { --c:$terra; --tint:#F3E3CB; } .c-agave { --c:$agave; --tint:#E4EBE2; } .c-mari { --c:$mari; --tint:#FAEBC8; --pc:#8A5A00; --on:$ink; } .c-rosa { --c:$rosa; --tint:#F7E3E8; }
 .page { width:612pt; height:792pt; padding:36pt; background:$cream; display:flex; flex-direction:column; margin:0 auto; }
 .banner { display:block; width:540pt; height:30pt; flex:none; }
 .banner-m, .tabs { display:none; }
@@ -250,9 +265,9 @@ body { -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:'
 .nw { white-space:nowrap; }
 .deck { flex:none; display:grid; grid-template-columns:264pt 264pt; grid-template-rows:repeat(${nrows}, 6pt); column-gap:${gap}pt; row-gap:0; height:${deck}pt; }
 .card { position:relative; min-width:0; height:var(--h); display:flex; flex-direction:column; background:$card; border:3pt solid var(--c); padding:0 0 9pt; overflow:hidden; }
-.face { position:relative; flex:none; height:${face}pt; display:flex; flex-direction:column; padding:6pt 0 0; background:var(--tint); box-shadow: inset 0 0 0 3pt var(--tint), inset 0 0 0 3.75pt var(--c); }
-.ftop { flex:none; height:${fig}pt; display:flex; gap:12pt; padding:0 6pt; margin-bottom:6pt; }
-.figure { position:relative; flex:none; width:${fig}pt; height:${fig}pt; }
+.face { position:relative; flex:none; height:var(--face); display:flex; flex-direction:column; padding:6pt 0 0; background:var(--tint); box-shadow: inset 0 0 0 3pt var(--tint), inset 0 0 0 3.75pt var(--c); }
+.ftop { flex:none; height:var(--fig); display:flex; gap:12pt; padding:0 6pt; margin-bottom:6pt; }
+.figure { position:relative; flex:none; width:var(--fig); height:var(--fig); }
 .figure .fig { display:block; width:100%; height:100%; }
 .cardno { position:absolute; left:3pt; top:0; font-family:'Fraunces', serif; font-style:italic; font-weight:600; font-size:11pt; line-height:18pt; color:$ink; font-feature-settings:'lnum' 0; }
 .vcol { flex:1; min-width:0; display:flex; flex-direction:column; padding-right:6pt; }
@@ -274,8 +289,10 @@ h3 .en { font-weight:500; color:$muted; letter-spacing:0.3pt; text-transform:non
 .row { display:flex; align-items:baseline; height:12pt; }
 .lead { flex:1; }
 .name { font-family:'Fraunces', serif; font-size:10.5pt; line-height:12pt; font-weight:600; }
-.price { font-size:11.5pt; line-height:12pt; margin-left:8pt; }
-.desc { margin:0; max-width:210pt; font-size:8pt; line-height:12pt; color:$ink; text-wrap:balance; }
+.pcol { flex:none; display:flex; align-items:baseline; justify-content:flex-end; gap:4pt; min-width:var(--pw); margin-left:8pt; }
+.plabel { font-size:7.5pt; line-height:12pt; font-style:italic; color:$muted; }
+.price { font-size:11.5pt; line-height:12pt; }
+.desc { margin:0; max-width:calc(100% - var(--pw) - 18pt); font-size:8pt; line-height:12pt; color:$ink; text-wrap:pretty; }
 .cue { margin:0; font-size:8pt; line-height:12pt; font-style:italic; color:$muted; white-space:nowrap; }
 .orn { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; margin-top:12pt; }
 .orn-svg { display:block; }
@@ -296,15 +313,16 @@ h3 .en { font-weight:500; color:$muted; letter-spacing:0.3pt; text-transform:non
   .card { height:auto !important; margin:0 0 24px; scroll-margin-top:66px; border-width:4px; padding:0 0 16px; box-shadow:3px 4px 0 rgba(35,27,22,.18); --xg:0pt !important; }
   .face { height:auto; padding:8px 0 0; }
   .ftop { height:auto; gap:12px; padding:0 8px; margin-bottom:8px; }
-  .figure { width:72px; height:72px; margin-left:30px; }
-  .cardno { font-size:24px; line-height:24px; left:-30px; top:0; }
+  .figure { width:72px; height:72px; margin-left:22px; }
+  .cardno { font-size:14px; line-height:18px; left:-22px; top:0; }
   .verse { font-size:14px; line-height:18px; }
   .namebar { height:auto; padding:4px 6px; } .namebar h2 { font-size:22px; line-height:30px; letter-spacing:1.2px; } .gloss { font-size:12px; line-height:30px; }
   .body { margin-top:14px; padding:0 16px; }
   .note { font-size:15px; line-height:20px; margin-bottom:12px; }
   .sub { height:auto; } h3 { font-size:11.5px; line-height:20px; }
   .row { height:auto; } .name { font-size:18px; line-height:24px; } .price { font-size:19px; line-height:24px; }
-  .desc, .cue { font-size:14.5px; line-height:20px; } .desc { max-width:30ch; }
+  .desc, .cue { font-size:14.5px; line-height:20px; } .desc { max-width:calc(100% - 44px); }
+  .plabel { font-size:13px; line-height:24px; } .pcol { min-width:0; }
   .items { --gi:12px; } .items + .sub { --gi:16px; } .sub { margin-bottom:6px; }
   .orn { display:none; }
 }
