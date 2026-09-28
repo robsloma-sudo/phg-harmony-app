@@ -440,4 +440,26 @@ Minor:
 - Add lock_timeout to the extraction save.
 - Show the monitor churn growth separately.
 
-### Safety Reviewer: pending
+### Safety Reviewer: 87.7, pass, no blockers
+- Rounds: 78, 78, 82.7, 85.5, 87.7. Average 82.4, above 80.
+- Areas: data 91, correctness 85, concurrency 87, performance 88, security 86, reversibility 89.
+
+Should-fix:
+- SF-1: a venue whose current menu is an item page is frozen against price updates. A same-URL re-capture with more than 10% of prices changed fails the overlap check. Fix: the exact-URL exemption drops the overlap requirement and keeps the partial-recapture guard. Add a rehearsal case: same URL, 4 of 33 prices changed, returns "created".
+- SF-2 (same issue as spec B1): the phg-expanded-data fix becomes a hard release precondition. Deploy it in the same window as file 2, before the previews go live, and strictly before cron 7. Prefer .eq('is_current', true), which also avoids the PostgREST 1000-row cap.
+
+Minor:
+- m1: correct the runbook wording on in-flight calls (55P03 and 40P01 are both safe to re-run).
+- m2: add lock_timeout to the roll-forward reset.
+- m3: save the rollback-check output and the run row before the DROP.
+- m4: the flip-flop monitor row should count only changes between different sources.
+- m5: correct the header wording.
+- m6: set submit_menu's search_path to 'public', 'pg_temp'.
+
+## Gate status after round 5
+Both averages are above 80: spec 80.9, safety 82.4. The numeric publish gate is MET.
+Before publishing:
+- fix spec B1 / safety SF-2;
+- fix safety SF-1;
+- fix the spec should-fixes and the minors;
+- re-rehearse.
