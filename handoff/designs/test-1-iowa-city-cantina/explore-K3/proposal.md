@@ -119,7 +119,8 @@ A citrus-forward mezcal serve would fill the gap, but that is a menu decision, n
 | No taglines or banned filler | **Pass**: 0 hits against the banned list (Rob's four removed lines, "Good drinks / Good people", the selected tagline, and the Glass Garden/Solstice slogans). The only venue line is "Cantina & Cocktail Bar · Iowa City, Iowa". |
 | Safe area 0.5 in | **Pass**: the closest text line box to the trim is 0.50 in (top and bottom), 0.51 in left, 0.59 in right. |
 | Bleed PDF 3.175 mm | **Pass**: `menu-print-bleed.pdf`, 2 pages at 9.25 × 11.75 in, trim at 0.375 in with crop marks. The front field bleeds 9 px (3.175 mm) top and right; the back band bleeds top, left and right; the paper ground carries a 9 pt bleed. |
-| Formats | **Pass**: front and back are 2550 × 3300; phone is 1170 × 18831 (one scroll, no horizontal scroll). All text is live HTML; no raster text. |
+| Formats | **Pass**: front and back are 2550 × 3300; phone is 1170 × 19089 (one scroll, no horizontal scroll; split into phone-part1..4.png). All text is live HTML; no raster text. |
+| Phone map matches letter map | **Pass**: dark-pixel share (luminance < 0.25) inside the field is 0.2777 on phone vs 0.2938 on letter, 5.5% relative difference (gate ≤ 10%). The phone map has its own axes and ticks, and fixed 36 px glyph boxes (viewBox -15 -16 30 32). |
 | No block overlap | Back groups → beer 10 px, band → groups 12 px, front index → zero-proof rule 36 px. |
 
 ## visual_tests.py

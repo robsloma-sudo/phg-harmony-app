@@ -141,7 +141,8 @@ def field_svg(fx, fy0, fx1, fb, X0, X1, Y0, Y1, dr, br, bo, gid, grid=True, glyp
         s.append(f'<g transform="translate({cx:.2f},{cy:.2f})"><circle r="{dr}" fill="{PAPER}"/>'
                  + (f'<g transform="scale({dr / 19.5 * 1.04:.3f}) translate(0,.6)">{glyph(it["glass"], it["garnish"], liquid(it))}</g>' if glyph_px is None else
                     f'<svg x="{-glyph_px / 2:.2f}" y="{-glyph_px * 32 / 30 / 2 + .6:.2f}" width="{glyph_px}" height="{glyph_px * 32 / 30:.2f}" viewBox="-15 -16 30 32" overflow="visible">{glyph(it["glass"], it["garnish"], liquid(it))}</svg>') +
-                 f'<circle cx="{-bo}" cy="{-bo}" r="{br}" fill="{INK}"/></g>')
+                 '</g>')
+    s += [f'<circle cx="{cx - bo:.2f}" cy="{cy - bo:.2f}" r="{br}" fill="{INK}"/>' for _, cx, cy in pts]  # badges above every disc
     return "".join(s), pts
 
 # ---------- letter front art layer
