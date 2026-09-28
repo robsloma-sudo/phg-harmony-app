@@ -47,7 +47,19 @@
 -- an item page from the SAME source replaces a real-page current menu only when it is strictly larger by
 -- (distinct items, drinks items) - the same order the repair's Step 2 uses - so a same-size item page never takes the
 -- real page's place (it is kept as an alternate). An item page still replaces a current menu that is itself an item
--- page when it is at least as large (unchanged).
+-- page when it is at least as large (unchanged in round 4; changed in round 5, below).
+--
+-- Review round 5 fixes (2026-09-28):
+--  * Over a current menu that is itself an item page, every comparison uses (distinct items, drinks items), Step 2's
+--    order: a real page from another source replaces it when at least as large by (items, drinks)
+--    ('real_page_over_item_page'), and the 7-day damping never holds a real page behind an item-page current menu.
+--  * An item page replaces an item-page current menu of the same source only when strictly larger by (items, drinks),
+--    unless it is the very same URL (a re-capture of that page), where at least as large is enough (safety SF-D).
+--  * "Drinks items" counts DISTINCT drinks item keys (name|price), in submit_menu and in the repair's Step 2 ranking
+--    alike (both use phg_menu_payload_bev_count / phg_menu_bev_count), so a repeated line cannot tip a tie (M1).
+--  * submit_menu has lock_timeout 5s as a function-level setting (SET LOCAL scoped to the call; reset on return):
+--    a writer waiting on the account row or menus longer than 5 s fails with 55P03 and changes nothing.
+--  * phg_rollback_function_defs_20260927 is not executable by service_role (runbook runs as postgres).
 --
 -- Apply with cron 7 (promotion) and 13 (extraction) PAUSED. Data repair is a separate script.
 -- Apply through the runbook (apply_migration, or psql -1 -f), in order: this file, then 20260927191000. Not with
@@ -93,7 +105,7 @@ begin
   end loop;
   return n;
 end $$;
-revoke all on function public.phg_rollback_function_defs_20260927() from public, anon, authenticated;
+revoke all on function public.phg_rollback_function_defs_20260927() from public, anon, authenticated, service_role;
 
 -- ---------- A. schema additions (nullable, no defaults: metadata-only, no table rewrite) ----------
 alter table public.menus
@@ -163,10 +175,12 @@ returns text[] language sql immutable set search_path = '' as $$
   ) x where k is not null
 $$;
 
--- Drinks item count of a payload: typed drinks items plus every item in a drinks section.
+-- Drinks item count of a payload: DISTINCT keys (name|price, same '(unnamed)' fallback as the item keys) of typed
+-- drinks items plus every item in a drinks section. Same definition as phg_menu_bev_count (stored menus).
 create or replace function public.phg_menu_payload_bev_count(p_sections jsonb)
 returns integer language sql immutable set search_path = '' as $$
-  select count(*)::int
+  select count(distinct public.phg_menu_item_key(coalesce(nullif(it->>'item_name', ''), '(unnamed)'),
+                                                 nullif(it->>'price', '')::numeric))::int
   from jsonb_array_elements(coalesce(p_sections, '[]'::jsonb)) as s,
        jsonb_array_elements(coalesce(s->'items', '[]'::jsonb)) as it
   where coalesce(it->>'item_type', '') in ('cocktail', 'spirit_pour', 'beer', 'wine')
@@ -193,10 +207,11 @@ returns text[] language sql stable set search_path = '' as $$
   ) x where k is not null
 $$;
 
--- Drinks item count of a stored menu (beer / wine are item_type 'other' inside typed sections).
+-- Drinks item count of a stored menu: DISTINCT drinks item keys (beer / wine are item_type 'other' inside typed
+-- sections). Used by submit_menu and by the repair's Step 2 ranking, so both count the same way.
 create or replace function public.phg_menu_bev_count(p_menu_id uuid)
 returns integer language sql stable set search_path = '' as $$
-  select count(*)::int
+  select count(distinct public.phg_menu_item_key(i.item_name, i.price))::int
   from public.menu_sections s join public.menu_items i on i.section_id = s.id
   where s.menu_id = p_menu_id
     and (i.item_type in ('cocktail', 'spirit_pour', 'beer', 'wine') or s.section_type in ('cocktails', 'wine', 'beer', 'spirits'))
@@ -241,6 +256,7 @@ create or replace function public.submit_menu(p_account_id text, p_source_code t
  language plpgsql
  security definer
  set search_path to 'public'
+ set lock_timeout to '5s'
 as $function$
 declare v_menu_id uuid;v_menu_code text;v_source_id uuid;v_section jsonb;v_item jsonb;v_brand jsonb;v_section_id uuid;v_item_id uuid;v_brand_id uuid;v_items int:=0;v_brands int:=0;v_inferred int:=0;v_expected_items int:=0;v_existing uuid;v_cat text;v_has_brands boolean;
  v_source_key text; v_keys text[]; v_n int; v_bev int; v_set_hash text; v_itemish boolean;
@@ -251,6 +267,7 @@ declare v_menu_id uuid;v_menu_code text;v_source_id uuid;v_section jsonb;v_item 
 begin
  -- Lock the account row first: the extraction save locks the same row, so the two writers queue instead of
  -- deadlocking; the advisory lock then serializes promotion with the submit-menu Edge function.
+ -- lock_timeout 5s (function-level SET above): a wait longer than that raises 55P03 and the call changes nothing.
  perform 1 from public.accounts where account_id=p_account_id for no key update;
  if not found then raise exception 'unknown account_id %',p_account_id;end if;
  perform pg_advisory_xact_lock(hashtextextended('phg_submit_menu:'||p_account_id, 0));
@@ -271,7 +288,7 @@ begin
 
  -- Decide against the current menu(s) before writing anything.
  for c in select m.id, coalesce(m.source_key, public.phg_menu_source_key(m.evidence_url)) as source_key, m.item_keys, m.created_at,
-                  public.phg_menu_url_is_item_page(m.evidence_url) as itemish
+                  m.evidence_url, public.phg_menu_url_is_item_page(m.evidence_url) as itemish
             from public.menus m where m.account_id=p_account_id and m.is_current
            order by m.created_at desc, m.id for update loop
   c_keys := coalesce(c.item_keys, public.phg_menu_item_keys(c.id));
@@ -279,6 +296,7 @@ begin
   v_ov   := public.phg_menu_keys_overlap(v_keys, c_keys);
   -- items whose price the capture supplies and the current menu lacks: never a duplicate (price enrichment)
   v_adds := public.phg_menu_keys_price_adds(v_keys, c_keys);
+  c_bev  := public.phg_menu_bev_count(c.id);
   -- a capture without a URL is never "the same page" as another capture without one
   if c.source_key is not null and c.source_key = v_source_key then
    -- Same source: identical or strict-subset re-capture keeps the current menu (unless it adds prices).
@@ -291,11 +309,12 @@ begin
     return jsonb_build_object('status','empty_capture_ignored','menu_id',c.id,'items',0,'message','zero-item re-capture ignored; current menu kept');
    end if;
    if v_itemish and c_n > 0 and not (v_ov >= ceil(c_dup_ratio * c_n)
-                                     and case when c.itemish then v_n >= c_n
-                                              else (v_n, v_bev) > (c_n, public.phg_menu_bev_count(c.id)) end) then
-    -- an item page shares the menu's key (?item= is stripped) but is not a fuller copy of it. Over a REAL page it must
-    -- be strictly larger (items, then drinks items: Step 2's order), so a same-size item page never takes the real
-    -- page's URL as current (C1, round 4); over another item page, at least as large is enough.
+                                     and ((v_n, v_bev) > (c_n, c_bev)
+                                          or (c.itemish and p_evidence_url = c.evidence_url and (v_n, v_bev) >= (c_n, c_bev)))) then
+    -- an item page shares the menu's key (?item= is stripped) but is not a fuller copy of it. It must be strictly
+    -- larger by (items, then drinks items: Step 2's order), over a real page (C1, round 4) and over another item page
+    -- alike (SF-D, round 5), so sibling item pages of one menu never swap places. The one exemption: the SAME item page
+    -- URL re-captured, over itself, replaces when at least as large (its own newer prices).
     v_make_current := false; v_alt_of := c.id; v_reason := 'alternate_item_page';
    elsif c_n > 0 and v_n < ceil(0.5 * c_n) then
     -- a partial parse of the same page must not replace the full menu
@@ -314,16 +333,21 @@ begin
    if v_n = 0 then
     return jsonb_build_object('status','empty_capture_ignored','menu_id',c.id,'items',0,'message','zero-item capture not promoted beside an existing current menu');
    end if;
-   c_bev := public.phg_menu_bev_count(c.id);
    if v_itemish and c_n > 0 then
     v_make_current := false; v_alt_of := c.id; v_reason := 'alternate_item_page';
    elsif (v_n, v_bev) > (c_n, c_bev) then
     v_supersede := v_supersede || c.id;
     v_reason := coalesce(v_reason, case when c_n > 0 and v_ov >= ceil(c_dup_ratio * c_n) then 'contained_in_larger_capture' else 'larger_beverage_capture' end);
+   elsif c.itemish and (v_n, v_bev) >= (c_n, c_bev) then
+    -- (round 5, C1) the current menu is an item page and this capture is a REAL page (v_itemish is false here) at least
+    -- as large by (items, drinks items): Step 2's order puts the real page first on ties
+    v_supersede := v_supersede || c.id;
+    v_reason := coalesce(v_reason, 'real_page_over_item_page');
    elsif v_n >= c_n and c_n > 0 and v_ov >= ceil(c_dup_ratio * c_n) and v_adds = 0
-         and c.created_at > now() - c_damping then
+         and c.created_at > now() - c_damping and not (c.itemish and not v_itemish) then
     -- flip-flop damping: two pages of the same menu must not keep swapping current. The current menu came from
     -- another source less than 7 days ago and this capture is only near-identical (not larger): keep it as an alternate.
+    -- Never applied to a real page behind an item-page current menu (round 5, C1): that page should become current.
     v_make_current := false; v_alt_of := c.id; v_reason := 'alternate_near_identical_recent_other_source';
    elsif v_n >= c_n and c_n > 0 and v_ov >= ceil(c_dup_ratio * c_n) then
     -- same menu, same size, from another page, with some new prices (or prices the current menu lacked):
