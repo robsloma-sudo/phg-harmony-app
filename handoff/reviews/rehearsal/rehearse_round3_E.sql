@@ -846,13 +846,42 @@ $rehearse_f2$;
      'venues_done', (select count(*) from public.phg_repair_step3_done)));
   -- Step 4: phg_repair_step4_batch(200)
   calls := '[]'; rem := -1;
-  WHILE rem <> 0 and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 12000 LOOP
+  WHILE rem <> 0 and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 1 LOOP
     t0 := clock_timestamp();
     rem := public.phg_repair_step4_batch(200);
     calls := calls || jsonb_build_object('ms', round(extract(epoch from clock_timestamp()-t0)*1000), 'remaining_venues', rem);
   END LOOP;
   r := r || jsonb_build_object('step4', jsonb_build_object('calls', calls,
      'hashed', (select count(*) from public.menu_source_candidates where item_set_hash is not null)));
+  -- function rollback, then ONE submit_menu call (the restored live 15-arg body) on a venue with a current menu
+  t0 := clock_timestamp();
+  BEGIN
+    c := jsonb_build_object('fn_rollback_returns', public.phg_rollback_function_defs_20260927(), 'ms', round(extract(epoch from clock_timestamp()-t0)*1000));
+    -- a separate statement: catalog reads in the same statement as the rollback call would see the old snapshot
+    c := c || jsonb_build_object(
+      'unique_index_after', to_regclass('public.menus_one_current_per_account') is not null,
+      'submit_menu_10arg_exists_after', to_regprocedure('public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb)') is not null,
+      'restored_body_is_live', (select prosrc !~ 'phg_menu_source_key' from pg_proc where oid = 'public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb,text,text,text,text,boolean)'::regprocedure),
+      'anon_or_authenticated_can_execute', (select jsonb_object_agg(b.signature, has_function_privilege('anon', b.signature::regprocedure, 'EXECUTE')
+                                                                        or has_function_privilege('authenticated', b.signature::regprocedure, 'EXECUTE'))
+                                              from public.phg_backup_function_defs_20260927 b),
+      'service_role_can_execute', (select bool_and(has_function_privilege('service_role', b.signature::regprocedure, 'EXECUTE')) from public.phg_backup_function_defs_20260927 b));
+    select id into cur_id from public.menus where account_id = acct and is_current;
+    t1 := clock_timestamp();
+    res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS','https://rehearsal.example.com/after-rollback',null,'html','unknown','rehearsal',null,md5('rehrb'||clock_timestamp()::text),'[{"section_name":"Food","section_type":"unsectioned","section_position":1,"items":[{"item_name":"Rehearsal Fries","item_type":"other","price":7},{"item_name":"Rehearsal Burger","item_type":"other","price":15}]}]'::jsonb,null,null,null,null,false);
+    c := c || jsonb_build_object('submit_after_rollback', res, 'submit_ms', round(extract(epoch from clock_timestamp()-t1)*1000),
+      'acct_current_count', (select count(*) from public.menus where account_id = acct and is_current),
+      'old_current_demoted', (select not is_current from public.menus where id = cur_id));
+    c := c || jsonb_build_object('pass', (c->>'fn_rollback_returns')::int = 4 and not (c->>'unique_index_after')::boolean
+                                        and (c->>'submit_menu_10arg_exists_after')::boolean and (c->>'restored_body_is_live')::boolean
+                                        and not exists (select 1 from jsonb_each_text(c->'anon_or_authenticated_can_execute') e where e.value::boolean)
+                                        and (c->>'service_role_can_execute')::boolean
+                                        and res ? 'menu_id' and (c->>'acct_current_count')::int = 1 and (c->>'old_current_demoted')::boolean);
+  EXCEPTION WHEN others THEN 
+      GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
+      c := c || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
+  END;
+  r := r || jsonb_build_object('function_rollback_and_submit', c); c := '{}';
   RAISE EXCEPTION 'REHEARSAL %', r;
 END
 $rehearse_main$;

@@ -325,7 +325,7 @@ $rehearse_gate$ || ') g' INTO v;
   EXCEPTION WHEN others THEN {soft_err('release_gate', 'r')}
   END;"""
 
-ROLLBACKS = f"""
+REPAIR_RB = f"""
   -- repair rollback (after step 3, including the staging restore)
   t0 := clock_timestamp();
   BEGIN
@@ -343,10 +343,15 @@ ROLLBACKS = f"""
   EXCEPTION WHEN others THEN {soft_err('ERROR', 'c')}
   END;
   r := r || jsonb_build_object('repair_rollback', c); c := '{{}}';
+"""
+
+FN_RB = f"""
   -- function rollback, then ONE submit_menu call (the restored live 15-arg body) on a venue with a current menu
   t0 := clock_timestamp();
   BEGIN
-    c := jsonb_build_object('fn_rollback_returns', public.phg_rollback_function_defs_20260927(), 'ms', {MS},
+    c := jsonb_build_object('fn_rollback_returns', public.phg_rollback_function_defs_20260927(), 'ms', {MS});
+    -- a separate statement: catalog reads in the same statement as the rollback call would see the old snapshot
+    c := c || jsonb_build_object(
       'unique_index_after', to_regclass('public.menus_one_current_per_account') is not null,
       'submit_menu_10arg_exists_after', to_regprocedure('public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb)') is not null,
       'restored_body_is_live', (select prosrc !~ 'phg_menu_source_key' from pg_proc where oid = 'public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb,text,text,text,text,boolean)'::regprocedure),
@@ -369,13 +374,15 @@ ROLLBACKS = f"""
   END;
   r := r || jsonb_build_object('function_rollback_and_submit', c); c := '{{}}';"""
 
+
 # C: timing - as much of Step 3 as fits in ~40 s
 C = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(30000, 0, 100) + END
 # D: a few batches of each step, then the gate, the repair rollback (with staging restore), function rollback + submit
 # D: one Step 3 call and one Step 4 call, then the gate, the repair rollback (with staging restore), function rollback + submit
-D = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(1, 1, 1) + GATE + ROLLBACKS + END
-# E: promote_clean_menu_batch(1) on a re-staged incident sibling page, then Step 4 timing (~12 s of calls)
-E = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + PROMOTE + steps(0, 12000, 0) + END
+D = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(1, 1, 1) + GATE + REPAIR_RB + FN_RB + END
+# E: promote_clean_menu_batch(1) on a re-staged incident sibling page, one more Step 4 call, then the function
+#    rollback + submit_menu again (its catalog check fixed to run in a separate statement)
+E = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + PROMOTE + steps(0, 1, 0) + FN_RB + END
 
 blocks = {'A': A, 'B': B, 'C': C, 'D': D, 'E': E}
 allsql = []

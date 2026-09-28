@@ -910,10 +910,13 @@ $rehearse_gate$ || ') g' INTO v;
       c := c || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
   END;
   r := r || jsonb_build_object('repair_rollback', c); c := '{}';
+
   -- function rollback, then ONE submit_menu call (the restored live 15-arg body) on a venue with a current menu
   t0 := clock_timestamp();
   BEGIN
-    c := jsonb_build_object('fn_rollback_returns', public.phg_rollback_function_defs_20260927(), 'ms', round(extract(epoch from clock_timestamp()-t0)*1000),
+    c := jsonb_build_object('fn_rollback_returns', public.phg_rollback_function_defs_20260927(), 'ms', round(extract(epoch from clock_timestamp()-t0)*1000));
+    -- a separate statement: catalog reads in the same statement as the rollback call would see the old snapshot
+    c := c || jsonb_build_object(
       'unique_index_after', to_regclass('public.menus_one_current_per_account') is not null,
       'submit_menu_10arg_exists_after', to_regprocedure('public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb)') is not null,
       'restored_body_is_live', (select prosrc !~ 'phg_menu_source_key' from pg_proc where oid = 'public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb,text,text,text,text,boolean)'::regprocedure),
