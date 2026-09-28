@@ -25,11 +25,11 @@
    ]
   },
   "phone": {
-   "text": "Cube: served on ice. Tint: shown only where an ingredient se",
-   "cls": "gnote tx",
-   "px": 13,
-   "pt": 9.75,
-   "worst": 6.72,
+   "text": "02",
+   "cls": "bn tx",
+   "px": 12,
+   "pt": 9.0,
+   "worst": 1.0,
    "bg": [
     243,
     240,
@@ -37,15 +37,29 @@
    ]
   }
  },
- "contrast_pass_4_5": true,
- "contrast_below_4_5": [],
+ "contrast_pass_4_5": false,
+ "contrast_below_4_5": [
+  {
+   "text": "02",
+   "cls": "bn tx",
+   "px": 12,
+   "pt": 9.0,
+   "worst": 1.0,
+   "bg": [
+    243,
+    240,
+    232
+   ],
+   "side": "phone"
+  }
+ ],
  "letter_min_font_pt": 9.0,
  "letter_min_font_ok": true,
  "phone_min_font_px": 12,
  "phone_min_font_ok": true,
  "phone_png": [
   1170,
-  18831
+  19089
  ],
  "phone_no_hscroll": true,
  "letter_png": {
@@ -170,6 +184,13 @@
   "Source Serif 4 normal",
   "Source Serif 4 italic"
  ],
+ "map_dark_share": {
+  "letter_field": 0.2938,
+  "phone_field": 0.2774,
+  "relative_diff": 0.056,
+  "method": "share of pixels with relative luminance < 0.25 inside the plotted field rectangle (letter: field x 294.7-816, y 0-424 css px at 3.125x; phone: field x 30-390, y 0-500 css px of .pmap at 3x)"
+ },
+ "map_dark_share_ok": true,
  "block_clearances_px": {
   "back_groups_to_bev_px": 10,
   "back_band_to_groups_px": 12,

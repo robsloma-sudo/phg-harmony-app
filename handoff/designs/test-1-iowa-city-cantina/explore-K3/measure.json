@@ -3310,11 +3310,11 @@
     "cls": "bn tx",
     "px": 12,
     "pt": 9.0,
-    "worst": 16.02,
+    "worst": 1.0,
     "bg": [
-     22,
-     21,
-     19
+     243,
+     240,
+     232
     ]
    },
    {
@@ -3438,8 +3438,8 @@
     ]
    },
    {
-    "text": "Bright → Rich, left to right",
-    "cls": "tx",
+    "text": "Smoky",
+    "cls": "plab ply tx",
     "px": 12,
     "pt": 9.0,
     "worst": 16.02,
@@ -3450,8 +3450,32 @@
     ]
    },
    {
-    "text": "Clean → Smoky, bottom to top",
-    "cls": "tx",
+    "text": "Clean",
+    "cls": "plab ply tx",
+    "px": 12,
+    "pt": 9.0,
+    "worst": 16.02,
+    "bg": [
+     243,
+     240,
+     232
+    ]
+   },
+   {
+    "text": "Bright",
+    "cls": "plab tx",
+    "px": 12,
+    "pt": 9.0,
+    "worst": 16.02,
+    "bg": [
+     243,
+     240,
+     232
+    ]
+   },
+   {
+    "text": "Rich",
+    "cls": "plab tx",
     "px": 12,
     "pt": 9.0,
     "worst": 16.02,
