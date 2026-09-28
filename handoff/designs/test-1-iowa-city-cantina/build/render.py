@@ -1,4 +1,4 @@
-"""Round 7 render: letter PNG (300 dpi, full resolution), PDF, phone PNG, and per-card measurement -> measure.json."""
+"""Round 11 render: letter PNG (300 dpi, full resolution), PDF, phone PNG, and per-card measurement -> measure.json."""
 import json, pathlib
 from playwright.sync_api import sync_playwright
 from PIL import Image, ImageChops
@@ -20,19 +20,22 @@ MEASURE = r"""() => {
     while ((n = tn.nextNode())) { const re = /\S+/g; let m; while ((m = re.exec(n.data))) { const r = document.createRange(); r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length); ws.push(r.getBoundingClientRect().top); } }
     const nb = el.textContent.split(/[ ]+/); if (!ws.length) return 0; const last = Math.max(...ws); const onLast = ws.filter(y => Math.abs(y - last) < 2).length; return {tokens_on_last_line: onLast, lines: new Set(ws.map(y => Math.round(y))).size}; };
   const T = el => Object.assign({text: (el.innerText || '').trim().replace(/\s+/g, ' ').slice(0, 160)}, tight(el));
+  const cueInfo = it => { const q = it.querySelector('.cue'); if (!q) return null; const r = document.createRange(); r.selectNodeContents(q); const rs = [...r.getClientRects()].filter(a => a.width > 0);
+    const ch = it.querySelector('.chr'); const r2_ = document.createRange(); r2_.selectNodeContents(ch); const cr = [...r2_.getClientRects()].filter(a => a.width > 0); const lastTop = Math.max(...cr.map(a => a.top));
+    return {lines: new Set(rs.map(a => Math.round(a.top))).size, shares_line_with_description: Math.abs(rs[0].top - lastTop) < 2, words: q.textContent.split(/[\s ]+/).filter(Boolean).length}; };
   const lh = el => parseFloat(getComputedStyle(el).lineHeight);
   const cards = [...document.querySelectorAll('.card')].map(c => {
     const cs = getComputedStyle(c), its = [...c.querySelectorAll('.item')];
     const gaps = its.slice(1).map((it, k) => it.previousElementSibling ? it.getBoundingClientRect().top - its[k].getBoundingClientRect().bottom : null).filter(v => v !== null);
     return {n: +c.dataset.n, ref: c.dataset.id, featured: c.classList.contains('featured'), box: box(c.getBoundingClientRect()),
       padding_px: {left: parseFloat(cs.paddingLeft), right: parseFloat(cs.paddingRight), top: parseFloat(cs.paddingTop), bottom: parseFloat(cs.paddingBottom)},
-      border_px: parseFloat(cs.borderLeftWidth), face: box(c.querySelector('.face').getBoundingClientRect()), fig_svg: box(c.querySelector('.figure svg').getBoundingClientRect()), rows: its.map(it => box(it.querySelector('.row').getBoundingClientRect())), subboxes: [...c.querySelectorAll('.sub')].map(s => box(s.getBoundingClientRect())), verse_pt_size: parseFloat(getComputedStyle(c.querySelector('.verse')).fontSize) * 0.75, name: T(c.querySelector('h2')), verse: T(c.querySelector('.verse')), gloss: T(c.querySelector('.gloss')), verse_clipped: c.querySelector('.verse').scrollWidth > c.querySelector('.verse').clientWidth + 1,
+      border_px: parseFloat(cs.borderLeftWidth), face: box(c.querySelector('.face').getBoundingClientRect()), cardno: Object.assign(box(c.querySelector('.cardno').getBoundingClientRect()), {text: c.querySelector('.cardno').innerText.trim()}), fig_svg: box(c.querySelector('.figure svg').getBoundingClientRect()), rows: its.map(it => box(it.querySelector('.row').getBoundingClientRect())), subboxes: [...c.querySelectorAll('.sub')].map(s => box(s.getBoundingClientRect())), verse_pt_size: parseFloat(getComputedStyle(c.querySelector('.verse')).fontSize) * 0.75, name: T(c.querySelector('h2')), verse: T(c.querySelector('.verse')), gloss: T(c.querySelector('.gloss')), verse_clipped: c.querySelector('.verse').scrollWidth > c.querySelector('.verse').clientWidth + 1,
       figure: box(c.querySelector('.figure').getBoundingClientRect()), body: box(c.querySelector('.body').getBoundingClientRect()),
       namebar: Object.assign(box(c.querySelector('.namebar').getBoundingClientRect()), {text: c.querySelector('.namebar').innerText.trim()}),
       item_gaps_px: gaps, line_heights_px: [...c.querySelectorAll('.name,.price,.desc,h3')].map(lh), first_row_y: (c.querySelector('.body .row') || c).getBoundingClientRect().top - pg.top, body_rule_y: c.querySelector('.body').getBoundingClientRect().top - pg.top, content_bottom: Math.max(...[...c.querySelectorAll('.body > *')].map(e => e.getBoundingClientRect().bottom)) - pg.top,
       subs: [...c.querySelectorAll('.sub')].map(s => ({ref: s.dataset.id, h3: T(s.querySelector('h3'))})),
       items: its.map(it => { const d = it.querySelector('.desc'); return {ref: it.dataset.ref, block: box(it.getBoundingClientRect()), name: T(it.querySelector('.name')), price: T(it.querySelector('.price')),
-        desc: d ? Object.assign(T(d), lastLineWords(d)) : null}; })};
+        desc: d ? Object.assign(T(d), lastLineWords(d)) : null, cue: cueInfo(it)}; })};
   });
   return {page: {w: pg.width, h: pg.height}, cards, banner: box(document.querySelector('.banner').getBoundingClientRect()),
           title: T(document.querySelector('.title')), loc: T(document.querySelector('.loc')), deck: box(document.querySelector('.deck').getBoundingClientRect()),
@@ -42,7 +45,10 @@ PHONE = r"""() => { const tb = document.querySelector('.tabs');
   const lastLine = el => { const tn = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); const ws = []; let n;
     while ((n = tn.nextNode())) { const re = /\S+/g; let m; while ((m = re.exec(n.data))) { const r = document.createRange(); r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length); ws.push(r.getBoundingClientRect().top); } }
     if (!ws.length) return 99; const last = Math.max(...ws); return new Set(ws.map(y => Math.round(y))).size > 1 ? ws.filter(y => Math.abs(y - last) < 2).length : 99; };
-  return {scrollWidth: document.documentElement.scrollWidth, tabs: getComputedStyle(tb).position, tab_count: document.querySelectorAll('.tab').length,
+  const cues = [...document.querySelectorAll('.item')].filter(i => i.querySelector('.cue')).map(i => { const q = i.querySelector('.cue'); const r = document.createRange(); r.selectNodeContents(q);
+    const rs = [...r.getClientRects()].filter(a => a.width > 0); const ch = i.querySelector('.chr'); const r3 = document.createRange(); r3.selectNodeContents(ch); const cr = [...r3.getClientRects()].filter(a => a.width > 0);
+    return {ref: i.dataset.ref, lines: new Set(rs.map(a => Math.round(a.top))).size, shares_line_with_description: Math.abs(rs[0].top - Math.max(...cr.map(a => a.top))) < 2, words: q.textContent.split(/[\s\u00a0]+/).filter(Boolean).length}; });
+  return {cues, scrollWidth: document.documentElement.scrollWidth, tabs: getComputedStyle(tb).position, tab_count: document.querySelectorAll('.tab').length,
     tabbar_scroll_vs_client: [tb.scrollWidth, tb.clientWidth], tab_rects: [...document.querySelectorAll('.tab')].map(t => { const r = t.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)]; }),
     active_label: (document.querySelector('.tab.active .lbl') || {}).innerText, active_bg: getComputedStyle(document.querySelector('.tab.active')).backgroundColor, inactive_bg: getComputedStyle(document.querySelector('.tab:not(.active)')).backgroundColor,
     min_last_line_tokens: Math.min(...[...document.querySelectorAll('.desc,.name,h2')].map(lastLine)),
