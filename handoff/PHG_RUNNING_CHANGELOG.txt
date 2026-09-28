@@ -1115,3 +1115,4 @@ tough scale (best).
   - Zero-proof at Iowa medians.
   Approved item names and prices are unchanged.
 2026-09-28 — K1v2 built on manifest v2: field carries the menu, 33 pours × 3 sizes, flights, glass/bottle, breweries; all gates pass (DOM diff 65 items, 0 text overlaps). The coordinator opened every page. 15-reviewer panel launched.
+2026-09-28 19:3xZ — the first K1v2 panel was killed by an API session limit (all 15 reviewers returned 429). Relaunched after the 18:00Z reset.
