@@ -1443,3 +1443,11 @@ Rob: "allow me to make edits to the menu continually as I talk to her."
   darker and then add a pineapple mocktail" -> dark theme + content edit; jump to page 1 with glow; undo; "replace
   the volcano bowl with an art deco drink" -> no paint; "no" -> next design; "rename the menu Magma Room";
   zero page errors. Not tested against live OpenAI (supabase.co blocked from this container) or a live mic.
+
+------------------------------------------------------------------------------
+PHG-20260928-DEPLOY-4927 | USER_PROMPT + DEPLOY | 2026-09-28 22:03Z
+Rob: "deploy."
+- Pushed index.html, netlify.toml, manifest.webmanifest and icons/harmony-{180,192,512}.png from the branch onto
+  origin/main as fa0d4c0 (builds 18.49.24-18.49.27: Action button + notes + home-screen app, venue menu lookup,
+  menus from the conversation, edit menus as you talk).
+- Netlify production deploy 6abae41de357e0000843cc94: state ready, published 2026-09-28T22:03:19Z, commit fa0d4c0.
