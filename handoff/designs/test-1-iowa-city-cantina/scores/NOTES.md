@@ -191,3 +191,12 @@ Recommendation: do not spend more rounds until Rob supplies the data or the art 
 - Next moves:
   - I6: turn the loam into a real soil band with strata or furrows in place of the root fan; tighten the wordmark lock-up; ease the leaves off column 2; add plate texture.
   - J6: cut the papel picado into the elevator itself.
+
+## Round 6 (I6, J6)
+| Direction | critic | content | accuracy | combined | vs prior |
+|---|---|---|---|---|---|
+| I6 Night Field (loam band, plate tone) | 71.8 | 77.0 | 64.0 | 70.9 | vs I5 73.8: -2.9 |
+| J6 Horizon (cut-paper elevator, wordmark on beam) | 74.2 | 75.4 | 62.8 | 70.8 | vs J5 70.4: +0.4 |
+
+- Noise: I5 and I6 differ only in the soil band, yet the critic score moved from 80.4 to 71.8. A single-critic screen is noisy by about ±5 (critic_consensus_not_truth).
+- Next: run the full 15-reviewer panel on I5, the best checkpoint, to get a reliable score before more design rounds.

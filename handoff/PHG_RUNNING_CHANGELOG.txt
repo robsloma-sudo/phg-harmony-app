@@ -1022,3 +1022,4 @@ tough scale (best).
   Asked Rob to add those hosts under the environment's Network access.
 - TEST-1 round 5: I5 scored 73.8 (critic 80.4), the new best of the KB rebuilds and just under the round-17 legacy best of 74.1. J5 scored 70.4.
   Reverted the taxonomy spirits wording: the nodes are only proposed, and "agave spirit" is the US class for non-tequila spirits.
+- TEST-1 round 6: I6 scored 70.9 and J6 70.8, so I5 (73.8) is still the best. Single-critic noise is about ±5, so I'm running the full 15-reviewer panel on I5.
