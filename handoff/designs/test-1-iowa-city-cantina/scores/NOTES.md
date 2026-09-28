@@ -161,3 +161,18 @@ Plateau diagnosis:
 1. The description criteria are stuck at 40-62, because 10 of the 14 source descriptions are name-echo sample text. The data comes from Rob.
 2. Critics repeat the same point: the Mexico × Iowa fusion is "written in proposal.md, not visible". Programmatic vector art is hitting its craft ceiling next to Rob's raster references (craft_quality).
 3. Column balancing by padding keeps creating dead islands.
+
+## Round 4 (I4, J4)
+| Direction | critic | content | accuracy | combined | vs prior |
+|---|---|---|---|---|---|
+| I4 Night Field | 71.2 | 76.8 | 66.0 | 71.3 | vs I2 72.1: -0.8 |
+| J4 Horizon | 69.4 | 79.8 | 64.6 | 71.3 | vs J3 69.8: +1.5 |
+
+All gates pass. The best checkpoint is still I2 at 72.1.
+
+For four rounds the KB-rebuild directions have sat in a 68-72 band, so they have plateaued. The caps are the same every round:
+1. Criterion 12 (description quality) auto-caps at 40-55. The spirit, beer and wine lines are name-echo sample text, and we need Rob's venue data to replace them.
+2. Criteria 15 and 16 (concept and art direction) sit at 56-64. Critics say the art is "a competent copy of the ref panel", that it has flat vector with no materiality, and that the fusion is not visible. Reaching the reference craft needs raster art, and media.canva.com is blocked.
+3. The remaining fixable issues are small: rag and orphans, margins, and column balance.
+
+Recommendation: do not spend more rounds until Rob supplies the data or the art access. Another round of this kind is expected to gain about 1 point.

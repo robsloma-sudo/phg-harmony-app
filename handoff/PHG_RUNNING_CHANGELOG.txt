@@ -1008,3 +1008,5 @@ tough scale (best).
   - The ceiling now is the missing venue data: beer ABV, wine region, spirit brand/age/pour.
 - TEST-1 KB rebuild round 3 scored: J3 69.8, G3 70.4, H3 68.3, I3 68.6. I3 regressed, so it reverts to I2 (72.1, still the best).
   The scores have plateaued at about 70. The blockers are Rob's venue data and raster-art access (media.canva.com).
+- TEST-1 round 4 scored I4 at 71.3 and J4 at 71.3 (J4 content 79.8, the best yet). The best overall is still I2 at 72.1.
+  Scores have held at 68-72 for four rounds. I've paused further rounds until Rob provides the venue data (ABV, region, brand, pour, Brut Rosé glass or bottle) and allows media.canva.com.
