@@ -417,3 +417,27 @@ Safety should-fix and minors:
 Timings this round: file 2 steps 1-2 6.8-8.7 s (one run 14.2 s); Step 3 13.5-16.7 s per 100; Step 4 16.1 s per 500 /
 11.8 s per 200; release gate 6.4 s; rollback 6.5-7.1 s; rollback check 0.3-0.4 s; monitor 2.9 s; function rollback
 20-25 ms.
+
+## Round 5 (2026-09-28, head f6f966e)
+### Spec Reviewer: 89.8. Average over 5 rounds = 80.9 (passes the >80 gate). Verdict: fix_and_resubmit.
+Criteria:
+- C1 93, C2 88, C3 92, C4 92, C5 94, C6 94, C7 92, C8 88, C9 91
+- C10 72, C11 84, C12 92, C13 91, C14 91, C15 93, C16 91, C17 88, C18 91
+
+BLOCKER B1:
+- The fix to the phg-expanded-data restaurant_menu_map function (order by is_current desc, then captured_at desc) has to ship at runbook step 0, before or together with file 2, not with cron 7.
+- Reason: Step 2 makes the newest menu non-current at about 348 venues, so the app map (index.html:28488) would keep showing the damaged menus.
+- Add a release-gate check that restaurant_menu_map returns the current menu, plus an informational row counting newest-not-current.
+
+Should-fix:
+1. List every deployed Edge function that reads menus and record whether it filters on is_current.
+2. The rollback check and roll-forward must cover staging rows superseded after release (duplicate_item_set_of_sibling) and candidates left in review.
+
+Minor:
+- Reword the file 1 header (a real page replaces an item page even with fewer drinks).
+- Simplify the redundant condition at line 347.
+- Normalise the exact-URL comparison.
+- Add lock_timeout to the extraction save.
+- Show the monitor churn growth separately.
+
+### Safety Reviewer: pending
