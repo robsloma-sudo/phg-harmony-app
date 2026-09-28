@@ -48,9 +48,9 @@ COLUMNS = [["sec_cocktails", "sec_beer"], ["sec_wine", "sec_spirits", "sec_cider
 
 VARIANTS = {
     # pre-subtraction: includes every device we were tempted by
-    "before": dict(rule=True, mark=True, subheads=True, beer_sub_inline=False, tagline=True, folio=True),
+    "before": dict(track=0, rule=True, mark=True, subheads=True, beer_sub_inline=False, tagline=True, folio=True),
     # after the subtraction pass (see proposal.md)
-    "after": dict(rule=False, mark=False, subheads=True, beer_sub_inline=True, tagline=True, folio=False),
+    "after": dict(track=-0.05, rule=False, mark=False, subheads=True, beer_sub_inline=True, tagline=True, folio=False),
 }
 
 
@@ -100,8 +100,9 @@ def build(variant="after"):
     mark = '<span class="mark"></span>' if v["mark"] else ""
     tagline = '<div class="tag">Good drinks<br>Good people</div>' if v["tagline"] else ""
     folio = '<div class="folio">Bar menu</div>' if v["folio"] else ""
+    TRACK = v.get("track", 0)
     return f"""<!doctype html><html><head><meta charset="utf-8"><title>Cantina · Bar menu</title><style>
-@font-face{{font-family:Mon;src:url({FONTS}/LeagueGothic-400.ttf)}}
+@font-face{{font-family:Mon;font-weight:700;src:url({FONTS}/Oswald-700.ttf)}}
 @font-face{{font-family:Lab;font-weight:500;src:url({FONTS}/Oswald-500.ttf)}}
 @font-face{{font-family:Nr;font-weight:400;src:url({FONTS}/Newsreader-400.ttf)}}
 @font-face{{font-family:Nr;font-weight:500;src:url({FONTS}/Newsreader-500.ttf)}}
@@ -112,7 +113,7 @@ html,body{{background:{PAPER}}}
   font-variant-numeric:lining-nums tabular-nums;-webkit-font-smoothing:antialiased}}
 /* the one gesture */
 svg.mon{{position:absolute;left:0;top:0;pointer-events:none}}
-svg.mon text{{font-family:Mon;fill:{INK}}}
+svg.mon text{{font-family:Mon;font-weight:700;fill:{INK}}}
 /* labels: tracked caps, 3 words or fewer */
 .lab,.tag,h2,h3,.h2sub,.folio{{font-family:Lab;font-weight:500;text-transform:uppercase}}
 .head{{position:absolute}}
@@ -138,15 +139,16 @@ h2+h3{{margin-top:0}}
 /* ---- letter: 816x1056 css px = 8.5x11 in; x3.125 = 2550x3300 ---- */
 body.letter .page{{width:816px;height:1056px;--u:15px;--gap:40px}}
 body.letter .head{{left:56px;top:56px}}
-body.letter .list{{left:56px;top:190px;grid-template-columns:262px 188px;column-gap:56px;align-items:start}}
+body.letter .list{{left:56px;top:190px;grid-template-columns:262px 170px;column-gap:36px;align-items:start}}
 body.letter .tag{{left:56px;bottom:56px}}
-body.letter .folio{{left:56px;top:1000px}}
+body.letter .folio{{left:306px;bottom:56px}}
 
 /* ---- phone: 390 css px x3 = 1170, one column, monument turns horizontal at the top ---- */
 body.phone .page{{width:390px;--u:14px;--gap:36px;padding:0 28px 40px}}
 body.phone .head{{position:relative;padding-top:18px}}
 body.phone .list{{position:relative;margin-top:34px;grid-template-columns:1fr;row-gap:var(--gap)}}
-body.phone .sec+.sec{{margin-top:0}}
+body.phone .sec+.sec{{margin-top:var(--gap)}}
+body.phone .it{{max-width:300px}}
 body.phone .rule{{margin-top:18px}}
 body.phone .tag{{position:relative;margin-top:44px}}
 body.phone .folio{{display:none}}
@@ -166,34 +168,39 @@ async function layout(){{
   const page=document.querySelector('.page'), phone=document.body.classList.contains('phone');
   const svg=document.querySelector('svg.mon'), t=document.getElementById('monw');
   const c=document.createElement('canvas').getContext('2d');
-  c.font='100px Mon'; const m=c.measureText('CANTINA');
+  c.font='700 100px Mon'; const m=c.measureText('CANTINA');
   const capR=m.actualBoundingBoxAscent/100, natR=m.width/100;
   const W=page.offsetWidth;
   if(!phone){{
     const H=page.offsetHeight;
-    // monument: full page height + 1.2% overshoot at each end, cap band cropped 14% by the right trim
-    const L=H*1.024, F=L/natR, cap=capR*F, crop=0.14;
+    // monument: Oswald 700 at its natural set width runs the full page height (+1.2% overshoot each end);
+    // letter tops cropped 7% by the right trim (the T crossbar stays readable)
+    const L=H*1.024, crop=0.07, TR={TRACK}, F=L/(natR+6*TR), cap=capR*F;
     const xb=W-cap*(1-crop);
     svg.setAttribute('width',W); svg.setAttribute('height',H);
     t.setAttribute('font-size',F.toFixed(2));
+    t.setAttribute('textLength',L.toFixed(2)); t.setAttribute('lengthAdjust','spacing');
     t.setAttribute('transform',`translate(${{xb.toFixed(2)}},${{(-H*0.012).toFixed(2)}}) rotate(90)`);
     t.setAttribute('x',0); t.setAttribute('y',0);
     window.__mon={{font_size:F,cap_height:cap,baseline_x:xb,visible_left:xb,visible_width:W-xb,crop_pct:crop*100,
-                  top:-H*0.012,bottom:H*1.012}};
-    // fill: stretch the section gap so the longer column ends on the tagline's cap line minus one band
-    const list=document.querySelector('.list'), tag=document.querySelector('.tag');
-    const target=(tag?tag.getBoundingClientRect().top:H-56)-72;
-    let gap=40; page.style.setProperty('--gap',gap+'px');
-    for(let k=0;k<4;k++){{
+                  top:-H*0.012,bottom:H*1.012,text_length:L,natural_length:natR*F,tracking_em:TR}};
+    // fill: one spacing unit u drives item spacing and section gaps (gap = 2.6u) so the longer column
+    // ends one band above the tagline; spacing is scaled, never ornament added
+    const tag=document.querySelector('.tag');
+    const target=(tag?tag.getBoundingClientRect().top:H-56)-64;
+    let u=15;
+    const setU=x=>{{page.style.setProperty('--u',x.toFixed(2)+'px');page.style.setProperty('--gap',(2.6*x).toFixed(2)+'px')}};
+    for(let k=0;k<6;k++){{
+      setU(u);
       const bottom=Math.max(...[...document.querySelectorAll('.col')].map(e=>e.getBoundingClientRect().bottom));
-      const nGaps=Math.max(...[...document.querySelectorAll('.col')].map(e=>e.querySelectorAll('.sec').length-1));
-      gap=Math.max(28,Math.min(96,gap+(target-bottom)/Math.max(1,nGaps)));
-      page.style.setProperty('--gap',gap.toFixed(2)+'px');
+      const slots=Math.max(...[...document.querySelectorAll('.col')].map(e=>e.querySelectorAll('.it').length+2.6*(e.querySelectorAll('.sec').length-1)+e.querySelectorAll('h3').length*1.95));
+      u=Math.max(12,Math.min(26,u+(target-bottom)/slots));
     }}
+    setU(u); const gap=2.6*u; window.__u=u;
     window.__gap=gap;
   }} else {{
-    // phone: the same word horizontal, spanning the width, cap tops cropped 14% by the top trim
-    const F=(W*1.035)/natR, cap=capR*F, crop=0.14, yb=cap*(1-crop);
+    // phone: the same word horizontal, spanning the width, cap tops cropped 6% by the top trim
+    const F=(W*1.035)/natR, cap=capR*F, crop=0.06, yb=cap*(1-crop);
     const hb=yb+Math.max(0,m.actualBoundingBoxDescent/100*F);
     svg.setAttribute('width',W); svg.setAttribute('height',hb+4);
     svg.style.position='relative'; svg.style.display='block'; svg.style.marginLeft='-28px';
@@ -209,7 +216,7 @@ layout();
 
 GEOM_JS = """() => {
   const R=e=>{const b=e.getBoundingClientRect();return [+b.left.toFixed(1),+b.top.toFixed(1),+b.right.toFixed(1),+b.bottom.toFixed(1)]};
-  const out={page:R(document.querySelector('.page')),monument:window.__mon,gap:window.__gap||null,
+  const out={page:R(document.querySelector('.page')),monument:window.__mon,gap:window.__gap||null,u:window.__u||null,
     head:R(document.querySelector('.head')),tag:document.querySelector('.tag')?R(document.querySelector('.tag')):null,
     columns:[...document.querySelectorAll('.col')].map(R),sections:{},items:{},problems:[]};
   document.querySelectorAll('.sec').forEach(s=>{out.sections[s.dataset.id]=R(s.querySelector('h2'))});

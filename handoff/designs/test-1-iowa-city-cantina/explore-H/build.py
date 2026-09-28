@@ -157,21 +157,21 @@ h3{{font-family:Gd;font-weight:500;color:{INK2};text-transform:uppercase;letter-
 
 /* ================= LETTER 816 x 1056 css px (= 8.5 x 11 in; x3.125 = 2550 x 3300) ============ */
 body.letter .page{{width:816px;height:1056px}}
-body.letter .disc{{width:320px;height:320px;left:512px;top:-34px}}           /* centre 672,126  r 160 */
+body.letter .disc{{width:420px;height:420px;left:625px;top:-110px}}          /* centre 835,100  r 210 */
 body.letter .terrace{{right:-12px;bottom:-12px}}
-body.letter .wm span{{left:58px;top:186px;font-size:124px;letter-spacing:.075em}}
-body.letter .wm.knock{{clip-path:circle(160px at 672px 126px)}}
-body.letter .sub{{left:64px;top:334px;font-size:13px;letter-spacing:.3em}}
-body.letter .col{{top:410px;width:300px;--nw:206px}}
+body.letter .wm span{{left:58px;top:126px;font-size:124px;letter-spacing:.075em}}
+body.letter .wm.knock{{clip-path:circle(210px at 835px 100px)}}
+body.letter .sub{{left:64px;top:276px;font-size:13px;letter-spacing:.3em}}
+body.letter .col{{top:372px;width:300px;--nw:214px}}
 body.letter .col1{{left:64px}}
 body.letter .col2{{left:452px}}
-body.letter section+section{{margin-top:34px}}
-body.letter h2{{font-size:14px;margin-bottom:12px}}
-body.letter h3{{font-size:11px;margin:12px 0 6px}}
+body.letter section+section{{margin-top:42px}}
+body.letter h2{{font-size:14.5px;margin-bottom:14px}}
+body.letter h3{{font-size:11.5px;margin:14px 0 7px}}
 body.letter h2+h3{{margin-top:0}}
-body.letter .it{{margin-bottom:11px}}
-body.letter .n,body.letter .p{{font-size:16px;line-height:1.2}}
-body.letter .d{{font-size:13px;line-height:1.3;margin-top:1px}}
+body.letter .it{{margin-bottom:13px}}
+body.letter .n,body.letter .p{{font-size:17px;line-height:1.2}}
+body.letter .d{{font-size:13.5px;line-height:1.3;margin-top:1px}}
 body.letter .tag{{left:64px;bottom:62px;font-size:11.5px;line-height:1.9}}
 
 /* ================= PHONE 390 css px wide (x3 = 1170) - recomposed to one column ============ */
@@ -181,7 +181,7 @@ body.phone .terrace{{right:-12px;bottom:-12px}}
 body.phone .wm span{{left:26px;top:104px;font-size:60px;letter-spacing:.07em}}
 body.phone .wm.knock{{clip-path:circle(110px at 346px 66px)}}
 body.phone .sub{{left:28px;top:180px;font-size:11px;letter-spacing:.24em}}
-body.phone .col{{position:static;width:auto;--nw:calc(100% - 44px)}}
+body.phone .col{{position:static;width:auto;--nw:246px}}
 body.phone .cols{{position:absolute;left:28px;right:28px;top:232px}}
 body.phone .col+.col{{margin-top:34px}}
 body.phone section+section{{margin-top:34px}}
@@ -206,7 +206,7 @@ body.phone .tag{{left:28px;bottom:40px;font-size:11px;line-height:1.9}}
 </div></body></html>"""
 
 
-TERRACES = {"letter": terrace_svg(7, 48, 26), "phone": terrace_svg(6, 30, 18)}
+TERRACES = {"letter": terrace_svg(6, 42, 19), "phone": terrace_svg(6, 30, 18)}
 
 CONTRAST_JS = """() => { const out=[]; const walker=document.createTreeWalker(document.querySelector('.page'),NodeFilter.SHOW_TEXT);
   let n; while(n=walker.nextNode()){ if(!n.textContent.trim()) continue; const el=n.parentElement;
@@ -272,7 +272,7 @@ def main():
             pg.wait_for_timeout(400)
             if cls == "phone":  # page height = content + room for tagline and terrace
                 bottom = pg.evaluate("() => document.querySelector('.cols').getBoundingClientRect().bottom")
-                pg.evaluate(f"() => document.querySelector('.page').style.setProperty('--ph', '{int(bottom + 190)}px')")
+                pg.evaluate(f"() => document.querySelector('.page').style.setProperty('--ph', '{int(bottom + 160)}px')")
             layout[name] = pg.evaluate(GEOM_JS)
             pg.screenshot(path=str(HERE / name), full_page=True,
                           clip=None if cls == "phone" else {"x": 0, "y": 0, "width": 816, "height": 1056})

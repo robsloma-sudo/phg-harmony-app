@@ -1,0 +1,145 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Cantina · Bar menu</title><style>
+@font-face{font-family:Mon;font-weight:700;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/explore-G/fonts/Oswald-700.ttf)}
+@font-face{font-family:Lab;font-weight:500;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/explore-G/fonts/Oswald-500.ttf)}
+@font-face{font-family:Nr;font-weight:400;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/explore-G/fonts/Newsreader-400.ttf)}
+@font-face{font-family:Nr;font-weight:500;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/explore-G/fonts/Newsreader-500.ttf)}
+@font-face{font-family:Nr;font-weight:400;font-style:italic;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/explore-G/fonts/Newsreader-400i.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#EFE7D8}
+.page{position:relative;overflow:hidden;background:#EFE7D8;color:#1B1815;font-family:Nr;
+  font-variant-numeric:lining-nums tabular-nums;-webkit-font-smoothing:antialiased}
+/* the one gesture */
+svg.mon{position:absolute;left:0;top:0;pointer-events:none}
+svg.mon text{font-family:Mon;font-weight:700;fill:#1B1815}
+/* labels: tracked caps, 3 words or fewer */
+.lab,.tag,h2,h3,.h2sub,.folio{font-family:Lab;font-weight:500;text-transform:uppercase}
+.head{position:absolute}
+.lab{font-size:12px;letter-spacing:.34em;line-height:1.75;color:#1B1815}
+.lab .l2{color:#4D453D}
+.mark{display:inline-block;width:7px;height:7px;border-radius:50%;background:#9B2D1F;margin-left:.6em;vertical-align:1px}
+.rule{height:1px;background:#1B1815;opacity:.55;margin-top:22px;width:96px}
+.list{position:absolute;display:grid}
+h2{font-size:15px;letter-spacing:.3em;color:#9B2D1F;line-height:1;margin:0 0 calc(var(--u)*1.25)}
+.h2sub{font-size:12px;letter-spacing:.3em;color:#4D453D;margin-left:1.1em}
+h3{font-size:12px;letter-spacing:.3em;color:#4D453D;line-height:1;margin:calc(var(--u)*1.2) 0 calc(var(--u)*.75)}
+h2+h3{margin-top:0}
+.sec+.sec{margin-top:var(--gap)}
+.it{margin-bottom:var(--u)}
+.it:last-child{margin-bottom:0}
+.row{display:flex;align-items:baseline;justify-content:space-between;gap:14px}
+.nm{font-size:18px;font-weight:500;line-height:1.2;letter-spacing:.005em}
+.pr{font-size:18px;font-weight:500;line-height:1.2;font-variant-numeric:lining-nums tabular-nums}
+.ds{font-size:13px;font-style:italic;line-height:1.3;color:#4D453D;margin-top:2px;white-space:nowrap}
+.tag{position:absolute;font-size:12px;letter-spacing:.34em;line-height:1.75;color:#4D453D}
+.folio{position:absolute;font-size:12px;letter-spacing:.3em;color:#4D453D}
+
+/* ---- letter: 816x1056 css px = 8.5x11 in; x3.125 = 2550x3300 ---- */
+body.letter .page{width:816px;height:1056px;--u:15px;--gap:40px}
+body.letter .head{left:56px;top:56px}
+body.letter .list{left:56px;top:190px;grid-template-columns:262px 170px;column-gap:36px;align-items:start}
+body.letter .tag{left:56px;bottom:56px}
+body.letter .folio{left:306px;bottom:56px}
+
+/* ---- phone: 390 css px x3 = 1170, one column, monument turns horizontal at the top ---- */
+body.phone .page{width:390px;--u:14px;--gap:36px;padding:0 28px 40px}
+body.phone .head{position:relative;padding-top:18px}
+body.phone .list{position:relative;margin-top:34px;grid-template-columns:1fr;row-gap:var(--gap)}
+body.phone .sec+.sec{margin-top:var(--gap)}
+body.phone .it{max-width:300px}
+body.phone .rule{margin-top:18px}
+body.phone .tag{position:relative;margin-top:44px}
+body.phone .folio{display:none}
+body.phone .ds{white-space:normal}
+</style></head>
+<body class="letter"><div class="page">
+<svg class="mon" aria-label="Cantina"><text id="monw">CANTINA</text></svg>
+<div class="head"><div class="lab">&amp; cocktail bar<br><span class="l2">Iowa City, Iowa</span></div></div>
+<div class="list">
+<div class="col col0"><section class="sec" data-id="sec_cocktails">
+<h2>Cocktails</h2>
+<h3>Classics</h3>
+<div class="it" data-id="beta_manhattan"><div class="row"><span class="nm">Manhattan</span><span class="pr">15</span></div><div class="ds">Rye whiskey · sweet vermouth · cocktail cherry</div></div>
+<div class="it" data-id="beta_margarita"><div class="row"><span class="nm">Margarita</span><span class="pr">15</span></div><div class="ds">Tequila blanco · lime · orange liqueur · agave</div></div>
+<h3>House Originals</h3>
+<div class="it" data-id="beta_daiquiri"><div class="row"><span class="nm">House Daiquiri</span><span class="pr">14</span></div><div class="ds">White rum · lime · demerara syrup</div></div>
+<div class="it" data-id="beta_old_fashioned"><div class="row"><span class="nm">Brown Butter Old Fashioned</span><span class="pr">16</span></div><div class="ds">Brown butter-washed bourbon · demerara · bitters</div></div>
+</section>
+<section class="sec" data-id="sec_beer">
+<h2>Beer<span class="h2sub">Draft</span></h2>
+<div class="it" data-id="beta_czech_pilsner"><div class="row"><span class="nm">Czech Pilsner</span><span class="pr">7</span></div><div class="ds">Crisp pale lager</div></div>
+<div class="it" data-id="beta_dry_hopped_ipa"><div class="row"><span class="nm">Dry-Hopped IPA</span><span class="pr">8</span></div><div class="ds">Hop-forward</div></div>
+<div class="it" data-id="beta_amber_lager"><div class="row"><span class="nm">Amber Lager</span><span class="pr">7</span></div><div class="ds">Toasty</div></div>
+</section></div>
+<div class="col col1"><section class="sec" data-id="sec_wine">
+<h2>Wine</h2>
+<h3>By the Glass</h3>
+<div class="it" data-id="beta_malbec"><div class="row"><span class="nm">Malbec</span><span class="pr">12</span></div><div class="ds">Dry red</div></div>
+<div class="it" data-id="beta_pinot_grigio"><div class="row"><span class="nm">Pinot Grigio</span><span class="pr">11</span></div><div class="ds">Dry white</div></div>
+<h3>Sparkling</h3>
+<div class="it" data-id="beta_brut_rose"><div class="row"><span class="nm">Brut Rosé</span><span class="pr">13</span></div></div>
+</section>
+<section class="sec" data-id="sec_spirits">
+<h2>Spirits</h2>
+<h3>Agave</h3>
+<div class="it" data-id="beta_blanco_tequila"><div class="row"><span class="nm">Blanco Tequila</span><span class="pr">12</span></div></div>
+<div class="it" data-id="beta_anejo_tequila"><div class="row"><span class="nm">Añejo Tequila</span><span class="pr">16</span></div></div>
+<h3>Brandy</h3>
+<div class="it" data-id="beta_cognac_vsop"><div class="row"><span class="nm">Cognac VSOP</span><span class="pr">18</span></div></div>
+</section>
+<section class="sec" data-id="sec_cider">
+<h2>Cider</h2>
+<div class="it" data-id="beta_dry_cider"><div class="row"><span class="nm">Dry Cider</span><span class="pr">8</span></div><div class="ds">Sparkling</div></div>
+</section></div>
+</div>
+<div class="tag">Good drinks<br>Good people</div>
+</div>
+<script>
+async function layout(){
+  await document.fonts.ready;
+  const page=document.querySelector('.page'), phone=document.body.classList.contains('phone');
+  const svg=document.querySelector('svg.mon'), t=document.getElementById('monw');
+  const c=document.createElement('canvas').getContext('2d');
+  c.font='700 100px Mon'; const m=c.measureText('CANTINA');
+  const capR=m.actualBoundingBoxAscent/100, natR=m.width/100;
+  const W=page.offsetWidth;
+  if(!phone){
+    const H=page.offsetHeight;
+    // monument: Oswald 700 at its natural set width runs the full page height (+1.2% overshoot each end);
+    // letter tops cropped 7% by the right trim (the T crossbar stays readable)
+    const L=H*1.024, crop=0.07, TR=-0.05, F=L/(natR+6*TR), cap=capR*F;
+    const xb=W-cap*(1-crop);
+    svg.setAttribute('width',W); svg.setAttribute('height',H);
+    t.setAttribute('font-size',F.toFixed(2));
+    t.setAttribute('textLength',L.toFixed(2)); t.setAttribute('lengthAdjust','spacing');
+    t.setAttribute('transform',`translate(${xb.toFixed(2)},${(-H*0.012).toFixed(2)}) rotate(90)`);
+    t.setAttribute('x',0); t.setAttribute('y',0);
+    window.__mon={font_size:F,cap_height:cap,baseline_x:xb,visible_left:xb,visible_width:W-xb,crop_pct:crop*100,
+                  top:-H*0.012,bottom:H*1.012,text_length:L,natural_length:natR*F,tracking_em:TR};
+    // fill: one spacing unit u drives item spacing and section gaps (gap = 2.6u) so the longer column
+    // ends one band above the tagline; spacing is scaled, never ornament added
+    const tag=document.querySelector('.tag');
+    const target=(tag?tag.getBoundingClientRect().top:H-56)-64;
+    let u=15;
+    const setU=x=>{page.style.setProperty('--u',x.toFixed(2)+'px');page.style.setProperty('--gap',(2.6*x).toFixed(2)+'px')};
+    for(let k=0;k<6;k++){
+      setU(u);
+      const bottom=Math.max(...[...document.querySelectorAll('.col')].map(e=>e.getBoundingClientRect().bottom));
+      const slots=Math.max(...[...document.querySelectorAll('.col')].map(e=>e.querySelectorAll('.it').length+2.6*(e.querySelectorAll('.sec').length-1)+e.querySelectorAll('h3').length*1.95));
+      u=Math.max(12,Math.min(26,u+(target-bottom)/slots));
+    }
+    setU(u); const gap=2.6*u; window.__u=u;
+    window.__gap=gap;
+  } else {
+    // phone: the same word horizontal, spanning the width, cap tops cropped 6% by the top trim
+    const F=(W*1.035)/natR, cap=capR*F, crop=0.06, yb=cap*(1-crop);
+    const hb=yb+Math.max(0,m.actualBoundingBoxDescent/100*F);
+    svg.setAttribute('width',W); svg.setAttribute('height',hb+4);
+    svg.style.position='relative'; svg.style.display='block'; svg.style.marginLeft='-28px';
+    t.setAttribute('font-size',F.toFixed(2)); t.setAttribute('x',(-W*0.0175).toFixed(2)); t.setAttribute('y',yb.toFixed(2));
+    window.__mon={font_size:F,cap_height:cap,baseline_y:yb,crop_pct:crop*100};
+  }
+  window.__ready=true;
+}
+layout();
+</script>
+</body></html>

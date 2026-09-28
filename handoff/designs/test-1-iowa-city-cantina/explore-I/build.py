@@ -139,7 +139,19 @@ def leaf_path(bx, by, ang, L, W, bend, n=90):
     outline = "M" + " L".join(f"{x:.2f},{y:.2f}" for x, y in pts) + " Z"
     k = int(n * 0.86)
     rib = "M" + " L".join(f"{x:.2f},{y:.2f}" for x, y in cen[int(n * 0.06):k])
-    return outline, rib
+    # engraving veins: lines at fixed fractions of the half-width, so they converge on the tip
+    veins = []
+    for u, t1 in VEINS:
+        pts = []
+        for i in range(int(n * 0.10), int(n * t1)):
+            cx, cy = cen[i]; lx, ly = left[i]
+            pts.append((cx + (lx - cx) * u, cy + (ly - cy) * u))
+        if pts:
+            veins.append("M" + " L".join(f"{x:.2f},{y:.2f}" for x, y in pts))
+    return outline, rib + " " + " ".join(veins)
+
+
+VEINS = json.loads(os.environ.get('AGAVE_VEINS', '[]'))   # (fraction of half-width, end t); negative = right side
 
 
 # rings from back (tall, upright) to front (short, splayed); drawn in that order, each leaf
@@ -148,8 +160,8 @@ RINGS = [
     # (angles, length factors, width factor, bend) -- each ring sits half a step off the ring behind it
     ([-20, 0, 20], [0.93, 1.00, 0.93], 0.13, 0.04),
     ([-50, -30, -10, 10, 30, 50], [0.78, 0.86, 0.92, 0.92, 0.86, 0.78], 0.145, 0.08),
-    ([-68, -45, -22, 0, 22, 45, 68], [0.62, 0.69, 0.74, 0.76, 0.74, 0.69, 0.62], 0.16, 0.12),
-    ([-34, -11, 11, 34], [0.54, 0.57, 0.57, 0.54], 0.18, 0.15),
+    ([-66, -44, -22, 0, 22, 44, 66], [0.64, 0.70, 0.74, 0.76, 0.74, 0.70, 0.64], 0.16, 0.08),
+    ([-32, -11, 11, 32], [0.54, 0.57, 0.57, 0.54], 0.18, 0.07),
 ]
 
 
@@ -178,11 +190,11 @@ GUT = PW - 2 * M - 2 * COLW  # 72
 def build():
     left = "\n".join(section_html(s) for s in LEFT)
     right = "\n".join(section_html(s) for s in RIGHT)
-    agave_letter = agave_svg(PW, PH, bx=664, by=1110, L=380, stroke=1.7, ribs=True)
-    agave_phone = agave_svg(390, 330, bx=300, by=372, L=300, stroke=1.4, ribs=True, css_class="agave-phone")
+    agave_letter = agave_svg(PW, PH, bx=664, by=1122, L=388, stroke=float(os.environ.get('AGAVE_STROKE', '1.7')), ribs=os.environ.get('AGAVE_RIBS', '1') == '1')
+    agave_phone = agave_svg(390, 300, bx=300, by=342, L=292, stroke=1.4, ribs=True, css_class="agave-phone")
     frame = '<div class="frame"></div>' if BEFORE else ""
     rule = '<div class="wmrule"></div>' if BEFORE else ""
-    sig = '<div class="sig">Good drinks<br>Good people</div>'
+    sig = '' if '--nosig' in sys.argv else '<div class="sig">Good drinks<br>Good people</div>'
     ff = "".join(
         f"@font-face{{font-family:{fam};font-weight:{w};src:url({FONTS}/{file})}}"
         for fam, w, file in [("CG", 500, "CormorantGaramond-500.ttf"), ("SS", 400, "SourceSerif4-400.ttf"),
@@ -217,13 +229,13 @@ h2+h3{{margin-top:0}}
 /* phone: recomposed to one column, agave closes the page */
 body.phone .page{{width:390px;min-height:100px;padding:0 0 0}}
 body.phone .agave,body.phone .frame{{display:none}}
-body.phone .agave-phone{{display:block;margin-top:34px}}
+body.phone .agave-phone{{display:block;margin-top:8px}}
 body.phone header{{position:static;padding-top:48px}}
 body.phone .wm{{font-size:50px;letter-spacing:.3em;padding-left:.3em}}
 body.phone .sub{{font-size:11px}} body.phone .sub.a{{margin-top:16px}}
 body.phone .cols{{position:static;display:block;padding:44px 34px 0}}
 body.phone .col+.col{{margin-top:42px}}
-body.phone .nm,body.phone .pr{{font-size:18px}} body.phone .ds{{font-size:14px}}
+body.phone .nm,body.phone .pr{{font-size:18px}} body.phone .ds{{font-size:13.5px}}
 body.phone .sig{{position:static;padding:40px 34px 0}}
 """
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -294,15 +306,15 @@ def main():
     # integrity: every draft item present with its exact price
     for it in all_items():
         assert f'data-id="{it["id"]}"' in doc and f'<span class="pr">{price(it)}</span>' in doc, it["id"]
-    tag = "-before" if BEFORE else ""
-    if not BEFORE:
+    tag = "-before" if BEFORE else ("-nosig" if "--nosig" in sys.argv else os.environ.get("TAG", ""))
+    if not tag:
         (HERE / "menu.html").write_text(doc.replace("{BODYCLASS}", "letter"))
     report = {"variant": VARIANT}
     exe = next(glob.iglob("/opt/pw-browsers/chromium-*/chrome-linux*/chrome"))
     with sync_playwright() as p:
         br = p.chromium.launch(executable_path=exe)
         jobs = [(f"preview-letter{tag}.png", "letter", PW, PH, 3.125)]
-        if not BEFORE:
+        if not tag:
             jobs.append(("preview-phone.png", "phone", 390, 800, 3))
         for name, cls, w, h, dsf in jobs:
             pg = br.new_page(viewport={"width": w, "height": h}, device_scale_factor=dsf)

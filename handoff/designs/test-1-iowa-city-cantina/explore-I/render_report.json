@@ -735,7 +735,7 @@
   "geometry_css_px": {
    "page": [
     390,
-    1710.65625
+    1648.25
    ],
    "header": [
     0,
@@ -754,20 +754,20 @@
      34,
      190,
      356,
-     810
+     804
     ],
     [
      34,
-     852,
+     846,
      356,
-     1265
+     1258
     ]
    ],
    "sig": [
     0,
-    1265,
+    1258,
     390,
-    1347
+    1340
    ]
   },
   "text": [
@@ -865,14 +865,14 @@
    {
     "text": "Rye whiskey · sweet vermouth · cocktail ",
     "role": "ds",
-    "font_px_css": "14px",
+    "font_px_css": "13.5px",
     "min_contrast": 8.7,
     "overflow": false,
     "box_css": [
      34,
      264,
-     347,
-     284
+     336,
+     282
     ]
    },
    {
@@ -883,9 +883,9 @@
     "overflow": false,
     "box_css": [
      34,
-     293,
+     292,
      119,
-     318
+     317
     ]
    },
    {
@@ -896,22 +896,22 @@
     "overflow": false,
     "box_css": [
      337,
-     293,
+     292,
      356,
-     318
+     317
     ]
    },
    {
     "text": "Tequila blanco · lime · orange liqueur ·",
     "role": "ds",
-    "font_px_css": "14px",
+    "font_px_css": "13.5px",
     "min_contrast": 8.7,
     "overflow": false,
     "box_css": [
      34,
      318,
-     330,
-     338
+     319,
+     337
     ]
    },
    {
@@ -922,9 +922,9 @@
     "overflow": false,
     "box_css": [
      34,
-     351,
+     350,
      172,
-     365
+     364
     ]
    },
    {
@@ -935,9 +935,9 @@
     "overflow": false,
     "box_css": [
      34,
-     371,
+     370,
      164,
-     396
+     395
     ]
    },
    {
@@ -948,22 +948,22 @@
     "overflow": false,
     "box_css": [
      337,
-     371,
+     370,
      356,
-     396
+     395
     ]
    },
    {
     "text": "White rum · lime · demerara syrup",
     "role": "ds",
-    "font_px_css": "14px",
+    "font_px_css": "13.5px",
     "min_contrast": 8.7,
     "overflow": false,
     "box_css": [
      34,
-     397,
-     264,
-     417
+     396,
+     256,
+     415
     ]
    },
    {
@@ -974,9 +974,9 @@
     "overflow": false,
     "box_css": [
      34,
-     426,
+     424,
      277,
-     451
+     449
     ]
    },
    {
@@ -987,22 +987,22 @@
     "overflow": false,
     "box_css": [
      337,
-     426,
+     424,
      356,
-     451
+     449
     ]
    },
    {
     "text": "Brown butter-washed bourbon · demerara ·",
     "role": "ds",
-    "font_px_css": "14px",
+    "font_px_css": "13.5px",
     "min_contrast": 8.7,
-    "overflow": true,
+    "overflow": false,
     "box_css": [
      34,
-     452,
-     368,
-     472
+     450,
+     356,
+     469
     ]
    },
    {
@@ -1013,9 +1013,9 @@
     "overflow": false,
     "box_css": [
      34,
-     511,
+     508,
      157,
-     529
+     526
     ]
    },
    {
@@ -1026,9 +1026,9 @@
     "overflow": false,
     "box_css": [
      34,
-     541,
+     538,
      151,
-     566
+     563
     ]
    },
    {
@@ -1039,22 +1039,22 @@
     "overflow": false,
     "box_css": [
      346,
-     541,
+     538,
      356,
-     566
+     563
     ]
    },
    {
     "text": "Crisp pale lager",
     "role": "ds",
-    "font_px_css": "14px",
+    "font_px_css": "13.5px",
     "min_contrast": 8.7,
     "overflow": false,
     "box_css": [
      34,
-     566,
-     138,
-     586
+     564,
+     134,
+     583
     ]
    },
    {
@@ -1065,9 +1065,9 @@
     "overflow": false,
     "box_css": [
      34,
-     595,
+     592,
      174,
-     620
+     617
     ]
    },
    {
@@ -1078,22 +1078,22 @@
     "overflow": false,
     "box_css": [
      346,
-     595,
+     592,
      356,
-     620
+     617
     ]
    },
    {
     "text": "Hop-forward",
     "role": "ds",
-    "font_px_css": "14px",
+    "font_px_css": "13.5px",
     "min_contrast": 8.7,
     "overflow": false,
     "box_css": [
      34,
-     621,
-     120,
-     641
+     618,
+     117,
+     637
     ]
    },
    {
@@ -1104,9 +1104,9 @@
     "overflow": false,
     "box_css": [
      34,
-     650,
+     646,
      146,
-     675
+     671
     ]
    },
    {
@@ -1117,22 +1117,22 @@
     "overflow": false,
     "box_css": [
      346,
-     650,
+     646,
      356,
-     675
+     671
     ]
    },
    {
     "text": "Toasty",
     "role": "ds",
-    "font_px_css": "14px",
+    "font_px_css": "13.5px",
     "min_contrast": 8.7,
     "overflow": false,
     "box_css": [
      34,
-     676,
-     78,
-     696
+     672,
+     76,
+     691
     ]
    },
    {
@@ -1143,9 +1143,9 @@
     "overflow": false,
     "box_css": [
      34,
-     735,
+     730,
      96,
-     753
+     748
     ]
    },
    {
@@ -1156,9 +1156,9 @@
     "overflow": false,
     "box_css": [
      34,
-     765,
+     760,
      118,
-     790
+     785
     ]
    },
    {
@@ -1169,22 +1169,22 @@
     "overflow": false,
     "box_css": [
      346,
-     765,
+     760,
      356,
-     790
+     785
     ]
    },
    {
     "text": "Sparkling",
     "role": "ds",
-    "font_px_css": "14px",
+    "font_px_css": "13.5px",
     "min_contrast": 8.7,
     "overflow": false,
     "box_css": [
      34,
-     790,
-     98,
-     810
+     786,
+     96,
+     805
     ]
    },
    {
@@ -1195,9 +1195,9 @@
     "overflow": false,
     "box_css": [
      34,
-     850,
+     844,
      87,
-     868
+     862
     ]
    },
    {
@@ -1208,9 +1208,9 @@
     "overflow": false,
     "box_css": [
      34,
-     880,
+     874,
      142,
-     894
+     888
     ]
    },
    {
@@ -1221,9 +1221,9 @@
     "overflow": false,
     "box_css": [
      34,
-     900,
+     894,
      97,
-     924
+     919
     ]
    },
    {
@@ -1234,22 +1234,22 @@
     "overflow": false,
     "box_css": [
      337,
-     900,
+     894,
      356,
-     924
+     919
     ]
    },
    {
     "text": "Dry red",
     "role": "ds",
-    "font_px_css": "14px",
+    "font_px_css": "13.5px",
     "min_contrast": 8.7,
     "overflow": false,
     "box_css": [
      34,
-     925,
-     85,
-     945
+     920,
+     83,
+     939
     ]
    },
    {
@@ -1260,9 +1260,9 @@
     "overflow": false,
     "box_css": [
      34,
-     954,
+     948,
      138,
-     979
+     973
     ]
    },
    {
@@ -1273,22 +1273,22 @@
     "overflow": false,
     "box_css": [
      337,
-     954,
+     948,
      356,
-     979
+     973
     ]
    },
    {
     "text": "Dry white",
     "role": "ds",
-    "font_px_css": "14px",
+    "font_px_css": "13.5px",
     "min_contrast": 8.7,
     "overflow": false,
     "box_css": [
      34,
-     980,
-     100,
-     1000
+     974,
+     98,
+     993
     ]
    },
    {
@@ -1299,9 +1299,9 @@
     "overflow": false,
     "box_css": [
      34,
-     1013,
+     1006,
      117,
-     1027
+     1020
     ]
    },
    {
@@ -1312,9 +1312,9 @@
     "overflow": false,
     "box_css": [
      34,
-     1033,
+     1026,
      117,
-     1058
+     1051
     ]
    },
    {
@@ -1325,9 +1325,9 @@
     "overflow": false,
     "box_css": [
      337,
-     1033,
+     1026,
      356,
-     1058
+     1051
     ]
    },
    {
@@ -1338,9 +1338,9 @@
     "overflow": false,
     "box_css": [
      34,
-     1097,
+     1091,
      113,
-     1115
+     1109
     ]
    },
    {
@@ -1351,9 +1351,9 @@
     "overflow": false,
     "box_css": [
      34,
-     1127,
+     1121,
      84,
-     1141
+     1135
     ]
    },
    {
@@ -1364,9 +1364,9 @@
     "overflow": false,
     "box_css": [
      34,
-     1147,
+     1141,
      161,
-     1172
+     1166
     ]
    },
    {
@@ -1377,9 +1377,9 @@
     "overflow": false,
     "box_css": [
      337,
-     1147,
+     1141,
      356,
-     1172
+     1166
     ]
    },
    {
@@ -1390,9 +1390,9 @@
     "overflow": false,
     "box_css": [
      34,
-     1182,
+     1175,
      152,
-     1207
+     1200
     ]
    },
    {
@@ -1403,9 +1403,9 @@
     "overflow": false,
     "box_css": [
      337,
-     1182,
+     1175,
      356,
-     1207
+     1200
     ]
    },
    {
@@ -1416,9 +1416,9 @@
     "overflow": false,
     "box_css": [
      34,
-     1220,
+     1214,
      93,
-     1234
+     1228
     ]
    },
    {
@@ -1429,9 +1429,9 @@
     "overflow": false,
     "box_css": [
      34,
-     1240,
+     1234,
      148,
-     1265
+     1259
     ]
    },
    {
@@ -1442,9 +1442,9 @@
     "overflow": false,
     "box_css": [
      337,
-     1240,
+     1234,
      356,
-     1265
+     1259
     ]
    },
    {
@@ -1455,9 +1455,9 @@
     "overflow": false,
     "box_css": [
      34,
-     1308,
+     1301,
      151,
-     1343
+     1336
     ]
    }
   ]
