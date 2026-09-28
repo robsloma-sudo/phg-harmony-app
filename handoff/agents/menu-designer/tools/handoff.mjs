@@ -36,6 +36,8 @@ export function requestDesignPayload(transcript, ctx = {}) {
     brand: clean({ colours: d.colours.length ? d.colours.map(c => c.hex) : undefined, fonts: d.fonts.length ? d.fonts : undefined,
                    tone: d.tone.length ? d.tone : undefined }),
     constraints: clean({ hours: d.hours || undefined, no_dollar_signs: d.no_dollar_signs || undefined }),
+    // One pour size said for a whole list ("Drafts are poured at 16 ounces"): printed once under that heading.
+    ...((parsed.pours || []).some(p => p.single) ? { pour_notes: parsed.pours.filter(p => p.single).map(p => ({ lists: p.lists, pours: p.pours, heard: p.heard, single: true })) } : {}),
   };
   return {
     request: String(transcript).trim().slice(0, 4000),
@@ -55,6 +57,7 @@ function voiceItem(it, list) {
   if (it.sub) out.sub = it.sub;
   if (it.abv !== null && it.abv !== undefined) out.abv = it.abv;
   if (it.garnish) out.garnish = it.garnish;
+  if (it.pour) out.pour = it.pour;
   if (it.flags && it.flags.length) out.flags = it.flags;
   Object.defineProperty(out, '_heard', { value: it.heard, enumerable: false });
   return out;
@@ -71,7 +74,7 @@ export function taskToRequest(task) {
     const labels = Array.isArray(x.price_labels) ? x.price_labels
       : Array.isArray(x.prices) ? x.prices.map(p => (p && typeof p === 'object') ? (p.label || '') : '') : [];
     return { edit: !!x.edit, name: x.name || x.item_name, description: x.description || x.desc || null, list: x.list || null, sub: x.sub || null,
-             abv: x.abv ?? null, garnish: x.garnish || null, brand: x.brand || '', flags: x.flags || [],
+             abv: x.abv ?? null, garnish: x.garnish || null, pour: x.pour || null, brand: x.brand || '', flags: x.flags || [],
              prices: vals.filter(v => isFinite(v)).map((v, i) => ({ label: labels[i] || '', value: v })) };
   });
   return {
@@ -84,6 +87,7 @@ export function taskToRequest(task) {
               screen: inp.format?.screen || null, pages: inp.format?.pages || null, columns: inp.format?.columns || null },
     base_doc: stripSecrets(task.base_doc || null), base_revision: task.base_revision ?? null,
     voice: inp.constraints?.hours ? { hours: inp.constraints.hours } : null, questions: [],
+    pour_notes: Array.isArray(inp.pour_notes) ? inp.pour_notes : [],
   };
 }
 

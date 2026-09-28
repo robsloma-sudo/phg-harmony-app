@@ -80,6 +80,10 @@ export function wordsToDigits(text) {
 const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const hasPhrase = (text, w) => new RegExp('(^|[^a-z])' + esc(w) + '($|[^a-z])', 'i').test(text);
 const SMALL = new Set(['a', 'an', 'and', 'the', 'of', 'on', 'in', 'with', 'de', 'del', 'la', 'le', 'y', 'or', 'to', 'at', 'for']);
+// Beverage words with their diacritics (panel round 3: "Kolsch" read as unfamiliar with beer). System fonts print them.
+const SPELLING = [[/\bKolsch\b/g, 'Kölsch'], [/\bkolsch\b/g, 'kölsch'], [/\bMarzen\b/g, 'Märzen'], [/\bmarzen\b/g, 'märzen'],
+  [/\bGewurztraminer\b/gi, 'Gewürztraminer'], [/\bGruner Veltliner\b/gi, 'Grüner Veltliner'], [/\bRose wine\b/g, 'Rosé wine']];
+export const spell = s => SPELLING.reduce((a, [re, to]) => a.replace(re, to), String(s || ''));
 export const titleCase = s => s.trim().split(/\s+/).map((w, i) => {
   if (/[A-Z]/.test(w.slice(1)) || /^[A-Z0-9&]+$/.test(w)) return w;          // keep IPA, McXxx, 1792
   if (i > 0 && SMALL.has(w.toLowerCase())) return w.toLowerCase();
@@ -202,6 +206,15 @@ export function parsePourScheme(sent) {
   return uniq.length >= 2 ? uniq : null;
 }
 
+// One pour size for a whole list (panel round 3): "Drafts are poured at sixteen ounces", "Whiskey is poured at one and
+// a half ounces", "All our drafts are 16 ounce pours". Returns { subject, pour } or null. The caller maps the subject to
+// a list; an item name is left to answerFor.
+export function parseSinglePour(sent) {
+  const m = String(sent).trim().match(/^(?:all\s+(?:of\s+)?(?:our\s+|the\s+)?)?(?:our\s+|the\s+)?([a-z][a-z &'-]*?)\s+(?:are|is)\s+(?:all\s+)?(?:(?:poured|served)\s+(?:at|in|as)\s+(?:a\s+)?)?(\d{1,2}(?:\.\d{1,2})?)[\s-]*(?:oz|ounces?)(\s+(?:pours?|glass(?:es)?))?(?:\s*,?\s*unless (?:noted|stated|otherwise noted))?$/i);
+  if (!m || !/\b(?:poured|served)\b/i.test(sent) && !m[3]) return null;
+  return { subject: m[1].trim(), pour: `${Number(m[2])} oz` };
+}
+
 // Follow-up answer about a known item (panel round 2). Returns true when the sentence was consumed.
 export function answerFor(sent, sections) {
   if (/\b(dollars|bucks)\b/i.test(sent)) return false;
@@ -212,15 +225,19 @@ export function answerFor(sent, sections) {
     let rest = m[1].trim();
     const abv = rest.match(/,?\s*(\d{1,2}(?:\.\d)?)\s*(?:%|percent|per cent)(?:\s*(?:abv|alcohol))?/i);
     if (abv) rest = rest.replace(abv[0], '').trim();
+    // Pour size (panel round 3): "Double Black Diamond is an imperial stout, poured at 10 ounces" -> it.pour = '10 oz'.
+    const pour = rest.match(/,?\s*(?:(?:poured|served)\s+(?:at|in|as)\s+(?:a\s+)?)?(\d{1,2}(?:\.\d{1,2})?)[\s-]*(?:oz|ounces?)(?:\s+(?:pours?|glass(?:es)?|snifters?))?/i);
+    if (pour) rest = rest.replace(pour[0], '').trim();
     if (/\d/.test(rest)) return false;                     // a number left over is a price or a pour: not an answer
     if (/\d/.test(wordsToDigits(rest))) return false;       // "Paloma, twelve": a price in words
     let garnish = null;
     const g = rest.match(/,?\s*(?:and\s+)?(?:garnished with|served with|finished with|with a garnish of)\s+(.+)$/i);
     if (g) { garnish = g[1].replace(/\b(?:a|an)\s+/gi, '').replace(/[\s,]+$/, '').trim(); rest = rest.slice(0, g.index).trim(); }
-    const desc = rest.replace(/^(?:a|an)\s+/i, '').replace(/[\s,;:-]+$/, '').trim();
-    if (!desc && !garnish && !abv) return false;
+    const desc = rest.replace(/^(?:a|an|our)\s+/i, '').replace(/[\s,;:-]+$/, '').trim();
+    if (!desc && !garnish && !abv && !pour) return false;
     if (desc) it.description = desc.charAt(0).toUpperCase() + desc.slice(1);
     if (abv) it.abv = Number(abv[1]);
+    if (pour) it.pour = `${Number(pour[1])} oz`;
     if (garnish) it.garnish = garnish;
     it.heard += ' | ' + sent;
     it.answered = true;
@@ -346,6 +363,13 @@ export function parseTranscript(transcript, ctx = {}) {
     // blanco tequila, orange liqueur, fresh lime and agave, served with a salt rim", "Modelo is Modelo Especial, Mexican
     // lager, 4.4 percent". No price in the sentence and the item must exist; it fills description, ABV and garnish.
     if (answerFor(sent, sections)) continue;
+    const sp = parseSinglePour(sent);
+    if (sp) {
+      const low = sp.subject.toLowerCase(); const keys = new Set();
+      for (const { w, key } of LIST_PHRASES) if (new RegExp('(^|[^a-z])' + esc(w) + '($|[^a-z])').test(low)) keys.add(key);
+      if (/\bdraft|\bon tap/.test(low)) { keys.delete('beer'); keys.add('beer:Draft'); }
+      if (keys.size) { pourNotes.push({ lists: [...keys], pours: [sp.pour], heard: sent, single: true }); continue; }
+    }
     // "Answers to the designer's questions", "here are the answers": a header for the follow-up, never an item.
     if (/^(?:here (?:are|is)\s+)?(?:the\s+)?answers?\b.*\bquestions?\b/i.test(sent) || /^(?:here (?:are|is)\s+)?(?:the\s+|our\s+)?answers?$/i.test(sent)) continue;
     const em = sent.match(EDIT);
@@ -438,6 +462,18 @@ export function parseTranscript(transcript, ctx = {}) {
   if (orphans.length) questions.push(`Which list do these belong to: ${orphans.map(o => `"${o.name}"`).join(', ')}?`);
   if (!sections.length && !orphans.length) questions.push('No menu items were heard. What should be on the menu (item, price, and which list)?');
 
+  // Names as spoken (panel round 3): wordsToDigits turns "Laws Four Grain Bourbon" into "Laws 4 Grain Bourbon". A number
+  // word the speaker capitalised is part of a proper name, so it goes back ("four pack" stays "4 Pack").
+  for (const s of sections) for (const it of s.items) {
+    if (!/\b\d{1,2}\b/.test(it.name)) continue;
+    const parts = it.name.split(/\b(\d{1,2})\b/);
+    const re = new RegExp(parts.map((x, i) => i % 2 ? '([A-Za-z]+)' : esc(x)).join(''), 'i');
+    const hm = heard.match(re);
+    if (!hm) continue;
+    let k = 1;
+    it.name = parts.map((x, i) => { if (!(i % 2)) return x; const w = hm[k++]; return /^[A-Z]/.test(w) && UNITS[w.toLowerCase()] === Number(x) ? w : x; }).join('');
+  }
+  for (const s of sections) for (const it of s.items) { it.name = spell(it.name); if (it.description) it.description = spell(it.description); }
   return {
     transcript: heard,
     normalized: text,

@@ -120,5 +120,42 @@ t('printed ABV and a Blanco subsection answer the spirit questions ("\\b%\\b" ne
   assert.ok(!res.questions.some(q => /which expression/.test(q)));
   assert.ok(!items(casa).some(i => /^Answers/i.test(i.name)));
 });
+
+// Panel round 3 (high-altitude)
+import { parseSinglePour } from './parse-voice.mjs';
+import { orphanSubs, contrast, SEC_SPACE_MAX } from './design.mjs';
+import { requestDesignPayload, taskToRequest } from './handoff.mjs';
+const haText = fs.readFileSync(new URL('../examples/high-altitude.voice.txt', import.meta.url), 'utf8');
+const haBody = requestDesignPayload(haText, { venue: { city: 'Fort Collins', state: 'CO', type: 'brewery' } });
+const haRes = design(taskToRequest({ request: haBody.request, inputs: haBody.inputs }), { venue: { city: 'Fort Collins', state: 'CO' } });
+const haAll = o => o.menu_studio_file.doc.sections.flatMap(x => [...x.items, ...(x.subs || []).flatMap(b => b.items)]);
+t('names as spoken: capitalised number words stay words, "four pack" stays 4 Pack, Kölsch spelled', () => {
+  assert.ok(find(ha, 'Laws Four Grain Bourbon')); assert.ok(find(ha, 'Summit Pils 4 Pack')); assert.ok(find(ha, 'Kölsch'));
+});
+t('one pour for a list: "Drafts are poured at 16 ounces" prints once under Draft; an item\'s own pour on its line', () => {
+  assert.deepEqual(parseSinglePour('Drafts are poured at 16 ounces'), { subject: 'Drafts', pour: '16 oz' });
+  assert.equal(parseSinglePour('Summit Pils 7'), null); assert.equal(parseSinglePour('Drafts are great'), null);
+  const beer = haRes.options[0].menu_studio_file.doc.sections.find(x => x.name === 'Beer');
+  assert.equal(beer.subs.find(b => b.name === 'Draft').desc, '16 oz pours unless noted');
+  assert.match(haAll(haRes.options[0]).find(i => i.name === 'Double Black Diamond').desc, /10 oz pour · 10\.5% ABV$/);
+  assert.equal(haAll(haRes.options[0]).find(i => i.name === 'Double Black Diamond').prices[0].value, 9);
+});
+t('no subhead is left at a column foot without its first two items', () => {
+  for (const o of haRes.options) assert.deepEqual(orphanSubs(o.menu_studio_file.doc, o.menu_studio_file.style, o.menu_studio_file.size), []);
+  assert.ok(haRes.options[0].menu_studio_file.doc.sections.some(x => x.name === 'Beer · Cans'));
+  assert.equal(haAll(haRes.options[0]).length, items(ha).length);
+});
+t('featured-name accent meets 4.5:1 (one accent value)', () => {
+  for (const o of [...haRes.options, ...res.options]) for (const it of haAll(o)) if (it.format?.name?.c) assert.ok(contrast(it.format.name.c, o.menu_studio_file.style.page.bg) >= 4.5, `${o.look} ${it.name}`);
+});
+t('multi-column says what prints: no leader dots claimed, prices inline', () => {
+  for (const o of haRes.options) { const P = o.menu_studio_file.style.page; if (P.cols > 1) { assert.equal(P.dots, false); assert.equal(P.priceAlign, 'inline'); assert.ok(!/leader dots/i.test(o.look_note + o.why.join(' ')), o.look); } }
+});
+t('space above a section head is capped (item gap + section gap)', () => {
+  for (const o of haRes.options) { const P = o.menu_studio_file.style.page; assert.ok(P.itemGap + P.secGap <= SEC_SPACE_MAX + 0.5, `${o.look}: ${P.itemGap}+${P.secGap}`); }
+});
+t('footer never repeats the masthead ("Fort Collins, CO" under "Taproom · Fort Collins")', () => {
+  for (const o of haRes.options) { const d = o.menu_studio_file.doc; const f = d.sections.find(x => x.designer_role === 'footer'); assert.ok(!f || !/fort collins/i.test(f.name), o.look); }
+});
 console.log(`${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

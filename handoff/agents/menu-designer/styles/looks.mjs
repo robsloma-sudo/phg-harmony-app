@@ -79,13 +79,13 @@ export const LOOKS = [
       desc: { f: 4, s: 11, c: '#6d4c3d' }, price: { f: 4, s: 13, w: 'bold', c: '#1f6f6b' } },
   },
   {
-    k: 'taproom', label: 'Taproom', base: 'corner', accent: '#b7791f', roles: ['section', 'sub'],
-    note: 'Chalk-paper page, condensed-feeling bold sans, leader dots to prices. Dense and scannable for long beer lists.',
+    k: 'taproom', label: 'Taproom', base: 'corner', accent: '#8e5e18', roles: ['section', 'sub'],
+    note: 'Chalk-paper page, heavy grotesque caps in one dark ochre, leader dots to prices. Dense and scannable for long beer lists.',
     fits: { venue: ['brewery', 'sports_bar', 'dive_bar'], tone: ['industrial', 'rustic', 'casual'] },
     d: { page: { bg: '#f1eee6', ink: '#1d1d1b', rule: '#1d1d1b', dots: true, margin: 0.5, itemGap: 5, secGap: 14 },
       title: { f: 3, s: 36, w: 'bold', sp: 80, c: '#1d1d1b', cs: 'upper' },
       subtitle: { f: 3, s: 10, sp: 300, c: '#5b5a55', cs: 'upper' },
-      section: { f: 3, s: 15, w: 'bold', sp: 160, c: '#b7791f', cs: 'upper' },
+      section: { f: 3, s: 15, w: 'bold', sp: 160, c: '#8e5e18', cs: 'upper' },   // 4.8:1 on the chalk page (was #b7791f, 3.1:1)
       sub: { f: 3, s: 10, w: 'bold', sp: 200, c: '#5b5a55', cs: 'upper' },
       name: { f: 3, s: 13, w: 'bold', c: '#1d1d1b' }, brand: { f: 3, s: 13, i: true, c: '#5b5a55' },
       desc: { f: 5, s: 10, c: '#5b5a55' }, price: { f: 3, s: 13, w: 'bold', c: '#1d1d1b' } },

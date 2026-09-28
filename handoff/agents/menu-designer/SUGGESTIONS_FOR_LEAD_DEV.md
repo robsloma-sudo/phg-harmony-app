@@ -22,6 +22,8 @@ Every item below was found while designing against the real Menu Studio code and
 | S11 | Low | Deploy | `netlify.toml`: keep `/.claude/*` unserved like `/handoff/*` |
 | S12 | Medium | Menu Studio prices | A price-format option so one menu can print "11.5" or all ".00", not a mix |
 | S13 | Medium | Menu Studio prices | Glass / bottle price columns: multi-price items as aligned columns with labels in the subheading |
+| S14 | Medium | Menu Studio layout | Subhead / legend spacing, price separator, badge size and baseline |
+| S15 | High | Menu Studio layout | Keep a subhead with its first items: a subhead can end a column while its items start the next |
 
 ---
 
@@ -234,3 +236,31 @@ All 15 panel reviewers marked down three Menu Studio drawing rules that the desi
   `max(8.5pt, desc size × 0.8)` on the name's baseline.
 - **Section order within the page plan.** The designer can only choose where columns and pages break; sections stay in
   list order. Letting a short final section (Zero Proof) fill the shorter column on its page would balance two-page menus.
+- **Round 3 (high-altitude) repeat.** All 15 reviewers again read the raised 7 pt grey badges (HOUSE, SEASONAL, NEW)
+  as superscripts off the baseline, too faint for bar light. The `mdcDrawItem` badge (index.html ~16091:
+  `top: y + 2`, `fontSize: max(7, desc × 0.7)`, fill `style.sub.c`) is the whole cause. **Suggested change (same as
+  above, now with a colour):** `top` on the name's baseline (`y + (name.s − badgeSize) × 0.8`), size
+  `max(9pt, desc.s × 0.85)`, fill `style.desc.c` or darker, a fixed word-space before the price.
+
+## S15. Keep a subhead with its first items (review panel round 3)
+
+**Found:** `mdcDraw` (index.html ~21042) fits a subsection heading with `mdcCursorFit(cur, sh)`, the heading's own
+height only. When the column target falls just after the heading, the heading prints at the foot of one column and
+its items start the next column with no label. On High Altitude Brewing the CANS subhead sat alone at the bottom of
+column 1 and "Summit Pils 4 Pack 16" opened column 2; every one of the 15 panel reviewers named it the worst defect on
+the page (Design Theory 66, Beverage 66, Brand 68 mean).
+
+**Designer workaround (in the toolkit now):** after fitting, the designer finds any subhead whose first two items land
+in another column or page and promotes that subsection to its own section ("Beer · Cans"), which Menu Studio keeps
+whole. It costs a level of hierarchy (the subsection becomes a section head).
+
+**Suggested change:** reserve the heading plus its first two items (or all of them when fewer) before placing it:
+
+```js
+var keep = sh + sub.items.slice(0, 2).reduce(function (a, it) { return a + mdcItemHeight(it) + MDC.style.page.itemGap; }, 0);
+mdcCursorFit(cur, keep);
+```
+
+Do the same for a section heading whose section is taller than a column (the `sh + name.s` branch at ~21018), and
+count nothing extra in `mdcSectionHeight`, so page counts do not change.
+

@@ -25,7 +25,7 @@ export function normalizeRequest(input = {}) {
   const p = input.input_payload || input;
   const items = (p.items || []).map(it => ({
     name: it.name, description: it.description || it.desc || null, list: normList(it.list),
-    sub: it.sub || it.serve_format || null, abv: it.abv ?? null, garnish: it.garnish || null, brand: it.brand || '',
+    sub: it.sub || it.serve_format || null, abv: it.abv ?? null, garnish: it.garnish || null, pour: it.pour || null, brand: it.brand || '',
     prices: Array.isArray(it.prices) ? it.prices.map(x => ({ label: x.label || '', value: Number(x.value) }))
       : (it.price !== undefined && it.price !== null && it.price !== '') ? [{ label: '', value: Number(it.price) }] : [],
     flags: Array.isArray(it.flags) ? it.flags : Object.keys(it.flags || {}).filter(k => it.flags[k]),
@@ -39,7 +39,7 @@ export function normalizeRequest(input = {}) {
     brand: p.brand || {}, constraints: p.constraints || {}, comparables: p.comparables || [],
     format: { size: fmt.size || fmt.print || null, orientation: fmt.orientation || null, medium: fmt.medium || (fmt.screen ? 'screen' : 'print'),
               screen: fmt.screen || null, pages: fmt.pages || null, columns: fmt.columns || null },
-    voice: null, questions: [],
+    voice: null, questions: [], pour_notes: Array.isArray(p.pour_notes) ? p.pour_notes : [],
   };
 }
 
@@ -69,6 +69,7 @@ function fromVoice(v) {
     format: { size, orientation: d.orientation, medium: ['phone', 'tablet', 'tv'].includes(d.format) ? 'screen' : 'print',
               screen: ['phone', 'tablet', 'tv'].includes(d.format) ? d.format : null, pages: d.pages, columns: d.columns },
     voice: { tone: d.tone, notes: d.notes, hours: d.hours || null }, questions: [...v.questions],
+    pour_notes: (v.pours || []).filter(p => p.single),
   };
 }
 
@@ -138,6 +139,8 @@ function mdcItem(it, accent, emphasise) {
   // Printed unless the whole phrase is already in the line ("lime wedge" still prints after "fresh lime"); the speaker's
   // casing is kept so proper nouns survive (Tajín rim).
   if (garnish && !desc.toLowerCase().includes(garnish.toLowerCase())) desc = (desc ? `${desc} · ` : '') + garnish;
+  // A pour that differs from the list's (panel round 3: a 10 oz imperial stout under "16 oz pours unless noted").
+  if (it.pour && !/\b\d+(?:\.\d+)?\s*oz\b/i.test(desc)) desc = (desc ? `${desc} · ` : '') + `${it.pour} pour`;
   // Beer convention: style/description first, then ABV ("Oatmeal stout with coffee · 6.2% ABV").
   if (it.abv !== null && it.abv !== undefined && it.abv !== '') desc = (desc ? `${desc} · ` : '') + `${it.abv}% ABV`;
   const node = {
@@ -365,7 +368,9 @@ export function measure(doc, S, sizeKey) {
   }
   // A pinned footer takes no flow height in Menu Studio, but the flow must stop a clear break above it.
   const foot = doc.sections.find(x => x.designer_role === 'footer');
-  let pages = L.pages, fill = Math.round(((L.pages - 1) + L.lastPageUsed) * 100) / 100;
+  // Fill is measured to the last line of ink, not the cursor (which carries the trailing item and section gaps, ~6%
+  // of a page: round 3's taproom page read 0.86 full with 36 mm of bare paper under it).
+  let pages = L.pages, fill = Math.round(((L.pages - 1) + Math.max(0, Math.min(1, (L.contentBottom - L.M) / (L.H - 2 * L.M)))) * 100) / 100;
   if (foot && L.pages === 1) {
     const usable = L.H - 2 * L.M;
     const reserve = (foot.desc ? S.section.s + 11 + S.desc.s * 1.16 : Math.max(8, S.sub.s) * 1.16) + Math.max(S.page.secGap, S.name.s * 1.3);
@@ -375,6 +380,9 @@ export function measure(doc, S, sizeKey) {
   return { pages, cols: L.n, colW: Math.round(L.colW), overflowing: L.overflow.map(o => o.name), wide, imbalance: L.imbalance, fill };
 }
 
+// Most space above a section head, item gap + section gap (px at 96 dpi; 40 px = 10.6 mm). Panel round 3: 16–18 mm
+// gaps read as "scattered islands"; every lens asked for one fixed gap near 10 mm and spare height spent on type.
+export const SEC_SPACE_MAX = 40;
 // Try to make the menu fit its page budget without dropping anything: gaps → columns → type steps → pages.
 export function fit(doc, S, sizeKey, want) {
   const log = [];
@@ -395,7 +403,8 @@ export function fit(doc, S, sizeKey, want) {
   // Compose: when everything fits with room to spare, search columns x scale for the layout that fills the page
   // best (target ~88% of the last page) while keeping every line inside its column. A half-empty page reads unfinished;
   // bigger type is also the single best legibility gain in bar lighting.
-  if (m.pages <= budget && m.fill - (m.pages - 1) < 0.8) {
+  // Round 3: section gaps are capped at 10 mm, so spare height must go into type, not gaps: compose below 0.86 fill.
+  if (m.pages <= budget && m.fill - (m.pages - 1) < 0.86) {
     const base = JSON.parse(JSON.stringify(S));
     const [w] = MDC_SIZES[sizeKey];
     const colOpts = want.columns ? [want.columns] : [1, 2, 3].filter(c => c <= (w >= 10 ? 3 : w >= 7 ? 2 : 1));
@@ -432,7 +441,7 @@ export function fit(doc, S, sizeKey, want) {
       const last = m.fill - (m.pages - 1);
       if (last >= 0.9) break;
       const prev = [S.page.secGap, S.page.itemGap];
-      if (S.page.secGap < Math.round(S.name.s * 1.6)) S.page.secGap += 2;
+      if (S.page.secGap < Math.min(SEC_SPACE_MAX - S.page.itemGap, Math.round(S.name.s * 1.6))) S.page.secGap += 2;
       if (i % 2 === 1 && S.page.itemGap < Math.round(S.name.s * 0.6)) S.page.itemGap += 1;
       if (prev[0] === S.page.secGap && prev[1] === S.page.itemGap) break;
       const n = measure(doc, S, sizeKey);
@@ -470,7 +479,12 @@ export function fit(doc, S, sizeKey, want) {
     // f(g) = how far the flow's last line is from where it should end (0 = on target). With a footer the flow stops
     // a clear break above it (twice the section gap, at least two lines); without one, on the bottom margin as far as
     // Menu Studio's page count (which includes trailing gaps) allows.
-    const apply = g => { S.page.secGap = Math.max(4, s0 + g); S.page.itemGap = Math.max(2, i0 + g * 0.3); };
+    // Section gap capped at 10 mm (panel round 3: 16–18 mm gaps read as scattered islands; "one fixed gap, let the
+    // spare height pool at the bottom"). Item gaps may still open a little.
+    const apply = g => {
+      S.page.itemGap = Math.max(2, Math.min(Math.max(i0, Math.round(S.name.s * 0.75)), i0 + g * 0.3));
+      S.page.secGap = Math.min(Math.max(4, SEC_SPACE_MAX - S.page.itemGap), Math.max(4, s0 + g));
+    };
     const f = g => {
       apply(g);
       const L = layout({ doc, style: S, size: sizeKey });
@@ -595,6 +609,60 @@ function pourHeaders(doc) {
   return changes;
 }
 
+// One pour size for a whole list (panel round 3, every beverage reviewer: "a beer list with no pour sizes"). The venue's
+// "Drafts are poured at 16 ounces" prints once under the Draft subhead (or the list heading) as "16 oz pours", with
+// "unless noted" when an item on that list states its own pour. Never invented: only what the venue said.
+export function applyPourNotes(doc, notes) {
+  const changes = [];
+  for (const n of notes || []) for (const key of n.lists || []) {
+    const [list, subName] = key.split(':');
+    for (const sec of doc.sections) {
+      if (sec.designer_role) continue;
+      const all = [...sec.items, ...(sec.subs || []).flatMap(b => b.items)];
+      if (!all.some(i => i.meta?.section === list)) continue;
+      const sub = subName ? (sec.subs || []).find(b => b.name.toLowerCase() === subName.toLowerCase()) : null;
+      // A folded "Draft" (flat section, "Draft · …" on each line) takes the note on the section when every item is draft.
+      const holder = sub || (!subName || all.every(i => /^draft\b/i.test(i.desc || '') || (i.meta?.serve_format || '').toLowerCase() === subName.toLowerCase()) ? sec : null);
+      if (!holder || String(holder.desc || '').trim()) continue;
+      const items = holder === sec ? all : holder.items;
+      const own = items.some(i => /\b\d+(?:\.\d+)?\s*oz pour\b/.test(i.desc || ''));
+      holder.desc = `${n.pours[0]} pours${own ? ' unless noted' : ''}`;
+      changes.push(`${holder.name}: "${holder.desc}" printed under the heading, as the venue said ("${n.heard}").`);
+    }
+  }
+  return changes;
+}
+
+// A subhead left at the foot of a column or page while its first item starts the next one (panel round 3, all 15
+// reviewers: "the orphaned CANS subhead"). Menu Studio keeps a section together but checks a subhead only for its own
+// height, so the designer promotes that subsection to its own section ("Beer · Cans"), which moves as one block.
+export function orphanSubs(doc, S, sizeKey) {
+  const L = layout({ doc, style: S, size: sizeKey });
+  const slot = op => `${Math.floor(op.y / L.H)}|${Math.max(0, Math.round((op.x - L.M) / (L.colW + L.gutter)))}`;
+  const out = [];
+  for (const op of L.ops) {
+    if (op.t !== 'head' || op.lvl !== 'sub' || !op.node?.items?.length) continue;
+    // Keep-with-next: the subhead stays with at least its first two items (a two-item "Cans" split 1 + 1 still reads
+    // as a stray line at the top of the next column).
+    const lead = op.node.items.slice(0, 2).map(it => L.ops.find(o => o.t === 'item' && o.item === it)).filter(Boolean);
+    if (lead.some(o => slot(o) !== slot(op))) out.push(op.node);
+  }
+  return out;
+}
+function promoteSubs(doc, subs) {
+  const changes = [];
+  for (const sub of subs) {
+    const i = doc.sections.findIndex(x => (x.subs || []).includes(sub));
+    if (i < 0) continue;
+    const sec = doc.sections[i];
+    sec.subs = sec.subs.filter(b => b !== sub);
+    const name = new RegExp(`\\b${sec.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(sub.name) ? sub.name : `${sec.name} · ${sub.name}`;
+    doc.sections.splice(i + 1, 0, { id: `${sub.id}_sec`, name, desc: sub.desc || '', items: sub.items, subs: [], designer_promoted_from: sec.id });
+    changes.push(`"${sub.name}" would have been left at the foot of a column without its items, so it became its own section "${name}" (Menu Studio keeps sections whole).`);
+  }
+  return changes;
+}
+
 // Multi-page menus: Menu Studio moves whole sections between columns and pages, which can strand a half-empty page.
 // Choose, in order, which section starts each column and page (Menu Studio's own "Start on a new column/page" flags)
 // so the slots fill evenly. Order is never changed.
@@ -637,7 +705,10 @@ function planPages(doc, S, sizeKey) {
 // the venue record, and legal lines exactly as supplied. It gives the page a finished foot and lets the layout meet
 // the scorecard's equal-margin rule inside Menu Studio (which counts trailing gaps toward the page height).
 function addFooter(doc, req) {
-  const place = [doc.subtitle && req.venue.area && doc.subtitle.includes(req.venue.area) ? null : req.venue.area, [req.venue.city, req.venue.state].filter(Boolean).join(', ')].filter(Boolean).join('  ·  ');
+  // Nothing the masthead already says (panel round 3: "Fort Collins, CO" under "Taproom · Fort Collins" repeats it).
+  const said = `${doc.title || ''} ${doc.subtitle || ''}`.toLowerCase();
+  const city = req.venue.city && said.includes(String(req.venue.city).toLowerCase()) ? '' : [req.venue.city, req.venue.state].filter(Boolean).join(', ');
+  const place = [req.venue.area && said.includes(String(req.venue.area).toLowerCase()) ? null : req.venue.area, city].filter(Boolean).join('  ·  ');
   const line = [place, req.venue.website].filter(Boolean).join('  ·  ');
   const legal = [].concat(req.constraints.legal_lines || req.constraints.legal || []).filter(Boolean);
   if (!line && !legal.length) return;
@@ -706,7 +777,11 @@ export function design(input, options = {}) {
     const style = styleForLook(r.look);
     if (req.format.columns) style.page.cols = req.format.columns;
     const tuning = tuneStyle(req, r.look, style);
-    const accent = (req.brand.colours && req.brand.colours[0]) || r.look.accent;
+    // The accent on a featured name must meet 4.5:1 like every other text colour (panel round 3: the house beer printed
+    // in the look's lighter #b7791f, 3.2:1, beside section heads already raised to #8e5e18). One accent, one value.
+    const accent0 = (req.brand.colours && req.brand.colours[0]) || r.look.accent;
+    const accent = contrast(accent0, style.page.bg) >= 4.5 ? accent0
+      : (r.look.roles.includes('section') && contrast(style.section.c, style.page.bg) >= 4.5 ? style.section.c : pushContrast(accent0, style.page.bg, 4.5));
     const venueKey = normVenue(req.venue.type);
     const built = fromDraft
       ? buildDocFromBase(req, r.look, { accent, order: [...(ORDER[venueKey] || ORDER.default), ...FOOD] })
@@ -731,8 +806,23 @@ export function design(input, options = {}) {
       }
     }
     for (const c of pourHeaders(doc)) changes.push(c);
+    for (const c of applyPourNotes(doc, req.pour_notes)) changes.push(c);
     addFooter(doc, req);
-    const { m: m0, log } = fit(doc, style, sizeKey, req.format);
+    const style0 = JSON.parse(JSON.stringify(style));
+    let { m: m0, log } = fit(doc, style, sizeKey, req.format);
+    for (let pass = 0; pass < 3; pass++) {
+      const orphans = orphanSubs(doc, style, sizeKey);
+      if (!orphans.length) break;
+      for (const c of promoteSubs(doc, orphans)) changes.push(c);
+      for (const key of Object.keys(style0)) style[key] = JSON.parse(JSON.stringify(style0[key]));
+      ({ m: m0, log } = fit(doc, style, sizeKey, req.format));
+    }
+    // Say what prints (panel round 3): Menu Studio sets prices inline beside the name in any multi-column layout
+    // (S5), so the file must not claim leader dots or a right-aligned price column it cannot draw.
+    if (style.page.cols > 1 && (style.page.dots || style.page.priceAlign !== 'inline')) {
+      style.page.dots = false; style.page.priceAlign = 'inline';
+      log.push('prices inline beside each name (Menu Studio sets multi-column prices inline), leader dots off');
+    }
     let m = m0;
     if (m.pages > 1) {
       const pl = planPages(doc, style, sizeKey);
@@ -759,8 +849,8 @@ export function design(input, options = {}) {
     if (m.wide.length) optRisk.push('lines_may_exceed_column');
     // Page breaks for multi-page menus: start each overflow page at a whole section (Menu Studio "Start on a new page").
     return {
-      option: String.fromCharCode(65 + idx), look: r.look.k, look_label: r.look.label, look_note: r.look.note,
-      why: r.why, score: r.score,
+      option: String.fromCharCode(65 + idx), look: r.look.k, look_label: r.look.label, look_note: lookNote(r.look.note, style),
+      why: r.why.map(w => style.page.dots ? w : w.replace(/reads best with leader dots/, 'needs a dense, scannable list')), score: r.score,
       menu_studio_file: { app: MDC_FILE_APP, schema_version: MDC_FILE_VERSION, saved_at: new Date().toISOString(),
                           preset: r.look.base, size: sizeKey, style, doc },
       fit: m, fit_log: log, tuning, changes, risk_flags: optRisk, title_missing,
@@ -768,6 +858,12 @@ export function design(input, options = {}) {
   });
   for (const o of out) for (const f of o.risk_flags) risk.add(f);
   return { request: req, size: sizeKey, options: out, questions: [...new Set(questions)], risk_flags: [...risk] };
+}
+
+// The look's one-line note describes what prints: no leader dots unless the page draws them.
+export function lookNote(note, style) {
+  if (style.page.dots) return note;
+  return String(note).replace(/,\s*leader dots(?: to prices)?(?=[.,])/i, ', prices beside each name');
 }
 
 function diverse(ranked, n) {
