@@ -1,11 +1,19 @@
-"""PHG-026 rehearsal generator (round 5; round-3/4 blocks kept and extended).
+"""PHG-026 rehearsal generator (pre-publish after round 5; round-3/4/5 blocks kept and extended).
 
 Builds rolled-back DO blocks that run the real migration files against the live database and end in
 RAISE EXCEPTION, so nothing is kept. Each block re-runs the setup it needs (the MCP call times out at 60 s).
 
-  python3 gen.py            -> rehearse_round5.sql (all blocks, in order) + rehearse_round5_<X>.sql (one per block)
+  python3 gen.py            -> rehearse_prepublish.sql (all blocks, in order) + rehearse_prepublish_<X>.sql (one per block)
 
-Round-2 output (rehearse_all.sql), round-3 (rehearse_round3*.sql) and round-4 (rehearse_round4*.sql) are kept for reference.
+Round-2 output (rehearse_all.sql), round-3/4/5 (rehearse_round3*.sql, rehearse_round4*.sql, rehearse_round5*.sql) are
+kept for reference.
+Pre-publish adds: A s13 (same item-page URL, 4 of 33 prices changed -> created; safety SF-1), s13b (same URL, partial ->
+still alternate), s13c (same page, other spelling of the URL -> created), s13d (other URL -> still alternate),
+phg_menu_exact_url, proconfigs (submit_menu search_path public, pg_temp; extraction save lock_timeout 5s); B the
+flip-flop row on same-source vs other-source forged changes (m4) and the churn-by-kind row; D the release gate's
+restaurant_menu_map rows and rollback-check query 3 (save before DROP, m3); E the roll-forward candidate reset to
+'retry' plus the hash reset under lock_timeout 5s (m2, spec should-fix 2); G the real extraction save after release
+(staging rows superseded + a candidate marked duplicate) listed by rollback-check query 2, then query 3.
 Round 5 adds: A s11/s11b (a real page is not damped behind an item-page current menu), s12/s12b/s12c (item page over an
 item-page current menu: strictly larger, exact-URL exemption), distinct drinks keys, submit_menu lock_timeout;
 B SELECT-only privileges on every repair table, service_role cannot execute the batch functions / rollbacks, the
@@ -26,10 +34,12 @@ gate = (T / 'phg_026_release_gate.sql').read_text().rstrip().rstrip(';')
 mon = (T / 'phg_026_monitor.sql').read_text().rstrip().rstrip(';')
 f3 = (M / '20260928030000_phg_menu_design_score_gate.sql').read_text()   # SF10 (not applied live)
 _rbc = (T / 'phg_026_rollback_check.sql').read_text().split('-- ===== 2. review candidates =====')
+_rbc23 = _rbc[1].split('-- ===== 3. save before a roll-forward DROP')
 rbc1 = _rbc[0].rstrip().rstrip(';')
-rbc2 = _rbc[1].rstrip().rstrip(';')
+rbc2 = _rbc23[0].rstrip().rstrip(';')
+rbc3 = '-- ===== 3. save before a roll-forward DROP' + _rbc23[1]
 for tag in ('$rehearse_f1$', '$rehearse_f2$', '$rehearse_f3$', '$rehearse_main$', '$rehearse_gate$', '$rehearse_mon$', '$rehearse_rbc$'):
-    for src in (f1, f2, f3, gate, mon, rbc1, rbc2):
+    for src in (f1, f2, f3, gate, mon, rbc1, rbc2, rbc3):
         assert tag not in src
 
 MULTI = "(select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x)"
@@ -93,6 +103,7 @@ DECLARE
   rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
   secs10 jsonb; gres jsonb := '{{}}'; skip_acct text; multi_acct text; stg_acct text; stg_url text; snap jsonb; snap2 jsonb;
   n1 int; n2 int; tid uuid; pid uuid; dlayout jsonb; ddoc jsonb; secs11 jsonb; wres jsonb; mon_sql text;
+  secs13 jsonb; secs13b jsonb; flip_ids uuid[];
   e_state text; e_msg text; e_ctx text; e_det text;
 BEGIN
   set local statement_timeout = '58s';"""
@@ -243,6 +254,53 @@ A = DECL + run_file('file1', '$rehearse_f1$', f1) + f"""
         RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback 12c';
       EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
       END;
+      -- 13 (pre-publish, safety SF-1): the SAME item page URL (copy2?item=a, the current menu's own URL) re-captured with
+      --    4 of its 33 priced items at a new price. Overlap 29 < ceil(0.9 * 33) = 30, which the round-5 exemption required,
+      --    so round 5 froze it as an alternate. Now: created (same_source_recapture).
+      with it as (select s.id sid, i.*, row_number() over (order by s.section_position, s.id, i.item_position, i.id) rn,
+                         (row_number() over (partition by (i.price is not null) order by s.section_position, s.id, i.item_position, i.id) <= 4
+                          and i.price is not null) as bump
+                    from public.menu_sections s join public.menu_items i on i.section_id=s.id where s.menu_id=cur2)
+      select jsonb_agg(jsonb_build_object('section_name',s.section_name,'section_type',s.section_type,'section_position',s.section_position,
+               'items',coalesce((select jsonb_agg(jsonb_build_object('item_name',it.item_name,'item_type',it.item_type,'price',case when it.bump then it.price+1 else it.price end,'item_position',it.item_position) order by it.rn) from it where it.sid=s.id),'[]'::jsonb)) order by s.section_position, s.id)
+        into secs13 from public.menu_sections s where s.menu_id=cur2;
+      select jsonb_build_array(jsonb_build_object('section_name','Partial13','section_type','unsectioned','section_position',1,'items',
+               (select jsonb_agg(x) from (select jsonb_build_object('item_name',i.item_name,'item_type','other','price',coalesce(i.price,0)+3) x
+                                             from public.menu_sections s join public.menu_items i on i.section_id=s.id where s.menu_id=cur2
+                                            order by i.id limit 12) q)))
+        into secs13b;
+      a := a || jsonb_build_object('s13_setup', jsonb_build_object(
+             'current_url', (select evidence_url from public.menus where id = cur2),
+             'current_items', cardinality(public.phg_menu_item_keys(cur2)),
+             'capture_items', cardinality(public.phg_menu_payload_item_keys(secs13)),
+             'prices_changed', cardinality(public.phg_menu_payload_item_keys(secs13)) - public.phg_menu_keys_overlap(public.phg_menu_payload_item_keys(secs13), public.phg_menu_item_keys(cur2)),
+             'overlap', public.phg_menu_keys_overlap(public.phg_menu_payload_item_keys(secs13), public.phg_menu_item_keys(cur2)),
+             'round5_overlap_threshold', ceil(0.9 * cardinality(public.phg_menu_item_keys(cur2))),
+             'partial_capture_items', cardinality(public.phg_menu_payload_item_keys(secs13b))));
+      BEGIN
+        {call("'https://rehearsal.example.com/copy2?item=a'", 'reh13', 'secs13')}{after('s13_same_item_page_url_4_of_33_prices_changed', "res->>'status'='created' and res->>'reason'='same_source_recapture' and cur_now<>cur2")}
+        RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback 13';
+      EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
+      END;
+      -- 13b the partial-recapture guard is kept: the same URL with 12 of 33 items -> alternate_partial_recapture
+      BEGIN
+        {call("'https://rehearsal.example.com/copy2?item=a'", 'reh13b', 'secs13b')}{after('s13b_same_url_partial_still_alternate', "res->>'status'='created_alternate' and res->>'reason'='alternate_partial_recapture' and cur_now=cur2")}
+        RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback 13b';
+      EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
+      END;
+      -- 13c normalised comparison: the same page spelled differently (scheme, host case, www, default port, trailing slash,
+      --     fragment) -> the same exact URL -> created
+      BEGIN
+        {call("'HTTP://WWW.Rehearsal.Example.com:443/copy2/?item=a#reviews'", 'reh13c', 'secs13')}{after('s13c_same_page_other_spelling', "res->>'status'='created' and res->>'reason'='same_source_recapture' and cur_now<>cur2")}
+        RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback 13c';
+      EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
+      END;
+      -- 13d control: another page of the same source key (an extra query parameter) is not exempt -> alternate_item_page
+      BEGIN
+        {call("'https://rehearsal.example.com/copy2?item=a&size=large'", 'reh13d', 'secs13')}{after('s13d_other_url_still_guarded', "res->>'status'='created_alternate' and res->>'reason'='alternate_item_page' and cur_now=cur2")}
+        RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback 13d';
+      EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
+      END;
       RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback 12 setup';
     EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
     END;
@@ -256,6 +314,25 @@ A = DECL + run_file('file1', '$rehearse_f1$', f1) + f"""
     a := jsonb_set(a, '{{m1_distinct_drinks,pass}}', to_jsonb((a->'m1_distinct_drinks'->>'payload_same_line_twice')::int = 2
        and (a->'m1_distinct_drinks'->>'stored_current')::int = (a->'m1_distinct_drinks'->>'payload_of_current')::int
        and (a->>'submit_menu_proconfig') ~ 'lock_timeout=5s'));
+    -- pre-publish: proconfigs (m6, spec minor) and phg_menu_exact_url
+    a := a || jsonb_build_object('prepublish_config', jsonb_build_object(
+       'submit_menu_proconfig', (select proconfig from pg_proc where oid = 'public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb,text,text,text,text,boolean)'::regprocedure),
+       'extraction_save_proconfig', (select proconfig from pg_proc where oid = 'public.phg_save_menu_candidate_extraction(bigint,timestamp with time zone,uuid,jsonb,text,text,text)'::regprocedure),
+       'exact_url_variants', public.phg_menu_exact_url('HTTP://WWW.Rehearsal.Example.com:443/copy2/?item=a#reviews'),
+       'exact_url_plain', public.phg_menu_exact_url(' https://rehearsal.example.com/copy2?item=a '),
+       'exact_url_amp', public.phg_menu_exact_url('https://rehearsal.example.com/copy2?item=a&amp;x=1'),
+       'exact_url_other_item', public.phg_menu_exact_url('https://rehearsal.example.com/copy2?item=b'),
+       'exact_url_null', public.phg_menu_exact_url(''),
+       'exact_url_anon_exec', has_function_privilege('anon', 'public.phg_menu_exact_url(text)', 'EXECUTE')));
+    a := jsonb_set(a, '{{prepublish_config,pass}}', to_jsonb(
+          (a->'prepublish_config'->>'submit_menu_proconfig') ~ 'search_path=public, pg_temp'
+      and (a->'prepublish_config'->>'extraction_save_proconfig') ~ 'lock_timeout=5s'
+      and a->'prepublish_config'->>'exact_url_variants' = 'rehearsal.example.com/copy2?item=a'
+      and a->'prepublish_config'->>'exact_url_plain' = 'rehearsal.example.com/copy2?item=a'
+      and a->'prepublish_config'->>'exact_url_amp' = 'rehearsal.example.com/copy2?item=a&x=1'
+      and a->'prepublish_config'->>'exact_url_other_item' = 'rehearsal.example.com/copy2?item=b'
+      and a->'prepublish_config'->'exact_url_null' = 'null'::jsonb
+      and not (a->'prepublish_config'->>'exact_url_anon_exec')::boolean));
     -- 7 a missing price overlaps a priced item (both ways); price-adds helper
     a := a || jsonb_build_object('s7_overlap',
        jsonb_build_object('capture_noprice_vs_current_priced', public.phg_menu_keys_overlap(array[public.phg_menu_item_key('Rehearsal Negroni', null)], array[public.phg_menu_item_key('Rehearsal Negroni', 12)]),
@@ -453,13 +530,21 @@ $rehearse_mon$;
       update public.menus set superseded_reason = 'same_source_recapture' where id = cur_id;
       EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g where g.check_name ~ ' || quote_literal('smaller') INTO v;
       wres := wres || jsonb_build_object('shrunk_same_page_allowed', v);
-      update public.menus m set superseded_at = clock_timestamp(), superseded_reason = 'newer_near_identical_capture'
-       where m.id in (select id from public.menus where account_id = '{ACCT}' order by id limit 1)
-          or m.id in (select id from public.menus where account_id = '{PROMO_ACCT}' and not is_current order by id limit 3);
-      EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g where g.check_name ~ ' || quote_literal('flip-flop') INTO v;
-      wres := wres || jsonb_build_object('flipflop_forged', v);
+      -- m4 (pre-publish): 3 non-growing current-menu changes at one venue, first between menus of the SAME source
+      -- (the venue re-capturing its own page: not a flip-flop, passes), then between DIFFERENT sources (fails)
+      select id into cur_id from public.menus where account_id = '{PROMO_ACCT}' and is_current;
+      select array_agg(id) into flip_ids from (select id from public.menus where account_id = '{PROMO_ACCT}' and not is_current order by id limit 3) x;
+      update public.menus m set superseded_at = clock_timestamp(), superseded_reason = 'newer_near_identical_capture', superseded_by = cur_id,
+             source_key = (select coalesce(c.source_key, public.phg_menu_source_key(c.evidence_url)) from public.menus c where c.id = cur_id)
+       where m.id = any (flip_ids);
+      EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g where g.check_name ~ ' || quote_literal('flip-flop|by kind') INTO v;
+      wres := wres || jsonb_build_object('flipflop_same_source', v);
+      update public.menus m set source_key = 'rehearsal.example.com/flip-' || left(m.id::text, 8) where m.id = any (flip_ids);
+      EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g where g.check_name ~ ' || quote_literal('flip-flop|by kind') INTO v;
+      wres := wres || jsonb_build_object('flipflop_forged', v, 'flip_venue', '{PROMO_ACCT}', 'flip_menus', to_jsonb(flip_ids));
       wres := wres || jsonb_build_object('pass', not (wres->'shrunk_forged'->0->>'pass')::boolean and (wres->'shrunk_same_page_allowed'->0->>'pass')::boolean
-                                        and not (wres->'flipflop_forged'->0->>'pass')::boolean);
+                                        and (select bool_and((x->>'pass')::boolean) from jsonb_array_elements(wres->'flipflop_same_source') x)
+                                        and not (select bool_and((x->>'pass')::boolean) from jsonb_array_elements(wres->'flipflop_forged') x));
       RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback forged monitor';
     EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
     END;
@@ -564,6 +649,29 @@ $rehearse_rbc$ || ') g' INTO v;
   END;
   r := r || jsonb_build_object('rollback_check', wres); wres := '{{}}';"""
 
+RBC3 = f"""
+  -- rollback-check query 3 (m3): save the run rows and the query-2 list before a roll-forward DROP (rolled back with the block)
+  t0 := clock_timestamp();
+  BEGIN
+    EXECUTE $rehearse_rbc${rbc3}
+$rehearse_rbc$;
+    wres := jsonb_build_object('ms', {MS},
+      'saved_rows', (select count(*) from public.phg_repair_rollback_saved_20260927),
+      'saved', (select jsonb_build_object('run_steps', (select jsonb_agg(x->>'step') from jsonb_array_elements(run_rows) x),
+                                          'review_candidates', jsonb_array_length(review_candidates),
+                                          'review_reasons', (select jsonb_object_agg(k, n) from (select x->>'review_reason' k, count(*) n from jsonb_array_elements(review_candidates) x group by 1) y))
+                  from public.phg_repair_rollback_saved_20260927 order by saved_at desc limit 1),
+      'service_role', jsonb_build_object('select', has_table_privilege('service_role','public.phg_repair_rollback_saved_20260927','SELECT'),
+                                         'insert', has_table_privilege('service_role','public.phg_repair_rollback_saved_20260927','INSERT'),
+                                         'trigger', has_table_privilege('service_role','public.phg_repair_rollback_saved_20260927','TRIGGER')));
+    wres := wres || jsonb_build_object('pass', (wres->>'saved_rows')::int = 1
+      and (wres->'saved'->>'review_candidates')::int = coalesce((r->'rollback_check'->>'review_candidates_n')::int, -1)
+      and wres->'saved'->'run_steps' @> '["step2","rollback"]'::jsonb
+      and (wres->'service_role'->>'select')::boolean and not (wres->'service_role'->>'insert')::boolean and not (wres->'service_role'->>'trigger')::boolean);
+  EXCEPTION WHEN others THEN {soft_err('ERROR', 'wres')}
+  END;
+  r := r || jsonb_build_object('rollback_check_save', wres); wres := '{{}}';"""
+
 
 FN_RB = f"""
   -- function rollback, then ONE submit_menu call (the restored live 15-arg body) on a venue with a current menu
@@ -598,17 +706,37 @@ FN_RB = f"""
 ROLLFWD = f"""
   -- roll-forward statement from file 2's header (rolled back): clear the candidate hashes; timed here after one Step 4
   -- call plus the extraction rows that already exist (in production it touches every hashed candidate)
+  -- pre-publish RF2: set local lock_timeout 5s (m2), first the candidates marked as duplicates back to 'retry' (spec
+  -- should-fix 2; candidate {CAND_ID} was marked by the extraction save earlier in this block), then the hash reset
   t0 := clock_timestamp();
   BEGIN
+    set local lock_timeout = '5s';
+    wres := jsonb_build_object('lock_timeout_in_effect', current_setting('lock_timeout'),
+       'dup_review_before', (select count(*) from public.menu_source_candidates where duplicate_of_candidate_id is not null and status = 'review'),
+       'cand_before', (select jsonb_build_object('status', status, 'duplicate_of', duplicate_of_candidate_id) from public.menu_source_candidates where id = {CAND_ID}));
+    t1 := clock_timestamp();
+    update public.menu_source_candidates
+       set status = 'retry', extraction_next_retry_at = now(),
+           last_error = 'PHG-026 roll-forward: was ' || coalesce(last_error, 'duplicate')
+     where duplicate_of_candidate_id is not null and status = 'review';
+    get diagnostics n2 = row_count;
+    wres := wres || jsonb_build_object('reset_to_retry_rows', n2, 'reset_ms', round(extract(epoch from clock_timestamp()-t1)*1000),
+       'cand_after_retry', (select jsonb_build_object('status', status, 'next_retry_due', extraction_next_retry_at <= now(), 'last_error', left(last_error, 80)) from public.menu_source_candidates where id = {CAND_ID}));
     n1 := (select count(*) from public.menu_source_candidates where item_set_hash is not null or duplicate_of_candidate_id is not null);
+    t1 := clock_timestamp();
     update public.menu_source_candidates set item_set_hash = null, duplicate_of_candidate_id = null
      where item_set_hash is not null or duplicate_of_candidate_id is not null;
     get diagnostics n2 = row_count;
-    r := r || jsonb_build_object('rollforward_candidate_reset', jsonb_build_object('rows_before', n1, 'rows_updated', n2, 'ms', {MS},
-           'left', (select count(*) from public.menu_source_candidates where item_set_hash is not null or duplicate_of_candidate_id is not null)));
+    wres := wres || jsonb_build_object('hash_rows_before', n1, 'hash_rows_updated', n2, 'hash_ms', round(extract(epoch from clock_timestamp()-t1)*1000), 'ms', {MS},
+           'left', (select count(*) from public.menu_source_candidates where item_set_hash is not null or duplicate_of_candidate_id is not null));
+    wres := wres || jsonb_build_object('pass', wres->>'lock_timeout_in_effect' = '5s' and (wres->>'reset_to_retry_rows')::int >= 1
+           and wres->'cand_before'->>'status' = 'review' and wres->'cand_after_retry'->>'status' = 'retry'
+           and (wres->>'left')::int = 0);
+    r := r || jsonb_build_object('rollforward_candidate_reset', wres); wres := '{{}}';
     RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback roll-forward reset';
   EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
-  END;"""
+  END;
+  r := r || jsonb_build_object('lock_timeout_after_rf', current_setting('lock_timeout'));"""
 
 
 # C: timing - one Step 3 call and one Step 4 call at the runbook batch size (500); round 4 runs it as generated
@@ -617,14 +745,18 @@ C = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse
 # D: a few batches of each step, then the gate, the repair rollback (with staging restore), function rollback + submit
 # D: one Step 3 call and one Step 4 call, then the gate, the repair rollback (with staging restore), function rollback + submit
 # round 5: D skips the Step 4 call (timed in C and E) to make room for phg_026_rollback_check.sql under the 58 s limit
-D = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(1, 0, 1) + GATE + REPAIR_RB + RBC + FN_RB + END.replace("  RAISE EXCEPTION 'REHEARSAL SUMMARY", """  v := v || jsonb_build_object('step3', r->'step3', 'gate', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 50), 'pass', x->'pass', 'v', left(x->>'value', 400))) from jsonb_array_elements(r->'release_gate') x),
+D = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(1, 0, 1) + GATE + REPAIR_RB + RBC + RBC3 + FN_RB + END.replace("  RAISE EXCEPTION 'REHEARSAL SUMMARY", """  v := v || jsonb_build_object('step3', r->'step3', 'gate', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 50), 'pass', x->'pass', 'v', left(x->>'value', 400))) from jsonb_array_elements(r->'release_gate') x),
     'rollback', r->'repair_rollback'->'result', 'rollback_check', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 70), 'pass', x->'pass', 'v', left(x->>'value', 300))) from jsonb_array_elements(r->'rollback_check'->'checks') x),
     'rbc_all_pass', r->'rollback_check'->'checks_all_pass', 'review_candidates_n', r->'rollback_check'->'review_candidates_n', 'rbc_ms', jsonb_build_object('checks', r->'rollback_check'->'checks_ms', 'review', r->'rollback_check'->'review_ms'),
+    'rbc_save', r->'rollback_check_save',
     'fn_rb', (r->'function_rollback_and_submit') - 'submit_after_rollback', 'submit_after', (r->'function_rollback_and_submit'->'submit_after_rollback')->>'status');
   RAISE EXCEPTION 'REHEARSAL SUMMARY""")
 # E: promote_clean_menu_batch(1) on a re-staged incident sibling page, one more Step 4 call, then the function
 #    rollback + submit_menu again (its catalog check fixed to run in a separate statement)
-E = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + PROMOTE + steps(0, 1, 0) + ROLLFWD + FN_RB + END
+E_EXTRACT = EXTRACT.replace("    RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback extraction';\n", "")
+assert E_EXTRACT != EXTRACT
+E = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + PROMOTE + E_EXTRACT + steps(0, 1, 0) + ROLLFWD + FN_RB + END.replace("  RAISE EXCEPTION 'REHEARSAL SUMMARY", """  v := v || jsonb_build_object('rollforward', r->'rollforward_candidate_reset', 'extraction', r->'extraction_sibling_duplicate'->'result', 'lock_timeout_after_rf', r->'lock_timeout_after_rf');
+  RAISE EXCEPTION 'REHEARSAL SUMMARY""")
 
 # F: SF10 - the design score-gate migration and its new rollback function (the migration is not applied live)
 SIGS = "(select jsonb_agg(p.oid::regprocedure::text order by 1) from pg_proc p where p.proname in ('phg_design_proposal_submit','phg_design_proposal_score','phg_design_proposal_review','phg_design_status'))"
@@ -738,6 +870,29 @@ G = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse
     values (stg_url, 'html', stg_acct, 'other', 'Rehearsal Re-extracted Item', 9, clock_timestamp());
     n2 := (select count(*) from public.phg_backup_staging_dupes_20260927 b where b.account_id = stg_acct and b.menu_page_url = stg_url);
     gres := gres || jsonb_build_object('multi_acct', multi_acct, 'stg_acct', stg_acct, 'stg_page_backup_rows', n2);
+    -- pre-publish (spec should-fix 2): the NEW extraction save runs after release. Candidate {CAND_ID}'s page gets two
+    -- staged rows first; the save finds sibling {SIB_ID} with the same items, supersedes those rows
+    -- ('duplicate_item_set_of_sibling', not in the Step-3 backup) and marks the candidate as a duplicate.
+    update public.menu_source_candidates mc set item_set_hash = x.h
+      from (select public.phg_menu_key_set_hash(array_agg(distinct public.phg_menu_item_key(item_name, item_price)
+                                                          order by public.phg_menu_item_key(item_name, item_price))) h
+              from public.staging_menu_extract s join public.menu_source_candidates sc on sc.id = {SIB_ID}
+             where s.account_id = sc.account_id and s.menu_page_url = sc.source_url and s.superseded_at is null and s.item_type <> 'summary') x
+     where mc.id = {SIB_ID};
+    insert into public.staging_menu_extract (menu_page_url, menu_format, account_id, item_type, item_name, item_price, loaded_at)
+    select mc.source_url, 'html', mc.account_id, 'other', 'Rehearsal Candidate Row ' || g, 10 + g, clock_timestamp()
+      from public.menu_source_candidates mc, generate_series(1, 2) g where mc.id = {CAND_ID};
+    select jsonb_agg(jsonb_build_object('item_name', s.item_name, 'item_price', s.item_price, 'item_type', s.item_type,
+                                        'section_name', s.section_name, 'spirit_brands', s.spirit_brands) order by s.id)
+      into items from public.staging_menu_extract s join public.menu_source_candidates sc on sc.id = {SIB_ID}
+     where s.account_id = sc.account_id and s.menu_page_url = sc.source_url and s.superseded_at is null and s.item_type <> 'summary';
+    update public.phg_menu_worker_leases set owner = lease_owner, lease_until = now() + interval '10 minutes' where lane = 'candidate_extraction';
+    update public.menu_source_candidates set status = 'processing', last_attempt_at = claimed where id = {CAND_ID};
+    res := public.phg_save_menu_candidate_extraction({CAND_ID}, claimed, lease_owner, items, 'rehearsal source text', 'rehearsal', 'html');
+    gres := gres || jsonb_build_object('after_release_extraction', res,
+      'after_release_rows_superseded', (select count(*) from public.staging_menu_extract s join public.menu_source_candidates mc on mc.id = {CAND_ID}
+                                          where s.account_id = mc.account_id and s.menu_page_url = mc.source_url and s.superseded_reason = 'duplicate_item_set_of_sibling'
+                                            and not exists (select 1 from public.phg_backup_staging_dupes_20260927 b where b.staging_id = s.id)));
     t1 := clock_timestamp();
     res := public.phg_repair_20260927_rollback();
     gres := gres || jsonb_build_object('rollback', res, 'rollback_ms', round(extract(epoch from clock_timestamp()-t1)*1000),
@@ -768,22 +923,28 @@ G = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse
       and (gres->>'multi_current_global')::int = 0);
   EXCEPTION WHEN others THEN {soft_err('ERROR', 'gres')}
   END;
-  r := r || jsonb_build_object('G', gres, 'G_ms', {MS});""" + RBC + """
+  r := r || jsonb_build_object('G', gres, 'G_ms', {MS});""" + RBC + f"""
   -- the review list must name the two skipped venues and the re-extracted page
   r := r || jsonb_build_object('G_review_list_pass', coalesce((r->'rollback_check'->>'checks_all_pass')::boolean, false)
         and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = skip_acct and x->>'review_reason' = 'skipped_newer_menu')
         and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = multi_acct and x->>'review_reason' = 'skipped_multi_current_backup')
-        and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = stg_acct and x->>'review_reason' = 'staging_page_not_restored'));""" + END.replace("  RAISE EXCEPTION 'REHEARSAL SUMMARY", """  v := v || jsonb_build_object('G_review_list_pass', r->'G_review_list_pass', 'G_rollback', r->'G'->'rollback', 'G_accts', jsonb_build_object('skip', skip_acct, 'multi', multi_acct, 'stg', stg_acct, 'stg_rows', n2),
+        and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = stg_acct and x->>'review_reason' = 'staging_page_not_restored')
+        and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = '{SIB_ACCT}' and x->>'review_reason' = 'staging_superseded_after_release')
+        and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = '{SIB_ACCT}' and x->>'review_reason' = 'candidate_marked_duplicate'
+                                                                                                          and x->>'detail' ~ '^candidate {CAND_ID} '));""" + RBC3 + END.replace("  RAISE EXCEPTION 'REHEARSAL SUMMARY", """  v := v || jsonb_build_object('G_review_list_pass', r->'G_review_list_pass', 'G_rollback', r->'G'->'rollback', 'G_accts', jsonb_build_object('skip', skip_acct, 'multi', multi_acct, 'stg', stg_acct, 'stg_rows', n2),
     'G_flags', (r->'G') - 'rollback' - 'submit' - 'skipped_accounts',
     'rollback_check', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 70), 'pass', x->'pass', 'v', left(x->>'value', 200))) from jsonb_array_elements(r->'rollback_check'->'checks') x),
     'review_candidates_n', r->'rollback_check'->'review_candidates_n',
-    'review_first10', (select jsonb_agg(x) from (select x from jsonb_array_elements(r->'rollback_check'->'review_candidates') x limit 10) y));
+    'review_first10', (select jsonb_agg(x) from (select x from jsonb_array_elements(r->'rollback_check'->'review_candidates') x limit 10) y),
+    'review_after_release', (select jsonb_agg(x) from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'review_reason' in ('staging_superseded_after_release','candidate_marked_duplicate')),
+    'after_release_extraction', r->'G'->'after_release_extraction', 'after_release_rows_superseded', r->'G'->'after_release_rows_superseded',
+    'rbc_save', r->'rollback_check_save');
   RAISE EXCEPTION 'REHEARSAL SUMMARY""")
 
 blocks = {'A': A, 'B': B, 'C': C, 'D': D, 'E': E, 'F': F, 'G': G}
 allsql = []
 for k, sql in blocks.items():
-    (HERE / f'rehearse_round5_{k}.sql').write_text(sql)
+    (HERE / f'rehearse_prepublish_{k}.sql').write_text(sql)
     allsql.append(f'-- ===== block {k} (run on its own; ends in RAISE EXCEPTION, so everything rolls back) =====\n' + sql)
-(HERE / 'rehearse_round5.sql').write_text('\n'.join(allsql))
+(HERE / 'rehearse_prepublish.sql').write_text('\n'.join(allsql))
 print({k: len(v) for k, v in blocks.items()})
