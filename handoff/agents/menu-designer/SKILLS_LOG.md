@@ -122,7 +122,27 @@ Chain of approval: designer → Coordinator → review agents → Rob → lead d
   - The standard footer block for legal lines (currently only supplied lines are printed).
   - The TV board size rule: 1" of cap height per 15 ft.
   - QR code size: 2×2 cm minimum.
-- **Review round 1:** see the entry below (scores from the Design Critic and the Menu Content Reviewer).
+- **Review rounds 1–3** (full detail in `REVIEW_LOG.md`), reviewed by independent agents using the backend's role files:
+  - **Content Reviewer:** 72.6 → 80.0 → **85.6 (passes)**.
+  - **Design Critic:** 53.4 → 64.1 → 69.3. Every measured check passes. It is capped by Menu Studio's price printing
+    (S12/S13) and the absence of ornaments (S10).
+- **Techniques learned from the reviews:**
+  - **Flat sections for small fresh menus.** Menu Studio's +6 px after subsections makes header spacing uneven, so
+    the subsection facts move into each item's line.
+  - Section headers at least 1.3× the item size.
+  - Leader dots for wide single columns.
+  - Non-alcoholic last.
+  - Merge one-item lists.
+  - Category-specific questions.
+  - `needs_input` whenever content is missing.
+  - Change notes must describe what is actually printed.
+  - Don't repeat the style that is already in the name.
+  - Keep gold for headers and the house item; don't use it for every price.
+- **Bugs found by testing myself:**
+  - v1 fitting ran every remedy at once (`steps.map`). Now one at a time.
+  - The badge sits 2 px low (Menu Studio draws it at `y + 2`); the self-check now allows for it.
+  - A regex swallowed the next sentence ("RiNo. For").
+  - The footer was not pinned on one code path.
 
 ---
 

@@ -60,14 +60,15 @@ export function contentGaps(it, list) {
   if (list === 'beer') {
     if (!d.trim()) q.push(`${n}: what style is it, and what is its ABV?`);
     else if (!/\d(\.\d)?\s*%/.test(d)) q.push(`${n}: what is its ABV?`);
-    else if (d.replace(/\d+(\.\d+)?\s*%\s*ABV/i, '').replace(/[·\s]/g, '') === '') q.push(`${n}: what style should print next to the ABV (for example lager, IPA, stout)?`);
+    else if (d.replace(/\d+(\.\d+)?\s*%\s*ABV/i, '').replace(/[·\s]/g, '') === '' && !/\b(ipa|lager|pils|stout|porter|ale|wheat|gose|saison|sour|amber)\b/i.test(it.name)) q.push(`${n}: what style should print next to the ABV (for example lager, IPA, stout)?`);
   } else if (list === 'cider_seltzer') {
     if (!d.trim()) q.push(`${n}: what style or flavour is it, and its ABV?`);
   } else if (/^wine/.test(list || '')) {
     if (!d.trim() || !/[A-Z][a-z]+,?\s+(?:[A-Z][a-z]+|\d{4})|valley|coast|france|italy|spain|california|oregon|washington|argentina|chile|australia|new zealand|germany|portugal|mendoza|napa|sonoma|doc|docg|aoc/i.test(d))
-      q.push(`${n}: which producer (or grape) and region should print${/prosecco|champagne|cava|sparkling|brut/i.test(it.name + d) ? ' (for sparkling: producer and DOC/region)' : ''}?`);
+      q.push(`${n}: which producer and region should print${/cabernet|merlot|pinot|malbec|syrah|shiraz|zinfandel|chardonnay|sauvignon|riesling|grigio|tempranillo|sangiovese|nebbiolo|grenache|garnacha/i.test(it.name) ? '' : ' (and the grape)'}${/prosecco|champagne|cava|sparkling|brut/i.test(it.name + d) ? ' (for sparkling: producer and DOC/region)' : ''}?`);
   } else if (spirit) {
-    if (!/\b(year|yr|aged|blanco|reposado|a[nñ]ejo|joven|espad[ií]n|tobal[aá]|vsop|xo|vs|proof|%|single|small batch|bottled|cask|barrel)\b/i.test(d + ' ' + it.name))
+    if (/\b(blanco|reposado|a[nñ]ejo|joven|extra)\b/i.test(d) && !/\b(proof|%|abv|year|aged)\b/i.test(d)) q.push(`${n}: ${d.trim()} is printed; any proof, ABV or age to add?`);
+    else if (!/\b(year|yr|aged|blanco|reposado|a[nñ]ejo|joven|espad[ií]n|tobal[aá]|vsop|xo|vs|proof|%|single|small batch|bottled|cask|barrel)\b/i.test(d + ' ' + it.name))
       q.push(list === 'mezcal' ? `${n}: which agave and style (joven, reposado…), and its ABV?`
            : list === 'tequila' ? `${n}: which expression (blanco, reposado, añejo) and any age or proof to print?`
            : `${n}: what type, age or proof should print?`);

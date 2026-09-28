@@ -13,7 +13,7 @@ export const MDC_FILE_VERSION = 2;
 const BADGE_FOR_FLAG = { house_special: 'house', new: 'new', seasonal: 'seasonal' };   // MDC_BADGES subset
 // Print legibility floor (px @96 dpi; pt = px x 0.75): names/prices 10.5 pt, descriptions 8.25 pt, labels 6.75 pt.
 // Butterick: body 10–12 pt in print, never below 8 pt; Sensory Trust clear print prefers 12 pt+ (knowledge/01 [16], 02).
-const FLOOR = { name: 14, desc: 11, price: 14, section: 13, sub: 9 };
+const FLOOR = { name: 14, desc: 11, price: 14, section: 13, sub: 11 };
 
 // ---------------------------------------------------------------- request normalisation
 // Accepts brief-style payloads ({venue, menu_type, lists, items, brand, format, constraints, demographics})
@@ -162,6 +162,9 @@ export function buildDoc(req, look, opts = {}) {
     // Menu engineering: house specials and featured items take the first slot(s) of their section,
     // where the eye lands first. Everything else keeps the order it was given in.
     const hot = arr.filter(i => (i.flags || []).some(f => f === 'house_special' || f === 'featured'));
+    // A new item takes the closing edge when a house/featured item already holds the first (both edges sell).
+    const fresh = arr.filter(i => !hot.includes(i) && (i.flags || []).includes('new'));
+    if (hot.length === 1 && fresh.length) hot.push(fresh[0]);
     if (!hot.length || hot.length === arr.length) return arr;
     // Edges sell: items first or last in a category are chosen ~20% more than mid-list (Dayan & Bar-Hillel 2011,
     // knowledge/01 [6]). The first promoted item leads the list, a second one closes it, any others follow the first.
@@ -204,9 +207,9 @@ export function buildDoc(req, look, opts = {}) {
   // each keeping its own subsection so both lists stay visibly equal.
   const tq = sections.find(x => x.name === 'Tequila'), mz = sections.find(x => x.name === 'Mezcal');
   if (tq && mz && (countItems(tq) <= 2 || countItems(mz) <= 2)) {
-    const subs = tq.subs.length ? tq.subs : [{ id: id('sub'), name: 'Tequila', items: tq.items }];
+    const subs = tq.subs.length ? tq.subs.map(b => ({ ...b, name: /^tequila/i.test(b.name) ? b.name : `Tequila ${b.name}` })) : [{ id: id('sub'), name: 'Tequila', items: tq.items }];
     if (tq.subs.length && tq.items.length) subs.unshift({ id: id('sub'), name: 'Tequila', items: tq.items });
-    subs.push(...(mz.subs.length ? mz.subs.map(b => ({ ...b, name: `Mezcal · ${b.name}` })) : [{ id: id('sub'), name: 'Mezcal', items: mz.items }]));
+    subs.push(...(mz.subs.length ? mz.subs.map(b => ({ ...b, name: `Mezcal ${b.name}` })) : [{ id: id('sub'), name: 'Mezcal', items: mz.items }]));
     tq.name = 'Tequila & Mezcal'; tq.items = []; tq.subs = subs;
     sections.splice(sections.indexOf(mz), 1);
     changes.push('Tequila and Mezcal share one section with their own subsections (a one-item list does not earn a full header).');
@@ -224,11 +227,18 @@ export function buildDoc(req, look, opts = {}) {
   let subtitle = '';
   if (req.menu_type === 'Happy hour page' && req.venue.name) subtitle = 'Happy Hour' + (req.voice?.hours ? ` · ${req.voice.hours}` : '');
   else if (req.voice?.hours) subtitle = req.voice.hours;
+  else if (req.venue.area && venueWord(req.venue.type)) subtitle = `${venueWord(req.venue.type)}  ·  ${req.venue.area}`;
   else {
     const offer = sections.map(x => x.name).join('  ·  ');
     if (sections.length >= 2 && offer.length <= 64) subtitle = offer;       // the city goes in the footer, never twice
   }
   return { doc: { id: 'doc_designer', title: title || 'Menu', subtitle, sections }, changes, title_missing: !title };
+}
+
+// The venue's own kind, as a plain word for the masthead ("Cantina · RiNo"); only for recognised venue types.
+function venueWord(t) {
+  return { latin_cantina: 'Cantina', cocktail_lounge: 'Cocktail bar', brewery: 'Taproom', wine_bar: 'Wine bar', hotel_bar: 'Hotel bar',
+           dive_bar: 'Bar', sports_bar: 'Sports bar', tiki: 'Tiki bar', fine_dining: 'Restaurant', restaurant: 'Restaurant' }[normVenue(t)] || null;
 }
 
 function countItems(sec) { return (sec.items || []).length + (sec.subs || []).reduce((a, b) => a + (b.items || []).length, 0); }
@@ -312,7 +322,7 @@ export function measure(doc, S, sizeKey) {
   let pages = L.pages, fill = Math.round(((L.pages - 1) + L.lastPageUsed) * 100) / 100;
   if (foot && L.pages === 1) {
     const usable = L.H - 2 * L.M;
-    const reserve = (foot.desc ? S.section.s + 11 + S.desc.s * 1.16 : Math.max(8, S.sub.s) * 1.16) + Math.max(S.page.secGap * 1.25, S.name.s * 1.6);
+    const reserve = (foot.desc ? S.section.s + 11 + S.desc.s * 1.16 : Math.max(8, S.sub.s) * 1.16) + Math.max(S.page.secGap, S.name.s * 1.3);
     if (L.contentBottom + reserve > L.H - L.M) pages = 2;
     fill = Math.round(((L.contentBottom - L.M) / (usable - reserve)) * 100) / 100;
   }
@@ -331,7 +341,8 @@ export function fit(doc, S, sizeKey, want) {
     () => { let ch = false; for (const l of ['name', 'price', 'desc', 'section', 'sub']) if (S[l].s - 1 >= FLOOR[l]) { S[l].s -= 1; ch = true; } return ch ? 'stepped type down one size' : null; },
   ];
   for (let i = 0; m.pages > budget && i < 12; i++) {
-    const did = steps.map(f => f()).find(Boolean);
+    let did = null;
+    for (const f of steps) { did = f(); if (did) break; }        // one remedy at a time, in order (v1 ran them all)
     if (!did) break;
     log.push(did); m = measure(doc, S, sizeKey);
   }
@@ -353,12 +364,12 @@ export function fit(doc, S, sizeKey, want) {
         if (r.pages > budget) break;
         const last = r.fill - (r.pages - 1);
         // Prefer fill near 0.88, a measure no wider than ~5.5 in (528 px), and larger body type.
-        const measurePenalty = Math.max(0, r.colW - 528) / 300;
+        const measurePenalty = Math.max(0, r.colW - 528) / 300 + (cols === 1 && r.colW > 640 ? 0.35 : 0);
         // Unbalanced columns (one ends far above the other) read as a mistake; single-column pages have none.
         // Menu Studio prints prices inline beside the name when there is more than one column (mdcDrawItem), so only a
         // single column gives the scorecard's one right-aligned price column. Multi-column must earn its place.
         // A line wider than its column runs into the next one in Menu Studio (no wrapping): heavy cost per line.
-        const score = -Math.abs(0.88 - last) * 3 - measurePenalty - (r.imbalance || 0) * 4 - (cols > 1 ? 0.45 : 0) - r.wide.length * 0.3 - r.wide.reduce((a, x) => a + Math.max(0, x.over), 0) / 150 + (cols === 1 ? 0.08 : 0) + Math.min(T.name.s, 20) / 100;
+        const score = -Math.abs(0.88 - last) * 3 - measurePenalty - (r.imbalance || 0) * 4 - (cols > 1 ? 0.1 : 0) - r.wide.length * 0.3 - r.wide.reduce((a, x) => a + Math.max(0, x.over), 0) / 150 + (cols === 1 ? 0.08 : 0) + Math.min(T.name.s, 20) / 100;
         if (process.env.MDZ_DEBUG) console.error(cols, mg, k.toFixed(2), r.pages, (r.fill).toFixed(2), r.colW, (r.imbalance||0).toFixed(2), r.wide.length, score.toFixed(3));
         if (!best || score > best.score) best = { score, T, r, k, cols, mg };
       }
@@ -405,7 +416,7 @@ export function fit(doc, S, sizeKey, want) {
       apply(g);
       const L = layout({ doc, style: S, size: sizeKey });
       if (L.pages > 1) return Infinity;
-      return footTop !== null ? L.contentBottom + Math.max(S.page.secGap * 1.25, S.name.s * 1.6) - footTop : L.contentBottom - (H - M);
+      return footTop !== null ? L.contentBottom + Math.max(S.page.secGap, S.name.s * 1.3) - footTop : L.contentBottom - (H - M);
     };
     const f0 = f(0);
     if (isFinite(f0) && Math.abs(f0) > 2) {
@@ -430,11 +441,69 @@ export function fit(doc, S, sizeKey, want) {
   return { m, log };
 }
 
+// Descriptions from facts already in the inputs, and one house style for description copy (Content Reviewer round 2):
+// - an item heard under an expression subsection gets that expression + spirit ("Blanco tequila");
+// - a beer whose name carries its style prints the style before the ABV ("IPA · 6.2% ABV");
+// - ingredient lists are serial lists without a closing "and" ("Mint, lime, soda"); "X infused" -> "X-infused".
+const BEER_STYLES = ['double ipa', 'hazy ipa', 'ipa', 'pale ale', 'pilsner', 'pils', 'lager', 'stout', 'porter', 'amber', 'wheat', 'hefeweizen', 'gose', 'saison', 'kolsch', 'kölsch', 'sour', 'red ale', 'brown ale', 'blonde'];
+function knownFacts(doc) {
+  const changes = [];
+  for (const { it, s, sub } of itemsOf(doc)) {
+    const list = it.meta?.section || listForName(sub?.name || s.name);
+    const d0 = String(it.desc || '');
+    if (!d0.trim() && sub && ['tequila', 'mezcal'].includes(list)) {
+      const expr = sub.name.replace(/^(tequila|mezcal)\s*/i, '').trim();
+      if (expr && /blanco|reposado|a[nñ]ejo|joven|extra/i.test(expr)) { it.desc = `${expr.charAt(0).toUpperCase() + expr.slice(1).toLowerCase()} ${list}`; it.meta = { ...(it.meta || {}), description_source: 'inputs' }; changes.push(`"${it.name}" description "${it.desc}" from how it was listed.`); }
+    }
+    if (false && list === 'beer') {                       // round 3: the name already carries the style; don't repeat it
+      const st = BEER_STYLES.find(x => new RegExp(`\\b${x}\\b`, 'i').test(it.name));
+      if (st && /^\s*\d+(\.\d+)?%\s*ABV\s*$/i.test(d0)) { it.desc = `${st.toUpperCase() === 'IPA' || /ipa/.test(st) ? st.replace(/ipa/i, 'IPA').replace(/^./, c => c.toUpperCase()) : st.charAt(0).toUpperCase() + st.slice(1)} · ${d0.trim()}`; it.meta = { ...(it.meta || {}), style_from_name: true }; changes.push(`"${it.name}" shows its style from its name: ${it.desc}.`); }
+    }
+    let d = String(it.desc || '');
+    const styled = d.replace(/,\s+([^,]+?)\s+and\s+([^,]+)$/i, ', $1, $2').replace(/\b(\w+) infused\b/gi, '$1-infused');
+    if (styled !== d && it.meta?.description_source !== 'recipe_components') { it.desc = styled; changes.push(`"${it.name}" description set in house style (serial list, hyphenation); words unchanged.`); }
+  }
+  return changes;
+}
+
+// Flat sections for small fresh menus (critic round 2): Menu Studio adds 6 px after every subsection only, so a menu
+// mixing sections with and without subsections can never have equal space above its headers (scorecard ±0.5 mm).
+// When every subsection is short, the subsection name moves into each item's line as a fact ("Draft · …",
+// "Blanco tequila") and the page gets one clean level of headers. Suggestion S7 would make this unnecessary.
+function flattenSubs(doc) {
+  const secs = doc.sections.filter(x => !x.designer_role);
+  const total = secs.reduce((a, x) => a + countItems(x), 0);
+  if (total > 24 || !secs.some(x => (x.subs || []).length) || secs.some(x => (x.subs || []).some(b => b.items.length > 4))) return [];
+  const changes = [];
+  for (const sec of secs) {
+    if (!(sec.subs || []).length) continue;
+    const moved = [];
+    for (const b of sec.subs) for (const it of b.items) {
+      const tag = b.name.replace(/^(tequila|mezcal)\s+(?=\S)/i, '').trim().replace(/^cans$/i, 'Can').replace(/^bottles$/i, 'Bottle');
+      const d = String(it.desc || '');
+      const agave = /^(tequila|mezcal)/i.test(b.name) || /tequila|mezcal/i.test(sec.name);
+      if (agave && /^(blanco|reposado|a[nñ]ejo|joven|extra a[nñ]ejo)$/i.test(tag)) {
+        if (!new RegExp(tag, 'i').test(d)) it.desc = d ? `${tag} · ${d}` : `${tag} ${/mezcal/i.test(b.name) ? 'mezcal' : 'tequila'}`;
+      } else if (agave && /^(tequila|mezcal)$/i.test(b.name)) {
+        if (!d) it.desc = b.name.charAt(0).toUpperCase() + b.name.slice(1).toLowerCase();
+      } else if (!/^by the glass/i.test(b.name) || !(it.prices || []).some(p => p.label)) {
+        if (!new RegExp('^' + tag, 'i').test(d)) it.desc = d ? `${tag} · ${d}` : tag;
+      }
+      it.meta = { ...(it.meta || {}), serve_format: it.meta?.serve_format || b.name };
+      moved.push(it);
+    }
+    sec.items = [...(sec.items || []), ...moved];
+    changes.push(`${sec.name}: subsections (${sec.subs.map(b => b.name).join(', ')}) folded into each item's line, so every header has the same space above it.`);
+    sec.subs = [];
+  }
+  return changes;
+}
+
 // Colophon footer: a pinned, item-less section on the bottom margin. Only known facts: city/state and website from
 // the venue record, and legal lines exactly as supplied. It gives the page a finished foot and lets the layout meet
 // the scorecard's equal-margin rule inside Menu Studio (which counts trailing gaps toward the page height).
 function addFooter(doc, req) {
-  const place = [req.venue.area, [req.venue.city, req.venue.state].filter(Boolean).join(', ')].filter(Boolean).join('  ·  ');
+  const place = [doc.subtitle && req.venue.area && doc.subtitle.includes(req.venue.area) ? null : req.venue.area, [req.venue.city, req.venue.state].filter(Boolean).join(', ')].filter(Boolean).join('  ·  ');
   const line = [place, req.venue.website].filter(Boolean).join('  ·  ');
   const legal = [].concat(req.constraints.legal_lines || req.constraints.legal || []).filter(Boolean);
   if (!line && !legal.length) return;
@@ -449,7 +518,7 @@ function placeFooter(doc, S, sizeKey) {
   const f = doc.sections.find(x => x.designer_role === 'footer');
   if (!f) return null;
   const [wIn, hIn] = MDC_SIZES[sizeKey]; const W = wIn * MDC_DPI, H = hIn * MDC_DPI, M = S.page.margin * MDC_DPI;
-  f.format = { section: { f: S.sub.f, s: Math.max(8, S.sub.s), w: S.sub.w, i: false, sp: Math.max(200, S.sub.sp || 0), c: S.sub.c, cs: 'upper' } };
+  f.format = { section: { f: S.sub.f, s: Math.max(9, S.sub.s), w: S.sub.w, i: false, sp: 60, c: S.sub.c, cs: 'none' } };   // keeps "RiNo" as spelled
   const vis = f.desc ? S.section.s + 11 + S.desc.s * 1.16 : f.format.section.s * 1.16;
   const top = H - M - vis;
   f.pos = { page: 0, x: +(M / W).toFixed(5), y: +(top / H).toFixed(5) };
@@ -507,11 +576,20 @@ export function design(input, options = {}) {
     if (options.standards) for (const c of applyStandards(doc, options.standards)) changes.push(c);
     if (built.questions) for (const q of built.questions) questions.push(q);
     if (built.flags) for (const f of built.flags) risk.add(f);
-    const noGarnish = itemsOf(doc).filter(({ it, s }) => (it.meta?.section === 'cocktails' || /cocktail/i.test(s.name)) && it.desc && !(it.components || []).some(c => /garnish/i.test(c.role || '')));
+    for (const c of knownFacts(doc)) changes.push(c);
+    const noGarnish = itemsOf(doc).filter(({ it, s }) => ['cocktails', 'non_alcoholic'].includes(it.meta?.section || '') && it.desc && (it.meta?.section === 'cocktails' || /,/.test(it.desc)) && !(it.components || []).some(c => /garnish/i.test(c.role || '')));
     if (noGarnish.length) questions.push(`Garnish: which garnish goes on ${noGarnish.map(x => `"${x.it.name}"`).join(', ')}? (Printed garnishes are a scorecard requirement for cocktails.)`);
     if (!fromDraft) for (const { it, s, sub } of itemsOf(doc)) {
       if (s.designer_role) continue;
       for (const q of contentGaps(it, it.meta?.section || listForName(sub?.name || s.name))) { questions.push(q); risk.add(gapFlag(q)); }
+    }
+    if (!fromDraft && options.flatten !== false) {
+      const fl = flattenSubs(doc);
+      if (fl.length) {
+        // The notes must describe what is printed (Content Reviewer round 3): drop the subsection-era notes.
+        for (let i = changes.length - 1; i >= 0; i--) if (/own subsections|Renamed "By the glass"/.test(changes[i])) changes.splice(i, 1);
+        changes.push(...fl);
+      }
     }
     addFooter(doc, req);
     const { m, log } = fit(doc, style, sizeKey, req.format);

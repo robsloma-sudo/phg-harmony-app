@@ -43,7 +43,17 @@ export function selfcheck(layout, file, task = null) {
   }
 
   // Price column: prices in one column share one right edge (±0.3 mm).
-  for (const [key, arr] of byCol('price')) {
+  if (layout.grid.price_alignment === 'inline') {
+    // One consistent inline style (scorecard criterion 3): every price sits the same distance after its name/badges.
+    const gaps = [];
+    for (const p of E.filter(e => e.kind === 'price')) {
+      const before = E.filter(e => e.ref === p.ref && e.page === p.page && Math.abs(e.y_mm - p.y_mm) < 1 && ['item_name', 'brand', 'label'].includes(e.kind));
+      if (before.length) gaps.push(p.x_mm - Math.max(...before.map(e => e.x_mm + e.w_mm)));
+    }
+    const sp = gaps.length ? Math.max(...gaps) - Math.min(...gaps) : 0;
+    check('price_inline_consistency', 3, sp <= 0.3, `inline prices: gap after name ${r2(Math.min(...gaps))}–${r2(Math.max(...gaps))} mm`, sp > 0.3 ? `Inline prices sit at varying distances after their names (${r2(sp)} mm).` : null);
+  }
+  for (const [key, arr] of (layout.grid.price_alignment === 'inline' ? new Map() : byCol('price'))) {
     const rs = arr.map(e => e.x_mm + e.w_mm), spread = Math.max(...rs) - Math.min(...rs);
     check(`price_column_${key}`, 3, spread <= 0.3, `prices in column ${key}: right-edge spread ${r2(spread)} mm (${layout.grid.price_alignment})`,
       spread > 0.3 ? (layout.grid.price_alignment === 'inline'

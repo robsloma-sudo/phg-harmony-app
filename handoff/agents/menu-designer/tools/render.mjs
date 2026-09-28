@@ -158,7 +158,10 @@ function docHTML(file, L, { bleed = 0, slug = 0, marks = false } = {}) {
 function phoneHTML(file) {
   const S = file.style, P = S.page, doc = file.doc;
   const k = 1.25, lift = (st, min) => Object.assign({}, st, { s: Math.max(min, Math.round(st.s * k)) });
-  const T = { title: lift(S.title, 28), subtitle: lift(S.subtitle, 11), section: lift(S.section, 16), sub: lift(S.sub, 11),
+  // Title fits one line on a 390 px screen: size and tracking come down together for long names.
+  const tLen = String(doc.title || '').length, tSp = Math.min(S.title.sp || 0, 160);
+  const tFit = Math.floor(340 / Math.max(1, tLen * (0.62 + tSp / 1000)));
+  const T = { title: Object.assign({}, S.title, { s: Math.max(20, Math.min(Math.round(S.title.s * 1.25), tFit)), sp: tSp }), subtitle: lift(S.subtitle, 11), section: lift(S.section, 16), sub: lift(S.sub, 11),
               name: lift(S.name, 16), brand: lift(S.brand, 16), desc: lift(S.desc, 14), price: lift(S.price, 16) };
   const c = (st, o) => css(st, o).replace('white-space:pre;', '');
   const fontCss = fontFaces();
@@ -184,7 +187,7 @@ function phoneHTML(file) {
   }
   if (footer) {
     const fst = Object.assign({}, S.section, footer.format?.section || {});
-    body += `<footer style="padding:18px 22px 8px;${P.rules ? `border-top:1px solid ${P.rule};` : ''}margin:8px 22px 0;padding-left:0;padding-right:0"><div style="${c(Object.assign({}, fst, { s: Math.max(11, fst.s) }))}">${escH(txt(footer.name, fst))}</div>${footer.desc ? `<div style="${c(T.desc)};margin-top:6px">${escH(footer.desc)}</div>` : ''}</footer>`;
+    body += `<footer style="padding:18px 0 8px;margin:8px 22px 0"><div style="${c(Object.assign({}, fst, { s: Math.max(11, fst.s) }))}">${escH(txt(footer.name, fst))}</div>${footer.desc ? `<div style="${c(T.desc)};margin-top:6px">${escH(footer.desc)}</div>` : ''}</footer>`;
   }
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${fontCss}
     html,body{margin:0;background:${P.bg};color:${P.ink};-webkit-text-size-adjust:100%} *{box-sizing:border-box}</style></head><body>${body}<div style="height:28px"></div></body></html>`;

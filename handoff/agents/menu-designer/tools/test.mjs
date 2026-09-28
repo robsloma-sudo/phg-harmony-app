@@ -59,6 +59,8 @@ t('font indices valid', () => { for (const o of res.options) for (const [k, v] o
 t('fits one page', () => { for (const o of res.options) assert.equal(o.fit.pages, 1); });
 t('footer pinned inside the margins', () => { for (const o of res.options) { const f = o.menu_studio_file.doc.sections.find(x => x.designer_role === 'footer'); if (f) { assert.ok(f.pos.x > 0.03 && f.pos.y > 0.8 && f.pos.y < 0.97, JSON.stringify(f.pos)); } } });
 t('non-alcoholic is the last list', () => { for (const o of res.options) { const n = o.menu_studio_file.doc.sections.filter(x => !x.designer_role).map(x => x.name); assert.match(n[n.length - 1], /Zero Proof|Non-Alcoholic/); } });
+t('small fresh menus are flat (equal space above every header)', () => { for (const o of res.options) assert.ok(o.menu_studio_file.doc.sections.every(x => !(x.subs || []).length)); });
+t('folded serve formats become facts on the line', () => { const d = res.options[0].menu_studio_file.doc; const all = d.sections.flatMap(x => x.items); assert.equal(all.find(i => i.name === 'Tecate').desc, 'Can'); assert.equal(all.find(i => i.name === 'Siete Leguas').desc, 'Blanco tequila'); assert.match(all.find(i => i.name === 'Lagunitas IPA').desc, /^Draft · 6.2% ABV$/); });
 t('missing prices -> needs input flag', () => assert.ok(design(missing).risk_flags.includes('missing_prices')));
 
 console.log(`${pass} passed, ${fail} failed`);

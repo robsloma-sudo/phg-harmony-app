@@ -55,7 +55,7 @@ export const MDC_PRESETS = {
 // `roles` says which levels carry the accent so a brand colour lands in the right places.
 export const LOOKS = [
   {
-    k: 'noir', label: 'Speakeasy Noir', base: 'slate', accent: '#c9a45c', accent2: '#c7876a', roles: ['section', 'price', 'subtitle'],
+    k: 'noir', label: 'Speakeasy Noir', base: 'slate', accent: '#c9a45c', accent2: '#c7876a', roles: ['section', 'subtitle'],
     note: 'Near-black page, cream ink, antique-gold heads. Low-light legible: generous size, no hairline type.',
     fits: { venue: ['cocktail_lounge', 'nightclub', 'hotel_bar'], tone: ['dark', 'elegant', 'vintage'] },
     d: { page: { bg: '#151412', ink: '#efe6d4', rule: '#3d372e', margin: 0.7, itemGap: 8, secGap: 20, rules: true },
@@ -64,7 +64,7 @@ export const LOOKS = [
       section: { f: 2, s: 15, w: 'normal', sp: 320, c: '#c9a45c', cs: 'upper' },
       sub: { f: 4, s: 9, w: 'normal', sp: 300, c: '#9a907f', cs: 'upper' },
       name: { f: 2, s: 14, w: 'bold', c: '#efe6d4' }, brand: { f: 2, s: 14, i: true, c: '#c9a45c' },
-      desc: { f: 4, s: 11, c: '#b3a994' }, price: { f: 4, s: 13, c: '#c9a45c' } },
+      desc: { f: 4, s: 11, c: '#b3a994' }, price: { f: 4, s: 13, c: '#efe6d4' } },
   },
   {
     k: 'cantina', label: 'Cantina Sol', base: 'house', accent: '#b5532f', roles: ['title', 'section'],
