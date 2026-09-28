@@ -13,9 +13,9 @@ draft = json.loads((HERE.parent / "build" / "draft_doc.json").read_text())
 #       "s" spirit (name + price only)
 # cocktail tokens: list of (text, letter_break_before, phone_break_before)
 C = {
- "beta_margarita": [("tequila blanco", 0, 0), ("fresh lime", 0, 0), ("orange liqueur", 0, 0), ("agave syrup", 0, 0), ("lime wheel", 1, 1), ("bright, citrus-forward", 0, 0)],
- "beta_manhattan": [("rye whiskey", 0, 0), ("sweet vermouth", 0, 0), ("cocktail cherry", 0, 0)],
- "beta_old_fashioned": [("brown butter-washed bourbon", 0, 0), ("house demerara syrup", 0, 0), ("aromatic bitters", 1, 1), ("orange peel", 0, 0)],
+ "beta_margarita": [("tequila blanco", 0, 0), ("fresh lime", 0, 0), ("orange liqueur", 0, 0), ("agave syrup", 0, 1), ("lime wheel", 1, 0), ("bright, citrus-forward", 0, 1)],
+ "beta_manhattan": [("rye whiskey", 0, 0), ("sweet vermouth", 0, 0), ("cocktail cherry", 0, 1)],
+ "beta_old_fashioned": [("brown butter-washed bourbon", 0, 0), ("house demerara syrup", 0, 1), ("aromatic bitters", 1, 1), ("orange peel", 0, 0)],
  "beta_daiquiri": [("white rum", 0, 0), ("fresh lime", 0, 0), ("house demerara syrup", 0, 0), ("lime coin", 1, 1)],
 }
 SRC = {
@@ -318,7 +318,7 @@ h3{{font:700 9pt/{2 * U}pt 'DM Sans',sans-serif;letter-spacing:.16em;text-transf
  .item.r .name{{width:144px}}
  .dl{{font-size:15px;line-height:24px}}
  .price{{font-size:16px;line-height:24px}}
- .desc{{font-size:14px;line-height:24px}}
+ .desc{{font-size:15px;line-height:24px}}
  .glass{{font-size:12px}}
  .bl,.sepl{{display:none}} .bp{{display:inline}} .sepp{{display:inline}}
  .legal{{margin-top:40px;font-size:14px;line-height:24px}}

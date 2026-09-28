@@ -1051,3 +1051,17 @@ tough scale (best).
   33 uncontrolled evidence_class values; 0 RLS policies; all sources access_status='reference'; no ingredient-order rule
   in guidance or rules. Added a provisional 50/20-vs-37 source reconciliation by title (file 02 still missing).
   Status doc bumped to 2026-09-28.3. G12 export not run (awaiting Rob; read-only).
+2026-09-28 — Rob sent 3 reference images (Glass Garden, Solstice, Cantina six-panel), stored unmodified in
+  handoff/design-intelligence/comparison-artifacts/ with hashes, visual_tests.json and COMPARISON_AUDIT.md.
+  Findings:
+  - Cantina six-panel matches only 7 DB items. Margarita is priced 14 vs DB 15; 6 approved items are missing and
+    12 non-DB items were added (mezcal, Modelo, Tecate, Jarritos...). Asked Rob whether those are his intended content.
+  - Glass Garden contains the banned "PLANTS PEOPLE POURS POSSIBILITIES" and "Stranger Things Grow Here Too".
+  - Solstice names a cocktail "Strange Fruit" (the Billie Holiday anti-lynching song); must not be used.
+  - Glass Garden and Solstice lack sensory descriptions and list crushed ice as an ingredient; they disagree on
+    rosé and lager prices; real wine producers were named by the image model (unconfirmed).
+  Measured: Glass Garden and Solstice each have one dominant field (primary:secondary 11 / 17); the six-panel has
+  25 competing regions (ratio 1.3). Accent ≤6% rule revised: Rob's preferred refs run ~12% accent, concentrated
+  in the gesture.
+  Correction: TEST-1 DB items are beta_seed/sample_content=true (sample data); the benchmark plan was amended.
+  Proposed Arm D = Solstice structure.

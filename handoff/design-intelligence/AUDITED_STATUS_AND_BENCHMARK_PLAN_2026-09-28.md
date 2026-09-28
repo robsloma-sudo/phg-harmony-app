@@ -162,7 +162,7 @@ This is **one stakeholder's judgement**. It governs what we build for Rob, but i
 
 **Question:** Does design knowledge retrieved from `phg_design` (via `phg_design_packet`) produce better menus than the same designer without it, holding content, format and art tooling fixed?
 
-**Brief:** TEST-1 Iowa City cantina, the 14 approved items. I chose it because its content is DB-verified (`phg.menu_items` status approved; Junmai Ginjo retired). The Last Round content is still unapproved (§2A), so it would confound content errors with design quality. The Last Round becomes benchmark #2 once §2A is signed off.
+**Brief:** TEST-1 Iowa City cantina, the 14 approved items. I chose it because its content is fixed in the DB (`phg.menu_items` status approved; Junmai Ginjo retired). **Correction (2026-09-28): every item carries `metadata.beta_seed/sample_content = true`. It is seeded sample content, not a real venue's menu.** That is fine for a controlled benchmark, where the only requirement is content locked across arms, but results say nothing about a live menu. The Last Round content is still unapproved (§2A), so it would confound content errors with design quality. The Last Round becomes benchmark #2 once §2A is signed off.
 
 **Locked inputs:**
 - content manifest JSON (names, prices, descriptions, ingredients in role order), sha256 recorded before any generation
@@ -177,7 +177,7 @@ This is **one stakeholder's judgement**. It governs what we build for Rob, but i
 | A — baseline | brief + manifest only |
 | B — KB-assisted | brief + manifest + `phg_design_packet('cocktail_menu', …)` output, logged verbatim with the packet hash |
 | C — reference | round-17 as-is (current best checkpoint, hash 4c13a4f8b996…) |
-| D — reference | Rob-preferred direction, rebuilt on the locked manifest once identified |
+| D — reference | Rob-preferred direction. Proposed: **Solstice** structure (comparison-artifacts/ref-solstice.png), rebuilt on the locked manifest with exact HTML text. Pending Rob's confirmation |
 
 - Arms A and B each produce 3 structurally different proposals (silhouette corr < 0.8 via `visual_tests.py`).
 - The best of each is picked by a deterministic gate pass only, not taste.
@@ -211,7 +211,7 @@ This is **one stakeholder's judgement**. It governs what we build for Rob, but i
 
 **Needs from Rob before the run:**
 1. OK to run it. It has zero production impact.
-2. Confirm Arm D: which menu is your preferred direction?
+2. Confirm Arm D = Solstice structure (see comparison-artifacts/COMPARISON_AUDIT.md), or name another.
 3. Whether to include the human arm.
 
 ---

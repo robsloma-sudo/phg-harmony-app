@@ -1,0 +1,101 @@
+{
+ "results": [
+  {
+   "file": "ref-cantina-six-panel.png",
+   "squint_salient_regions": 25,
+   "primary_area_pct": 3.8,
+   "primary_to_secondary": 1.3,
+   "ground_luminance": 0.815,
+   "value_range_p5_p95": [
+    0.179,
+    0.896
+   ],
+   "accent_area_pct": 12.13,
+   "visual_centroid": [
+    0.467,
+    0.525
+   ]
+  },
+  {
+   "file": "ref-glass-garden.png",
+   "squint_salient_regions": 11,
+   "primary_area_pct": 29.66,
+   "primary_to_secondary": 10.84,
+   "ground_luminance": 0.718,
+   "value_range_p5_p95": [
+    0.108,
+    0.891
+   ],
+   "accent_area_pct": 11.81,
+   "visual_centroid": [
+    0.491,
+    0.593
+   ]
+  },
+  {
+   "file": "ref-solstice.png",
+   "squint_salient_regions": 8,
+   "primary_area_pct": 27.22,
+   "primary_to_secondary": 16.53,
+   "ground_luminance": 0.737,
+   "value_range_p5_p95": [
+    0.043,
+    0.888
+   ],
+   "accent_area_pct": 12.17,
+   "visual_centroid": [
+    0.407,
+    0.619
+   ]
+  },
+  {
+   "file": "../../designs/test-1-iowa-city-cantina/round-17/preview-letter.png",
+   "squint_salient_regions": 8,
+   "primary_area_pct": 15.31,
+   "primary_to_secondary": 59.64,
+   "ground_luminance": 0.869,
+   "value_range_p5_p95": [
+    0.264,
+    0.908
+   ],
+   "accent_area_pct": 6.41,
+   "visual_centroid": [
+    0.252,
+    0.63
+   ]
+  }
+ ],
+ "variant_silhouette": [
+  {
+   "a": "ref-cantina-six-panel.png",
+   "b": "ref-glass-garden.png",
+   "silhouette_corr": -0.019
+  },
+  {
+   "a": "ref-cantina-six-panel.png",
+   "b": "ref-solstice.png",
+   "silhouette_corr": 0.099
+  },
+  {
+   "a": "ref-cantina-six-panel.png",
+   "b": "../../designs/test-1-iowa-city-cantina/round-17/preview-letter.png",
+   "silhouette_corr": 0.172
+  },
+  {
+   "a": "ref-glass-garden.png",
+   "b": "ref-solstice.png",
+   "silhouette_corr": 0.262
+  },
+  {
+   "a": "ref-glass-garden.png",
+   "b": "../../designs/test-1-iowa-city-cantina/round-17/preview-letter.png",
+   "silhouette_corr": 0.143
+  },
+  {
+   "a": "ref-solstice.png",
+   "b": "../../designs/test-1-iowa-city-cantina/round-17/preview-letter.png",
+   "silhouette_corr": 0.643
+  }
+ ],
+ "notes": "silhouette_corr > 0.8 = structurally similar directions (variant_silhouette_test fails)"
+}
