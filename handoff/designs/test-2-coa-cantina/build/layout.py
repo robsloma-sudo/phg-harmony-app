@@ -97,6 +97,26 @@ for c, E in sorted(cols.items()):
 checks['header_spacing_below_mm'] = {k: {'values': sorted(set(v)), 'spread_mm': spread(v)} for k, v in hsp.items()}
 checks['item_gaps'] = gaps
 checks['contrast'] = contrast
+# space above every level-1 header: from the lowest element above it that overlaps it horizontally
+above = []
+for h in [e for e in elements if e.get('level') == 1]:
+    prev = [e for e in elements if e['page'] == h['page'] and e is not h and e['y_mm'] + e['h_mm'] <= h['y_mm'] + 0.01
+            and e['x_mm'] < h['x_mm'] + h['w_mm'] and e['x_mm'] + e['w_mm'] > h['x_mm']]
+    if prev:
+        p = max(prev, key=lambda e: e['y_mm'] + e['h_mm'])
+        above.append({'header': h['text'][:24], 'page': h['page'], 'space_above_mm': r2(h['y_mm'] - (p['y_mm'] + p['h_mm'])), 'measured_from': p['kind']})
+checks['space_above_L1_mm'] = above
+# column bottoms per band (holes)
+bands = defaultdict(dict)
+for c, E in cols.items():
+    top_ = min(e['y_mm'] for e in E); bot_ = max(e['y_mm'] + e['h_mm'] for e in E)
+    bands[(E[0]['page'], r2(top_))][c] = r2(bot_)
+checks['column_bottoms_mm'] = [{'page': k[0], 'band_top_mm': k[1], 'bottoms': v, 'spread_mm': r2(max(v.values()) - min(v.values()))} for k, v in sorted(bands.items())]
+# free space between the last content and the footer rule
+for pg in (1, 2):
+    foot = [e for e in elements if e['page'] == pg and e['kind'] == 'footer'][0]
+    last = max(e['y_mm'] + e['h_mm'] for e in elements if e['page'] == pg and e.get('column'))
+    checks[f'page{pg}_space_last_content_to_footer_rule_mm'] = r2(foot['y_mm'] - last)
 
 # content: every item_name has a description element?
 refs_name = {e['ref'] for e in elements if e['kind'] == 'item_name'}
@@ -117,17 +137,20 @@ checks['item_names_without_own_description_line'] = {'count': len(no_desc), 'all
 layout = {
  'page': {'size': 'US Legal portrait', 'width_mm': W_MM, 'height_mm': H_MM, 'width_pt': 612, 'height_pt': 1008, 'pages': 2,
           'margins_mm': {'top': 12.7, 'right': 12.7, 'bottom': 12.7, 'left': 12.7}, 'bleed_mm': 0,
-          'note': 'Duplex on one sheet: page 1 Cocktails/Beer, page 2 Agave & Spirits.'},
+          'note': 'Duplex on one sheet: page 1 Drinks (margaritas, cocktails, frozen, beer, seltzer & cider, alcohol free), page 2 Tequila & Spirits.'},
  'grid': {'columns': 12, 'column_width_pt': 28.5, 'gutter_pt': 18, 'gutter_mm': 6.35, 'baseline_pt': 1,
           'spans': {'halves': '6 cols = 261pt (92.08mm)', 'thirds': '4 cols = 168pt (59.27mm)', 'quarters': '3 cols = 121.5pt (42.86mm)'},
-          'rhythm_pt': {'cocktail_name_line': 16, 'cocktail_desc_line': 12, 'cocktail_item_gap': 12, 'list_row': 14, 'matrix_row': 13, 'section_gap': 21},
-          'note': 'Leading is set per text role (16/12/14/13pt) on a 1pt grid; each role is constant everywhere it appears.'},
+          'rhythm_pt': {'space_above_L1': 21, 'cocktail_name_line': 17, 'cocktail_desc_line': 13, 'cocktail_item_gap': {'margaritas_frozen_af': 15, 'cocktails_column_p1': 22.1},
+                        'list_row': 16, 'matrix_row': 13, 'L2_to_first_row': 4.5, 'between_L2_blocks': 15},
+          'note': 'Leading is set per text role on a 1pt grid and is constant wherever that role appears. The Cocktails column uses one constant 22.1pt item gap (its items carry 2-3 line descriptions) so it ends on the Margaritas line; every other cocktail-style list uses 15pt.'},
  'palette': PAL,
  'type': {'masthead': {'font': 'Fraunces 900', 'size_pt': 40}, 'page_title': {'font': 'Fraunces 600 italic', 'size_pt': 20},
           'header': {'font': 'Fraunces 800', 'size_pt': 18, 'colour': '#A8361F'},
           'subheader': {'font': 'DM Sans 800 caps +0.18em', 'size_pt': 8, 'colour': '#135651'},
-          'item': {'font': 'Fraunces 650 (cocktails) / DM Sans 500 (lists)', 'size_pt': [12.5, 9.5, 9], 'feature_size_pt': 14},
-          'description': {'font': 'DM Sans 400', 'size_pt': [9, 8], 'colour': '#57504A'},
+          'item': {'font': 'Fraunces 650 (cocktails) / DM Sans 500 (lists)', 'size_pt': [13, 9.5, 9], 'feature_size_pt': 14.5},
+          'description': {'font': 'DM Sans 400 (intro lines italic)', 'size_pt': [9.5, 8], 'colour': '#57504A'},
+          'spanish_kicker': {'font': 'Fraunces 500 italic', 'size_pt': 11, 'colour': '#135651'},
+          'grid_column_label': {'font': 'DM Sans 800 caps', 'size_pt': 7.5, 'colour': '#135651'},
           'price': {'font': 'DM Sans 700 tabular lining', 'size_pt': [12, 9.5, 9], 'colour': '#135651', 'format': 'whole dollars, no $ sign, no decimals; upgrades as +N'}},
  'elements': elements,
  'measured_checks': checks,

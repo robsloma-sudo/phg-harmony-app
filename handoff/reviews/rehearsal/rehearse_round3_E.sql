@@ -805,10 +805,38 @@ $rehearse_f2$;
     RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file2','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',right(e_ctx, 600),'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
   END;
   r := r || jsonb_build_object('file2_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
+  t0 := clock_timestamp();
+  BEGIN
+    -- The promotion queue is empty today (v_menu_staging_promotion_candidates = 0 rows). Re-stage one incident item
+    -- page's 13 beverage rows under a NEW sibling ?item= URL: same items, new content hash (the incident pattern).
+    update public.staging_menu_extract
+       set menu_page_url = 'https://thesherpagrill.com/menu?item=rehearsal-new-sibling', promoted_at = null, promotion_status = null, quality_status = 'promotion_ready'
+     where account_id = 'ACC-CO-LED-03-06531' and menu_page_url = 'https://thesherpagrill.com/menu?item=aloo-gobi-NKZx' and superseded_at is null;
+    get diagnostics rem = row_count;
+    select id into cur_id from public.menus where account_id = 'ACC-CO-LED-03-06531' and is_current;
+    t1 := clock_timestamp();
+    res := public.promote_clean_menu_batch(1);
+    c := jsonb_build_object('rows_requeued', rem, 'result', res, 'ms', round(extract(epoch from clock_timestamp()-t1)*1000),
+      'current_unchanged', (select id from public.menus where account_id = 'ACC-CO-LED-03-06531' and is_current) = cur_id,
+      'acct_menus_created', (select count(*) from public.menus where account_id = 'ACC-CO-LED-03-06531' and created_at >= now()),
+      'staging_outcome', (select jsonb_object_agg(coalesce(promotion_status,'(null)'), n) from (select promotion_status, count(*) n from public.staging_menu_extract
+                            where account_id = 'ACC-CO-LED-03-06531' and menu_page_url = 'https://thesherpagrill.com/menu?item=rehearsal-new-sibling' group by 1) x),
+      'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x));
+    c := c || jsonb_build_object('pass', coalesce((res->>'failed')::int, 1) = 0 and (res->>'created')::int = 0
+              and (coalesce((res->>'alternate')::int,0)+coalesce((res->>'duplicate')::int,0)+coalesce((res->>'held_subset')::int,0)) = 1
+              and (c->>'current_unchanged')::boolean and (c->>'multi_current_global')::int = 0 and (c->>'acct_menus_created')::int = 0);
+    RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback promote';
+  EXCEPTION
+    WHEN sqlstate 'P0099' THEN NULL;
+    WHEN others THEN 
+      GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
+      c := c || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
+  END;
+  r := r || jsonb_build_object('promote_clean_menu_batch_1', c); c := '{}';
   -- Step 3: phg_repair_step3_batch(100) until done, the time budget, or the call cap
   calls := '[]'; rem := -1;
-  WHILE rem <> 0 and jsonb_array_length(calls) < 1
-        and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 1 LOOP
+  WHILE rem <> 0 and jsonb_array_length(calls) < 0
+        and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 0 LOOP
     t0 := clock_timestamp();
     rem := public.phg_repair_step3_batch(100);
     calls := calls || jsonb_build_object('ms', round(extract(epoch from clock_timestamp()-t0)*1000), 'remaining_venues', rem);
@@ -818,125 +846,13 @@ $rehearse_f2$;
      'venues_done', (select count(*) from public.phg_repair_step3_done)));
   -- Step 4: phg_repair_step4_batch(200)
   calls := '[]'; rem := -1;
-  WHILE rem <> 0 and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 1 LOOP
+  WHILE rem <> 0 and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 12000 LOOP
     t0 := clock_timestamp();
     rem := public.phg_repair_step4_batch(200);
     calls := calls || jsonb_build_object('ms', round(extract(epoch from clock_timestamp()-t0)*1000), 'remaining_venues', rem);
   END LOOP;
   r := r || jsonb_build_object('step4', jsonb_build_object('calls', calls,
      'hashed', (select count(*) from public.menu_source_candidates where item_set_hash is not null)));
-  -- runbook step 4 index (CONCURRENTLY in the runbook; plain here because CONCURRENTLY cannot run in a transaction)
-  t0 := clock_timestamp();
-  create index if not exists menu_source_candidates_item_set_idx on public.menu_source_candidates (account_id, item_set_hash) where item_set_hash is not null;
-  r := r || jsonb_build_object('cand_index_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
-  t0 := clock_timestamp();
-  BEGIN
-    EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || $rehearse_gate$-- PHG-026 release gate. Run ONCE, right after the runbook (both migrations, steps 1-4, the CONCURRENTLY index) and
--- BEFORE cron 13 / 7 are re-enabled. Every row must say pass = true.
--- Scope: the venues in the repair plan (phg_repair_plan_menus_20260927) and data that existed before Step 2 ran
--- (phg_repair_run_20260927.step2.ran_at). Nothing here depends on captures made after release; those are watched by
--- supabase/tests/phg_026_monitor.sql instead.
-with
-run as (select ran_at t, detail from public.phg_repair_run_20260927 where step = 'step2'),
-plan_accts as (select distinct account_id from public.phg_repair_plan_menus_20260927),
-multi as (select count(*) n from (select account_id from public.menus where is_current group by 1 having count(*) > 1) x),
-idx as (select count(*) n from pg_indexes where schemaname = 'public' and indexname = 'menus_one_current_per_account'),
-no_current as (select count(*) n from plan_accts t
-                where not exists (select 1 from public.menus m where m.account_id = t.account_id and m.is_current)),
-smaller as (
-  select count(*) n from plan_accts t
-  cross join lateral (select max(cardinality(coalesce(m.item_keys, '{}'::text[]))) cur_n from public.menus m
-                       where m.account_id = t.account_id and m.is_current) c
-  cross join lateral (select max(cardinality(coalesce(m.item_keys, '{}'::text[]))) old_n from public.menus m
-                       where m.account_id = t.account_id and m.created_at < '2026-09-27 00:00:00+00') o
-  where o.old_n is not null and coalesce(c.cur_n, 0) < o.old_n),
-damaged as (
-  select count(*) total, count(*) filter (where coalesce(c.n, 0) < d.old_max_n) not_restored
-    from public.phg_repair_damaged_20260927 d
-    left join lateral (select max(cardinality(coalesce(m.item_keys, '{}'::text[]))) n from public.menus m
-                        where m.account_id = d.account_id and m.is_current) c on true),
-fdefs as (select count(*) n from public.phg_backup_function_defs_20260927),
--- Step 3: every venue with live staging rows loaded in the incident window and before Step 2 ran is done
-step3_left as (select count(*) n from (
-                 select distinct s.account_id from public.staging_menu_extract s, run
-                  where s.superseded_at is null and s.account_id is not null
-                    and s.loaded_at >= '2026-09-27 00:00:00+00' and s.loaded_at < run.t) a
-                where not exists (select 1 from public.phg_repair_step3_done d where d.account_id = a.account_id)),
--- Step 4: every venue with a candidate discovered before Step 2 ran and still without item_set_hash is done
-step4_left as (select count(*) n from (
-                 select distinct c.account_id from public.menu_source_candidates c, run
-                  where c.item_set_hash is null and c.duplicate_of_candidate_id is null and c.account_id is not null
-                    and c.first_discovered_at < run.t) a
-                where not exists (select 1 from public.phg_repair_step4_done d where d.account_id = a.account_id)),
-cand_idx as (select count(*) n from pg_indexes where schemaname = 'public' and indexname = 'menu_source_candidates_item_set_idx'),
-cron_paused as (select coalesce(bool_and(not active), true) ok, string_agg(jobid || ':' || active, ',' order by jobid) v
-                  from cron.job where jobid in (7, 13))
-select * from (values
-  ('0 accounts with more than one current menu',                   (select n from multi) = 0,        (select n from multi)::text),
-  ('one-current unique index exists',                              (select n from idx) = 1,          (select n from idx)::text),
-  ('0 plan venues without a current menu',                         (select n from no_current) = 0,   (select n from no_current)::text),
-  ('0 plan venues smaller than their largest pre-incident menu',   (select n from smaller) = 0,      (select n from smaller)::text),
-  ('every damaged venue (saved before Step 2) restored',           (select not_restored from damaged) = 0 and (select total from damaged) > 0,
-                                                                   (select not_restored || ' of ' || total || ' not restored' from damaged)),
-  ('4 pre-change function definitions saved',                      (select n from fdefs) = 4,        (select n from fdefs)::text),
-  ('step 2 recorded (current_changed, damaged, picks)',            (select detail from run) is not null, (select detail::text from run)),
-  ('step 3 finished for venues staged before the repair',          (select n from step3_left) = 0,   (select n from step3_left)::text),
-  ('step 4 finished for candidates found before the repair',       (select n from step4_left) = 0,   (select n from step4_left)::text),
-  ('candidate item-set index exists',                              (select n from cand_idx) = 1,     (select n from cand_idx)::text),
-  ('cron 7 and 13 still paused (re-enable only after this gate)',  (select ok from cron_paused),     (select v from cron_paused))
-) v(check_name, pass, value)
-$rehearse_gate$ || ') g' INTO v;
-    r := r || jsonb_build_object('release_gate', v, 'release_gate_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
-  EXCEPTION WHEN others THEN 
-      GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-      r := r || jsonb_build_object('release_gate', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
-  END;
-  -- repair rollback (after step 3, including the staging restore)
-  t0 := clock_timestamp();
-  BEGIN
-    res := public.phg_repair_20260927_rollback();
-    c := jsonb_build_object('result', res, 'ms', round(extract(epoch from clock_timestamp()-t0)*1000), 'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x),
-      'currency_mismatch_vs_backup', (select count(*) from public.menus m join public.phg_backup_menus_currency_20260927 bk on bk.id=m.id
-                                       where (m.is_current, m.superseded_by, m.superseded_reason, m.superseded_at)
-                                             is distinct from (bk.is_current, bk.superseded_by, bk.superseded_reason, bk.superseded_at)),
-      'staging_backup_rows', (select count(*) from public.phg_backup_staging_dupes_20260927),
-      'staging_still_superseded_by_repair', (select count(*) from public.staging_menu_extract s join public.phg_backup_staging_dupes_20260927 bk on bk.staging_id=s.id
-                                              where s.superseded_reason = 'duplicate_item_set_of_sibling'));
-    c := c || jsonb_build_object('pass', (c->>'multi_current_global')::int = 0 and (c->>'currency_mismatch_vs_backup')::int = 0
-                                        and (c->>'staging_still_superseded_by_repair')::int = 0
-                                        and (res->>'staging_rows_restored')::int = (c->>'staging_backup_rows')::int);
-  EXCEPTION WHEN others THEN 
-      GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-      c := c || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
-  END;
-  r := r || jsonb_build_object('repair_rollback', c); c := '{}';
-  -- function rollback, then ONE submit_menu call (the restored live 15-arg body) on a venue with a current menu
-  t0 := clock_timestamp();
-  BEGIN
-    c := jsonb_build_object('fn_rollback_returns', public.phg_rollback_function_defs_20260927(), 'ms', round(extract(epoch from clock_timestamp()-t0)*1000),
-      'unique_index_after', to_regclass('public.menus_one_current_per_account') is not null,
-      'submit_menu_10arg_exists_after', to_regprocedure('public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb)') is not null,
-      'restored_body_is_live', (select prosrc !~ 'phg_menu_source_key' from pg_proc where oid = 'public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb,text,text,text,text,boolean)'::regprocedure),
-      'anon_or_authenticated_can_execute', (select jsonb_object_agg(b.signature, has_function_privilege('anon', b.signature::regprocedure, 'EXECUTE')
-                                                                        or has_function_privilege('authenticated', b.signature::regprocedure, 'EXECUTE'))
-                                              from public.phg_backup_function_defs_20260927 b),
-      'service_role_can_execute', (select bool_and(has_function_privilege('service_role', b.signature::regprocedure, 'EXECUTE')) from public.phg_backup_function_defs_20260927 b));
-    select id into cur_id from public.menus where account_id = acct and is_current;
-    t1 := clock_timestamp();
-    res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS','https://rehearsal.example.com/after-rollback',null,'html','unknown','rehearsal',null,md5('rehrb'||clock_timestamp()::text),'[{"section_name":"Food","section_type":"unsectioned","section_position":1,"items":[{"item_name":"Rehearsal Fries","item_type":"other","price":7},{"item_name":"Rehearsal Burger","item_type":"other","price":15}]}]'::jsonb,null,null,null,null,false);
-    c := c || jsonb_build_object('submit_after_rollback', res, 'submit_ms', round(extract(epoch from clock_timestamp()-t1)*1000),
-      'acct_current_count', (select count(*) from public.menus where account_id = acct and is_current),
-      'old_current_demoted', (select not is_current from public.menus where id = cur_id));
-    c := c || jsonb_build_object('pass', (c->>'fn_rollback_returns')::int = 4 and not (c->>'unique_index_after')::boolean
-                                        and (c->>'submit_menu_10arg_exists_after')::boolean and (c->>'restored_body_is_live')::boolean
-                                        and not exists (select 1 from jsonb_each_text(c->'anon_or_authenticated_can_execute') e where e.value::boolean)
-                                        and (c->>'service_role_can_execute')::boolean
-                                        and res ? 'menu_id' and (c->>'acct_current_count')::int = 1 and (c->>'old_current_demoted')::boolean);
-  EXCEPTION WHEN others THEN 
-      GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-      c := c || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
-  END;
-  r := r || jsonb_build_object('function_rollback_and_submit', c); c := '{}';
   RAISE EXCEPTION 'REHEARSAL %', r;
 END
 $rehearse_main$;

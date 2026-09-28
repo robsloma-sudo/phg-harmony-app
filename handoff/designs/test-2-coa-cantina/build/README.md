@@ -1,1 +1,1 @@
-Re-render: cd handoff/designs/test-2-coa-cantina/build && python3 build.py && PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers python3 render.py && python3 layout.py  (writes menu.html, doc.json, previews and layout.json to the parent folder).
+Re-render: cd handoff/designs/test-2-coa-cantina/build && python3 build.py && PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers python3 render.py && python3 layout.py  (writes menu.html, doc.json, previews and layout.json to the parent folder; COA_ELS sets where the intermediate element dump goes).

@@ -1,6 +1,6 @@
 """Tally one round: python3 tally.py <round>. Reads scores/r<round>.jsonl (one reviewer JSON per line)."""
 import json, sys, pathlib
-KEYS = {'critic': ['1','2','3','4','5','6','7','10'], 'content': ['3','5','8','9','10'], 'accuracy': ['10','11','12','13','14']}
+KEYS = {'critic': ['1','2','3','4','5','6','7','10','15'], 'content': ['3','5','8','9','10'], 'accuracy': ['10','11','12','13','14']}
 here = pathlib.Path(__file__).parent
 r = sys.argv[1]
 rows = [json.loads(l) for l in open(here / f'r{r}.jsonl') if l.strip()]

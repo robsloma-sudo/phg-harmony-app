@@ -121,8 +121,24 @@ chk["desc_lines"] = {e["ref"]: e["lines"] for e in els if e["kind"] == "descript
 chk["png_px"] = {"letter": R["png"], "phone": R["phone_png"], "phone_scrollWidth_css": R["ph_w"]}
 chk["phone_gap_below_every_section_header_px"] = {x["sec"]: x["gap_px"] for x in R["ph"]}
 
+SPEC = json.loads((HERE / "spec.json").read_text())
+import re as _re
+_css = _re.search(r"<style>(.*?)</style>", (OUT / "menu.html").read_text(), _re.S).group(1)
+_css = _re.sub(r"@font-face \{[^}]*\}", "", _css).split("@media")[0]
+def css_spec(sel):
+    m = _re.search(r"(?:^|\n)" + _re.escape(sel) + r"\s*\{([^}]*)\}", _css)
+    d = dict((a.strip(), b.strip()) for a, b in (x.split(":", 1) for x in m.group(1).split(";") if ":" in x))
+    out = {}
+    if "font-family" in d: out["font"] = d["font-family"].split(",")[0].strip("'\" ")
+    for k, n in (("font-weight", "weight"), ("font-style", "style"), ("font-size", "size"), ("line-height", "line"), ("letter-spacing", "tracking"), ("text-transform", "case"), ("color", "colour")):
+        if k in d: out[n] = d[k]
+    out.setdefault("font", "DM Sans"); return out
+TYPE = {k: css_spec(v) for k, v in {"title": ".title", "location": ".loc", "header": "h2", "kicker": ".kicker", "subheader": "h3",
+        "subheader_spanish": ".sub .es", "item": ".name", "price": ".price", "description": ".desc", "footer": ".foot .salud"}.items()}
+TYPE["price"]["numerals"] = "lining, tabular"; TYPE["min_print_size_pt"] = 9
+TYPE["source"] = "parsed from the print CSS inside menu.html at layout time"
 layout = {
-    "round": 2,
+    "round": SPEC["round"],
     "units": "pt (1/72 in) and mm; origin top-left of the page; every number measured from the Chromium render of menu.html",
     "page": {"size": "US Letter portrait", "width_pt": 612, "height_pt": 792, "width_mm": 215.9, "height_mm": 279.4,
              "margins_pt": {"top": 36, "right": 36, "bottom": 36, "left": 36}, "margins_mm": {"top": 12.7, "right": 12.7, "bottom": 12.7, "left": 12.7},
@@ -137,20 +153,9 @@ layout = {
                 "roles": {"#A63C1A": "prices, kickers, ampersand, footer sign-off", "#2F5D50": "subheaders, rules, agave ornaments",
                           "#E3A018": "non-text ornaments only (diamonds, dotted divider, flags)", "#5A4A3F": "descriptions, location line",
                           "#B4441F": "papel picado flags (graphic only)"}},
-    "type": {"title": {"font": "Fraunces", "weight": 700, "size_pt": 40, "slot_pt": 48},
-             "location": {"font": "DM Sans", "weight": 500, "size_pt": 9, "slot_pt": 12, "tracking_pt": 3.2, "case": "upper"},
-             "header": {"font": "Fraunces", "weight": 700, "size_pt": 24, "slot_pt": 24},
-             "kicker": {"font": "DM Sans", "weight": 700, "size_pt": 8, "slot_pt": 12, "tracking_pt": 2.4, "case": "upper", "colour": "#A63C1A",
-                        "align": "right edge = price column edge, baseline = header baseline"},
-             "subheader": {"font": "DM Sans", "weight": 700, "size_pt": 8.5, "slot_pt": 12, "tracking_pt": 2, "case": "upper"},
-             "item": {"font": "Fraunces", "weight": 600, "size_pt": 13, "slot_pt": 12},
-             "description": {"font": "DM Sans", "weight": 400, "size_pt": 9, "line_pt": 12},
-             "price": {"font": "Fraunces", "weight": 600, "size_pt": 13, "slot_pt": 12, "numerals": "lining, tabular",
-                       "format": "whole dollars, no $ sign, no decimals, right-aligned"},
-             "footer": {"font": "Fraunces Italic", "weight": 600, "size_pt": 11, "slot_pt": 24},
-             "min_print_size_pt": 8},
+    "type": TYPE,
     "spacing_pt": {"section_gap": 36, "below_section_header": 12, "subheader_to_first_item": 12, "items_to_next_subheader": 24,
-                   "item_gap": 12, "desc_right_indent": 30, "columns_to_footer": 12},
+                   "item_gap": 12, "desc_right_indent": 6, "house_originals_panel": "0.75pt terracotta frame, 12pt outside the text block top and bottom, 10pt inner side padding, cut-paper corner ticks", "columns_to_footer": 12},
     "elements": els,
     "measured_checks": chk,
 }

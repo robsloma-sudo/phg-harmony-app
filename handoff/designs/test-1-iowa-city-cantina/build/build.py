@@ -1,4 +1,4 @@
-"""TEST-1 round 2: build doc.json + menu.html from the verbatim draft doc.
+"""TEST-1 round 4: build doc.json + menu.html from the verbatim draft doc.
 Grid: every slot height and every gap is a multiple of 12pt. Baseline shifts per text class come from shifts.json
 (written by render.py after a measuring pass) so that every baseline lands on the same 12pt grid line phase."""
 import json, copy, html, pathlib, base64, math
@@ -34,26 +34,55 @@ MISSING = {
     "beta_malbec": ["producer", "region or country", "vintage"], "beta_pinot_grigio": ["producer", "region or country", "vintage"],
     "beta_brut_rose": ["producer", "grapes", "region", "glass or bottle price (label empty)"],
 }
-KICKER = {"sec_cocktails": "Cócteles", "sec_spirits": "Destilados", "sec_beer": "Cerveza", "sec_wine": "Vino"}
+KICKER = {"sec_cocktails": "Cócteles", "sec_spirits": "Destilados", "sec_beer": "Cerveza", "sec_cider": "Sidra", "sec_wine": "Vino"}
+ROUND = 4
+import os
+MARG_CUE = os.environ.get("MARG_CUE", "0") == "1"
+DESC.update({
+    "beta_margarita": "Blanco tequila, fresh lime, orange liqueur, agave syrup; lime wheel. " + ("Bright and citrus-forward. " if MARG_CUE else "") + "Shaken, served on the rocks.",
+    "beta_old_fashioned": "Brown butter-washed bourbon, demerara syrup, bitters; orange peel. Stirred, served over a large cube.",
+    "beta_blanco_tequila": "Blanco tequila pour.",
+    "beta_anejo_tequila": "Añejo tequila pour.",
+    "beta_cognac_vsop": "VSOP Cognac pour.",
+    "beta_dry_hopped_ipa": "Hop-forward IPA.",
+    "beta_dry_cider": "Dry sparkling cider.",
+    "beta_brut_rose": "Dry sparkling rosé.",
+})
+_SP = ["brand", "pour_size"]; _BE = ["brewery", "abv", "pour_size"]; _WI = ["producer", "region", "vintage"]
+MISSING = {"beta_margarita": [], "beta_manhattan": [], "beta_old_fashioned": [], "beta_daiquiri": [],
+           "beta_blanco_tequila": _SP, "beta_anejo_tequila": _SP, "beta_cognac_vsop": _SP,
+           "beta_czech_pilsner": _BE, "beta_dry_hopped_ipa": _BE, "beta_amber_lager": _BE,
+           "beta_dry_cider": ["producer", "abv"], "beta_malbec": _WI, "beta_pinot_grigio": _WI,
+           "beta_brut_rose": _WI + ["glass_or_bottle"]}
+ES = {"sub_cocktails_classics": "Clásicos", "sub_cocktails_house_originals": "De la casa", "sub_beer_draft": "De barril",
+      "sub_wine_by_the_glass": "Por copa", "sub_wine_sparkling": "Espumoso"}
+(HERE / "spec.json").write_text(json.dumps({"round": ROUND}))
 
 secs = {s["id"]: s for s in draft["sections"]}
 doc = copy.deepcopy(draft)
 doc["title"] = "Cantina & Cocktail Bar"
 doc["subtitle"] = "Iowa City, Iowa"
-new_secs = [copy.deepcopy(secs[k]) for k in ["sec_cocktails", "sec_spirits", "sec_beer", "sec_wine"]]
-new_secs[2]["subs"].append({"id": "sub_beer_cider", "name": "Cider", "items": [copy.deepcopy(i) for i in secs["sec_cider"]["items"]]})
+new_secs = [copy.deepcopy(secs[k]) for k in ["sec_cocktails", "sec_spirits", "sec_beer", "sec_cider", "sec_wine"]]
 cl = new_secs[0]["subs"][0]; cl["items"] = [next(i for i in cl["items"] if i["id"] == x) for x in ["beta_margarita", "beta_manhattan"]]
 ho = new_secs[0]["subs"][1]; ho["items"] = [next(i for i in ho["items"] if i["id"] == x) for x in ["beta_old_fashioned", "beta_daiquiri"]]
 for s in new_secs:
     for it in s["items"] + [i for sb in s["subs"] for i in sb["items"]]:
-        it["desc"] = DESC[it["id"]]; it["missing_ingredients"] = MISSING[it["id"]]
+        it["desc"] = DESC[it["id"]]; it.pop("missing_ingredients", None); it["meta"] = dict(it.get("meta") or {}); it["meta"]["missing_ingredients"] = list(MISSING[it["id"]])
 doc["sections"] = new_secs
 
 def flat(d):
     return {i["id"]: (i["name"], json.dumps(i["prices"], sort_keys=True), json.dumps(i.get("phg"), sort_keys=True),
-                      json.dumps(i.get("meta"), sort_keys=True), json.dumps(i.get("components"), sort_keys=True))
+                      json.dumps({k: v for k, v in (i.get("meta") or {}).items() if k != "missing_ingredients"}, sort_keys=True), json.dumps(i.get("components"), sort_keys=True))
             for s in d["sections"] for i in s["items"] + [x for sb in s["subs"] for x in sb["items"]]}
 assert flat(doc) == flat(draft) and len(flat(doc)) == 14, "item/price/meta drift"
+doc["meta"] = dict(doc.get("meta") or {})
+doc["meta"]["designer_notes"] = {
+    "round": ROUND,
+    "manhattan_bitters": "Aromatic bitters are not printed on the Manhattan: the item's public_components has aromatic-bitters = false, so the venue hides them; the designer follows the flag (question for the venue).",
+    "retired_junmai_ginjo": "phg.menu_items has a retired Junmai Ginjo ($12, section Sake) that is not in the draft; it is left off the menu because it is retired (please confirm).",
+    "missing_ingredients": "Each item's meta.missing_ingredients lists the facts the venue still has to supply before print (brand, pour size, brewery, ABV, producer, region, vintage, glass or bottle).",
+    "cider_section": "Cider is its own section, as in the draft document (sec_cider).",
+}
 (OUT / "doc.json").write_text(json.dumps(doc, ensure_ascii=False, indent=2))
 
 # ---------------------------------------------------------------- palette
@@ -147,11 +176,13 @@ def sec_html(s):
     if s["items"]:
         h.append('<div class="items">' + "".join(item_html(i) for i in s["items"]) + "</div>")
     for sb in s["subs"]:
-        h.append(f'<div class="sub" data-id="{sb["id"]}"><h3>{html.escape(sb["name"])}</h3><span class="subrule"></span></div>')
-        h.append('<div class="items">' + "".join(item_html(i) for i in sb["items"]) + "</div>")
+        es = f'<span class="es">{ES[sb["id"]]}</span>' if sb["id"] in ES else ""
+        blk = (f'<div class="sub" data-id="{sb["id"]}"><h3>{html.escape(sb["name"])}</h3>{es}<span class="subrule"></span></div>'
+               + '<div class="items">' + "".join(item_html(i) for i in sb["items"]) + "</div>")
+        h.append(f'<div class="frame">{blk}</div>' if sb["id"] == "sub_cocktails_house_originals" else blk)
     return "".join(h) + "</section>"
 
-left = "".join(sec_html(s) for s in doc["sections"][:2])
+left = "".join(sec_html(s) for s in doc["sections"][:2])  # Cocktails, Spirits | Beer, Cider, Wine
 right = "".join(sec_html(s) for s in doc["sections"][2:])
 ENDMARK = (f'<div class="endmark" aria-hidden="true"><span class="er"></span>'
            f'<svg viewBox="0 0 8 8" width="6pt" height="6pt"><path d="M4 0 L8 4 L4 8 L0 4 Z" fill="{P["mari"]}"/></svg>'
@@ -194,10 +225,19 @@ body {{ -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:
 .sec + .sec {{ margin-top:36pt; }}
 .hrow {{ display:flex; justify-content:space-between; align-items:baseline; height:24pt; }}
 h2 {{ font-family:'Fraunces', serif; font-weight:700; font-size:24pt; line-height:24pt; margin:0; color:{P['ink']}; }}
-.kicker {{ display:flex; align-items:baseline; gap:5pt; font-size:9pt; line-height:12pt; letter-spacing:2.2pt; text-transform:uppercase; color:{P['terra']}; font-weight:700; }}
+.kicker {{ display:flex; align-items:baseline; gap:5pt; font-family:'Fraunces', serif; font-style:italic; font-size:12pt; line-height:12pt; letter-spacing:0.2pt; color:{P['terra']}; font-weight:500; }}
 .kicker .dia {{ flex:none; align-self:center; }}
 .hrow + .items, .hrow + .sub {{ margin-top:12pt; }}        /* 12pt below every section header, whatever follows */
-.items + .sub {{ margin-top:24pt; }}
+.items + .sub, .items + .frame {{ margin-top:24pt; }}
+.frame {{ position:relative; isolation:isolate; padding:0 10pt; }}
+.frame::before {{ content:''; position:absolute; z-index:-1; top:-12pt; bottom:-12pt; left:0; right:0; border:0.75pt solid {P['terra']}; background:#F1E4CF; }}
+.frame::after {{ content:''; position:absolute; top:-15pt; left:0; right:0; bottom:-15pt; pointer-events:none;
+  background:
+    linear-gradient({P['terra']},{P['terra']}) top left/9pt 1.5pt no-repeat, linear-gradient({P['terra']},{P['terra']}) top left/1.5pt 9pt no-repeat,
+    linear-gradient({P['terra']},{P['terra']}) top right/9pt 1.5pt no-repeat, linear-gradient({P['terra']},{P['terra']}) top right/1.5pt 9pt no-repeat,
+    linear-gradient({P['terra']},{P['terra']}) bottom left/9pt 1.5pt no-repeat, linear-gradient({P['terra']},{P['terra']}) bottom left/1.5pt 9pt no-repeat,
+    linear-gradient({P['terra']},{P['terra']}) bottom right/9pt 1.5pt no-repeat, linear-gradient({P['terra']},{P['terra']}) bottom right/1.5pt 9pt no-repeat; }}
+.sub .es {{ font-family:'Fraunces', serif; font-style:italic; font-size:10pt; line-height:12pt; color:{P['terra']}; font-weight:500; white-space:nowrap; }}
 .sub {{ display:flex; align-items:center; gap:8pt; height:12pt; }}
 .sub + .items {{ margin-top:12pt; }}
 h3 {{ margin:0; font-size:9pt; line-height:12pt; letter-spacing:2pt; text-transform:uppercase; color:{P['agave']}; font-weight:700; white-space:nowrap; }}
@@ -232,7 +272,9 @@ h3 {{ margin:0; font-size:9pt; line-height:12pt; letter-spacing:2pt; text-transf
   .kicker {{ font-size:12px; line-height:16px; align-items:baseline; }}
   .hrow {{ align-items:baseline; }}
   .hrow + .items, .hrow + .sub, .sub + .items {{ margin-top:14px; }}
-  .items + .sub {{ margin-top:22px; }}
+  .items + .sub, .items + .frame {{ margin-top:22px; }}
+  .frame {{ padding:0 12px; }} .frame::before {{ top:-12px; bottom:-12px; }} .frame::after {{ top:-15px; bottom:-15px; }}
+  .sub .es {{ font-size:13px; line-height:20px; }}
   .sub {{ height:20px; }}
   h3 {{ font-size:11.5px; line-height:20px; }}
   .row {{ height:26px; }}
@@ -257,17 +299,7 @@ HTML = f"""<!doctype html>
 <main class="cols"><div class="col">{left}</div><div class="divider" aria-hidden="true"></div><div class="col">{right}</div></main>
 <footer class="foot"><span class="fr"></span>{AGAVE}<span class="salud">¡Salud!</span>{AGAVE}<span class="fr"></span></footer>
 </div>
-<script>
-(function(){{
-  if (window.innerWidth <= 600) return;
-  const q = s => document.querySelector(s);
-  const pairs = [['[data-id="sec_spirits"]','[data-id="sec_wine"]'],['[data-id="sub_spirits_agave"]','[data-id="sub_wine_by_the_glass"]'],['[data-id="sub_spirits_brandy"]','[data-id="sub_wine_sparkling"]']];
-  for (const [a,b] of pairs) {{
-    const A=q(a), B=q(b); const d=A.getBoundingClientRect().top-B.getBoundingClientRect().top;
-    const T = d>0 ? B : A; T.style.marginTop = (parseFloat(getComputedStyle(T).marginTop)+Math.abs(d))+'px';
-  }}
-}})();
-</script></body></html>
+</body></html>
 """
 (OUT / "menu.html").write_text(HTML)
 print("built; shifts =", shifts)

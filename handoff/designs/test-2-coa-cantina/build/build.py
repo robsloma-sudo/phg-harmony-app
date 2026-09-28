@@ -202,7 +202,7 @@ def block(title, ids, descs=None, ref='', po=0):
 top = (f'<div class="halves top">'
        f'<div class="col"><section class="blk" style="--o:1">{h1("Margaritas", "sec_margaritas", "Margaritas")}{intro("sec_margaritas")}<div class="rows">'
        + rich(MARGS[0], True) + ''.join(rich(i) for i in MARGS[1:]) + '</div></section></div>'
-       f'<div class="col"><section class="blk" style="--o:2">{h1("Cocktails", "sec_cocktails", "Cócteles")}<div class="rows">'
+       f'<div class="col" style="--igap:{os.environ.get("COA_IGAP_R","22.1pt")}"><section class="blk" style="--o:2">{h1("Cocktails", "sec_cocktails", "Cócteles")}<div class="rows">'
        + rich(COCKS[0], True) + ''.join(rich(i) for i in COCKS[1:]) + '</div></section></div></div>')
 frozen = (f'<div class="band" style="--o:3">{h1("Frozen", "sec_frozen", "Congelados")}{intro("sec_frozen")}<div class="halves">'
           f'<div class="col">{"".join(rich(i) for i in FROZEN[:2])}</div><div class="col">{"".join(rich(i) for i in FROZEN[2:])}</div></div></div>')

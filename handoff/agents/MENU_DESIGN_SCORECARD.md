@@ -33,7 +33,12 @@ not guessed.
 | 13 | **Venue-type fit** | Accuracy | Reads as this venue (type, city, demographics): order and emphasis, correct Spanish/other-language use, expected categories, price tier | Menu could belong to any venue; wrong or misused language |
 | 14 | **Descriptions and prices laid out together** | Accuracy | Description measure and breaks, price-to-name relationship, glass/bottle/pour labels, nothing orphaned or crowded, readable in print and on a phone | Prices detached from items; unlabelled glass/bottle prices; crowded or orphaned lines |
 
-- **Critic average** = mean of criteria 1, 2, 3, 4, 5, 6, 7 and 10.
+| 15 | **Design concept** (added by Rob 2026-09-28) | Critic | A bold, ownable big idea - a visual narrative or system rooted in the venue and its culture - executed so the menu is unforgettable | A tidy list with generic festive trim; no idea |
+
+Reviewers score Roger-Ebert tough: see handoff/designs/REVIEW_PROTOCOL.md for calibration anchors (60 = clean but
+forgettable; 85+ = portfolio concept executed flawlessly; 95+ = among the best bar menus in the country).
+
+- **Critic average** = mean of criteria 1, 2, 3, 4, 5, 6, 7, 10 and 15.
 - **Content average** = mean of criteria 3, 5, 8, 9 and 10.
 - **Accuracy average** = mean of criteria 10, 11, 12, 13 and 14.
 

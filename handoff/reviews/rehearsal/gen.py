@@ -372,9 +372,12 @@ ROLLBACKS = f"""
 # C: timing - as much of Step 3 as fits in ~40 s
 C = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(30000, 0, 100) + END
 # D: a few batches of each step, then the gate, the repair rollback (with staging restore), function rollback + submit
-D = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + PROMOTE + steps(8000, 4000, 3) + GATE + ROLLBACKS + END
+# D: one Step 3 call and one Step 4 call, then the gate, the repair rollback (with staging restore), function rollback + submit
+D = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(1, 1, 1) + GATE + ROLLBACKS + END
+# E: promote_clean_menu_batch(1) on a re-staged incident sibling page, then Step 4 timing (~12 s of calls)
+E = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + PROMOTE + steps(0, 12000, 0) + END
 
-blocks = {'A': A, 'B': B, 'C': C, 'D': D}
+blocks = {'A': A, 'B': B, 'C': C, 'D': D, 'E': E}
 allsql = []
 for k, sql in blocks.items():
     (HERE / f'rehearse_round3_{k}.sql').write_text(sql)

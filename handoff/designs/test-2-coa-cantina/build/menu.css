@@ -38,7 +38,7 @@ body{background:#CFC6B6;font-family:'DM Sans',sans-serif;color:var(--ink);font-f
 /* level 2 header */
 .h2{font-size:8pt;line-height:12pt;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);padding-bottom:3pt;border-bottom:.75pt solid var(--teal);margin:0 0 4.5pt}
 .band .thirds .blk + .blk,.band .quarters .blk + .blk{margin-top:15pt}
-.intro{font-size:9pt;line-height:12pt;font-style:italic;color:var(--muted);margin:0 0 9pt}
+.intro{font-size:9.5pt;line-height:13pt;font-style:italic;color:var(--muted);margin:0 0 9pt}
 
 .line{display:flex;align-items:baseline;justify-content:space-between;gap:6pt}
 .pr{font-weight:700;color:var(--teal);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums lining-nums}
@@ -46,14 +46,14 @@ body{background:#CFC6B6;font-family:'DM Sans',sans-serif;color:var(--ink);font-f
 /* cocktail items */
 .ritem{margin-bottom:var(--igap)}
 .rows > .ritem:last-child,.col > .ritem:last-child{margin-bottom:0}
-.ritem .nm{font-family:'Fraunces',serif;font-weight:650;font-size:12.5pt;line-height:16pt;font-variation-settings:"opsz" 24}
-.ritem .pr{font-size:12pt;line-height:16pt}
-.ritem .pr.small{font-size:9.5pt;line-height:12pt}
-.ritem .ds{font-size:9pt;line-height:12pt;color:var(--muted)}
+.ritem .nm{font-family:'Fraunces',serif;font-weight:650;font-size:13pt;line-height:17pt;font-variation-settings:"opsz" 24}
+.ritem .pr{font-size:12pt;line-height:17pt}
+.ritem .pr.small{font-size:9.5pt;line-height:13pt}
+.ritem .ds{font-size:9.5pt;line-height:13pt;color:var(--muted)}
 .ritem .up .ds{font-style:italic}
 .ritem .line:first-child .nm{flex:1;display:flex;align-items:baseline}
 .ritem .line:first-child .nm::after{content:"";flex:1;border-bottom:.75pt dotted var(--dot);margin:0 0 3pt 6pt}
-.feature .nm{color:var(--terra);font-size:14pt}
+.feature .nm{color:var(--terra);font-size:14.5pt}
 .feature .pr{font-size:13pt}
 .feature{padding-bottom:calc((var(--igap) - 1.5pt) / 2);border-bottom:1.5pt solid var(--mari);margin-bottom:calc((var(--igap) - 1.5pt) / 2)}
 
@@ -64,9 +64,9 @@ body{background:#CFC6B6;font-family:'DM Sans',sans-serif;color:var(--ink);font-f
 .row .ds{font-size:8pt;line-height:11pt;color:var(--muted);margin-top:-2pt;padding-bottom:3pt}
 
 /* tequila grid: labels in level-2 style */
-.matrix .mhead,.matrix .mrow,.tq-phone .mhead,.tq-phone .mrow{display:grid;grid-template-columns:1fr 34pt 42pt 34pt;align-items:baseline;padding:0 0 0 4pt}
+.matrix .mhead,.matrix .mrow,.tq-phone .mhead,.tq-phone .mrow{display:grid;grid-template-columns:1fr 33pt 47pt 33pt;align-items:baseline;padding:0 0 0 4pt}
 .mhead{border-bottom:.75pt solid var(--teal);padding-bottom:3pt!important;margin-bottom:2pt}
-.mhead .mc{font-size:7.5pt;line-height:12pt;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--teal);text-align:right}
+.mhead .mc{font-size:7.5pt;line-height:12pt;font-weight:800;letter-spacing:0;text-transform:uppercase;color:var(--teal);text-align:right}
 .mrow{min-height:13pt}
 .mrow .nm{font-size:9pt;line-height:13pt;font-weight:500;letter-spacing:-0.06pt}
 .mrow .mc{font-size:9pt;line-height:13pt;text-align:right}
@@ -91,14 +91,16 @@ body{background:#CFC6B6;font-family:'DM Sans',sans-serif;color:var(--ink);font-f
   #page-2 .mast,#page-1 .foot,.foot .pg,.divider{display:none}
   .mast,.blk,.band,.foot{order:var(--o,0)}
   .top .blk + .blk,.top > .col + .col .blk{margin-top:26px}
-  .top > .col:last-child .blk{margin-top:26px}
-  .band{display:flex;flex-direction:column;margin-top:26px}
+  .top > .col:last-child .blk{margin-top:32px}
+  .band,.body > .band:first-child{display:flex;flex-direction:column;margin-top:32px}
+  .top > .col{--igap:15pt!important}
+  .top > .col:first-child .blk{margin-top:22px}
   .band > .h1,.band > .intro{order:-1}
   .band .thirds,.band .quarters,.band .thirds > .col,.band .quarters > .col{display:contents}
   .band .blk{order:var(--po,0);margin-top:18px}
   .band .halves,.band .single{display:block}
   .band .halves > .col + .col{margin-top:15pt}
-  .tq-print{display:none}
+  .band .tq-print{display:none}
   .tq-phone{display:block}
   .tq-phone .mhead.sticky{position:sticky;top:0;background:var(--paper);z-index:2;padding-top:6px!important}
   .papel{width:100%;height:auto}
