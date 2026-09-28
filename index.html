@@ -6291,7 +6291,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.22 MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.23 TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -40214,6 +40214,9 @@ body.hvx-reading #phgView .phgNodeStage{opacity:.38}
 #hvxFloat .you{font-size:.62em;color:#94a3b8;margin-bottom:.7em;letter-spacing:.01em}
 #hvxFloat .her::after{content:'';display:inline-block;width:.45em;height:1em;margin-left:.08em;vertical-align:-.12em;background:#7dd3fc;opacity:0}
 #hvxFloat.typing .her::after{opacity:.85;animation:hvxCaret 1s steps(2) infinite}
+#hvxFloat.waiting .her::before{content:'\2022\2009\2022\2009\2022';color:#67e8f9;letter-spacing:.2em;animation:hvxWait 1.2s ease-in-out infinite}
+#hvxFloat.waiting .her::after{display:none}
+@keyframes hvxWait{50%{opacity:.25}}
 @keyframes hvxCaret{50%{opacity:0}}
 #hvxDock{position:absolute;left:0;right:0;z-index:5;bottom:calc(var(--hvx-dock,0px));display:flex;align-items:center;justify-content:center;gap:16px;
   padding:10px 16px calc(env(safe-area-inset-bottom,0px) + 18px);font-family:'Inter',system-ui,sans-serif}
@@ -40630,19 +40633,59 @@ function speakingNow(){
     if(window.PHG_ENV&&PHG_ENV.speaking&&PHG_ENV.speaking())return true;
   }catch(e){}return false;
 }
+/* 18.49.23 TEXT IN STEP WITH HER VOICE.
+   When she is going to speak, the words wait (a soft pulse) until her voice
+   actually starts, then type at the pace she talks: with the server voice the
+   typed length follows the audio's own playback position; with the device
+   voice it runs at speaking pace (~14.5 characters a second). If no voice
+   starts within 8 s the text types on its own, as it does in Text only mode. */
+function willSpeak(){
+  try{return document.body.classList.contains('phg-view-open')&&HARMONY_PREFS.output!=='text'&&typeof VOICE!=='undefined'&&VOICE.canSpeak;}catch(e){return false;}
+}
+function voiceStarted(){
+  try{
+    if(typeof PHG_AI_AUDIO!=='undefined'&&PHG_AI_AUDIO.playing)return 'server';
+    if(window.speechSynthesis&&speechSynthesis.speaking)return 'device';
+    if(window.PHG_ENV&&PHG_ENV.speaking&&PHG_ENV.speaking())return 'device';
+  }catch(e){}
+  return '';
+}
 function floatReply(text,you){
   var el=document.getElementById('hvxFloat');if(!el||!text)return;
   clearInterval(F.timer);clearTimeout(F.hold);
   el.innerHTML=(you?'<div class="you"></div>':'')+'<div class="her"></div>';
   if(you)el.querySelector('.you').textContent=you;
-  var her=el.querySelector('.her'),n=text.length,t0=performance.now();
-  var cps=Math.max(45,n/3.5);   /* long answers finish typing in ~3.5 s */
+  var her=el.querySelector('.her'),n=text.length;
   el.classList.add('show','typing');el._clip=false;el.classList.remove('clip');reading(true);
+  function clip(){var over=el.scrollHeight>el.clientHeight+2;if(over!==el._clip){el._clip=over;el.classList.toggle('clip',over);}}
+  function finish(){clearInterval(F.timer);her.textContent=text;clip();el.classList.remove('typing','waiting');fadeLater(el,n);}
+  function typeFree(){
+    var t0=performance.now(),cps=Math.max(45,n/3.5);
+    F.timer=setInterval(function(){
+      var i=Math.min(n,Math.ceil((performance.now()-t0)/1000*cps));her.textContent=text.slice(0,i);clip();
+      if(i>=n)finish();
+    },33);
+  }
+  function typeWithVoice(kind){
+    el.classList.remove('waiting');
+    var t0=performance.now(),a=(typeof PHG_AUDIO!=='undefined'&&PHG_AUDIO.el)||null,shown=0,quiet=0;
+    F.timer=setInterval(function(){
+      var i;
+      if(kind==='server'&&a&&isFinite(a.duration)&&a.duration>0)i=Math.ceil(n*Math.min(1,(a.currentTime+0.2)/a.duration));
+      else i=Math.ceil((performance.now()-t0)/1000*14.5);
+      i=Math.max(shown,Math.min(n,i));shown=i;her.textContent=text.slice(0,i);clip();
+      if(!voiceStarted()){quiet+=33;if(quiet>600)return finish();}else quiet=0;
+      if(i>=n)finish();
+    },33);
+  }
+  if(!willSpeak())return typeFree();
+  el.classList.add('waiting');
+  var waited=0;
   F.timer=setInterval(function(){
-    var i=Math.min(n,Math.ceil((performance.now()-t0)/1000*cps));her.textContent=text.slice(0,i);
-    var over=el.scrollHeight>el.clientHeight+2;if(over!==el._clip){el._clip=over;el.classList.toggle('clip',over);}
-    if(i>=n){clearInterval(F.timer);el.classList.remove('typing');fadeLater(el,n);}
-  },33);
+    var k=voiceStarted();
+    if(k){clearInterval(F.timer);typeWithVoice(k);return;}
+    waited+=100;if(waited>=8000){clearInterval(F.timer);el.classList.remove('waiting');typeFree();}
+  },100);
 }
 function fadeLater(el,n){
   var readMs=Math.max(2500,Math.min(6000,2000+n*15)),t0=Date.now();
