@@ -2,8 +2,10 @@
 
 Set by Rob, 2026-09-28: "Scores need to be determined by upper-echelon design skill sets."
 
-Every design proposal is scored by two design reviewers: the **Design Critic** (visual craft) and the **Menu Content
-Reviewer** (content and prices). Each scores the criteria below from 0 to 100. A proposal can only be approved when
+Every design proposal is scored by three reviewers: the **Design Critic** (visual craft), the **Menu Content
+Reviewer** (content and prices) and the **Ingredient & Venue Accuracy Reviewer** (added by Rob 2026-09-28: ingredient
+descriptions and accuracy, venue type, and how descriptions and prices are laid out; it may correct description text in
+the design files from verified data). Each scores the criteria below from 0 to 100. A proposal can only be approved when
 **each reviewer's average is above 80**. The database enforces this: `phg_design_proposal_review` refuses to approve
 without it. A failed proposal comes back to the designer with the scores and notes, and the designer submits a new
 version.
@@ -26,8 +28,14 @@ not guessed.
 | 9 | **Prices match** | Content | Every price exactly matches the draft or the inputs (the automatic check also enforces this) | Any changed, missing or invented price |
 | 10 | **Coherence** | Critic + Content | Everything reads as one design: typography, colour, spacing, tone and content all agree, on paper and on a phone | Parts look like different menus |
 
+| 11 | **Ingredient accuracy** | Accuracy | Every printed ingredient, garnish, glass, serve, grape, region, style, ABV, age or brand traces to a real Supabase row or the inputs, spelled exactly as the source | Any printed fact with no source |
+| 12 | **Description quality** | Accuracy | Guest language, appetising, one voice, right length; never just repeats the item name; no taxonomy wording | Descriptions that read like database classes or repeat the name |
+| 13 | **Venue-type fit** | Accuracy | Reads as this venue (type, city, demographics): order and emphasis, correct Spanish/other-language use, expected categories, price tier | Menu could belong to any venue; wrong or misused language |
+| 14 | **Descriptions and prices laid out together** | Accuracy | Description measure and breaks, price-to-name relationship, glass/bottle/pour labels, nothing orphaned or crowded, readable in print and on a phone | Prices detached from items; unlabelled glass/bottle prices; crowded or orphaned lines |
+
 - **Critic average** = mean of criteria 1, 2, 3, 4, 5, 6, 7 and 10.
 - **Content average** = mean of criteria 3, 5, 8, 9 and 10.
+- **Accuracy average** = mean of criteria 10, 11, 12, 13 and 14.
 
 (Criteria 3, 5 and 10 are scored by both reviewers independently.)
 

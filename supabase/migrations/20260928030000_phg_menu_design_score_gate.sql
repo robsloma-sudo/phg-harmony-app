@@ -2,6 +2,44 @@
 -- A proposal carries its layout geometry; two design reviewers (design_critic, content_reviewer) score it per
 -- criterion; phg_design_proposal_review refuses to approve unless EACH reviewer's average is above 80.
 
+-- Review (PHG-026 round 3, SF10): the layout check treats a missing key as missing (coalesce), and the three
+-- functions this file replaces are saved first; phg_rollback_design_score_gate_20260928() puts them back.
+
+-- ---------- 0. save the definitions this migration replaces ----------
+create table if not exists public.phg_backup_design_fn_defs_20260928 (
+  signature text primary key, definition text not null, saved_at timestamptz not null default now());
+alter table public.phg_backup_design_fn_defs_20260928 enable row level security;
+revoke all on public.phg_backup_design_fn_defs_20260928 from anon, authenticated;
+revoke insert, update, delete, truncate on public.phg_backup_design_fn_defs_20260928 from service_role;
+insert into public.phg_backup_design_fn_defs_20260928 (signature, definition)
+select p.oid::regprocedure::text, pg_get_functiondef(p.oid)
+  from pg_proc p
+ where p.oid in (to_regprocedure('public.phg_design_proposal_submit(uuid,jsonb,jsonb,jsonb,jsonb,text,bigint[],numeric,text[],boolean)'),
+                 to_regprocedure('public.phg_design_proposal_review(uuid,boolean,text)'),
+                 to_regprocedure('public.phg_design_status(uuid)'))
+on conflict (signature) do nothing;
+do $$ begin
+  if (select count(*) from public.phg_backup_design_fn_defs_20260928) < 3 then
+    raise exception 'expected 3 saved function definitions before replacing them';
+  end if;
+end $$;
+-- Rollback: drops the new submit (11 args) and the score function, restores the three saved bodies, re-applies revokes.
+-- The added columns (layout, review_scores) stay: nullable / defaulted, unused by the restored functions.
+create or replace function public.phg_rollback_design_score_gate_20260928()
+returns int language plpgsql set search_path to 'public', 'pg_temp' as $$
+declare r record; n int := 0;
+begin
+  drop function if exists public.phg_design_proposal_submit(uuid,jsonb,jsonb,jsonb,jsonb,text,bigint[],numeric,text[],boolean,jsonb);
+  drop function if exists public.phg_design_proposal_score(uuid,text,jsonb,jsonb,jsonb);
+  for r in select signature, definition from public.phg_backup_design_fn_defs_20260928 order by signature loop
+    execute r.definition;
+    execute format('revoke all on function %s from public, anon, authenticated', r.signature::regprocedure);
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+revoke all on function public.phg_rollback_design_score_gate_20260928() from public, anon, authenticated;
+
 alter table phg.menu_design_proposals
   add column if not exists layout jsonb,
   add column if not exists review_scores jsonb not null default '{}'::jsonb;
@@ -20,8 +58,8 @@ begin
   if v_t.status in ('applied','cancelled') then raise exception 'task is %', v_t.status; end if;
   v_chk := case when p_needs_input then jsonb_build_object('ok', true, 'problems', '[]'::jsonb, 'needs_input', true)
                 else public.phg_design_doc_check(p_doc, v_t.base_doc, v_t.inputs) end;
-  if not p_needs_input and (p_layout is null or jsonb_typeof(p_layout->'elements') <> 'array'
-                            or jsonb_typeof(p_layout->'page') <> 'object') then
+  if not p_needs_input and (p_layout is null or coalesce(jsonb_typeof(p_layout->'elements'), '') <> 'array'
+                            or coalesce(jsonb_typeof(p_layout->'page'), '') <> 'object') then
     v_chk := jsonb_set(v_chk, '{ok}', 'false'::jsonb);
     v_chk := jsonb_set(v_chk, '{problems}', coalesce(v_chk->'problems','[]'::jsonb) || '["layout geometry missing (page + elements required by the scorecard)"]'::jsonb);
   end if;
@@ -45,10 +83,11 @@ returns jsonb language plpgsql security definer set search_path to 'public', 'pg
 declare v_keys text[]; v_avg numeric; v_pr phg.menu_design_proposals%rowtype; k text;
 begin
   v_keys := case p_reviewer when 'design_critic' then array['1','2','3','4','5','6','7','10']
-                            when 'content_reviewer' then array['3','5','8','9','10'] end;
-  if v_keys is null then raise exception 'reviewer must be design_critic or content_reviewer'; end if;
+                            when 'content_reviewer' then array['3','5','8','9','10']
+                            when 'accuracy_reviewer' then array['10','11','12','13','14'] end;
+  if v_keys is null then raise exception 'reviewer must be design_critic, content_reviewer or accuracy_reviewer'; end if;
   foreach k in array v_keys loop
-    if not (p_scores ? k) or jsonb_typeof(p_scores->k) <> 'number' or (p_scores->>k)::numeric not between 0 and 100 then
+    if not coalesce(p_scores ? k, false) or coalesce(jsonb_typeof(p_scores->k), '') <> 'number' or (p_scores->>k)::numeric not between 0 and 100 then
       raise exception 'score % missing or not 0-100', k; end if;
   end loop;
   select * into v_pr from phg.menu_design_proposals where id = p_proposal_id for update;
@@ -66,7 +105,7 @@ end $$;
 -- Review: approval now also needs both reviewers' averages above 80.
 create or replace function public.phg_design_proposal_review(p_proposal_id uuid, p_approve boolean, p_note text default null)
 returns jsonb language plpgsql security definer set search_path to 'public', 'pg_temp' as $$
-declare v_pr phg.menu_design_proposals%rowtype; v_t phg.menu_design_tasks%rowtype; v_chk jsonb; v_c numeric; v_m numeric;
+declare v_pr phg.menu_design_proposals%rowtype; v_t phg.menu_design_tasks%rowtype; v_chk jsonb; v_c numeric; v_m numeric; v_a numeric;
 begin
   select * into v_pr from phg.menu_design_proposals where id = p_proposal_id for update;
   if not found then raise exception 'proposal not found'; end if;
@@ -80,8 +119,9 @@ begin
     end if;
     v_c := (v_pr.review_scores->'design_critic'->>'average')::numeric;
     v_m := (v_pr.review_scores->'content_reviewer'->>'average')::numeric;
-    if v_c is null or v_m is null or v_c <= 80 or v_m <= 80 then
-      return jsonb_build_object('status','blocked_by_score_gate','design_critic',v_c,'content_reviewer',v_m,
+    v_a := (v_pr.review_scores->'accuracy_reviewer'->>'average')::numeric;
+    if v_c is null or v_m is null or v_a is null or v_c <= 80 or v_m <= 80 or v_a <= 80 then
+      return jsonb_build_object('status','blocked_by_score_gate','design_critic',v_c,'content_reviewer',v_m,'accuracy_reviewer',v_a,
         'rule','each reviewer average must be above 80 (MENU_DESIGN_SCORECARD.md)');
     end if;
   end if;
@@ -102,7 +142,8 @@ returns jsonb language sql stable security definer set search_path to 'public', 
     'proposals', (select coalesce(jsonb_agg(jsonb_build_object('proposal_id', p.id, 'version', p.version, 'status', p.status,
                     'reasoning', p.reasoning, 'risk_flags', p.risk_flags, 'problems', p.check_result->'problems',
                     'scores', jsonb_build_object('design_critic', p.review_scores->'design_critic'->'average',
-                                                 'content_reviewer', p.review_scores->'content_reviewer'->'average'),
+                                                 'content_reviewer', p.review_scores->'content_reviewer'->'average',
+                                                 'accuracy_reviewer', p.review_scores->'accuracy_reviewer'->'average'),
                     'changes', p.changes, 'previews', p.previews, 'created_at', p.created_at) order by p.version desc), '[]'::jsonb)
                   from phg.menu_design_proposals p where p.task_id = t.id)) order by t.created_at desc), '[]'::jsonb))
   from (select * from phg.menu_design_tasks where menu_project_id = p_menu_project_id order by created_at desc limit 30) t
