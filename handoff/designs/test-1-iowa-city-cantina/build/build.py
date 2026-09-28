@@ -71,7 +71,7 @@ dr = sub("sec_beer", "sub_beer_draft"); dr["name"] = "Cerveza & Sidra"; dr["item
 S["sec_beer"]["name"] = "Beer & Cider"
 bg, sp = sub("sec_wine", "sub_wine_by_the_glass"), sub("sec_wine", "sub_wine_sparkling")
 bg["name"] = "Tintos, Blancos y Espumoso"; bg["items"] = bg["items"] + sp["items"]; S["sec_wine"]["subs"] = [bg]
-new = [S[k] for k in ["sec_cocktails", "sec_spirits", "sec_beer", "sec_wine"]]
+new = [S[k] for k in ["sec_cocktails", "sec_beer", "sec_spirits", "sec_wine"]]
 for s in new:
     for it in s["items"] + [i for sb in s["subs"] for i in sb["items"]]:
         line, src, rows, miss = C[it["id"]]
@@ -93,12 +93,12 @@ allitems = {i["id"]: i for s in new for i in s["items"] + [x for sb in s["subs"]
 V = {"cantarito": "Tanto va el cántaro al agua, que se quiebra y te moja las enaguas.", "botella": "La herramienta del borracho.",
      "barril": "Tanto bebió el albañil, que quedó como barril.", "rosa": "Rosita, Rosaura, ven que te quiero ahora."}
 FIG = 105; FACE = 117          # face = 6 + 105 figure + 6; with the 3 pt top frame, 120 pt = a multiple of 6
-H1, H2, GAP, DECK = 354, 270, 12, 636
+H1, H2, GAP, DECK = 354, 240, 12, 606   # lower row shrunk to La Rosa's content; the spare 30 pt goes to the masthead
 # (n, ref, gloss, lotería name, don clemente number, figure, colour, groups, verse, column, card h)
 CARDS = [
  (1, "sec_cocktails", "Cocktails", "El Cantarito", 44, "cantarito", "terra", [(cl, cl["items"]), (ho, ho["items"])], V["cantarito"], 1, H1),
- (2, "sec_spirits", "Spirits", "La Botella", 8, "bottle", "ink", [(ag, ag["items"])], V["botella"], 2, H1),
- (3, "sec_beer", "Beer & Cider", "El Barril", 9, "barrel", "agave", [(dr, dr["items"])], V["barril"], 1, H2),
+ (2, "sec_beer", "Beer & Cider", "El Barril", 9, "barrel", "agave", [(dr, dr["items"])], V["barril"], 2, H1),
+ (3, "sec_spirits", "Spirits", "La Botella", 8, "bottle", "ink", [(ag, ag["items"])], V["botella"], 1, H2),
  (4, "sec_wine", "Wine", "La Rosa", 41, "rose", "rosa", [(bg, bg["items"])], V["rosa"], 2, H2),
 ]
 assert sorted(i["id"] for c in CARDS for g in c[7] for i in g[1]) == sorted(allitems), "every item on exactly one card"
@@ -107,8 +107,8 @@ doc["meta"] = dict(doc.get("meta") or {})
 doc["meta"]["designer_notes"] = {
     "round": ROUND,
     "recipe_versions": {k: list(v) for k, v in RV.items()},
-    "concept": ("Lotería de la Cantina, a real tabla of four cards read in rows: El Cantarito (44, cocktails, Margarita first) and La Botella (8, agave & brandy) on top; "
-                "El Barril (9, beer & cider) and La Rosa (41, wine) below, on one shared break line. Every card: 3 pt frame in its colour; one face template "
+    "concept": ("Lotería de la Cantina, a real tabla of four cards read in rows: El Cantarito (44, cocktails, Margarita first) and El Barril (9, beer & cider) on top; "
+                "La Botella (8, agave & brandy) and La Rosa (41, wine) below, on one shared break line. Every card: 3 pt frame in its colour; one face template "
                 "(105 pt cut-paper figure at the same x on every card, its traditional Don Clemente number as an italic ink numeral in the figure's top-left corner, "
                 "cantor verse and name band in a column at the same x offset); the drinks list below."),
     "cards": [{"n": c[0], "ref": c[1], "name": c[2], "loteria_name": c[3].upper(), "loteria_number": c[4], "number_source": "traditional Don Clemente lotería numbering",
@@ -124,7 +124,7 @@ doc["meta"]["designer_notes"] = {
     "manhattan": "'Rye, sweet vermouth and aromatic bitters.' (the venue's own menu_description words). 'Spirit-forward' (a class label) dropped; 'rye whiskey' shortened to 'rye'.",
     "brut_rose_price": "Prints like every other price. The empty glass / bottle label is asked in needs_input only.",
     "structure_changes": "Cocktails: 'Clásicos · Classics' (Margarita, Manhattan) leads, then 'De la Casa · House' (Old Fashioned, Daiquiri). Spirits: 'Agave & Brandy'. Beer: 'Cerveza & Sidra' (cider folded in). Wine: 'Tintos, Blancos y Espumoso'.",
-    "card_layout": f"2 + 2 tabla read in rows; columns 261 / 261 pt, 18 pt gutter, 12 pt between rows. Top row {H1} pt (El Cantarito | La Botella); lower row {H2} pt (El Barril | La Rosa); {H1} + 12 + {H2} = {DECK}. Card tops, faces, name bands, subheads and item rows all sit on 6 pt steps from the deck top.",
+    "card_layout": f"2 + 2 tabla read in rows; columns 261 / 261 pt, 18 pt gutter, 12 pt between rows. Top row {H1} pt (El Cantarito | El Barril); lower row {H2} pt (La Botella | La Rosa); {H1} + 12 + {H2} = {DECK}. Card tops, faces, name bands, subheads and item rows all sit on 6 pt steps from the deck top.",
     "retired_junmai_ginjo": "Retired Junmai Ginjo ($12) in phg.menu_items is not in the draft and is left off (please confirm).",
     "palette_note": "Four hues: terracotta (El Cantarito), ink (La Botella), agave green (El Barril), lotería rosa (La Rosa); marigold is the accent (papel picado and figure details). Agave blue dropped.",
 }
@@ -200,8 +200,7 @@ def card_html(n, cid, name, lot, num, fig, col, groups, verse, column, h):
     for sb, items in groups:
         body.append(f'<div class="sub" data-id="{sb["id"]}"><h3>{h3(sb["name"])}</h3><span class="subrule"></span></div>')
         body.append('<div class="items">' + "".join(item_html(i) for i in items) + "</div>")
-    ORN_DIMS = 'width="234pt" height="48pt"'
-    orn = ('<div class="orn" aria-hidden="true">' + papel(5, 234, 48, "orn-svg", ORN_DIMS) + '</div>') if n == 2 else ""
+    orn = ""  # no filler ornament (Coordinator, round 12 fix)
     return (f'<article class="card c-{col}{" featured" if n == 1 else ""}" id="card-{n}" data-id="{cid}" data-n="{n}" style="--h:{h}pt">'
             f'<div class="face"><div class="figure">{icon(fig, "fig")}<span class="cardno" aria-label="Lotería card {num}">{num}</span></div>'
             f'<div class="vcol"><p class="verse" lang="es">{html.escape(verse)}</p>'
@@ -231,11 +230,11 @@ html, body { margin:0; padding:0; background:#d9d2c6; }
 body { -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:'DM Sans', sans-serif; color:$ink; }
 .c-terra { --c:$terra; --tint:#F3E3CB; } .c-agave { --c:$agave; --tint:#E4EBE2; } .c-ink { --c:$ink; --tint:#ECE3D4; } .c-rosa { --c:$rosa; --tint:#F7E3E8; }
 .page { width:612pt; height:792pt; padding:36pt; background:$cream; display:flex; flex-direction:column; margin:0 auto; }
-.banner { display:block; width:540pt; height:30pt; flex:none; }
+.banner { display:block; width:540pt; height:36pt; flex:none; }
 .banner-m, .tabs { display:none; }
-.title { font-family:'Fraunces', serif; font-weight:700; font-size:24pt; line-height:30pt; height:30pt; letter-spacing:-0.3pt; text-align:center; margin:0; }
+.title { font-family:'Fraunces', serif; font-weight:700; font-size:24pt; line-height:30pt; height:30pt; letter-spacing:-0.3pt; text-align:center; margin:12pt 0 0; }
 .title .amp { color:$terra; font-style:italic; font-weight:600; }
-.loc { text-align:center; font-size:8.5pt; line-height:12pt; height:12pt; letter-spacing:3pt; text-transform:uppercase; color:$muted; font-weight:500; margin:6pt 0 6pt; }
+.loc { text-align:center; font-size:8.5pt; line-height:12pt; height:12pt; letter-spacing:3pt; text-transform:uppercase; color:$muted; font-weight:500; margin:6pt 0 18pt; }
 .num { font-family:'Fraunces', serif; font-weight:700; color:var(--c, $terra); font-variant-numeric:lining-nums tabular-nums; font-feature-settings:'tnum' 1,'lnum' 1; }
 .nw { white-space:nowrap; }
 .deck { flex:none; display:grid; grid-template-columns:261pt 261pt; grid-template-rows:${h1}pt ${h2}pt; column-gap:18pt; row-gap:12pt; height:${deck}pt; }
@@ -301,7 +300,7 @@ HTML = f"""<!doctype html>
 <title>Cantina &amp; Cocktail Bar · Iowa City, Iowa</title>
 <style>{FONTS}{CSS}</style></head>
 <body><div class="page">
-<header class="mast">{papel(11, 540, 30, "banner", 'width="540pt" height="30pt"')}{papel(5, 340, 56, "banner-m", 'width="100%"')}
+<header class="mast">{papel()}{papel(5, 340, 56, "banner-m", 'width="100%"')}
 <h1 class="title">Cantina <span class="amp">&amp;</span> Cocktail Bar</h1><p class="loc">Iowa City, Iowa</p></header>
 <nav class="tabs" aria-label="Jump to a card">{tabs}</nav>
 <main class="deck">{deck}</main>

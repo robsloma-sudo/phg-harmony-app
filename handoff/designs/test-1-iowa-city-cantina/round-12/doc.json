@@ -329,178 +329,6 @@
       "items": []
     },
     {
-      "id": "sec_spirits",
-      "desc": "Straight pours by category.",
-      "name": "Spirits",
-      "subs": [
-        {
-          "id": "sub_spirits_agave",
-          "desc": "",
-          "name": "Agave & Brandy",
-          "items": [
-            {
-              "id": "beta_blanco_tequila",
-              "phg": {
-                "menu_item_id": "19d79518-edde-4331-b64a-0b7c21f30c79",
-                "recipe_stale": false,
-                "recipe_project_id": null,
-                "recipe_version_id": null
-              },
-              "desc": "",
-              "meta": {
-                "family": null,
-                "section": "spirits",
-                "beta_seed": true,
-                "canonical": null,
-                "subfamily": "agave",
-                "serve_format": null,
-                "venue_heading": "Spirits",
-                "identity_class": "spirit",
-                "sample_content": true,
-                "public_components": {},
-                "public_visibility": {
-                  "item": true,
-                  "brand": true,
-                  "price": true,
-                  "description": true,
-                  "ingredients": true,
-                  "house_recipe": true
-                },
-                "missing_ingredients": [
-                  "guest line (no defining row)",
-                  "brand",
-                  "pour size"
-                ]
-              },
-              "name": "Blanco Tequila",
-              "brand": "",
-              "badges": [],
-              "origin": {
-                "item_name": null,
-                "venue_key": null
-              },
-              "prices": [
-                {
-                  "id": "p_beta_blanco_tequila",
-                  "label": "",
-                  "value": 12,
-                  "source": "manual"
-                }
-              ],
-              "source": "manual",
-              "components": []
-            },
-            {
-              "id": "beta_anejo_tequila",
-              "phg": {
-                "menu_item_id": "124f8949-6661-4c84-8333-b07754dbf859",
-                "recipe_stale": false,
-                "recipe_project_id": null,
-                "recipe_version_id": null
-              },
-              "desc": "",
-              "meta": {
-                "family": null,
-                "section": "spirits",
-                "beta_seed": true,
-                "canonical": null,
-                "subfamily": "agave",
-                "serve_format": null,
-                "venue_heading": "Spirits",
-                "identity_class": "spirit",
-                "sample_content": true,
-                "public_components": {},
-                "public_visibility": {
-                  "item": true,
-                  "brand": true,
-                  "price": true,
-                  "description": true,
-                  "ingredients": true,
-                  "house_recipe": true
-                },
-                "missing_ingredients": [
-                  "guest line (no defining row)",
-                  "brand",
-                  "age statement",
-                  "pour size"
-                ]
-              },
-              "name": "Añejo Tequila",
-              "brand": "",
-              "badges": [],
-              "origin": {
-                "item_name": null,
-                "venue_key": null
-              },
-              "prices": [
-                {
-                  "id": "p_beta_anejo_tequila",
-                  "label": "",
-                  "value": 16,
-                  "source": "manual"
-                }
-              ],
-              "source": "manual",
-              "components": []
-            },
-            {
-              "id": "beta_cognac_vsop",
-              "phg": {
-                "menu_item_id": "75501d63-42c4-45cc-8a86-d8cdb30d8909",
-                "recipe_stale": false,
-                "recipe_project_id": null,
-                "recipe_version_id": null
-              },
-              "desc": "",
-              "meta": {
-                "family": null,
-                "section": "spirits",
-                "beta_seed": true,
-                "canonical": null,
-                "subfamily": "brandy",
-                "serve_format": null,
-                "venue_heading": "Spirits",
-                "identity_class": "spirit",
-                "sample_content": true,
-                "public_components": {},
-                "public_visibility": {
-                  "item": true,
-                  "brand": true,
-                  "price": true,
-                  "description": true,
-                  "ingredients": true,
-                  "house_recipe": true
-                },
-                "missing_ingredients": [
-                  "guest line (no defining row)",
-                  "brand / house",
-                  "pour size"
-                ]
-              },
-              "name": "Cognac VSOP",
-              "brand": "",
-              "badges": [],
-              "origin": {
-                "item_name": null,
-                "venue_key": null
-              },
-              "prices": [
-                {
-                  "id": "p_beta_cognac_vsop",
-                  "label": "",
-                  "value": 18,
-                  "source": "manual"
-                }
-              ],
-              "source": "manual",
-              "components": []
-            }
-          ]
-        }
-      ],
-      "items": []
-    },
-    {
       "id": "sec_beer",
       "desc": "Draft beer selections.",
       "name": "Beer & Cider",
@@ -726,6 +554,178 @@
       "items": []
     },
     {
+      "id": "sec_spirits",
+      "desc": "Straight pours by category.",
+      "name": "Spirits",
+      "subs": [
+        {
+          "id": "sub_spirits_agave",
+          "desc": "",
+          "name": "Agave & Brandy",
+          "items": [
+            {
+              "id": "beta_blanco_tequila",
+              "phg": {
+                "menu_item_id": "19d79518-edde-4331-b64a-0b7c21f30c79",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "",
+              "meta": {
+                "family": null,
+                "section": "spirits",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "agave",
+                "serve_format": null,
+                "venue_heading": "Spirits",
+                "identity_class": "spirit",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "guest line (no defining row)",
+                  "brand",
+                  "pour size"
+                ]
+              },
+              "name": "Blanco Tequila",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_blanco_tequila",
+                  "label": "",
+                  "value": 12,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            },
+            {
+              "id": "beta_anejo_tequila",
+              "phg": {
+                "menu_item_id": "124f8949-6661-4c84-8333-b07754dbf859",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "",
+              "meta": {
+                "family": null,
+                "section": "spirits",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "agave",
+                "serve_format": null,
+                "venue_heading": "Spirits",
+                "identity_class": "spirit",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "guest line (no defining row)",
+                  "brand",
+                  "age statement",
+                  "pour size"
+                ]
+              },
+              "name": "Añejo Tequila",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_anejo_tequila",
+                  "label": "",
+                  "value": 16,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            },
+            {
+              "id": "beta_cognac_vsop",
+              "phg": {
+                "menu_item_id": "75501d63-42c4-45cc-8a86-d8cdb30d8909",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "",
+              "meta": {
+                "family": null,
+                "section": "spirits",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "brandy",
+                "serve_format": null,
+                "venue_heading": "Spirits",
+                "identity_class": "spirit",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "guest line (no defining row)",
+                  "brand / house",
+                  "pour size"
+                ]
+              },
+              "name": "Cognac VSOP",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_cognac_vsop",
+                  "label": "",
+                  "value": 18,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            }
+          ]
+        }
+      ],
+      "items": []
+    },
+    {
       "id": "sec_wine",
       "desc": "Wine by the glass and sparkling selections.",
       "name": "Wine",
@@ -930,7 +930,7 @@
           "Cocktail cherry"
         ]
       },
-      "concept": "Lotería de la Cantina, a real tabla of four cards read in rows: El Cantarito (44, cocktails, Margarita first) and La Botella (8, agave & brandy) on top; El Barril (9, beer & cider) and La Rosa (41, wine) below, on one shared break line. Every card: 3 pt frame in its colour; one face template (105 pt cut-paper figure at the same x on every card, its traditional Don Clemente number as an italic ink numeral in the figure's top-left corner, cantor verse and name band in a column at the same x offset); the drinks list below.",
+      "concept": "Lotería de la Cantina, a real tabla of four cards read in rows: El Cantarito (44, cocktails, Margarita first) and El Barril (9, beer & cider) on top; La Botella (8, agave & brandy) and La Rosa (41, wine) below, on one shared break line. Every card: 3 pt frame in its colour; one face template (105 pt cut-paper figure at the same x on every card, its traditional Don Clemente number as an italic ink numeral in the figure's top-left corner, cantor verse and name band in a column at the same x offset); the drinks list below.",
       "cards": [
         {
           "n": 1,
@@ -955,26 +955,6 @@
         },
         {
           "n": 2,
-          "ref": "sec_spirits",
-          "name": "Spirits",
-          "loteria_name": "LA BOTELLA",
-          "loteria_number": 8,
-          "number_source": "traditional Don Clemente lotería numbering",
-          "cantor_verse": "La herramienta del borracho.",
-          "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
-          "figure": "bottle",
-          "featured": false,
-          "card_h_pt": 354,
-          "face_h_pt": 117,
-          "figure_pt": 105,
-          "items": [
-            "beta_blanco_tequila",
-            "beta_anejo_tequila",
-            "beta_cognac_vsop"
-          ]
-        },
-        {
-          "n": 3,
           "ref": "sec_beer",
           "name": "Beer & Cider",
           "loteria_name": "EL BARRIL",
@@ -984,7 +964,7 @@
           "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
           "figure": "barrel",
           "featured": false,
-          "card_h_pt": 270,
+          "card_h_pt": 354,
           "face_h_pt": 117,
           "figure_pt": 105,
           "items": [
@@ -992,6 +972,26 @@
             "beta_dry_hopped_ipa",
             "beta_amber_lager",
             "beta_dry_cider"
+          ]
+        },
+        {
+          "n": 3,
+          "ref": "sec_spirits",
+          "name": "Spirits",
+          "loteria_name": "LA BOTELLA",
+          "loteria_number": 8,
+          "number_source": "traditional Don Clemente lotería numbering",
+          "cantor_verse": "La herramienta del borracho.",
+          "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
+          "figure": "bottle",
+          "featured": false,
+          "card_h_pt": 240,
+          "face_h_pt": 117,
+          "figure_pt": 105,
+          "items": [
+            "beta_blanco_tequila",
+            "beta_anejo_tequila",
+            "beta_cognac_vsop"
           ]
         },
         {
@@ -1005,7 +1005,7 @@
           "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
           "figure": "rose",
           "featured": false,
-          "card_h_pt": 270,
+          "card_h_pt": 240,
           "face_h_pt": 117,
           "figure_pt": 105,
           "items": [
@@ -1203,7 +1203,7 @@
       "manhattan": "'Rye, sweet vermouth and aromatic bitters.' (the venue's own menu_description words). 'Spirit-forward' (a class label) dropped; 'rye whiskey' shortened to 'rye'.",
       "brut_rose_price": "Prints like every other price. The empty glass / bottle label is asked in needs_input only.",
       "structure_changes": "Cocktails: 'Clásicos · Classics' (Margarita, Manhattan) leads, then 'De la Casa · House' (Old Fashioned, Daiquiri). Spirits: 'Agave & Brandy'. Beer: 'Cerveza & Sidra' (cider folded in). Wine: 'Tintos, Blancos y Espumoso'.",
-      "card_layout": "2 + 2 tabla read in rows; columns 261 / 261 pt, 18 pt gutter, 12 pt between rows. Top row 354 pt (El Cantarito | La Botella); lower row 270 pt (El Barril | La Rosa); 354 + 12 + 270 = 636. Card tops, faces, name bands, subheads and item rows all sit on 6 pt steps from the deck top.",
+      "card_layout": "2 + 2 tabla read in rows; columns 261 / 261 pt, 18 pt gutter, 12 pt between rows. Top row 354 pt (El Cantarito | El Barril); lower row 240 pt (La Botella | La Rosa); 354 + 12 + 240 = 606. Card tops, faces, name bands, subheads and item rows all sit on 6 pt steps from the deck top.",
       "retired_junmai_ginjo": "Retired Junmai Ginjo ($12) in phg.menu_items is not in the draft and is left off (please confirm).",
       "palette_note": "Four hues: terracotta (El Cantarito), ink (La Botella), agave green (El Barril), lotería rosa (La Rosa); marigold is the accent (papel picado and figure details). Agave blue dropped."
     }
