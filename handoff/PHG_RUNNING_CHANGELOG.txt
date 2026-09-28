@@ -1301,3 +1301,13 @@ functions + OpenAI key). Rob: "Deploy."
 - Pushed main 95c192b = index.html 18.49.20 + netlify.toml (includes 18.49.19 attachments + cosmic menus,
   18.49.20 voice fix). Rollback: redeploy main d8a3f14 (18.49.18). language_interpretations grant still
   NOT applied (not approved).
+
+------------------------------------------------------------------------------
+PHG-20260928-HIST | USER_PROMPT + DB CHANGE | 2026-09-28
+Rob: "fix the history."
+- Applied migration grant_service_role_language_interpretations: grant select, insert on
+  phg.language_interpretations to service_role (no update/delete). File:
+  supabase/migrations/20260928210000_grant_service_role_language_interpretations.sql.
+- Verified: service_role SELECT/INSERT true, UPDATE/DELETE false; a rolled-back insert as service_role
+  wrote and read back 1 row; 0 test rows left. Table still has 0 real rows - history starts filling
+  from the next Harmony request. Revert: revoke select, insert on phg.language_interpretations from service_role.
