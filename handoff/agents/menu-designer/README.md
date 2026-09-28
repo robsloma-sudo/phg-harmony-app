@@ -29,6 +29,10 @@ node run.mjs --transcript-file ../examples/casa-luna.voice.txt --venue-type lati
   --zip 80205 --demographics ../examples/denver-80205.census.json --comparables ../examples/denver-cantina.refs.json \
   --standards ../examples/classic-specs.json --out ../out/casa-luna
 
+# Full bar menu with pour sizes (sample content: the fictional PHG Sample Bar)
+node run.mjs --transcript-file ../examples/sample-bar.voice.txt --venue-type cocktail_lounge --city Denver --state CO \
+  --standards ../examples/classic-specs.json --out ../out/sample-bar
+
 # Voice edit on the venue's existing draft
 node run.mjs --transcript-file ../examples/live-draft.voice.txt --base-doc ../examples/live-draft-ddc4bb5b.base_doc.json \
   --venue-type cocktail_lounge --out ../out/live-draft

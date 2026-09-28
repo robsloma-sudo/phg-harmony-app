@@ -1,0 +1,16 @@
+This is for PHG Sample Bar, a cocktail bar in LoHi. Make it elegant, letter size, two pages, front and back.
+
+House cocktails: Luna Paloma, blanco tequila, pink grapefruit, lime, agave, salted rim, fourteen, it's our house special. Smoke and Honey, mezcal, honey, lemon, ginger, fifteen. Garden Gimlet, gin, cucumber, basil, lime, fourteen, it's seasonal. Midnight Espresso, vodka, cold brew, coffee liqueur, vanilla, fifteen, it's new. Copper Mule, bourbon, ginger beer, lime, bitters, thirteen.
+
+Classic cocktails: Manhattan, rye, sweet vermouth, Angostura bitters, cherry, fifteen. Margarita, blanco tequila, lime, orange liqueur, agave, thirteen. Daiquiri, white rum, lime, simple syrup, twelve. Old Fashioned, bourbon, demerara, Angostura bitters, orange peel, fourteen. Negroni, gin, Campari, sweet vermouth, orange peel, fourteen.
+
+Draft beers come in ten ounce, sixteen ounce and pitchers. Beers on draft: Summit Pils, Czech pilsner, 4.8 percent, five, seven, twenty two. Switchback IPA, west coast IPA, 6.9 percent, six, eight, twenty eight. Hazy Peak, New England IPA, 6.5 percent, six, eight fifty, thirty. Alpenglow Amber, amber lager, 5.4 percent, five, seven, twenty four. Nightfall Stout, oatmeal stout, 6.2 percent, six, eight, twenty eight.
+Beers in cans: Modelo Especial, Mexican lager, 4.4 percent, six. Coors Light, light lager, 4.2 percent, five. Athletic Run Wild, non alcoholic IPA, 0.5 percent, six.
+
+Wines by the glass: Whitehaven Sauvignon Blanc, Marlborough New Zealand, twelve a glass, forty four a bottle. Sonoma-Cutrer Chardonnay, Russian River Valley California, fourteen a glass, fifty two a bottle. Whispering Angel Rosé, Provence France, thirteen a glass, forty eight a bottle. La Marca Prosecco, Veneto Italy, eleven a glass, forty a bottle. Meiomi Pinot Noir, California coast, thirteen a glass, forty eight a bottle. Catena Malbec, Mendoza Argentina, twelve a glass, forty four a bottle. Daou Cabernet Sauvignon, Paso Robles California, sixteen a glass, sixty a bottle.
+
+All spirits are poured in one ounce, one and a half ounce and two and a half ounce pours. Vodka: Tito's seven, ten, sixteen. Grey Goose nine, thirteen, twenty. Gin: Hendrick's nine, thirteen, twenty. Tanqueray seven, ten, sixteen. Rum: Plantation 3 Stars seven, ten, sixteen. Tequila: Siete Leguas Blanco nine, thirteen, twenty. Fortaleza Reposado eleven, sixteen, twenty five. Mezcal: Del Maguey Vida nine, thirteen, twenty.
+Whiskey pours are one and a half and three ounces. Whiskey: Buffalo Trace bourbon twelve, twenty two. Rittenhouse rye twelve, twenty two. Blanton's Single Barrel eighteen, thirty four. Lagavulin 16 year scotch twenty two, forty two.
+
+Mocktails: Garden Spritz, cucumber, lime, elderflower tonic, eight. Nojito, mint, lime, soda, seven. Spiced Pear Fizz, pear, cinnamon, lemon, ginger beer, eight. Rosemary Lemonade, lemon, rosemary, honey, sparkling water, seven.
+Non alcoholic: Mexican Coca-Cola four. Fever-Tree Ginger Beer five. Topo Chico four. Cold brew coffee five.

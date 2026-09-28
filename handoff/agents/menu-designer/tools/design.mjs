@@ -108,16 +108,17 @@ function normVenue(t) {
 }
 
 // ---------------------------------------------------------------- section order
-// Section order. Scorecard §1 criterion 5 example: cocktails → beer → wine → spirits → non-alcoholic. Non-alcoholic sits
-// last with equal type treatment (both reviewers, round 1, marked it down when it sat between alcoholic lists).
+// Section order. Scorecard §1 criterion 5 example: cocktails → beer → wine → spirits → non-alcoholic. Mocktails sit
+// right after the cocktails, styled like them (zero-proof as a peer: Dandelyan, NoMad; knowledge/03 [4][10]); soft drinks
+// (non-alcoholic) sit last with equal type treatment (both reviewers, round 1, marked it down when it sat between alcoholic lists).
 const SPIRITS_ORDER = ['tequila', 'mezcal', 'whiskey', 'gin', 'vodka', 'rum', 'brandy_cognac', 'liqueurs_amari', 'sake_soju'];
 const WINES = ['wine_sparkling', 'wine_white', 'wine_rose', 'wine_red', 'wine'];
 const ORDER = {
-  default:       ['cocktails', 'beer', 'cider_seltzer', ...WINES, ...SPIRITS_ORDER, 'non_alcoholic'],
-  brewery:       ['beer', 'cider_seltzer', 'cocktails', ...WINES, ...SPIRITS_ORDER, 'non_alcoholic'],
-  dive_bar:      ['beer', 'cocktails', 'cider_seltzer', 'whiskey', 'tequila', 'vodka', 'gin', 'rum', 'mezcal', ...WINES, 'brandy_cognac', 'liqueurs_amari', 'sake_soju', 'non_alcoholic'],
-  wine_bar:      [...WINES, 'cocktails', 'beer', 'cider_seltzer', 'brandy_cognac', 'liqueurs_amari', 'whiskey', 'gin', 'vodka', 'rum', 'tequila', 'mezcal', 'sake_soju', 'non_alcoholic'],
-  latin_cantina: ['cocktails', 'tequila', 'mezcal', 'beer', 'cider_seltzer', ...WINES, 'whiskey', 'rum', 'gin', 'vodka', 'brandy_cognac', 'liqueurs_amari', 'sake_soju', 'non_alcoholic'],
+  default:       ['cocktails', 'mocktails', 'beer', 'cider_seltzer', ...WINES, 'spirits', ...SPIRITS_ORDER, 'non_alcoholic'],
+  brewery:       ['beer', 'cider_seltzer', 'cocktails', 'mocktails', ...WINES, 'spirits', ...SPIRITS_ORDER, 'non_alcoholic'],
+  dive_bar:      ['beer', 'cocktails', 'mocktails', 'cider_seltzer', 'whiskey', 'tequila', 'vodka', 'gin', 'rum', 'mezcal', ...WINES, 'brandy_cognac', 'liqueurs_amari', 'sake_soju', 'non_alcoholic'],
+  wine_bar:      [...WINES, 'cocktails', 'mocktails', 'beer', 'cider_seltzer', 'brandy_cognac', 'liqueurs_amari', 'whiskey', 'gin', 'vodka', 'rum', 'tequila', 'mezcal', 'sake_soju', 'non_alcoholic'],
+  latin_cantina: ['cocktails', 'mocktails', 'tequila', 'mezcal', 'beer', 'cider_seltzer', ...WINES, 'whiskey', 'rum', 'gin', 'vodka', 'brandy_cognac', 'liqueurs_amari', 'sake_soju', 'non_alcoholic'],
 };
 ORDER.sports_bar = ORDER.dive_bar; ORDER.fine_dining = ORDER.wine_bar;
 const FOOD = ['food_small', 'food_mains', 'food_sides', 'food_dessert'];
@@ -191,7 +192,15 @@ export function buildDoc(req, look, opts = {}) {
   for (const l of lists) {
     if (/^wine/.test(l)) {
       if (wineDone) continue; wineDone = true;
-      const items = req.items.filter(i => /^wine/.test(i.list || ''));
+      const WHITE = /sauvignon blanc|chardonnay|pinot gri[gs]io?|riesling|chenin|albari[nñ]o|gr[uü]ner|viognier|verdejo|vermentino|moscato|white/i;
+      const RED = /pinot noir|malbec|cabernet|merlot|syrah|shiraz|zinfandel|tempranillo|sangiovese|nebbiolo|grenache|garnacha|rioja|chianti|red/i;
+      const items = req.items.filter(i => /^wine/.test(i.list || '')).map(i => {
+        if (i.list !== 'wine') return i;
+        const t = `${i.name} ${i.description || ''}`;
+        const style = WHITE.test(i.name) ? 'wine_white' : RED.test(i.name) ? 'wine_red' : WHITE.test(t) ? 'wine_white' : RED.test(t) ? 'wine_red' : null;
+        // "By the glass" says nothing once every price is labelled glass / bottle; the style is the better heading.
+        return style ? { ...i, list: style, sub: (i.prices || []).every(p => p.label) ? null : i.sub } : i;
+      });
       // One Wine section; styles become subsections in the classic order (sparkling → white → rosé → red).
       const subOrder = ['Sparkling', 'White', 'Rosé', 'Red'];
       const sec = buildSection('Wine', items, i => WINE_SUB[i.list] || i.sub || null);
@@ -213,6 +222,20 @@ export function buildDoc(req, look, opts = {}) {
     tq.name = 'Tequila & Mezcal'; tq.items = []; tq.subs = subs;
     sections.splice(sections.indexOf(mz), 1);
     changes.push('Tequila and Mezcal share one section with their own subsections (a one-item list does not earn a full header).');
+  }
+  // Several small spirit lists read better as one Spirits section with a subsection per list (same level for all,
+  // so every list is treated equally) than as a row of one- and two-item headers.
+  const SPIRIT_NAMES = ['Vodka', 'Gin', 'Rum', 'Tequila', 'Mezcal', 'Tequila & Mezcal', 'Whiskey', 'Brandy & Cognac', 'Liqueurs & Amari', 'Sake & Soju'];
+  const sp = sections.filter(x => SPIRIT_NAMES.includes(x.name));
+  if (sp.length >= 3 && sp.reduce((a, x) => a + countItems(x), 0) <= 24) {
+    const merged = { id: id('sec'), name: 'Spirits', items: [], subs: [] };
+    for (const x of sp) {
+      if (x.subs.length) for (const b of x.subs) merged.subs.push({ ...b, name: /tequila|mezcal/i.test(b.name) || x.name === b.name ? b.name : `${x.name} · ${b.name}` });
+      if (x.items.length) merged.subs.push({ id: id('sub'), name: x.name, items: x.items });
+    }
+    sections.splice(sections.indexOf(sp[0]), 0, merged);
+    for (const x of sp) sections.splice(sections.indexOf(x), 1);
+    changes.push(`Spirits: ${sp.map(x => x.name).join(', ')} set as subsections of one Spirits section (each list at the same level).`);
   }
   // A "By the glass" subsection that also carries bottle prices is renamed so the heading tells the truth.
   for (const sec of sections) for (const b of sec.subs || []) {
@@ -499,6 +522,75 @@ function flattenSubs(doc) {
   return changes;
 }
 
+// Pour sizes and glass/bottle labels printed once (Design Critic round 3; professional drinks lists head their price
+// columns instead of repeating "1 oz / 1.5 oz / 2.5 oz" on every line). When every item in a list shares the same
+// labels, the labels become that list's description line ("1 oz  ·  1.5 oz  ·  2.5 oz") and the rows print bare
+// values ("9 / 13 / 20"). Values never change; the labels stay on each item in meta.price_labels.
+function pourHeaders(doc) {
+  const changes = [];
+  for (const sec of doc.sections) for (const holder of [sec, ...(sec.subs || [])]) {
+    const items = holder.items || [];
+    if (!items.length || holder.designer_role) continue;
+    const sig = it => (it.prices || []).map(p => p.label || '').join('|');
+    const first = sig(items[0]);
+    if (!first || (items[0].prices || []).length < 2 || !items.every(it => sig(it) === first)) continue;
+    if (String(holder.desc || '').trim()) continue;
+    const labels = items[0].prices.map(p => p.label);
+    holder.desc = labels.join('  ·  ');
+    for (const it of items) { it.meta = { ...(it.meta || {}), price_labels: labels }; it.prices = it.prices.map(p => ({ ...p, label: '' })); }
+    changes.push(`${holder.name}: ${labels.join(' / ')} printed once under the heading; each line shows the prices in that order (labels kept in meta.price_labels).`);
+  }
+  // Every subsection of a section carries the same labels (wine: Glass · Bottle): say it once, under the section heading.
+  for (const sec of doc.sections) {
+    const subs = (sec.subs || []).filter(b => b.items.length);
+    if (subs.length < 2 || sec.items.length || String(sec.desc || '').trim()) continue;
+    const d = subs[0].desc;
+    if (d && subs.every(b => b.desc === d) && subs.every(b => b.items.every(i => i.meta?.price_labels))) {
+      sec.desc = d; for (const b of subs) b.desc = '';
+      changes.push(`${sec.name}: "${d}" printed once for the whole section.`);
+    }
+  }
+  return changes;
+}
+
+// Multi-page menus: Menu Studio moves whole sections between columns and pages, which can strand a half-empty page.
+// Choose, in order, which section starts each column and page (Menu Studio's own "Start on a new column/page" flags)
+// so the slots fill evenly. Order is never changed.
+function planPages(doc, S, sizeKey) {
+  const secs = doc.sections.filter(x => !x.designer_role);
+  if (secs.length < 3 || secs.length > 14) return null;
+  const n = Math.max(1, S.page.cols || 1);
+  const L0 = layout({ doc, style: S, size: sizeKey });
+  const pages = L0.pages;
+  const slots = pages * n;
+  if (slots < 2 || slots > 8) return null;
+  const clear = () => { for (const x of secs) { delete x.breakBefore; delete x.breakCol; } };
+  let best = null;
+  // enumerate order-preserving splits of secs into `slots` consecutive groups (small n: brute force)
+  const rec = (start, k, cuts) => {
+    if (k === slots - 1) { tryCuts([...cuts]); return; }
+    for (let i = start + 1; i <= secs.length - (slots - 1 - k); i++) { cuts.push(i); rec(i, k + 1, cuts); cuts.pop(); }
+  };
+  const tryCuts = cuts => {
+    clear();
+    cuts.forEach((c, i) => { const slot = i + 1; if (slot % n === 0) secs[c].breakBefore = true; else secs[c].breakCol = true; });
+    const L = layout({ doc, style: S, size: sizeKey });
+    if (L.pages > pages || L.overflow.length) return;
+    // fill of each column slot
+    const bottoms = Array(slots).fill(0);
+    for (const op of L.ops) { if (op.node?.pos) continue; const pg = Math.floor(op.y / L.H); const col = Math.max(0, Math.round((op.x - L.M) / (L.colW + L.gutter))); const k = pg * n + Math.min(col, n - 1); if (k < slots) bottoms[k] = Math.max(bottoms[k], op.y - pg * L.H); }
+    if (bottoms.some(b => b === 0)) return;
+    const mean = bottoms.reduce((a, b) => a + b, 0) / slots;
+    const score = bottoms.reduce((a, b) => a + (b - mean) ** 2, 0) + (L.H - L.M - Math.max(...bottoms)) * 0;
+    if (!best || score < best.score) best = { score, cuts: [...cuts] };
+  };
+  rec(0, 0, []);
+  clear();
+  if (!best) return null;
+  best.cuts.forEach((c, i) => { const slot = i + 1; if (slot % n === 0) secs[c].breakBefore = true; else secs[c].breakCol = true; });
+  return `planned ${pages} pages × ${n} columns: ${best.cuts.map(c => secs[c].name).join(', ')} start new ${n > 1 ? 'columns/pages' : 'pages'}`;
+}
+
 // Colophon footer: a pinned, item-less section on the bottom margin. Only known facts: city/state and website from
 // the venue record, and legal lines exactly as supplied. It gives the page a finished foot and lets the layout meet
 // the scorecard's equal-margin rule inside Menu Studio (which counts trailing gaps toward the page height).
@@ -521,7 +613,8 @@ function placeFooter(doc, S, sizeKey) {
   f.format = { section: { f: S.sub.f, s: Math.max(9, S.sub.s), w: S.sub.w, i: false, sp: 60, c: S.sub.c, cs: 'none' } };   // keeps "RiNo" as spelled
   const vis = f.desc ? S.section.s + 11 + S.desc.s * 1.16 : f.format.section.s * 1.16;
   const top = H - M - vis;
-  f.pos = { page: 0, x: +(M / W).toFixed(5), y: +(top / H).toFixed(5) };
+  const pages = layout({ doc, style: S, size: sizeKey }).pages;
+  f.pos = { page: Math.max(0, pages - 1), x: +(M / W).toFixed(5), y: +(top / H).toFixed(5) };
   return top;
 }
 
@@ -591,8 +684,29 @@ export function design(input, options = {}) {
         changes.push(...fl);
       }
     }
+    for (const c of pourHeaders(doc)) changes.push(c);
     addFooter(doc, req);
-    const { m, log } = fit(doc, style, sizeKey, req.format);
+    const { m: m0, log } = fit(doc, style, sizeKey, req.format);
+    let m = m0;
+    if (m.pages > 1) {
+      const pl = planPages(doc, style, sizeKey);
+      if (pl) {
+        log.push(pl);
+        // With the page plan fixed, grow type and spacing while every section still lands in its planned slot.
+        const base = JSON.parse(JSON.stringify(style)), pages = measure(doc, style, sizeKey).pages;
+        const starts = () => layout({ doc, style, size: sizeKey }).ops.filter(o => o.t === 'head' && o.lvl === 'section' && !o.node?.pos).map(o => `${Math.floor(o.y / 1e9)}|${o.node?.id}`);
+        let bestK = 1;
+        for (let k = 1.03; k <= 1.45; k += 0.03) {
+          const T = scaleStyle(base, k); for (const key of Object.keys(T)) style[key] = T[key];
+          const r = measure(doc, style, sizeKey);
+          if (r.pages !== pages || r.wide.length || r.overflowing.length) break;
+          bestK = k;
+        }
+        const T = scaleStyle(base, bestK); for (const key of Object.keys(T)) style[key] = T[key];
+        if (bestK > 1) log.push(`type and spacing x${bestK.toFixed(2)} to fill the planned pages`);
+        m = measure(doc, style, sizeKey); placeFooter(doc, style, sizeKey);
+      }
+    }
     const optRisk = [];
     if (req.format.pages && m.pages > req.format.pages) optRisk.push('too_many_items_for_format');
     if (m.overflowing.length) optRisk.push('section_taller_than_page');

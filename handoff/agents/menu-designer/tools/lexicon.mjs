@@ -2,7 +2,7 @@
 // Every drinks list is a first-class citizen; order here is only the default section order.
 
 export const LISTS = [
-  { key: 'cocktails',      label: 'Cocktails',            kind: 'bev',  words: ['cocktails', 'cocktail', 'signature drinks', 'signatures', 'house drinks', 'mixed drinks', 'well drinks', 'wells', 'classics', 'martinis', 'margaritas', 'spritzes', 'shots'] },
+  { key: 'cocktails',      label: 'Cocktails',            kind: 'bev',  words: ['house cocktails', 'signature cocktails', 'classic cocktails', 'cocktails', 'cocktail', 'signature drinks', 'signatures', 'house drinks', 'mixed drinks', 'well drinks', 'wells', 'classics', 'martinis', 'margaritas', 'spritzes', 'shots'] },
   { key: 'beer',           label: 'Beer',                 kind: 'bev',  words: ['beers', 'beer', 'on draft', 'draft', 'draught', 'on tap', 'taps', 'cans', 'bottles and cans', 'bottled beer', 'lagers', 'ales', 'ipas'] },
   { key: 'cider_seltzer',  label: 'Cider & Seltzer',      kind: 'bev',  words: ['cider and seltzer', 'ciders', 'cider', 'seltzers', 'seltzer', 'hard seltzer'] },
   { key: 'wine_sparkling', label: 'Sparkling',            kind: 'bev',  words: ['sparkling wine', 'sparkling', 'bubbles', 'champagne', 'prosecco', 'cava'] },
@@ -19,7 +19,9 @@ export const LISTS = [
   { key: 'brandy_cognac',  label: 'Brandy & Cognac',      kind: 'bev',  words: ['brandy and cognac', 'cognacs', 'cognac', 'brandies', 'brandy', 'armagnac', 'calvados'] },
   { key: 'liqueurs_amari', label: 'Liqueurs & Amari',     kind: 'bev',  words: ['liqueurs and amari', 'amari', 'amaro', 'liqueurs', 'liqueur', 'digestifs', 'cordials', 'aperitifs'] },
   { key: 'sake_soju',      label: 'Sake & Soju',          kind: 'bev',  words: ['sake and soju', 'sakes', 'sake', 'soju', 'shochu'] },
-  { key: 'non_alcoholic',  label: 'Zero Proof',           kind: 'bev',  words: ['non alcoholic', 'non-alcoholic', 'na drinks', 'n/a', 'zero proof', 'zero-proof', 'spirit free', 'spirit-free', 'mocktails', 'mocktail', 'soft drinks', 'sodas', 'coffee and tea', 'coffee', 'tea'] },
+  { key: 'non_alcoholic',  label: 'Zero Proof',           kind: 'bev',  words: ['non alcoholic', 'non-alcoholic', 'na drinks', 'n/a', 'zero proof', 'zero-proof', 'spirit free', 'spirit-free', 'soft drinks', 'sodas', 'coffee and tea', 'coffee', 'tea'] },
+  { key: 'mocktails',      label: 'Mocktails',            kind: 'bev',  words: ['mocktails', 'mocktail', 'zero proof cocktails', 'zero-proof cocktails', 'spirit free cocktails', 'spirit-free cocktails', 'na cocktails'] },
+  { key: 'spirits',        label: 'Spirits',              kind: 'bev',  words: ['spirits', 'liquor', 'straight pours'] },
   { key: 'food_small',     label: 'Small Plates',         kind: 'food', words: ['small plates', 'snacks', 'bar snacks', 'starters', 'appetizers', 'apps', 'shareables', 'to share', 'bites', 'tapas'] },
   { key: 'food_mains',     label: 'Mains',                kind: 'food', words: ['mains', 'entrees', 'entrées', 'large plates', 'plates', 'burgers', 'sandwiches', 'tacos', 'pizzas', 'pizza'] },
   { key: 'food_sides',     label: 'Sides',                kind: 'food', words: ['sides', 'side dishes'] },

@@ -156,3 +156,42 @@ Chain of approval: designer → Coordinator → review agents → Rob → lead d
    Hand `submit.json` to the Coordinator.
 4. Never apply anything to the app. App changes go into `SUGGESTIONS_FOR_LEAD_DEV.md` for Rob.
 5. Append to this log.
+
+### 2026-09-28 — Session 2b: pour sizes and full-bar menus
+
+Rob asked for draft beer and spirits in several pour sizes, each priced, plus a full menu: 5 house and 5 classic
+cocktails, wines, beers, non-alcoholic drinks and mocktails.
+
+**Built:**
+- **Pour schemes in the voice parser.** A sentence such as "spirits are poured one, one and a half and two and a half
+  ounces", "whiskey pours are one and a half and three ounces" or "draft beers come in ten ounce, sixteen ounce and
+  pitchers" sets that list's ladder. It applies to the list or lists named, to every spirit list for "spirits", and to
+  Beer › Draft for "draft".
+- **Priced items.** An item followed by a run of bare prices takes the ladder's labels in order. A count mismatch
+  becomes a question ("Which price goes with which pour?").
+- **New lists and subsections.** Mocktails is its own list. Cocktails › House / Classics come from "house cocktails:" and
+  "classic cocktails:". A generic "spirits" list was added.
+- **Pour headers.** When every item in a list shares the same labels, the labels print once as the list's description
+  line ("1 oz · 1.5 oz · 2.5 oz", "Glass · Bottle") and the rows print bare values ("9 / 13 / 20"). If every subsection
+  shares them, they go under the section heading. Values never change; the labels stay on each item in
+  `meta.price_labels`.
+- **Wine grouped by style from the grape named** (Sauvignon Blanc → White, Malbec → Red): Sparkling → White → Rosé → Red.
+- **One Spirits section** with a subsection per list when there are three or more small spirit lists.
+- **Mocktails right after cocktails** (zero-proof as a peer: Dandelyan, NoMad); soft drinks last.
+- **Multi-page planner.** It picks, without reordering, which section starts each column and page, using Menu Studio's
+  own `breakCol` / `breakBefore` flags. With the plan fixed it grows type while everything still fits.
+
+**Parser bugs fixed:**
+- **False subsection labels.** A style word that is really part of an item ("Margarita, blanco tequila…") had been
+  opening a subsection. Such words now open one only when spoken as a label: a colon, "we have", standing alone, or a
+  comma followed by a Capitalised name. Serve formats (draft, cans, bottles, by the glass) are always subsections.
+- "Fever-Tree Ginger Beer" is not beer.
+- "New Zealand" no longer trips the "new" flag.
+
+**Example:** `examples/sample-bar.voice.txt`, the fictional *PHG Sample Bar* (sample content, not a venue): 45 items,
+13 lists, two letter pages. Regression tests now number 57.
+
+**Still open:**
+- Page 1 keeps spare space at the foot. The tallest slot (Spirits + Zero Proof) caps the page-wide type size.
+- Menu Studio can't print pour prices as true columns under their headings (S13).
+- Multi-page menus are not justified to the bottom margin.

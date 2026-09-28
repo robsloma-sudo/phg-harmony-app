@@ -212,3 +212,8 @@ scorecard expect a column for each label, with the labels printed once in the su
 
 **Suggested change:** when a subsection's items share price labels, draw each label's value right-aligned in its own
 column, and draw the labels once, beside the subheading. Use an en dash for a missing price.
+
+The same applies to pour sizes (draft 10 oz / 16 oz / Pitcher; spirits 1 / 1.5 / 2.5 oz or 1.5 / 3 oz), which Rob wants
+on every bar menu. Until then, the designer prints the labels once as the list's description line, prints the rows as
+bare values ("9 / 13 / 20"), and keeps the labels in `meta.price_labels`. A `phg.menu_item_prices` pour-size column
+would let costing, POS and the menu share the same pours.

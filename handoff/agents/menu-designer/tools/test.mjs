@@ -48,6 +48,23 @@ t('happy hour times kept verbatim', () => assert.match(hh.design.hours || '', /M
 const missing = parseTranscript('For cocktails, the Paloma and the Old Fashioned fourteen.');
 t('missing price asks, never invents', () => { assert.equal(find(missing, 'Paloma').prices.length, 0); assert.ok(missing.questions.some(q => /Paloma/.test(q))); });
 
+// pour sizes
+import { parsePourScheme } from './parse-voice.mjs';
+t('pour scheme: spirits ladder', () => assert.deepEqual(parsePourScheme('All spirits are poured in 1 ounce, 1.50 ounce and 2.50 ounce pours.'), ['1 oz', '1.5 oz', '2.5 oz']));
+t('pour scheme: draft with pitcher', () => assert.deepEqual(parsePourScheme('Draft beers come in 10 ounce, 16 ounce and pitchers.'), ['10 oz', '16 oz', 'Pitcher']));
+const sb = parseTranscript(fs.readFileSync(new URL('../examples/sample-bar.voice.txt', import.meta.url), 'utf8'));
+t('sample bar: 45 items, 5 house + 5 classics', () => { assert.equal(items(sb).length, 45); const c = sb.sections.find(x => x.key === 'cocktails').items; assert.equal(c.filter(i => i.sub === 'House').length, 5); assert.equal(c.filter(i => i.sub === 'Classics').length, 5); });
+t('sample bar: spirit ladders by list', () => { assert.deepEqual(find(sb, "Tito's").prices.map(p => p.label), ['1 oz', '1.5 oz', '2.5 oz']); assert.deepEqual(find(sb, "Blanton's Single Barrel").prices.map(p => p.label), ['1.5 oz', '3 oz']); });
+t('sample bar: draft ladder, cans single price', () => { assert.deepEqual(find(sb, 'Summit Pils').prices.map(p => p.value), [5, 7, 22]); assert.equal(find(sb, 'Coors Light').prices.length, 1); });
+t('"Margarita, blanco tequila…" is an item, not a Blanco label', () => assert.equal(find(sb, 'Margarita').sub, 'Classics'));
+t('ginger beer is not beer; New Zealand is not a "new" flag', () => { assert.equal(find(sb, 'Fever-Tree Ginger Beer').list, 'non_alcoholic'); assert.match(find(sb, 'Whitehaven Sauvignon Blanc').description, /New Zealand/); });
+t('mocktails are their own list', () => assert.equal(find(sb, 'Garden Spritz').list, 'mocktails'));
+t('pour mismatch asks', () => { const r = parseTranscript('All spirits are poured in 1 ounce, 1.50 ounce and 2.50 ounce pours. Vodka: Titos seven, ten.'); assert.ok(r.questions.some(q => /Which price goes with which pour/.test(q))); });
+const sbd = design(sb, { venue: { city: 'Denver', state: 'CO' } }).options[0].menu_studio_file.doc;
+t('pour labels printed once, values unchanged', () => { const sp = sbd.sections.find(x => x.name === 'Spirits'); const v = sp.subs.find(b => b.name === 'Vodka'); assert.match(v.desc, /1 oz.*1\.5 oz.*2\.5 oz/); const tito = v.items.find(i => i.name === "Tito's"); assert.deepEqual(tito.prices.map(p => p.value), [7, 10, 16]); assert.deepEqual(tito.meta.price_labels, ['1 oz', '1.5 oz', '2.5 oz']); });
+t('wine: glass/bottle said once for the section', () => { const w = sbd.sections.find(x => x.name === 'Wine'); assert.match(w.desc, /Glass.*Bottle/); assert.deepEqual(w.subs.map(b => b.name), ['Sparkling', 'White', 'Rosé', 'Red']); });
+t('mocktails follow cocktails; soft drinks last', () => { const n = sbd.sections.filter(x => !x.designer_role).map(x => x.name); assert.equal(n[1], 'Mocktails'); assert.equal(n[n.length - 1], 'Zero Proof'); });
+
 // designer invariants
 const res = design(casa, { venue: { city: 'Denver', state: 'CO' } });
 const docItems = o => o.menu_studio_file.doc.sections.flatMap(s => [...s.items, ...s.subs.flatMap(x => x.items)]);

@@ -110,6 +110,8 @@ function findHeading(seg) {
       if (!r.sub && /in bottles/.test(q)) r.sub = 'Bottles';
       if (!r.sub && /^(on draft|draft|draught|on tap|taps)$/.test(w)) r.sub = 'Draft';
       if (!r.sub && /^cans$/.test(w)) r.sub = 'Cans';
+      if (!r.sub && /^(house|signature) cocktails/.test(w)) r.sub = 'House';
+      if (!r.sub && /^classic cocktails/.test(w)) r.sub = 'Classics';
       return r;
     }
     if (new RegExp(`^${W}\\s*$`, 'i').test(s)) return { key, rest: '', sub: null };
@@ -124,18 +126,28 @@ const SUBS = [
   [/^(?:in (?:the )?bottles|bottles|bottled)\b/i, 'Bottles'],
   [/^(?:by the glass)\b/i, 'By the glass'],
   [/^(?:by the bottle)\b/i, 'By the bottle'],
-  [/^(?:classics?)\b/i, 'Classics'],
+  [/^(?:classics?)\b/i, 'Classics'], [/^(?:house|signatures?)\b/i, 'House'],
   [/^(?:frozen)\b/i, 'Frozen'],
   [/^(?:local)\b/i, 'Local'],
   [/^(?:blancos?|silver|plata)\b/i, 'Blanco'], [/^(?:reposados?)\b/i, 'Reposado'], [/^(?:extra a(?:ñ|n)ejos?)\b/i, 'Extra Añejo'],
   [/^(?:a(?:ñ|n)ejos?)\b/i, 'Añejo'], [/^(?:bourbons?)\b/i, 'Bourbon'], [/^(?:ryes?)\b/i, 'Rye'], [/^(?:scotch(?:es)?)\b/i, 'Scotch'],
   [/^(?:japanese)\b/i, 'Japanese'], [/^(?:spritz(?:es)?)\b/i, 'Spritzes'], [/^(?:martinis?)\b/i, 'Martinis'], [/^(?:margaritas?)\b/i, 'Margaritas'],
 ];
+const SERVE_SUBS = new Set(['Draft', 'Cans', 'Bottles', 'By the glass', 'By the bottle']);
 function withSub(key, rest) {
   let sub = null;
   for (const [re, name] of SUBS) {
     const m = rest.match(new RegExp(re.source + '\\s*(?:,|:|-)?\\s*(?:we(?:\'ve| have)? got|we have|there\'?s|there are|is|are)?\\s*', 'i'));
-    if (m && m.index === 0) { sub = name; rest = rest.slice(m[0].length); break; }
+    if (!m || m.index !== 0) continue;
+    // Serve formats are rarely item names. Expression / style words ("blanco", "classics", "margaritas") open a
+    // subsection only when spoken as a label: followed by a colon or "we have", or standing alone.
+    const tail = m[0].slice(m[0].search(/\s|[:,\-]|$/));
+    const after = rest.slice(m[0].length);
+    // A label is followed by ":" / "we have", stands alone, or is followed by a comma and a Capitalised name
+    // ("blanco, Siete Leguas twelve"). "Margarita, blanco tequila, lime" continues in lower case: an item, not a label.
+    const labelled = /[:\-]|we|there|\bis\b|\bare\b/i.test(tail) || !after.trim() || (/,/.test(tail) && /^[A-ZÁÉÍÓÚÑ]/.test(after.trim()));
+    if (!SERVE_SUBS.has(name) && !labelled) continue;
+    sub = name; rest = rest.slice(m[0].length); break;
   }
   return { key, rest, sub };
 }
@@ -170,10 +182,27 @@ function detectFlags(text) {
 
 const FLAG_STRIP = new RegExp('(?:,?\\s*(?:and\\s+)?(?:it\'?s|that\'?s|this is|mark(?:ed)?\\s+(?:it|this)(?:\\s+as)?|make\\s+(?:it|this))?\\s*(?:a|an|our|the)?\\s*(?:' +
   Object.values(FLAG_WORDS).flat().filter(w => w !== 'house' && w !== 'new').map(esc).join('|') +
-  '|brand new|new)\\b[^,.;]*)', 'gi');
+  '|brand new)\\b[^,.;]*|,?\\s*(?:and\\s+)?(?:it\'?s|that\'?s|this is)\\s+(?:a\\s+)?(?:brand\\s+)?new\\b[^,.;]*)', 'gi');
 
 // Parse one item phrase. Returns null if it doesn't look like an item.
-export function parseItem(raw, listKey) {
+const SPIRIT_KEYS = ['vodka', 'gin', 'rum', 'tequila', 'mezcal', 'whiskey', 'brandy_cognac', 'liqueurs_amari', 'sake_soju', 'spirits'];
+
+// "Draft beers come in ten ounce, sixteen ounce and pitchers" / "spirits are poured one, one and a half and two and a
+// half ounces" -> pour labels for those lists, in the order spoken. Returns null if the sentence is not a declaration.
+export function parsePourScheme(sent) {
+  if (!/\b(pour(?:ed|s)?|pour sizes?|comes? in|come in|served in|sizes?|sold (?:by|in))\b/i.test(sent)) return null;
+  const labels = [];
+  const re = /(\d+(?:\.\d+)?)\s*(?:-|to)?\s*(?:oz|ounces?)\b|(\d+(?:\.\d+)?)(?=\s*(?:,|and|or)\s*(?:\d+(?:\.\d+)?\s*(?:,|and|or)\s*)*\d+(?:\.\d+)?\s*(?:oz|ounces?))|\b(half pints?|pints?|pitchers?|flights?|tasters?|glass(?:es)?|bottles?|carafes?|cans?)\b/gi;
+  let m;
+  while ((m = re.exec(sent))) {
+    if (m[1] || m[2]) labels.push(`${Number(m[1] || m[2])} oz`);
+    else labels.push(m[3].toLowerCase().replace(/s$/, '').replace(/^./, c => c.toUpperCase()).replace(/^Half pint$/, 'Half pint'));
+  }
+  const uniq = [...new Set(labels)];
+  return uniq.length >= 2 ? uniq : null;
+}
+
+export function parseItem(raw, listKey, pours = null) {
   let seg = raw.trim().replace(/^(?:and|also|plus|then|the next one is|next is|we(?:'ve| have)? got|we have|there'?s)\s+/i, '').trim();
   if (!seg) return null;
   const item = { name: null, description: null, prices: [], abv: null, flags: detectFlags(seg), heard: raw.trim(), list: listKey || null };
@@ -182,6 +211,19 @@ export function parseItem(raw, listKey) {
   const abv = seg.match(/(\d{1,2}(?:\.\d)?)\s*(?:%|percent|per cent)(?:\s*(?:abv|alcohol))?|\babv\s*(?:of\s*)?(\d{1,2}(?:\.\d)?)/i);
   if (abv) { item.abv = Number(abv[1] || abv[2]); seg = seg.replace(abv[0], ' ').trim(); }
 
+  // Pour ladder for this list: a run of bare numbers at the end ("Tito's 7, 10, 16") takes the ladder's labels in order.
+  if (pours && pours.length >= 2) {
+    const run = seg.match(/((?:\$?\d+(?:\.\d{1,2})?(?:\s*(?:dollars|bucks))?\s*(?:,|and|\/)?\s*){2,})$/i);
+    if (run) {
+      const nums = run[1].match(/\d+(?:\.\d{1,2})?/g).map(Number);
+      if (nums.length === pours.length) {
+        item.prices = nums.map((v, i) => ({ label: pours[i], value: v }));
+        seg = seg.slice(0, run.index).trim();
+      } else if (nums.length > 1) {
+        item.pour_mismatch = { heard: nums, pours };
+      }
+    }
+  }
   // Multi-price: "11 glass 40 bottle", "11 a glass and 40 for the bottle", "glass 11 bottle 40", "5 oz 9, 8 oz 14", "pint 7 pitcher 22"
   const LBL = '(glass|bottle|btl|carafe|half bottle|pint|pitcher|can|draft|pour|shot|neat|rocks|double|single|flight|taster|5 ?oz|6 ?oz|8 ?oz|9 ?oz|1 ?oz|2 ?oz|1\\.5 ?oz|16 ?oz|12 ?oz|20 ?oz|small|large|half|full|well|call|premium)';
   const labelled = [];
@@ -197,7 +239,8 @@ export function parseItem(raw, listKey) {
     if (lb.length > labelled.length) { labelled.splice(0, labelled.length, ...lb); taken.splice(0, taken.length, ...tb); }
   }
   // A single "11 a glass" is still a labelled price; a lone "pint" with no number is ignored.
-  if (labelled.length) {
+  if (item.prices.length) { /* pour ladder already set */ }
+  else if (labelled.length) {
     labelled.sort((a, b) => a.at - b.at);
     item.prices = labelled.map(p => ({ label: p.label.replace(/\s+/g, ' ').replace(/^(\d(?:\.\d)?) ?oz$/i, '$1 oz').replace(/^btl$/i, 'bottle')
       .replace(/^./, c => c.toUpperCase()), value: p.value }));
@@ -248,16 +291,30 @@ export function parseTranscript(transcript, ctx = {}) {
   const orphans = [];             // item phrases with no list
   const directives = [];
   let current = ctx.default_list || null, currentSub = null, lastItem = null;
+  const pourSchemes = {};                        // list key (or list:sub) -> ['1 oz', '1.5 oz', '2.5 oz']
+  const schemeFor = (key, sub) => pourSchemes[`${key}:${sub}`] || pourSchemes[key] || (SPIRIT_KEYS.includes(key) ? pourSchemes.spirits : null);
   const sectionFor = key => { let s = sections.find(x => x.key === key); if (!s) { s = { key, label: LIST_BY_KEY[key]?.label || key, items: [] }; sections.push(s); } return s; };
   const venueName = findVenueName(text);
 
   // Edit commands about items already on the menu: "put the House Daiquiri first", "feature the Paloma",
   // "highlight the Old Fashioned", "mark the Gose as new". They change flags on an existing item, never add one.
   const edits = [];
+  const pourNotes = [];
   const EDIT = /^(?:please\s+)?(?:put|move|place|feature|highlight|push|mark|make|flag|star)\s+(?:the\s+|our\s+)?(.+?)(?:\s+(?:first|at the top|on top|up front|to the top|as (?:a |the |our )?(?:feature|featured|house special|special|new|seasonal)|new|seasonal))?(?:\s*,?\s*(?:it'?s|it is|that'?s|as)\s+(?:a |an |our |the )?(house special|special|signature|featured|new|seasonal))?$/i;
   for (let sent of sentences) {
     sent = sent.replace(/[.!?;]+$/, '').trim();
     if (!sent) continue;
+    const ps = parsePourScheme(sent);
+    if (ps && !/\d+(?:\.\d+)?\s*(?:dollars|bucks)/i.test(sent)) {
+      // Which lists does it apply to? Named lists in the sentence, else the open list.
+      const low = sent.toLowerCase(); const keys = new Set();
+      for (const { w, key } of LIST_PHRASES) if (new RegExp('(^|[^a-z])' + esc(w) + '($|[^a-z])').test(low)) keys.add(key);
+      if (/\bdraft|\bon tap/.test(low)) { pourSchemes['beer:Draft'] = ps; keys.delete('beer'); }
+      if (!keys.size && current) keys.add(current);
+      for (const k of keys) pourSchemes[k] = ps;
+      pourNotes.push({ lists: [...keys, ...(/\bdraft|\bon tap/.test(low) ? ['beer:Draft'] : [])], pours: ps, heard: sent });
+      continue;
+    }
     const em = sent.match(EDIT);
     if (em && !/\d/.test(sent) && em[1].split(/\s+/).length <= 6 && !DIRECTIVE.test(em[1])) {
       const fl = new Set(detectFlags(sent));
@@ -287,12 +344,13 @@ export function parseTranscript(transcript, ctx = {}) {
         }
         let chunk = ch;
         if (current) { const sb = findSub(chunk.replace(/^(?:and|also|plus)\s+/i, '')); if (sb) { currentSub = sb.sub; chunk = sb.rest; if (!chunk) continue; } }
-        const it = parseItem(chunk, current);
+        const it = parseItem(chunk, current, schemeFor(current, currentSub));
         if (!it) continue;
         if (!it.prices.length && !it.description && !current && !it.flags.length) { directives.push(ch); continue; }
         let itemList = current;
         if (!h && chunkIdx === 0) {
-          const hit = LIST_PHRASES.find(p => p.key !== current && new RegExp(`(^|\\s)${esc(p.w)}$`, 'i').test(it.name));
+          const hit = /\b(ginger|root|birch) beer$/i.test(it.name) ? null
+            : LIST_PHRASES.find(p => p.key !== current && new RegExp(`(^|\\s)${esc(p.w)}$`, 'i').test(it.name));
           if (hit) { itemList = hit.key; it.list = hit.key; }
         }
         if (currentSub && itemList === current) it.sub = currentSub;
@@ -340,6 +398,7 @@ export function parseTranscript(transcript, ctx = {}) {
     if (!s.items.length) questions.push(`You mentioned ${s.label} but no items were heard for it. What goes in that list?`);
     for (const it of s.items) {
       if (!it.prices.length) questions.push(`What is the price for "${it.name}" (${s.label})?`);
+      if (it.pour_mismatch) questions.push(`"${it.name}": ${it.pour_mismatch.heard.length} prices were heard (${it.pour_mismatch.heard.join(', ')}) for ${it.pour_mismatch.pours.length} pours (${it.pour_mismatch.pours.join(', ')}). Which price goes with which pour?`);
       if (/^wine/.test(s.key) && it.prices.length === 1 && !it.prices[0].label) questions.push(`Is ${it.prices[0].value} for "${it.name}" the glass or the bottle price?`);
     }
   }
@@ -356,6 +415,7 @@ export function parseTranscript(transcript, ctx = {}) {
     sections: sections.map(s => ({ key: s.key, label: s.label, items: s.items })),
     unplaced_items: orphans,
     edits,
+    pours: pourNotes,
     design,
     questions,
   };
