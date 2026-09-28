@@ -1,0 +1,269 @@
+{
+ "manifest": "expanded-v2/manifest.json",
+ "manifest_sha256_16": "fa881aa9ab7ebc11",
+ "content_letter": {
+  "items_checked": 65,
+  "manifest_items": 65,
+  "prices": 32,
+  "pours": 99,
+  "bottle_prices": 3,
+  "breweries": 10,
+  "producers": 3,
+  "flights": 3,
+  "errors": [],
+  "pass": true,
+  "printed_deviations": {
+   "Tres Generaciones Añejo region": "omitted (NOM 1102 is shared with Hornitos, region null) — coordinator",
+   "brewery lines shortened": {
+    "Tecate": "Cuauhtémoc Moctezuma · Tecate, B.C.",
+    "Amber Lager": "Dos Equis Ámbar · Cuauhtémoc Moctezuma"
+   },
+   "flags added": "recipe to confirm (zero proof, Spicy Pineapple Margarita), beer ABV to confirm (key)"
+  }
+ },
+ "content_phone": {
+  "items_checked": 65,
+  "manifest_items": 65,
+  "prices": 32,
+  "pours": 99,
+  "bottle_prices": 3,
+  "breweries": 10,
+  "producers": 3,
+  "flights": 3,
+  "errors": [],
+  "pass": true,
+  "printed_deviations": {
+   "Tres Generaciones Añejo region": "omitted (NOM 1102 is shared with Hornitos, region null) — coordinator",
+   "brewery lines shortened": {
+    "Tecate": "Cuauhtémoc Moctezuma · Tecate, B.C.",
+    "Amber Lager": "Dos Equis Ámbar · Cuauhtémoc Moctezuma"
+   },
+   "flags added": "recipe to confirm (zero proof, Spicy Pineapple Margarita), beer ABV to confirm (key)"
+  }
+ },
+ "price_proximity_letter": {
+  "inline_rows": 29,
+  "inline_max_gap_em": 0.683,
+  "inline_worst": "Vuelo de Tequila · Tequila Flight",
+  "inline_all_same_line": true,
+  "aligned_price_columns_right_edge_spread_px": {
+   "table col 0 pour 0": 0.0,
+   "table col 0 pour 1": 0.0,
+   "table col 0 pour 2": 0.0,
+   "table col 1 pour 0": 0.0,
+   "table col 1 pour 1": 0.0,
+   "table col 1 pour 2": 0.0,
+   "wine copa": 0.0,
+   "wine botella": 0.0
+  },
+  "guide": "every table and wine row sits on its own furrow rule, which runs through its price columns",
+  "pass": true
+ },
+ "price_proximity_phone": {
+  "inline_rows": 29,
+  "inline_max_gap_em": 0.481,
+  "inline_worst": "Margarita",
+  "inline_all_same_line": true,
+  "aligned_price_columns_right_edge_spread_px": {
+   "table col 0 pour 0": 0,
+   "table col 0 pour 1": 0,
+   "table col 0 pour 2": 0,
+   "table col 1 pour 0": 0,
+   "table col 1 pour 1": 0,
+   "table col 1 pour 2": 0,
+   "wine copa": 0,
+   "wine botella": 0
+  },
+  "guide": "every table and wine row sits on its own furrow rule, which runs through its price columns",
+  "pass": true
+ },
+ "contrast_worst_pixel": {
+  "front": {
+   "elements": 82,
+   "min_ratio": 5.51,
+   "min_element": "16",
+   "pass": true
+  },
+  "back": {
+   "elements": 302,
+   "min_ratio": 5.45,
+   "min_element": "Unaged · peppery, bright cooked agave",
+   "pass": true
+  },
+  "phone": {
+   "elements": 378,
+   "min_ratio": 5.51,
+   "min_element": "16",
+   "pass": true
+  },
+  "method": "text-free render at 300 dpi (phone 3x); each text line box narrowed to its ink box (+2 px); every background pixel compared with the text colour",
+  "pass": true
+ },
+ "legibility": {
+  "letter_front": {
+   "min_size": 8.5,
+   "unit": "pt",
+   "element": "proposed — pending approval",
+   "pass": true
+  },
+  "letter_back": {
+   "min_size": 8.5,
+   "unit": "pt",
+   "element": "0",
+   "pass": true
+  },
+  "phone": {
+   "min_size": 12.0,
+   "unit": "css px",
+   "element": "1 oz",
+   "pass": true
+  },
+  "pass": true
+ },
+ "text_overlap": {
+  "front": {
+   "text_elements": 82,
+   "overlapping_pairs": 0,
+   "pairs": []
+  },
+  "back": {
+   "text_elements": 302,
+   "overlapping_pairs": 0,
+   "pairs": []
+  },
+  "phone": {
+   "text_elements": 378,
+   "overlapping_pairs": 0,
+   "pairs": []
+  },
+  "method": "every leaf text element, per text line: the 1 em band centred in its line's content area x full advance width; any two different elements intersecting by > 0.6 css px both ways count",
+  "pass": true
+ },
+ "no_taglines": {
+  "banned_hits": [],
+  "non_item_strings": [
+   "CASA · HOUSE POURS",
+   "Cerveza, sidra y vino · Beer, cider & wine",
+   "Clásicos · Classics",
+   "DE BARRIL · DRAFT",
+   "De la Casa · House",
+   "Destilados · Spirits",
+   "EN LATA · CANS",
+   "MEZCAL",
+   "SIDRA · CIDER",
+   "Sin alcohol · Zero proof",
+   "TEQUILA · AÑEJO",
+   "TEQUILA · BLANCO",
+   "TEQUILA · REPOSADO",
+   "VINO · WINE",
+   "Vuelos · Flights",
+   "Cantina",
+   "& Cocktail Bar · Iowa City, Iowa",
+   "key: proposed — pending approval / months in oak (class range) / unaged / beer ABV to confirm / copa · botella / NOM / 0 12 24 36 / 1 oz 1½ oz 2 oz"
+  ],
+  "pass": true
+ },
+ "ingredient_role_order_and_garnish_separate": {
+  "note": "ingredients printed in exact manifest order (the manifest's role order); garnish is its own element on the serve line",
+  "pass": true
+ },
+ "safe_area": {
+  "text_ink_margins_pt": {
+   "front": {
+    "left": 36.48,
+    "top": 182.64,
+    "right": 57.6,
+    "bottom": 41.52
+   },
+   "back": {
+    "left": 36.48,
+    "top": 36.48,
+    "right": 37.2,
+    "bottom": 49.44
+   }
+  },
+  "min_pt": 36.48,
+  "required_pt": 36,
+  "pass": true,
+  "note": "text ink from the difference between the full and text-free renders; hairline proposal rings and glass glyphs are non-text marks that hang in the gutter/margin"
+ },
+ "bleed_pdf": {
+  "file": "menu-print-bleed.pdf",
+  "pages": [
+   {
+    "w_pt": 666.0,
+    "h_pt": 846.0
+   },
+   {
+    "w_pt": 666.0,
+    "h_pt": 846.0
+   }
+  ],
+  "sheet": "666 x 846 pt = 612 x 792 trim + 2 x (9 pt = 3.175 mm bleed + 18 pt slug), crop marks",
+  "bleed": [
+   {
+    "page": 1,
+    "top_bleed_nonwhite": 1.0,
+    "left_bleed_nonwhite": 1.0
+   },
+   {
+    "page": 2,
+    "top_bleed_nonwhite": 1.0,
+    "left_bleed_nonwhite": 1.0
+   }
+  ],
+  "pass": true
+ },
+ "formats": {
+  "front_png": [
+   2550,
+   3300
+  ],
+  "back_png": [
+   2550,
+   3300
+  ],
+  "phone_png": [
+   1170,
+   20268
+  ],
+  "phone_parts": [
+   [
+    "preview-phone-1.png",
+    1170,
+    4054
+   ],
+   [
+    "preview-phone-2.png",
+    1170,
+    4054
+   ],
+   [
+    "preview-phone-3.png",
+    1170,
+    4054
+   ],
+   [
+    "preview-phone-4.png",
+    1170,
+    4054
+   ],
+   [
+    "preview-phone-5.png",
+    1170,
+    4052
+   ]
+  ],
+  "phone_scroll_width_css": 390,
+  "no_horizontal_scroll": true,
+  "fonts_loaded": [
+   "IBM Plex Sans Condensed 400 italic",
+   "IBM Plex Sans Condensed 400 normal",
+   "IBM Plex Sans Condensed 500 normal",
+   "IBM Plex Sans Condensed 600 normal",
+   "Newsreader 300 600 italic",
+   "Newsreader 300 700 normal"
+  ]
+ },
+ "all_hard_gates_pass": true
+}

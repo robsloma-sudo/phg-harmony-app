@@ -106,15 +106,22 @@ def plant(x, y, s, a, v):
     return f'<use href="#ag{v}" x="-6" y="-6" width="12" height="12" transform="translate({x:.2f} {y:.2f}) rotate({a:.0f}) scale({s:.3f})"/>'
 
 def plant_along(seg, pitch, scale, seed):
-    """Plant along a polyline by arc length, with jittered spacing and scale (plants are not identical)."""
+    """Plant a hilera along a polyline by arc length, as a field is really planted: blocks of plants with bare gaps
+    (fallow patches, missing plants), plant size drifting slowly along the row (planting age) plus per-plant jitter,
+    spacing growing with plant size."""
     r = rng(seed)
     d = np.r_[0, np.cumsum(np.hypot(*np.diff(seg, axis=0).T))]
-    out, t = [], r.uniform(0, pitch)
+    out, t = [], r.uniform(0, 40)
+    lam, phi = r.uniform(220, 420), r.uniform(0, 6.283)
+    block_end = t + r.uniform(50, 170)
     while t < d[-1]:
-        x, y = np.interp(t, d, seg[:, 0]), np.interp(t, d, seg[:, 1])
-        s = scale * r.uniform(0.72, 1.18)
-        out.append(plant(x, y + r.uniform(-.5, .5), s, r.uniform(0, 360), int(r.integers(0, 3))))
-        t += pitch * r.uniform(0.82, 1.22) * (0.85 + 0.3 * s / scale)
+        if t > block_end:                       # a bare stretch of furrow, then a new block
+            t += r.uniform(25, 90); block_end = t + r.uniform(50, 170); continue
+        s = scale * float(np.clip(0.95 + 0.42 * math.sin(2 * math.pi * t / lam + phi), 0.55, 1.4)) * r.uniform(0.86, 1.14)
+        if r.uniform() > .08:
+            x, y = np.interp(t, d, seg[:, 0]), np.interp(t, d, seg[:, 1])
+            out.append(plant(x, y + r.uniform(-.6, .6), s, r.uniform(0, 360), int(r.integers(0, 3))))
+        t += pitch * s / scale * r.uniform(0.95, 1.35)
     return "".join(out)
 
 def field_svg(P, T, cls, css):
@@ -150,24 +157,27 @@ def field_svg(P, T, cls, css):
     g += fur
     g.append('<path d="' + " ".join(lines(gen, c) for c in cs if c < top) + f'" fill="none" stroke="{INK}" stroke-opacity=".3" stroke-width=".5"/>')
     # agave: along the centre level line of each earth strip (curved rows ride the contour; they straighten as W -> 0)
+    earth_seen = -1
     for i, kind in enumerate(kinds[:-1]):
         if kind != "earth": continue
+        earth_seen += 1
+        if earth_seen % 2 == 1: continue          # every other earth strip is left bare: furrows only
         hi, lo = min(levels[i], top), levels[i + 1]
         width = hi - lo
-        nrow = 2 if width > P["two_rows"] else 1
+        nrow = 1
         for k in range(nrow):
             lv = lo + width * (k + 1) / (nrow + 1)
             for seg in gen.lines(lv):
                 if len(seg) < 3: continue
-                sc = min(1.35, 0.45 + width / (nrow * 14.0)) * P["pscale"]
+                sc = min(1.2, 0.4 + width / 16.0) * P["pscale"]
                 g.append(plant_along(seg, P["pitch"] * sc, sc, int(abs(lv) * 97) + k))
     vb = f"{X0} {Y0} {X1 - X0} {Y1 - Y0}"
     return (f'<svg class="{cls}" viewBox="{vb}" style="{css}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + "".join(g) + "</svg>")
 
 # strips: straight-row y of each boundary at ref_x (pt), varied widths; fewer, wider strips than v1
-HERO_F = {"frame": (-9, -9, 621, 162), "ref_x": 0,
-          "bounds": [-150, -118, -100, -64, -44, -10, 10, 40, 58, 84, 100, 124, 142],
-          "kinds": ["straw", "loam", "sage", "straw", "loam", "earth", "straw", "loam", "earth", "straw", "sage", "earth", "loam", "straw"],
+HERO_F = {"frame": (-9, -9, 621, 180), "ref_x": 0,
+          "bounds": [-150, -118, -100, -64, -44, -10, 10, 40, 58, 84, 100, 124, 142, 160],
+          "kinds": ["straw", "loam", "sage", "straw", "loam", "earth", "straw", "loam", "earth", "straw", "sage", "earth", "loam", "earth", "straw"],
           "furrows": {"straw": 7, "loam": 5, "sage": 5, "earth": 4}, "fw": .5, "pitch": 13, "pscale": 1.12, "two_rows": 30}
 HERO_P = {"frame": (0, 0, 390, 250), "ref_x": 0,
           "bounds": [-150, -118, -98, -64, -42, -6, 16, 46, 64, 98, 116, 146, 170, 204, 222],
@@ -186,13 +196,8 @@ def back_field(width, height, cls, css=""):
     for k in range(4):   # earth furrows between the rows
         yy = edge * (k + .02) / 3
         g.append(f'<line x1="-2" x2="{width + 2}" y1="{yy:.2f}" y2="{yy:.2f}" stroke="{EARTH_H}" stroke-width=".5"/>')
-    for k, yy in enumerate((edge * 1 / 6, edge * 3 / 6, edge * 5 / 6)):
-        x = r.uniform(0, 8) + 7 * (k % 2)
-        while x < width + 8:
-            if r.uniform() > .07:
-                s = r.uniform(.95, 1.45)
-                g.append(plant(x, yy + r.uniform(-.8, .8), s, r.uniform(0, 360), int(r.integers(0, 3))))
-            x += 14.5 * r.uniform(.85, 1.15)
+    for k, yy in enumerate((edge * .3, edge * .74)):
+        g.append(plant_along(np.array([[-8, yy], [width + 8, yy]]), 13.5, 1.15, 77 + k))
     return (f'<svg class="{cls}" viewBox="0 0 {width} {height}" preserveAspectRatio="xMinYMin slice" style="{css}" aria-hidden="true">' + "".join(g) + "</svg>")
 
 # ------------------------------------------------------------------ glass glyphs: hairline family (contour-line grammar)
@@ -259,7 +264,9 @@ def caps(label, cls=""):
 
 def name_row(it, prices=None):
     pr = prices if prices is not None else price_html(it)
-    return (f'<p class="np">{ring(proposed(it))}<span class="nm tx">{E(it["name"])}<span class="fw"></span></span>{pr}</p>')
+    head_, _, last = it["name"].rpartition(" ")     # the last word, the baseline marker and the price never separate
+    nmh = (E(head_) + " " if head_ else "") + f'<span class="nw">{E(last)}<span class="fw"></span></span>'
+    return (f'<p class="np">{ring(proposed(it))}<span class="nm tx">{nmh}</span>{pr}</p>')
 
 def ing_line(parts, flag=None):
     spans = f'{NB}· '.join(f'<span class="i">{E(glue(p))}</span>' for p in parts)
@@ -278,10 +285,11 @@ def zp_item(it):
     return (f'<article class="item zp" data-name="{E(it["name"])}" data-status="{it["status"]}">' + name_row(it)
             + f'<p class="sd tx">{E(it["sensory"])}</p><p class="ig tx"><span class="flag">recipe{NB}to{NB}confirm</span></p></article>')
 
+BREWERY_SHORT = {"Tecate": "Cuauhtémoc Moctezuma · Tecate, B.C.", "Amber Lager": "Dos Equis Ámbar · Cuauhtémoc Moctezuma"}   # coordinator: one-line brewery
 def beer_item(it):
     r2 = (it.get("brewery_status") or "").startswith("PROPOSED") and not proposed(it)
     return (f'<article class="item bwi" data-name="{E(it["name"])}" data-status="{it["status"]}">' + name_row(it)
-            + f'<p class="brw">{ring(r2)}<span class="tx">{E(it["brewery"])}</span></p>'
+            + f'<p class="brw">{ring(r2)}<span class="tx">{E(BREWERY_SHORT.get(it["name"], it["brewery"]))}</span></p>'
             + f'<p class="sd tx">{E(it["sensory"])}</p></article>')
 
 def wine_item(it):
@@ -348,11 +356,20 @@ def spirits_cols():
     def group(g):
         es, en = [x.strip() for x in g.split("·", 1)] if "·" in g else (g, "")
         return f'<div class="tg">{caps(es + (" · " + en if en else ""))}</div>' + "".join(spirit_row(it) for it in S[g])
-    left = ["Casa · House pours", "Tequila · Blanco", "Tequila · Reposado"]
-    right = [g for g in S if g not in left]
-    fl = '<div class="flights" data-crop="table">' + '<div class="tg">' + caps("Vuelos · Flights") + '</div>' + "".join(flight_row(f) for f in MAN["flights"]) + '</div>'
+    # two balanced survey columns (17 / 16 rows): blanco -> reposado | añejo -> mezcal -> the house pours
+    left = ["Tequila · Blanco", "Tequila · Reposado"]
+    right = ["Tequila · Añejo", "Mezcal", "Casa · House pours"]
+    assert set(left + right) == set(S)
     return (f'<div class="tcol">{table_head()}{"".join(group(g) for g in left)}</div>'
-            f'<div class="tcol">{table_head()}{"".join(group(g) for g in right)}{fl}</div>')
+            f'<div class="tcol">{table_head()}{"".join(group(g) for g in right)}</div>')
+
+def flight_item(f):
+    items = f'{NB}· '.join(f'<span class="i">{E(glue(x))}</span>' for x in f["items"])
+    nm = E(f["name"]).replace(" ", NB).replace(NB + "·" + NB, NB + "· ")   # may break only after the "·"
+    return (f'<article class="item flt" data-name="{E(f["name"])}" data-status="{f["status"]}">'
+            f'<p class="np">{ring(True)}<span class="nm tx">{nm}<span class="fw"></span></span>{price_html(f)}</p>'
+            f'<p class="sd tx">{E(f["sensory"])}</p>'
+            f'<p class="ig tx">{items}{NB}· <span class="pour">{E(glue(f["pour"]))}</span></p></article>')
 
 def key_back():
     u = 108 / 36
@@ -361,8 +378,7 @@ def key_back():
            f'<rect x="{2.2 + 24 * u:.2f}" y="2.2" width="{12 * u:.2f}" height="2.6" fill="{OAK}"/><rect x="2.2" y="2.2" width="108" height="2.6" fill="none" stroke="{OAK}" stroke-width=".6"/>{ticks}</svg>')
     scl = "".join('<span class="tx" style="left:%.2f%%">%d</span>' % ((2.2 + m * u) * 100 / 114, m) for m in (0, 12, 24, 36))
     k1 = (f'<div class="key kb1"><p class="li sc"><span class="scwrap">{bar}<span class="scl">{scl}</span></span></p>'
-          f'<p class="li"><span class="tx">months in oak (class range)</span></p>'
-          f'<p class="li"><svg class="sw2" viewBox="0 0 8 8"><circle cx="4" cy="4" r="2" fill="{OAK}"/></svg><span class="tx">unaged</span></p></div>')
+          f'<p class="li"><span class="tx">months in oak (class range)</span><svg class="sw2" viewBox="0 0 8 8"><circle cx="4" cy="4" r="2" fill="{OAK}"/></svg><span class="tx">unaged</span></p></div>')
     k2 = ('<div class="key kb2"><p class="li"><span class="ring k"></span><span class="tx">proposed — pending approval</span></p>'
           '<p class="li"><span class="tx">beer ABV to confirm</span></p></div>')
     return k1, k2
@@ -376,8 +392,7 @@ def build_html():
     c1, c2 = list(ck)
     rows = lambda items, fn: "".join('<div class="hl">' + "".join(fn(it) for it in items[i:i + 3]) + "</div>" for i in range(0, len(items), 3))
     zitems = zp[list(zp)[0]]
-    zp_html = ('<div class="hl">' + "".join(zp_item(it) for it in zitems[:3]) + '</div>'
-               '<div class="hl">' + zp_item(zitems[3]) + f'<div class="slot2">{key_block()}</div></div>')
+    zp_html = '<div class="hl zp4">' + "".join(zp_item(it) for it in zitems) + '</div>' + key_block()
     front = (f'<section class="band" data-crop="straw" data-bg="paper">{head(c1)}{rows(ck[c1], cocktail)}</section>'
              f'<section class="band tint" data-crop="sage" data-bg="tint">{head(c2)}{rows(ck[c2], cocktail)}</section>'
              f'<section class="band" data-crop="loam" data-bg="paper">{head(list(zp)[0])}{zp_html}</section>')
@@ -388,11 +403,17 @@ def build_html():
     k1, k2 = key_back()
     c1 = [beer_item(it) for it in draft]
     c2 = [beer_item(it) for it in cans] + [f'<div class="cellh">{caps("Sidra · Cider")}{beer_item(cider[0])}</div>']
-    c3 = [wine_item(it) for it in wines] + [k1, k2]
+    c3 = [wine_item(it) for it in wines] + [k2, '<div class="key"></div>']
     heads = (f'<div class="bwh">{caps("De barril · Draft")}{caps("En lata · Cans")}'
-             f'<div class="wh">{caps("Vino · Wine")}<span class="wph tx"><span>copa</span><span>botella</span></span></div></div>')
-    bw_html = heads + "".join(f'<div class="hl{" hh" if i == 4 else ""}">{c1[i]}{c2[i]}{c3[i]}</div>' for i in range(5))
-    back = (f'<section class="band spirits" data-crop="table" data-bg="paper">{head("Destilados · Spirits")}<div class="tcols">{spirits_cols()}</div></section>'
+             f'<div class="wh">{caps("Vino · Wine")}<span class="wph"><span class="tx">copa ·</span><span class="tx">botella</span></span></div></div>')
+    # phone reads column by column: each cell carries its column-major order; phone-only group heads slot in between
+    def o(cell, n): return f'<div class="cw" style="order:{n}">{cell}</div>'
+    phh = (f'<h3 class="tx phh" style="order:0">De barril · Draft</h3><h3 class="tx phh" style="order:10">En lata · Cans</h3>'
+           f'<div class="phh wh" style="order:20">{caps("Vino · Wine")}<span class="wph"><span class="tx">copa ·</span><span class="tx">botella</span></span></div>')
+    bw_html = heads + phh + "".join(f'<div class="hl{" hh" if i == 4 else ""}">{o(c1[i], 1 + i)}{o(c2[i], 11 + i)}{o(c3[i], 21 + i if i < 3 else 30 + i)}</div>' for i in range(5))
+    flights = '<div class="hl">' + "".join(flight_item(f) for f in MAN["flights"]) + '</div>'
+    back = (f'<section class="band spirits" data-crop="table" data-bg="paper"><div class="sph">{head("Destilados · Spirits")}{k1}</div><div class="tcols">{spirits_cols()}</div></section>'
+            f'<section class="band flts" data-crop="table" data-bg="paper">{head("Vuelos · Flights")}{flights}</section>'
             f'<section class="band tint bw" data-crop="straw" data-bg="tint">{head("Cerveza, sidra y vino · Beer, cider & wine")}{bw_html}</section>')
     fonts_css = (HERE / "fonts" / "fonts.css").read_text().replace("url(", "url(fonts/")
     css = CSS
@@ -408,14 +429,14 @@ def build_html():
 {css}</style></head>
 <body>{defs}
 <div class="page front" data-terrain="front">
- {field_svg(HERO_F, T_FRONT, "field lt", "position:absolute;left:-9pt;top:-9pt;width:630pt;height:171pt")}
+ {field_svg(HERO_F, T_FRONT, "field lt", "position:absolute;left:-9pt;top:-9pt;width:630pt;height:189pt")}
  {field_svg(HERO_P, T_PHONE, "field ph", "")}
  <div class="hl wmrow" data-crop="loam"><header class="wm"><h1 class="tx big">Cantina<span class="fw"></span></h1><p class="tx sub">&amp; Cocktail Bar · Iowa City, Iowa</p></header></div>
  <div class="ph-key">{key_block()}</div>
  <main class="menu">{front}</main>
 </div>
 <div class="page back" data-terrain="back">
- {back_field(630, 21, "bfield", "")}
+ {back_field(630, 37, "bfield", "")}
  <main class="menu">{back}</main>
 </div>
 <script>
@@ -441,7 +462,7 @@ function layout() {
     const rows = [];
     // 1) plant each hilera: names sit where the furrow (a level line of h) passes under them
     pg.querySelectorAll('.hl').forEach(hl => {
-      if (!hl.offsetParent) return;
+      const first = hl.querySelector('.item, .wm'); if (!first || !first.offsetParent) return;
       const units = phone ? [...hl.querySelectorAll('.item, .wm')].map(it => [it]) : [[...hl.querySelectorAll('.item, .wm')]];
       for (const items of units) {
         if (!items.length) continue;
@@ -519,10 +540,10 @@ body{font-family:'Newsreader',serif;color:var(--ink);-webkit-font-smoothing:anti
 .band[data-crop=table]{--furrow:%F_table%}
 /* grid: 3 equal columns of 166.33 pt, 20 pt gutters, from x = 36.5 pt */
 .menu{position:absolute;left:37pt;width:538pt;z-index:1}
-.front .menu{top:228pt}
+.front .menu{top:246pt}
 .hl{display:grid;grid-template-columns:repeat(3,1fr);column-gap:20pt;padding:0 0 10pt;position:relative;z-index:1}
 /* wordmark lock-up: sits on the first furrow */
-.wmrow{position:absolute;left:37pt;top:166pt;width:538pt;display:block;padding:0;z-index:3}
+.wmrow{position:absolute;left:37pt;top:184pt;width:538pt;display:block;padding:0;z-index:3}
 .wm{display:flex;align-items:baseline;gap:12pt}
 .wm .big{font-weight:420;font-size:62pt;line-height:62pt;letter-spacing:-.018em;font-variation-settings:'opsz' 72;background:var(--paper);padding:0 7pt;margin-left:-7pt}
 .wm .sub{font-size:10.5pt;font-weight:500;letter-spacing:.035em;background:var(--paper);padding:0 4pt;margin-left:-4pt}
@@ -549,6 +570,8 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
 .gg .tx span{white-space:nowrap}
 .sv{color:var(--ink3)}
 .slot2{grid-column:2 / 4;display:flex;align-items:flex-end}
+.hl.zp4{grid-template-columns:repeat(4,1fr)}
+.front .kf{padding-top:4pt}
 .zp .ig{margin-top:auto;padding-top:2pt}
 .key{font-size:8.5pt;line-height:12pt;color:var(--ink3)}
 .kf{display:flex;flex-direction:column;gap:1pt;padding-left:0}
@@ -557,15 +580,26 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
 .ring.k{position:relative;left:0;top:0;display:inline-block;box-shadow:none;background:transparent}
 .sq.k{margin:0}
 /* back */
-.bfield{position:absolute;left:-9pt;top:-9pt;width:630pt;height:21pt}
-.back .menu{top:14pt}
+.bfield{position:absolute;left:-9pt;top:-9pt;width:630pt;height:37pt}
+.back .menu{top:32pt}
 .back h2{font-size:18pt;line-height:21pt}
-.spirits>h2{padding:3pt 0 0}
+.sph{display:flex;justify-content:space-between;align-items:flex-end}
+.sph h2{padding:3pt 0 0}
+.sph .kb1{flex-direction:row;align-items:flex-end;gap:8pt;padding-bottom:2pt}
+.flts>h2{padding:2pt 0 1pt}
+.flt .np{font-size:9.5pt;line-height:12pt;white-space:nowrap;letter-spacing:-.01em}
+.flt .pr{font-size:10pt}
+.flt .sd{font-size:9pt;line-height:10.5pt}
+.flt .ig{font-size:8.5pt;line-height:10pt;margin-top:auto;padding-top:1pt}
+.flts .hl{padding-bottom:1pt}
+.pour{color:var(--ink3)}
 .tcols{display:grid;grid-template-columns:1fr 1fr;column-gap:20pt;position:relative}
 .tcol{position:relative}
 .sh,.sr{display:grid;grid-template-columns:1fr 20pt 54pt 21pt 24pt 21pt;align-items:start}
-.sh{font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8pt;line-height:10pt;color:var(--ink3);letter-spacing:.04em;padding:0 0 1pt}
+.sh{font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8.5pt;line-height:10pt;color:var(--ink3);letter-spacing:.04em;padding:0 0 1pt}
 .sh .s-oak{position:relative;height:10pt}
+.sh .s-nom{padding-right:4pt}
+.axn:first-child{transform:none}
 .axl{position:absolute;left:0;top:0;width:100%;height:10pt}
 .axn{position:absolute;top:0;transform:translateX(-50%);letter-spacing:0}
 .sh .s-p{position:relative;white-space:nowrap}
@@ -585,30 +619,35 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
 .sr .pr.std{font-weight:600}
 .s-sd{grid-column:1 / -1;font-size:8.5pt;line-height:8.8pt;padding:0 0 1.1pt}
 .ssd{font-style:italic;color:var(--ink2);font-variation-settings:'opsz' 9}
-.rg{font-family:'IBM Plex Sans Condensed',sans-serif;color:var(--ink3)}
+.rg{font-family:'IBM Plex Sans Condensed',sans-serif;color:var(--ink3);line-height:0}
 .s-sd .fw,.s-it .fw{vertical-align:-2.6pt}
 .fl .fnm{grid-column:1 / 6}
 .s-it{grid-column:1 / -1;font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8.5pt;line-height:10pt;padding:0 0 2.5pt}
 .flights{margin-top:3pt}
-.bw>h2{padding-top:4pt;padding-bottom:1pt}
-.bwh{display:grid;grid-template-columns:repeat(3,1fr);column-gap:20pt;padding:0 0 3pt}
+.bw>h2{padding-top:2pt;padding-bottom:0}
+.bwh{display:grid;grid-template-columns:repeat(3,1fr);column-gap:20pt;padding:0 0 1pt}
 .wh{display:flex;justify-content:space-between;align-items:baseline}
-.wph{display:flex;font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
-.wph span{width:36pt;text-align:right}
-.bw .hl{padding-bottom:3.5pt}
-.bwi .np{font-size:10.5pt;line-height:12.5pt}
+.wph{display:flex;font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8.5pt;color:var(--ink3)}
+.wph span{width:36pt;text-align:right;white-space:nowrap}
+.bw .hl{padding-bottom:1pt;grid-template-columns:repeat(3,minmax(0,1fr))}
+.bwi .np{font-size:10.5pt;line-height:12.5pt;white-space:normal;text-wrap:balance}
+.nw{white-space:nowrap}
 .bwi .pr{font-size:10pt}
 .brw{font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8.5pt;line-height:9.5pt;color:var(--ink3);position:relative;margin-top:.5pt}
 .brw .ring{left:-10pt;top:2.2pt;width:5pt;height:5pt}
 .bwi .sd{font-size:9pt;line-height:10pt;margin-top:auto;padding-top:.5pt}
+.brw .tx{white-space:nowrap}
 .wn .np{display:flex;align-items:baseline}
 .wp{margin-left:auto;display:flex}
 .wp .pr{width:36pt;text-align:right;padding:0 0 0 3pt;background:var(--bg)}
 .wp .wb{font-weight:400}
-.cellh h3{margin:0 0 1pt;line-height:10pt}
-.hl.hh>.item{padding-top:11pt}
-.hl.hh>.key{padding-top:11pt}
+.cellh h3{margin:0;line-height:10pt}
+.hl.hh>.cw>.item{padding-top:10pt}
+.hl.hh>.cw>.key{padding-top:10pt}
 .cellh{display:flex;flex-direction:column}
+.cw{display:flex;flex-direction:column}
+.cw>.item,.cw>.cellh,.cw>.key{flex:1}
+.phh{display:none}
 .cellh .item{flex:1}
 .key{font-family:'IBM Plex Sans Condensed',sans-serif;font-size:8.5pt;line-height:11pt;color:var(--ink3);position:relative;z-index:2}
 .key .tx{background:var(--bg);padding:0 2pt;margin-left:-2pt}
@@ -637,7 +676,20 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
  .sq{width:8px;height:8px;border-width:1px}
  .menu{position:static;width:auto}
  .hl,.bw .hl{display:block;padding:0}
- .hl.hh>.item,.hl.hh>.key{padding-top:0}
+ .hl.hh>.cw>.item,.hl.hh>.cw>.key{padding-top:0}
+ .bw{display:flex;flex-direction:column}
+ .bw>h2{order:-1}
+ .bw .hl{display:contents}
+ .phh{display:block;padding:18px 0 8px}
+ .phh.wh{display:flex}
+ .wph{font-size:13px}
+ .wph span{width:48px}
+ .cw{display:block}
+ .flt .np{font-size:18px;line-height:24px;white-space:normal}
+ .flt .pr{font-size:17px}
+ .flt .sd{font-size:15px;line-height:20px}
+ .flt .ig{font-size:14px;line-height:19px}
+ .flts .hl{display:block}
  .slot2{display:none}
  h2{font-size:28px;line-height:32px;padding:26px 0 12px}
  .item{padding:0 0 20px}
@@ -656,7 +708,7 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
  .tcol+.tcol .sh{display:none}
  .sh{grid-template-columns:1fr 34px 34px 34px;font-size:12px;line-height:16px;padding:6px 0 4px}
  .sh .s-nom,.sh .s-oak{display:none}
- .sh .ring{left:-14px;top:4px;width:8px;height:8px}
+ .sh .ring{left:auto;right:-13px;top:4px;width:8px;height:8px}
  .sr{grid-template-columns:1fr 34px 34px 34px;padding:0 0 10px}
  .s-nm{grid-column:1;grid-row:1;font-size:16px;line-height:22px}
  .sr .s0{grid-column:2;grid-row:1}.sr .s1{grid-column:3;grid-row:1}.sr .s2{grid-column:4;grid-row:1}
@@ -681,6 +733,12 @@ h3{font-size:8.5pt;line-height:11pt;font-weight:600;letter-spacing:.12em;text-tr
  .bwi .sd{font-size:15px;line-height:20px}
  .wp .pr{width:48px}
  .kb1,.kb2{padding:6px 0}
+ .sph{display:block}
+ .sph .kb1{flex-direction:column;align-items:flex-start;padding:4px 0 0}
+ .hl.zp4{display:block}
+ .brw .tx{white-space:normal}
+ .bwi .np,.bwi .np .nm{white-space:normal}
+.nw{white-space:nowrap}
  .key{font-size:13px;line-height:18px}
  .key .scale,.scl{width:124px}
  .scl{height:17px}

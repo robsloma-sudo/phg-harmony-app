@@ -39,29 +39,27 @@ TEXTS = r"""(sel) => {
 CONTENT = r"""(sel) => {
  const root = document.querySelector(sel); const P = root.getBoundingClientRect();
  const t = (e) => e ? e.innerText.trim().replace(/\s+/g, ' ') : null;
+ const tr = e => { const r = document.createRange(); r.selectNodeContents(e); return [...r.getClientRects()].filter(a => a.width > 0); };
  const items = [...root.querySelectorAll('[data-name]')].filter(e => e.offsetParent).map(it => {
-   const nm = it.querySelector('.nm'), pr = it.querySelector('.pr');
-   const tr = e => { const r = document.createRange(); r.selectNodeContents(e); return [...r.getClientRects()].filter(a => a.width > 0); };
-   const rs = tr(nm); const last = rs[rs.length - 1]; const prr = tr(pr)[0];
-   const fs = parseFloat(getComputedStyle(nm).fontSize);
-   return {name: t(nm), price: t(pr), status: it.dataset.status, table: it.classList.contains('tr'),
-     sensory: t(it.querySelector('.sd,.ssd')), ingredients: t(it.querySelector('.ig')), ing_list: [...it.querySelectorAll('.ig .i')].map(t),
-     flags: [...it.querySelectorAll('.flag')].map(t), serve: t(it.querySelector('.svl')), tbc_mark: !!it.querySelector('.sq'), garnish: t(it.querySelector('.gar')), glass: t(it.querySelector('.gls')),
-     ring: !!it.querySelector('.ring'), cls: t(it.querySelector('.c-cl')), nom: t(it.querySelector('.c-nom')), region: t(it.querySelector('.c-rg')),
+   const nm = it.querySelector('.nm'); const prs = [...it.querySelectorAll('.pr')];
+   const nrs = tr(nm); const last = nrs[nrs.length - 1]; const fs = parseFloat(getComputedStyle(nm).fontSize);
+   const p0 = prs.length ? tr(prs[0])[0] : null;
+   return {name: t(nm), prices: prs.map(t), price_right: prs.map(p => tr(p)[0].right - P.left), status: it.dataset.status,
+     kind: it.classList.contains('sr') ? (it.classList.contains('fl') ? 'flight_row' : 'spirit') : (it.className.match(/\b(ck|zp|bwi|flt)\b/) || [null, 'other'])[1],
+     wine: it.classList.contains('wn'),
+     sensory: t(it.querySelector('.sd, .ssd')), ing_list: [...it.querySelectorAll('.ig .i')].map(t), flags: [...it.querySelectorAll('.flag')].map(t),
+     pour: t(it.querySelector('.pour')), garnish: t(it.querySelector('.gar')), glass: t(it.querySelector('.gls')),
+     brewery: t(it.querySelector('.brw .tx')), brewery_ring: !!it.querySelector('.brw .ring'),
+     ring: !!it.querySelector('.np > .ring, .s-nm > .ring'), nom: t(it.querySelector('.nom')), region: t(it.querySelector('.rg')),
      oak: (it.querySelector('.oak[data-oak]') || {dataset: {}}).dataset.oak || null, glyph: !!it.querySelector('svg.gl'),
      gar_in_ig: !!(it.querySelector('.ig') && it.querySelector('.gar') && it.querySelector('.ig').contains(it.querySelector('.gar'))),
-     gap_em: (prr.left - last.right) / fs, same_line: Math.abs(prr.bottom - last.bottom) < fs * 0.5,
-     price_right: prr.right - P.left, name_font_px: fs};
+     gap_em: p0 ? (p0.left - last.right) / fs : null, same_line: p0 ? Math.abs(p0.bottom - last.bottom) < fs * 0.5 : null,
+     col: (it.closest('.tcol') ? [...it.closest('.tcols').children].indexOf(it.closest('.tcol')) : -1)};
  });
  const heads = [...root.querySelectorAll('h2,h3')].filter(e => e.offsetParent).map(h => t(h));
- const gsd = [...root.querySelectorAll('.gsd')].map(e => ({group: t(e.parentElement.querySelector('h3')), sensory: t(e)}));
  const alltext = root.innerText;
- const furrows = [...root.querySelectorAll('.fwl')].length;
- const art = [...root.querySelectorAll('svg.field, svg.bfield')].filter(e => e.offsetParent !== null || getComputedStyle(e).display !== 'none').map(e => { const r = e.getBoundingClientRect(); return [r.left - P.left, r.top - P.top, r.right - P.left, r.bottom - P.top]; });
- const leg = root.querySelector('.legend'); const legTop = leg ? leg.getBoundingClientRect().top - P.top : null;
- const menuBottom = Math.max(...[...root.querySelectorAll('.menu .tx')].filter(e => e.offsetParent).map(e => e.getBoundingClientRect().bottom - P.top));
- const rings = [...root.querySelectorAll('.ring:not(.k)')].filter(e => e.offsetParent).map(e => e.getBoundingClientRect().left - P.left);
- return {items, heads, gsd, alltext, furrows, art, legTop, menuBottom, rings_min_left: rings.length ? Math.min(...rings) : null};
+ const art = [...root.querySelectorAll('svg.field, svg.bfield')].filter(e => getComputedStyle(e).display !== 'none').map(e => { const r = e.getBoundingClientRect(); return [r.left - P.left, r.top - P.top, r.right - P.left, r.bottom - P.top]; });
+ return {items, heads, alltext, furrows: root.querySelectorAll('.ov path').length, art};
 }"""
 
 def lum(c):
@@ -88,6 +86,21 @@ def contrast(full, art, texts, S):
                 if r < worst: worst, wpx = r, c
         res.append({"text": e["text"][:48], "cls": e["cls"], "size_px": e["size_px"], "text_rgb": tc, "worst_bg_rgb": wpx, "worst_ratio": round(worst, 2)})
     return res
+
+def overlaps(texts, tol=0.6):
+    """Pairs of different text elements whose em boxes (per text line, css px) intersect by more than tol px each way."""
+    # each line's em box: the 1 em band centred in its content area (what the glyphs can occupy), full advance width
+    R = [(i, x, y + (h - e["size_px"]) / 2, x + w, y + (h + e["size_px"]) / 2) for i, e in enumerate(texts) for (x, y, w, h) in e["rects"]]
+    out = []
+    for a in range(len(R)):
+        i, ax0, ay0, ax1, ay1 = R[a]
+        for b in range(a + 1, len(R)):
+            j, bx0, by0, bx1, by1 = R[b]
+            if i == j: continue
+            ox, oy = min(ax1, bx1) - max(ax0, bx0), min(ay1, by1) - max(ay0, by0)
+            if ox > tol and oy > tol:
+                out.append({"a": texts[i]["text"][:40], "b": texts[j]["text"][:40], "overlap_px": [round(ox, 2), round(oy, 2)]})
+    return out
 
 def ink_margins(full, art, S, W=612, H=792):
     d = ImageChops.difference(full, art).convert("L").point(lambda v: 255 if v > 40 else 0); bx = d.getbbox()
@@ -149,6 +162,7 @@ def run():
         out[f"{side}_png"] = list(full.size)
     full = Image.open(HERE / "preview-phone.png").convert("RGB"); art = Image.open(HERE / "_art-phone.png").convert("RGB")
     out["phone_contrast"] = contrast(full, art, out["phone_texts"], 3)
+    for k in ("front", "back", "phone"): out[f"{k}_overlaps"] = overlaps(out[f"{k}_texts"])
     out["phone_png"] = list(full.size)
     return out
 
