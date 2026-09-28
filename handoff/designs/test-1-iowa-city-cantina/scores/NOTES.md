@@ -78,3 +78,20 @@ Round-15 fixes that reviewers agree on:
 - Add a "copa" price label under By the Glass.
 - One description measure per card.
 - Consistent SPANISH · English subheads.
+
+## Round 15 (one item pitch, faces absorb row difference, bilingual subheads, copa labels)
+Combined 72.597 (critic 72.9, content 73.5, accuracy 71.4). NEW BEST (just above 72.305).
+- Accuracy rose to 71.4, its highest yet.
+- Critic fell because the name bands are offset inside each row: the grid critic scored 70.6 and header criterion 2 got 58.
+
+Round 16:
+- Align the name bands in each row, with faces equal per row.
+- Keep one item pitch.
+- Fill the short card's foot with a card seal or cantor line, not decoration padding.
+- Manhattan follows the draft (hide the aromatic bitters) pending the venue's answer.
+- Subheads become AGAVE · Agave and BRANDY · Brandy.
+- Band gloss "Spirits".
+- Spirit and wine and beer lines built from name/draft facts: "Malbec, dry red", "Pale lager · draft".
+- Cocktail leads from method rows.
+- Put doc.json section order in line with print.
+- Try agave top-right.
