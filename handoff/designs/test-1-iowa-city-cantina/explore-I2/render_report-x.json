@@ -1,6 +1,10 @@
 {
- "tag": "-t",
- "opt": {},
+ "tag": "-x",
+ "opt": {
+  "heart": "0.6",
+  "hatch": "3.0",
+  "pmin": "2.5"
+ },
  "letter_clamped_leaves": [
   [
    "leaf0",
@@ -11,7 +15,7 @@
    0.91
   ]
  ],
- "preview-letter-t.png": {
+ "preview-letter-x.png": {
   "geometry_css_px": {
    "page": [
     816,

@@ -23,7 +23,11 @@ OPT = dict(a.split("=", 1) for a in sys.argv[1:] if "=" in a and not a.startswit
 GREEN, IVORY, IVORY2, IVORY3, GOLD = "#10291F", "#EFE6D2", "#C9C2AF", "#A8A796", "#C8A765"
 STROKE = float(OPT.get("stroke", 1.25))       # the one stroke weight (css px; x3.125 at print)
 HATCH = float(OPT.get("hatch", 3.3))          # target hatch pitch (css px)
-WF = float(OPT.get('wf', 1.35))
+WF = float(OPT.get('wf', 1.8))
+WRAPS = () if OPT.get('wraps') == '0' else (0.18, 0.40, 0.60)
+CONE_L, CONE_W = float(OPT.get('cl', 0.98)), float(OPT.get('cw', 0.085))
+PITCH_MIN = float(OPT.get('pmin', 2.7))
+HEART = float(OPT.get('heart', 0.42))
 CLEAR = 23                                    # 6 mm at 96 css px / in
 
 # ---- content -----------------------------------------------------------------------------
@@ -154,6 +158,18 @@ class Leaf:
         h = self.hw(t) * u
         return (self.cen[i][0] + self.nor[i][0] * h, self.cen[i][1] + self.nor[i][1] * h)
 
+    def drop_end(self, k, m, tmax, full_width=False):
+        """engraver's line dropping: line k of m stops where the local pitch falls below PITCH_MIN;
+        every 2nd line runs on to half that pitch, every 4th further, so tone stays even to the tip."""
+        lvl = (k & -k).bit_length() - 1          # trailing zeros of k
+        span = 2.0 if full_width else 1.0
+        n = self.n
+        for i in range(int(n * 0.3), int(n * tmax) + 1):
+            pitch = self.hw(i / n) * span / (m + 1) * (2 ** lvl)
+            if pitch < PITCH_MIN:
+                return i
+        return int(n * tmax) + (1 if tmax >= 1.0 else 0)
+
     def outline(self):
         n = self.n
         left, right = [], []
@@ -192,8 +208,13 @@ class Leaf:
         m = max(2, int(self.W / pitch))
         for k in range(1, m + 1):
             u = self.shadow * k / (m + 1)
-            tend = 0.84 - 0.40 * (k / (m + 1)) ** 1.5
-            out.append([self.at(i, u) for i in range(i0, int(n * tend))])
+            tend = 0.40 + 0.46 * (k / (m + 1)) ** 0.9     # longest along the shaded edge: the leaf rolls away
+            out.append([self.at(i, u) for i in range(i0, min(int(n * tend), self.drop_end(k, m, tend)))])
+        if HEART > 0:   # the heart of the rosette is in deep shadow: hatch the lit half too, near the base only
+            for k in range(1, m + 1):
+                u = -self.shadow * k / (m + 1)
+                tend = HEART * (1 - 0.45 * (k / (m + 1)))
+                out.append([self.at(i, u) for i in range(i0, int(n * tend))])
         return out
 
 
@@ -202,14 +223,14 @@ class Cone(Leaf):
 
     def lines(self, pitch):
         out, n = [], self.n
-        m = max(4, int(2 * self.W / (pitch * 0.9)))
+        m = max(4, int(2 * self.W / pitch))
         for k in range(1, m + 1):
             u = 1 - 2 * k / (m + 1)
-            if u * self.shadow < -0.2:        # lit side: keep open, three lines only
-                if k % 3:
-                    continue
-            out.append([self.at(i, u) for i in range(int(n * 0.03), int(n * 0.80))])
-        for t0 in (0.18, 0.40, 0.60):          # wrapped leaf margins spiralling across the cone
+            if u * self.shadow < -0.25 and k % 3:      # lit side stays open
+                continue
+            tend = 1.0 if u * self.shadow >= -0.25 else 0.80   # fixed-fraction lines meet exactly at the tip
+            out.append([self.at(i, u) for i in range(int(n * 0.03), self.drop_end(k, m, tend, full_width=True))])
+        for t0 in (WRAPS if 'WRAPS' in globals() else ()):   # wrapped leaf margins spiralling across the cone
             seg = []
             for j in range(0, 41):
                 f = j / 40
@@ -272,7 +293,7 @@ def agave(bx, by, S, text_rects=None, seed=11):
         a2, l2 = j(a) if a else a, j(lf_)
         emit(clamp_leaf(lambda f, a2=a2, l2=l2, wf=wf, dr=dr, cu=cu:
                         Leaf(bx, by, a2, S * l2 * f, S * wf * WF * (0.8 + 0.2 * f), droop=dr, curl=cu), f"back{k}"))
-    emit(clamp_leaf(lambda f: Cone(bx - 6, by, -2.5, S * 1.05 * f, S * 0.058, droop=0.0, teeth=False), "cone"))
+    emit(clamp_leaf(lambda f: Cone(bx - 6, by, -2.5, S * CONE_L * f, S * CONE_W, droop=0.0, teeth=False), "cone"))
     for k, (a, lf_, wf, dr, cu) in enumerate(MID + FRONT):
         a2, l2 = j(a), j(lf_)
         emit(clamp_leaf(lambda f, a2=a2, l2=l2, wf=wf, dr=dr, cu=cu:

@@ -1,5 +1,5 @@
 {
- "tag": "-t",
+ "tag": "-before",
  "opt": {},
  "letter_clamped_leaves": [
   [
@@ -11,7 +11,7 @@
    0.91
   ]
  ],
- "preview-letter-t.png": {
+ "preview-letter-before.png": {
   "geometry_css_px": {
    "page": [
     816,

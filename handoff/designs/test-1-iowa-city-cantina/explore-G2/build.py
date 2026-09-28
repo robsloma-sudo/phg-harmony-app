@@ -126,7 +126,7 @@ svg.mon{{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}}
   line-height:1.55;white-space:nowrap;color:{INK}}}
 .foot .l2{{color:{INK2}}}
 h2,h3,.h2sub{{font-family:Lab;font-weight:500;text-transform:uppercase}}
-h2{{font-size:17px;letter-spacing:.3em;color:{CHILE};line-height:1;margin:0 0 calc(var(--u)*1.1)}}
+h2{{font-size:18px;letter-spacing:.3em;color:{CHILE};line-height:1;margin:0 0 calc(var(--u)*1.1)}}
 {rules_css}
 .h2sub{{font-size:13px;letter-spacing:.3em;color:{INK2};margin-left:1.1em}}
 h3{{font-size:13px;letter-spacing:.3em;color:{INK2};line-height:1;margin:calc(var(--u)*1.15) 0 calc(var(--u)*.6)}}
@@ -134,20 +134,21 @@ h2+h3{{margin-top:0}}
 .sec+.sec{{margin-top:var(--gap)}}
 .it{{margin-bottom:var(--u)}} .it:last-child{{margin-bottom:0}}
 .row{{display:block;line-height:1.2}}
-.nm{{font-size:22px;font-weight:500;letter-spacing:.005em}}
-.pr{{font-size:22px;font-weight:400;color:{INK2};margin-left:.9em;font-variant-numeric:lining-nums tabular-nums}}
-.ds{{font-size:15px;font-style:italic;line-height:1.32;color:{INK2};margin-top:2px}}
+.nm{{font-size:24px;font-weight:500;letter-spacing:.005em}}
+.pr{{font-size:24px;font-weight:400;color:{INK2};margin-left:.9em;font-variant-numeric:lining-nums tabular-nums}}
+.ds{{font-size:16px;font-style:italic;line-height:1.32;color:{INK2};margin-top:2px}}
 .ds+.ds{{margin-top:0}}
 .list{{position:absolute;display:grid;align-items:start}}
 
 body.letter .page{{width:816px;height:1056px;--u:16px;--gap:44px}}
-body.letter .list{{left:56px;top:56px;grid-template-columns:272px 188px;column-gap:32px}}
+body.letter .list{{left:56px;top:56px;grid-template-columns:252px 208px;column-gap:32px}}
 
 body.phone .page{{width:390px;--u:14px;--gap:38px;padding:0 28px 44px}}
 body.phone svg.mon{{position:relative;display:block;margin-left:-28px}}
 body.phone .foot{{position:relative;margin-top:10px}}
 body.phone .list{{position:relative;margin-top:40px;grid-template-columns:1fr}}
 body.phone .col1{{margin-top:var(--gap)}}
+body.phone .nm,body.phone .pr{{font-size:19px}} body.phone .ds{{font-size:14px}} body.phone h2{{font-size:16px}}
 </style></head>
 <body class="{{BODYCLASS}}"><div class="page">
 <svg class="mon" aria-label="Cantina"><g id="mon"><g class="plate-red" fill-rule="evenodd" transform="translate({rx},{ry})">{word}</g><g class="plate-key" fill-rule="evenodd">{word}</g></g></svg>
@@ -220,7 +221,7 @@ GEOM_JS = """() => {
   document.querySelectorAll('.it').forEach(it=>{
     const nm=it.querySelector('.nm'),pr=it.querySelector('.pr'),ds=[...it.querySelectorAll('.ds')];
     const col=it.closest('.col').getBoundingClientRect(), n=nm.getBoundingClientRect(), p=pr.getBoundingClientRect();
-    out.items[it.dataset.id]={name:R(nm),price:R(pr),desc:ds.map(R),desc_lines:ds.map(d=>Math.round(d.getBoundingClientRect().height/(15*1.32)))};
+    out.items[it.dataset.id]={name:R(nm),price:R(pr),desc:ds.map(R),desc_lines:ds.map(d=>Math.round(d.getBoundingClientRect().height/(16*1.32)))};
     // eye travel: gap from end of name to start of price, as a share of the column (row) width
     const travel=(p.left-n.right)/col.width; out.rows[it.dataset.id]=+(travel*100).toFixed(1);
     if(travel>0.40) out.problems.push(it.dataset.id+': eye travel '+(travel*100).toFixed(0)+'%');

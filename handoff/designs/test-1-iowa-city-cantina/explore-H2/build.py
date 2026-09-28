@@ -98,9 +98,11 @@ def menu_html(cols):
                 if g["sub"]:
                     out.append(f'<h3>{esc(g["sub"])}</h3>')
                 for r in g["rows"]:
+                    # keep each separator on the line it closes (no line may start with a middot)
+                    dsc = esc(r["desc"]).replace(" · ", "&nbsp;· ")
                     out.append(f'<div class="it"><p class="np"><span class="n">{esc(r["name"])}</span>'
                                f'<span class="p">{r["price"]}</span></p>'
-                               f'<p class="d">{esc(r["desc"])}</p></div>')
+                               f'<p class="d">{dsc}</p></div>')
             out.append('</section>')
         out.append('</div>')
     return "\n".join(out)
@@ -111,13 +113,12 @@ def art_geometry(s=1.0, ox=0.0, oy=0.0, W=816):
     """One continuous plough line. Letter-space geometry mapped by p' = (ox + x*s, oy + y*s).
 
     Furrow k follows the hill contour y_k(x) = Y0 + k*U - H*bump(x), bump = gaussian under the sun,
-    with the pitch opening slightly over the crest (contours spread on the gentle hilltop). The line
-    ploughs right->left, turns at the left headland with a squared greca hairpin, ploughs back
+    at a constant pitch U. The line ploughs right->left, turns at the left headland with a squared greca hairpin, ploughs back
     left->right and turns again off the right trim (bleed). Headland turns step outward pair by pair
     (x = 88, 64, 40): the stepped fret. The sun sets behind the first furrow: the disc is clipped
     by the hill crest, so sun and land share one horizon line.
     """
-    cx, cy, r = 648, 100, 170
+    cx, cy, r = 650, 100, 200   # disc edge crosses the T's right arm at x ~450 (stem stays ink)
     Y0, H, sig, n = 272, 62, 250, 6
     heads = [88, 64, 40]
     Wl = W / s if s != 1 else W   # letter-space width of this page
@@ -126,7 +127,7 @@ def art_geometry(s=1.0, ox=0.0, oy=0.0, W=816):
         return math.exp(-((x - cx) / sig) ** 2)
 
     def fy(k, x):
-        return Y0 - H * bump(x) + k * U * (1 + 0.35 * bump(x))
+        return Y0 - H * bump(x) + k * U
 
     def P(x, y):
         return f"{ox + x*s:.2f},{oy + y*s:.2f}"
@@ -313,7 +314,7 @@ def main():
                 pg.evaluate(f"() => {{document.querySelector('.page').style.height='{int(bottom + 24)}px'}}")
             layout[name] = pg.evaluate(GEOM_JS)
             layout[name]["wordmark_font_px"] = round(size, 2)
-            layout[name]["art"] = {k: (round(v, 2) if isinstance(v, float) else v) for k, v in L["geom"].items() if k != "path"}
+            layout[name]["art"] = {k: (round(v, 2) if isinstance(v, float) else v) for k, v in L["geom"].items() if k not in ("path", "hill")}
             pg.screenshot(path=str(HERE / name), full_page=True)
             report[name] = contrast_check(pg, dsf)
             tmp.unlink()

@@ -3,17 +3,17 @@
   {
    "file": "preview-letter.png",
    "squint_salient_regions": 1,
-   "primary_area_pct": 11.41,
+   "primary_area_pct": 15.4,
    "primary_to_secondary": null,
-   "ground_luminance": 0.924,
+   "ground_luminance": 0.9,
    "value_range_p5_p95": [
-    0.349,
-    0.928
+    0.096,
+    0.912
    ],
-   "accent_area_pct": 7.39,
+   "accent_area_pct": 1.68,
    "visual_centroid": [
-    0.6,
-    0.177
+    0.783,
+    0.418
    ]
   }
  ],
