@@ -269,3 +269,39 @@ Next: apply fix + repair (with backup table), verify, then re-enable 13 then 7.
 PHG-036e (P1, needs Rob) Designer DB access is enforced by the gateway only when the agent uses it; the agent's
   execute_sql connector runs as the main DB user. Create a LOGIN role that is only a member of phg_menu_designer and
   give the designer a connector with those credentials; then remove execute_sql from the designer's tools.
+
+-------------------------------------------------------------
+FLAVOR INTELLIGENCE (PHG-FLV) — added 2026-09-28 from brief PHG-FLAVOR-DEV-2026-09-28.01
+Response: handoff/flavor/FLAVOR_LEAD_DEV_RESPONSE.md. Live phg_flavor: 36 sources cataloged, 0 acquired,
+0 findings, 0 production-eligible evidence. Engine NOT populated or connected.
+-------------------------------------------------------------
+PHG-FLV-001 | OPEN | P0 | needs Rob | = GLOBAL/backend-source-control. No repo rebuilds the live DB (408 live
+  migrations vs 22 on this branch, 0 on main; 83 deployed functions vs 6 in git). Migration 20260928063244 and all
+  flavor seed DML exist only live. Next: approve the repo/branch promotion; export 20260928063244 verbatim from
+  schema_migrations.statements plus idempotent seed files; export the other live-only migrations and function sources.
+PHG-FLV-002 | OPEN | P1 | H10 recovery: no restore test; Storage bytes not covered by DB backups; PITR unverified.
+  Next: restore drill on a branch/local stack reproducing 36/36/36/151/6/6 and registry checksum 625ace3b....
+PHG-FLV-003 | OPEN | P1 | The 19 rollback-only validation checks from the brief are not persisted. Recreate them as
+  supabase/tests/phg_flavor_foundation.sql, plus phg_flavor_baseline.sql.
+PHG-FLV-004 | OPEN | P1 | = GLOBAL/ingredient-normalization. phg.ingredients has 6 generated drafts; Maple Syrup
+  (6df22ecb) and Pure Maple Syrup (bd550a93) are unreferenced orphans; recipe JSON names do not join to ingredient
+  names; subjects UNIQUE(ingredient_id,form_key) allows duplicate NULL forms. Blocks subject loading. No merge until
+  decided.
+PHG-FLV-005 | OPEN | P1 | H1/H3: append-only and "backend-only" are ACL-only (no triggers/functions in phg_flavor);
+  service_role can write content directly. Plan: writer role + capability-checked functions + freeze/append-only
+  triggers.
+PHG-FLV-006 | OPEN | P1 | H7: no account_id/visibility on flavor records; phg.recipe_projects/recipe_versions also
+  lack account_id. Blocks in-house tasting evidence and release criterion E.
+PHG-FLV-007 | OPEN | P2 | phg-menu-item-generate-v2 returns why_it_works.flavor_progression (unsourced LLM text)
+  rendered in the Menu Development card. Must be labelled generated_hypothesis; never stored as other evidence.
+PHG-FLV-008 | OPEN | P1 | needs Rob | Source-access and rights decisions (acquisition order, book purchases,
+  publisher licences, FlavorDB2/RecipeDB noncommercial, Foodpairing/VCF paid, FooDB, embeddings/training policy,
+  assessor, customer data scope, menu co-occurrence, backup spend, owners). See response section 5.
+PHG-FLV-009 | OPEN | P2 | = GLOBAL/production-integration (blocked). Gateway design: parameterized SECURITY DEFINER
+  functions (phg_flavor_candidates/explain/resolve) through a flavor_evidence capability. Not the arbitrary-SQL
+  phg_designer_query pattern. Typed link tables, never evidence_document_ids bigint[] or fabricated claims.goal_id.
+PHG-FLV-010 | OPEN | P2 | H8 pipeline: no queue/lease/worker/bucket. Build disabled until Phase D approval.
+PHG-FLV-011 | OPEN | P2 | Two knowledge-base source registries: phg_design.sources (37) + phg_design.ingestion_runs are
+  independent of public.sources / phg_flavor. Do not merge implicitly; decide a shared rights model later.
+PHG-FLV-012 | OPEN | P2 | = GLOBAL/validation-tasting, GLOBAL/coverage-expansion, GLOBAL/security-review-existing
+  carried as-is from phg_flavor.work_items (queued). The new flavor gateway must add zero advisor findings.

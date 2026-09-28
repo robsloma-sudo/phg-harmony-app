@@ -951,3 +951,22 @@ tough scale (best).
   accuracy_reviewer. Rehearsed approve path + rollback.
 - Monitor baseline: 1.000 menus per venue item set before the incident, 2.892 during it; threshold 1.2.
 - Results: handoff/reviews/rehearsal/results_round4.md (blocks A-G all pass; nothing left live; cron untouched).
+
+2026-09-28 PHG-FLV flavor intelligence: lead developer response to brief PHG-FLAVOR-DEV-2026-09-28.01 (read-only)
+- Read the brief from phg_flavor.research_documents (flavor-lead-developer-brief-2026-09-28, rev 1). Verified the live
+  state SELECT-only. No DDL/DML, cron, grant, function or deployment change.
+- All numeric claims match live: 15 tables + 4 security_invoker views; 36 catalog/versions/rights (34 pending_review,
+  2 restricted: FlavorDB2, RecipeDB; 0 capability flags true); 151 work items (41 queued / 109 blocked / 1 done);
+  36 source_coverage rows = content_not_acquired, percent NULL; 0 units/findings/assertions/evidence; public.sources
+  154; cocktail_reference 150, specs 449, spec_components 468, spec_sources 449; phg.ingredients 6 (generated_draft),
+  recipe_versions 6, recipe_components 0, prep_recipes 0. ACLs as claimed (anon/authenticated no USAGE; no DELETE).
+- New findings: Maple Syrup and Pure Maple Syrup are unreferenced orphans; recipe_versions JSON names do not join to
+  phg.ingredients; "append-only" is ACL-only (no triggers in phg_flavor); the 19 validation checks are not persisted
+  anywhere; the designer gateway (phg_designer.run, owner phg_menu_designer) cannot read phg_flavor; the scrape guard
+  refuses all 36 flavor sources (under_review).
+- Source of truth: live has 408 migrations and 83 Edge Functions. origin/main (ee278f2) has index.html + netlify.toml
+  only. This branch has 22 migrations (15 match live by name, 7 repo-only, 11 live-only) and 6 function dirs.
+  Migration 20260928063244 and its seed DML are in no repo branch.
+- Response written: handoff/flavor/FLAVOR_LEAD_DEV_RESPONSE.md (claimed vs actual, reuse, conflicts, H1-H10 plan,
+  14 Rob decisions, phases A-F with approval boundaries). Open issues PHG-FLV-001..012 added.
+- The flavor engine is NOT populated, connected or complete.
