@@ -120,7 +120,7 @@ X0, X1 = FX + 36, 742        # plot 0..10 on x
 Y0, Y1 = FB - 32, 140        # plot 0..10 on y (clean at the bottom, smoke rises)
 DR, BR, BO = 19.5, 10.5, 14.5  # disc radius, number-badge radius, badge offset
 
-def field_svg(fx, fy0, fx1, fb, X0, X1, Y0, Y1, dr, br, bo, gid, grid=True):
+def field_svg(fx, fy0, fx1, fb, X0, X1, Y0, Y1, dr, br, bo, gid, grid=True, glyph_px=None):
     px = lambda v: X0 + (X1 - X0) * v / 10
     py = lambda v: Y0 + (Y1 - Y0) * v / 10
     stops = "".join(f'<stop offset="{o}" stop-color="{c}"/>' for o, c in FIELD)
@@ -139,7 +139,8 @@ def field_svg(fx, fy0, fx1, fb, X0, X1, Y0, Y1, dr, br, bo, gid, grid=True):
         x, y = COORDS[it["name"]]; cx, cy = px(x), py(y)
         pts.append((n, cx, cy))
         s.append(f'<g transform="translate({cx:.2f},{cy:.2f})"><circle r="{dr}" fill="{PAPER}"/>'
-                 f'<g transform="scale({dr / 19.5 * 1.04:.3f}) translate(0,.6)">{glyph(it["glass"], it["garnish"], liquid(it))}</g>'
+                 + (f'<g transform="scale({dr / 19.5 * 1.04:.3f}) translate(0,.6)">{glyph(it["glass"], it["garnish"], liquid(it))}</g>' if glyph_px is None else
+                    f'<svg x="{-glyph_px / 2:.2f}" y="{-glyph_px * 32 / 30 / 2 + .6:.2f}" width="{glyph_px}" height="{glyph_px * 32 / 30:.2f}" viewBox="-15 -16 30 32" overflow="visible">{glyph(it["glass"], it["garnish"], liquid(it))}</svg>') +
                  f'<circle cx="{-bo}" cy="{-bo}" r="{br}" fill="{INK}"/></g>')
     return "".join(s), pts
 
@@ -264,15 +265,15 @@ BEV = ('<div class="bev"><div class="glab"><div class="bheads"><h3 class="tx">Ce
 
 # the key band: the cards' oak scale drawn once at poster scale (macro reading of the small multiples)
 BAND_B = 152
-SX0, SW = colx(3) + 3, span(9) - 8
+SX0, BW = colx(3) + 3, span(9) - 8
 def band_scale():
     classes = {}
     for grp in SP.values():
         for i in grp:
             o = oak(i["sensory"])
             if o is not None: classes.setdefault(o, []).append(i["cls"])
-    X = lambda m: m / AGE_MAX * SW
-    svg = [f'<line x1="0" y1="10" x2="{SW}" y2="10" stroke="{PAPER}" stroke-width="1"/>']
+    X = lambda m: m / AGE_MAX * BW
+    svg = [f'<line x1="0" y1="10" x2="{BW}" y2="10" stroke="{PAPER}" stroke-width="1"/>']
     svg += [f'<line x1="{X(m)}" y1="3" x2="{X(m)}" y2="10" stroke="{PAPER}" stroke-width="1"/>' for m in (0, 12, 24, 36, 48)]
     labs = []
     for o, cl in sorted(classes.items(), key=lambda t: t[0][0]):
@@ -285,7 +286,7 @@ def band_scale():
             svg.append(f'<rect x="{X(o[0]) + 1.5}" y="1" width="{X(o[1]) - X(o[0]) - 3}" height="18" fill="{PAPER}"/>'); pos, al = (o[0] + o[1]) / 2, "c in"
         labs.append(f'<span class="bcl {al} tx" style="left:{pos / AGE_MAX * 100:.3f}%">{e(names)}</span>')
     nums = "".join(f'<span class="bnum tx" style="left:{m / AGE_MAX * 100:.3f}%">{m}</span>' for m in (0, 12, 24, 36, 48))
-    return (f'<div class="scale">{nums}<svg class="track" width="{SW}" height="20" viewBox="-6 0 {SW + 12} 20" preserveAspectRatio="none">{"".join(svg)}</svg>'
+    return (f'<div class="scale">{nums}<svg class="track" width="{BW}" height="20" viewBox="-6 0 {BW + 12} 20" preserveAspectRatio="none">{"".join(svg)}</svg>'
             f'<span class="bunit tx">months in oak</span>{"".join(labs)}</div>')
 
 BACK = f"""<section class="page back">
@@ -296,11 +297,19 @@ BACK = f"""<section class="page back">
 </section>"""
 
 # ---------- phone: its own map drawing (same data, same coordinates)
-PW = 390; PFH = 430; PX0, PX1, PY0, PY1 = 46, 362, PFH - 40, 60
-PH_SVG, PH_PTS = field_svg(0, 0, PW, PFH, PX0, PX1, PY0, PY1, 17, 10, 13, "pg", grid=True)
-PH_BADGES = "".join(f'<div class="bn tx" style="left:{cx - 13 - 12:.2f}px;top:{cy - 13 - 8:.2f}px">{n:02d}</div>' for n, cx, cy in PH_PTS)
-PHONE_MAP = f"""<div class="pmap"><svg width="{PW}" height="{PFH}" viewBox="0 0 {PW} {PFH}">{PH_SVG}</svg>{PH_BADGES}</div>
-<div class="paxis"><span class="tx">Bright → Rich, left to right</span><span class="tx">Clean → Smoky, bottom to top</span></div>"""
+PW = 390; PFH = 500; PFX = 30                      # phone field: x 30..390 (bleeds right), y 0..500; axes on paper to the left and below
+PX0, PX1, PY0, PY1 = 58, 356, PFH - 30, 130
+PDR, PBR, PBO, PGL = 19, 10, 14, 36                # disc radius, badge radius, badge offset, glyph box width (css px)
+PH_SVG, PH_PTS = field_svg(PFX, 0, PW, PFH, PX0, PX1, PY0, PY1, PDR, PBR, PBO, "pg", grid=True, glyph_px=PGL)
+PAY_X, PAX_Y = PFX - 9, PFH + 14
+PH_AX = [f'<line x1="{PX0}" y1="{PAX_Y}" x2="{PX1}" y2="{PAX_Y}" stroke="{INK}" stroke-width=".9"/>', f'<path d="M{PX1 + 7},{PAX_Y} l-7,-3.2 v6.4 Z" fill="{INK}"/>',
+         f'<line x1="{PAY_X}" y1="{PY0}" x2="{PAY_X}" y2="{PY1}" stroke="{INK}" stroke-width=".9"/>', f'<path d="M{PAY_X},{PY1 - 7} l-3.2,7 h6.4 Z" fill="{INK}"/>']
+PH_AX += [f'<line x1="{PX0 + (PX1 - PX0) * i / 10}" y1="{PAX_Y - (3 if i % 5 else 5)}" x2="{PX0 + (PX1 - PX0) * i / 10}" y2="{PAX_Y}" stroke="{INK}" stroke-width=".9"/>' for i in range(11)]
+PH_AX += [f'<line x1="{PAY_X}" y1="{PY0 + (PY1 - PY0) * i / 10}" x2="{PAY_X + (3 if i % 5 else 5)}" y2="{PY0 + (PY1 - PY0) * i / 10}" stroke="{INK}" stroke-width=".9"/>' for i in range(11)]
+PH_BADGES = "".join(f'<div class="bn tx" style="left:{cx - PBO - 12:.2f}px;top:{cy - PBO - 8:.2f}px">{n:02d}</div>' for n, cx, cy in PH_PTS)
+PH_LABELS = (f'<div class="plab ply tx" style="left:{PAY_X - 22}px;top:{PY1 + 2}px">Smoky</div><div class="plab ply tx" style="left:{PAY_X - 22}px;top:{PY0 - 40}px">Clean</div>'
+             f'<div class="plab tx" style="left:{PX0}px;top:{PAX_Y + 5}px">Bright</div><div class="plab tx" style="right:{PW - PX1 - 7}px;top:{PAX_Y + 5}px">Rich</div>')
+PHONE_MAP = f"""<div class="pmap"><svg width="{PW}" height="{PFH + 40}" viewBox="0 0 {PW} {PFH + 40}">{PH_SVG}{"".join(PH_AX)}</svg>{PH_BADGES}{PH_LABELS}</div>"""
 
 CSS = f"""
 @font-face{{font-family:'Inter Tight';src:url('fonts/intertight-normal-latin.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:block;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}}
@@ -363,10 +372,10 @@ h3{{font-weight:600;font-size:12px;line-height:16px;letter-spacing:.08em;text-tr
 .bl{{position:absolute;left:{M + 9}px;top:{M + 9}px;width:{span(3)}px}}
 .band h2{{font-weight:600;font-size:17px;line-height:22px}}
 .band .bnote{{color:#C9C3B7}} .band .lgt{{color:#DAD4C8;margin-top:8px}}
-.scale{{position:absolute;left:{SX0 + 9}px;top:{M + 13}px;width:{SW}px;height:{BAND_B - M - 13}px}}
+.scale{{position:absolute;left:{SX0 + 9}px;top:{M + 13}px;width:{BW}px;height:{BAND_B - M - 13}px}}
 .bnum{{position:absolute;top:0;transform:translateX(-50%);font-weight:200;font-size:48px;line-height:44px;letter-spacing:-.04em}}
 .bnum:first-child{{transform:translateX(-12%)}}
-.track{{position:absolute;left:-6px;top:50px;width:{SW + 12}px;height:20px}}
+.track{{position:absolute;left:-6px;top:50px;width:{BW + 12}px;height:20px}}
 .bunit{{position:absolute;right:0;top:0;font-size:12px;line-height:16px;font-weight:600;color:#DAD4C8;display:none}}
 .bcl{{position:absolute;top:74px;font-size:12px;line-height:16px;font-weight:600;white-space:nowrap}}
 .bcl.c{{transform:translateX(-50%)}} .bcl.in{{top:52px;color:{INK}}} .bcl.r{{transform:translateX(-100%)}}
@@ -395,17 +404,17 @@ h3{{font-weight:600;font-size:12px;line-height:16px;letter-spacing:.08em;text-tr
 .bsub .it+.it{{margin-top:5px}}
 .bev .it .name,.bev .it .price{{font-size:12.5px;line-height:16px}}
 .bev .it .sd{{font-size:12.5px;line-height:16px;color:{INK2}}}
-.pmap,.paxis,.ponly{{display:none}}
+.pmap,.ponly{{display:none}}
 
 /* ---------- phone: one scroll, 390 css px */
 @media (max-width:600px){{
  body{{display:block;padding:0;background:{PAPER}}}
  .page{{width:100%;height:auto;overflow:visible}}
  .art,.lab,.front>.bn{{display:none}}
- .pmap{{display:block;position:relative;width:{PW}px;height:{PFH}px}}
+ .pmap{{display:block;position:relative;width:{PW}px;height:{PFH + 40}px}}
  .pmap svg{{display:block}}
  .pmap .bn{{font-size:12px}}
- .paxis{{display:flex;justify-content:space-between;padding:8px 20px 0;font-size:12px;line-height:16px;font-weight:600}}
+ .plab{{position:absolute;font-weight:600;font-size:12px;line-height:16px}} .ply{{writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.02em}}
  .mast{{position:static;width:auto;padding:24px 20px 20px}}
  .wm{{font-size:56px;line-height:60px}} .venue{{font-size:14px;line-height:20px}}
  .legend{{position:static;width:auto;padding:20px 20px 0}}
@@ -540,6 +549,7 @@ with sync_playwright() as p:
                                                         "const root = document.body; const pg = {left: 0, top: -scrollY};")
                                         .replace("a.top - pg.top", "a.top + scrollY"), "body"),
                     "pairs": ph.evaluate(PAIRS, "body")}
+    res["phone"]["pmap_top"] = ph.evaluate("document.querySelector('.pmap').getBoundingClientRect().top + scrollY")
     ph.screenshot(path=str(HERE / "preview-phone.png"), full_page=True)
     ph.evaluate(HIDE); ph.screenshot(path=str(HERE / "_art-phone.png"), full_page=True)
     b.close()
@@ -626,6 +636,17 @@ G["banned_lines_found"] = [w for w in BANNED if w in txt.lower()]
 G["no_banned_lines"] = not G["banned_lines_found"]
 G["coords_phg_inference"] = {f'{n:02d} {i["name"]}': {"bright_to_rich_x": COORDS[i["name"]][0], "clean_to_smoky_y": COORDS[i["name"]][1]} for n, i in enumerate(COCKTAILS, 1)}
 G["fonts_loaded"] = res["fonts_loaded"]
+import numpy as np
+def dark_share(img, box):
+    a = np.asarray(img.convert("RGB").crop(box), dtype=np.float32) / 255
+    L = 0.2126 * a[..., 0] + 0.7152 * a[..., 1] + 0.0722 * a[..., 2]
+    return float((L < 0.25).mean())
+_lf = dark_share(Image.open(HERE / "preview-front.png"), (round(FX * 3.125), 0, 2550, round(FB * 3.125)))
+_pt = res["phone"]["pmap_top"]
+_pf = dark_share(Image.open(HERE / "preview-phone.png"), (PFX * 3, round(_pt * 3), PW * 3, round((_pt + PFH) * 3)))
+G["map_dark_share"] = {"letter_field": round(_lf, 4), "phone_field": round(_pf, 4), "relative_diff": round(abs(_pf - _lf) / _lf, 4),
+                       "method": "share of pixels with relative luminance < 0.25 inside the plotted field rectangle (letter: field x 294.7-816, y 0-424 css px at 3.125x; phone: field x 30-390, y 0-500 css px of .pmap at 3x)"}
+G["map_dark_share_ok"] = G["map_dark_share"]["relative_diff"] <= 0.10
 G["block_clearances_px"] = res["overlap"]; G["no_block_overlap"] = min(res["overlap"].values()) >= 6
 # point spacing on the letter map (discs must not collide)
 pts = FRONT_PTS
@@ -633,7 +654,7 @@ G["min_disc_center_distance_px"] = round(min(math.dist(a[1:], b_[1:]) for k, a i
 (HERE / "gates.json").write_text(json.dumps(G, indent=1, ensure_ascii=False))
 (HERE / "measure.json").write_text(json.dumps({"contrast": cont, "pairs": {k: res[k]["pairs"] for k in ("front", "back")}, "phone_pairs": res["phone"]["pairs"]}, indent=1, ensure_ascii=False))
 for k in ["contrast_pass_4_5", "contrast_worst_pixel", "letter_min_font_pt", "phone_min_font_px", "price_max_gap_em", "price_all_same_line_within_1em", "price_phone_ok",
-          "safe_area_min_in", "safe_area_ok", "dom_diff_ok", "spirit_sensory_all_printed", "no_banned_lines", "phone_png", "phone_no_hscroll", "letter_png", "min_disc_center_distance_px", "block_clearances_px", "bleed"]:
+          "safe_area_min_in", "safe_area_ok", "dom_diff_ok", "spirit_sensory_all_printed", "no_banned_lines", "phone_png", "phone_no_hscroll", "letter_png", "min_disc_center_distance_px", "block_clearances_px", "map_dark_share", "map_dark_share_ok", "bleed"]:
     print(k, json.dumps(G[k], ensure_ascii=False))
 if G["contrast_below_4_5"]: print("LOW", G["contrast_below_4_5"][:8])
 if G["price_violations"]: print("PRICE", G["price_violations"][:6])
