@@ -970,3 +970,22 @@ tough scale (best).
 - Response written: handoff/flavor/FLAVOR_LEAD_DEV_RESPONSE.md (claimed vs actual, reuse, conflicts, H1-H10 plan,
   14 Rob decisions, phases A-F with approval boundaries). Open issues PHG-FLV-001..012 added.
 - The flavor engine is NOT populated, connected or complete.
+
+2026-09-28 PHG-026 pre-publish fixes after review round 5 (not applied live)
+- Gates after round 5: spec 80.9, safety 82.4 (both > 80).
+- B1/SF-2: phg-expanded-data source added to the repo (v5 prepared with restaurant_menu_map `.eq("is_current",true)`,
+  v4 rollback copy). NOT deployed. File 2 runbook step 0 makes that deploy a hard precondition: same window as file 2,
+  before step 1 and the preview builds, strictly before cron 7. Release gate: restaurant_menu_map check (3/3 in
+  rehearsal) + informational newest-not-current count (190 live, 407 after Step 2).
+- Edge survey: every deployed function read. Only phg-expanded-data reads menus without is_current; all others go
+  through is_current views, write, or don't read menus (live_defs_round5.md).
+- SF-1: the exact-URL exemption drops the overlap requirement and keeps the partial guard. New phg_menu_exact_url.
+  Rehearsal s13 (4 of 33 prices changed, same URL) -> created.
+- Rollback check q2 lists staging rows superseded after release and candidates marked duplicate. q3 saves the run rows
+  and the review list before the DROP. Roll-forward RF2 (lock_timeout 5s) resets those candidates to retry before the
+  hash reset.
+- Minors: in-flight wording; flip-flop monitor row counts other-source changes only; by-kind churn row;
+  submit_menu search_path public, pg_temp; extraction save lock_timeout 5s; file 1 header.
+- Rehearsed A-G on live, each in a rolled-back DO block under 60 s: all pass. C's first try hit 55P03 on a live lock
+  (nothing kept) and passed on re-run. Read-only check before and after: identical.
+  Results: handoff/reviews/rehearsal/results_prepublish.md.

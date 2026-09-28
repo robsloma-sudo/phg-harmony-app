@@ -463,3 +463,66 @@ Before publishing:
 - fix safety SF-1;
 - fix the spec should-fixes and the minors;
 - re-rehearse.
+
+## Pre-publish fixes (after round 5)
+Nothing was applied live: no apply_migration, no Edge deploy, no cron change. The designer gateway and the design
+files were not touched. Rehearsal: handoff/reviews/rehearsal/results_prepublish.md (blocks A-G all pass).
+
+**B1 / SF-2 (phg-expanded-data).**
+- Source is now in the repo: supabase/functions/phg-expanded-data/index.ts (v5, prepared, NOT deployed) and
+  v4.rollback.index.ts (verbatim copy of live v4).
+- v5 changes one query: restaurant_menu_map selects menus with `.eq("is_current", true)`.
+- File 2's runbook makes the deploy **step 0, a hard precondition**. It happens in the same window as file 2, before
+  step 1, before the preview builds that call restaurant_menu_map go live, and strictly before cron 7 (step 7).
+- If the deploy fails, STOP. The wording "or together with" is gone.
+- Release gate, two new rows:
+  - "restaurant_menu_map (v5 read: current menus only) returns the Step-2 menu for 3 changed venues". Rehearsed:
+    3 of 3 ok, and v4 would differ at all 3.
+  - Informational: venues whose newest menu is not current. 190 live today, 407 after Step 2 in rehearsal.
+
+**Spec should-fix 1 (Edge survey).**
+- I listed and read every deployed function; the table is in live_defs_round5.md, pre-publish section.
+- phg-expanded-data is the only one that reads public.menus without the current-menu filter.
+- phg-menu-context and the RPC callers (phg-capability-router, phg-execute-readonly, phg-conversation) go through
+  views that filter is_current.
+- submit-menu and promote-menus are writers. The rest don't read menus.
+- The step-0 list is phg-expanded-data only.
+
+**Spec should-fix 2 (post-release activity in rollback / roll-forward).**
+- rollback_check query 2 adds two categories:
+  - `staging_superseded_after_release`: reason duplicate_item_set_of_sibling, superseded after step2 ran_at, not in
+    the backup; grouped by page.
+  - `candidate_marked_duplicate`: candidates with duplicate_of_candidate_id.
+- Roll-forward RF2 first puts those candidates back to status 'retry' (retry due now, last_error prefixed), then
+  resets the hashes.
+- Rehearsed with a real extraction save after release (block G lists both categories) and in RF2 (block E).
+
+**SF-1 (item page frozen against price updates).**
+- The exact-URL exemption drops the overlap / size requirement and keeps the partial-recapture guard.
+- URLs are compared with the new phg_menu_exact_url. It trims, decodes &amp;, drops the fragment and the scheme,
+  lower-cases the host, drops www and the default port, and strips trailing slashes of the path. The query is kept
+  exact.
+- s13: same URL, 4 of 33 prices changed -> created. s13b: 12 of 33 -> alternate_partial_recapture.
+  s13c: case / www / :443 / trailing slash / fragment variant -> created. s13d: extra query param -> alternate.
+
+**Minors.**
+- m1: in-flight call wording (a)/(b)/(c). 55P03 and 40P01 are both safe to re-run.
+- m2: RF2 is one transaction with `set local lock_timeout = '5s'`.
+- m3: new rollback_check query 3 saves the run rows and the query-2 list into phg_repair_rollback_saved_20260927
+  (SELECT-only) before the RF3 DROP.
+- m4: the flip-flop row counts only non-growing changes between different sources. Rehearsed: same-source -> 0,
+  other-source -> fails.
+- m5 / spec minor 1: file 1 header rule list rewritten.
+- m6: submit_menu search_path is 'public', 'pg_temp'.
+- Spec minors:
+  - damping condition simplified to `and not c.itemish`;
+  - exact-URL comparison normalised;
+  - phg_save_menu_candidate_extraction has lock_timeout 5s;
+  - new monitor row "current-menu changes since release by kind" (growth / non-growing same source / non-growing
+    other source).
+
+**Rehearsal notes.**
+- Block C's first try stopped in file 1 with 55P03 (another session held a lock for more than 3 s). Nothing was
+  kept, and the re-run passed. That is the documented safe-retry path.
+- Read-only check before and after: identical (cron 7/13 off, 16 on; no PHG-026 objects; function md5s unchanged;
+  menus 12,229 / 6,162 current; phg-expanded-data still v4).
