@@ -65,6 +65,31 @@ const SCHEMA = {
   },
 };
 
+async function readBody(req: Request): Promise<Record<string, any>> {
+  const ct = (req.headers.get("content-type") || "").toLowerCase();
+  let raw = "";
+  try {
+    if (ct.includes("multipart/form-data")) {
+      const fd = await req.formData(); const o: Record<string, any> = {};
+      fd.forEach((v, k) => { o[k] = typeof v === "string" ? v : ""; });
+      return lower(o);
+    }
+    raw = await req.text();
+  } catch { return {}; }
+  const t = raw.trim();
+  if (!t) return {};
+  if (t.startsWith("{")) { try { const j = JSON.parse(t); if (j && typeof j === "object") return lower(j); } catch { /* fall through */ } }
+  if (ct.includes("application/x-www-form-urlencoded") || (/^[\w-]+=/.test(t) && !/\s/.test(t.split("&")[0].split("=")[0]))) {
+    const o: Record<string, any> = {}; new URLSearchParams(t).forEach((v, k) => { o[k] = v; }); return lower(o);
+  }
+  return { text: t }; // plain text body: the whole thing is what they said
+}
+function lower(o: Record<string, any>) {
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(o)) out[String(k).trim().toLowerCase()] = v;
+  return out;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ ok: false, speak: "Send a POST request.", error: "POST required" }, 405);
@@ -86,7 +111,9 @@ Deno.serve(async (req) => {
     return data as any;
   };
 
-  const b = await req.json().catch(() => ({}));
+  /* v5: Shortcuts can send the Request Body as JSON, Form (urlencoded or multipart) or plain
+     text, and people name the field "text", "Text", etc. Read all of them, case-insensitively. */
+  const b: Record<string, any> = await readBody(req);
   const action = String(b.action || "inbox");
 
   // ---- who is calling
@@ -175,7 +202,12 @@ Deno.serve(async (req) => {
   // ---- inbox: one spoken sentence from the Shortcut (or the app)
   if (action !== "inbox") return json({ ok: false, error: "unknown action" }, 400);
   const text = String(b.text || b.input || "").trim().slice(0, 2000);
-  if (!text) return json({ ok: true, route: "answer", speak: "I'm here. Press and hold, then tell me what to log or ask me anything.", url: "" });
+  if (!text) {
+    const fields = Object.keys(b).filter((k) => k !== "key");
+    return json({ ok: true, route: "answer", url: "", speak: fields.length
+      ? `I got your key but no words. In the Shortcut, the Request Body field should be named text, set to Dictated Text. I received ${fields.join(", ")}.`
+      : "I got your key but no words came through. In the Shortcut, set Request Body to a field named text with Dictated Text in it." });
+  }
   if (!oa) {
     const n = await saveNote(text, "note", [], null).catch(() => null);
     return json({ ok: !!n, route: "note", speak: n ? "Logged." : "I couldn't save that.", url: "" });

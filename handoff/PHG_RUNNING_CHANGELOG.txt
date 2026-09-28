@@ -1533,3 +1533,13 @@ Rob: "Okay, deploy."
   2026-09-28T22:39:31Z, commit 9946a81 (took ~6 min to start; a manual upload attempt through the Netlify connector
   got 403 from this container and was not needed).
 - Server pieces were already live: phg-harmony-data v1, phg-harmony-inbox v4, migration harmony_inbox_db.
+
+------------------------------------------------------------------------------
+PHG-20260928-INBOXBODY | USER_PROMPT + FIX | 2026-09-28 (phg-harmony-inbox v5 live)
+Rob: "every time I talk, all Harmony says is, I'm here. Press and hold to log or tell me something. And she just
+repeats that over and over."
+- Logs: Shortcut calls (BackgroundShortcutRunner) authenticated fine (200) with a 37-byte body; that size matches a
+  Form-encoded "text=..." body. v4 only read JSON (req.json()), so the text was empty and it gave the idle reply.
+- v5: readBody() accepts JSON, application/x-www-form-urlencoded, multipart/form-data and plain text; field names
+  are case-insensitive ("text", "Text"). Tested all six shapes locally with Deno. When no words arrive it now says
+  exactly what to fix and which fields it received, instead of the idle line.
