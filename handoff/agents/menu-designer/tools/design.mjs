@@ -111,14 +111,15 @@ function normVenue(t) {
 // Section order. Scorecard §1 criterion 5 example: cocktails → beer → wine → spirits → non-alcoholic. Mocktails sit
 // right after the cocktails, styled like them (zero-proof as a peer: Dandelyan, NoMad; knowledge/03 [4][10]); soft drinks
 // (non-alcoholic) sit last with equal type treatment (both reviewers, round 1, marked it down when it sat between alcoholic lists).
-const SPIRITS_ORDER = ['tequila', 'mezcal', 'whiskey', 'gin', 'vodka', 'rum', 'brandy_cognac', 'liqueurs_amari', 'sake_soju'];
+// Conventional back-bar order, light to dark (panel round 1: vodka, gin, rum, tequila, mezcal, whiskey).
+const SPIRITS_ORDER = ['vodka', 'gin', 'rum', 'tequila', 'mezcal', 'whiskey', 'brandy_cognac', 'liqueurs_amari', 'sake_soju'];
 const WINES = ['wine_sparkling', 'wine_white', 'wine_rose', 'wine_red', 'wine'];
 const ORDER = {
-  default:       ['cocktails', 'mocktails', 'beer', 'cider_seltzer', ...WINES, 'spirits', ...SPIRITS_ORDER, 'non_alcoholic'],
-  brewery:       ['beer', 'cider_seltzer', 'cocktails', 'mocktails', ...WINES, 'spirits', ...SPIRITS_ORDER, 'non_alcoholic'],
-  dive_bar:      ['beer', 'cocktails', 'mocktails', 'cider_seltzer', 'whiskey', 'tequila', 'vodka', 'gin', 'rum', 'mezcal', ...WINES, 'brandy_cognac', 'liqueurs_amari', 'sake_soju', 'non_alcoholic'],
-  wine_bar:      [...WINES, 'cocktails', 'mocktails', 'beer', 'cider_seltzer', 'brandy_cognac', 'liqueurs_amari', 'whiskey', 'gin', 'vodka', 'rum', 'tequila', 'mezcal', 'sake_soju', 'non_alcoholic'],
-  latin_cantina: ['cocktails', 'mocktails', 'tequila', 'mezcal', 'beer', 'cider_seltzer', ...WINES, 'whiskey', 'rum', 'gin', 'vodka', 'brandy_cognac', 'liqueurs_amari', 'sake_soju', 'non_alcoholic'],
+  default:       ['cocktails', 'beer', 'cider_seltzer', ...WINES, 'spirits', ...SPIRITS_ORDER, 'mocktails', 'non_alcoholic'],
+  brewery:       ['beer', 'cider_seltzer', 'cocktails', ...WINES, 'spirits', ...SPIRITS_ORDER, 'mocktails', 'non_alcoholic'],
+  dive_bar:      ['beer', 'cocktails', 'cider_seltzer', 'whiskey', 'tequila', 'vodka', 'gin', 'rum', 'mezcal', ...WINES, 'brandy_cognac', 'liqueurs_amari', 'sake_soju', 'mocktails', 'non_alcoholic'],
+  wine_bar:      [...WINES, 'cocktails', 'beer', 'cider_seltzer', 'brandy_cognac', 'liqueurs_amari', 'whiskey', 'gin', 'vodka', 'rum', 'tequila', 'mezcal', 'sake_soju', 'mocktails', 'non_alcoholic'],
+  latin_cantina: ['cocktails', 'tequila', 'mezcal', 'beer', 'cider_seltzer', ...WINES, 'whiskey', 'rum', 'gin', 'vodka', 'brandy_cognac', 'liqueurs_amari', 'sake_soju', 'mocktails', 'non_alcoholic'],
 };
 ORDER.sports_bar = ORDER.dive_bar; ORDER.fine_dining = ORDER.wine_bar;
 const FOOD = ['food_small', 'food_mains', 'food_sides', 'food_dessert'];
@@ -184,7 +185,9 @@ export function buildDoc(req, look, opts = {}) {
       bySub.get(sub).push(it);
     }
     sec.items = promote(sec.items).map(i => mdcItem(i, accent, true));
-    for (const [sub, arr] of bySub) sec.subs.push({ id: id('sub'), name: sub, items: promote(arr).map(i => mdcItem(i, accent, true)) });
+    // A HOUSE badge under a House/Signature subhead repeats the subhead (panel round 1): drop the badge there.
+    const dropHouse = (sub, node) => { if (/house|signature/i.test(sub)) node.badges = node.badges.filter(b => b !== 'house'); return node; };
+    for (const [sub, arr] of bySub) sec.subs.push({ id: id('sub'), name: sub, items: promote(arr).map(i => dropHouse(sub, mdcItem(i, accent, true))) });
     return sec;
   };
 
@@ -207,6 +210,17 @@ export function buildDoc(req, look, opts = {}) {
       sec.subs.sort((a, b) => (subOrder.indexOf(a.name) + 1 || 50) - (subOrder.indexOf(b.name) + 1 || 50));
       if (sec.subs.some(x => subOrder.includes(x.name))) changes.push('Grouped wine styles into one Wine section with Sparkling / White / Rosé / Red subsections.');
       sections.push(sec);
+      continue;
+    }
+    // One zero-proof program (panel round 1: all 15 reviewers marked down mocktails and soft drinks split across pages):
+    // crafted drinks and softs share one section, as two subsections.
+    if (l === 'mocktails' && lists.includes('non_alcoholic')) continue;
+    if (l === 'non_alcoholic' && lists.includes('mocktails')) {
+      const zp = req.items.filter(i => i.list === 'mocktails' || i.list === 'non_alcoholic');
+      const zs = buildSection(sectionLabel(l, look), zp, i => i.list === 'mocktails' ? 'Crafted' : 'Soft Drinks & Coffee');
+      zs.subs.sort((a, b) => (a.name === 'Crafted' ? 0 : 1) - (b.name === 'Crafted' ? 0 : 1));
+      sections.push(zs);
+      changes.push('Mocktails and soft drinks set together in one zero-proof section (Crafted / Soft Drinks & Coffee).');
       continue;
     }
     const label = sectionLabel(l, look);

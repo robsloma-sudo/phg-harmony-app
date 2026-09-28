@@ -217,3 +217,20 @@ The same applies to pour sizes (draft 10 oz / 16 oz / Pitcher; spirits 1 / 1.5 /
 on every bar menu. Until then, the designer prints the labels once as the list's description line, prints the rows as
 bare values ("9 / 13 / 20"), and keeps the labels in `meta.price_labels`. A `phg.menu_item_prices` pour-size column
 would let costing, POS and the menu share the same pours.
+
+## S14. Header and legend spacing, price separator, badge size (review panel round 1)
+
+All 15 panel reviewers marked down three Menu Studio drawing rules that the designer cannot change from the file:
+
+- **Space around subheads and heading descriptions.** `mdcDraw` advances a fixed 9 px after a subhead and 4 px after a
+  heading description, and adds only 6 px after a subsection's last item. A pour legend ("Glass · Bottle",
+  "1 oz · 1.5 oz · 2.5 oz") therefore touches the first item under it, and a section legend sits 0.55 mm above the next
+  subhead. **Suggested change:** add `page.subGap` (space above a subhead, default 6) and `page.legendGap` (space after a
+  heading description, default 4), both counted in `mdcSectionHeight` so the flow stays exact.
+- **Price separator.** `mdcPriceText` joins prices with `'  /  '` (two spaces each side), which reviewers read as loose.
+  **Suggested change:** a `page.priceSep` style option (`' / '`, `' · '`, thin-space slash), default unchanged.
+- **Badge size.** HOUSE / SEASONAL / NEW badges are drawn at about 7 pt as raised small caps, which low-light reviewers
+  could not read and typographers flagged as off the baseline. **Suggested change:** draw badges at
+  `max(8.5pt, desc size × 0.8)` on the name's baseline.
+- **Section order within the page plan.** The designer can only choose where columns and pages break; sections stay in
+  list order. Letting a short final section (Zero Proof) fill the shorter column on its page would balance two-page menus.

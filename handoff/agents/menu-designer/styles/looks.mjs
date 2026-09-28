@@ -55,7 +55,7 @@ export const MDC_PRESETS = {
 // `roles` says which levels carry the accent so a brand colour lands in the right places.
 export const LOOKS = [
   {
-    k: 'noir', label: 'Speakeasy Noir', base: 'slate', accent: '#c9a45c', accent2: '#c7876a', roles: ['section', 'subtitle'],
+    k: 'noir', label: 'Speakeasy Noir', base: 'slate', accent: '#c9a45c', accent2: '#a39a88', roles: ['section', 'subtitle'],
     note: 'Near-black page, cream ink, antique-gold heads. Low-light legible: generous size, no hairline type.',
     fits: { venue: ['cocktail_lounge', 'nightclub', 'hotel_bar'], tone: ['dark', 'elegant', 'vintage'] },
     d: { page: { bg: '#151412', ink: '#efe6d4', rule: '#3d372e', margin: 0.7, itemGap: 8, secGap: 20, rules: true },
@@ -64,7 +64,7 @@ export const LOOKS = [
       section: { f: 2, s: 15, w: 'normal', sp: 320, c: '#c9a45c', cs: 'upper' },
       sub: { f: 4, s: 9, w: 'normal', sp: 300, c: '#9a907f', cs: 'upper' },
       name: { f: 2, s: 14, w: 'bold', c: '#efe6d4' }, brand: { f: 2, s: 14, i: true, c: '#c9a45c' },
-      desc: { f: 4, s: 11, c: '#b3a994' }, price: { f: 4, s: 13, c: '#efe6d4' } },
+      desc: { f: 4, s: 11, c: '#c4baa4' }, price: { f: 4, s: 13, c: '#c4baa4' } },
   },
   {
     k: 'cantina', label: 'Cantina Sol', base: 'house', accent: '#b5532f', roles: ['title', 'section'],
@@ -173,11 +173,22 @@ export const LOOKS = [
 
 export const LOOK_BY_KEY = Object.fromEntries(LOOKS.map(l => [l.k, l]));
 
+// Letterspacing ceilings in 1/1000 em (Bringhurst 3.2.2; panel round 1: title at 300+ fell apart into letters, caps
+// heads at 300 lost their word spaces). Display lines may open up a little; text-size caps stay in the 50-120 range.
+export const TRACKING_MAX = { title: 150, subtitle: 180, section: 120, sub: 110, name: 60, brand: 60, desc: 40, price: 40 };
+// Prices sit one step under the item name and in the description ink so the name stays primary (panel round 1).
+export function quietPrices(s) {
+  if (s.price.s >= s.name.s) s.price.s = Math.max(s.desc.s, s.name.s - 2);
+  s.price.w = 'normal';
+  return s;
+}
+
 export function styleForLook(look) {
   const s = mdcStyleDefault();
   merge(s, MDC_PRESETS[look.base] || {});
   merge(s, look.d);
-  return s;
+  for (const [k, max] of Object.entries(TRACKING_MAX)) if (s[k] && s[k].sp > max) s[k].sp = max;
+  return quietPrices(s);
 }
 
 export function merge(base, d) {

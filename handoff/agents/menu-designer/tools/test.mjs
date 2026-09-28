@@ -63,7 +63,11 @@ t('pour mismatch asks', () => { const r = parseTranscript('All spirits are poure
 const sbd = design(sb, { venue: { city: 'Denver', state: 'CO' } }).options[0].menu_studio_file.doc;
 t('pour labels printed once, values unchanged', () => { const sp = sbd.sections.find(x => x.name === 'Spirits'); const v = sp.subs.find(b => b.name === 'Vodka'); assert.match(v.desc, /1 oz.*1\.5 oz.*2\.5 oz/); const tito = v.items.find(i => i.name === "Tito's"); assert.deepEqual(tito.prices.map(p => p.value), [7, 10, 16]); assert.deepEqual(tito.meta.price_labels, ['1 oz', '1.5 oz', '2.5 oz']); });
 t('wine: glass/bottle said once for the section', () => { const w = sbd.sections.find(x => x.name === 'Wine'); assert.match(w.desc, /Glass.*Bottle/); assert.deepEqual(w.subs.map(b => b.name), ['Sparkling', 'White', 'Rosé', 'Red']); });
-t('mocktails follow cocktails; soft drinks last', () => { const n = sbd.sections.filter(x => !x.designer_role).map(x => x.name); assert.equal(n[1], 'Mocktails'); assert.equal(n[n.length - 1], 'Zero Proof'); });
+t('zero-proof program in one section, last (Crafted then softs)', () => { const n = sbd.sections.filter(x => !x.designer_role).map(x => x.name); assert.ok(!n.includes('Mocktails')); assert.equal(n[n.length - 1], 'Zero Proof'); const z = sbd.sections.find(x => x.name === 'Zero Proof'); assert.deepEqual(z.subs.map(b => b.name), ['Crafted', 'Soft Drinks & Coffee']); assert.ok(z.subs[0].items.some(i => i.name === 'Nojito')); });
+t('spirits in back-bar order, whiskey last', () => { const sp = sbd.sections.find(x => x.name === 'Spirits'); const k = sp.subs.map(b => b.name.toLowerCase()); assert.ok(k.indexOf('vodka') < k.indexOf('tequila') && k.indexOf('whiskey') === k.length - 1, k.join(',')); });
+t('no HOUSE badge under a House subhead', () => { const c = sbd.sections.find(x => x.name === 'Cocktails'); const lp = c.subs.find(b => /house/i.test(b.name)).items.find(i => i.name === 'Luna Paloma'); assert.ok(!lp.badges.includes('house')); });
+import { LOOKS, styleForLook, TRACKING_MAX } from '../styles/looks.mjs';
+t('looks: tracking within ceilings, prices under names', () => { for (const l of LOOKS) { const s = styleForLook(l); for (const [k, m] of Object.entries(TRACKING_MAX)) assert.ok(s[k].sp <= m, `${l.k}.${k}`); assert.ok(s.price.s < s.name.s || s.price.s <= s.desc.s + 1, l.k); } });
 
 // designer invariants
 const res = design(casa, { venue: { city: 'Denver', state: 'CO' } });
