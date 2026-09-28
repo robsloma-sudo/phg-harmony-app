@@ -33,13 +33,22 @@ window.addEventListener('error', function(e){
     b = document.createElement('div'); b.id = 'jsErr';
     if (document.body) document.body.appendChild(b);
   }
+  (window.PHG_ERRORS=window.PHG_ERRORS||[]).push({t:Date.now(),msg:'JS: '+msg,at:at});
+  /* 18.49.16: the red banner is a developer tool - shown only with ?diag=1 /
+     phgDiagnostics(true). Guests and staff never see it; errors stay in PHG_ERRORS. */
+  if (!phgDiagOn()){ if (b) b.remove(); return; }
   if (b) b.textContent = 'JS: ' + msg + (at ? '  [' + at + ']' : '');
 });
+function phgDiagOn(){try{return /[?&]diag=1/.test(location.search)||localStorage.getItem('phg_diag')==='1';}catch(e){return false;}}
 window.addEventListener('unhandledrejection', function(e){
   var b = document.getElementById('jsErr');
   if (!b){ b = document.createElement('div'); b.id = 'jsErr';
            if (document.body) document.body.appendChild(b); }
-  if (b) b.textContent = 'PROMISE: ' + (e && e.reason ? String(e.reason).slice(0,160) : 'rejected');
+  var _r = e && e.reason ? String(e.reason).slice(0,160) : 'rejected';
+  (window.PHG_ERRORS=window.PHG_ERRORS||[]).push({t:Date.now(),msg:'PROMISE: '+_r});
+  if (window.console) console.warn('PHG unhandled rejection:', e && e.reason);
+  if (!phgDiagOn()){ if (b) b.remove(); return; }
+  if (b) b.textContent = 'PROMISE: ' + _r;
 });
 </script>
 <script>
@@ -6282,7 +6291,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.15 HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.16 SIMPLE HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -21950,9 +21959,14 @@ function phgInteractMicAttach(stream){
   }
   var b=document.body;
   if(b){
-    b.classList.toggle('phg-user-listening',vmode==='listening');
-    b.classList.toggle('phg-user-review',vmode==='processing'||vmode==='review');
-    b.classList.toggle('phg-harmony-speaking',vmode==='speaking');
+    /* 18.49.16: toggle() rewrites body's class attribute every frame even when
+       nothing changed, invalidating style for the whole page 60x a second. */
+    if(I._vm!==vmode){
+      I._vm=vmode;
+      b.classList.toggle('phg-user-listening',vmode==='listening');
+      b.classList.toggle('phg-user-review',vmode==='processing'||vmode==='review');
+      b.classList.toggle('phg-harmony-speaking',vmode==='speaking');
+    }
   }
 })();
 
@@ -27445,11 +27459,18 @@ function harmonyAISpeakOpenAI(text,opts){
   });
 }
 PHG_OPENAI_HARMONY_SPEAK=harmonyAISpeakOpenAI;
+/* 18.49.16: the on-device Kokoro voice threw "undefined is not a function"
+   inside its library on iPhone when a second reply started while the first was
+   still generating, and it is the heaviest thing the app can run on a phone.
+   iOS/iPadOS now always use the server voice; elsewhere a local failure falls
+   back to the server voice for the rest of the session instead of erroring. */
+var PHG_LOCAL_VOICE_BROKEN=false;
+function phgIsIOS(){var u=navigator.userAgent||'';return /iPad|iPhone|iPod/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1);}
 async function harmonyAISpeak(text,opts){
   opts=opts||{};
-  if(PHG_LOCAL_VOICE_PREF.engine==='local'){
-    if(!window.PHG_LOCAL_VOICE)throw new Error('PHG Local AI Voice is still loading.');
-    return window.PHG_LOCAL_VOICE.speak(text,{voice:PHG_LOCAL_VOICE_PREF.voice,device:PHG_LOCAL_VOICE_PREF.device,speed:1});
+  if(PHG_LOCAL_VOICE_PREF.engine==='local'&&!PHG_LOCAL_VOICE_BROKEN&&!phgIsIOS()&&window.PHG_LOCAL_VOICE){
+    try{return await window.PHG_LOCAL_VOICE.speak(text,{voice:PHG_LOCAL_VOICE_PREF.voice,device:PHG_LOCAL_VOICE_PREF.device,speed:1});}
+    catch(e){PHG_LOCAL_VOICE_BROKEN=true;if(window.console)console.warn('Local voice failed; using server voice',e);}
   }
   if(PHG_LOCAL_VOICE_PREF.engine==='device'){vSayDevice(text,true);return null;}
   return PHG_OPENAI_HARMONY_SPEAK(text,opts);
@@ -40090,6 +40111,129 @@ document.addEventListener('keydown',function(e){
   if(e.key==='ArrowRight')next();else if(e.key==='ArrowLeft')prev();
   else if(e.key==='ArrowDown')goPage(PMS.page+1);else if(e.key==='ArrowUp')goPage(PMS.page-1);
 });
+})();
+</script>
+
+<style id="phgViewSimpleCSS">
+/* 18.49.16 SIMPLE HARMONY VIEW: one top bar, one caption, one dock.
+   The legacy rail, floating chat bubble, close pill, collapsed chat panel and
+   separate composer are hidden inside the view; "Full chat" brings the panel
+   back for workflows that need its buttons. */
+body.phg-view-open:not(.hvx-chat) #agentPanel,
+body.phg-view-open #harmonyComposer,
+body.phg-view-open #harmonyTransientReply,
+body.phg-view-open #hvRail,
+body.phg-view-open #phgViewHarmony,
+body.phg-view-open #phgViewX,
+body.phg-view-open .phgPrimaryModeToggle,
+body.phg-view-open #jsErr{display:none!important}
+#hvxTop{position:absolute;left:0;right:0;top:0;z-index:5;display:flex;align-items:center;gap:8px;
+  padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 8px;font-family:'Inter',system-ui,sans-serif}
+#hvxTop .hvxBrand{flex:1;min-width:0;font:700 13px/1.1 'JetBrains Mono',monospace;letter-spacing:.2em;color:#7dd3fc;text-transform:uppercase}
+#hvxTop button{height:40px;min-width:40px;padding:0 14px;border-radius:20px;border:1px solid rgba(148,163,184,.3);background:rgba(10,14,24,.92);color:#e8edf5;font:600 13px 'Inter',system-ui,sans-serif;cursor:pointer}
+#hvxTop #hvxStudio{border-color:rgba(125,211,252,.6);color:#7dd3fc}
+#hvxTop #hvxClose,#hvxTop #hvxMore{padding:0;width:40px;font-size:20px;line-height:1}
+#hvxMenu{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:6;min-width:200px;padding:6px;border-radius:14px;
+  background:#0d1220;border:1px solid rgba(148,163,184,.25);box-shadow:0 12px 40px rgba(0,0,0,.5);display:flex;flex-direction:column}
+#hvxMenu[hidden]{display:none!important}
+#hvxMenu button{text-align:left!important;justify-content:flex-start;padding:12px 14px;border:0;border-radius:10px;background:none;color:#e8edf5;font:500 15px 'Inter',system-ui,sans-serif;cursor:pointer}
+#hvxMenu button:hover{background:#172033}
+#hvxMenu hr{border:0;border-top:1px solid rgba(148,163,184,.18);margin:4px 6px}
+#hvxCaption{position:absolute;left:14px;right:14px;z-index:4;bottom:calc(var(--hvx-dock,0px) + env(safe-area-inset-bottom,0px) + 84px);
+  max-height:32vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;font-family:'Inter',system-ui,sans-serif;pointer-events:auto}
+#hvxCaption:empty{display:none}
+#hvxCaption .you{align-self:flex-end;max-width:85%;padding:8px 12px;border-radius:14px 14px 4px 14px;background:rgba(30,41,59,.92);color:#cbd5e1;font-size:14px;line-height:1.35}
+#hvxCaption .her{align-self:flex-start;max-width:92%;padding:10px 14px;border-radius:14px 14px 14px 4px;background:rgba(8,47,73,.94);color:#f1f5f9;font-size:15.5px;line-height:1.45;white-space:pre-wrap}
+#hvxCaption .her b{display:block;font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.2em;color:#7dd3fc;margin-bottom:5px}
+#hvxDock{position:absolute;left:0;right:0;z-index:5;bottom:calc(var(--hvx-dock,0px));display:flex;align-items:center;gap:8px;
+  padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 12px);background:linear-gradient(180deg,rgba(5,7,13,0),rgba(5,7,13,.96) 35%)}
+#hvxDock input{flex:1;min-width:0;height:48px;border-radius:24px;border:1px solid rgba(148,163,184,.3);background:#0b0f19;color:#e8edf5;padding:0 18px;font-size:16px}
+#hvxDock .hvxSend{height:48px;width:48px;border-radius:50%;border:0;background:#1e293b;color:#e8edf5;font-size:20px;cursor:pointer}
+#hvxDock #hvTalk{position:static;transform:none;height:48px;padding:0 18px;box-shadow:none;flex:0 0 auto}
+body.hvx-chat #hvxDock,body.hvx-chat #hvxCaption{display:none}
+</style>
+<script id="phgViewSimpleV1">
+(function(){
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+function plain(t){var d=document.createElement('div');d.innerHTML=String(t==null?'':t);return (d.textContent||'').trim();}
+function build(){
+  var view=document.getElementById('phgView');if(!view||document.getElementById('hvxTop'))return;
+  var oldTalk=document.getElementById('hvTalk');if(oldTalk)oldTalk.remove();
+  var top=document.createElement('div');top.id='hvxTop';
+  top.innerHTML='<div class="hvxBrand">Harmony</div><button id="hvxStudio">Menu Studio</button><button id="hvxMore" aria-label="More options" aria-expanded="false">⋯</button><button id="hvxClose" aria-label="Close Harmony view">×</button>';
+  var menu=document.createElement('div');menu.id='hvxMenu';menu.hidden=true;
+  menu.innerHTML='<button data-k="brief">Brief</button><button data-k="recent">Recent work</button><button data-k="tools">Tools</button><hr><button data-k="chat">Full chat history</button><button data-k="voice">Voice settings</button><hr><button data-k="signout">Sign out</button>';
+  var cap=document.createElement('div');cap.id='hvxCaption';cap.setAttribute('aria-live','polite');
+  var dock=document.createElement('form');dock.id='hvxDock';dock.setAttribute('autocomplete','off');
+  dock.innerHTML='<input id="hvxIn" enterkeyhint="send" placeholder="Ask Harmony…" aria-label="Message Harmony">'
+    +'<button type="button" id="hvTalk" class="pmsTalk off" aria-label="Talk to Harmony hands-free"><i></i><span>Talk</span></button>'
+    +'<button type="submit" class="hvxSend" aria-label="Send">↑</button>';
+  [top,menu,cap,dock].forEach(function(el){
+    ['pointerdown','pointermove','touchstart','touchmove','wheel'].forEach(function(ev){el.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
+    view.appendChild(el);
+  });
+  top.querySelector('#hvxClose').onclick=function(e){e.stopPropagation();if(typeof window.phgViewportClose==='function')window.phgViewportClose();};
+  top.querySelector('#hvxStudio').onclick=function(e){e.stopPropagation();if(window.PMS)PMS.hear('make a menu');};
+  var more=top.querySelector('#hvxMore');
+  more.onclick=function(e){e.stopPropagation();menu.hidden=!menu.hidden;more.setAttribute('aria-expanded',String(!menu.hidden));};
+  menu.onclick=function(e){
+    var k=e.target&&e.target.getAttribute&&e.target.getAttribute('data-k');if(!k)return;
+    menu.hidden=true;more.setAttribute('aria-expanded','false');
+    if(k==='brief'||k==='recent'||k==='tools'){if(typeof hviewMobileSelect==='function')hviewMobileSelect(k);}
+    else if(k==='chat'){document.body.classList.add('hvx-chat');if(typeof agentOpen==='function')agentOpen(true);if(typeof harmonyExpandedModeSet==='function')try{harmonyExpandedModeSet('expanded');}catch(_){}}
+    else if(k==='voice'){if(typeof window.phgViewportClose==='function')window.phgViewportClose();if(typeof aiVoiceOpenSettings==='function')aiVoiceOpenSettings();}
+    else if(k==='signout'){if(typeof phgAuthSignOut==='function')phgAuthSignOut();}
+  };
+  document.addEventListener('pointerdown',function(e){if(!menu.hidden&&!menu.contains(e.target)&&e.target!==more){menu.hidden=true;more.setAttribute('aria-expanded','false');}},true);
+  dock.querySelector('#hvTalk').onclick=function(e){e.stopPropagation();if(window.PMS)PMS.toggleTalk();};
+  dock.onsubmit=function(e){
+    e.preventDefault();var i=dock.querySelector('#hvxIn'),q=i.value.trim();if(!q)return;i.value='';i.blur();
+    if(window.PMS)PMS.hear(q);else if(typeof harmonyAsk==='function')harmonyAsk(q);
+  };
+  keyboardSync();caption();
+}
+/* Lift the dock above the iOS keyboard. */
+function keyboardSync(){
+  var vv=window.visualViewport,v=document.getElementById('phgView');if(!v)return;
+  var lift=vv?Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop)):0;
+  var cur=v.style.getPropertyValue('--hvx-dock');
+  if(cur!==lift+'px')v.style.setProperty('--hvx-dock',lift+'px');
+}
+if(window.visualViewport){visualViewport.addEventListener('resize',keyboardSync);visualViewport.addEventListener('scroll',keyboardSync);}
+/* The caption shows the latest exchange - what you said, and her answer. */
+var lastKey='';
+function caption(){
+  var cap=document.getElementById('hvxCaption');if(!cap||typeof AGENT==='undefined'||!AGENT.chat)return;
+  var a=AGENT.chat,her=null,you=null;
+  for(var i=a.length-1;i>=0;i--){var m=a[i];if(!m)continue;if(!her&&m.who==='agent'){her=m;continue;}if(her&&m.who==='you'){you=m;break;}if(!her&&m.who==='you'&&!you){you=m;}}
+  var key=(you?you.text:'')+'|'+(her?her.text:'')+'|'+a.length;if(key===lastKey)return;lastKey=key;
+  var h='';
+  if(you)h+='<div class="you">'+esc(plain(you.text))+'</div>';
+  if(her&&(!you||a.indexOf(her)>a.indexOf(you)))h+='<div class="her"><b>HARMONY</b>'+esc(plain(her.text))+'</div>';
+  cap.innerHTML=h;cap.scrollTop=cap.scrollHeight;
+}
+if(typeof agentDraw==='function'){
+  var _draw=agentDraw;
+  agentDraw=function(){
+    var r=_draw.apply(this,arguments);
+    if(document.body.classList.contains('phg-view-open')){
+      if(document.body.classList.contains('hvx-chat')&&typeof AGENT!=='undefined'&&!AGENT.open)document.body.classList.remove('hvx-chat');
+      caption();
+    }
+    return r;
+  };
+  window.agentDraw=agentDraw;
+}
+if(typeof phgViewport==='function'){
+  var _vp=phgViewport;
+  phgViewport=function(){var r=_vp.apply(this,arguments);setTimeout(build,0);return r;};
+  window.phgViewport=phgViewport;
+}
+/* leaving the view always drops the full-chat mode */
+/* only write when something actually changes: classList.remove() rewrites the
+   attribute even when the class is absent, which re-fires this observer */
+new MutationObserver(function(){var c=document.body.classList;if(!c.contains('phg-view-open')&&c.contains('hvx-chat'))c.remove('hvx-chat');})
+  .observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
 </script>
 

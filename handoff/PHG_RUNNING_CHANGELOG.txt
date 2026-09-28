@@ -1197,3 +1197,25 @@ Rob: "deploy."
 - Pushed main 861813c = index.html 18.49.15 + netlify.toml (adds /workers/* 404) from branch 8c29827.
   Netlify site prismatic-rugelach-777e48 builds main. Previous production: main ee278f2 (18.49.7),
   deploy 6ab977c8. Rollback: redeploy 6ab977c8 in Netlify, or push ee278f2's index.html to main.
+
+------------------------------------------------------------------------------
+PHG-20260928-HVX | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.16)
+Rob (screenshot "PROMISE: TypeError: undefined is not a function (near '...R of T...')" after using Talk more
+than once): "clean up that whole page ... clean up the chat box option ... simplify things so that it's not
+as laggy and not as many errors."
+- Cause: no for-of loops exist in PHG code; the error is inside the on-device Kokoro voice library
+  (Local AI engine) - Safari's wording for iterating a non-iterable - when a second reply starts while the
+  first is still generating. Fix: iOS/iPadOS never use the on-device voice (server voice instead); on other
+  devices a local-voice failure falls back to the server voice for the session.
+- Red JS/PROMISE banners are now developer-only (?diag=1 or phgDiagnostics(true)); every error is still
+  recorded in window.PHG_ERRORS and the console.
+- SIMPLE HARMONY VIEW (phgViewSimpleV1): top bar = Harmony · Menu Studio · More (⋯) · Close; her latest
+  answer + your line show as a caption above one bottom dock (text box · Talk · Send). Hidden inside the
+  view: legacy rail, floating chat bubble, close pill, collapsed chat panel (which hid her answers),
+  separate composer + second mic, Harmony/Admin toggle. More menu: Brief, Recent work, Tools, Full chat
+  history (brings the old panel back for workflows with buttons), Voice settings, Sign out.
+- Found + fixed while testing: classList.remove()/toggle() rewrite the class attribute even when nothing
+  changes. The new observer would have looped forever (caught in test, never shipped); the existing
+  interaction frame rewrote body's classes every frame - now only on state change.
+- Tested headless 390x844: caption shows the exchange, More menu, full chat opens/closes, Menu Studio opens,
+  Close works, zero page errors, no banner. Idle fps unchanged vs 18.49.15 (42.5 vs 43.2).
