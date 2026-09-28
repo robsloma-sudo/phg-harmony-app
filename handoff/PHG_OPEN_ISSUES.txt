@@ -265,3 +265,7 @@ Action so far: cron 7 (promotion) and 13 (extraction) paused ~15:57Z. Workflow w
   fix: supersede per source not per account; skip duplicate/subset item sets; upstream URL/fingerprint
   filter; reversible repair restoring good menus.
 Next: apply fix + repair (with backup table), verify, then re-enable 13 then 7.
+
+PHG-036e (P1, needs Rob) Designer DB access is enforced by the gateway only when the agent uses it; the agent's
+  execute_sql connector runs as the main DB user. Create a LOGIN role that is only a member of phg_menu_designer and
+  give the designer a connector with those credentials; then remove execute_sql from the designer's tools.

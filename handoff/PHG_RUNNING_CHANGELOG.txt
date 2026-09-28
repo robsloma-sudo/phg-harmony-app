@@ -889,3 +889,16 @@ related, if they're being the menu designer."
 - Rob asked what "real library venue" means; offered 8 fully-described library drinks menus (Coppertop Tavern,
   Double Chicken Please, Cantina Taqueria & Tequila Bar, Ainslie ...) as a demo alternative to the sample Bar menu.
 - Spec reviewer round 1 (on the pre-fix version): 62.5. Remaining items being fixed before round 2.
+
+2026-09-28 PHG-036d SECURITY FIX (applied live): designer gateway role escape closed
+- Found by the PHG-026 round-2 spec reviewer; confirmed live: a gateway query could run set_config('role','postgres')
+  and then read as postgres through query_to_xml (read escalation; writes were still blocked by the read-only txn).
+- Fix (migration 20260928050000_phg_designer_gateway_definer): the query now runs in phg_designer.run(), a SECURITY
+  DEFINER function owned by phg_menu_designer; Postgres refuses any role change there. Rehearsed rolled-back, then
+  applied, then re-probed live: escape / direct set role / vault / internal_secrets / token hash / writes all refused;
+  ingredient and recipe reads still work. Live membership grant and RLS read policies are now in the file.
+- Still open (PHG-036e): the designer agent's execute_sql tool connects as the main DB user, so "gateway only" is by
+  instruction. Real fix: a dedicated LOGIN role (member of phg_menu_designer only) and its own connector. Needs Rob.
+- PHG-026 round 2: spec reviewer 76.7 (average of 2 rounds 69.6, gate 80). Blockers being fixed: function rollback vs
+  unique index + revokes, verification script post-cron false-fails, rehearsal gaps (steps 3-4, staging rollback,
+  promote batch, extraction save, verification SQL).
