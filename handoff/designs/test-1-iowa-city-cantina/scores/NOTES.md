@@ -103,3 +103,19 @@ Combined 72.399 (critic 73.6, content 74.0, accuracy 69.6). Not above round 15 (
 - The El Barril foot reads as filler.
 - 13 of the 15 reviews were re-run after a usage-limit stop (06:00 UTC reset).
 Paused after round 16: Rob has loaded the phg_design knowledge base (938 records) and new reference concepts. The loop resumes once the designer and critics have been updated from it.
+
+## Round 17 (new editorial direction "Sun Behind the Page", updated KB-based scorecard)
+Combined 74.087: critic 74.0 (average of 1-7, 10, 15, 16), content 77.8, accuracy 70.5. NEW BEST (was 72.597).
+All hard gates PASS on all 15 reviews.
+Consensus fixes for round 18:
+- (a) Replace the Bistro-derived structure with a concept only this venue could own: agave country meets the Iowa prairie at dusk, carried through the section structure.
+- (b) Remove both rail taglines ("GOOD DRINKS GOOD COMPANY" copies ref-01).
+- (c) Drop the no-name-echo rule and print the draft's short phrases ("toasty amber lager", "dry sparkling cider"). Spirits get no description rather than "pour".
+- (d) Restore "bright and citrus-forward" on the Margarita.
+- (e) Split the header and item-name hierarchy.
+- (f) Agave spirits prominent; a small set of Spanish subheads back.
+- (g) Equal lower columns on one baseline grid.
+- (h) Phone: never start a line with a separator, a shorter hero, and a closing art band.
+- (i) Give Cider its own header again.
+- (j) Machine-readable meta.missing per item.
+- (k) Prices in a palette colour with stronger leaders.
