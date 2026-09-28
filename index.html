@@ -7,6 +7,15 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Perfect Harmony Group</title>
+<!-- 18.49.24 home-screen app: Safari > Share > Add to Home Screen opens straight into Harmony -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#05070d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Harmony">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/icons/harmony-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/harmony-192.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script>
 /* SAY WHAT THE ERROR WAS.
@@ -6291,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.23 TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.27 EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -39404,8 +39413,10 @@ window.phgSay = function(text, opts){
 #pmsStage .pmsAsk{display:flex;gap:8px;max-width:640px;width:100%;margin:0 auto}
 #pmsStage .pmsAsk input{flex:1;min-width:0;height:42px;border-radius:21px;border:1px solid rgba(148,163,184,.28);background:#0b0f19;color:#e8edf5;padding:0 16px;font-size:16px}
 #pmsStage .pmsAsk button{height:42px;padding:0 16px;border-radius:21px;border:0;background:#1e293b;color:#e8edf5;font-weight:600}
-body.pms-painting #pmsStage .pmsScaler{animation:pmsPulse 1.6s ease-in-out infinite}
+body.pms-painting #pmsStage .pmsScaler,body.pms-drafting #pmsStage .pmsScaler{animation:pmsPulse 1.6s ease-in-out infinite}
 @keyframes pmsPulse{50%{opacity:.82}}
+#pmsStage .pmsIt.pmsNew{animation:pmsNewGlow 3.2s ease-out 1;border-radius:4px;outline:2px solid transparent;outline-offset:6px}
+@keyframes pmsNewGlow{0%,35%{outline-color:rgba(255,196,92,.95);background:rgba(255,214,140,.16)}100%{outline-color:rgba(255,196,92,0);background:transparent}}
 /* ---- MENU STUDIO INSIDE THE HARMONY VIEW (18.49.22) -----------------------
    The stage becomes a transparent layer of the view: the page sits where the
    field was (dimmed behind it), the view's own +, Speak and gear stay, her
@@ -39691,7 +39702,7 @@ function artLayer(d,p,key,cls){
 
 /* ---------- rendering ------------------------------------------------------ */
 function itemHTML(it,dense){
-  var h='<div class="pmsIt"><div class="pmsItTop"><span class="pmsN">'+esc(it.n)+'</span>'+(it.p?'<span class="pmsP">'+esc(it.p)+'</span>':'')+'</div>';
+  var h='<div class="pmsIt'+(PMS.changed&&PMS.changed[it.n]?' pmsNew':'')+'"><div class="pmsItTop"><span class="pmsN">'+esc(it.n)+'</span>'+(it.p?'<span class="pmsP">'+esc(it.p)+'</span>':'')+'</div>';
   if(it.d&&!dense)h+='<div class="pmsD">'+esc(it.d)+'</div>';
   if(it.i)h+='<div class="pmsI">'+esc(it.i)+'</div>';
   if(it.g&&!dense)h+='<div class="pmsG">'+esc(it.g)+'</div>';
@@ -39715,7 +39726,7 @@ function coverHTML(d,p,c){
     +artLayer(d,p,key,'cov')
     +'<div class="pmsCovText"><div class="pmsKicker">'+esc(head||'Drinks')+'</div><h1>'+esc(title)+'</h1>'+(sub?'<div class="pmsSub">'+esc(sub)+'</div>':'')+'</div>'
     +(d.id==='solstice'?'<div class="pmsSun"></div>':'')
-    +(c.sample?'<div class="pmsSample">SAMPLE CONTENT</div>':'')
+    +(c.sample?'<div class="pmsSample">SAMPLE CONTENT</div>':c.draft?'<div class="pmsSample">DRAFT · HARMONY</div>':'')
     +'</div>';
 }
 function pageHTML(d,p,c,pg,idx){
@@ -39833,6 +39844,12 @@ function say(text){
   }
 }
 
+/* While you are mid-sentence in talk mode, hold her reply until you stop, so
+   she never talks over you (or into the microphone). */
+function talkSay(text){
+  if(PMS.talk&&typeof T!=='undefined'&&T.state==='listening'&&T.heard>250){T.held=(T.held?T.held+' ':'')+text;return;}
+  say(text);
+}
 /* ---------- commands ------------------------------------------------------- */
 var MENU_INTENT=/\b(make|build|create|design|generate|start|draft|mock ?up)\b[^.]*\bmenus?\b|\bmenu (studio|designer|design)\b|\b(show|open|see|pull up|bring up)\b[^.]*\b(menus?|menu designs?)\b[^.]*\b(working on|you('| a)re (making|building|designing|doing)|studio|designs?)\b/i;
 function stageCommand(q){
@@ -39846,21 +39863,28 @@ function stageCommand(q){
     matchColors(refIndex(s));return 'Matched the colours to your photo.';}
   if(/\buse (my|the|this|that) (photo|picture|image)\b|\b(photo|picture) (as|for|on) the\b/.test(s)){
     if(!PMS.refs.length)return 'Add a photo first with the Photo button next to the text box.';
-    var ri=refIndex(s),pages=/\b(page|pages|inside|menu pages)\b/.test(s)&&!/\b(cover|splash)\b/.test(s);
-    useRef(ri,pages?'page':'cover');return 'Using your photo '+(pages?'on the menu pages':'as the splash page art')+'.';}
-  if((m=s.match(/\b(?:title|name|call it|rename it)\b(?: (?:it|to|as|should be|is))* ["“]?(.+?)["”]?$/))&&m[1]&&!/^(bigger|smaller)/.test(m[1])){PMS.ov.title=tidy(m[1]);render();return 'Retitled it '+PMS.ov.title+'.';}
+    var ri=refIndex(s),onPages=/\b(page|pages|inside|menu pages)\b/.test(s)&&!/\b(cover|splash)\b/.test(s);
+    useRef(ri,onPages?'page':'cover');return 'Using your photo '+(onPages?'on the menu pages':'as the splash page art')+'.';}
+  if(/^(undo|undo (that|it|the last (change|edit))|revert( that)?|put it back|never ?mind|scratch that|take that back)$/.test(s)){
+    if(!PMS.hist||!PMS.hist.length)return 'There is no menu change to undo.';
+    PMS.content=PMS.hist.pop();PMS.changed=null;PMS.page=Math.min(PMS.page,pages().length-1);render();return 'Undone. Back to the last version.';}
+  /* 18.49.27: anything about the drinks themselves is a content edit, even if it
+     contains a design word ("add a dark rum drink", "no, make the paloma 14") */
+  if(!/\b(splash|cover|front page|title|subtitle|tagline|paint)\b/.test(s)&&contentish(s))return false;
+  if((m=s.match(/\b(?:title|name it|menu name|name the menu|call it|rename it|rename the menu)\b(?: (?:it|to|as|should be|is))* ["“]?(.+?)["”]?$/))&&m[1]&&!/^(bigger|smaller)/.test(m[1])){PMS.ov.title=tidy(m[1]);render();return 'Retitled it '+PMS.ov.title+'.';}
   if((m=s.match(/\b(?:subtitle|tagline|second line)\b(?: (?:to|as|should be|is))* ["“]?(.+?)["”]?$/))&&m[1]){PMS.ov.sub=tidy(m[1]);render();return 'Subtitle updated.';}
   if(/\b(splash|cover|front page|first page)\b/.test(s)){
     if((m=s.match(/\b(?:to say|to read|say|says|read|reads|headline|to)\b ["“]?(.+?)["”]?$/))&&!/\b(new|different|another)\b/.test(m[1])){PMS.ov.coverLine=tidy(m[1]);PMS.page=0;render();return 'The splash page now reads '+PMS.ov.coverLine+'.';}
     if(/\b(new|different|another|change|redo|next)\b/.test(s)){PMS.variant++;PMS.page=0;render();return 'Here is a different splash page.'+(anyArt()?'':' Say paint it and I will paint real artwork for it.');}
     PMS.page=0;render();return 'Here is the splash page.';
   }
-  if(/\b(paint|illustrat|artwork|art\b|image|picture)/.test(s)){
+  if(/\b(paint|illustrat|artwork)/.test(s)){
     m=s.match(/\b(?:of|with|showing)\b (.+)$/);if(m)PMS.ov.subject=tidy(m[1]);
     paint();return m?'Painting '+PMS.ov.subject+'. This takes about half a minute.':'Painting the artwork for this design. This takes about half a minute.';
   }
-  if(/^(next|another|next one|next design|show me another|different|something else|try another|nope|no)\b|\bnext (design|one|look|style)\b|\b(show|try) (me )?(another|something different)\b/.test(s)){next();d=current();return d.name+(PMS.variant?' variation '+(PMS.variant+1):'')+'. What do you think?';}
-  if(/^(back|previous|go back|last one|the one before)\b|\b(previous|last) (design|one)\b/.test(s)){prev();return 'Back to '+current().name+'.';}
+  if(/\b(new|different|another|fresh|whole new|other)\s+(menu|drink menu|cocktail menu|set of drinks|lineup|list of drinks|drinks)\b|\b(start over|redo the menu|rewrite (it|the menu))\b/.test(s)){draftMenu(q,true);return null;}
+  if(/^(next|another|next one|next design|show me another|different|something else|try another|nope|no)$|^(next|nope|no)[,.!]? (design|look|style|one|please)\b|^(nope|nah|no)[,.!]? (i )?(do ?n[o']?t|don'?t) (like|love) (it|that|this)$|\bnext (design|one|look|style)\b|\b(show|try) (me )?(another|something different)\b/.test(s)){next();d=current();return d.name+(PMS.variant?' variation '+(PMS.variant+1):'')+'. What do you think?';}
+  if(/^(back|previous|go back|last one|the one before)$|\b(previous|last) (design|one)\b/.test(s)){prev();return 'Back to '+current().name+'.';}
   if(/\bnext page\b|\bturn the page\b/.test(s)){goPage(PMS.page+1);return 'Page '+PMS.page+'.';}
   if(/\b(previous|last) page\b/.test(s)){goPage(PMS.page-1);return PMS.page?'Page '+PMS.page+'.':'The cover.';}
   if((m=s.match(/\bpage (\d+|one|two|three|four)\b/))){var nn={one:1,two:2,three:3,four:4}[m[1]]||+m[1];goPage(nn);return 'Page '+PMS.page+'.';}
@@ -39881,8 +39905,25 @@ function stageCommand(q){
   if(/\b(save|keep|love|like) (this|it|that)\b|\bsave (the )?design\b/.test(s)){saveCurrent();return 'Saved '+current().name+'. You have '+PMS.saved.length+' saved.';}
   if(/\b(use|load) (my|the) (menu|current menu|studio menu)\b/.test(s)){PMS.content=loadContent();PMS.page=0;render();return PMS.content.sample?'There is no menu open in Menu Studio yet, so I am still using the sample cantina menu.':'Loaded '+PMS.content.title+' from Menu Studio.';}
   if((m=s.match(/\b(?:menu )?for (?:an? |the )?(.+)$/))&&MENU_INTENT.test(s)){PMS.ov.title=PMS.ov.title||null;PMS.ov.subject=tidy(m[1]);}
-  if(MENU_INTENT.test(s)){startDesigns();return null;}
+  if(MENU_INTENT.test(s)){startDesigns(q);return null;}
   return false;
+}
+/* content vs design: verbs that change dishes, prices, or a named item on the menu */
+var DESIGN_WORDS=/^(noche|night|light|dark|darker|lighter|garden|swiss|solstice|letterpress|cover|splash|title|page|pages|photo|design|style|color|colour|accent|bigger|smaller|serif|modern|classic|bold)$/;
+function itemWords(){
+  var out=[];
+  ((PMS.content&&PMS.content.sections)||[]).forEach(function(sec){(sec.items||[]).forEach(function(it){
+    var n=String(it.n||'').toLowerCase().replace(/[^a-z0-9' ]/g,' ').replace(/\s+/g,' ').trim();if(!n)return;out.push(n);
+    n.split(' ').forEach(function(w){if(w.length>=5&&!DESIGN_WORDS.test(w)&&!COLORS[w])out.push(w);});
+  });});
+  return out;
+}
+function contentish(s){
+  if(/\b(add|adding|remove|drop|cut|delete|swap|replace|substitute|include|reprice|cheaper|pricier|more expensive|less expensive|get rid of|take (out|off)|instead of|swap out)\b/.test(s))return true;
+  if(/\$\s?\d|\b\d+(\.\d\d)? ?(dollars|bucks)\b|\bprices?\b|\bpriced\b|\bingredients?\b|\bgarnish(es)?\b|\brecipes?\b|\bsweeter\b|\bstronger\b|\bboozier\b|\bspicier\b|\bsourer\b/.test(s))return true;
+  if(/\b(more|fewer|less|another|one more|extra)\b.*\b(drinks?|cocktails?|beers?|wines?|mocktails?|options?|items?|shots?|spirits?|tequilas?|mezcals?|whisk(e)?ys?|bourbons?|ryes?|gins?|rums?|vodkas?|ipas?|lagers?|n\/a|non-?alcoholic|zero[- ]proof)\b/.test(s))return true;
+  var t=' '+s.replace(/[^a-z0-9' ]/g,' ').replace(/\s+/g,' ')+' ';
+  return itemWords().some(function(w){return t.indexOf(' '+w+' ')>=0;});
 }
 function tidy(t){t=String(t).trim().replace(/^(to|as|is|be)\s+/,'');return t.replace(/\b\w/g,function(c){return c.toUpperCase();});}
 function anyArt(){for(var k in PMS.art)return true;return false;}
@@ -39892,11 +39933,82 @@ function saveCurrent(){
   PMS.saved.push({dir:current().id,variant:PMS.variant,ov:JSON.parse(JSON.stringify(PMS.ov)),title:PMS.ov.title||PMS.content.title,at:new Date().toISOString()});
   try{localStorage.setItem('phg_pms_saved_v1',JSON.stringify(PMS.saved.slice(-30)));}catch(e){}
 }
-function startDesigns(){
-  PMS.content=loadContent();PMS.dir=0;PMS.variant=0;PMS.page=0;
-  openStage();
-  var c=PMS.content;
-  say('Here is a first direction, '+current().name+', for '+(PMS.ov.title||c.title)+(c.sample?', using the sample cantina menu':'')+'. Say next for another look, tell me what to change, or say paint it and I will paint real artwork.');
+/* 18.49.26: the Menu Studio shows the menu from the CONVERSATION.
+   "make a menu ..." drafts one with Harmony's menu brain (phg-harmony-attach
+   mode "menu") from the request plus the recent chat, opens it in the design
+   that suits the concept, and anything said inside the studio that is not a
+   design command revises the content. The built-in cantina sample is only a
+   fallback when signed out ("use the sample"); "use my menu" loads Menu Studio. */
+var MENU_BRAIN=FN+'phg-harmony-attach';
+function startDesigns(q){
+  var t=String(q||'');
+  if(/\b(use|load|open) (my|our|the current|the studio) menu\b/i.test(t)||/\buse the sample\b/i.test(t)){
+    PMS.content=/\bsample\b/i.test(t)?JSON.parse(JSON.stringify(SAMPLE)):loadContent();PMS.dir=0;PMS.variant=0;PMS.page=0;openStage();
+    say('Here is '+(PMS.content.sample?'the sample cantina menu':PMS.content.title)+' in '+current().name+'. Say next for another look.');return;
+  }
+  draftMenu(t||'Draft the menu we have been discussing.',true);
+}
+function chatHistory(n){
+  return (typeof AGENT!=='undefined'&&AGENT.chat?AGENT.chat.slice(-n):[]).map(function(m){return {role:m.who==='you'?'user':'assistant',text:String(m.text||'').replace(/<[^>]+>/g,' ').slice(0,600)};});
+}
+function toManifest(c){
+  if(!c||c.sample)return null;
+  return {title:c.title,subtitle:c.sub||'',sections:(c.sections||[]).map(function(s){return {name:s.s,kind:s.k||'other',items:(s.items||[]).map(function(i){return {name:i.n,price:i.p||'',sensory:i.d||'',ingredients:i.i||'',serve:i.g||''};})};})};
+}
+function fromDraft(m){
+  var K={cocktails:'cocktails',zero:'zero',spirits:'spirits',beer:'beer',wine:'wine'};
+  return {title:m.title||'Menu',sub:m.subtitle||'',sample:false,draft:true,concept:m.concept||'',
+    sections:(m.sections||[]).filter(function(s){return s.items&&s.items.length;}).map(function(s){
+      return {s:s.name,k:K[s.kind]||'',items:s.items.map(function(i){return {n:i.name,p:String(i.price||''),d:i.sensory||'',i:i.ingredients||'',g:i.serve||''};})};})};
+}
+function draftMenu(instruction,fresh){
+  var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
+  if(!tok){PMS.content=JSON.parse(JSON.stringify(SAMPLE));PMS.page=0;openStage();say('Sign in to PHG and I can draft your menu from our conversation. For now, here is the sample cantina menu.');return;}
+  /* 18.49.27: keep talking while she redraws; edits said meanwhile queue up and
+     go out together as soon as the current one lands */
+  if(PMS.drafting){
+    if(fresh){PMS.queue=[];PMS.queueFresh=instruction;talkSay('Got it, a new menu is next.');return;}
+    PMS.queue=(PMS.queue||[]).concat(instruction);talkSay(PMS.queue.length>1?'Got those, coming up.':'Got it, that is next.');return;
+  }
+  PMS.drafting=true;document.body.classList.add('pms-drafting');
+  if(fresh)say(PMS.open?'Writing a new menu for you.':'Give me a moment, I am drafting the menu from what we talked about.');
+  fetch(MENU_BRAIN,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
+    body:JSON.stringify({mode:'menu',prompt:instruction,recent:chatHistory(14),current:fresh?null:toManifest(PMS.content)})})
+  .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.menu)throw new Error(j.detail||j.error||('HTTP '+r.status));return j;});})
+  .then(function(j){
+    if(j.changed===false&&!fresh){talkSay(j.reply||'Okay.');return;}
+    var c=fromDraft(j.menu);
+    if(!c.sections.length){talkSay(j.reply||'I need a little more to go on. Tell me the concept and the kind of drinks.');return;}
+    var before=PMS.content;
+    if(before&&!before.sample){PMS.hist=(PMS.hist||[]).concat([before]).slice(-12);}
+    PMS.changed=null;
+    if(!fresh&&before&&!before.sample){
+      var old={};(before.sections||[]).forEach(function(x){(x.items||[]).forEach(function(i){old[i.n]=[i.p,i.d,i.i,i.g].join('|');});});
+      var ch={},any=false;c.sections.forEach(function(x){x.items.forEach(function(i){if(old[i.n]!==[i.p,i.d,i.i,i.g].join('|')){ch[i.n]=1;any=true;}});});
+      if(any)PMS.changed=ch;
+    }
+    PMS.content=c;
+    if(fresh||!PMS.changed)PMS.page=fresh?0:Math.min(PMS.page,pages().length-1);
+    if(fresh){
+      PMS.ov={subject:c.concept||''};PMS.variant=0;PMS.art={};
+      var ix=DIRS.map(function(d){return d.id;}).indexOf({solstice:'solstice',garden:'garden',noche:'noche',swiss:'swiss',letterpress:'letterpress'}[j.menu.style_hint]||'solstice');
+      PMS.dir=ix<0?0:ix;
+    }else if(c.concept)PMS.ov.subject=c.concept;
+    if(PMS.changed){
+      /* show the page where the first change landed */
+      var pg=pages(),first=Object.keys(PMS.changed)[0],tag='>'+esc(first)+'<';
+      for(var pi=1;pi<pg.length;pi++){if(pg[pi].indexOf(tag)>=0){PMS.page=pi;break;}}
+      clearTimeout(PMS._chT);PMS._chT=setTimeout(function(){PMS.changed=null;},3600);
+    }
+    if(!PMS.open)openStage();else render();
+    talkSay((j.reply||'Here it is.')+(fresh?' Say next for another look, new menu for different drinks, or tell me what to change.':''));
+  })
+  .catch(function(e){talkSay('I could not '+(fresh?'draft':'change')+' the menu just now: '+(e&&e.message||e));})
+  .then(function(){
+    PMS.drafting=false;document.body.classList.remove('pms-drafting');
+    if(PMS.queueFresh){var f=PMS.queueFresh;PMS.queueFresh=null;PMS.queue=[];draftMenu(f,true);return;}
+    if(PMS.queue&&PMS.queue.length){var qd=PMS.queue.join('. Also: ');PMS.queue=[];draftMenu(qd,false);}
+  });
 }
 
 /* ---------- reference photos ---------------------------------------------- */
@@ -39934,8 +40046,8 @@ function addFiles(list){
   Promise.all(files.map(function(f){return loadRef(f).catch(function(){return null;});})).then(function(rs){
     rs=rs.filter(Boolean);if(!rs.length){say('I could not open those photos.');return;}
     PMS.refs=PMS.refs.concat(rs);
-    if(!PMS.open){if(!PMS.content)PMS.content=loadContent();openStage();}else render();
-    say('Got '+(rs.length>1?rs.length+' photos':'your photo')+'. Say paint it and I will paint from '+(PMS.refs.length>1?'them':'it')+', use my photo as the cover, or match the photo colours.');
+    if(PMS.open){render();say('Got '+(rs.length>1?rs.length+' photos':'your photo')+'. Say paint it and I will paint from '+(PMS.refs.length>1?'them':'it')+', use my photo as the cover, or match the photo colours.');}
+    else say('Got '+(rs.length>1?rs.length+' photos':'your photo')+'. Tell me about the menu, then say make the menu, and I will use '+(PMS.refs.length>1?'them':'it')+' for the look.');
   });
 }
 function useRef(i,where){
@@ -40046,6 +40158,7 @@ function listen(){
   T.rec.ondataavailable=function(e){if(e.data&&e.data.size)T.chunks.push(e.data);};
   T.rec.onstop=function(){
     if(!PMS.talk)return;
+    if(T.held){var h=T.held;T.held=null;say(h);}
     if(!T.heard){listen();return;}
     var blob=new Blob(T.chunks,{type:T.rec.mimeType||mime||'audio/webm'});
     transcribe(blob);
@@ -40092,7 +40205,9 @@ function afterReply(expect){
     var sp=speakingNow();
     if(sp){started=true;quietFor=0;return;}
     quietFor+=200;
-    if((started&&quietFor>=500)||(!started&&Date.now()-t0>(expect?(PMS.open?9000:16000):600))){clearInterval(T.wait);T.wait=null;listen();}
+    /* while she is only redrawing the menu (no answer to wait for), listen again right away */
+    var patience=!expect?600:PMS.open?(PMS.drafting&&!window.PHG_PENDING?700:9000):16000;
+    if((started&&quietFor>=500)||(!started&&Date.now()-t0>patience)){clearInterval(T.wait);T.wait=null;listen();}
   },200);
 }
 
@@ -40122,18 +40237,36 @@ PMS.toggleTalk=function(){
   startTalk();
 };
 PMS.cmd=function(q){PMS.hear(q);};
+/* One utterance can mix design and content: "make it darker and add a mezcal
+   sour". Design clauses act now; content clauses go to Harmony as one edit. */
+function studioInput(q){
+  var parts=String(q).replace(/([.!?;])\s+/g,'$1\u0001').replace(/,?\s+(?:and then|and also|then also|and after that)\s+/gi,'\u0001').split('\u0001')
+    .map(function(x){return x.trim();}).filter(Boolean);
+  if(parts.length<2){
+    var r=stageCommand(q);
+    if(typeof r==='string')say(r);else if(r===false)draftMenu(q,false);
+    return;
+  }
+  var said=[],content=[];
+  for(var i=0;i<parts.length;i++){
+    var r2=stageCommand(parts[i]);
+    if(typeof r2==='string')said.push(r2);
+    else if(r2===false)content.push(parts[i]);
+    else {content=content.concat(parts.slice(i+1));break;}
+  }
+  if(content.length)draftMenu(content.join('. '),false);
+  if(said.length)say(said.join(' '));
+}
+PMS.input=studioInput;
 PMS.hear=function(text){
   var q=String(text||'').trim();if(!q)return;
-  if(!PMS.open&&!MENU_INTENT.test(q)){if(typeof harmonyAsk==='function')harmonyAsk(q);return;}
-  try{if(typeof AGENT!=='undefined'&&AGENT.chat){AGENT.chat.push({who:'you',text:q});}}catch(e){}
-  if(!PMS.content)PMS.content=loadContent();
-  if(!PMS.open)openStage();
-  var r=stageCommand(q);
-  if(typeof r==='string'){say(r);return;}
-  if(r===null)return;
-  /* not a menu command: hand it to Harmony's normal brain, keep the stage up */
-  if(typeof agentAnswer==='function'){try{agentAnswer(q);}catch(e){say('I am not sure how to do that on the menu yet.');}}
-  else say('I am not sure how to do that on the menu yet.');
+  var busy=PMS.open||PMS.drafting;
+  if(!busy&&!MENU_INTENT.test(q)){if(typeof harmonyAsk==='function')harmonyAsk(q);return;}
+  try{if(typeof AGENT!=='undefined'&&AGENT.chat){AGENT.chat.push({who:'you',text:q});if(typeof agentDraw==='function')agentDraw();}}catch(e){}
+  /* never open on a preset: the menu is drafted first, then the studio opens */
+  if(!busy){startDesigns(q);return;}
+  /* not a design command: it is about the menu itself - revise the content */
+  studioInput(q);
 };
 
 /* Route typed/dictated Harmony requests: menu design intents open the stage;
@@ -40142,11 +40275,16 @@ if(typeof agentHeard==='function'){
   var _heard=agentHeard;
   agentHeard=function(text){
     var q=String(text||'');
-    if(MENU_INTENT.test(q)||(PMS.open&&stageCommand.length&&looksLikeStage(q))){
+    var noteish=/^(?:(?:hey|ok|okay)?,?\s*harmony[,.]?\s*)?(?:log|note|jot|remind me|what did i log)\b/i.test(q);
+    /* "build it" right after Harmony offered to make the menu */
+    if(!PMS.open&&/^(?:(?:ok(?:ay)?|yes|yeah|yep|sure|great|perfect|sounds good|let'?s do it)[,.!]*\s*)?(?:go ahead and\s+)?(?:build|make|draft|do|create) (?:it|that|this|the menu|that menu)\b/i.test(q)){
+      var lastH=(AGENT.chat||[]).slice().reverse().filter(function(m){return m.who==='agent';})[0];
+      if(lastH&&/\bmenu\b/i.test(String(lastH.text||''))){AGENT.chat.push({who:'you',text:q});if(typeof agentDraw==='function')agentDraw();startDesigns(q);return;}
+    }
+    if(MENU_INTENT.test(q)||((PMS.open||PMS.drafting)&&!noteish)){
       AGENT.chat.push({who:'you',text:q});if(typeof agentDraw==='function')agentDraw();
-      if(!PMS.content)PMS.content=loadContent();
-      if(!PMS.open)openStage();
-      var r=stageCommand(q);if(typeof r==='string')say(r);
+      if(MENU_INTENT.test(q)&&!PMS.open&&!PMS.drafting){startDesigns(q);return;}
+      studioInput(q);
       return;
     }
     return _heard.apply(this,arguments);
@@ -40161,7 +40299,7 @@ function addRailButton(){
   if(!rail||rail.querySelector('[data-pms]'))return;
   var b=document.createElement('button');b.setAttribute('data-pms','1');b.className='pmsRailBtn';
   b.innerHTML='<b>Menu Studio</b><small>design by voice</small>';
-  b.onclick=function(e){e.stopPropagation();startDesigns();};
+  b.onclick=function(e){e.stopPropagation();startDesigns('');};
   rail.insertBefore(b,rail.firstChild);
   var view=document.getElementById('phgView');
   if(view&&!document.getElementById('hvTalk')){
@@ -40346,6 +40484,39 @@ body.pms-open .hvxSheet button.nomenu{display:none!important}
 /* send = a tiny event horizon with an arrow */
 #hvxType .hvxSend{background:radial-gradient(circle,#010208 0 52%,#e0f7ff 57%,#67e8f9 61%,rgba(167,139,250,.5) 70%,transparent 76%);box-shadow:0 0 16px rgba(34,211,238,.45)}
 #hvxType .hvxSend svg{width:16px;height:16px;stroke:#e0f7ff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+#hvxPanel{position:absolute;z-index:8;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 14px);bottom:calc(env(safe-area-inset-bottom,0px) + 150px);
+  display:flex;flex-direction:column;border-radius:24px;overflow:hidden;font-family:'Inter',system-ui,sans-serif;color:#e2e8f0;
+  background:radial-gradient(140% 70% at 0% 0%,rgba(103,232,249,.10),transparent 50%),radial-gradient(140% 70% at 100% 100%,rgba(240,171,252,.08),transparent 55%),rgba(5,7,16,.97);
+  box-shadow:inset 0 0 0 1px rgba(103,232,249,.28),0 24px 70px rgba(0,0,0,.65);animation:hvxSheetIn .22s cubic-bezier(.2,.8,.3,1)}
+#hvxPanel[hidden]{display:none!important}
+.hvxPanelHead{display:flex;align-items:center;justify-content:space-between;padding:14px 10px 6px 6px}
+.hvxPanelX{width:36px;height:36px;border-radius:50%;border:0;background:rgba(240,171,252,.08);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.hvxPanelX svg{width:17px;height:17px;stroke:#f5d0fe;stroke-width:1.8;fill:none;stroke-linecap:round}
+.hvxPanelBody{flex:1;overflow-y:auto;padding:4px 16px 18px;-webkit-overflow-scrolling:touch}
+.hvxEmpty{color:#8b9ab3;font-size:14px;line-height:1.5;padding:18px 4px}
+.hvxNote{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid rgba(148,163,184,.12)}
+.hvxNote.done .hvxNoteBody{text-decoration:line-through;color:#64748b}
+.hvxCheck{flex:0 0 26px;width:26px;height:26px;border-radius:50%;border:0;padding:0;margin-top:2px;background:rgba(103,232,249,.06);box-shadow:inset 0 0 0 1.5px rgba(103,232,249,.5);color:#67e8f9;font-size:14px;cursor:pointer}
+.hvxNoteMain{flex:1;min-width:0}
+.hvxNoteMeta{display:flex;flex-wrap:wrap;gap:8px;font:500 11px/1.4 'Inter',sans-serif;color:#8b9ab3;margin-bottom:3px}
+.hvxNoteMeta .k{font:700 9.5px/1.6 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;padding:0 7px;border-radius:6px;background:rgba(103,232,249,.12);color:#67e8f9}
+.hvxNoteMeta .k-task{background:rgba(253,164,175,.14);color:#fda4af}.hvxNoteMeta .k-idea{background:rgba(240,171,252,.14);color:#f0abfc}.hvxNoteMeta .k-reminder{background:rgba(253,230,138,.14);color:#fde68a}
+.hvxNoteBody{font-size:15px;line-height:1.45;color:#f1f5f9;word-wrap:break-word}
+.hvxDel{flex:0 0 28px;width:28px;height:28px;border:0;border-radius:50%;background:none;color:#64748b;font-size:18px;cursor:pointer}
+.hvxLead{font-size:15px;line-height:1.5;color:#cbd5e1;margin:4px 0 14px}
+.hvxBig{width:100%;height:50px;border-radius:25px;border:0;cursor:pointer;font:600 16px 'Inter',sans-serif;color:#021018;background:linear-gradient(90deg,#67e8f9,#a78bfa 60%,#f0abfc);box-shadow:0 0 24px rgba(34,211,238,.35)}
+.hvxBig:disabled{opacity:.6}
+.hvxCopy{display:flex;gap:8px;align-items:center;margin:8px 0;padding:6px 6px 6px 12px;border-radius:14px;background:rgba(103,232,249,.06);box-shadow:inset 0 0 0 1px rgba(103,232,249,.25)}
+.hvxCopy code{flex:1;min-width:0;font:500 12px/1.4 'JetBrains Mono',monospace;color:#e0f7ff;word-break:break-all}
+.hvxCopy button{flex:0 0 auto;height:34px;padding:0 14px;border-radius:17px;border:0;background:#0e7490;color:#fff;font:600 13px 'Inter',sans-serif;cursor:pointer}
+.hvxWarn{margin:6px 0;padding:10px 12px;border-radius:12px;background:rgba(253,230,138,.10);color:#fde68a;font-size:13px;line-height:1.4}
+.hvxSteps{margin:16px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5;color:#cbd5e1}
+.hvxSteps b{color:#f1f5f9}.hvxSteps code,.hvxLead code{font:500 12px 'JetBrains Mono',monospace;color:#a5f3fc;background:rgba(103,232,249,.08);padding:1px 5px;border-radius:5px}
+.hvxKey{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid rgba(148,163,184,.12)}
+.hvxKey b{font-size:14px}.hvxKey span{font:500 12px 'JetBrains Mono',monospace;color:#8b9ab3}.hvxKey small{display:block;color:#8b9ab3;font-size:12px;margin-top:2px}
+.hvxKey.off{opacity:.5}
+.hvxKey button{height:32px;padding:0 12px;border-radius:16px;border:0;background:rgba(240,171,252,.12);color:#f5d0fe;font:600 12.5px 'Inter',sans-serif;cursor:pointer}
+.hvxFine{font-size:12px;line-height:1.5;color:#64748b;margin-top:16px}
 #hvxAttach{position:absolute;left:12px;right:12px;z-index:7;bottom:calc(var(--hvx-dock,0px) + env(safe-area-inset-bottom,0px) + 150px);display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 #hvxAttach:empty{display:none}
 body.hvx-typing #hvxAttach{bottom:calc(var(--hvx-dock,0px) + env(safe-area-inset-bottom,0px) + 76px)}
@@ -40484,6 +40655,169 @@ function askWithAttachments(q){
     .catch(function(e){var m=String(e&&e.message||e);if(typeof agentSay==='function')agentSay(/404|Failed to fetch/i.test(m)?'Attachment reading is not switched on yet.':'I could not read that: '+m);})
     .then(function(){window.PHG_PENDING=false;document.body.classList.remove('hvx-asking');});
 }
+/* ---------- NOTES + iPHONE ACTION BUTTON (18.49.24) ----------
+   phg-harmony-inbox holds the notes log and the personal Shortcut keys. In the
+   view, "log / note / remind me / idea ..." and "what did I log" go through the
+   same inbox the Shortcut uses, so the phone and the app share one log. */
+var INBOX_URL='https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-harmony-inbox';
+var HVX_NOTE=/^(?:(?:hey|ok|okay)?,?\s*harmony[,.]?\s*)?(?:(?:can|could|would|will) you\s+)?(?:please\s+)?(?:log|note|jot|remember|remind me|add (?:a |an )?(?:task|note|reminder|idea|to-?do)|idea\b|to-?do\b|put .{1,60} on my list)\b|\b(?:my notes|what did i (?:log|note|save|jot)|my tasks|my reminders|my to-?dos?|my list|my ideas|read (?:me )?my)\b/i;
+function inbox(body){
+  var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
+  if(!tok)return Promise.reject(new Error('Sign in to PHG first.'));
+  var acct=(typeof PHGAUTH!=='undefined'&&PHGAUTH.workspace&&PHGAUTH.workspace.account&&PHGAUTH.workspace.account.id)||null;
+  body.account_id=body.account_id||acct;
+  return fetch(INBOX_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify(body)})
+    .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j;});});
+}
+function harmonyInboxSay(q){
+  window.PHG_PENDING=true;
+  inbox({action:'inbox',text:q,tz:(Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Chicago')})
+    .then(function(j){if(typeof agentSay==='function')agentSay(j.speak||'Done.');var np=document.getElementById('hvxPanel');if(np&&np.dataset.kind==='notes')loadNotes();})
+    .catch(function(e){if(typeof agentSay==='function')agentSay('I could not save that: '+(e&&e.message||e));})
+    .then(function(){window.PHG_PENDING=false;});
+}
+function panel(kind,title,html){
+  var view=document.getElementById('phgView');if(!view)return null;
+  var p=document.getElementById('hvxPanel');
+  if(!p){p=document.createElement('div');p.id='hvxPanel';stop(p);view.appendChild(p);}
+  p.dataset.kind=kind;p.hidden=false;
+  p.innerHTML='<div class="hvxPanelHead"><div class="hvxSheetHead">'+title+'</div><button class="hvxPanelX" aria-label="Close">'+ICON.close+'</button></div><div class="hvxPanelBody">'+html+'</div>';
+  p.querySelector('.hvxPanelX').onclick=function(){p.hidden=true;};
+  return p;
+}
+function ago(iso){var s=(Date.now()-Date.parse(iso))/1000;if(s<60)return 'just now';if(s<3600)return Math.round(s/60)+' min ago';if(s<86400)return Math.round(s/3600)+' h ago';return new Date(iso).toLocaleDateString();}
+function openNotes(){panel('notes','Harmony · Notes','<div class="hvxEmpty">Loading your notes…</div>');loadNotes();}
+function loadNotes(){
+  var p=document.getElementById('hvxPanel');if(!p||p.dataset.kind!=='notes')return;
+  inbox({action:'list_notes',limit:100}).then(function(j){
+    var items=j.items||[],b=p.querySelector('.hvxPanelBody');
+    if(!items.length){b.innerHTML='<div class="hvxEmpty">Nothing logged yet. Say “log …”, “remind me to …” or “idea …”, or use the iPhone Action button.</div>';return;}
+    b.innerHTML=items.map(function(n){
+      return '<div class="hvxNote'+(n.done?' done':'')+'" data-id="'+n.id+'"><button class="hvxCheck" aria-label="'+(n.done?'Mark not done':'Mark done')+'">'+(n.done?'✓':'')+'</button>'
+        +'<div class="hvxNoteMain"><div class="hvxNoteMeta"><span class="k k-'+n.kind+'">'+n.kind+'</span>'+(n.due_at?'<span>due '+new Date(n.due_at).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span>':'')+'<span>'+ago(n.created_at)+(n.source==='shortcut'?' · iPhone':'')+'</span></div>'
+        +'<div class="hvxNoteBody">'+esc(n.body)+'</div></div><button class="hvxDel" aria-label="Delete note">×</button></div>';
+    }).join('');
+    Array.prototype.forEach.call(b.querySelectorAll('.hvxNote'),function(r){
+      var id=r.getAttribute('data-id');
+      r.querySelector('.hvxCheck').onclick=function(){var d=!r.classList.contains('done');r.classList.toggle('done',d);this.textContent=d?'✓':'';inbox({action:'update_note',id:id,done:d}).catch(function(){});};
+      r.querySelector('.hvxDel').onclick=function(){r.remove();inbox({action:'delete_note',id:id}).catch(function(){});};
+    });
+  }).catch(function(e){var b=p.querySelector('.hvxPanelBody');if(b)b.innerHTML='<div class="hvxEmpty">Could not load notes: '+esc(e&&e.message||e)+'</div>';});
+}
+function copyBtn(label,value){return '<div class="hvxCopy"><code>'+esc(value)+'</code><button data-copy="'+esc(value)+'">'+label+'</button></div>';}
+function wireCopy(root){Array.prototype.forEach.call(root.querySelectorAll('[data-copy]'),function(b){b.onclick=function(){var v=b.getAttribute('data-copy');
+  var done=function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(done,function(){prompt('Copy this',v);});else prompt('Copy this',v);};});}
+function openShortcut(){
+  var steps='<ol class="hvxSteps">'
+    +'<li>Tap <b>Create my key</b> below and copy the key and the address.</li>'
+    +'<li>Open the <b>Shortcuts</b> app, tap <b>+</b>, name it <b>Harmony</b>.</li>'
+    +'<li>Add <b>Dictate Text</b> (Stop Listening: After Pause).</li>'
+    +'<li>Add <b>Get Contents of URL</b>: paste the address · Method <b>POST</b> · Headers: add <code>x-harmony-key</code> = your key · Request Body <b>JSON</b>: add field <code>text</code> = <i>Dictated Text</i>.</li>'
+    +'<li>Add <b>Get Dictionary Value</b>: Value for <code>speak</code> in <i>Contents of URL</i>, then <b>Speak Text</b> (Dictionary Value).</li>'
+    +'<li>Add <b>Get Dictionary Value</b>: Value for <code>url</code> in <i>Contents of URL</i> → <b>If</b> it has any value → <b>Open URLs</b>.</li>'
+    +'<li>iPhone <b>Settings → Action Button → Shortcut → Harmony</b>. Also works with Back Tap, Siri (“Harmony”) or a widget.</li>'
+    +'</ol>';
+  var p=panel('shortcut','iPhone · Action button',
+    '<p class="hvxLead">Press the Action button and talk. Harmony logs notes, answers out loud, or opens the app when you ask to see something.</p>'
+    +'<div id="hvxKeyBox"><button class="hvxBig" id="hvxMakeKey">Create my key</button></div>'+steps
+    +'<div class="hvxSheetHead" style="padding-left:0;margin-top:14px">Your keys</div><div id="hvxKeys" class="hvxEmpty">Loading…</div>'
+    +'<p class="hvxFine">A key only lets that Shortcut log notes and talk to Harmony as you. It is shown once and stored scrambled. Revoke it here any time. Add to Home Screen from Safari’s Share menu to get the Harmony app icon.</p>');
+  if(!p)return;
+  p.querySelector('#hvxMakeKey').onclick=function(){
+    var btn=this;btn.disabled=true;btn.textContent='Creating…';
+    inbox({action:'issue_key',name:'iPhone Shortcut'}).then(function(j){
+      var box=p.querySelector('#hvxKeyBox');
+      box.innerHTML='<div class="hvxWarn">Copy your key now: it will not be shown again.</div>'+copyBtn('Copy',j.key)+'<div class="hvxSheetHead" style="padding-left:0;margin-top:10px">Address</div>'+copyBtn('Copy',j.endpoint);
+      wireCopy(box);loadKeys();
+    }).catch(function(e){btn.disabled=false;btn.textContent='Create my key';alertInline(p,'Could not create a key: '+(e&&e.message||e));});
+  };
+  loadKeys();
+}
+function alertInline(p,msg){var d=document.createElement('div');d.className='hvxWarn';d.textContent=msg;p.querySelector('.hvxPanelBody').prepend(d);}
+function loadKeys(){
+  var box=document.getElementById('hvxKeys');if(!box)return;
+  inbox({action:'list_keys'}).then(function(j){
+    var items=(j.items||[]);
+    if(!items.length){box.textContent='No keys yet.';return;}
+    box.className='';
+    box.innerHTML=items.map(function(k){return '<div class="hvxKey'+(k.revoked_at?' off':'')+'"><div><b>'+esc(k.name)+'</b> <span>…'+esc(k.key_hint)+'</span><small>'+(k.revoked_at?'revoked':'last used '+(k.last_used_at?ago(k.last_used_at):'never'))+'</small></div>'
+      +(k.revoked_at?'':'<button data-rev="'+k.id+'">Revoke</button>')+'</div>';}).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('[data-rev]'),function(b){b.onclick=function(){b.disabled=true;inbox({action:'revoke_key',id:b.getAttribute('data-rev')}).then(loadKeys).catch(loadKeys);};});
+  }).catch(function(e){box.textContent='Could not load keys: '+(e&&e.message||e);});
+}
+/* Deep link used by the home-screen icon and by the Shortcut's "open" answers:
+   /?harmony=1 opens the Harmony view once signed in; &q=... then runs that request. */
+(function deepLink(){
+  var p;try{p=new URLSearchParams(location.search);}catch(e){return;}
+  if(p.get('harmony')!=='1')return;
+  var q=(p.get('q')||'').slice(0,500);
+  try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){}
+  var tries=0;
+  (function wait(){
+    var ready=typeof PHGAUTH!=='undefined'&&PHGAUTH.workspace&&PHGAUTH.workspace.account&&typeof phgViewport==='function';
+    if(!ready){if(++tries<240)setTimeout(wait,500);return;}
+    if(!document.getElementById('phgView'))phgViewport();
+    if(q)setTimeout(function(){if(window.PMS)PMS.hear(q);else if(typeof harmonyAsk==='function')harmonyAsk(q);},1000);
+  })();
+})();
+
+/* ---------- FIND A REAL VENUE'S MENU (18.49.25) ----------
+   "Show me Eatery A's menu in Des Moines, Iowa" -> search the PHG menu library
+   (phg-menu-corpus-browser) by the name's most distinctive word within the
+   city/state, rank candidates by normalised-name similarity ("Eatery A's" ==
+   "EATERY / A"), and open the best match in the library's full-screen viewer
+   over the Harmony view. Closing the viewer returns to Harmony. */
+var HVX_LOOKUP=/\b(show|pull up|open|find|get|bring up|see|look up|view|display|load)\b[^?.!]*\bmenus?\b/i;
+var HVX_LOOKUP_NOT=/\b(my|our|this|that|the) (own |current |new )?menus?\b(?!\s+(for|from|at|of)\b)|\bmenus? (you('| a)re|we('| a)re|i('| a)m) (working|making|building|designing)|\bmenu studio\b|\b(make|build|create|design|draft)\b/i;
+var US_STATES={alabama:'AL',alaska:'AK',arizona:'AZ',arkansas:'AR',california:'CA',colorado:'CO',connecticut:'CT',delaware:'DE',florida:'FL',georgia:'GA',hawaii:'HI',idaho:'ID',illinois:'IL',indiana:'IN',iowa:'IA',kansas:'KS',kentucky:'KY',louisiana:'LA',maine:'ME',maryland:'MD',massachusetts:'MA',michigan:'MI',minnesota:'MN',mississippi:'MS',missouri:'MO',montana:'MT',nebraska:'NE',nevada:'NV','new hampshire':'NH','new jersey':'NJ','new mexico':'NM','new york':'NY','north carolina':'NC','north dakota':'ND',ohio:'OH',oklahoma:'OK',oregon:'OR',pennsylvania:'PA','rhode island':'RI','south carolina':'SC','south dakota':'SD',tennessee:'TN',texas:'TX',utah:'UT',vermont:'VT',virginia:'VA',washington:'WA','west virginia':'WV',wisconsin:'WI',wyoming:'WY'};
+function normName(t){return String(t||'').toLowerCase().replace(/[’']s\b/g,'').replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').replace(/\b(the|restaurant|bar|grill|and)\b/g,' ').replace(/\s+/g,' ').trim();}
+function parseMenuLookup(q){
+  var t=String(q||'').replace(/^(?:(?:hey|ok|okay)[, ]+)?harmony[,.]?\s*/i,'').replace(/[?.!]+\s*$/,'').trim();
+  var city=null,state=null,m=t.match(/\s+(?:in|near|over in|out in)\s+([A-Za-z .'-]+?)(?:,\s*([A-Za-z .]+))?$/i);
+  if(m&&!/\bmenu\b/i.test(m[1])){
+    var a=m[1].trim(),b2=(m[2]||'').trim();
+    var sc=US_STATES[b2.toLowerCase()]||(/^[A-Za-z]{2}$/.test(b2)?b2.toUpperCase():null);
+    if(!sc&&US_STATES[a.toLowerCase()]){state=US_STATES[a.toLowerCase()];}
+    else{city=a.toUpperCase();state=sc;}
+    t=t.slice(0,m.index).trim();
+  }
+  var name=null,n1=t.match(/\bmenus?\s+(?:for|from|at|of)\s+(.+)$/i);
+  if(n1)name=n1[1];
+  else{var n2=t.match(/\b(?:show|pull up|open|find|get|bring up|see|look up|view|display|load)(?:\s+(?:me|us|up))?(?:\s+(?:the|a))?\s+(.+?)(?:[’']s|s[’'])?\s+(?:drinks?\s+|beverage\s+|cocktail\s+|food\s+|bar\s+|wine\s+|happy hour\s+)?menus?\b/i);if(n2)name=n2[1];}
+  if(name)name=name.replace(/^(?:the|a)\s+/i,'').trim();
+  return {name:name,city:city,state:state};
+}
+function nameScore(want,got){
+  var a=normName(want),b=normName(got);if(!a||!b)return 0;if(a===b)return 1;
+  var A=a.split(' '),B=b.split(' '),hit=0;A.forEach(function(w){if(B.indexOf(w)>=0)hit++;});
+  var j=hit/(A.length+B.length-hit);
+  if(b.indexOf(a)===0||a.indexOf(b)===0)j=Math.max(j,.8);
+  return j;
+}
+function harmonyFindMenu(q){
+  var ask=parseMenuLookup(q);
+  if(!ask.name){if(typeof agentSay==='function')agentSay('Which venue should I pull up? Say something like: show me Eatery A’s menu in Des Moines.');return;}
+  if(typeof corpusPost!=='function'){if(typeof agentSay==='function')agentSay('The menu library isn’t loaded yet.');return;}
+  var words=normName(ask.name).split(' ').filter(function(w){return w.length>=3;}).sort(function(x,y){return y.length-x.length;});
+  var term=words[0]||normName(ask.name);
+  var body={action:'list',kind:'rendered',q:term,limit:50,sign:'none',sort:'name'};
+  if(ask.city)body.city=[ask.city];if(ask.state)body.state=[ask.state];
+  window.PHG_PENDING=true;
+  corpusPost(body).then(function(j){
+    var rows=(j.rows||[]).map(function(r){return {r:r,name:(r.accounts&&r.accounts.account_name)||'',score:nameScore(ask.name,(r.accounts&&r.accounts.account_name)||'')};})
+      .filter(function(x){return x.score>=.5;})
+      .sort(function(x,y){return (y.score-x.score)||((y.r.ready_page_count||0)-(x.r.ready_page_count||0))||(String(y.r.updated_at||'')>String(x.r.updated_at||'')?1:-1);});
+    var where=(ask.city?corpusTitle(ask.city):'')+(ask.state?(ask.city?', ':'')+ask.state:'');
+    if(!rows.length){if(typeof agentSay==='function')agentSay('I couldn’t find '+ask.name+(where?' in '+where:'')+' in the menu library. The library covers Iowa, Colorado and New York venues we have captured so far.');return;}
+    var best=rows[0],same=rows.filter(function(x){return normName(x.name)===normName(best.name)&&(x.r.city||'')===(best.r.city||'');}).length;
+    if(typeof corpusView==='function')corpusView(best.r.id);
+    var nm=corpusTitle(best.name),pg=best.r.ready_page_count||best.r.page_count||0;
+    if(typeof agentSay==='function')agentSay('Here’s '+nm+' in '+corpusTitle(best.r.city||'')+(pg?', '+pg+' page'+(pg>1?'s':''):'')+'.'+(same>1?' I have '+same+' captured menus for them; this is the fullest one.':'')+' Pinch to zoom, and close it to come back to me.');
+  }).catch(function(e){if(typeof agentSay==='function')agentSay('I couldn’t reach the menu library: '+(e&&e.message||e));})
+    .then(function(){window.PHG_PENDING=false;});
+}
+
 /* ---------- CONVERSATION ROUTING (18.49.21) ----------
    In the Harmony view, ordinary conversation goes to Harmony's conversation
    brain (phg-harmony-attach in chat mode). Only business-report questions
@@ -40507,6 +40841,8 @@ if(typeof agentAnswer==='function'){
   var _answer=agentAnswer;
   agentAnswer=function(q){
     var inView=document.body.classList.contains('phg-view-open');
+    if(inView&&HVX_NOTE.test(String(q||'')))return harmonyInboxSay(String(q||'').trim());
+    if(inView&&HVX_LOOKUP.test(String(q||''))&&!HVX_LOOKUP_NOT.test(String(q||''))&&parseMenuLookup(q).name)return harmonyFindMenu(String(q||'').trim());
     if(inView&&!HVX_FIN.test(String(q||''))){
       if(typeof harmonyCoreControl==='function'&&harmonyCoreControl(q))return;
       return harmonyChat(String(q||'').trim());
@@ -40550,7 +40886,9 @@ function build(){
   gm.innerHTML='<div class="hvxSheetHead">Harmony · Control</div>'
     +row('studio','spark','Menu Studio','Design menus with Harmony','warm')+'<hr>'
     +row('brief','doc','Brief','What Harmony is tracking')+row('recent','clock','Recent work','Your latest requests')
+    +row('notes','doc','Notes','Everything you have logged with Harmony')
     +row('tools','tools','Tools','Workflows and shortcuts')+row('chat','chat','Chat history','The full conversation')+'<hr>'
+    +row('shortcut','wave','iPhone Action button','Talk to Harmony without opening the app')
     +row('voice','wave','Voice & conversation','How she sounds and replies')+row('signout','exit','Sign out','')
     +row('close','close','Close Harmony view','');
   var pm=document.createElement('div');pm.id='hvxPlusMenu';pm.className='hvxSheet';pm.hidden=true;
@@ -40593,6 +40931,8 @@ function build(){
     var r=e.target&&e.target.closest&&e.target.closest('[data-k]'),k=r&&r.getAttribute('data-k');if(!k)return;closeSheets();
     if(k==='studio'){if(window.PMS){if(PMS.open)PMS.close();else PMS.hear('make a menu');}}
     else if(k==='brief'||k==='recent'||k==='tools'){if(typeof hviewMobileSelect==='function')hviewMobileSelect(k);}
+    else if(k==='notes')openNotes();
+    else if(k==='shortcut')openShortcut();
     else if(k==='chat'){document.body.classList.add('hvx-chat');if(typeof agentOpen==='function')agentOpen(true);if(typeof harmonyExpandedModeSet==='function')try{harmonyExpandedModeSet('expanded');}catch(_){}}
     else if(k==='voice'){closeView();if(typeof aiVoiceOpenSettings==='function')aiVoiceOpenSettings();}
     else if(k==='signout'){if(typeof phgAuthSignOut==='function')phgAuthSignOut();}
