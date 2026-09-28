@@ -1,0 +1,570 @@
+{
+ "preview-letter.png": {
+  "page": {
+   "sel": ".page",
+   "text": "CANTINA\nCANTINA\n& cocktail bar",
+   "x": 0,
+   "y": 0,
+   "w": 816,
+   "h": 1056
+  },
+  "disc": {
+   "sel": ".disc",
+   "text": "",
+   "x": 512,
+   "y": -34,
+   "w": 320,
+   "h": 320
+  },
+  "terrace": {
+   "sel": ".terrace",
+   "text": "",
+   "x": 480,
+   "y": 874,
+   "w": 348,
+   "h": 194
+  },
+  "wordmark": {
+   "sel": ".wm.ink span",
+   "text": "CANTINA",
+   "x": 58,
+   "y": 186,
+   "w": 661.2,
+   "h": 124
+  },
+  "sub": {
+   "sel": ".sub",
+   "text": "& cocktail bar · Iowa City, Io",
+   "x": 64,
+   "y": 334,
+   "w": 347,
+   "h": 17
+  },
+  "columns": [
+   {
+    "sel": ".col",
+    "text": "Cocktails\nClassics\nManhattan15",
+    "x": 64,
+    "y": 410,
+    "w": 300,
+    "h": 480.5
+   },
+   {
+    "sel": ".col",
+    "text": "Wine\nBy the Glass\nMalbec12Dry ",
+    "x": 452,
+    "y": 410,
+    "w": 300,
+    "h": 459.9
+   }
+  ],
+  "section_heads": [
+   {
+    "sel": "h2",
+    "text": "Cocktails",
+    "x": 64,
+    "y": 410,
+    "w": 300,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Beer",
+    "x": 64,
+    "y": 696.3,
+    "w": 300,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Wine",
+    "x": 452,
+    "y": 410,
+    "w": 300,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Spirits",
+    "x": 452,
+    "y": 648.2,
+    "w": 300,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Cider",
+    "x": 452,
+    "y": 791.8,
+    "w": 300,
+    "h": 18
+   }
+  ],
+  "sub_heads": [
+   {
+    "sel": "h3",
+    "text": "Classics",
+    "x": 64,
+    "y": 440,
+    "w": 300,
+    "h": 14
+   },
+   {
+    "sel": "h3",
+    "text": "House Originals",
+    "x": 64,
+    "y": 557.2,
+    "w": 300,
+    "h": 14
+   },
+   {
+    "sel": "h3",
+    "text": "Draft",
+    "x": 64,
+    "y": 726.3,
+    "w": 300,
+    "h": 14
+   },
+   {
+    "sel": "h3",
+    "text": "By the Glass",
+    "x": 452,
+    "y": 440,
+    "w": 300,
+    "h": 14
+   },
+   {
+    "sel": "h3",
+    "text": "Sparkling",
+    "x": 452,
+    "y": 557.2,
+    "w": 300,
+    "h": 14
+   }
+  ],
+  "items": [
+   {
+    "sel": ".it",
+    "text": "Manhattan15Rye whiskey · sweet",
+    "x": 64,
+    "y": 460,
+    "w": 300,
+    "h": 37.1
+   },
+   {
+    "sel": ".it",
+    "text": "Margarita15Tequila blanco · li",
+    "x": 64,
+    "y": 508.1,
+    "w": 300,
+    "h": 37.1
+   },
+   {
+    "sel": ".it",
+    "text": "House Daiquiri14White rum · li",
+    "x": 64,
+    "y": 577.2,
+    "w": 300,
+    "h": 37.1
+   },
+   {
+    "sel": ".it",
+    "text": "Brown Butter Old Fashioned16Br",
+    "x": 64,
+    "y": 625.2,
+    "w": 300,
+    "h": 37.1
+   },
+   {
+    "sel": ".it",
+    "text": "Czech Pilsner7Crisp pale lager",
+    "x": 64,
+    "y": 746.3,
+    "w": 300,
+    "h": 37.1
+   },
+   {
+    "sel": ".it",
+    "text": "Dry-Hopped IPA8Hop-forward",
+    "x": 64,
+    "y": 794.4,
+    "w": 300,
+    "h": 37.1
+   },
+   {
+    "sel": ".it",
+    "text": "Amber Lager7Toasty",
+    "x": 64,
+    "y": 842.5,
+    "w": 300,
+    "h": 37.1
+   },
+   {
+    "sel": ".it",
+    "text": "Malbec12Dry red wine",
+    "x": 452,
+    "y": 460,
+    "w": 300,
+    "h": 37.1
+   },
+   {
+    "sel": ".it",
+    "text": "Pinot Grigio11Dry white wine",
+    "x": 452,
+    "y": 508.1,
+    "w": 300,
+    "h": 37.1
+   },
+   {
+    "sel": ".it",
+    "text": "Brut Rosé13Dry sparkling",
+    "x": 452,
+    "y": 577.2,
+    "w": 300,
+    "h": 37.1
+   },
+   {
+    "sel": ".it",
+    "text": "Blanco Tequila12",
+    "x": 452,
+    "y": 678.2,
+    "w": 300,
+    "h": 19.2
+   },
+   {
+    "sel": ".it",
+    "text": "Añejo Tequila16",
+    "x": 452,
+    "y": 708.4,
+    "w": 300,
+    "h": 19.2
+   },
+   {
+    "sel": ".it",
+    "text": "Cognac VSOP18",
+    "x": 452,
+    "y": 738.6,
+    "w": 300,
+    "h": 19.2
+   },
+   {
+    "sel": ".it",
+    "text": "Dry Cider8Sparkling",
+    "x": 452,
+    "y": 821.8,
+    "w": 300,
+    "h": 37.1
+   }
+  ],
+  "tagline": {
+   "sel": ".tag",
+   "text": "Good drinksGood people",
+   "x": 64,
+   "y": 950.3,
+   "w": 124.1,
+   "h": 43.7
+  },
+  "digit_widths": [
+   7.95,
+   7.95,
+   7.95,
+   7.95,
+   7.95,
+   7.95,
+   7.95,
+   7.95,
+   7.95,
+   7.95
+  ],
+  "text_ext": [
+   64,
+   334,
+   752,
+   994
+  ]
+ },
+ "preview-phone.png": {
+  "page": {
+   "sel": ".page",
+   "text": "CANTINA\nCANTINA\n& cocktail bar",
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 1416
+  },
+  "disc": {
+   "sel": ".disc",
+   "text": "",
+   "x": 236,
+   "y": -44,
+   "w": 220,
+   "h": 220
+  },
+  "terrace": {
+   "sel": ".terrace",
+   "text": "",
+   "x": 210,
+   "y": 1308,
+   "w": 192,
+   "h": 120
+  },
+  "wordmark": {
+   "sel": ".wm.ink span",
+   "text": "CANTINA",
+   "x": 26,
+   "y": 104,
+   "w": 317.8,
+   "h": 60
+  },
+  "sub": {
+   "sel": ".sub",
+   "text": "& cocktail bar · Iowa City, Io",
+   "x": 28,
+   "y": 180,
+   "w": 272.5,
+   "h": 14
+  },
+  "columns": [
+   {
+    "sel": ".col",
+    "text": "Cocktails\nClassics\nManhattan15",
+    "x": 28,
+    "y": 232,
+    "w": 334,
+    "h": 487
+   },
+   {
+    "sel": ".col",
+    "text": "Wine\nBy the Glass\nMalbec12Dry ",
+    "x": 28,
+    "y": 753,
+    "w": 334,
+    "h": 462.5
+   }
+  ],
+  "section_heads": [
+   {
+    "sel": "h2",
+    "text": "Cocktails",
+    "x": 28,
+    "y": 232,
+    "w": 334,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Beer",
+    "x": 28,
+    "y": 528.3,
+    "w": 334,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Wine",
+    "x": 28,
+    "y": 753,
+    "w": 334,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Spirits",
+    "x": 28,
+    "y": 998.8,
+    "w": 334,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Cider",
+    "x": 28,
+    "y": 1146,
+    "w": 334,
+    "h": 18
+   }
+  ],
+  "sub_heads": [
+   {
+    "sel": "h3",
+    "text": "Classics",
+    "x": 28,
+    "y": 262,
+    "w": 334,
+    "h": 14
+   },
+   {
+    "sel": "h3",
+    "text": "House Originals",
+    "x": 28,
+    "y": 384.2,
+    "w": 334,
+    "h": 14
+   },
+   {
+    "sel": "h3",
+    "text": "Draft",
+    "x": 28,
+    "y": 558.3,
+    "w": 334,
+    "h": 14
+   },
+   {
+    "sel": "h3",
+    "text": "By the Glass",
+    "x": 28,
+    "y": 783,
+    "w": 334,
+    "h": 14
+   },
+   {
+    "sel": "h3",
+    "text": "Sparkling",
+    "x": 28,
+    "y": 905.2,
+    "w": 334,
+    "h": 14
+   }
+  ],
+  "items": [
+   {
+    "sel": ".it",
+    "text": "Manhattan15Rye whiskey · sweet",
+    "x": 28,
+    "y": 282,
+    "w": 334,
+    "h": 39.6
+   },
+   {
+    "sel": ".it",
+    "text": "Margarita15Tequila blanco · li",
+    "x": 28,
+    "y": 332.6,
+    "w": 334,
+    "h": 39.6
+   },
+   {
+    "sel": ".it",
+    "text": "House Daiquiri14White rum · li",
+    "x": 28,
+    "y": 404.2,
+    "w": 334,
+    "h": 39.6
+   },
+   {
+    "sel": ".it",
+    "text": "Brown Butter Old Fashioned16Br",
+    "x": 28,
+    "y": 454.7,
+    "w": 334,
+    "h": 39.6
+   },
+   {
+    "sel": ".it",
+    "text": "Czech Pilsner7Crisp pale lager",
+    "x": 28,
+    "y": 578.3,
+    "w": 334,
+    "h": 39.6
+   },
+   {
+    "sel": ".it",
+    "text": "Dry-Hopped IPA8Hop-forward",
+    "x": 28,
+    "y": 628.9,
+    "w": 334,
+    "h": 39.6
+   },
+   {
+    "sel": ".it",
+    "text": "Amber Lager7Toasty",
+    "x": 28,
+    "y": 679.5,
+    "w": 334,
+    "h": 39.6
+   },
+   {
+    "sel": ".it",
+    "text": "Malbec12Dry red wine",
+    "x": 28,
+    "y": 803,
+    "w": 334,
+    "h": 39.6
+   },
+   {
+    "sel": ".it",
+    "text": "Pinot Grigio11Dry white wine",
+    "x": 28,
+    "y": 853.6,
+    "w": 334,
+    "h": 39.6
+   },
+   {
+    "sel": ".it",
+    "text": "Brut Rosé13Dry sparkling",
+    "x": 28,
+    "y": 925.2,
+    "w": 334,
+    "h": 39.6
+   },
+   {
+    "sel": ".it",
+    "text": "Blanco Tequila12",
+    "x": 28,
+    "y": 1028.8,
+    "w": 334,
+    "h": 20.4
+   },
+   {
+    "sel": ".it",
+    "text": "Añejo Tequila16",
+    "x": 28,
+    "y": 1060.2,
+    "w": 334,
+    "h": 20.4
+   },
+   {
+    "sel": ".it",
+    "text": "Cognac VSOP18",
+    "x": 28,
+    "y": 1091.6,
+    "w": 334,
+    "h": 20.4
+   },
+   {
+    "sel": ".it",
+    "text": "Dry Cider8Sparkling",
+    "x": 28,
+    "y": 1176,
+    "w": 334,
+    "h": 39.6
+   }
+  ],
+  "tagline": {
+   "sel": ".tag",
+   "text": "Good drinksGood people",
+   "x": 28,
+   "y": 1334.2,
+   "w": 118.7,
+   "h": 41.8
+  },
+  "digit_widths": [
+   8.45,
+   8.45,
+   8.45,
+   8.45,
+   8.45,
+   8.45,
+   8.45,
+   8.45,
+   8.45,
+   8.45
+  ],
+  "text_ext": [
+   28,
+   180,
+   362,
+   1376
+  ]
+ }
+}
