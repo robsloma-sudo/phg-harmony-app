@@ -167,3 +167,53 @@ Open, carried to later rounds:
 - **Grand Hotel (option B)** runs to 3 pages on Sample Bar (too_many_items_for_format), unchanged this round.
 - From round 3: beer order light to dark, column balance on High Altitude, altitude concept. From round 2: leaders
   style, Speakeasy Noir cantina character, two golds on Casa Luna.
+
+## Round 5 — casa-luna
+
+Scores: Design Theory 79, 79, 77, 81, 81 (mean 79.4) · Cocktail & Beverage 83, 85, 80, 81, 84 (mean 82.4) ·
+Concept & Brand 80, 78, 79, 75, 79 (mean 78.2). Lowest 75. Gate not met (9 of 15 below 80).
+Weakest subscores: list_conventions 73, graphic_craft 75, overall_design 75, grid_space 76, concept 76, brand 76.
+
+Most common points: the Wine "Glass · Bottle" key sat flush left, far from "11 / 40", and Prosecco's lone 10 was
+ambiguous (14 of 15); 6 in dashed leaders on a 7.1 in measure (11); NEW invisible at 7 pt grey (9); the signature
+marked by gold alone (4); no pour sizes (5 beverage reviewers); Prosecco after the Cabernet; the reasoning claimed
+White / Rosé subsections that were never built.
+
+Changed (toolkit, applies to every menu):
+- **Tags lead the description line.** New / Seasonal / House special print as the first word of the description
+  ("New · Del Maguey Vida mezcal, Campari, …"), at description size, instead of Menu Studio's raised 7 pt grey badge.
+  A house special whose name already says "House" reads "Signature · …", so the gold name has a reason a guest can
+  read (not colour alone). Flags stay in `meta.designer_flags`. If the word would push the line past its column
+  (descriptions do not wrap, S6) it goes back to the badge (Sample Bar's Garden Gimlet).
+- **Partial price ladders named on each line.** When some items carry only part of the ladder (Prosecco glass only
+  beside Cabernet glass / bottle), no floating key prints; each line leads with its units ("Glass · Glera, …",
+  "Glass / bottle · Justin Cabernet Sauvignon, …"). Full ladders keep the one key under the heading.
+- **Sparkling and rosé recognised.** Prosecco, Cava, Champagne, Crémant, brut, Lambrusco, pét-nat go to Sparkling and
+  rosé/rosado to Rosé, so wine runs light to full (Prosecco before the Cabernet).
+- **Reasoning says what was built.** "Wine ordered light to full: Sparkling, Red" instead of the boilerplate that
+  named four subsections.
+- **No forced leaders.** A wide single column no longer switches leader dots on; the right-aligned price column stands
+  alone (looks that ask for leaders keep them). The measure could not be narrowed: one margin value (S17).
+- **One gold.** The brand level follows the requested colour when it carried the look's own accent.
+- **Sample transcript.** Casa Luna's voice note gained the venue's (simulated, labelled) answers: 1.5 oz tequila and
+  mezcal pours, 16 oz drafts, 6 oz Cabernet and 5 oz Prosecco pours, Cointreau in the House Margarita, fresh
+  grapefruit juice and soda water in the Paloma, Del Maguey Vida named in the Mezcal Negroni and as a joven mezcal,
+  and Justin as the Cabernet's producer. No price changed. Still one page, 42/42 self-check, confidence 0.88.
+- Tests: 79 passed (3 new, 2 updated).
+
+Filed: S17 (a single-column measure or separate side margins; a key aligned over the price column; finer leaders
+ending at a fixed price slot).
+
+Open, carried to later rounds:
+- **Measure.** Casa Luna's column is still 7.1 in (one margin value, S17). Two columns would put prices inline and
+  push several description lines past 3.4 in (S6).
+- **Masthead and footer axis.** Centred masthead and footer over a flush-left body (Swiss reviewer); "Denver, CO"
+  footer adds nothing; no cantina voice line (needs the venue's words, never invented).
+- **Key lines touch their first item** ("1.5 oz pours" on Siete Leguas; S14 spacing).
+- **Content not yet answered:** Tecate can size, Ranch Water 11.50 (confirm or round, a venue call), NA beer and
+  zero-proof versions of the signatures, a white or rosé, a Colorado tap. Ask, never invent.
+- **Colour.** Prices share the description grey (#c4baa4); several near greys (subheads, footer); descriptions 8.25 pt
+  on a dark ground (print manager asks for 9 pt).
+- **Section weight.** Section heads 1.3x names; reviewers ask for more space above heads than below.
+- High Altitude self-check bottom margin now 45–48 mm (was 34 mm); from rounds 2–4: beer order light to dark, column
+  balance, altitude concept, Sample Bar page 1 short (S16).

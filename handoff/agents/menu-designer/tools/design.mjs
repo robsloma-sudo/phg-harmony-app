@@ -139,6 +139,14 @@ function mdcItem(it, accent, emphasise) {
   // Printed unless the whole phrase is already in the line ("lime wedge" still prints after "fresh lime"); the speaker's
   // casing is kept so proper nouns survive (Tajín rim).
   if (garnish && !desc.toLowerCase().includes(garnish.toLowerCase())) desc = (desc ? `${desc} · ` : '') + garnish;
+  // Tags lead the description line instead of Menu Studio's raised 7 pt grey badge (panel round 5, 9 of 15 reviewers:
+  // "NEW disappears in bar light"; "the signature is marked by gold alone", WCAG 1.4.1). The word prints at description
+  // size as the line's first token ("New · Mezcal, Campari, …"); flags stay in meta.designer_flags. "House special" beside
+  // a name that already says "House" reads "Signature" (the speaker's "house special", without the repeat).
+  const tagWords = badges.map(b => b === 'house' ? 'House special' : b === 'new' ? 'New' : b === 'seasonal' ? 'Seasonal' : null).filter(Boolean);
+  if ((it.flags || []).includes('house_special') && /^house\b/i.test(it.name || '')) tagWords.unshift('Signature');
+  const lead = tagWords.filter(w => !new RegExp('^' + w, 'i').test(desc));
+  if (lead.length) desc = [...lead, desc].filter(Boolean).join(' · ');
   // A pour that differs from the list's (panel round 3: a 10 oz imperial stout under "16 oz pours unless noted").
   if (it.pour && !/\b\d+(?:\.\d+)?\s*oz\b/i.test(desc)) desc = (desc ? `${desc} · ` : '') + `${it.pour} pour`;
   // Beer convention: style/description first, then ABV ("Oatmeal stout with coffee · 6.2% ABV").
@@ -147,7 +155,7 @@ function mdcItem(it, accent, emphasise) {
     id: id('itm'), source: 'manual', origin: { venue_key: null, item_name: it.name },
     name: it.name, brand: it.brand || '', desc,
     prices: (it.prices || []).filter(p => isFinite(p.value)).map(p => ({ id: id('prc'), label: p.label || '', value: p.value, source: 'manual' })),
-    badges,
+    badges: [],
     meta: { canonical: null, identity_class: null, section: it.list, family: null, subfamily: null, serve_format: it.sub || null,
             venue_heading: null, abv: it.abv ?? null, designer_flags: it.flags || [],
             public_visibility: { item: true, description: true, price: true, brand: true, ingredients: true, house_recipe: true },
@@ -197,7 +205,7 @@ export function buildDoc(req, look, opts = {}) {
     }
     sec.items = promote(sec.items).map(i => mdcItem(i, accent, true));
     // A HOUSE badge under a House/Signature subhead repeats the subhead (panel round 1): drop the badge there.
-    const dropHouse = (sub, node) => { if (/house|signature/i.test(sub)) node.badges = node.badges.filter(b => b !== 'house'); return node; };
+    const dropHouse = (sub, node) => { if (/house|signature/i.test(sub)) node.desc = String(node.desc || '').replace(/^(?:House special|Signature)(?: · |$)/, ''); return node; };
     for (const [sub, arr] of bySub) sec.subs.push({ id: id('sub'), name: sub, items: promote(arr).map(i => dropHouse(sub, mdcItem(i, accent, true))) });
     return sec;
   };
@@ -211,7 +219,11 @@ export function buildDoc(req, look, opts = {}) {
       const items = req.items.filter(i => /^wine/.test(i.list || '')).map(i => {
         if (i.list !== 'wine') return i;
         const t = `${i.name} ${i.description || ''}`;
-        const style = WHITE.test(i.name) ? 'wine_white' : RED.test(i.name) ? 'wine_red' : WHITE.test(t) ? 'wine_white' : RED.test(t) ? 'wine_red' : null;
+        // Sparkling and rosé first (panel round 5: "Prosecco sat under Red / By the glass, after the Cabernet").
+        const SPARK = /prosecco|cava|champagne|cr[eé]mant|sparkling|brut|lambrusco|franciacorta|\bsekt\b|p[eé]t[- ]?nat/i;
+        const ROSE = /\bros[eé]\b|rosado|rosato/i;
+        const style = SPARK.test(i.name) ? 'wine_sparkling' : ROSE.test(i.name) ? 'wine_rose' : WHITE.test(i.name) ? 'wine_white' : RED.test(i.name) ? 'wine_red'
+          : SPARK.test(t) ? 'wine_sparkling' : ROSE.test(t) ? 'wine_rose' : WHITE.test(t) ? 'wine_white' : RED.test(t) ? 'wine_red' : null;
         // "By the glass" says nothing once every price is labelled glass / bottle; the style is the better heading.
         return style ? { ...i, list: style, sub: (i.prices || []).every(p => p.label) ? null : i.sub } : i;
       });
@@ -219,7 +231,9 @@ export function buildDoc(req, look, opts = {}) {
       const subOrder = ['Sparkling', 'White', 'Rosé', 'Red'];
       const sec = buildSection('Wine', items, i => WINE_SUB[i.list] || i.sub || null);
       sec.subs.sort((a, b) => (subOrder.indexOf(a.name) + 1 || 50) - (subOrder.indexOf(b.name) + 1 || 50));
-      if (sec.subs.some(x => subOrder.includes(x.name))) changes.push('Grouped wine styles into one Wine section with Sparkling / White / Rosé / Red subsections.');
+      // Say only what was built (panel round 5: the reasoning claimed White and Rosé subsections the page did not have).
+      const styled = sec.subs.filter(x => subOrder.includes(x.name)).map(x => x.name);
+      if (styled.length >= 2) changes.push(`Wine ordered light to full: ${styled.join(', ')}.`);
       sections.push(sec);
       continue;
     }
@@ -303,6 +317,8 @@ export function tuneStyle(req, look, style) {
   const accent = (req.brand.colours && req.brand.colours[0]) || null;
   if (accent) {
     for (const lvl of look.roles) style[lvl].c = accent;
+    // One gold (panel round 5): the brand line in the look's own accent sat beside heads in the requested colour.
+    if (style.brand && look.accent && String(style.brand.c).toLowerCase() === look.accent.toLowerCase()) style.brand.c = accent;
     notes.push(`Applied the requested colour ${accent} to ${look.roles.join(', ')}.`);
   }
   if (look.accent2 && !(req.brand.colours && req.brand.colours[1])) style.sub.c = look.accent2;   // second accent: subheads + badges
@@ -454,11 +470,11 @@ export function fit(doc, S, sizeKey, want) {
   // margin (±1 mm = ±3.8 px). Solve for the gap scale that lands it there; gaps may be fractional in Menu Studio.
   // Finishing rules from review round 1:
   // - hierarchy: section headers at least 1.3 x item names (critic: "hierarchy relies on colour alone");
-  // - a single column wider than ~5.5 in gets leader dots so the eye can travel from name to price.
+  // - (round 1 gave a single column wider than ~5.5 in leader dots; round 5 retired that, see below).
   S.section.s = Math.max(S.section.s, Math.round(S.name.s * 1.3));
   // Round 2: every lens objected to 150 mm leaders across a full-width column. First narrow the measure toward ~5.5 in
   // with wider side margins (Menu Studio's margin is one value, so top and bottom grow too) while it still fits;
-  // only a column that stays wide gets leader dots.
+  // a column that stays wide keeps its right-aligned price column without leaders (round 5).
   if (S.page.cols === 1 && measure(doc, S, sizeKey).colW > 528) {
     const w = MDC_SIZES[sizeKey][0], m0 = S.page.margin;
     for (const mg of [1.5, 1.4, 1.3, 1.25, 1.15, 1.0]) {
@@ -469,7 +485,11 @@ export function fit(doc, S, sizeKey, want) {
       S.page.margin = m0;
     }
   }
-  if (S.page.cols === 1 && measure(doc, S, sizeKey).colW > 528 && !S.page.dots) { S.page.dots = true; log.push('leader dots on: a wide single column needs a path from name to price'); }
+  // Round 5 (11 of 15 reviewers): leaders forced onto a column that could not be narrowed ran ~6 in per row, became the
+  // heaviest texture on the page and ended at different x before 11.50 / 11 / 40 / 7. Menu Studio has one margin value
+  // (S17), so when the measure stays wide the right-aligned price column stands alone and leaders are no longer forced
+  // on; a look that asks for leaders (taproom, dive) keeps them.
+  if (S.page.cols === 1 && !S.page.dots && measure(doc, S, sizeKey).colW > 528) log.push('no leader dots: the wide single column keeps a clean right-aligned price column');
   m = measure(doc, S, sizeKey);
   if (m.pages > budget) { S.section.s = Math.max(S.name.s + 2, S.section.s - 3); m = measure(doc, S, sizeKey); }
   if (m.pages === 1) {
@@ -576,6 +596,23 @@ function flattenSubs(doc) {
   return changes;
 }
 
+// A tag word that pushes its description past the column (descriptions do not wrap in Menu Studio, S6) goes back to
+// Menu Studio's badge beside the name, so the line stays inside its column (panel round 5).
+const TAG_LEAD = /^(House special|Signature|New|Seasonal) · /;
+const BADGE_FOR_WORD = { 'House special': 'house', Signature: null, New: 'new', Seasonal: 'seasonal' };
+export function tagsThatFit(doc, S, sizeKey) {
+  const wide = new Set(measure(doc, S, sizeKey).wide.map(w => w.item));
+  const changes = [];
+  for (const sec of doc.sections) for (const it of [...(sec.items || []), ...(sec.subs || []).flatMap(b => b.items)]) {
+    const mm = String(it.desc || '').match(TAG_LEAD);
+    if (!mm || !wide.has(it.name)) continue;
+    it.desc = it.desc.slice(mm[0].length);
+    if (BADGE_FOR_WORD[mm[1]]) it.badges = [...new Set([...(it.badges || []), BADGE_FOR_WORD[mm[1]]])];
+    changes.push(`"${it.name}": "${mm[1]}" kept as Menu Studio's badge; in the description line it would run past the column.`);
+  }
+  return changes;
+}
+
 // Pour sizes and glass/bottle labels printed once (Design Critic round 3; professional drinks lists head their price
 // columns instead of repeating "1 oz / 1.5 oz / 2.5 oz" on every line). When every item in a list shares the same
 // labels, the labels become that list's description line ("1 oz  ·  1.5 oz  ·  2.5 oz") and the rows print bare
@@ -592,6 +629,20 @@ function pourHeaders(doc) {
     const labels = labs(widest);
     if (labels.length < 2 || labels.some(l => !l) || !items.every(it => labs(it).length && labs(it).every((l, i) => l === labels[i]))) continue;
     if (String(holder.desc || '').trim()) continue;
+    // Some items carry only part of the ladder (Prosecco "Glass 10" beside "Glass 11 / Bottle 40"): a key line that
+    // Menu Studio can only set flush left, 6 in from the prices, leaves the lone price ambiguous (panel round 5, 14 of 15
+    // reviewers). Each line then leads with its own units instead ("Glass / bottle · Cabernet Sauvignon, …",
+    // "Glass · Glera, …"), and no key line prints. Values never change; labels stay in meta.price_labels.
+    if (items.some(it => labs(it).length < labels.length)) {
+      for (const it of items) {
+        const lead = labs(it).map((l, i) => i ? l.toLowerCase() : l.charAt(0).toUpperCase() + l.slice(1).toLowerCase()).join(' / ');
+        const d = String(it.desc || '');
+        if (!new RegExp('^' + lead.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&'), 'i').test(d)) it.desc = d ? `${lead} · ${d}` : lead;
+        it.meta = { ...(it.meta || {}), price_labels: labs(it) }; it.prices = it.prices.map(p => ({ ...p, label: '' }));
+      }
+      changes.push(`${holder.name}: ${labels.join(' / ')} named at the start of each line (${items.map(it => `${it.name}: ${labs(it).join(' / ')}`).join('; ')}), so a single price is never read as the wrong unit.`);
+      continue;
+    }
     holder.desc = labels.join('  ·  ');
     for (const it of items) { it.meta = { ...(it.meta || {}), price_labels: labs(it) }; it.prices = it.prices.map(p => ({ ...p, label: '' })); }
     changes.push(`${holder.name}: ${labels.join(' / ')} printed once under the heading; each line shows the prices in that order (labels kept in meta.price_labels).`);
@@ -879,6 +930,12 @@ export function design(input, options = {}) {
       const orphans = orphanSubs(doc, style, sizeKey);
       if (!orphans.length) break;
       for (const c of promoteSubs(doc, orphans)) changes.push(c);
+      for (const key of Object.keys(style0)) style[key] = JSON.parse(JSON.stringify(style0[key]));
+      ({ m: m0, log } = fit(doc, style, sizeKey, req.format));
+    }
+    const tagFix = tagsThatFit(doc, style, sizeKey);
+    if (tagFix.length) {
+      for (const c of tagFix) changes.push(c);
       for (const key of Object.keys(style0)) style[key] = JSON.parse(JSON.stringify(style0[key]));
       ({ m: m0, log } = fit(doc, style, sizeKey, req.format));
     }

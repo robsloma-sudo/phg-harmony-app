@@ -81,7 +81,7 @@ t('fits one page', () => { for (const o of res.options) assert.equal(o.fit.pages
 t('footer pinned inside the margins', () => { for (const o of res.options) { const f = o.menu_studio_file.doc.sections.find(x => x.designer_role === 'footer'); if (f) { assert.ok(f.pos.x > 0.03 && f.pos.y > 0.8 && f.pos.y < 0.97, JSON.stringify(f.pos)); } } });
 t('non-alcoholic is the last list', () => { for (const o of res.options) { const n = o.menu_studio_file.doc.sections.filter(x => !x.designer_role).map(x => x.name); assert.match(n[n.length - 1], /Zero Proof|Non-Alcoholic/); } });
 t('small fresh menus are flat (equal space above every header)', () => { for (const o of res.options) assert.ok(o.menu_studio_file.doc.sections.every(x => !(x.subs || []).length)); });
-t('folded serve formats become facts on the line', () => { const d = res.options[0].menu_studio_file.doc; const all = d.sections.flatMap(x => x.items); assert.equal(all.find(i => i.name === 'Tecate').desc, 'Can · Mexican lager · 4.5% ABV'); assert.equal(all.find(i => i.name === 'Siete Leguas').desc, 'Blanco · Los Altos, Jalisco · 40% ABV'); assert.match(all.find(i => i.name === 'Lagunitas IPA').desc, /^Draft · West Coast IPA, Petaluma, California · 6.2% ABV$/); });
+t('folded serve formats become facts on the line', () => { const d = res.options[0].menu_studio_file.doc; const all = d.sections.flatMap(x => x.items); assert.equal(all.find(i => i.name === 'Tecate').desc, 'Can · Mexican lager · 4.5% ABV'); assert.equal(all.find(i => i.name === 'Siete Leguas').desc, 'Blanco · Los Altos, Jalisco · 40% ABV'); assert.match(all.find(i => i.name === 'Lagunitas IPA').desc, /^Draft · West Coast IPA, Petaluma, California · 16 oz pour · 6.2% ABV$/); });
 t('missing prices -> needs input flag', () => assert.ok(design(missing).risk_flags.includes('missing_prices')));
 
 
@@ -101,10 +101,13 @@ t('garnish prints after a middle dot and counts as answered; HOUSE badge dropped
   assert.match(hm.desc, /agave · salt rim$/); assert.ok(!hm.badges.includes('house'));
   assert.ok(!res.questions.some(q => /^Garnish:/.test(q)));
 });
-t('wine: glass/bottle key once under the heading, bare prices, no redundant colour tag', () => {
+t('wine: a partial glass/bottle ladder is named on each line (no floating key), sparkling first, bare prices, no redundant colour tag', () => {
   const wine = res.options[0].menu_studio_file.doc.sections.find(x => /wine/i.test(x.name));
   const items = [...wine.items, ...(wine.subs || []).flatMap(b => b.items)];
-  assert.match([wine.desc, ...(wine.subs || []).map(b => b.desc)].join(' '), /Glass\s+·\s+Bottle/);
+  assert.ok(![wine.desc, ...(wine.subs || []).map(b => b.desc)].join(' ').trim(), 'no key line');
+  assert.deepEqual(items.map(i => i.name), ['Prosecco', 'House Cabernet']);
+  assert.match(items[0].desc, /^Glass · Glera/); assert.match(items[1].desc, /^Glass \/ bottle · /);
+  assert.deepEqual(items[1].meta.price_labels, ['Glass', 'Bottle']); assert.deepEqual(items[1].prices.map(p => p.value), [11, 40]);
   assert.ok(items.every(i => i.prices.every(p => !p.label)));
   assert.ok(!/^Red\b/.test(items.find(i => i.name === 'House Cabernet').desc));
 });
@@ -187,6 +190,25 @@ t('garnish question covers crafted zero-proof, never a bottled or brewed soft dr
   for (const n of ['Mexican Coca-Cola', 'Topo Chico', 'Fever-Tree Ginger Beer', 'Cold Brew Coffee']) assert.ok(!q.includes(`"${n}"`), n);
   const bare = parseTranscript('Mocktails: Nojito, mint, lime, soda, seven.');
   assert.match(design(bare, {}).questions.join(' '), /Garnish: .*"Nojito"/);
+});
+// Panel round 5: tags lead the description line; the reasoning says only what was built; no forced leaders.
+t('tags lead the description line (New · / Signature ·), no raised badge', () => {
+  const all = res.options[0].menu_studio_file.doc.sections.flatMap(x => [...x.items, ...(x.subs || []).flatMap(b => b.items)]);
+  const mn = all.find(i => i.name === 'Mezcal Negroni'), hm = all.find(i => i.name === 'House Margarita');
+  assert.match(mn.desc, /^New · /); assert.deepEqual(mn.badges, []); assert.ok(mn.meta.designer_flags.includes('new'));
+  assert.match(hm.desc, /^Signature · /); assert.deepEqual(hm.badges, []);
+});
+t('a tag that would push its line past the column stays a Menu Studio badge', () => {
+  const o = design(sb, { venue: { city: 'Denver', state: 'CO' } }).options[0];
+  const all = o.menu_studio_file.doc.sections.flatMap(x => [...x.items, ...(x.subs || []).flatMap(b => b.items)]);
+  const gg = all.find(i => i.name === 'Garden Gimlet');
+  assert.ok(!/^Seasonal · /.test(gg.desc) && gg.badges.includes('seasonal'));
+});
+t('reasoning names only the wine subsections built; a wide single column gets no forced leaders', () => {
+  const txt = JSON.stringify(res);
+  assert.ok(!/White \/ Rosé|Sparkling \/ White/.test(txt));
+  const P = res.options[0].menu_studio_file.style?.page || res.options[0].menu_studio_file.doc.style?.page;
+  if (P && P.cols === 1) assert.equal(P.dots, false);
 });
 console.log(`${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

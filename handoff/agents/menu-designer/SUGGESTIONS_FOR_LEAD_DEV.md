@@ -294,3 +294,25 @@ when the final plan no longer needs it. Page 1 still ends about 40% short.
 - let a section continue into the next column at a subsection boundary (with its heading repeated in small caps,
   "Spirits, continued"), so a long section can share a page with a short one. Count both in `mdcSectionHeight`.
 
+
+## S17. A measure for a single column, and a price-column key (review panel round 5)
+
+**Found:** on Casa Luna (16 items, letter, one column) 11 of 15 reviewers marked down the 7.1 in measure: a short name
+("Tecate", "Modelo") sits about 6 in from its price, and forced leader dots then ran the width of every row and stopped
+at different x before 11.50, 11 / 40 and 7. Menu Studio has one `page.margin` for all four sides, so a narrower column
+also costs the same height at top and bottom, which a full single page cannot spare. And a key such as "Glass ·
+Bottle" can only print as a flush-left section description, about 6 in from the "11 / 40" it explains (14 of 15
+reviewers).
+
+**Designer workaround (in the toolkit now):** leaders are no longer forced onto a wide single column (the right-aligned
+price column stands alone; looks that ask for leaders keep them). When a price ladder is partial (Prosecco "Glass 10"
+beside "Glass 11 / Bottle 40"), each line names its own units ("Glass / bottle · …", "Glass · …") and no key line
+prints. The measure stays 7.1 in.
+
+**Suggested change:**
+- `page.measure` (max column width, in inches) or separate `page.marginX` / `page.marginY`, so a single column can be
+  about 5–5.5 in wide and centred without losing page depth. Count it in `mdcSectionHeight` and the price x.
+- A key that aligns with the prices: `sub.al: 'price'` (or a `holder.key` string) that `mdcDrawItem`'s price column
+  uses, set right-aligned in the sub style above the price figures.
+- Leader style when dots are on: a finer dot (period plus thin space) in `page.rule` at about 60% opacity, ending at
+  a fixed price-slot width (the widest price in the file, tabular figures), so every leader stops at the same x.
