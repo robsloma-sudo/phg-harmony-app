@@ -1096,3 +1096,7 @@ tough scale (best).
   K3 phone map render bug (glyphs unscaled, blacking out the field) found by the K3 phone critic. The coordinator had
   sent the phone parts to Rob without inspecting them (process miss: always open every render before sending).
   Sent back to the K3 builder for a fix.
+2026-09-28 — TEST-1 benchmark panels complete (60 reviews).
+  Combined scores: K1 71.7, K2 66.8, K3 70.9, R21 72.3.
+  Critic scores: K1 72.5, K2 61.3, K3 65.2, R21 70.3.
+  Recommendation: take K1 forward, with manifest fixes. Details in scores/BENCHMARK_K_PANEL.md.
