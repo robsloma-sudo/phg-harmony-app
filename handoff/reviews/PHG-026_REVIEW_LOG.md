@@ -40,3 +40,26 @@ Spec (S1-S16) and Safety (B1, S1-S7) overlap on:
 - 10-arg overload cannot be called ('not unique') -> drop after checking callers
 - promotion batch account locks: document / smaller batch
 - staging views that ignore superseded_at: correct the claim
+
+## Changes after round 1 (submitted for round 2)
+- Function rollback: the migration first saves the 4 live definitions in phg_backup_function_defs_20260927 (aborts if
+  fewer than 4) and adds phg_rollback_function_defs_20260927() to restore them exactly (including the 10-arg overload).
+- Data rollback: phg_repair_20260927_rollback() - skips venues that got a newer menu after the repair, demotes before it
+  restores, restores staging rows only if their page was not re-extracted since, raises if any account would end
+  with two current menus.
+- One current menu enforced by the database: unique index menus_one_current_per_account (created after Step 2's
+  checks); submit_menu now demotes, inserts, then links superseded_by (index is non-deferrable).
+- Step 2: table lock for Steps 1-2; ties keep the menu already current (was_current before created_at); demote then
+  promote; postcondition block raises on >1 current, touched venue without current, or any venue smaller than its
+  largest pre-incident menu; result recorded in phg_repair_run_20260927.
+- submit_menu: other-source duplicate only for a true subset; near-identical (>=90% of current) and at least as large
+  -> replaces (newer prices kept); a missing price matches any price (phg_menu_keys_overlap); a NULL source key is
+  never "same source".
+- 10-arg submit_menu dropped (uncallable today: 42725 'not unique'; no callers); definition saved for rollback.
+- Step 3: 100 venues per call, returns venues remaining; runbook VACUUM (ANALYZE) afterwards.
+- Step 4: batched phg_repair_step4_batch(200) with a done table; CONCURRENTLY index as runbook step 4.
+- Counts defined in the repair header (1,547 touched / 185 with a pre-incident menu / 119 damaged / Step 2 changes
+  recorded at run time); staging-view claim corrected (4 views ignore superseded_at).
+- Verification: supabase/tests/phg_026_verification.sql (pass/fail rows, expected values).
+- Documented: re-enable cron 7 with p_pages <= 5 (account row locks held per promotion transaction).
+- Follow-up after release (not part of this change): stale header comment in the submit-menu Edge function.

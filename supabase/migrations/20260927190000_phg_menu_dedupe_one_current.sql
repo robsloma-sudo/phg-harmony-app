@@ -14,8 +14,9 @@
 -- (v_menu_composition, v_menu_brand_presence, v_menu_category_share, phg_menu_composition,
 -- phg_brand_presence, phg-expanded-data) assumes ONE current menu per venue. This keeps that
 -- invariant and decides which capture should be current:
---   same source (canonical URL)      -> re-capture replaces, unless identical or a strict subset
---   other source, >=90% contained    -> duplicate, nothing inserted
+--   same source (canonical URL)      -> re-capture replaces, unless identical or a strict subset (no URL = never same)
+--   other source, a true subset       -> duplicate, nothing inserted (a missing price matches any price: unknown)
+--   other source, near-identical (>=90% of the current items) and at least as large -> replaces (newer prices kept)
 --   zero-item capture beside a menu  -> ignored
 --   item/event/product page          -> never replaces a non-empty current menu (stored as alternate), even
 --                                       when it shares the menu's source key (?item= is stripped from the key)
@@ -24,6 +25,8 @@
 -- "Drinks items" = cocktail / spirit_pour items plus every item in a cocktails / wine / beer / spirits section
 -- (beer and wine are stored as item_type 'other' inside typed sections).
 -- Alternates are real rows with is_current=false and superseded_reason, so nothing is lost.
+-- One current menu per venue is enforced by the unique index menus_one_current_per_account (created by the repair after
+-- it has made the data consistent); submit_menu demotes before it inserts.
 -- Menus are never deleted. submit_menu locks the account row first (the same lock the extraction save takes),
 -- then an advisory lock, so both writers of one account queue behind each other.
 --
@@ -35,6 +38,31 @@
 -- Apply with cron 7 (promotion) and 13 (extraction) PAUSED. Data repair is a separate script.
 
 set local lock_timeout = '3s';
+
+-- ---------- 0. save the live definitions this migration replaces (rollback: phg_rollback_function_defs_20260927) ----------
+create table if not exists public.phg_backup_function_defs_20260927 (
+  signature text primary key, definition text not null, saved_at timestamptz not null default now());
+alter table public.phg_backup_function_defs_20260927 enable row level security;
+revoke all on public.phg_backup_function_defs_20260927 from anon, authenticated;
+insert into public.phg_backup_function_defs_20260927 (signature, definition)
+select p.oid::regprocedure::text, pg_get_functiondef(p.oid)
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+ where n.nspname = 'public' and p.proname in ('submit_menu','promote_clean_menu_batch','phg_save_menu_candidate_extraction')
+on conflict (signature) do nothing;
+do $$ begin
+  if (select count(*) from public.phg_backup_function_defs_20260927) < 4 then
+    raise exception 'expected 4 saved function definitions before replacing them';
+  end if;
+end $$;
+-- restores all four exactly as they were (including the 10-arg submit_menu this migration drops)
+create or replace function public.phg_rollback_function_defs_20260927()
+returns int language plpgsql set search_path to 'public', 'pg_temp' as $$
+declare r record; n int := 0;
+begin
+  for r in select definition from public.phg_backup_function_defs_20260927 loop execute r.definition; n := n + 1; end loop;
+  return n;
+end $$;
+revoke all on function public.phg_rollback_function_defs_20260927() from public, anon, authenticated;
 
 -- ---------- A. schema additions (nullable, no defaults: metadata-only, no table rewrite) ----------
 alter table public.menus
@@ -143,6 +171,17 @@ returns integer language sql stable set search_path = '' as $$
     and (i.item_type in ('cocktail', 'spirit_pour', 'beer', 'wine') or s.section_type in ('cocktails', 'wine', 'beer', 'spirits'))
 $$;
 
+-- Items of a that also appear in b. Same name and same price, or the same name where either side has no price
+-- (a missing price is unknown, not a different item).
+create or replace function public.phg_menu_keys_overlap(a text[], b text[])
+returns integer language sql immutable parallel safe as $$
+  select count(*)::int from (select distinct x from pg_catalog.unnest(coalesce(a, '{}'::text[])) x) ax
+  where exists (select 1 from pg_catalog.unnest(coalesce(b, '{}'::text[])) y
+                where y = ax.x
+                   or (pg_catalog.split_part(y, '|', 1) = pg_catalog.split_part(ax.x, '|', 1)
+                       and (pg_catalog.split_part(y, '|', 2) = '' or pg_catalog.split_part(ax.x, '|', 2) = '')))
+$$;
+
 create or replace function public.phg_menu_key_set_hash(p_keys text[])
 returns text language sql immutable parallel safe as $$
   select pg_catalog.md5(pg_catalog.array_to_string(coalesce(p_keys, '{}'::text[]), '~'))
@@ -151,7 +190,8 @@ $$;
 revoke all on function public.phg_menu_source_key(text), public.phg_menu_url_is_item_page(text),
   public.phg_menu_item_key(text, numeric), public.phg_menu_payload_item_keys(jsonb),
   public.phg_menu_payload_bev_count(jsonb), public.phg_menu_extract_item_keys(jsonb),
-  public.phg_menu_item_keys(uuid), public.phg_menu_bev_count(uuid), public.phg_menu_key_set_hash(text[])
+  public.phg_menu_item_keys(uuid), public.phg_menu_bev_count(uuid), public.phg_menu_key_set_hash(text[]),
+  public.phg_menu_keys_overlap(text[], text[])
   from public, anon, authenticated;
 
 -- ---------- C. submit_menu (15-arg): the single chokepoint for every writer ----------
@@ -193,8 +233,9 @@ begin
            order by m.created_at desc, m.id for update loop
   c_keys := coalesce(c.item_keys, public.phg_menu_item_keys(c.id));
   c_n    := cardinality(c_keys);
-  v_ov   := cardinality(array(select unnest(v_keys) intersect select unnest(c_keys)));
-  if c.source_key is not distinct from v_source_key then
+  v_ov   := public.phg_menu_keys_overlap(v_keys, c_keys);
+  -- a capture without a URL is never "the same page" as another capture without one
+  if c.source_key is not null and c.source_key = v_source_key then
    -- Same source: identical or strict-subset re-capture keeps the current menu.
    if v_n > 0 and v_ov = v_n and c_n >= v_n then
     return jsonb_build_object('status', case when c_n > v_n then 'subset_of_current' else 'duplicate_of_current' end,
@@ -214,8 +255,9 @@ begin
     v_supersede := v_supersede || c.id; v_reason := coalesce(v_reason, 'same_source_recapture');
    end if;
   else
-   -- Other source: (near-)contained in an equal-or-larger current menu is a duplicate.
-   if v_n > 0 and c_n >= v_n and v_ov >= ceil(c_dup_ratio * v_n) then
+   -- Other source: only a TRUE subset of an equal-or-larger current menu is a duplicate (a 90% match may carry
+   -- newer prices, and those must not be thrown away).
+   if v_n > 0 and c_n >= v_n and v_ov = v_n then
     return jsonb_build_object('status','duplicate_of_current','menu_id',c.id,'items',v_n,'overlap',v_ov,'current_items',c_n,
       'message','item set already present in the current menu of this account; nothing inserted');
    end if;
@@ -228,6 +270,9 @@ begin
    elsif (v_n, v_bev) > (c_n, c_bev) then
     v_supersede := v_supersede || c.id;
     v_reason := coalesce(v_reason, case when c_n > 0 and v_ov >= ceil(c_dup_ratio * c_n) then 'contained_in_larger_capture' else 'larger_beverage_capture' end);
+   elsif v_n >= c_n and c_n > 0 and v_ov >= ceil(c_dup_ratio * c_n) then
+    -- same menu, same size, from another page, with some new prices: the newer capture becomes current
+    v_supersede := v_supersede || c.id; v_reason := coalesce(v_reason, 'newer_near_identical_capture');
    else
     v_make_current := false; v_alt_of := c.id; v_reason := 'alternate_smaller_other_source';
    end if;
@@ -244,15 +289,18 @@ begin
  end if;
 
  v_menu_code:='MENU-'||left(md5(p_account_id||coalesce(p_content_hash,'')||clock_timestamp()::text),20);
+ -- demote first: the one-current-menu unique index is checked row by row
+ if v_make_current and cardinality(v_supersede) > 0 then
+  update public.menus set is_current=false, superseded_at=now(), superseded_reason=v_reason
+   where id = any(v_supersede) and is_current;
+ end if;
  insert into public.menus(menu_id,account_id,source_id,evidence_url,menu_title,menu_format,extraction_confidence,extraction_notes,published_date,content_hash,is_current,superseded_by,superseded_reason,superseded_at,raw_content,raw_content_type,raw_content_chars,platform,source_file_url,needs_vision_pass,item_count,source_key,item_keys,item_set_hash)
  values(v_menu_code,p_account_id,v_source_id,p_evidence_url,p_menu_title,p_menu_format,p_extraction_confidence,p_extraction_notes,p_published_date,p_content_hash,v_make_current,
         case when v_make_current then null else v_alt_of end, case when v_make_current then null else v_reason end, case when v_make_current then null else now() end,
         p_raw_content,p_raw_content_type,length(p_raw_content),p_platform,p_source_file_url,p_needs_vision_pass,v_expected_items,v_source_key,v_keys,v_set_hash) returning id into v_menu_id;
 
- if cardinality(v_supersede) > 0 then
-  update public.menus
-     set is_current=false, superseded_by=v_menu_id, superseded_at=now(), superseded_reason=v_reason
-   where id = any(v_supersede) and is_current;
+ if v_make_current and cardinality(v_supersede) > 0 then
+  update public.menus set superseded_by=v_menu_id where id = any(v_supersede);
  end if;
 
  for v_section in select * from jsonb_array_elements(coalesce(p_sections,'[]'::jsonb)) loop
@@ -281,19 +329,10 @@ begin
    'superseded',to_jsonb(v_supersede),'reason',v_reason,'source_key',v_source_key);
 end $function$;
 
--- The 10-arg overload was a second, divergent write path (account-wide supersession, no cocktail
--- inference). Keep the signature for any old caller but route it through the 15-arg logic.
-create or replace function public.submit_menu(p_account_id text, p_source_code text, p_evidence_url text, p_menu_title text, p_menu_format text, p_extraction_confidence text, p_extraction_notes text, p_published_date date, p_content_hash text, p_sections jsonb)
- returns jsonb
- language plpgsql
- security definer
- set search_path to 'public'
-as $function$
-begin
-  return public.submit_menu(p_account_id, p_source_code, p_evidence_url, p_menu_title, p_menu_format,
-                            p_extraction_confidence, p_extraction_notes, p_published_date, p_content_hash,
-                            p_sections, null::text, null::text, null::text, null::text, false);
-end $function$;
+-- The 10-arg overload cannot be called at all today (any 10-argument call is ambiguous with the 15-arg version and
+-- fails with 42725 'is not unique'), no function or Edge function calls it, and the submit-menu Edge function passes
+-- p_needs_vision_pass, so it already uses the 15-arg version. Drop it; its definition is saved for rollback.
+drop function if exists public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb);
 
 -- ---------- D. promote_clean_menu_batch: one group per (page, account); mark exactly the rows used ----------
 create or replace function public.promote_clean_menu_batch(p_pages integer default 10)
@@ -399,6 +438,5 @@ begin
 end $function$;
 
 revoke all on function public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb,text,text,text,text,boolean) from public, anon, authenticated;
-revoke all on function public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb) from public, anon, authenticated;
 revoke all on function public.promote_clean_menu_batch(integer) from public, anon, authenticated;
 revoke all on function public.phg_save_menu_candidate_extraction(bigint,timestamp with time zone,uuid,jsonb,text,text,text) from public, anon, authenticated;
