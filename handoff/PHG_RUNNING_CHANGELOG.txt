@@ -1326,3 +1326,16 @@ Evidence: computed_dashboard." ("show me the map view", "show me the menus you'r
   "Evidence: ..." audit tags are stripped from spoken/floated replies in the view. "Show me the menus
   you're working on" now opens Menu Studio. The leftover "HARMONY PROMPT" float is hidden in the view.
 - Tested headless: chat question -> chat brain; sales question -> command router; menus request -> stage.
+
+------------------------------------------------------------------------------
+PHG-20260928-ONEVIEW | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.22, branch)
+Rob: "Can we just make Menu Studio part of that same view? I want this to be an all-inclusive view, never
+having to leave this page."
+- Menu Studio is now a mode of the Harmony view, not a separate full-screen page: the page renders where the
+  field was (field dimmed to 16%), the view's own +, Speak and gear stay, her replies float above the page
+  (3 lines), and a cosmic nav pill (previous · design + page dots · next · close) sits above the dock.
+  The stage's own title bar, bottom bar, text box and caption are hidden inside the view.
+- + sheet in menu mode: Paint the artwork, Next design, Close the menu (Start a menu hidden); gear
+  "Menu Studio" toggles the mode. Leaving the Harmony view also closes the menu.
+- Tested headless 390x844: open via +, nav pill, + sheet rows, next design, page swipe target, close back to
+  the field in the same view; zero page errors.
