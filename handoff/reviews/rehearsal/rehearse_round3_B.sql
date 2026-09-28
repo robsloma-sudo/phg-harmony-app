@@ -841,11 +841,24 @@ $rehearse_f2$;
   r := r || jsonb_build_object('B', b, 'B_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
   t0 := clock_timestamp();
   BEGIN
+    -- The promotion queue is empty today (v_menu_staging_promotion_candidates = 0 rows). Re-stage one incident item
+    -- page's 13 beverage rows under a NEW sibling ?item= URL: same items, new content hash (the incident pattern).
+    update public.staging_menu_extract
+       set menu_page_url = 'https://thesherpagrill.com/menu?item=rehearsal-new-sibling', promoted_at = null, promotion_status = null, quality_status = 'promotion_ready'
+     where account_id = 'ACC-CO-LED-03-06531' and menu_page_url = 'https://thesherpagrill.com/menu?item=aloo-gobi-NKZx' and superseded_at is null;
+    get diagnostics rem = row_count;
+    select id into cur_id from public.menus where account_id = 'ACC-CO-LED-03-06531' and is_current;
+    t1 := clock_timestamp();
     res := public.promote_clean_menu_batch(1);
-    c := jsonb_build_object('result', res, 'ms', round(extract(epoch from clock_timestamp()-t0)*1000), 'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x),
-      'pass', coalesce((res->>'failed')::int, 1) = 0 and (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x) = 0
-              and (coalesce((res->>'created')::int,0)+coalesce((res->>'alternate')::int,0)+coalesce((res->>'duplicate')::int,0)
-                   +coalesce((res->>'held_subset')::int,0)+coalesce((res->>'skipped')::int,0)) = 1);
+    c := jsonb_build_object('rows_requeued', rem, 'result', res, 'ms', round(extract(epoch from clock_timestamp()-t1)*1000),
+      'current_unchanged', (select id from public.menus where account_id = 'ACC-CO-LED-03-06531' and is_current) = cur_id,
+      'acct_menus_created', (select count(*) from public.menus where account_id = 'ACC-CO-LED-03-06531' and created_at >= now()),
+      'staging_outcome', (select jsonb_object_agg(coalesce(promotion_status,'(null)'), n) from (select promotion_status, count(*) n from public.staging_menu_extract
+                            where account_id = 'ACC-CO-LED-03-06531' and menu_page_url = 'https://thesherpagrill.com/menu?item=rehearsal-new-sibling' group by 1) x),
+      'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x));
+    c := c || jsonb_build_object('pass', coalesce((res->>'failed')::int, 1) = 0 and (res->>'created')::int = 0
+              and (coalesce((res->>'alternate')::int,0)+coalesce((res->>'duplicate')::int,0)+coalesce((res->>'held_subset')::int,0)) = 1
+              and (c->>'current_unchanged')::boolean and (c->>'multi_current_global')::int = 0 and (c->>'acct_menus_created')::int = 0);
     RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback promote';
   EXCEPTION
     WHEN sqlstate 'P0099' THEN NULL;

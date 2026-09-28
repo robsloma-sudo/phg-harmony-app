@@ -1,47 +1,50 @@
+"""Coa Cantina drinks menu, round 2. Writes doc.json and menu.html into the parent folder."""
 import json, base64, html, unicodedata, os, sys
-sys.path.insert(0, os.path.dirname(__file__))
-from source import ALL, fix
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from source import ALL, fix, fix_cite
 
-HERE = os.path.dirname(__file__)
-OUT = '/home/user/phg-harmony-app/handoff/designs/test-2-coa-cantina'
-os.makedirs(OUT, exist_ok=True)
+OUT = os.path.dirname(HERE)
 SRC = {r[0]: r for r in ALL}
 E = html.escape
 
 # ---------------------------------------------------------------- content model
-# spec: 'venue' = venue's own notes; 'standard' = public.cocktail_reference; 'name' = stated in the item name
-STD_MARG = ['blanco tequila', 'lime', 'orange liqueur']
+# Printed descriptions carry ONLY what venue rows state. Standard specs live in proposal.md, not on the menu.
+# (printed desc or '', components [(name, role, source)], missing ingredients)
+MARG_BASE = [('Blanco tequila', 'base', 'venue')]
 COCKTAILS = {
- # id: (printed desc, components[(name, role, source)], missing list)
- 173909: ('Blanco tequila, lime, orange liqueur', [('Blanco tequila','base','venue'),('Lime','citrus','standard'),('Orange liqueur','modifier','standard')], []),
- 173910: ('Banhez mezcal, lime, orange liqueur', [('Banhez mezcal','base','venue'),('Lime','citrus','standard'),('Orange liqueur','modifier','standard')], []),
- 173911: ('Blanco tequila, lime, orange liqueur, cucumber, jalapeño', [('Blanco tequila','base','venue'),('Lime','citrus','standard'),('Orange liqueur','modifier','standard'),('Cucumber','flavour','name'),('Jalapeño','flavour','name')], ['form of cucumber and jalapeño (muddled, infused, syrup?)']),
- 173912: ('Blanco tequila, lime, orange liqueur, mango', [('Blanco tequila','base','venue'),('Lime','citrus','standard'),('Orange liqueur','modifier','standard'),('Mango','flavour','name')], ['form of mango (purée, syrup, fresh?)']),
- 173908: ('Blanco tequila, lime, orange liqueur, blackberry', [('Blanco tequila','base','venue'),('Lime','citrus','standard'),('Orange liqueur','modifier','standard'),('Blackberry','flavour','name')], ['form of blackberry']),
- 173913: ('Blanco tequila, lime, orange liqueur, peach', [('Blanco tequila','base','venue'),('Lime','citrus','standard'),('Orange liqueur','modifier','standard'),('Peach','flavour','name')], ['form of peach']),
- 173914: ('Blanco tequila, lime, orange liqueur, pineapple', [('Blanco tequila','base','venue'),('Lime','citrus','standard'),('Orange liqueur','modifier','standard'),('Pineapple','flavour','name')], ['form of pineapple']),
- 173915: ('Blanco tequila, lime, orange liqueur, strawberry', [('Blanco tequila','base','venue'),('Lime','citrus','standard'),('Orange liqueur','modifier','standard'),('Strawberry','flavour','name')], ['form of strawberry']),
- 173918: ('Blanco tequila, fresh lime, grapefruit, Aperol, grapefruit soda, salted rim', [('Blanco tequila','base','venue'),('Fresh lime','citrus','venue'),('Grapefruit','citrus','venue'),('Aperol','modifier','venue'),('Grapefruit soda','lengthener','venue'),('Salted rim','garnish','venue')], []),
- 173921: ('Blanco tequila, fresh lime juice, Topo Chico sparkling water', [('Blanco tequila','base','venue'),('Fresh lime juice','citrus','venue'),('Topo Chico sparkling water','lengthener','venue')], ['garnish']),
- 173916: ('Blanco tequila, tomato juice, lemon, Worcestershire, hot sauce, celery salt', [('Blanco tequila','base','venue'),('Tomato juice','mixer','standard'),('Lemon','citrus','standard'),('Worcestershire','seasoning','standard'),('Hot sauce','seasoning','standard'),('Celery salt','seasoning','standard')], ['garnish']),
- 173920: ('Made with Dos Equis', [('Dos Equis','base','venue')], ['michelada mix / seasonings, citrus, rim, garnish']),
- 173917: ('Blanco tequila', [('Blanco tequila','base','venue')], ['all modifiers, mixers and garnish']),
- 173919: ('Tequila', [('Tequila','base','venue')], ['all modifiers and garnish']),
- 173922: ('Blanco tequila, frozen', [('Blanco tequila','base','venue')], ['all flavours and mixers']),
- 173923: ('Blanco tequila, lime, orange liqueur, mango', [('Blanco tequila','base','venue'),('Lime','citrus','standard'),('Orange liqueur','modifier','standard'),('Mango','flavour','name')], ['frozen base / mix']),
- 173924: ('Blanco tequila, lime, orange liqueur, strawberry', [('Blanco tequila','base','venue'),('Lime','citrus','standard'),('Orange liqueur','modifier','standard'),('Strawberry','flavour','name')], ['frozen base / mix']),
- 173925: ('Blanco tequila, frozen', [('Blanco tequila','base','venue')], ['which tropical fruits; mixers']),
- 173975: ('Zero-proof alternatives to tequila, gin or whiskey', [('Ritual Zero Proof (tequila, gin or whiskey alternative)','base','venue')], []),
+ 173909: ('', MARG_BASE, ['all modifiers (citrus, sweetener, liqueur), rim, garnish']),
+ 173910: ('Made with Banhez mezcal', [('Banhez mezcal', 'base', 'venue')], ['all modifiers, rim, garnish']),
+ 173911: ('', MARG_BASE + [('Cucumber', 'flavour', 'name'), ('Jalapeno', 'flavour', 'name')], ['form of cucumber / jalapeno; modifiers; rim']),
+ 173912: ('', MARG_BASE + [('Mango', 'flavour', 'name')], ['form of mango; modifiers; rim']),
+ 173908: ('', MARG_BASE + [('Blackberry', 'flavour', 'name')], ['form of blackberry; modifiers; rim']),
+ 173913: ('', MARG_BASE + [('Peach', 'flavour', 'name')], ['form of peach; modifiers; rim']),
+ 173914: ('', MARG_BASE + [('Pineapple', 'flavour', 'name')], ['form of pineapple; modifiers; rim']),
+ 173915: ('', MARG_BASE + [('Strawberry', 'flavour', 'name')], ['form of strawberry; modifiers; rim']),
+ 173918: ('Blanco tequila, fresh lime, grapefruit, Aperol, grapefruit soda, salted rim',
+          [('Blanco tequila', 'base', 'venue'), ('Fresh lime', 'citrus', 'venue'), ('Grapefruit', 'citrus', 'venue'), ('Aperol', 'modifier', 'venue'),
+           ('Grapefruit soda', 'lengthener', 'venue'), ('Salted rim', 'garnish', 'venue')], []),
+ 173921: ('Blanco tequila, fresh lime juice, Topo Chico sparkling water',
+          [('Blanco tequila', 'base', 'venue'), ('Fresh lime juice', 'citrus', 'venue'), ('Topo Chico sparkling water', 'lengthener', 'venue')], ['garnish']),
+ 173916: ('', [('Blanco tequila', 'base', 'venue')], ['tomato base, citrus, seasonings, rim, garnish (standard Bloody Mary spec in proposal.md, not printed)']),
+ 173920: ('Made with Dos Equis', [('Dos Equis', 'base', 'venue')], ['michelada mix / seasonings, citrus, rim, garnish']),
+ 173917: ('', [('Blanco tequila', 'base', 'venue')], ['all modifiers, mixers, rim, garnish']),
+ 173919: ('', [('Tequila', 'base', 'venue')], ['all modifiers and garnish']),
+ 173923: ('', MARG_BASE + [('Mango', 'flavour', 'name')], ['frozen base / mix']),
+ 173924: ('', MARG_BASE + [('Strawberry', 'flavour', 'name')], ['frozen base / mix']),
+ 173925: ('', MARG_BASE, ['which tropical fruits; frozen base / mix']),
+ 173922: ('', MARG_BASE, ['all flavours and mixers']),
+ 173975: ('Zero-proof alternatives to tequila, gin or whiskey', [('Ritual Zero Proof (tequila, gin or whiskey alternative)', 'base', 'venue')], []),
 }
-UPGRADE = {173918: (184680, 'Upgrade to Don Julio Blanco', 4), 173921: (184681, 'Upgrade to DeLeón Platinum', 2)}
-
+UPGRADE = {173918: (184680, 'Upgrade to Don Julio Blanco', 4), 173921: (184681, 'Upgrade to Deleon Platinum', 2)}
+INTRO = {'sec_margaritas': 'Made with blanco tequila, except the Coa Mezcal Margarita.',
+         'sec_frozen': 'Made with blanco tequila.'}
 KNOWN_BEER = {173932: 'American light lager', 173933: 'American light lager', 173941: 'International pale lager',
-              173930: 'Golden ale', 173931: 'IPA'}  # brand_products.declared_style, or the style stated in the name
-SPIRIT_DESC = {173955: 'Cucumber & mint · grapefruit & rose · peach & orange blossom',
-               173956: 'Grape · orange · citrus · raspberry · watermelon',
-               174103: 'Coffee liqueur', 174104: 'Tequila'}
-
-def names(ids): return [(i, fix(SRC[i][2]), SRC[i][3]) for i in ids]
+              173930: 'Golden ale', 173931: 'IPA'}           # doc.json only (brand_products.declared_style / the name)
+SPIRIT_DESC = {173955: 'Cucumber & mint · grapefruit & rose · peach & orange blossom',     # venue notes
+               173956: 'Grape · orange · citrus · raspberry · watermelon',                 # venue notes
+               174104: 'Joven tequila'}   # products d760d665-2d53-42a9-bdad-700bff970dc0 "Ha Clase Azul Gold Tequila", class joven
+NOT_PRINTED = {173971: "no price in the source; kept in doc.json, left off print and phone until priced"}
 
 MARGS = [173909, 173910, 173911, 173912, 173908, 173913, 173914, 173915]
 COCKS = [173918, 173921, 173916, 173920, 173917, 173919]
@@ -49,97 +52,90 @@ FROZEN = [173923, 173924, 173925, 173922]
 AF = [173975]
 DRAFT = [173926, 173928, 173927, 173930, 173931, 173929]
 BOTTLES = [173937, 173936, 173941, 173942, 173938, 173932, 173933, 173934, 173935, 173940]
-SELTZ = [173943, 173944, 173945, 173948, 173949, 173950, 173951, 173946, 173947, 173939]
-VODKA = [173952, 173954, 173955, 173957, 173953, 173956]
-GIN = [173965, 173962, 173963, 173964]
-RUM = [173958, 173959, 173960, 173961]
-WHISKEY = [173970, 173969, 173967, 173968, 173966, 173972, 173971]
-SCOTCH = [173974, 173973]
-OTROS = [174103, 174104]
-# sort spirits by price then name for a clean ladder
+SELTZ = [173943, 173944, 173945, 173948, 173949, 173950, 173951, 173946, 173947]
+CIDER = [173939]
 def ladder(ids): return sorted(ids, key=lambda i: (SRC[i][3] if SRC[i][3] is not None else 999, fix(SRC[i][2])))
-VODKA, GIN, RUM, WHISKEY, SCOTCH = map(ladder, (VODKA, GIN, RUM, WHISKEY, SCOTCH))
+VODKA = ladder([173952, 173954, 173955, 173957, 173953, 173956])
+GIN = ladder([173965, 173962, 173963, 173964])
+RUM = ladder([173958, 173959, 173960, 173961])
+WHISKEY = ladder([173970, 173969, 173967, 173968, 173966, 173972, 173971])
+SCOTCH = ladder([173974, 173973])
+OTROS = [174103, 174104]
 
 TEQ = [r for r in ALL if r[1] in ('Blanco', 'Reposado', 'Anejo')]
 def is_cris(n): return 'Cristalino' in n or 'Cristalnio' in n
-def is_extra(n): return ' Extra' in n
 CRIS = [r for r in TEQ if is_cris(r[2])]
-EXTRA = [r for r in TEQ if is_extra(r[2])]
-CORE = [r for r in TEQ if not is_cris(r[2]) and not is_extra(r[2])]
+CORE = [r for r in TEQ if not is_cris(r[2])]   # extra anejos stay in the Anejo column (round-2 rule 11)
 def skey(n): return unicodedata.normalize('NFKD', n).encode('ascii', 'ignore').decode().lower()
 rows = {}
 for i, sec, n, p, _ in CORE:
     rows.setdefault(fix(n), {})[sec[0]] = (i, p)
 MATRIX = sorted(rows.items(), key=lambda kv: skey(kv[0]))
 CRIS = sorted(CRIS, key=lambda r: skey(fix(r[2])))
-EXTRA = sorted(EXTRA, key=lambda r: r[3])
+CRIS_CITE = {174018: 'products 2a635ebb-ba30-4be9-9ef4-de957a258457 "Casamigos Cristalino" class cristalino',
+             174079: 'products 9952863c-16f6-4a4d-81b8-3c8d142adbc7 "Espolon Cristalino" class cristalino',
+             174037: 'products 5bc87a16-7b10-48d8-8d13-bfb63548fbf2 "Gran Coramino Reposado Cristalino" class cristalino'}
+EXTRA_CITE = {174097: 'products 9a28ff7a-d1af-40ad-859d-a5ead6d74ae6 "Patron Extra Anejo" class extra_anejo',
+              174071: 'products 2f16596f-5fcd-44eb-a02d-bde282f3f718 "Corralejo Extra Anejo" class extra_anejo'}
 
 # ---------------------------------------------------------------- doc.json
-def item(i, desc='', label='', comps=None, missing=None, section_note=None, extra_prices=None, merged=None):
+def item(i, desc='', label='', comps=None, missing=None, note=None, extra_prices=None, merged=None, cite=None):
     r = SRC[i]
     prices = [] if r[3] is None else [{'id': f'p_sme_{i}', 'label': label, 'value': r[3], 'source': 'staging_menu_extract'}]
     for (uid, ulabel, uval) in (extra_prices or []):
         prices.append({'id': f'p_sme_{uid}', 'label': ulabel, 'value': uval, 'source': 'staging_menu_extract'})
     meta = {'source_id': i, 'source_section': r[1], 'source_name': r[2]}
-    if fix(r[2]) != r[2]: meta['name_normalised_from'] = r[2]
+    if fix(r[2]) != r[2]: meta['name_normalised_from'] = r[2]; meta['name_normalisation_cite'] = fix_cite(r[2])
     if merged: meta['merged_from'] = merged
-    if missing: meta['missing_ingredients'] = missing
+    if missing: meta['missing_ingredients'] = [m for m in missing if m]
     if r[3] is None: meta['needs_price'] = True
-    if section_note: meta['placement_note'] = section_note
+    if i in NOT_PRINTED: meta['print'] = False; meta['print_note'] = NOT_PRINTED[i]
+    if note: meta['placement_note'] = note
+    if cite: meta['class_cite'] = cite
     it = {'id': f'sme_{i}', 'name': fix(r[2]), 'brand': '', 'desc': desc, 'badges': [], 'prices': prices,
           'meta': meta, 'origin': {'item_name': r[2], 'venue_key': 'ACC-IA-LIC-LC0049193'}, 'source': 'staging_menu_extract'}
-    if comps:
-        it['components'] = [{'kind': 'ingredient', 'name': n, 'role': role, 'spec_source': s} for n, role, s in comps]
+    if comps: it['components'] = [{'kind': 'ingredient', 'name': n, 'role': role, 'spec_source': s} for n, role, s in comps]
     return it
 
 def cocktail(i):
-    d, comps, miss = COCKTAILS[i]
-    up = UPGRADE.get(i)
+    d, comps, miss = COCKTAILS[i]; up = UPGRADE.get(i)
     return item(i, d, comps=comps, missing=miss, extra_prices=[up] if up else None, merged=[up[0]] if up else None)
+def beer(i): return item(i, KNOWN_BEER.get(i, ''), missing=[None if i in KNOWN_BEER else 'style', 'ABV'])
+LAB = {'Blanco': 'Blanco', 'Reposado': 'Reposado', 'Anejo': 'Añejo'}
 
-def simple(i, desc=''):
-    miss = None
-    return item(i, desc)
+teq_subs = {'Blanco': [], 'Reposado': [], 'Anejo': []}
+for r in sorted(CORE, key=lambda r: skey(fix(r[2]))):
+    teq_subs[r[1]].append(item(r[0], f'{LAB[r[1]]} tequila', label=LAB[r[1]], cite=EXTRA_CITE.get(r[0]),
+                               note='name says Extra; kept under Añejo as listed by the venue (round-2 rule 11)' if ' Extra' in r[2] else None))
+cris_items = [item(r[0], f'{LAB[r[1]]} cristalino', label=LAB[r[1]], note=f'venue lists under {LAB[r[1]]}', cite=CRIS_CITE.get(r[0])) for r in CRIS]
 
 doc = {'id': 'menu_coa_drinks', 'title': 'Coa Cantina — Drinks', 'size': 'legal_p', 'sections': [
- {'id': 'sec_margaritas', 'name': 'Margaritas', 'desc': '', 'items': [cocktail(i) for i in MARGS], 'subs': []},
+ {'id': 'sec_margaritas', 'name': 'Margaritas', 'desc': INTRO['sec_margaritas'], 'items': [cocktail(i) for i in MARGS], 'subs': []},
  {'id': 'sec_cocktails', 'name': 'Cocktails', 'desc': '', 'items': [cocktail(i) for i in COCKS], 'subs': []},
- {'id': 'sec_frozen', 'name': 'Frozen Drinks', 'desc': '', 'items': [cocktail(i) for i in FROZEN], 'subs': []},
+ {'id': 'sec_frozen', 'name': 'Frozen Drinks', 'desc': INTRO['sec_frozen'], 'items': [cocktail(i) for i in FROZEN], 'subs': []},
  {'id': 'sec_beer', 'name': 'Beer', 'desc': '', 'items': [], 'subs': [
-   {'id': 'sub_beer_draft', 'name': 'Draft', 'desc': '', 'items': [item(i, KNOWN_BEER.get(i, ''), missing=['style' if i not in KNOWN_BEER else None, 'ABV']) for i in DRAFT]},
-   {'id': 'sub_beer_bottles', 'name': 'Bottles & Cans', 'desc': '', 'items': [item(i, KNOWN_BEER.get(i, ''), missing=['style' if i not in KNOWN_BEER else None, 'ABV']) for i in BOTTLES]}]},
- {'id': 'sec_seltzer_cider', 'name': 'Seltzer & Cider', 'desc': '', 'items': [item(i, '', missing=['base spirit / style', 'ABV'], section_note='venue lists under Bottles & Cans') for i in SELTZ], 'subs': []},
+   {'id': 'sub_beer_draft', 'name': 'Draft', 'desc': '', 'items': [beer(i) for i in DRAFT]},
+   {'id': 'sub_beer_bottles', 'name': 'Bottles & Cans', 'desc': '', 'items': [beer(i) for i in BOTTLES]}]},
+ {'id': 'sec_seltzer_cider', 'name': 'Seltzer & Cider', 'desc': '', 'items': [], 'subs': [
+   {'id': 'sub_seltzer', 'name': 'Seltzer', 'desc': '', 'items': [item(i, '', missing=['base spirit / style', 'ABV'], note='venue lists under Bottles & Cans') for i in SELTZ]},
+   {'id': 'sub_cider', 'name': 'Cider', 'desc': '', 'items': [item(i, '', missing=['style', 'ABV'], note='venue lists under Bottles & Cans') for i in CIDER]}]},
  {'id': 'sec_tequila', 'name': 'Tequila', 'desc': 'By expression', 'items': [], 'subs': [
-   {'id': 'sub_teq_blanco', 'name': 'Blanco', 'desc': '', 'items': []},
-   {'id': 'sub_teq_reposado', 'name': 'Reposado', 'desc': '', 'items': []},
-   {'id': 'sub_teq_anejo', 'name': 'Añejo', 'desc': '', 'items': []},
-   {'id': 'sub_teq_cristalino', 'name': 'Cristalino', 'desc': '', 'items': []},
-   {'id': 'sub_teq_extra', 'name': 'Extra Añejo', 'desc': '', 'items': []}]},
- {'id': 'sec_vodka', 'name': 'Vodka', 'desc': '', 'items': [item(i, SPIRIT_DESC.get(i, 'Vodka')) for i in VODKA], 'subs': []},
- {'id': 'sec_gin', 'name': 'Gin', 'desc': '', 'items': [item(i, 'Gin') for i in GIN], 'subs': []},
- {'id': 'sec_rum', 'name': 'Rum', 'desc': '', 'items': [item(i, 'Rum') for i in RUM], 'subs': []},
- {'id': 'sec_whiskey', 'name': 'Whiskey', 'desc': '', 'items': [item(i, 'Whiskey') for i in WHISKEY], 'subs': []},
- {'id': 'sec_scotch', 'name': 'Scotch', 'desc': '', 'items': [item(i, 'Scotch whisky') for i in SCOTCH], 'subs': []},
- {'id': 'sec_otros', 'name': 'Otros', 'desc': '', 'items': [item(i, SPIRIT_DESC[i], section_note='venue section: Misc') for i in OTROS], 'subs': []},
+   {'id': 'sub_teq_blanco', 'name': 'Blanco', 'desc': '', 'items': teq_subs['Blanco']},
+   {'id': 'sub_teq_reposado', 'name': 'Reposado', 'desc': '', 'items': teq_subs['Reposado']},
+   {'id': 'sub_teq_anejo', 'name': 'Añejo', 'desc': '', 'items': teq_subs['Anejo']},
+   {'id': 'sub_teq_cristalino', 'name': 'Cristalino', 'desc': '', 'items': cris_items}]},
+ {'id': 'sec_vodka', 'name': 'Vodka', 'desc': '', 'items': [item(i, SPIRIT_DESC.get(i, '')) for i in VODKA], 'subs': []},
+ {'id': 'sec_gin', 'name': 'Gin', 'desc': '', 'items': [item(i) for i in GIN], 'subs': []},
+ {'id': 'sec_rum', 'name': 'Rum', 'desc': '', 'items': [item(i) for i in RUM], 'subs': []},
+ {'id': 'sec_whiskey', 'name': 'Whiskey', 'desc': '', 'items': [item(i) for i in WHISKEY], 'subs': []},
+ {'id': 'sec_scotch', 'name': 'Scotch', 'desc': '', 'items': [item(i) for i in SCOTCH], 'subs': []},
+ {'id': 'sec_otros', 'name': 'Otros', 'desc': '', 'items': [item(i, SPIRIT_DESC.get(i, ''), note='venue section: Misc',
+      cite='products d760d665-2d53-42a9-bdad-700bff970dc0 class joven' if i == 174104 else None) for i in OTROS], 'subs': []},
  {'id': 'sec_alcohol_free', 'name': 'Alcohol Free', 'desc': '', 'items': [cocktail(i) for i in AF], 'subs': []},
 ]}
-for it in (x for s in doc['sections'] for sub in s['subs'] for x in sub['items']):
-    if 'missing_ingredients' in it['meta']: it['meta']['missing_ingredients'] = [m for m in it['meta']['missing_ingredients'] if m]
-for s in doc['sections']:
-    for x in s['items']:
-        if 'missing_ingredients' in x['meta']: x['meta']['missing_ingredients'] = [m for m in x['meta']['missing_ingredients'] if m]
-teq = {s['id']: s for s in doc['sections'][5]['subs']}
-LAB = {'Blanco': 'Blanco', 'Reposado': 'Reposado', 'Anejo': 'Añejo'}
-for r in sorted(CORE, key=lambda r: skey(fix(r[2]))):
-    sub = {'Blanco': 'sub_teq_blanco', 'Reposado': 'sub_teq_reposado', 'Anejo': 'sub_teq_anejo'}[r[1]]
-    teq[sub]['items'].append(item(r[0], f'{LAB[r[1]]} tequila', label=LAB[r[1]]))
-for r in CRIS:
-    teq['sub_teq_cristalino']['items'].append(item(r[0], f'{LAB[r[1]]} cristalino', label=LAB[r[1]], section_note=f'venue lists under {LAB[r[1]]}'))
-for r in EXTRA:
-    teq['sub_teq_extra']['items'].append(item(r[0], 'Extra añejo', label='Añejo', section_note='venue lists under Añejo; name states Extra'))
 json.dump(doc, open(f'{OUT}/doc.json', 'w'), ensure_ascii=False, indent=1)
 
-# ---------------------------------------------------------------- HTML
+# ---------------------------------------------------------------- HTML helpers
 def b64(f): return base64.b64encode(open(f'{HERE}/fonts/{f}', 'rb').read()).decode()
 FONTS = f"""
 @font-face{{font-family:'Fraunces';font-style:normal;font-weight:400 900;src:url(data:font/woff2;base64,{b64('fraunces.woff2')}) format('woff2');}}
@@ -147,14 +143,11 @@ FONTS = f"""
 @font-face{{font-family:'DM Sans';font-style:normal;font-weight:400 800;src:url(data:font/woff2;base64,{b64('dmsans.woff2')}) format('woff2');}}
 @font-face{{font-family:'DM Sans';font-style:italic;font-weight:400;src:url(data:font/woff2;base64,{b64('dmsans-i.woff2')}) format('woff2');}}
 """
-
-def price_txt(v): return '—' if v is None else str(v)
+def printed(i): return i not in NOT_PRINTED
 
 def papel(width_pt=540, h=20):
-    # papel picado banner: a string with alternating cut-paper flags
-    cols = ['#B03A26', '#E3A33B', '#145A55']
-    n = 15; fw = width_pt / n
-    parts = [f'<svg class="papel" data-k="ornament" viewBox="0 0 {width_pt} {h}" width="{width_pt}pt" height="{h}pt" aria-hidden="true">',
+    cols = ['#A8361F', '#E3A33B', '#135651']; n = 15; fw = width_pt / n
+    parts = [f'<svg class="papel" data-k="ornament" viewBox="0 0 {width_pt} {h}" width="{width_pt}pt" height="{h}pt" preserveAspectRatio="none" aria-hidden="true">',
              f'<path d="M0 1.2 H{width_pt}" stroke="#1F1B18" stroke-width="0.6"/>']
     for k in range(n):
         x0 = k * fw + 3; x1 = (k + 1) * fw - 3; c = cols[k % 3]; mid = (x0 + x1) / 2
@@ -166,110 +159,109 @@ def papel(width_pt=540, h=20):
     return ''.join(parts)
 
 AGAVE = '''<svg class="agave" viewBox="0 0 60 34" aria-hidden="true"><g fill="none" stroke-linecap="round">
-<path d="M30 32 C29 20 28 10 30 1" stroke="#145A55" stroke-width="2.2"/>
-<path d="M30 32 C25 22 19 14 11 8" stroke="#145A55" stroke-width="2"/><path d="M30 32 C35 22 41 14 49 8" stroke="#145A55" stroke-width="2"/>
+<path d="M30 32 C29 20 28 10 30 1" stroke="#135651" stroke-width="2.2"/>
+<path d="M30 32 C25 22 19 14 11 8" stroke="#135651" stroke-width="2"/><path d="M30 32 C35 22 41 14 49 8" stroke="#135651" stroke-width="2"/>
 <path d="M30 32 C22 26 12 22 2 21" stroke="#E3A33B" stroke-width="2"/><path d="M30 32 C38 26 48 22 58 21" stroke="#E3A33B" stroke-width="2"/>
-<path d="M30 32 C27 24 23 17 20 5" stroke="#B03A26" stroke-width="1.6"/><path d="M30 32 C33 24 37 17 40 5" stroke="#B03A26" stroke-width="1.6"/>
+<path d="M30 32 C27 24 23 17 20 5" stroke="#A8361F" stroke-width="1.6"/><path d="M30 32 C33 24 37 17 40 5" stroke="#A8361F" stroke-width="1.6"/>
 </g></svg>'''
 
-def divider():
-    return f'<div class="divider" data-k="divider"><span class="rule"></span>{AGAVE}<span class="rule"></span></div>'
-
-def mast(kicker, title):
-    return f'''<header class="mast">{papel()}
+def mast(kicker, title, order):
+    return f'''<header class="mast" style="--o:{order}">{papel()}
 <div class="mastrow"><div class="wordmark" data-k="header" data-lvl="0">Coa Cantina</div>
 <div class="mastright"><div class="masttitle" data-k="header" data-lvl="0b">{E(title)}</div><div class="kicker" data-k="description">{E(kicker)}</div></div></div>
 <div class="doublerule" data-k="divider"></div></header>'''
 
-def footer(n):
-    return f'''<footer class="foot" data-k="description"><span>Coa Cantina · Iowa City</span><span class="fdot">{AGAVE}</span><span>coacantinaiowacity.com · {n}/2</span></footer>'''
+def footer(n, order):
+    return f'''<footer class="foot" data-k="description" style="--o:{order}"><span>Coa Cantina · Iowa City</span><span class="fdot">{AGAVE}</span><span>coacantinaiowacity.com<span class="pg"> · {n}/2</span></span></footer>'''
 
-def h1(txt, ref=''):
-    return f'<h2 class="h1" data-k="header" data-ref="{ref}"><span>{E(txt)}</span></h2>'
-def h2(txt, ref=''):
-    return f'<h3 class="h2" data-k="subheader" data-ref="{ref}">{E(txt)}</h3>'
+def h1(txt, ref='', es=''):
+    k = f'<em class="es">{E(es)}</em>' if es else ''
+    return f'<h2 class="h1" data-k="header" data-ref="{ref}"><span>{E(txt)}</span>{k}</h2>'
+def h2(txt, ref=''): return f'<h3 class="h2" data-k="subheader" data-ref="{ref}">{E(txt)}</h3>'
+def intro(ref): return f'<p class="intro" data-k="description" data-ref="{ref}">{E(INTRO[ref])}</p>'
 
 def rich(i, feature=False):
-    r = SRC[i]; d, _, miss = COCKTAILS[i]
-    up = UPGRADE.get(i)
-    cls = 'ritem feature' if feature else 'ritem'
-    s = f'<div class="{cls}" data-item="sme_{i}">'
-    s += f'<div class="line"><span class="nm" data-k="item_name" data-ref="sme_{i}">{E(fix(r[2]))}</span><span class="pr" data-k="price" data-ref="sme_{i}">{price_txt(r[3])}</span></div>'
-    s += f'<div class="line"><span class="ds" data-k="description" data-ref="sme_{i}">{E(d)}</span></div>'
-    if up:
-        s += f'<div class="line up"><span class="ds" data-k="description" data-ref="sme_{i}">{E(up[1])}</span><span class="pr small" data-k="price" data-ref="sme_{i}">+{up[2]}</span></div>'
+    r = SRC[i]; d, _, _ = COCKTAILS[i]; up = UPGRADE.get(i)
+    s = f'<div class="{"ritem feature" if feature else "ritem"}" data-item="sme_{i}">'
+    s += f'<div class="line"><span class="nm" data-k="item_name" data-ref="sme_{i}">{E(fix(r[2]))}</span><span class="pr" data-k="price" data-ref="sme_{i}">{r[3]}</span></div>'
+    if d: s += f'<div class="line"><span class="ds" data-k="description" data-ref="sme_{i}">{E(d)}</span></div>'
+    if up: s += f'<div class="line up"><span class="ds" data-k="description" data-ref="sme_{i}">{E(up[1])}</span><span class="pr small" data-k="price" data-ref="sme_{i}">+{up[2]}</span></div>'
     return s + '</div>'
 
 def row(i, desc=None):
     r = SRC[i]
-    muted = ' na' if r[3] is None else ''
-    s = f'<div class="row" data-item="sme_{i}"><div class="line"><span class="nm" data-k="item_name" data-ref="sme_{i}">{E(fix(r[2]))}</span><span class="pr{muted}" data-k="price" data-ref="sme_{i}">{price_txt(r[3])}</span></div>'
+    s = f'<div class="row" data-item="sme_{i}"><div class="line"><span class="nm" data-k="item_name" data-ref="sme_{i}">{E(fix(r[2]))}</span><span class="pr" data-k="price" data-ref="sme_{i}">{r[3]}</span></div>'
     if desc: s += f'<div class="line"><span class="ds" data-k="description" data-ref="sme_{i}">{E(desc)}</span></div>'
     return s + '</div>'
 
-def block(title, ids, lvl=1, descs=None, ref=''):
-    hd = h1(title, ref) if lvl == 1 else h2(title, ref)
-    return f'<section class="blk">{hd}<div class="rows">' + ''.join(row(i, (descs or {}).get(i)) for i in ids) + '</div></section>'
+def block(title, ids, descs=None, ref='', po=0):
+    return (f'<section class="blk" style="--po:{po}">{h2(title, ref)}<div class="rows">'
+            + ''.join(row(i, (descs or {}).get(i)) for i in ids if printed(i)) + '</div></section>')
 
-# ---- page 1
-p1_left = (f'<section class="blk">{h1("Margaritas","sec_margaritas")}<div class="rows">' + rich(MARGS[0], True) + ''.join(rich(i) for i in MARGS[1:]) + '</div></section>'
-           + f'<section class="blk">{h1("Alcohol Free","sec_alcohol_free")}<div class="rows">' + rich(AF[0]) + '</div></section>')
-p1_right = (f'<section class="blk">{h1("Cocktails","sec_cocktails")}<div class="rows">' + rich(COCKS[0], True) + ''.join(rich(i) for i in COCKS[1:]) + '</div></section>'
-            + f'<section class="blk">{h1("Frozen","sec_frozen")}<div class="rows">' + ''.join(rich(i) for i in FROZEN) + '</div></section>')
-beer = (f'<div class="band">{h1("Beer, Seltzer & Cider","sec_beer")}<div class="thirds">'
-        f'<div class="col">{block("Draft", DRAFT, 2, ref="sub_beer_draft")}</div>'
-        f'<div class="col">{block("Bottles & Cans", BOTTLES, 2, ref="sub_beer_bottles")}</div>'
-        f'<div class="col">{block("Seltzer & Cider", SELTZ, 2, ref="sec_seltzer_cider")}</div></div></div>')
-page1 = (f'<article class="page" id="page-1">{mast("Iowa City · Bebidas", "Drinks")}'
-         f'<main class="body"><div class="halves"><div class="col">{p1_left}{divider()}</div><div class="col">{p1_right}</div></div>'
-         f'{beer}</main>{footer(1)}</article>')
+# ---------------------------------------------------------------- page 1
+top = (f'<div class="halves top">'
+       f'<div class="col"><section class="blk" style="--o:1">{h1("Margaritas", "sec_margaritas", "Margaritas")}{intro("sec_margaritas")}<div class="rows">'
+       + rich(MARGS[0], True) + ''.join(rich(i) for i in MARGS[1:]) + '</div></section></div>'
+       f'<div class="col"><section class="blk" style="--o:2">{h1("Cocktails", "sec_cocktails", "Cócteles")}<div class="rows">'
+       + rich(COCKS[0], True) + ''.join(rich(i) for i in COCKS[1:]) + '</div></section></div></div>')
+frozen = (f'<div class="band" style="--o:3">{h1("Frozen", "sec_frozen", "Congelados")}{intro("sec_frozen")}<div class="halves">'
+          f'<div class="col">{"".join(rich(i) for i in FROZEN[:2])}</div><div class="col">{"".join(rich(i) for i in FROZEN[2:])}</div></div></div>')
+beerband = (f'<div class="band" style="--o:4">{h1("Beer, Seltzer & Cider", "sec_beer", "Cervezas")}<div class="thirds">'
+            f'<div class="col">{block("Draft", DRAFT, ref="sub_beer_draft", po=1)}{block("Cider", CIDER, ref="sub_cider", po=4)}</div>'
+            f'<div class="col">{block("Bottles & Cans", BOTTLES, ref="sub_beer_bottles", po=2)}</div>'
+            f'<div class="col">{block("Seltzer", SELTZ, ref="sub_seltzer", po=3)}</div></div></div>')
+afband = (f'<div class="band" style="--o:8">{h1("Alcohol Free", "sec_alcohol_free", "Sin Alcohol")}'
+          f'<div class="single"><div class="col">{rich(AF[0])}</div></div></div>')
+page1 = (f'<article class="page" id="page-1">{mast("Iowa City · Bebidas", "Drinks", 0)}'
+         f'<main class="body">{top}{frozen}{beerband}{afband}</main>{footer(1, 99)}</article>')
 
-# ---- page 2: tequila matrix
+# ---------------------------------------------------------------- page 2: tequila grid
 def mrow(name, cells):
     ref = ' '.join(f'sme_{c[0]}' for c in cells.values())
     s = f'<div class="mrow" data-item="{ref}"><span class="nm" data-k="item_name" data-ref="{ref}">{E(name)}</span>'
     for k in 'BRA':
-        if k in cells:
-            s += f'<span class="mc pr" data-k="price" data-col="{k}" data-ref="sme_{cells[k][0]}">{cells[k][1]}</span>'
-        else:
-            s += f'<span class="mc empty" data-col="{k}" aria-hidden="true">·</span>'
+        if k in cells: s += f'<span class="mc pr" data-k="price" data-col="{k}" data-ref="sme_{cells[k][0]}">{cells[k][1]}</span>'
+        else: s += f'<span class="mc empty" data-col="{k}" aria-hidden="true">·</span>'
     return s + '</div>'
-
-def mhead():
-    return ('<div class="mhead"><span class="nm">&nbsp;</span>'
-            '<span class="mc" data-k="subheader">Blanco</span><span class="mc" data-k="subheader">Reposado</span><span class="mc" data-k="subheader">Añejo</span></div>')
-
-half = (len(MATRIX) + len(CRIS) + len(EXTRA) + 2) // 2
-# split: left gets first N matrix rows + cristalino group; right gets the rest + extra group
-nL = half - len(CRIS) - 1
-left_rows = MATRIX[:nL]; right_rows = MATRIX[nL:]
-def grp(title, rs, ref):
-    out = f'<div class="mgroup">{h2(title, ref)}'
-    for r in rs:
+def mhead(extra=''):
+    return (f'<div class="mhead{extra}"><span class="nm">&nbsp;</span>'
+            '<span class="mc" data-k="subheader" data-lvl2="label">Blanco</span><span class="mc" data-k="subheader" data-lvl2="label">Reposado</span><span class="mc" data-k="subheader" data-lvl2="label">Añejo</span></div>')
+def crisrows():
+    out = ''
+    for r in CRIS:
         k = {'Blanco': 'B', 'Reposado': 'R', 'Anejo': 'A'}[r[1]]
         out += mrow(fix(r[2]), {k: (r[0], r[3])})
-    return out + '</div>'
-mleft = f'<div class="col matrix">{mhead()}' + ''.join(mrow(n, c) for n, c in left_rows) + grp('Cristalino', CRIS, 'sub_teq_cristalino') + '</div>'
-mright = f'<div class="col matrix">{mhead()}' + ''.join(mrow(n, c) for n, c in right_rows) + grp('Extra Añejo', EXTRA, 'sub_teq_extra') + '</div>'
+    return out
 
-sp = (f'<div class="band">{h1("Spirits","sec_spirits")}<div class="quarters">'
-      f'<div class="col">{block("Vodka", VODKA, 2, SPIRIT_DESC, "sec_vodka")}</div>'
-      f'<div class="col">{block("Gin", GIN, 2, ref="sec_gin")}{block("Rum", RUM, 2, ref="sec_rum")}</div>'
-      f'<div class="col">{block("Whiskey", WHISKEY, 2, ref="sec_whiskey")}</div>'
-      f'<div class="col">{block("Scotch", SCOTCH, 2, ref="sec_scotch")}{block("Otros", OTROS, 2, SPIRIT_DESC, "sec_otros")}</div></div></div>')
-page2 = (f'<article class="page" id="page-2">{mast("Blanco · Reposado · Añejo", "Agave & Spirits")}'
-         f'<main class="body"><div class="band">{h1("Tequila","sec_tequila")}<div class="halves">{mleft}{mright}</div></div>{sp}</main>{footer(2)}</article>')
+NL = int(os.environ.get('COA_NL', 39))
+left_rows, right_rows = MATRIX[:NL], MATRIX[NL:]
+mleft = f'<div class="col matrix">{mhead()}' + ''.join(mrow(n, c) for n, c in left_rows) + '</div>'
+mright = (f'<div class="col matrix">{mhead()}' + ''.join(mrow(n, c) for n, c in right_rows)
+          + f'<div class="mgroup">{h2("Cristalino", "sub_teq_cristalino")}{mhead(" rep")}{crisrows()}</div></div>')
+phone_grid = (f'<div class="tq-phone">{mhead(" sticky")}' + ''.join(mrow(n, c) for n, c in MATRIX)
+              + f'<div class="mgroup">{h2("Cristalino", "")}{crisrows()}</div></div>')
+tequila = (f'<div class="band" style="--o:5">{h1("Tequila", "sec_tequila")}'
+           f'<div class="halves tq-print">{mleft}{mright}</div>{phone_grid}</div>')
+
+# spirits: four quarters; column assignment chosen by build/balance (see proposal.md)
+SPB = {'V': lambda po: block("Vodka", VODKA, SPIRIT_DESC, "sec_vodka", po), 'G': lambda po: block("Gin", GIN, ref="sec_gin", po=po),
+       'R': lambda po: block("Rum", RUM, ref="sec_rum", po=po), 'W': lambda po: block("Whiskey", WHISKEY, ref="sec_whiskey", po=po),
+       'S': lambda po: block("Scotch", SCOTCH, ref="sec_scotch", po=po), 'O': lambda po: block("Otros", OTROS, SPIRIT_DESC, "sec_otros", po)}
+PO = {'V': 1, 'G': 2, 'R': 3, 'W': 4, 'S': 5, 'O': 6}
+SPCOLS = os.environ.get('COA_SPCOLS', 'V|GO|RS|W').split('|')
+spirits = (f'<div class="band" style="--o:6">{h1("Spirits", "sec_spirits", "Licores")}<div class="quarters">'
+           + ''.join('<div class="col">' + ''.join(SPB[k](PO[k]) for k in col) + '</div>' for col in SPCOLS) + '</div></div>')
+page2 = (f'<article class="page" id="page-2">{mast("Iowa City · Tequila y Licores", "Tequila & Spirits", 50)}'
+         f'<main class="body">{tequila}{spirits}</main>{footer(2, 100)}</article>')
 
 CSS = open(f'{HERE}/menu.css').read()
-doc_html = f'''<!doctype html><html lang="en"><head><meta charset="utf-8">
+open(f'{OUT}/menu.html', 'w').write(f'''<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Coa Cantina — Drinks (US Legal 8.5 × 14 in, 2 pages)</title>
-<!-- Print size: US Legal 8.5 x 14 in (215.9 x 355.6 mm), portrait, 2 pages (duplex). Margins 0.5 in (12.7 mm) all sides. No bleed required: all colour sits inside the margins. -->
+<!-- Print size: US Legal 8.5 x 14 in (215.9 x 355.6 mm), portrait, 2 pages (duplex). Margins 0.5 in (12.7 mm) all sides. No bleed. Round 2. -->
 <style>{FONTS}{CSS}</style></head><body>
 {page1}
 {page2}
-</body></html>'''
-open(f'{OUT}/menu.html', 'w').write(doc_html)
-print('matrix rows', len(MATRIX), 'left', len(left_rows), '+', len(CRIS), 'right', len(right_rows), '+', len(EXTRA))
-print('tequila items', sum(len(s['items']) for s in doc['sections'][5]['subs']))
-print('total items', sum(len(s['items']) + sum(len(x['items']) for x in s['subs']) for s in doc['sections']))
+</body></html>''')
+print('matrix rows', len(MATRIX), 'left', len(left_rows), 'right', len(right_rows), '+ cristalino', len(CRIS))
+print('items', sum(len(s['items']) + sum(len(x['items']) for x in s['subs']) for s in doc['sections']))

@@ -8,7 +8,7 @@ You have **90 seconds and at most 6 tool calls**. Do not re-render; do not run P
 3. Accuracy reviewers only: at most 2 gateway queries (`select public.phg_designer_query($q$...$q$)`,
    ToolSearch "select:mcp__Supabase__execute_sql", project_id `lqjtwabzmgjcufftuqvu`) to verify the facts your lens
    targets. Garnish / glass / method live in phg.recipe_versions (columns garnish, glassware, method) for the
-   menu_items.current_recipe_version_id of each item; component rows alone are not the whole recipe.
+   menu_items.current_recipe_version_id of each item (join: phg.menu_items.current_recipe_version_id = phg.recipe_versions.id; a failed or empty lookup is NOT evidence that a fact is unsourced); component rows alone are not the whole recipe.
 4. Score ONLY your criteria, 0-100, strictly and absolutely by the bands (95+ = portfolio-grade a top agency would
    sign). Do not ask what earlier rounds scored.
 5. Reply with ONLY this JSON (no prose before or after), fixes one sentence each, max 5, ranked by score impact:
