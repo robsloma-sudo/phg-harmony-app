@@ -228,8 +228,8 @@ def draw_art(W, H, s, Hz, G, P, F, safe_boxes, seed=5):
         fine /= fine.std() + 1e-6
         mott = gaussian_filter(rng.standard_normal(cov.shape).astype(np.float32), 2.2)
         mott /= mott.std() + 1e-6
-        dens = np.clip(0.93 + amp * k * 0.5 * mott, 0, 1)     # mean-neutral mottling around 93% ink
-        voids = (fine < np.quantile(fine, p_void)).astype(np.float32) * k
+        dens = 1 - amp * np.clip(0.5 + 0.3 * mott, 0, 1)      # uniform mottling (no zone, so no halo)
+        voids = (fine < np.quantile(fine, p_void)).astype(np.float32) * k if p_void > 0 else 0
         out = cov * dens * (1 - 0.9 * voids)
         if F["density"]:
             low = gaussian_filter(rng.standard_normal((cov.shape[0] // 16 + 1, cov.shape[1] // 16 + 1)).astype(np.float32), 3)
@@ -238,7 +238,7 @@ def draw_art(W, H, s, Hz, G, P, F, safe_boxes, seed=5):
         return out
 
     if F["grain"]:
-        n = grain(n, 0.005, 0.09)
+        n = grain(n, 0.0, 0.10)       # navy: mottling only, no pinholes (type sits on it)
         a = grain(a, 0.008, 0.10)
     paper = np.array(PAPER, np.float32) / 255
     img = np.ones((Hp, Wp, 3), np.float32) * paper
