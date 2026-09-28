@@ -33,5 +33,12 @@
   "content": 70.4,
   "accuracy": 66.2,
   "n": 15
+ },
+ "7": {
+  "combined": 68.2,
+  "critic": 66.2,
+  "content": 70.7,
+  "accuracy": 67.7,
+  "n": 15
  }
 }
