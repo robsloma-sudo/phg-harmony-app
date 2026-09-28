@@ -31,7 +31,7 @@ LINE = {
  "beta_cognac_vsop": ("pour", "draft desc 'VSOP Cognac pour.' (every other word echoes the name)"),
 }
 TAGS = {  # section-rule taglines: generic brand voice, no item facts
- "cocktails": "raise a glass", "beer": "one more round", "wine": "for the table", "spirits": "take your time"}
+ "cocktails": "raise a glass", "beer": "one more round", "wine": "for the table", "spirits": "¡salud!"}
 RAIL_TOP = ["GOOD", "DRINKS", "GOOD", "COMPANY"]
 RAIL_BOT = ["PULL UP", "A CHAIR", "STAY", "A WHILE"]
 
@@ -83,10 +83,22 @@ def leaf(bx, by, ang, L, W, cl, cr, curve=0.10):
     return f'<path d="{left}" fill="{cl}"/><path d="{right}" fill="{cr}"/>'
 
 A, B, C_, D = PAL["leafA"], PAL["leafB"], PAL["leafC"], PAL["leafD"]
-# one rosette, base below trim, tips lean toward the menu (gaze vector -> content)
-LEAVES = [(-44, 330, 30, D, B), (-30, 420, 34, B, A), (48, 300, 28, D, B), (-14, 500, 36, D, B), (34, 400, 32, B, A),
-          (4, 560, 38, B, C_), (20, 470, 34, D, B), (-6, 380, 30, A, C_), (12, 330, 26, B, C_), (62, 250, 24, B, A)]
-leaves_svg = "".join(leaf(66, 812, a, L, W * .5, cl, cr, curve=0.06 if a < 0 else 0.10) for a, L, W, cl, cr in LEAVES)
+def leaf2(bx, by, ang, L, W, cl, cr, bend):
+    """broad agave leaf, widest near the base, sharp tip; folded along the midrib (two tones)."""
+    a = math.radians(ang); ux, uy = math.sin(a), -math.cos(a); px, py = -uy, ux
+    P = lambda t, o: (bx + ux * L * t + px * (o + bend * L * t * t), by + uy * L * t + py * (o + bend * L * t * t))
+    tip = P(1, 0); q = lambda v: f"{v[0]:.1f},{v[1]:.1f}"
+    l1, l2 = P(.22, -W * .5), P(.62, -W * .30); r1, r2 = P(.22, W * .5), P(.62, W * .30)
+    m1, m2 = P(.35, 0), P(.75, 0)
+    left = f"M{q(P(0,-W*.42))} C{q(l1)} {q(l2)} {q(tip)} C{q(m2)} {q(m1)} {q(P(0,0))} Z"
+    right = f"M{q(P(0,W*.42))} C{q(r1)} {q(r2)} {q(tip)} C{q(m2)} {q(m1)} {q(P(0,0))} Z"
+    return f'<path d="{left}" fill="{cl}"/><path d="{right}" fill="{cr}"/>'
+# one rosette planted behind the foreground ground band; tips arc up and toward the menu (gaze vector -> content)
+LEAVES = [  # (base x, angle, length, width, left tone, right tone, bend)
+    (40, -58, 250, 58, D, B, -.10), (118, 64, 230, 54, B, A, .10), (52, -34, 360, 66, B, A, -.08),
+    (100, 38, 330, 62, D, B, .09), (62, -14, 470, 72, D, B, -.04), (86, 16, 430, 70, B, C_, .06),
+    (74, 2, 360, 60, A, C_, .03), (30, -74, 170, 50, B, A, -.12), (128, 80, 170, 48, D, B, .10)]
+leaves_svg = "".join(leaf2(bx, 740, a, L, W, cl, cr, bd) for bx, a, L, W, cl, cr, bd in LEAVES)
 
 def torn_band(y, amp, seed, x0=-9, x1=240):
     rnd = random.Random(seed); pts = []; x = x0
@@ -121,8 +133,8 @@ ART = f'''
    <feDisplacementMap in="SourceGraphic" scale="2.6" result="d"/>
    <feDropShadow in="d" dx="-2" dy="3" stdDeviation="2" flood-color="#0C1A15" flood-opacity=".45"/></filter>
   <filter id="goldleaf" x="-5%" y="-5%" width="110%" height="110%">
-   <feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="4" seed="21" result="n"/>
-   <feColorMatrix in="n" type="matrix" values="0 0 0 0 .93  0 0 0 0 .78  0 0 0 0 .42  0 0 0 1.9 -.85" result="fleck"/>
+   <feTurbulence type="fractalNoise" baseFrequency=".11" numOctaves="4" seed="21" result="n"/>
+   <feColorMatrix in="n" type="matrix" values="0 0 0 0 .95  0 0 0 0 .83  0 0 0 0 .52  0 0 0 2.4 -1.05" result="fleck"/>
    <feComposite in="fleck" in2="SourceGraphic" operator="in" result="f2"/>
    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="f2"/></feMerge></filter>
   <filter id="fiber" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="4" result="n"/>
@@ -182,24 +194,24 @@ html,body{{background:#fff}}
   font-family:'Fraunces',serif;font-variant-numeric:lining-nums tabular-nums;-webkit-print-color-adjust:exact}}
 .art{{position:absolute;left:-9pt;top:-9pt;width:630pt;height:810pt}}
 .rail{{position:absolute;left:36pt;font:500 7.5pt/12pt 'DM Sans',sans-serif;letter-spacing:.38em}}
-.rail.top{{top:36pt;color:{PAL['ink']}}}
-.rail.bot{{bottom:36pt;color:#F4ECDC}}
-.wm{{position:absolute;left:170pt;top:36pt;height:720pt;display:flex;flex-direction:row-reverse;gap:6pt}}
+.rail.top{{top:33.12pt;color:{PAL['ink']}}}
+.rail.bot{{bottom:32.16pt;color:#F4ECDC}}
+.wm{{position:absolute;left:170pt;top:33.12pt;height:726.16pt;display:flex;flex-direction:row-reverse;gap:6pt}}
 .wm .big{{writing-mode:vertical-rl;font-weight:380;font-size:96pt;line-height:74pt;letter-spacing:.075em;
-  font-variation-settings:'opsz' 144, 'SOFT' 0, 'WONK' 0;color:{PAL['ink']};height:720pt;text-align:start}}
-.wm .small{{writing-mode:vertical-rl;font:500 8pt/12pt 'DM Sans',sans-serif;letter-spacing:.42em;color:#6E2F1D;height:720pt;text-align:end}}
-.menu{{position:absolute;left:282pt;top:36pt;width:294pt;height:720pt;display:flex;flex-direction:column;justify-content:space-between}}
-.hrow{{display:flex;align-items:baseline;justify-content:space-between;border-bottom:.75pt solid #6B5A4C;padding-bottom:5pt;margin-bottom:9pt}}
+  font-variation-settings:'opsz' 144, 'SOFT' 0, 'WONK' 0;color:{PAL['ink']};height:726.16pt;text-align:start}}
+.wm .small{{writing-mode:vertical-rl;font:500 8pt/12pt 'DM Sans',sans-serif;letter-spacing:.42em;color:#6E2F1D;height:726.16pt;text-align:end}}
+.menu{{position:absolute;left:282pt;top:32.64pt;width:294pt;height:724.8pt;display:flex;flex-direction:column;justify-content:space-between}}
+.hrow{{display:flex;align-items:baseline;justify-content:space-between;border-bottom:.75pt solid #6B5A4C;padding-bottom:5pt;margin-bottom:12pt}}
 h2{{font-weight:600;font-size:15pt;line-height:18pt;letter-spacing:.2em;text-transform:uppercase;font-variation-settings:'opsz' 36}}
 .tag{{font-style:italic;font-weight:400;font-size:9.5pt;line-height:12pt;color:#5A4B3F;letter-spacing:.02em}}
 h3{{font:700 7.5pt/12pt 'DM Sans',sans-serif;letter-spacing:.26em;text-transform:uppercase;color:#9A3B22;margin:0 0 3pt}}
-.sub+.sub{{margin-top:9pt}}
-.item+.item{{margin-top:6pt}}
+.sub+.sub{{margin-top:15pt}}
+.item+.item{{margin-top:10pt}}
 .row{{display:flex;align-items:baseline}}
-.name{{font-weight:600;font-size:10.5pt;line-height:14pt;letter-spacing:.11em;text-transform:uppercase;white-space:nowrap}}
+.name{{font-weight:600;font-size:11pt;line-height:15pt;letter-spacing:.11em;text-transform:uppercase;white-space:nowrap}}
 .lead{{flex:1;min-width:8pt;margin:0 5pt;border-bottom:1.1pt dotted #9C8B7B;transform:translateY(-2.5pt)}}
-.price{{font-weight:600;font-size:12pt;line-height:14pt;min-width:15pt;text-align:right}}
-.desc{{font-weight:400;font-size:10pt;line-height:13pt;color:#40352D;padding-right:22pt;font-variation-settings:'opsz' 12}}
+.price{{font-weight:600;font-size:12.5pt;line-height:15pt;min-width:15pt;text-align:right}}
+.desc{{text-wrap:balance;font-weight:400;font-size:10.5pt;line-height:14pt;color:#40352D;padding-right:22pt;font-variation-settings:'opsz' 12}}
 .pair{{display:grid;grid-template-columns:1fr 1fr;column-gap:18pt}}
 .half .name{{letter-spacing:.08em}}
 .half .desc{{padding-right:0}}
