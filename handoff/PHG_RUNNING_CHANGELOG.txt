@@ -1257,3 +1257,24 @@ Rob: "deploy"
 - Pushed main d8a3f14 = index.html 18.49.18 + netlify.toml (from branch dc291a6). Includes 18.49.16-18:
   iOS voice error fix, developer-only error banners, minimal Harmony view, cosmic Speak button.
   Rollback: redeploy main 861813c (18.49.15) in Netlify.
+
+------------------------------------------------------------------------------
+PHG-20260928-ATT | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.19)
+Rob (screenshot of the + sheet): "make text box text boxes like this look better. The black hole looks great.
+Make this more on brand with that. Also ... add an option to upload a file or photo or video for prompts to Harmony."
+- COSMIC CONTROLS: + / gear / sheets / type box restyled in the Speak star's language - deep-space glass,
+  thin conic nebula edge (cyan -> violet -> rose), star dust, stroke icons in small planet chips, mono-caps
+  sheet headers ("Add to Harmony", "Harmony · Control"), two-line rows (title + hint), send button is a
+  tiny event horizon. + rotates to x when open; gear turns.
+- ATTACHMENTS FOR PROMPTS: + -> "Photo, video or file" (also a paperclip in the type box). Accepts photos
+  (<=6, downscaled to 1280 px JPEG), one video (6 evenly sampled stills at 768 px), one PDF (<=8 MB),
+  up to 3 text/CSV/JSON/MD files (60k chars each). Chips show above the dock with x to remove; the type
+  box opens with "Ask about this…". Whatever is typed OR spoken next goes with the attachments; the reply
+  floats and speaks like any other. Attachments clear after a successful answer.
+- NEW EDGE FUNCTION phg-harmony-attach v1 (ACTIVE, JWT): OpenAI Responses API with the existing
+  OPENAI_API_KEY, model gpt-4o-mini (override OPENAI_VISION_MODEL; same default as phg-language-
+  interpreter). Harmony voice rules: plain spoken sentences, <=120 words, never invent numbers/names.
+  Reads/writes no PHG data. Source: supabase/functions/phg-harmony-attach.
+- Tested headless 390x844 with the function stubbed: photo + CSV + PDF + in-page-recorded webm video ->
+  request carried 1 image, 6 video frames, the PDF and the CSV (434 KB); reply floated; chips cleared;
+  zero page errors. Live model call not tested from this container (supabase.co blocked here).
