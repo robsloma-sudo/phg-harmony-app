@@ -1339,3 +1339,12 @@ having to leave this page."
   "Menu Studio" toggles the mode. Leaving the Harmony view also closes the menu.
 - Tested headless 390x844: open via +, nav pill, + sheet rows, next design, page swipe target, close back to
   the field in the same view; zero page errors.
+
+------------------------------------------------------------------------------
+PHG-20260928-DEPLOY4 | USER_PROMPT + PRODUCTION DEPLOY | 2026-09-28
+Rob asked about a home-screen app + iPhone Action-button Shortcut -> Harmony (notes log / answer / open app);
+answered with a 4-part plan (PWA manifest + deep link; phg.harmony_notes + Notes view; a Shortcut inbox edge
+function with a personal device key; installable Shortcut). NOT started - awaiting "build it".
+Rob: "I like that view. Deploy."
+- Pushed main c856195 = index.html 18.49.22 + netlify.toml (includes 18.49.21 conversation brain and
+  18.49.22 Menu Studio in the Harmony view). Rollback: redeploy main 95c192b (18.49.20).
