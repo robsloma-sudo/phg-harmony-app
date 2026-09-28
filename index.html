@@ -6291,7 +6291,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.20 VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.22 MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -39406,6 +39406,32 @@ window.phgSay = function(text, opts){
 #pmsStage .pmsAsk button{height:42px;padding:0 16px;border-radius:21px;border:0;background:#1e293b;color:#e8edf5;font-weight:600}
 body.pms-painting #pmsStage .pmsScaler{animation:pmsPulse 1.6s ease-in-out infinite}
 @keyframes pmsPulse{50%{opacity:.82}}
+/* ---- MENU STUDIO INSIDE THE HARMONY VIEW (18.49.22) -----------------------
+   The stage becomes a transparent layer of the view: the page sits where the
+   field was (dimmed behind it), the view's own +, Speak and gear stay, her
+   replies float above the page, and a small nav pill sits over the dock. */
+#phgView #pmsStage{position:absolute;inset:0;z-index:4;display:block;padding:0;background:transparent;pointer-events:none}
+#phgView #pmsStage .pmsTop,#phgView #pmsStage .pmsBar,#phgView #pmsStage .pmsAsk,#phgView #pmsStage .pmsSay{display:none!important}
+#phgView #pmsStage .pmsView{position:absolute;left:14px;right:14px;top:calc(env(safe-area-inset-top,0px) + 92px);bottom:calc(env(safe-area-inset-bottom,0px) + 226px);pointer-events:auto}
+#phgView #pmsStage.has-refs .pmsView{bottom:calc(env(safe-area-inset-bottom,0px) + 312px)}
+#phgView #pmsStage .pmsScaler{box-shadow:0 0 0 1px rgba(103,232,249,.18),0 18px 60px rgba(0,0,0,.6),0 0 70px rgba(34,211,238,.10)}
+#phgView #pmsStage .pmsNav{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 168px);pointer-events:auto;
+  display:flex;align-items:center;gap:6px;padding:5px;border-radius:999px;white-space:nowrap;
+  background:radial-gradient(120% 140% at 0% 0%,rgba(103,232,249,.10),transparent 55%),rgba(5,7,16,.94);box-shadow:inset 0 0 0 1px rgba(103,232,249,.25),0 10px 30px rgba(0,0,0,.5)}
+#phgView #pmsStage .pmsNavB{width:36px;height:36px;border-radius:50%;border:0;padding:0;background:rgba(103,232,249,.07);display:flex;align-items:center;justify-content:center;cursor:pointer}
+#phgView #pmsStage .pmsNavB svg{width:18px;height:18px;stroke:#a5f3fc;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+#phgView #pmsStage .pmsNavB.x{margin-left:4px;background:rgba(240,171,252,.08)}
+#phgView #pmsStage .pmsNavB.x svg{stroke:#f5d0fe}
+#phgView #pmsStage .pmsNavMid{display:flex;flex-direction:column;align-items:center;gap:5px;padding:0 8px;min-width:120px}
+#phgView #pmsStage #pmsInfo2{font:700 9.5px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.2em;text-transform:uppercase;color:#67e8f9}
+#phgView #pmsStage .pmsDots{gap:6px}
+#phgView #pmsStage .pmsDots button{width:7px;height:7px}
+#phgView #pmsStage .pmsDots button.on{width:18px;background:#67e8f9}
+#phgView #pmsStage .pmsRefs{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 218px);pointer-events:auto}
+body.pms-open #phgView .phgNodeStage{opacity:.16!important}
+body.pms-open #hvxFloat{top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);max-height:calc(3 * 1.4em);font-size:15.5px;line-height:1.4}
+body.pms-open #hvxFloat .you{display:none}
+body.pms-open #hvxAttach{display:none}
 #phgView .hvRail>.pmsRailBtn{box-sizing:border-box;width:100%;height:44px;min-width:0;margin:0;padding:4px 6px;border-radius:12px;
   border:1px solid rgba(125,211,252,.55);background:rgba(5,10,18,.90);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;text-align:center}
 #phgView .hvRail>.pmsRailBtn b{font:700 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7dd3fc;white-space:nowrap}
@@ -39417,7 +39443,7 @@ body.pms-painting #pmsStage .pmsScaler{animation:pmsPulse 1.6s ease-in-out infin
 #hvTalk.listening{background:#be123c;border-color:#fb7185}
 #hvTalk.thinking{background:#6d28d9;border-color:#a78bfa}
 #hvTalk.speaking{background:#0f766e;border-color:#5eead4}
-body.pms-open #hvTalk{display:none}
+/* 18.49.22: Menu Studio lives inside the Harmony view - Speak stays */
 #hvRail .pmsRailBtn b{color:#7dd3fc}
 
 /* ---- Page base (850 x 1100 = US letter at 100 px/in) ---- */
@@ -39728,7 +39754,12 @@ function ensureStage(){
   el.innerHTML='<div class="pmsTop"><div class="pmsTitle"><b>Menu Studio</b><span id="pmsInfo"></span></div>'
     +'<button class="pmsX" aria-label="Close menu studio" onclick="PMS.close()">×</button></div>'
     +'<div id="pmsView" class="pmsView"><div id="pmsScaler" class="pmsScaler"></div></div>'
-    +'<div id="pmsDots" class="pmsDots"></div>'
+    +'<div class="pmsNav" aria-label="Menu design controls">'
+      +'<button class="pmsNavB" onclick="PMS.cmd(\'back\')" aria-label="Previous design"><svg viewBox="0 0 24 24"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>'
+      +'<div class="pmsNavMid"><span id="pmsInfo2"></span><div id="pmsDots" class="pmsDots"></div></div>'
+      +'<button class="pmsNavB" onclick="PMS.cmd(\'next\')" aria-label="Next design"><svg viewBox="0 0 24 24"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>'
+      +'<button class="pmsNavB x" onclick="PMS.close()" aria-label="Close the menu"><svg viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>'
+    +'</div>'
     +'<div id="pmsSay" class="pmsSay" aria-live="polite"></div>'
     +'<div id="pmsRefs" class="pmsRefs" aria-label="Reference photos"></div>'
     +'<div class="pmsBar">'
@@ -39767,6 +39798,8 @@ function render(){
   el.querySelector('#pmsInfo').textContent=d.name+(PMS.variant?' · v'+(PMS.variant+1):'')+' · '+(PMS.page===0?'Cover':'Page '+PMS.page)+' of '+(PMS.designs.length-1)+(PMS.content.sample?' · sample':'');
   var dots='';for(var i=0;i<PMS.designs.length;i++)dots+='<button class="'+(i===PMS.page?'on':'')+'" aria-label="'+(i?'Page '+i:'Cover')+'" onclick="PMS.go('+i+')"></button>';
   el.querySelector('#pmsDots').innerHTML=dots;
+  var i2=el.querySelector('#pmsInfo2');if(i2)i2.textContent=d.name+(PMS.variant?' · v'+(PMS.variant+1):'')+' · '+(PMS.page===0?'Cover':'p.'+PMS.page);
+  el.classList.toggle('has-refs',PMS.refs.length>0);
   renderRefs();
   fit();
   requestAnimationFrame(autofit);
@@ -39801,7 +39834,7 @@ function say(text){
 }
 
 /* ---------- commands ------------------------------------------------------- */
-var MENU_INTENT=/\b(make|build|create|design|generate|start|draft|mock ?up)\b[^.]*\bmenus?\b|\bmenu (studio|designer|design)\b/i;
+var MENU_INTENT=/\b(make|build|create|design|generate|start|draft|mock ?up)\b[^.]*\bmenus?\b|\bmenu (studio|designer|design)\b|\b(show|open|see|pull up|bring up)\b[^.]*\b(menus?|menu designs?)\b[^.]*\b(working on|you('| a)re (making|building|designing|doing)|studio|designs?)\b/i;
 function stageCommand(q){
   var s=q.toLowerCase().replace(/[.!?]+$/,'').trim(),m,d;
   if(/^(close|exit|done|that'?s all|stop (the )?(studio|menu))\b/.test(s)){PMS.close();return 'Closing Menu Studio.';}
@@ -40166,7 +40199,8 @@ body.phg-view-open #phgViewHarmony,
 body.phg-view-open #phgViewX,
 body.phg-view-open .phgPrimaryModeToggle,
 body.phg-view-open #harmonyApprovalStrip:not(.show),
-body.phg-view-open #jsErr{display:none!important}
+body.phg-view-open #jsErr,
+body.phg-view-open #harmonyWorkFloat:has(.harmonyFloatPrompt){display:none!important}
 #hvxFloat{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;width:min(88vw,620px);
   max-height:calc(10 * 1.45em);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;
   font:500 clamp(19px,5vw,26px)/1.45 'Inter',system-ui,sans-serif;color:#f8fafc;text-align:center;pointer-events:none;
@@ -40292,6 +40326,9 @@ body.hvx-reading #phgView .phgNodeStage{opacity:.38}
   background:radial-gradient(circle at 35% 30%,rgba(103,232,249,.22),rgba(8,12,28,.95) 65%);box-shadow:inset 0 0 0 1px rgba(103,232,249,.28),0 0 14px rgba(34,211,238,.12)}
 .hvxIc svg{width:18px;height:18px;stroke:#a5f3fc;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .hvxSheet button:hover .hvxIc{box-shadow:inset 0 0 0 1px rgba(103,232,249,.6),0 0 18px rgba(34,211,238,.35)}
+.hvxSheet button.menuonly{display:none!important}
+body.pms-open .hvxSheet button.menuonly{display:flex!important}
+body.pms-open .hvxSheet button.nomenu{display:none!important}
 .hvxSheet button.warm .hvxIc{background:radial-gradient(circle at 35% 30%,rgba(240,171,252,.22),rgba(8,12,28,.95) 65%);box-shadow:inset 0 0 0 1px rgba(240,171,252,.3)}
 .hvxSheet button.warm .hvxIc svg{stroke:#f5d0fe}
 .hvxSheet hr{border:0;height:1px;margin:6px 12px;background:linear-gradient(90deg,transparent,rgba(103,232,249,.25),rgba(240,171,252,.2),transparent)}
@@ -40444,6 +40481,48 @@ function askWithAttachments(q){
     .catch(function(e){var m=String(e&&e.message||e);if(typeof agentSay==='function')agentSay(/404|Failed to fetch/i.test(m)?'Attachment reading is not switched on yet.':'I could not read that: '+m);})
     .then(function(){window.PHG_PENDING=false;document.body.classList.remove('hvx-asking');});
 }
+/* ---------- CONVERSATION ROUTING (18.49.21) ----------
+   In the Harmony view, ordinary conversation goes to Harmony's conversation
+   brain (phg-harmony-attach in chat mode). Only business-report questions
+   (sales, labor, costs, P&L, budgets...) still go to the finance command
+   router - which used to receive EVERYTHING and answered any unclassified
+   question with "Management dashboard completed. Evidence: computed_dashboard." */
+var HVX_FIN=/\b(sales|revenue|cogs|cost of goods|food cost|pour cost|labou?r|payroll|wages|expenses?|p\s*&\s*l|p and l|profit|losses?|budgets?|forecasts?|variance|margins?|inventory|invoices?|purchas\w*|vendors?|close (the )?(period|month|books)|month[- ]end|dashboard|kpis?|reconcil\w*|costing|period review|daily brief|management brief)\b/i;
+function harmonyChat(q){
+  var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
+  if(!tok){if(typeof agentSay==='function')agentSay('Sign in to PHG so I can talk with you.');return;}
+  var hist=(typeof AGENT!=='undefined'&&AGENT.chat?AGENT.chat.slice(0,-1).slice(-6):[]).map(function(m){return {role:m.who==='you'?'user':'assistant',text:String(m.text||'').replace(/<[^>]+>/g,' ').slice(0,400)};});
+  window.PHG_PENDING=true;
+  if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('Harmony · thinking…');
+  fetch(ATTACH_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify({prompt:q,recent:hist})})
+    .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.reply)throw new Error(j.detail||j.error||('HTTP '+r.status));return j;});})
+    .then(function(j){if(typeof agentSay==='function')agentSay(j.reply);})
+    .catch(function(e){if(typeof agentSay==='function')agentSay('I could not reach my conversation service just now. Try again in a moment.');if(window.console)console.warn('harmonyChat',e);})
+    .then(function(){window.PHG_PENDING=false;if(typeof AGENT!=='undefined')AGENT.thinking=false;if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('');});
+}
+if(typeof agentAnswer==='function'){
+  var _answer=agentAnswer;
+  agentAnswer=function(q){
+    var inView=document.body.classList.contains('phg-view-open');
+    if(inView&&!HVX_FIN.test(String(q||''))){
+      if(typeof harmonyCoreControl==='function'&&harmonyCoreControl(q))return;
+      return harmonyChat(String(q||'').trim());
+    }
+    return _answer.apply(this,arguments);
+  };
+  window.agentAnswer=agentAnswer;
+}
+/* Report replies end with an audit tag ("Evidence: computed_dashboard.") that
+   is meaningful in the chat log but noise when spoken or floated. */
+if(typeof agentSay==='function'){
+  var _say=agentSay;
+  agentSay=function(text){
+    if(document.body.classList.contains('phg-view-open'))text=String(text||'').replace(/\s*Evidence:\s*[\w_ ,\-]+\.?\s*$/,'');
+    return _say.call(this,text);
+  };
+  window.agentSay=agentSay;
+}
+
 /* Anything typed or spoken while attachments are waiting goes with them. */
 function hookHear(){
   if(!window.PMS||PMS._attHooked)return;PMS._attHooked=true;
@@ -40475,7 +40554,10 @@ function build(){
   pm.innerHTML='<div class="hvxSheetHead">Add to Harmony</div>'
     +row('attach','clip','Photo, video or file','Ask Harmony about it')
     +row('type','chat','Type a message','Write instead of speaking')+'<hr>'
-    +row('menu','spark','Start a menu','Design one together','warm')
+    +row('menu','spark','Start a menu','Design one together','warm nomenu')
+    +row('paint','spark','Paint the artwork','Harmony paints this design','warm menuonly')
+    +row('mnext','spark','Next design','Try another direction','menuonly')
+    +row('mclose','close','Close the menu','Back to Harmony','menuonly')
     +row('photo','image','Menu reference photos','Style, colour and mood for a design','warm');
   var ty=document.createElement('form');ty.id='hvxType';ty.hidden=true;ty.setAttribute('autocomplete','off');
   ty.innerHTML='<button type="button" class="hvxClip" aria-label="Attach a photo, video or file">'+ICON.clip+'</button>'
@@ -40500,10 +40582,13 @@ function build(){
     else if(k==='type')openType();
     else if(k==='photo')file.click();
     else if(k==='menu'&&window.PMS)PMS.hear('make a menu');
+    else if(k==='paint'&&window.PMS)PMS.cmd('paint it');
+    else if(k==='mnext'&&window.PMS)PMS.cmd('next');
+    else if(k==='mclose'&&window.PMS)PMS.close();
   };
   gm.onclick=function(e){
     var r=e.target&&e.target.closest&&e.target.closest('[data-k]'),k=r&&r.getAttribute('data-k');if(!k)return;closeSheets();
-    if(k==='studio'){if(window.PMS)PMS.hear('make a menu');}
+    if(k==='studio'){if(window.PMS){if(PMS.open)PMS.close();else PMS.hear('make a menu');}}
     else if(k==='brief'||k==='recent'||k==='tools'){if(typeof hviewMobileSelect==='function')hviewMobileSelect(k);}
     else if(k==='chat'){document.body.classList.add('hvx-chat');if(typeof agentOpen==='function')agentOpen(true);if(typeof harmonyExpandedModeSet==='function')try{harmonyExpandedModeSet('expanded');}catch(_){}}
     else if(k==='voice'){closeView();if(typeof aiVoiceOpenSettings==='function')aiVoiceOpenSettings();}
@@ -40607,7 +40692,7 @@ if(typeof phgViewport==='function'){
 }
 /* only write when something actually changes: classList.remove() rewrites the
    attribute even when the class is absent, which would re-fire this observer */
-new MutationObserver(function(){var c=document.body.classList;if(!c.contains('phg-view-open')){if(c.contains('hvx-chat'))c.remove('hvx-chat');if(c.contains('hvx-typing'))c.remove('hvx-typing');if(c.contains('hvx-reading'))c.remove('hvx-reading');}})
+new MutationObserver(function(){var c=document.body.classList;if(!c.contains('phg-view-open')){if(window.PMS&&PMS.open&&!document.getElementById('phgView'))PMS.close();if(c.contains('hvx-chat'))c.remove('hvx-chat');if(c.contains('hvx-typing'))c.remove('hvx-typing');if(c.contains('hvx-reading'))c.remove('hvx-reading');}})
   .observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
 </script>
