@@ -27,7 +27,7 @@
                 "recipe_project_id": "6ffaffaa-1d2a-4ddc-8b1a-0dbb0bd6dd69",
                 "recipe_version_id": "f06abb74-762a-4f89-81b2-76a9e4714f3c"
               },
-              "desc": "Tequila blanco, fresh lime, orange liqueur, agave syrup, lime wheel. Bright and citrus-forward.",
+              "desc": "Tequila blanco, fresh lime, orange liqueur, agave syrup; lime wheel. Bright and citrus-forward.",
               "meta": {
                 "family": "Sour",
                 "section": "cocktails",
@@ -103,7 +103,7 @@
                 "recipe_project_id": "80b98160-2eac-4a46-9fc7-537ccf1a59b2",
                 "recipe_version_id": "9fb77eaa-c5eb-477c-8e21-acbc89a0e942"
               },
-              "desc": "Rye whiskey, sweet vermouth, cocktail cherry. Stirred and served up.",
+              "desc": "Rye whiskey, sweet vermouth; cocktail cherry. Stirred and strained into a coupe.",
               "meta": {
                 "family": "Spirit-Forward",
                 "section": "cocktails",
@@ -188,7 +188,7 @@
                 "recipe_project_id": "b70aeb56-8b52-4ee2-89a4-82255893bdc5",
                 "recipe_version_id": "7095fd3d-58fb-43f5-8e8f-1a0afadeafa7"
               },
-              "desc": "Brown butter-washed bourbon, demerara syrup, aromatic bitters, orange peel. Over a large cube.",
+              "desc": "Brown butter-washed bourbon, demerara syrup, aromatic bitters; orange peel. Over a large cube.",
               "meta": {
                 "family": "Old Fashioned",
                 "section": "cocktails",
@@ -257,7 +257,7 @@
                 "recipe_project_id": "58a6d62f-0b20-4cb8-b168-69fc3fed1d31",
                 "recipe_version_id": "14d45e57-72fa-4d23-8274-24e5c80e4b12"
               },
-              "desc": "White rum, fresh lime, house demerara syrup, lime coin. Shaken and fine-strained.",
+              "desc": "White rum, fresh lime, demerara syrup; lime coin. Shaken and fine-strained into a coupe.",
               "meta": {
                 "family": "Sour",
                 "section": "cocktails",
@@ -342,7 +342,7 @@
                 "recipe_project_id": null,
                 "recipe_version_id": null
               },
-              "desc": "Blanco / plata class. Blue agave, D.O. Tequila.",
+              "desc": "Blue agave, unaged. D.O. Tequila.",
               "meta": {
                 "family": null,
                 "section": "spirits",
@@ -389,7 +389,7 @@
                 "recipe_project_id": null,
                 "recipe_version_id": null
               },
-              "desc": "Añejo (aged) class. Blue agave, D.O. Tequila.",
+              "desc": "Blue agave, aged at least one year in oak. D.O. Tequila.",
               "meta": {
                 "family": null,
                 "section": "spirits",
@@ -443,7 +443,7 @@
                 "recipe_project_id": null,
                 "recipe_version_id": null
               },
-              "desc": "Grape brandy from Cognac, VSOP age grade.",
+              "desc": "Grape brandy, aged at least four years in oak.",
               "meta": {
                 "family": null,
                 "section": "spirits",
@@ -505,7 +505,7 @@
                 "recipe_project_id": null,
                 "recipe_version_id": null
               },
-              "desc": "Pils-style pale lager, bottom-fermented. Crisp.",
+              "desc": "Crisp pale lager in the Czech pils style.",
               "meta": {
                 "family": null,
                 "section": "beer",
@@ -552,7 +552,7 @@
                 "recipe_project_id": null,
                 "recipe_version_id": null
               },
-              "desc": "India pale ale, dry-hopped. Hop-forward.",
+              "desc": "Hop-forward India pale ale, dry-hopped. On draft.",
               "meta": {
                 "family": null,
                 "section": "beer",
@@ -599,7 +599,7 @@
                 "recipe_project_id": null,
                 "recipe_version_id": null
               },
-              "desc": "Amber lager, bottom-fermented. Toasty.",
+              "desc": "Toasty amber lager, on draft.",
               "meta": {
                 "family": null,
                 "section": "beer",
@@ -716,7 +716,7 @@
                 "recipe_project_id": null,
                 "recipe_version_id": null
               },
-              "desc": "Malbec. Dry red.",
+              "desc": "Dry red wine from the Malbec grape.",
               "meta": {
                 "family": null,
                 "section": "wine",
@@ -763,7 +763,7 @@
                 "recipe_project_id": null,
                 "recipe_version_id": null
               },
-              "desc": "Pinot Grigio. Dry white.",
+              "desc": "Dry white wine from the Pinot Grigio grape.",
               "meta": {
                 "family": null,
                 "section": "wine",
@@ -817,7 +817,7 @@
                 "recipe_project_id": null,
                 "recipe_version_id": null
               },
-              "desc": "Brut sparkling rosé. Dry.",
+              "desc": "Dry sparkling rosé in the brut style.",
               "meta": {
                 "family": null,
                 "section": "wine",

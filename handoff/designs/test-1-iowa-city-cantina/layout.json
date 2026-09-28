@@ -1,5 +1,6 @@
 {
- "units": "pt (1/72 in) and mm; origin top-left of page; measured from the Chromium render of menu.html",
+ "round": 2,
+ "units": "pt (1/72 in) and mm; origin top-left of the page; every number measured from the Chromium render of menu.html",
  "page": {
   "size": "US Letter portrait",
   "width_pt": 612,
@@ -18,49 +19,78 @@
    "bottom": 12.7,
    "left": 12.7
   },
-  "bleed": "none (full-bleed cream background; for trade printing add 0.125in bleed by extending background)"
+  "bleed": "none; background is full-bleed cream, extend it 0.125in for trade printing"
  },
  "grid": {
   "columns": 2,
-  "column_width_pt": 258,
-  "gutter_pt": 24,
-  "gutter_mm": 8.47,
   "column_x_pt": [
    36,
-   330
+   318
   ],
+  "column_width_pt": 258,
   "column_width_mm": 91.02,
-  "baseline_pt": 6,
-  "note": "all line heights (12/18/30/42) and vertical gaps (6/12/18/24) are multiples of 6pt"
+  "gutter_pt": 24,
+  "gutter_mm": 8.47,
+  "baseline_pt": 12,
+  "baseline_phase_pt": [
+   9.0
+  ],
+  "rows_pt": {
+   "banner": [
+    36,
+    84
+   ],
+   "title": [
+    108,
+    156
+   ],
+   "location": [
+    156,
+    168
+   ],
+   "double_rule": [
+    180,
+    192
+   ],
+   "columns": [
+    216,
+    720
+   ],
+   "footer": [
+    732,
+    756
+   ]
+  },
+  "note": "every slot height and every vertical gap is a multiple of 12pt; baselines are nudged within their slots so all sit 3pt above a 12pt grid line"
  },
  "palette": {
   "background": "#F6EEDF",
   "text": "#231B16",
-  "accent": "#B4441F",
+  "accent": "#A63C1A",
   "secondary": "#2F5D50",
   "highlight": "#E3A018",
   "muted": "#5A4A3F",
-  "names": {
-   "#F6EEDF": "papel cream",
-   "#231B16": "obsidian ink",
-   "#B4441F": "terracotta (prices, kickers, ampersand)",
-   "#2F5D50": "agave green (subheaders, ornaments)",
-   "#E3A018": "marigold (ornaments only)",
-   "#5A4A3F": "adobe brown (descriptions)"
+  "flag_terracotta": "#B4441F",
+  "roles": {
+   "#A63C1A": "prices, kickers, ampersand, footer sign-off",
+   "#2F5D50": "subheaders, rules, agave ornaments",
+   "#E3A018": "non-text ornaments only (diamonds, dotted divider, flags)",
+   "#5A4A3F": "descriptions, location line",
+   "#B4441F": "papel picado flags (graphic only)"
   }
  },
  "type": {
   "title": {
    "font": "Fraunces",
    "weight": 700,
-   "size_pt": 38,
-   "line_pt": 42
+   "size_pt": 40,
+   "slot_pt": 48
   },
   "location": {
    "font": "DM Sans",
    "weight": 500,
    "size_pt": 9,
-   "line_pt": 12,
+   "slot_pt": 12,
    "tracking_pt": 3.2,
    "case": "upper"
   },
@@ -68,22 +98,23 @@
    "font": "Fraunces",
    "weight": 700,
    "size_pt": 24,
-   "line_pt": 30
+   "slot_pt": 24
   },
   "kicker": {
    "font": "DM Sans",
    "weight": 700,
    "size_pt": 8,
-   "line_pt": 12,
+   "slot_pt": 12,
    "tracking_pt": 2.4,
    "case": "upper",
-   "align": "right, baseline-aligned with header"
+   "colour": "#A63C1A",
+   "align": "right edge = price column edge, baseline = header baseline"
   },
   "subheader": {
    "font": "DM Sans",
    "weight": 700,
    "size_pt": 8.5,
-   "line_pt": 18,
+   "slot_pt": 12,
    "tracking_pt": 2,
    "case": "upper"
   },
@@ -91,7 +122,7 @@
    "font": "Fraunces",
    "weight": 600,
    "size_pt": 13,
-   "line_pt": 18
+   "slot_pt": 12
   },
   "description": {
    "font": "DM Sans",
@@ -100,26 +131,29 @@
    "line_pt": 12
   },
   "price": {
-   "font": "DM Sans",
-   "weight": 700,
-   "size_pt": 12,
-   "line_pt": 18,
-   "format": "whole dollars, no $ sign, no decimals, tabular lining numerals, right-aligned"
+   "font": "Fraunces",
+   "weight": 600,
+   "size_pt": 13,
+   "slot_pt": 12,
+   "numerals": "lining, tabular",
+   "format": "whole dollars, no $ sign, no decimals, right-aligned"
   },
   "footer": {
    "font": "Fraunces Italic",
    "weight": 600,
    "size_pt": 11,
-   "line_pt": 18
+   "slot_pt": 24
   },
   "min_print_size_pt": 8
  },
  "spacing_pt": {
-  "section_gap": 24,
-  "header_to_sub": 12,
-  "sub_to_first_item": 6,
+  "section_gap": 36,
+  "below_section_header": 12,
+  "subheader_to_first_item": 12,
+  "items_to_next_subheader": 24,
   "item_gap": 12,
-  "desc_right_indent": 30
+  "desc_right_indent": 30,
+  "columns_to_footer": 12
  },
  "elements": [
   {
@@ -129,86 +163,135 @@
    "x_pt": 36.0,
    "y_pt": 36.0,
    "w_pt": 540.0,
-   "h_pt": 36.0,
+   "h_pt": 48.0,
    "x_mm": 12.7,
    "y_mm": 12.7,
    "w_mm": 190.5,
-   "h_mm": 12.7,
-   "text": "papel picado banner (SVG)"
+   "h_mm": 16.93,
+   "text": "",
+   "note": "bespoke papel picado banner (SVG, 9 motifs)"
   },
   {
    "kind": "header",
    "page": 1,
    "column": null,
-   "x_pt": 96.05,
-   "y_pt": 81.0,
-   "w_pt": 419.91,
-   "h_pt": 47.25,
-   "x_mm": 33.88,
-   "y_mm": 28.57,
-   "w_mm": 148.13,
-   "h_mm": 16.67,
+   "x_pt": 84.74,
+   "y_pt": 102.0,
+   "w_pt": 442.51,
+   "h_pt": 49.5,
+   "x_mm": 29.89,
+   "y_mm": 35.98,
+   "w_mm": 156.11,
+   "h_mm": 17.46,
    "text": "Cantina & Cocktail Bar",
-   "level": "title",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 102.75,
+    "w": 540.0,
+    "h": 48.0
+   },
+   "baseline_pt": 141.0,
+   "lines": 1,
+   "level": "title"
   },
   {
    "kind": "subheader",
    "page": 1,
    "column": null,
    "x_pt": 246.18,
-   "y_pt": 132.0,
+   "y_pt": 156.0,
    "w_pt": 119.65,
    "h_pt": 12.0,
    "x_mm": 86.85,
-   "y_mm": 46.57,
+   "y_mm": 55.03,
    "w_mm": 42.21,
    "h_mm": 4.23,
    "text": "IOWA CITY, IOWA",
-   "level": "location",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 156.0,
+    "w": 540.0,
+    "h": 12.0
+   },
+   "baseline_pt": 165.0,
+   "lines": 1,
+   "level": "location"
   },
   {
    "kind": "divider",
    "page": 1,
    "column": null,
    "x_pt": 36.0,
-   "y_pt": 156.0,
+   "y_pt": 180.0,
    "w_pt": 540.0,
-   "h_pt": 4.0,
+   "h_pt": 12.0,
    "x_mm": 12.7,
-   "y_mm": 55.03,
+   "y_mm": 63.5,
    "w_mm": 190.5,
-   "h_mm": 1.41,
-   "text": "double rule"
+   "h_mm": 4.23,
+   "text": "",
+   "note": "double rule (1.5pt + 0.5pt) inside a 12pt slot"
   },
   {
    "kind": "divider",
    "page": 1,
    "column": null,
    "x_pt": 305.62,
-   "y_pt": 184.0,
+   "y_pt": 216.0,
    "w_pt": 0.75,
-   "h_pt": 548.0,
+   "h_pt": 504.0,
    "x_mm": 107.82,
-   "y_mm": 64.91,
+   "y_mm": 76.2,
    "w_mm": 0.26,
-   "h_mm": 193.32,
-   "text": "column divider (dotted)"
+   "h_mm": 177.8,
+   "text": "",
+   "note": "dotted column divider"
+  },
+  {
+   "kind": "header",
+   "page": 1,
+   "column": 1,
+   "x_pt": 36.0,
+   "y_pt": 213.75,
+   "w_pt": 112.04,
+   "h_pt": 29.25,
+   "x_mm": 12.7,
+   "y_mm": 75.41,
+   "w_mm": 39.53,
+   "h_mm": 10.32,
+   "text": "Cocktails",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 216.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 237.0,
+   "lines": 1,
+   "ref": "sec_cocktails",
+   "level": "section"
   },
   {
    "kind": "ornament",
    "page": 1,
    "column": 1,
    "x_pt": 223.43,
-   "y_pt": 192.25,
+   "y_pt": 228.0,
    "w_pt": 70.57,
    "h_pt": 12.0,
    "x_mm": 78.82,
-   "y_mm": 67.82,
+   "y_mm": 80.43,
    "w_mm": 24.9,
    "h_mm": 4.23,
    "text": "CÓCTELES",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 216.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 237.0,
+   "lines": 3,
    "ref": "sec_cocktails",
    "level": "kicker"
   },
@@ -217,64 +300,94 @@
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 178.0,
-   "w_pt": 112.04,
+   "y_pt": 525.75,
+   "w_pt": 80.81,
    "h_pt": 29.25,
    "x_mm": 12.7,
-   "y_mm": 62.79,
-   "w_mm": 39.53,
+   "y_mm": 185.47,
+   "w_mm": 28.51,
    "h_mm": 10.32,
-   "text": "Cocktails",
-   "ref": "sec_cocktails",
-   "level": "section",
-   "lines": 1
+   "text": "Spirits",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 528.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 549.0,
+   "lines": 1,
+   "ref": "sec_spirits",
+   "level": "section"
   },
   {
    "kind": "ornament",
    "page": 1,
    "column": 1,
-   "x_pt": 156.25,
-   "y_pt": 510.25,
-   "w_pt": 137.75,
+   "x_pt": 211.11,
+   "y_pt": 540.0,
+   "w_pt": 82.89,
    "h_pt": 12.0,
-   "x_mm": 55.12,
-   "y_mm": 180.0,
-   "w_mm": 48.6,
+   "x_mm": 74.47,
+   "y_mm": 190.5,
+   "w_mm": 29.24,
    "h_mm": 4.23,
-   "text": "AGAVE Y DESTILADOS",
+   "text": "DESTILADOS",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 528.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 549.0,
+   "lines": 3,
    "ref": "sec_spirits",
    "level": "kicker"
   },
   {
    "kind": "header",
    "page": 1,
-   "column": 1,
-   "x_pt": 36.0,
-   "y_pt": 496.0,
-   "w_pt": 80.81,
+   "column": 2,
+   "x_pt": 318.0,
+   "y_pt": 213.75,
+   "w_pt": 56.1,
    "h_pt": 29.25,
-   "x_mm": 12.7,
-   "y_mm": 174.98,
-   "w_mm": 28.51,
+   "x_mm": 112.18,
+   "y_mm": 75.41,
+   "w_mm": 19.79,
    "h_mm": 10.32,
-   "text": "Spirits",
-   "ref": "sec_spirits",
-   "level": "section",
-   "lines": 1
+   "text": "Beer",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 216.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 237.0,
+   "lines": 1,
+   "ref": "sec_beer",
+   "level": "section"
   },
   {
    "kind": "ornament",
    "page": 1,
    "column": 2,
    "x_pt": 513.22,
-   "y_pt": 192.25,
+   "y_pt": 228.0,
    "w_pt": 62.78,
    "h_pt": 12.0,
    "x_mm": 181.05,
-   "y_mm": 67.82,
+   "y_mm": 80.43,
    "w_mm": 22.15,
    "h_mm": 4.23,
    "text": "CERVEZA",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 216.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 237.0,
+   "lines": 3,
    "ref": "sec_beer",
    "level": "kicker"
   },
@@ -283,31 +396,46 @@
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 178.0,
-   "w_pt": 56.1,
+   "y_pt": 405.75,
+   "w_pt": 65.68,
    "h_pt": 29.25,
    "x_mm": 112.18,
-   "y_mm": 62.79,
-   "w_mm": 19.79,
+   "y_mm": 143.14,
+   "w_mm": 23.17,
    "h_mm": 10.32,
-   "text": "Beer",
-   "ref": "sec_beer",
-   "level": "section",
-   "lines": 1
+   "text": "Cider",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 408.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 429.0,
+   "lines": 1,
+   "ref": "sec_cider",
+   "level": "section"
   },
   {
    "kind": "ornament",
    "page": 1,
    "column": 2,
    "x_pt": 530.65,
-   "y_pt": 396.25,
+   "y_pt": 420.0,
    "w_pt": 45.35,
    "h_pt": 12.0,
    "x_mm": 187.2,
-   "y_mm": 139.79,
+   "y_mm": 148.17,
    "w_mm": 16.0,
    "h_mm": 4.23,
    "text": "SIDRA",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 408.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 429.0,
+   "lines": 3,
    "ref": "sec_cider",
    "level": "kicker"
   },
@@ -316,288 +444,342 @@
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 382.0,
-   "w_pt": 65.68,
+   "y_pt": 501.75,
+   "w_pt": 61.99,
    "h_pt": 29.25,
    "x_mm": 112.18,
-   "y_mm": 134.76,
-   "w_mm": 23.17,
+   "y_mm": 177.01,
+   "w_mm": 21.87,
    "h_mm": 10.32,
-   "text": "Cider",
-   "ref": "sec_cider",
-   "level": "section",
-   "lines": 1
+   "text": "Wine",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 504.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 525.0,
+   "lines": 1,
+   "ref": "sec_wine",
+   "level": "section"
   },
   {
    "kind": "ornament",
    "page": 1,
    "column": 2,
    "x_pt": 536.5,
-   "y_pt": 486.25,
+   "y_pt": 516.0,
    "w_pt": 39.5,
    "h_pt": 12.0,
-   "x_mm": 189.26,
-   "y_mm": 171.54,
-   "w_mm": 13.94,
+   "x_mm": 189.27,
+   "y_mm": 182.03,
+   "w_mm": 13.93,
    "h_mm": 4.23,
    "text": "VINO",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 504.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 525.0,
+   "lines": 3,
    "ref": "sec_wine",
    "level": "kicker"
-  },
-  {
-   "kind": "header",
-   "page": 1,
-   "column": 2,
-   "x_pt": 318.0,
-   "y_pt": 472.0,
-   "w_pt": 61.99,
-   "h_pt": 29.25,
-   "x_mm": 112.18,
-   "y_mm": 166.51,
-   "w_mm": 21.87,
-   "h_mm": 10.32,
-   "text": "Wine",
-   "ref": "sec_wine",
-   "level": "section",
-   "lines": 1
   },
   {
    "kind": "subheader",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 223.0,
+   "y_pt": 252.75,
    "w_pt": 57.01,
    "h_pt": 11.25,
    "x_mm": 12.7,
-   "y_mm": 78.67,
+   "y_mm": 89.16,
    "w_mm": 20.11,
    "h_mm": 3.97,
    "text": "CLASSICS",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 252.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 261.0,
+   "lines": 1,
    "ref": "sub_cocktails_classics",
-   "level": "sub",
-   "lines": 1
+   "level": "sub"
   },
   {
    "kind": "divider",
    "page": 1,
    "column": 1,
    "x_pt": 101.0,
-   "y_pt": 228.62,
+   "y_pt": 257.62,
    "w_pt": 193.0,
    "h_pt": 0.75,
    "x_mm": 35.63,
-   "y_mm": 80.65,
-   "w_mm": 68.08,
+   "y_mm": 90.88,
+   "w_mm": 68.09,
    "h_mm": 0.26,
-   "text": "subheader rule",
-   "ref": "sub_cocktails_classics"
+   "text": "",
+   "ref": "sub_cocktails_classics",
+   "note": "subheader hairline"
   },
   {
    "kind": "subheader",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 355.0,
+   "y_pt": 384.75,
    "w_pt": 105.73,
    "h_pt": 11.25,
    "x_mm": 12.7,
-   "y_mm": 125.23,
+   "y_mm": 135.73,
    "w_mm": 37.3,
    "h_mm": 3.97,
    "text": "HOUSE ORIGINALS",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 384.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 393.0,
+   "lines": 1,
    "ref": "sub_cocktails_house_originals",
-   "level": "sub",
-   "lines": 1
+   "level": "sub"
   },
   {
    "kind": "divider",
    "page": 1,
    "column": 1,
    "x_pt": 149.72,
-   "y_pt": 360.62,
+   "y_pt": 389.62,
    "w_pt": 144.28,
    "h_pt": 0.75,
    "x_mm": 52.82,
-   "y_mm": 127.22,
+   "y_mm": 137.45,
    "w_mm": 50.9,
    "h_mm": 0.26,
-   "text": "subheader rule",
-   "ref": "sub_cocktails_house_originals"
+   "text": "",
+   "ref": "sub_cocktails_house_originals",
+   "note": "subheader hairline"
   },
   {
    "kind": "subheader",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 541.0,
+   "y_pt": 564.75,
    "w_pt": 38.53,
    "h_pt": 11.25,
    "x_mm": 12.7,
-   "y_mm": 190.85,
+   "y_mm": 199.23,
    "w_mm": 13.59,
    "h_mm": 3.97,
    "text": "AGAVE",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 564.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 573.0,
+   "lines": 1,
    "ref": "sub_spirits_agave",
-   "level": "sub",
-   "lines": 1
+   "level": "sub"
   },
   {
    "kind": "divider",
    "page": 1,
    "column": 1,
    "x_pt": 82.52,
-   "y_pt": 546.62,
+   "y_pt": 569.62,
    "w_pt": 211.48,
    "h_pt": 0.75,
    "x_mm": 29.11,
-   "y_mm": 192.84,
-   "w_mm": 74.6,
+   "y_mm": 200.95,
+   "w_mm": 74.61,
    "h_mm": 0.26,
-   "text": "subheader rule",
-   "ref": "sub_spirits_agave"
+   "text": "",
+   "ref": "sub_spirits_agave",
+   "note": "subheader hairline"
   },
   {
    "kind": "subheader",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 649.0,
+   "y_pt": 672.75,
    "w_pt": 46.02,
    "h_pt": 11.25,
    "x_mm": 12.7,
-   "y_mm": 228.95,
+   "y_mm": 237.33,
    "w_mm": 16.23,
    "h_mm": 3.97,
    "text": "BRANDY",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 672.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 681.0,
+   "lines": 1,
    "ref": "sub_spirits_brandy",
-   "level": "sub",
-   "lines": 1
+   "level": "sub"
   },
   {
    "kind": "divider",
    "page": 1,
    "column": 1,
    "x_pt": 90.01,
-   "y_pt": 654.62,
+   "y_pt": 677.62,
    "w_pt": 203.99,
    "h_pt": 0.75,
    "x_mm": 31.75,
-   "y_mm": 230.94,
+   "y_mm": 239.05,
    "w_mm": 71.96,
    "h_mm": 0.26,
-   "text": "subheader rule",
-   "ref": "sub_spirits_brandy"
+   "text": "",
+   "ref": "sub_spirits_brandy",
+   "note": "subheader hairline"
   },
   {
    "kind": "subheader",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 223.0,
+   "y_pt": 252.75,
    "w_pt": 37.2,
    "h_pt": 11.25,
    "x_mm": 112.18,
-   "y_mm": 78.67,
+   "y_mm": 89.16,
    "w_mm": 13.12,
    "h_mm": 3.97,
    "text": "DRAFT",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 252.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 261.0,
+   "lines": 1,
    "ref": "sub_beer_draft",
-   "level": "sub",
-   "lines": 1
+   "level": "sub"
   },
   {
    "kind": "divider",
    "page": 1,
    "column": 2,
    "x_pt": 363.19,
-   "y_pt": 228.62,
+   "y_pt": 257.62,
    "w_pt": 212.81,
    "h_pt": 0.75,
-   "x_mm": 128.12,
-   "y_mm": 80.65,
-   "w_mm": 75.08,
+   "x_mm": 128.13,
+   "y_mm": 90.88,
+   "w_mm": 75.07,
    "h_mm": 0.26,
-   "text": "subheader rule",
-   "ref": "sub_beer_draft"
+   "text": "",
+   "ref": "sub_beer_draft",
+   "note": "subheader hairline"
   },
   {
    "kind": "subheader",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 517.0,
+   "y_pt": 540.75,
    "w_pt": 82.29,
    "h_pt": 11.25,
    "x_mm": 112.18,
-   "y_mm": 182.38,
+   "y_mm": 190.76,
    "w_mm": 29.03,
    "h_mm": 3.97,
    "text": "BY THE GLASS",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 540.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 549.0,
+   "lines": 1,
    "ref": "sub_wine_by_the_glass",
-   "level": "sub",
-   "lines": 1
+   "level": "sub"
   },
   {
    "kind": "divider",
    "page": 1,
    "column": 2,
    "x_pt": 408.28,
-   "y_pt": 522.62,
+   "y_pt": 545.62,
    "w_pt": 167.72,
    "h_pt": 0.75,
    "x_mm": 144.03,
-   "y_mm": 184.37,
+   "y_mm": 192.48,
    "w_mm": 59.17,
    "h_mm": 0.26,
-   "text": "subheader rule",
-   "ref": "sub_wine_by_the_glass"
+   "text": "",
+   "ref": "sub_wine_by_the_glass",
+   "note": "subheader hairline"
   },
   {
    "kind": "subheader",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 625.0,
+   "y_pt": 648.75,
    "w_pt": 64.52,
    "h_pt": 11.25,
    "x_mm": 112.18,
-   "y_mm": 220.48,
+   "y_mm": 228.86,
    "w_mm": 22.76,
    "h_mm": 3.97,
    "text": "SPARKLING",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 648.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 657.0,
+   "lines": 1,
    "ref": "sub_wine_sparkling",
-   "level": "sub",
-   "lines": 1
+   "level": "sub"
   },
   {
    "kind": "divider",
    "page": 1,
    "column": 2,
    "x_pt": 390.52,
-   "y_pt": 630.62,
+   "y_pt": 653.62,
    "w_pt": 185.48,
    "h_pt": 0.75,
    "x_mm": 137.77,
-   "y_mm": 222.47,
+   "y_mm": 230.58,
    "w_mm": 65.43,
    "h_mm": 0.26,
-   "text": "subheader rule",
-   "ref": "sub_wine_sparkling"
+   "text": "",
+   "ref": "sub_wine_sparkling",
+   "note": "subheader hairline"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 244.0,
+   "y_pt": 276.0,
    "w_pt": 258.0,
-   "h_pt": 42.0,
+   "h_pt": 36.0,
    "x_mm": 12.7,
-   "y_mm": 86.08,
+   "y_mm": 97.37,
    "w_mm": 91.02,
-   "h_mm": 14.82,
-   "text": "Margarita\n15\n\nTequila blanco, fresh lime, orange liqueur, agave syrup, lime wheel. Bright and citrus-forward.",
+   "h_mm": 12.7,
+   "text": "Margarita 15 Tequila blanco, fresh lime, orange liqueur, agave syrup; lime wheel. Bright and citrus-forward.",
    "ref": "beta_margarita"
   },
   {
@@ -605,62 +787,83 @@
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 244.75,
+   "y_pt": 272.25,
    "w_pt": 63.02,
    "h_pt": 15.75,
    "x_mm": 12.7,
-   "y_mm": 86.34,
+   "y_mm": 96.04,
    "w_mm": 22.23,
    "h_mm": 5.56,
    "text": "Margarita",
-   "ref": "beta_margarita",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 276.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 285.0,
+   "lines": 1,
+   "ref": "beta_margarita"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 1,
-   "x_pt": 282.16,
-   "y_pt": 245.5,
-   "w_pt": 11.84,
+   "x_pt": 280.27,
+   "y_pt": 272.25,
+   "w_pt": 13.73,
    "h_pt": 15.75,
-   "x_mm": 99.54,
-   "y_mm": 86.61,
-   "w_mm": 4.18,
+   "x_mm": 98.87,
+   "y_mm": 96.04,
+   "w_mm": 4.84,
    "h_mm": 5.56,
    "text": "15",
-   "ref": "beta_margarita",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 276.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 285.0,
+   "lines": 1,
+   "ref": "beta_margarita"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 262.0,
-   "w_pt": 223.73,
+   "y_pt": 288.0,
+   "w_pt": 224.14,
    "h_pt": 24.0,
    "x_mm": 12.7,
-   "y_mm": 92.43,
-   "w_mm": 78.93,
+   "y_mm": 101.6,
+   "w_mm": 79.07,
    "h_mm": 8.47,
-   "text": "Tequila blanco, fresh lime, orange liqueur, agave syrup, lime wheel. Bright and citrus-forward.",
-   "ref": "beta_margarita",
-   "lines": 2
+   "text": "Tequila blanco, fresh lime, orange liqueur, agave syrup; lime wheel. Bright and citrus-forward.",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 288.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 309.0,
+   "lines": 2,
+   "ref": "beta_margarita"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 298.0,
+   "y_pt": 324.0,
    "w_pt": 258.0,
-   "h_pt": 42.0,
+   "h_pt": 36.0,
    "x_mm": 12.7,
-   "y_mm": 105.13,
+   "y_mm": 114.3,
    "w_mm": 91.02,
-   "h_mm": 14.82,
-   "text": "Manhattan\n15\n\nRye whiskey, sweet vermouth, cocktail cherry. Stirred and served up.",
+   "h_mm": 12.7,
+   "text": "Manhattan 15 Rye whiskey, sweet vermouth; cocktail cherry. Stirred and strained into a coupe.",
    "ref": "beta_manhattan"
   },
   {
@@ -668,62 +871,83 @@
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 298.75,
+   "y_pt": 320.25,
    "w_pt": 69.02,
    "h_pt": 15.75,
    "x_mm": 12.7,
-   "y_mm": 105.39,
+   "y_mm": 112.98,
    "w_mm": 24.35,
    "h_mm": 5.56,
    "text": "Manhattan",
-   "ref": "beta_manhattan",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 324.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 333.0,
+   "lines": 1,
+   "ref": "beta_manhattan"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 1,
-   "x_pt": 282.16,
-   "y_pt": 299.5,
-   "w_pt": 11.84,
+   "x_pt": 280.27,
+   "y_pt": 320.25,
+   "w_pt": 13.73,
    "h_pt": 15.75,
-   "x_mm": 99.54,
-   "y_mm": 105.66,
-   "w_mm": 4.18,
+   "x_mm": 98.87,
+   "y_mm": 112.98,
+   "w_mm": 4.84,
    "h_mm": 5.56,
    "text": "15",
-   "ref": "beta_manhattan",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 324.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 333.0,
+   "lines": 1,
+   "ref": "beta_manhattan"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 316.0,
-   "w_pt": 218.98,
+   "y_pt": 336.0,
+   "w_pt": 219.39,
    "h_pt": 24.0,
    "x_mm": 12.7,
-   "y_mm": 111.48,
-   "w_mm": 77.25,
+   "y_mm": 118.53,
+   "w_mm": 77.4,
    "h_mm": 8.47,
-   "text": "Rye whiskey, sweet vermouth, cocktail cherry. Stirred and served up.",
-   "ref": "beta_manhattan",
-   "lines": 2
+   "text": "Rye whiskey, sweet vermouth; cocktail cherry. Stirred and strained into a coupe.",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 336.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 357.0,
+   "lines": 2,
+   "ref": "beta_manhattan"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 376.0,
+   "y_pt": 408.0,
    "w_pt": 258.0,
-   "h_pt": 42.0,
+   "h_pt": 36.0,
    "x_mm": 12.7,
-   "y_mm": 132.64,
+   "y_mm": 143.93,
    "w_mm": 91.02,
-   "h_mm": 14.82,
-   "text": "Brown Butter Old Fashioned\n16\n\nBrown butter-washed bourbon, demerara syrup, aromatic bitters, orange peel. Over a large ",
+   "h_mm": 12.7,
+   "text": "Brown Butter Old Fashioned 16 Brown butter-washed bourbon, demerara syrup, aromatic bitters; orange peel. Over a large cube.",
    "ref": "beta_old_fashioned"
   },
   {
@@ -731,62 +955,83 @@
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 376.75,
+   "y_pt": 404.25,
    "w_pt": 178.58,
    "h_pt": 15.75,
    "x_mm": 12.7,
-   "y_mm": 132.91,
+   "y_mm": 142.61,
    "w_mm": 63.0,
    "h_mm": 5.56,
    "text": "Brown Butter Old Fashioned",
-   "ref": "beta_old_fashioned",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 408.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 417.0,
+   "lines": 1,
+   "ref": "beta_old_fashioned"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 1,
-   "x_pt": 282.02,
-   "y_pt": 377.5,
-   "w_pt": 11.98,
+   "x_pt": 279.87,
+   "y_pt": 404.25,
+   "w_pt": 14.13,
    "h_pt": 15.75,
-   "x_mm": 99.49,
-   "y_mm": 133.17,
-   "w_mm": 4.23,
+   "x_mm": 98.73,
+   "y_mm": 142.61,
+   "w_mm": 4.98,
    "h_mm": 5.56,
    "text": "16",
-   "ref": "beta_old_fashioned",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 408.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 417.0,
+   "lines": 1,
+   "ref": "beta_old_fashioned"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 394.0,
+   "y_pt": 420.0,
    "w_pt": 201.12,
    "h_pt": 24.0,
    "x_mm": 12.7,
-   "y_mm": 138.99,
+   "y_mm": 148.17,
    "w_mm": 70.95,
    "h_mm": 8.47,
-   "text": "Brown butter-washed bourbon, demerara syrup, aromatic bitters, orange peel. Over a large cube.",
-   "ref": "beta_old_fashioned",
-   "lines": 2
+   "text": "Brown butter-washed bourbon, demerara syrup, aromatic bitters; orange peel. Over a large cube.",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 420.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 441.0,
+   "lines": 2,
+   "ref": "beta_old_fashioned"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 430.0,
+   "y_pt": 456.0,
    "w_pt": 258.0,
-   "h_pt": 42.0,
+   "h_pt": 36.0,
    "x_mm": 12.7,
-   "y_mm": 151.69,
+   "y_mm": 160.87,
    "w_mm": 91.02,
-   "h_mm": 14.82,
-   "text": "House Daiquiri\n14\n\nWhite rum, fresh lime, house demerara syrup, lime coin. Shaken and fine-strained.",
+   "h_mm": 12.7,
+   "text": "House Daiquiri 14 White rum, fresh lime, demerara syrup; lime coin. Shaken and fine-strained into a coupe.",
    "ref": "beta_daiquiri"
   },
   {
@@ -794,62 +1039,83 @@
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 430.75,
+   "y_pt": 452.25,
    "w_pt": 95.38,
    "h_pt": 15.75,
    "x_mm": 12.7,
-   "y_mm": 151.96,
+   "y_mm": 159.54,
    "w_mm": 33.65,
    "h_mm": 5.56,
    "text": "House Daiquiri",
-   "ref": "beta_daiquiri",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 456.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 465.0,
+   "lines": 1,
+   "ref": "beta_daiquiri"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 1,
-   "x_pt": 281.82,
-   "y_pt": 431.5,
-   "w_pt": 12.18,
+   "x_pt": 279.74,
+   "y_pt": 452.25,
+   "w_pt": 14.26,
    "h_pt": 15.75,
-   "x_mm": 99.42,
-   "y_mm": 152.22,
-   "w_mm": 4.3,
+   "x_mm": 98.69,
+   "y_mm": 159.54,
+   "w_mm": 5.03,
    "h_mm": 5.56,
    "text": "14",
-   "ref": "beta_daiquiri",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 456.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 465.0,
+   "lines": 1,
+   "ref": "beta_daiquiri"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 448.0,
-   "w_pt": 207.46,
+   "y_pt": 468.0,
+   "w_pt": 202.16,
    "h_pt": 24.0,
    "x_mm": 12.7,
-   "y_mm": 158.04,
-   "w_mm": 73.19,
+   "y_mm": 165.1,
+   "w_mm": 71.32,
    "h_mm": 8.47,
-   "text": "White rum, fresh lime, house demerara syrup, lime coin. Shaken and fine-strained.",
-   "ref": "beta_daiquiri",
-   "lines": 2
+   "text": "White rum, fresh lime, demerara syrup; lime coin. Shaken and fine-strained into a coupe.",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 468.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "baseline_pt": 489.0,
+   "lines": 2,
+   "ref": "beta_daiquiri"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 562.0,
+   "y_pt": 588.0,
    "w_pt": 258.0,
-   "h_pt": 30.0,
+   "h_pt": 24.0,
    "x_mm": 12.7,
-   "y_mm": 198.26,
+   "y_mm": 207.43,
    "w_mm": 91.02,
-   "h_mm": 10.58,
-   "text": "Blanco Tequila\n12\n\nBlanco / plata class. Blue agave, D.O. Tequila.",
+   "h_mm": 8.47,
+   "text": "Blanco Tequila 12 Blue agave, unaged. D.O. Tequila.",
    "ref": "beta_blanco_tequila"
   },
   {
@@ -857,62 +1123,83 @@
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 562.75,
+   "y_pt": 584.25,
    "w_pt": 93.35,
    "h_pt": 15.75,
    "x_mm": 12.7,
-   "y_mm": 198.52,
+   "y_mm": 206.11,
    "w_mm": 32.93,
    "h_mm": 5.56,
    "text": "Blanco Tequila",
-   "ref": "beta_blanco_tequila",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 588.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 597.0,
+   "lines": 1,
+   "ref": "beta_blanco_tequila"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 1,
-   "x_pt": 282.7,
-   "y_pt": 563.5,
-   "w_pt": 11.3,
+   "x_pt": 279.88,
+   "y_pt": 584.25,
+   "w_pt": 14.12,
    "h_pt": 15.75,
-   "x_mm": 99.73,
-   "y_mm": 198.79,
-   "w_mm": 3.99,
+   "x_mm": 98.74,
+   "y_mm": 206.11,
+   "w_mm": 4.98,
    "h_mm": 5.56,
    "text": "12",
-   "ref": "beta_blanco_tequila",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 588.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 597.0,
+   "lines": 1,
+   "ref": "beta_blanco_tequila"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 580.0,
-   "w_pt": 182.5,
+   "y_pt": 600.0,
+   "w_pt": 132.7,
    "h_pt": 12.0,
    "x_mm": 12.7,
-   "y_mm": 204.61,
-   "w_mm": 64.38,
+   "y_mm": 211.67,
+   "w_mm": 46.81,
    "h_mm": 4.23,
-   "text": "Blanco / plata class. Blue agave, D.O. Tequila.",
-   "ref": "beta_blanco_tequila",
-   "lines": 1
+   "text": "Blue agave, unaged. D.O. Tequila.",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 600.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 609.0,
+   "lines": 1,
+   "ref": "beta_blanco_tequila"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 604.0,
+   "y_pt": 624.0,
    "w_pt": 258.0,
-   "h_pt": 30.0,
+   "h_pt": 24.0,
    "x_mm": 12.7,
-   "y_mm": 213.08,
+   "y_mm": 220.13,
    "w_mm": 91.02,
-   "h_mm": 10.58,
-   "text": "Añejo Tequila\n16\n\nAñejo (aged) class. Blue agave, D.O. Tequila.",
+   "h_mm": 8.47,
+   "text": "Añejo Tequila 16 Blue agave, aged at least one year in oak. D.O. Tequila.",
    "ref": "beta_anejo_tequila"
   },
   {
@@ -920,62 +1207,83 @@
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 604.75,
+   "y_pt": 620.25,
    "w_pt": 86.52,
    "h_pt": 15.75,
    "x_mm": 12.7,
-   "y_mm": 213.34,
+   "y_mm": 218.81,
    "w_mm": 30.52,
    "h_mm": 5.56,
    "text": "Añejo Tequila",
-   "ref": "beta_anejo_tequila",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 624.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 633.0,
+   "lines": 1,
+   "ref": "beta_anejo_tequila"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 1,
-   "x_pt": 282.02,
-   "y_pt": 605.5,
-   "w_pt": 11.98,
+   "x_pt": 279.87,
+   "y_pt": 620.25,
+   "w_pt": 14.13,
    "h_pt": 15.75,
-   "x_mm": 99.49,
-   "y_mm": 213.61,
-   "w_mm": 4.23,
+   "x_mm": 98.73,
+   "y_mm": 218.81,
+   "w_mm": 4.98,
    "h_mm": 5.56,
    "text": "16",
-   "ref": "beta_anejo_tequila",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 624.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 633.0,
+   "lines": 1,
+   "ref": "beta_anejo_tequila"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 622.0,
-   "w_pt": 178.38,
+   "y_pt": 636.0,
+   "w_pt": 220.54,
    "h_pt": 12.0,
    "x_mm": 12.7,
-   "y_mm": 219.43,
-   "w_mm": 62.93,
+   "y_mm": 224.37,
+   "w_mm": 77.8,
    "h_mm": 4.23,
-   "text": "Añejo (aged) class. Blue agave, D.O. Tequila.",
-   "ref": "beta_anejo_tequila",
-   "lines": 1
+   "text": "Blue agave, aged at least one year in oak. D.O. Tequila.",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 636.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 645.0,
+   "lines": 1,
+   "ref": "beta_anejo_tequila"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 670.0,
+   "y_pt": 696.0,
    "w_pt": 258.0,
-   "h_pt": 30.0,
+   "h_pt": 24.0,
    "x_mm": 12.7,
-   "y_mm": 236.36,
+   "y_mm": 245.53,
    "w_mm": 91.02,
-   "h_mm": 10.58,
-   "text": "Cognac VSOP\n18\n\nGrape brandy from Cognac, VSOP age grade.",
+   "h_mm": 8.47,
+   "text": "Cognac VSOP 18 Grape brandy, aged at least four years in oak.",
    "ref": "beta_cognac_vsop"
   },
   {
@@ -983,62 +1291,83 @@
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 670.75,
+   "y_pt": 692.25,
    "w_pt": 86.21,
    "h_pt": 15.75,
    "x_mm": 12.7,
-   "y_mm": 236.62,
+   "y_mm": 244.21,
    "w_mm": 30.41,
    "h_mm": 5.56,
    "text": "Cognac VSOP",
-   "ref": "beta_cognac_vsop",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 696.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 705.0,
+   "lines": 1,
+   "ref": "beta_cognac_vsop"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 1,
-   "x_pt": 282.04,
-   "y_pt": 671.5,
-   "w_pt": 11.96,
+   "x_pt": 279.89,
+   "y_pt": 692.25,
+   "w_pt": 14.11,
    "h_pt": 15.75,
-   "x_mm": 99.5,
-   "y_mm": 236.89,
-   "w_mm": 4.22,
+   "x_mm": 98.74,
+   "y_mm": 244.21,
+   "w_mm": 4.98,
    "h_mm": 5.56,
    "text": "18",
-   "ref": "beta_cognac_vsop",
-   "lines": 1
+   "slot_pt": {
+    "x": 36.0,
+    "y": 696.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 705.0,
+   "lines": 1,
+   "ref": "beta_cognac_vsop"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 1,
    "x_pt": 36.0,
-   "y_pt": 688.0,
-   "w_pt": 186.68,
+   "y_pt": 708.0,
+   "w_pt": 187.38,
    "h_pt": 12.0,
    "x_mm": 12.7,
-   "y_mm": 242.71,
-   "w_mm": 65.86,
+   "y_mm": 249.77,
+   "w_mm": 66.1,
    "h_mm": 4.23,
-   "text": "Grape brandy from Cognac, VSOP age grade.",
-   "ref": "beta_cognac_vsop",
-   "lines": 1
+   "text": "Grape brandy, aged at least four years in oak.",
+   "slot_pt": {
+    "x": 36.0,
+    "y": 708.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 717.0,
+   "lines": 1,
+   "ref": "beta_cognac_vsop"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 244.0,
+   "y_pt": 276.0,
    "w_pt": 258.0,
-   "h_pt": 30.0,
+   "h_pt": 24.0,
    "x_mm": 112.18,
-   "y_mm": 86.08,
+   "y_mm": 97.37,
    "w_mm": 91.02,
-   "h_mm": 10.58,
-   "text": "Czech Pilsner\n7\n\nPils-style pale lager, bottom-fermented. Crisp.",
+   "h_mm": 8.47,
+   "text": "Czech Pilsner 7 Crisp pale lager in the Czech pils style.",
    "ref": "beta_czech_pilsner"
   },
   {
@@ -1046,62 +1375,83 @@
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 244.75,
+   "y_pt": 272.25,
    "w_pt": 85.62,
    "h_pt": 15.75,
    "x_mm": 112.18,
-   "y_mm": 86.34,
+   "y_mm": 96.04,
    "w_mm": 30.2,
    "h_mm": 5.56,
    "text": "Czech Pilsner",
-   "ref": "beta_czech_pilsner",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 276.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 285.0,
+   "lines": 1,
+   "ref": "beta_czech_pilsner"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 2,
-   "x_pt": 569.55,
-   "y_pt": 245.5,
-   "w_pt": 6.45,
+   "x_pt": 569.13,
+   "y_pt": 272.25,
+   "w_pt": 6.87,
    "h_pt": 15.75,
-   "x_mm": 200.93,
-   "y_mm": 86.61,
-   "w_mm": 2.27,
+   "x_mm": 200.78,
+   "y_mm": 96.04,
+   "w_mm": 2.42,
    "h_mm": 5.56,
    "text": "7",
-   "ref": "beta_czech_pilsner",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 276.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 285.0,
+   "lines": 1,
+   "ref": "beta_czech_pilsner"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 262.0,
-   "w_pt": 192.9,
+   "y_pt": 288.0,
+   "w_pt": 159.91,
    "h_pt": 12.0,
    "x_mm": 112.18,
-   "y_mm": 92.43,
-   "w_mm": 68.05,
+   "y_mm": 101.6,
+   "w_mm": 56.41,
    "h_mm": 4.23,
-   "text": "Pils-style pale lager, bottom-fermented. Crisp.",
-   "ref": "beta_czech_pilsner",
-   "lines": 1
+   "text": "Crisp pale lager in the Czech pils style.",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 288.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 297.0,
+   "lines": 1,
+   "ref": "beta_czech_pilsner"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 286.0,
+   "y_pt": 312.0,
    "w_pt": 258.0,
-   "h_pt": 30.0,
+   "h_pt": 24.0,
    "x_mm": 112.18,
-   "y_mm": 100.89,
+   "y_mm": 110.07,
    "w_mm": 91.02,
-   "h_mm": 10.58,
-   "text": "Dry-Hopped IPA\n8\n\nIndia pale ale, dry-hopped. Hop-forward.",
+   "h_mm": 8.47,
+   "text": "Dry-Hopped IPA 8 Hop-forward India pale ale, dry-hopped. On draft.",
    "ref": "beta_dry_hopped_ipa"
   },
   {
@@ -1109,62 +1459,83 @@
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 286.75,
+   "y_pt": 308.25,
    "w_pt": 105.54,
    "h_pt": 15.75,
    "x_mm": 112.18,
-   "y_mm": 101.16,
+   "y_mm": 108.74,
    "w_mm": 37.23,
    "h_mm": 5.56,
    "text": "Dry-Hopped IPA",
-   "ref": "beta_dry_hopped_ipa",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 312.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 321.0,
+   "lines": 1,
+   "ref": "beta_dry_hopped_ipa"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 2,
-   "x_pt": 568.39,
-   "y_pt": 287.5,
-   "w_pt": 7.61,
+   "x_pt": 567.97,
+   "y_pt": 308.25,
+   "w_pt": 8.03,
    "h_pt": 15.75,
-   "x_mm": 200.52,
-   "y_mm": 101.42,
-   "w_mm": 2.68,
+   "x_mm": 200.37,
+   "y_mm": 108.74,
+   "w_mm": 2.83,
    "h_mm": 5.56,
    "text": "8",
-   "ref": "beta_dry_hopped_ipa",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 312.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 321.0,
+   "lines": 1,
+   "ref": "beta_dry_hopped_ipa"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 304.0,
-   "w_pt": 169.72,
+   "y_pt": 324.0,
+   "w_pt": 207.09,
    "h_pt": 12.0,
    "x_mm": 112.18,
-   "y_mm": 107.24,
-   "w_mm": 59.87,
+   "y_mm": 114.3,
+   "w_mm": 73.06,
    "h_mm": 4.23,
-   "text": "India pale ale, dry-hopped. Hop-forward.",
-   "ref": "beta_dry_hopped_ipa",
-   "lines": 1
+   "text": "Hop-forward India pale ale, dry-hopped. On draft.",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 324.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 333.0,
+   "lines": 1,
+   "ref": "beta_dry_hopped_ipa"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 328.0,
+   "y_pt": 348.0,
    "w_pt": 258.0,
-   "h_pt": 30.0,
+   "h_pt": 24.0,
    "x_mm": 112.18,
-   "y_mm": 115.71,
+   "y_mm": 122.77,
    "w_mm": 91.02,
-   "h_mm": 10.58,
-   "text": "Amber Lager\n7\n\nAmber lager, bottom-fermented. Toasty.",
+   "h_mm": 8.47,
+   "text": "Amber Lager 7 Toasty amber lager, on draft.",
    "ref": "beta_amber_lager"
   },
   {
@@ -1172,62 +1543,83 @@
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 328.75,
+   "y_pt": 344.25,
    "w_pt": 82.09,
    "h_pt": 15.75,
    "x_mm": 112.18,
-   "y_mm": 115.97,
+   "y_mm": 121.44,
    "w_mm": 28.96,
    "h_mm": 5.56,
    "text": "Amber Lager",
-   "ref": "beta_amber_lager",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 348.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 357.0,
+   "lines": 1,
+   "ref": "beta_amber_lager"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 2,
-   "x_pt": 569.55,
-   "y_pt": 329.5,
-   "w_pt": 6.45,
+   "x_pt": 569.13,
+   "y_pt": 344.25,
+   "w_pt": 6.87,
    "h_pt": 15.75,
-   "x_mm": 200.93,
-   "y_mm": 116.24,
-   "w_mm": 2.27,
+   "x_mm": 200.78,
+   "y_mm": 121.44,
+   "w_mm": 2.42,
    "h_mm": 5.56,
    "text": "7",
-   "ref": "beta_amber_lager",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 348.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 357.0,
+   "lines": 1,
+   "ref": "beta_amber_lager"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 346.0,
-   "w_pt": 166.78,
+   "y_pt": 360.0,
+   "w_pt": 118.18,
    "h_pt": 12.0,
    "x_mm": 112.18,
-   "y_mm": 122.06,
-   "w_mm": 58.84,
+   "y_mm": 127.0,
+   "w_mm": 41.69,
    "h_mm": 4.23,
-   "text": "Amber lager, bottom-fermented. Toasty.",
-   "ref": "beta_amber_lager",
-   "lines": 1
+   "text": "Toasty amber lager, on draft.",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 360.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 369.0,
+   "lines": 1,
+   "ref": "beta_amber_lager"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 418.0,
+   "y_pt": 444.0,
    "w_pt": 258.0,
-   "h_pt": 30.0,
+   "h_pt": 24.0,
    "x_mm": 112.18,
-   "y_mm": 147.46,
+   "y_mm": 156.63,
    "w_mm": 91.02,
-   "h_mm": 10.58,
-   "text": "Dry Cider\n8\n\nDry, sparkling cider.",
+   "h_mm": 8.47,
+   "text": "Dry Cider 8 Dry, sparkling cider.",
    "ref": "beta_dry_cider"
   },
   {
@@ -1235,62 +1627,83 @@
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 418.75,
+   "y_pt": 440.25,
    "w_pt": 61.3,
    "h_pt": 15.75,
    "x_mm": 112.18,
-   "y_mm": 147.72,
+   "y_mm": 155.31,
    "w_mm": 21.63,
    "h_mm": 5.56,
    "text": "Dry Cider",
-   "ref": "beta_dry_cider",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 444.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 453.0,
+   "lines": 1,
+   "ref": "beta_dry_cider"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 2,
-   "x_pt": 568.39,
-   "y_pt": 419.5,
-   "w_pt": 7.61,
+   "x_pt": 567.97,
+   "y_pt": 440.25,
+   "w_pt": 8.03,
    "h_pt": 15.75,
-   "x_mm": 200.52,
-   "y_mm": 147.99,
-   "w_mm": 2.68,
+   "x_mm": 200.37,
+   "y_mm": 155.31,
+   "w_mm": 2.83,
    "h_mm": 5.56,
    "text": "8",
-   "ref": "beta_dry_cider",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 444.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 453.0,
+   "lines": 1,
+   "ref": "beta_dry_cider"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 436.0,
+   "y_pt": 456.0,
    "w_pt": 80.5,
    "h_pt": 12.0,
    "x_mm": 112.18,
-   "y_mm": 153.81,
+   "y_mm": 160.87,
    "w_mm": 28.4,
    "h_mm": 4.23,
    "text": "Dry, sparkling cider.",
-   "ref": "beta_dry_cider",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 456.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 465.0,
+   "lines": 1,
+   "ref": "beta_dry_cider"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 538.0,
+   "y_pt": 564.0,
    "w_pt": 258.0,
-   "h_pt": 30.0,
+   "h_pt": 24.0,
    "x_mm": 112.18,
-   "y_mm": 189.79,
+   "y_mm": 198.97,
    "w_mm": 91.02,
-   "h_mm": 10.58,
-   "text": "Malbec\n12\n\nMalbec. Dry red.",
+   "h_mm": 8.47,
+   "text": "Malbec 12 Dry red wine from the Malbec grape.",
    "ref": "beta_malbec"
   },
   {
@@ -1298,62 +1711,83 @@
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 538.75,
+   "y_pt": 560.25,
    "w_pt": 45.27,
    "h_pt": 15.75,
    "x_mm": 112.18,
-   "y_mm": 190.06,
+   "y_mm": 197.64,
    "w_mm": 15.97,
    "h_mm": 5.56,
    "text": "Malbec",
-   "ref": "beta_malbec",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 564.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 573.0,
+   "lines": 1,
+   "ref": "beta_malbec"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 2,
-   "x_pt": 564.7,
-   "y_pt": 539.5,
-   "w_pt": 11.3,
+   "x_pt": 561.88,
+   "y_pt": 560.25,
+   "w_pt": 14.12,
    "h_pt": 15.75,
-   "x_mm": 199.21,
-   "y_mm": 190.32,
-   "w_mm": 3.99,
+   "x_mm": 198.22,
+   "y_mm": 197.64,
+   "w_mm": 4.98,
    "h_mm": 5.56,
    "text": "12",
-   "ref": "beta_malbec",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 564.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 573.0,
+   "lines": 1,
+   "ref": "beta_malbec"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 556.0,
-   "w_pt": 67.16,
+   "y_pt": 576.0,
+   "w_pt": 151.65,
    "h_pt": 12.0,
    "x_mm": 112.18,
-   "y_mm": 196.14,
-   "w_mm": 23.69,
+   "y_mm": 203.2,
+   "w_mm": 53.5,
    "h_mm": 4.23,
-   "text": "Malbec. Dry red.",
-   "ref": "beta_malbec",
-   "lines": 1
+   "text": "Dry red wine from the Malbec grape.",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 576.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 585.0,
+   "lines": 1,
+   "ref": "beta_malbec"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 580.0,
+   "y_pt": 600.0,
    "w_pt": 258.0,
-   "h_pt": 30.0,
+   "h_pt": 24.0,
    "x_mm": 112.18,
-   "y_mm": 204.61,
+   "y_mm": 211.67,
    "w_mm": 91.02,
-   "h_mm": 10.58,
-   "text": "Pinot Grigio\n11\n\nPinot Grigio. Dry white.",
+   "h_mm": 8.47,
+   "text": "Pinot Grigio 11 Dry white wine from the Pinot Grigio grape.",
    "ref": "beta_pinot_grigio"
   },
   {
@@ -1361,62 +1795,83 @@
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 580.75,
+   "y_pt": 596.25,
    "w_pt": 76.8,
    "h_pt": 15.75,
    "x_mm": 112.18,
-   "y_mm": 204.87,
+   "y_mm": 210.34,
    "w_mm": 27.09,
    "h_mm": 5.56,
    "text": "Pinot Grigio",
-   "ref": "beta_pinot_grigio",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 600.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 609.0,
+   "lines": 1,
+   "ref": "beta_pinot_grigio"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 2,
-   "x_pt": 567.26,
-   "y_pt": 581.5,
-   "w_pt": 8.74,
+   "x_pt": 563.81,
+   "y_pt": 596.25,
+   "w_pt": 12.19,
    "h_pt": 15.75,
-   "x_mm": 200.12,
-   "y_mm": 205.14,
-   "w_mm": 3.08,
+   "x_mm": 198.9,
+   "y_mm": 210.34,
+   "w_mm": 4.3,
    "h_mm": 5.56,
    "text": "11",
-   "ref": "beta_pinot_grigio",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 600.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 609.0,
+   "lines": 1,
+   "ref": "beta_pinot_grigio"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 598.0,
-   "w_pt": 94.05,
+   "y_pt": 612.0,
+   "w_pt": 178.54,
    "h_pt": 12.0,
    "x_mm": 112.18,
-   "y_mm": 210.96,
-   "w_mm": 33.18,
+   "y_mm": 215.9,
+   "w_mm": 62.98,
    "h_mm": 4.23,
-   "text": "Pinot Grigio. Dry white.",
-   "ref": "beta_pinot_grigio",
-   "lines": 1
+   "text": "Dry white wine from the Pinot Grigio grape.",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 612.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 621.0,
+   "lines": 1,
+   "ref": "beta_pinot_grigio"
   },
   {
    "kind": "item_block",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 646.0,
+   "y_pt": 672.0,
    "w_pt": 258.0,
-   "h_pt": 30.0,
+   "h_pt": 24.0,
    "x_mm": 112.18,
-   "y_mm": 227.89,
+   "y_mm": 237.07,
    "w_mm": 91.02,
-   "h_mm": 10.58,
-   "text": "Brut Rosé\n13\n\nBrut sparkling rosé. Dry.",
+   "h_mm": 8.47,
+   "text": "Brut Rosé 13 Dry sparkling rosé in the brut style.",
    "ref": "beta_brut_rose"
   },
   {
@@ -1424,136 +1879,184 @@
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 646.75,
+   "y_pt": 668.25,
    "w_pt": 62.23,
    "h_pt": 15.75,
    "x_mm": 112.18,
-   "y_mm": 228.16,
+   "y_mm": 235.74,
    "w_mm": 21.95,
    "h_mm": 5.56,
    "text": "Brut Rosé",
-   "ref": "beta_brut_rose",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 672.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 681.0,
+   "lines": 1,
+   "ref": "beta_brut_rose"
   },
   {
    "kind": "price",
    "page": 1,
    "column": 2,
-   "x_pt": 564.39,
-   "y_pt": 647.5,
-   "w_pt": 11.61,
+   "x_pt": 562.56,
+   "y_pt": 668.25,
+   "w_pt": 13.44,
    "h_pt": 15.75,
-   "x_mm": 199.1,
-   "y_mm": 228.42,
-   "w_mm": 4.1,
+   "x_mm": 198.46,
+   "y_mm": 235.74,
+   "w_mm": 4.74,
    "h_mm": 5.56,
    "text": "13",
-   "ref": "beta_brut_rose",
-   "lines": 1
+   "slot_pt": {
+    "x": 318.0,
+    "y": 672.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 681.0,
+   "lines": 1,
+   "ref": "beta_brut_rose"
   },
   {
    "kind": "description",
    "page": 1,
    "column": 2,
    "x_pt": 318.0,
-   "y_pt": 664.0,
-   "w_pt": 97.48,
+   "y_pt": 684.0,
+   "w_pt": 144.83,
    "h_pt": 12.0,
    "x_mm": 112.18,
-   "y_mm": 234.24,
-   "w_mm": 34.39,
+   "y_mm": 241.3,
+   "w_mm": 51.09,
    "h_mm": 4.23,
-   "text": "Brut sparkling rosé. Dry.",
-   "ref": "beta_brut_rose",
-   "lines": 1
+   "text": "Dry sparkling rosé in the brut style.",
+   "slot_pt": {
+    "x": 318.0,
+    "y": 684.0,
+    "w": 258.0,
+    "h": 12.0
+   },
+   "baseline_pt": 693.0,
+   "lines": 1,
+   "ref": "beta_brut_rose"
+  },
+  {
+   "kind": "ornament",
+   "page": 1,
+   "column": 2,
+   "x_pt": 318.0,
+   "y_pt": 708.0,
+   "w_pt": 258.0,
+   "h_pt": 12.0,
+   "x_mm": 112.18,
+   "y_mm": 249.77,
+   "w_mm": 91.02,
+   "h_mm": 4.23,
+   "text": "",
+   "note": "column end mark (three diamonds + hairlines)"
   },
   {
    "kind": "divider",
    "page": 1,
    "column": null,
    "x_pt": 36.0,
-   "y_pt": 746.62,
-   "w_pt": 201.45,
+   "y_pt": 743.62,
+   "w_pt": 191.45,
    "h_pt": 0.75,
    "x_mm": 12.7,
-   "y_mm": 263.39,
-   "w_mm": 71.07,
+   "y_mm": 262.33,
+   "w_mm": 67.54,
    "h_mm": 0.26,
-   "text": "footer rule"
+   "text": "",
+   "note": "footer hairline"
   },
   {
    "kind": "divider",
    "page": 1,
    "column": null,
-   "x_pt": 374.55,
-   "y_pt": 746.62,
-   "w_pt": 201.45,
+   "x_pt": 384.55,
+   "y_pt": 743.62,
+   "w_pt": 191.45,
    "h_pt": 0.75,
-   "x_mm": 132.13,
-   "y_mm": 263.39,
-   "w_mm": 71.07,
+   "x_mm": 135.66,
+   "y_mm": 262.33,
+   "w_mm": 67.54,
    "h_mm": 0.26,
-   "text": "footer rule"
+   "text": "",
+   "note": "footer hairline"
   },
   {
    "kind": "ornament",
    "page": 1,
    "column": null,
-   "x_pt": 247.44,
-   "y_pt": 738.0,
-   "w_pt": 30.0,
-   "h_pt": 18.0,
-   "x_mm": 87.29,
-   "y_mm": 260.35,
-   "w_mm": 10.58,
-   "h_mm": 6.35,
-   "text": "agave ornament (SVG)"
+   "x_pt": 237.45,
+   "y_pt": 732.0,
+   "w_pt": 40.0,
+   "h_pt": 24.0,
+   "x_mm": 83.77,
+   "y_mm": 258.23,
+   "w_mm": 14.11,
+   "h_mm": 8.47,
+   "text": "",
+   "note": "agave ornament (SVG)"
   },
   {
    "kind": "ornament",
    "page": 1,
    "column": null,
    "x_pt": 334.56,
-   "y_pt": 738.0,
-   "w_pt": 30.0,
-   "h_pt": 18.0,
-   "x_mm": 118.02,
-   "y_mm": 260.35,
-   "w_mm": 10.58,
-   "h_mm": 6.35,
-   "text": "agave ornament (SVG)"
+   "y_pt": 732.0,
+   "w_pt": 40.0,
+   "h_pt": 24.0,
+   "x_mm": 118.03,
+   "y_mm": 258.23,
+   "w_mm": 14.11,
+   "h_mm": 8.47,
+   "text": "",
+   "note": "agave ornament (SVG)"
   },
   {
    "kind": "ornament",
    "page": 1,
    "column": null,
    "x_pt": 287.44,
-   "y_pt": 740.25,
+   "y_pt": 737.25,
    "w_pt": 37.12,
    "h_pt": 13.5,
    "x_mm": 101.4,
-   "y_mm": 261.14,
+   "y_mm": 260.09,
    "w_mm": 13.1,
    "h_mm": 4.76,
    "text": "¡Salud!",
-   "lines": 1
+   "baseline_pt": 747.75,
+   "lines": 1,
+   "note": "footer sign-off"
   }
  ],
  "measured_checks": {
-  "margins_pt": {
+  "margins_element_boxes_pt": {
    "left": 36.0,
    "top": 36.0,
    "right": 36.0,
    "bottom": 36.0,
-   "declared": 36,
-   "max_dev_mm": 0.0
+   "declared": 36
+  },
+  "margins_printed_ink_pt": {
+   "left": 36.0,
+   "top": 36.0,
+   "right": 35.76,
+   "bottom": 36.0,
+   "method": "non-background pixels in the 2550x3300 preview (threshold 24/255)",
+   "max_dev_mm": 0.08
   },
   "col1": {
-   "item_name_left_x_pt": [
+   "item_name_x_pt": [
     36.0
    ],
-   "item_name_x_spread_mm": 0.0,
-   "description_left_x_pt": [
+   "description_x_pt": [
     36.0
    ],
    "price_right_edge_pt": [
@@ -1571,11 +2074,10 @@
    ]
   },
   "col2": {
-   "item_name_left_x_pt": [
+   "item_name_x_pt": [
     318.0
    ],
-   "item_name_x_spread_mm": 0.0,
-   "description_left_x_pt": [
+   "description_x_pt": [
     318.0
    ],
    "price_right_edge_pt": [
@@ -1592,82 +2094,105 @@
     576.0
    ]
   },
-  "item_gap_pt": {
-   "values": [
+  "vertical_gaps_pt": {
+   "below_section_header": [
+    {
+     "section": "sec_cocktails",
+     "next": "subheader",
+     "gap_pt": 12.0
+    },
+    {
+     "section": "sec_spirits",
+     "next": "subheader",
+     "gap_pt": 12.0
+    },
+    {
+     "section": "sec_beer",
+     "next": "subheader",
+     "gap_pt": 12.0
+    },
+    {
+     "section": "sec_cider",
+     "next": "item",
+     "gap_pt": 12.0
+    },
+    {
+     "section": "sec_wine",
+     "next": "subheader",
+     "gap_pt": 12.0
+    }
+   ],
+   "above_section_header": [
+    36.0
+   ],
+   "subheader_to_item": [
     12.0
    ],
-   "spread": 0.0
-  },
-  "section_header_space_above_pt(text-box)": [
-   24.0
-  ],
-  "subheader_to_first_item_pt(text-box)": [
-   9.75
-  ],
-  "header_baselines": [
-   {
-    "section": "sec_cocktails",
-    "h2_baseline_pt": 201.25,
-    "kicker_baseline_pt": 201.25,
-    "delta_pt": 0.0
-   },
-   {
-    "section": "sec_spirits",
-    "h2_baseline_pt": 519.25,
-    "kicker_baseline_pt": 519.25,
-    "delta_pt": 0.0
-   },
-   {
-    "section": "sec_beer",
-    "h2_baseline_pt": 201.25,
-    "kicker_baseline_pt": 201.25,
-    "delta_pt": 0.0
-   },
-   {
-    "section": "sec_cider",
-    "h2_baseline_pt": 405.25,
-    "kicker_baseline_pt": 405.25,
-    "delta_pt": 0.0
-   },
-   {
-    "section": "sec_wine",
-    "h2_baseline_pt": 495.25,
-    "kicker_baseline_pt": 495.25,
-    "delta_pt": 0.0
-   }
-  ],
-  "name_price_baseline_max_delta_pt": 0.0,
-  "baseline_grid_6pt": {
-   "section_headers_offset_from_first_mod6": [
-    0.0
+   "items_to_next_subheader": [
+    24.0
    ],
-   "subheaders_mod6": [
-    0.0
+   "item_to_item": [
+    12.0
    ],
-   "item_names_mod6": [
-    2.25
+   "to_endmark": [
+    12.0
    ]
   },
-  "cross_column_top_headers_baseline_pt": {
-   "sec_cocktails": 201.25,
-   "sec_beer": 201.25
+  "all_gaps_multiple_of_12": true,
+  "all_slot_tops_and_heights_multiple_of_12": true,
+  "baseline_grid_12pt": {
+   "phases_mod_12": [
+    9.0
+   ],
+   "text_lines_checked": 66,
+   "note": "every text baseline (title, location, headers, kickers, subheaders, names, prices, every description line, both columns) sits at y = 12k + phase"
   },
-  "column_content_bottom_pt": [
-   700.0,
-   676.0
+  "kicker_vs_header_baseline_delta_pt": {
+   "sec_cocktails": 0.0,
+   "sec_spirits": 0.0,
+   "sec_beer": 0.0,
+   "sec_cider": 0.0,
+   "sec_wine": 0.0
+  },
+  "name_price_baseline_max_delta_pt": 0.0,
+  "section_header_baseline_to_next_baseline_pt": {
+   "sec_cocktails": 24.0,
+   "sec_spirits": 24.0,
+   "sec_beer": 24.0,
+   "sec_cider": 24.0,
+   "sec_wine": 24.0
+  },
+  "column_bottoms_pt": [
+   720.0,
+   720.0
   ],
-  "footer_top_pt": 738.0,
-  "contrast_vs_background": {
-   "text": 14.69,
-   "accent_price": 4.81,
-   "subheader": 6.5,
-   "description": 7.33,
-   "ornament": 1.96
+  "divider_pt": {
+   "top": 216.0,
+   "bottom": 720.0,
+   "last_content_slot_bottom": 720.0
   },
-  "contrast_note": "marigold #E3A018 is used only for non-text ornaments (diamonds, dotted divider, banner flags)",
+  "footer_slot_pt": [
+   732.0,
+   756.0
+  ],
+  "baseline_shifts_pt": {
+   "title": -5.25,
+   "loc": 0.0,
+   "h2": 0.75,
+   "h3": 0.75,
+   "name": -1.5,
+   "desc": 0.0
+  },
+  "contrast_vs_background": {
+   "text #231B16": 14.69,
+   "prices/kickers/ampersand #A63C1A": 5.55,
+   "subheaders #2F5D50": 6.5,
+   "descriptions #5A4A3F": 7.33,
+   "marigold #E3A018 (non-text ornaments only)": 1.96
+  },
   "items_rendered": 14,
-  "every_item_has_description": true,
   "printed_prices_match_doc": true,
+  "printed_desc_equals_doc_desc": true,
   "desc_lines": {
    "beta_margarita": 2,
    "beta_manhattan": 2,
@@ -1683,6 +2208,24 @@
    "beta_malbec": 1,
    "beta_pinot_grigio": 1,
    "beta_brut_rose": 1
+  },
+  "png_px": {
+   "letter": [
+    2550,
+    3300
+   ],
+   "phone": [
+    1170,
+    5571
+   ],
+   "phone_scrollWidth_css": 390
+  },
+  "phone_gap_below_every_section_header_px": {
+   "sec_cocktails": 14,
+   "sec_spirits": 14,
+   "sec_beer": 14,
+   "sec_cider": 14,
+   "sec_wine": 14
   }
  }
 }
