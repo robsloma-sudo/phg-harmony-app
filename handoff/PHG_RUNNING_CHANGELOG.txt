@@ -1726,3 +1726,13 @@ set this up as we go and Harmony becomes them."
   phg.sales_import_mappings, "what's left to set up"); per-business memory (glossary, facts/preferences, habits,
   "What Harmony knows about you"); admin layer. Section 4A made business-neutral (Parkway FH = first test business,
   chart of accounts = default template). Decisions reduced to phase order, migrations, voice approval, model cost.
+
+------------------------------------------------------------------------------
+PHG-20260928-PROJECTS | USER_PROMPT + DESIGN (no code, no migration) | 2026-09-28
+Rob: "each user will have a different project login where their model will be specific to them. And when they log
+into a different model, that will be different and specific to that user."
+- Spec section 4C added: three layers (PHG shared knowledge read-only; project = account with all business data,
+  settings, glossary, memory, keys; person-in-project = role, preferences, private notes, habits, history); users
+  in several projects, explicit switching; account_id + RLS on every project table (gap: recipe_projects /
+  recipe_versions, PHG-FLV-006); memory never crosses projects; per-project roles; Action button keys per project;
+  admin manages shared layer and skeleton only.

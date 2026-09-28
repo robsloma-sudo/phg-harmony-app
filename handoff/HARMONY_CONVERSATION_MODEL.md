@@ -262,6 +262,35 @@ Rob manages the skeleton itself: setting definitions, question wording, folder t
 templates, metric definitions, POS adapters, and the question bank. Each business only answers; the admin
 decides what can be asked. Changes apply to every business without code.
 
+## 4C. Projects and users: one Harmony per project, tuned per person
+
+Each login opens a **project** (a business, group or venue). Harmony's whole model belongs to that project; switch
+projects and Harmony is a different assistant with different data, settings, words and memory. On top of that,
+each person gets their own layer inside the project.
+
+### 4C.1 Layers
+
+| Layer | Belongs to | Holds | Shared with |
+|---|---|---|---|
+| **PHG shared knowledge** | Everyone | Market data (41k venues, 12k menus, brands, NOMs, labels, census), classic specs, finance and design knowledge, the admin skeleton and templates | All projects, read-only |
+| **Project** | One business (`phg.accounts`) | Settings (4B), glossary, folders, recipes, menus, ingredients, vendors, costs, sales, labor, budgets, data-source mappings, project memory, Harmony device keys | Only members of that project |
+| **Person in project** | One user in one project (`phg.account_memberships`) | Role and permissions, voice and detail preferences, personal notes and reminders, habits, parked jobs, conversation history | Only that person (admins can see the setup, not the private notes) |
+
+### 4C.2 Rules
+
+- A user can belong to several projects (e.g. Rob as admin, a consultant, a group owner). Harmony always knows the
+  current project, says it when it matters, and switches only when asked ("switch to Parkway").
+- Every project table carries `account_id`, protected by row-level security and the existing membership check
+  (`phg_harmony_inbox_db is_member` pattern). Gap to fix: `phg.recipe_projects` / `recipe_versions` and some
+  flavor tables have no `account_id` yet (PHG-FLV-006).
+- Harmony's memory, glossary and learned facts are stored with `account_id` (and `user_id` for the person layer)
+  and are never used in another project. Learning from one business never leaks into another's answers.
+- Roles per project: owner, admin, manager, staff (names editable in the skeleton). Roles decide who can approve
+  prices, publish menus, see labor/pay, change settings, connect data sources.
+- Action button keys are already tied to one project (`harmony_device_keys.account_id`); a person with several
+  projects makes one key per project or says "switch to ..." at the start.
+- The PHG admin (Rob) manages the shared layer and the skeleton, and can enter a project only as a member of it.
+
 ---
 
 ## 5. How Harmony talks: jobs, slots and questions
@@ -518,7 +547,7 @@ native iPhone app later.
 | 4 | **Folders workspace** (folders, links, records, templates, Finance/Training views) | Migration: workspace tables + new write actions |
 | 5 | **Voice building** of recipes and preps (capture loop, ingredient matching, nested preps, save to folder, cost pending) | New Command Center actions |
 | 6 | **Talk-over** in the app (option 1, then maybe realtime) | Frontend + tuning on Rob's phone |
-| 2A | **Setup skeleton + finance data**: setting definitions, account settings, glossary/memory, guided setup, data-source adapters and mappings, chart-of-accounts template, metric functions | Migration; Rob as admin writes the first skeleton with Harmony |
+| 2A | **Projects, setup skeleton + finance data**: project/person layers and RLS audit (add account_id where missing), setting definitions, account settings, glossary/memory, guided setup, data-source adapters and mappings, chart-of-accounts template, metric functions | Migration; Rob as admin writes the first skeleton with Harmony |
 | 7 | **Costing live** in Finance views as prices arrive | Airtable prices first, invoices later |
 | Later | Invoice photos -> vision model -> prices; food side; native iPhone app | Separate decisions |
 
