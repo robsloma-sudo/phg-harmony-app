@@ -1358,3 +1358,7 @@ text comes out."
   voice within 8 s (or Text only) it types on its own as before; finishes when the voice stops.
 - Test (TTS stubbed with 1.5 s latency, 3.0 s clip): 0 chars for 1.5 s, then 13/28/44/59/74/88 chars at
   audio 0.3/0.8/1.3/1.8/2.3/2.8 s - text ends with the voice.
+
+------------------------------------------------------------------------------
+PHG-20260928-DEPLOY5 | USER_PROMPT + PRODUCTION DEPLOY | 2026-09-28
+Rob: "deploy." - Pushed main 662fda8 = index.html 18.49.23 + netlify.toml. Rollback: redeploy main c856195 (18.49.22).
