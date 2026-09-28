@@ -1,0 +1,74 @@
+{
+ "contrast": {
+  "body ink on paper card": 14.8,
+  "paper on ink kicker": 14.8,
+  "ink on pink tagline (multiply over paper)": 4.94,
+  "ink on paper footer chip": 14.8,
+  "ink on tagline over teal dot (worst)": 1.26
+ },
+ "palette": {
+  "paper": "#f3efe4",
+  "pink": "#ff48b0",
+  "teal": "#00a3ad",
+  "overlap": "#002e77",
+  "ink": "#1b1446"
+ },
+ "geometry_css_px_96dpi": [
+  {
+   "id": "b-mast",
+   "x": 48,
+   "y": 48,
+   "w": 420,
+   "h": 243
+  },
+  {
+   "id": "b-cock",
+   "x": 44,
+   "y": 303,
+   "w": 727,
+   "h": 379
+  },
+  {
+   "id": "b-beer",
+   "x": 51,
+   "y": 644,
+   "w": 346,
+   "h": 260
+  },
+  {
+   "id": "b-wine",
+   "x": 416,
+   "y": 639,
+   "w": 356,
+   "h": 284
+  },
+  {
+   "id": "b-spir",
+   "x": 46,
+   "y": 857,
+   "w": 361,
+   "h": 296
+  },
+  {
+   "id": "b-cider",
+   "x": 426,
+   "y": 872,
+   "w": 234,
+   "h": 139
+  },
+  {
+   "id": "b-tag",
+   "x": 605,
+   "y": 803,
+   "w": 165,
+   "h": 93
+  },
+  {
+   "id": "b-foot",
+   "x": 48,
+   "y": 991,
+   "w": 720,
+   "h": 17
+  }
+ ]
+}

@@ -1,0 +1,129 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cantina &amp; Cocktail Bar · Bar menu</title>
+<style>
+@font-face{font-family:Fraunces;font-weight:700;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/build/fonts/Fraunces-700-normal.ttf)}
+@font-face{font-family:Fraunces;font-weight:600;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/build/fonts/Fraunces-600-normal.ttf)}
+@font-face{font-family:'DM Sans';font-weight:700;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/build/fonts/DMSans-700-normal.ttf)}
+@font-face{font-family:'DM Sans';font-weight:500;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/build/fonts/DMSans-500-normal.ttf)}
+@font-face{font-family:'DM Sans';font-weight:400;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/build/fonts/DMSans-400-normal.ttf)}
+@page{size:8.5in 11in;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#F4EAD3}
+/* page 816x1056 css px = 612x792 pt; 36 pt safe margin = 48 px */
+.page{width:816px;height:1056px;padding:48px;position:relative;overflow:hidden;
+  background:#F4EAD3;display:flex;flex-direction:column;gap:14px;font-family:'DM Sans',sans-serif;color:#1B1512}
+/* ART layer: painted wall trim, full bleed (+3 mm past trim handled by bleed box) */
+.page::before{content:"";position:absolute;inset:-12px;border:26px solid #0B6135;
+  box-shadow:inset 0 0 0 5px #F4EAD3,inset 0 0 0 9px #B8102A;pointer-events:none}
+.page>*{position:relative}
+/* header sign */
+.marquee{background:#B8102A;border:4px solid #FFFFFF;outline:3px solid #1B1512;border-radius:14px;
+  padding:14px 20px 12px;text-align:center}
+.wm{font-family:Fraunces;font-weight:700;font-size:92px;line-height:.95;letter-spacing:4px;color:#FFC414;
+  -webkit-text-stroke:2.5px #1B1512;paint-order:stroke fill;
+  text-shadow:2px 2px 0 #1B1512,4px 4px 0 #1B1512,6px 6px 0 #1B1512,8px 8px 0 #FFFFFF,10px 10px 0 #1B1512}
+.sub-wm{display:flex;justify-content:center;gap:14px;margin-top:10px}
+.pill{display:inline-block;background:#FFFFFF;color:#1B1512;font-weight:700;font-size:15px;letter-spacing:3px;
+  padding:5px 14px;border-radius:30px;border:2.5px solid #1B1512}
+/* shop-front boards */
+.board{background:var(--bg);border:4px solid #FFFFFF;outline:3px solid #1B1512;border-radius:12px;
+  padding:0 16px 12px;color:#FFFFFF}
+.board.yel{color:#1B1512}
+.sign{margin:-2px -2px 8px;text-align:center;line-height:1}
+.signtxt{display:inline-block;font-family:Fraunces;font-weight:700;font-size:40px;letter-spacing:3px;
+  color:#FFFFFF;-webkit-text-stroke:2px #1B1512;paint-order:stroke fill;
+  text-shadow:2px 2px 0 #1B1512,4px 4px 0 #1B1512,5px 5px 0 #1B1512;
+  background:#1B1512;padding:6px 22px 8px;border-radius:0 0 12px 12px;
+  border:3px solid #FFFFFF;border-top:0}
+.signtxt{background:transparent;border:0;padding:10px 0 2px}
+.sub{margin:6px 0 4px}
+.tab{display:inline-block;font-weight:700;font-size:13px;letter-spacing:3px;background:#FFFFFF;color:#1B1512;
+  padding:3px 10px;border-radius:4px}
+.ckgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;margin-bottom:6px}
+.ckhead,.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.name{font-weight:700;font-size:19px;letter-spacing:1.6px;line-height:1.15}
+.spec{font-weight:500;font-size:13.5px;letter-spacing:.6px;line-height:1.3;margin-top:2px}
+.serve{font-weight:700;font-size:12.5px;letter-spacing:1px;line-height:1.3;margin-top:3px;color:#FFC414}
+.burst{position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;
+  filter:drop-shadow(3px 3px 0 #1B1512)}
+.burst svg{position:absolute;inset:0;width:100%;height:100%}
+.price{position:relative;font-family:Fraunces;font-weight:700;font-size:30px;color:#1B1512;line-height:1}
+.oval{flex:none;display:inline-flex;align-items:center;justify-content:center;width:60px;height:42px;
+  border-radius:50%;background:#FFC414;border:2.5px solid #1B1512;box-shadow:3px 3px 0 #1B1512}
+.oval .price{font-size:24px}
+.row{padding:5px 0;border-bottom:2px dashed rgba(255,255,255,.55)}
+.row:last-child{border-bottom:0}
+.yel .row{border-bottom-color:rgba(27,21,18,.45)}
+.yel .tab{background:#1B1512;color:#FFC414}
+.yel .signtxt{color:#B8102A;-webkit-text-stroke-color:#1B1512}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.foot{display:flex;justify-content:center;margin-top:auto}
+.foot .pill{background:#FFC414;font-size:14px}
+/* phone */
+@media (max-width:600px){
+  .page{width:390px;height:auto;padding:22px 18px 30px;gap:14px}
+  .page::before{border-width:10px;box-shadow:inset 0 0 0 3px #F4EAD3,inset 0 0 0 5px #B8102A}
+  .wm{font-size:58px;letter-spacing:2px}
+  .sub-wm{flex-wrap:wrap;gap:6px} .pill{font-size:12px;letter-spacing:2px}
+  .ckgrid,.pair{grid-template-columns:1fr}
+  .signtxt{font-size:34px}
+  .name{font-size:17px} .spec{font-size:14px} .serve{font-size:13px}
+}
+</style></head><body><main class="page">
+<header class="marquee">
+  <h1 class="t wm">CANTINA</h1>
+  <div class="sub-wm"><span class="t pill">&amp; COCKTAIL BAR</span><span class="t pill">IOWA CITY, IOWA</span></div>
+</header>
+<section class="board " style="--bg:#173E9A">
+  <h2 class="sign"><span class="t signtxt">COCKTAILS</span></h2>
+  <div class="sub"><span class="t tab">CLASSICS</span></div><div class="ckgrid"><div class="ck">
+  <div class="ckhead"><h3 class="t name">MANHATTAN</h3><span class="burst" style="width:78px;height:78px"><svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40.0,2.0 46.9,9.8 56.5,5.8 59.3,15.8 69.7,16.3 67.9,26.5 77.0,31.5 71.0,40.0 77.0,48.5 67.9,53.5 69.7,63.7 59.3,64.2 56.5,74.2 46.9,70.2 40.0,78.0 33.1,70.2 23.5,74.2 20.7,64.2 10.3,63.7 12.1,53.5 3.0,48.5 9.0,40.0 3.0,31.5 12.1,26.5 10.3,16.3 20.7,15.8 23.5,5.8 33.1,9.8" fill="#FFC414" stroke="#1B1512" stroke-width="2.5" stroke-linejoin="round"/></svg><b class="t price">15</b></span></div>
+  <p class="t spec">2 OZ RYE WHISKEY + 1 OZ SWEET VERMOUTH</p>
+  <p class="t serve">— STIRRED · COUPE · COCKTAIL CHERRY</p>
+</div><div class="ck">
+  <div class="ckhead"><h3 class="t name">MARGARITA</h3><span class="burst" style="width:78px;height:78px"><svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40.0,2.0 46.9,9.8 56.5,5.8 59.3,15.8 69.7,16.3 67.9,26.5 77.0,31.5 71.0,40.0 77.0,48.5 67.9,53.5 69.7,63.7 59.3,64.2 56.5,74.2 46.9,70.2 40.0,78.0 33.1,70.2 23.5,74.2 20.7,64.2 10.3,63.7 12.1,53.5 3.0,48.5 9.0,40.0 3.0,31.5 12.1,26.5 10.3,16.3 20.7,15.8 23.5,5.8 33.1,9.8" fill="#FFC414" stroke="#1B1512" stroke-width="2.5" stroke-linejoin="round"/></svg><b class="t price">15</b></span></div>
+  <p class="t spec">2 OZ TEQUILA BLANCO + ¾ OZ FRESH LIME + ¾ OZ ORANGE LIQUEUR + ½ OZ AGAVE SYRUP</p>
+  <p class="t serve">— SHAKEN · ON THE ROCKS · LIME WHEEL</p>
+</div></div><div class="sub"><span class="t tab">HOUSE ORIGINALS</span></div><div class="ckgrid"><div class="ck">
+  <div class="ckhead"><h3 class="t name">HOUSE DAIQUIRI</h3><span class="burst" style="width:78px;height:78px"><svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40.0,2.0 46.9,9.8 56.5,5.8 59.3,15.8 69.7,16.3 67.9,26.5 77.0,31.5 71.0,40.0 77.0,48.5 67.9,53.5 69.7,63.7 59.3,64.2 56.5,74.2 46.9,70.2 40.0,78.0 33.1,70.2 23.5,74.2 20.7,64.2 10.3,63.7 12.1,53.5 3.0,48.5 9.0,40.0 3.0,31.5 12.1,26.5 10.3,16.3 20.7,15.8 23.5,5.8 33.1,9.8" fill="#FFC414" stroke="#1B1512" stroke-width="2.5" stroke-linejoin="round"/></svg><b class="t price">14</b></span></div>
+  <p class="t spec">2 OZ WHITE RUM + ¾ OZ FRESH LIME + ¾ OZ HOUSE DEMERARA SYRUP</p>
+  <p class="t serve">— SHAKEN · COUPE · LIME COIN</p>
+</div><div class="ck">
+  <div class="ckhead"><h3 class="t name">BROWN BUTTER OLD FASHIONED</h3><span class="burst" style="width:78px;height:78px"><svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40.0,2.0 46.9,9.8 56.5,5.8 59.3,15.8 69.7,16.3 67.9,26.5 77.0,31.5 71.0,40.0 77.0,48.5 67.9,53.5 69.7,63.7 59.3,64.2 56.5,74.2 46.9,70.2 40.0,78.0 33.1,70.2 23.5,74.2 20.7,64.2 10.3,63.7 12.1,53.5 3.0,48.5 9.0,40.0 3.0,31.5 12.1,26.5 10.3,16.3 20.7,15.8 23.5,5.8 33.1,9.8" fill="#FFC414" stroke="#1B1512" stroke-width="2.5" stroke-linejoin="round"/></svg><b class="t price">16</b></span></div>
+  <p class="t spec">BROWN BUTTER-WASHED BOURBON + DEMERARA SYRUP + AROMATIC BITTERS</p>
+  <p class="t serve">— STIRRED · ROCKS · LARGE CUBE · ORANGE PEEL</p>
+</div></div>
+</section>
+<div class="pair">
+<section class="board " style="--bg:#0B6135">
+  <h2 class="sign"><span class="t signtxt">BEER</span></h2>
+  <div class="sub"><span class="t tab">DRAFT</span></div><div class="row"><div class="rt"><h3 class="t name">CZECH PILSNER</h3>
+<p class="t spec">CRISP PALE LAGER.</p></div><span class="oval"><b class="t price">7</b></span></div><div class="row"><div class="rt"><h3 class="t name">DRY-HOPPED IPA</h3>
+<p class="t spec">HOP-FORWARD DRAFT IPA.</p></div><span class="oval"><b class="t price">8</b></span></div><div class="row"><div class="rt"><h3 class="t name">AMBER LAGER</h3>
+<p class="t spec">TOASTY AMBER LAGER.</p></div><span class="oval"><b class="t price">7</b></span></div>
+</section>
+<section class="board " style="--bg:#B8102A">
+  <h2 class="sign"><span class="t signtxt">WINE</span></h2>
+  <div class="sub"><span class="t tab">BY THE GLASS</span></div><div class="row"><div class="rt"><h3 class="t name">MALBEC</h3>
+<p class="t spec">DRY RED WINE.</p></div><span class="oval"><b class="t price">12</b></span></div><div class="row"><div class="rt"><h3 class="t name">PINOT GRIGIO</h3>
+<p class="t spec">DRY WHITE WINE.</p></div><span class="oval"><b class="t price">11</b></span></div><div class="sub"><span class="t tab">SPARKLING</span></div><div class="row"><div class="rt"><h3 class="t name">BRUT ROSÉ</h3>
+<p class="t spec">DRY SPARKLING ROSÉ.</p></div><span class="oval"><b class="t price">13</b></span></div>
+</section>
+</div>
+<div class="pair">
+<section class="board " style="--bg:#1B1512">
+  <h2 class="sign"><span class="t signtxt">SPIRITS</span></h2>
+  <div class="sub"><span class="t tab">AGAVE</span></div><div class="row"><div class="rt"><h3 class="t name">BLANCO TEQUILA</h3>
+<p class="t spec">BLANCO TEQUILA POUR.</p></div><span class="oval"><b class="t price">12</b></span></div><div class="row"><div class="rt"><h3 class="t name">AÑEJO TEQUILA</h3>
+<p class="t spec">AÑEJO TEQUILA POUR.</p></div><span class="oval"><b class="t price">16</b></span></div><div class="sub"><span class="t tab">BRANDY</span></div><div class="row"><div class="rt"><h3 class="t name">COGNAC VSOP</h3>
+<p class="t spec">VSOP COGNAC POUR.</p></div><span class="oval"><b class="t price">18</b></span></div>
+</section>
+<section class="board yel" style="--bg:#FFC414">
+  <h2 class="sign"><span class="t signtxt">CIDER</span></h2>
+  <div class="row"><div class="rt"><h3 class="t name">DRY CIDER</h3>
+<p class="t spec">DRY SPARKLING CIDER.</p></div><span class="oval"><b class="t price">8</b></span></div>
+</section>
+</div>
+<div class="foot"><span class="t pill">¡SALUD! · GOOD DRINKS · GOOD COMPANY</span></div>
+</main></body></html>
