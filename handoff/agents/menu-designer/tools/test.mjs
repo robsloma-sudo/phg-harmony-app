@@ -37,6 +37,9 @@ t('item names never set mood ("Nightfall Stout")', () => assert.ok(!ha.design.to
 t('capitalised "This is for"', () => assert.equal(ha.venue_name, 'High Altitude Brewing'));
 t('comma before "with" keeps name short', () => { const i = find(ha, 'Switchback IPA'); assert.ok(i); assert.match(i.description, /Simcoe and Mosaic/); });
 t('casual tone', () => assert.ok(ha.design.tone.includes('casual')));
+t('neighbourhood stops at the sentence end', () => assert.equal(casa.design.area, 'RiNo'));
+const ed = parseTranscript('Put the House Daiquiri first, it\'s our house special. Feature the Margarita.');
+t('edit commands are edits, not new items', () => { assert.equal(ed.edits.length, 2); assert.equal(items(ed).length, 0); assert.ok(ed.edits[0].flags.includes('house_special')); });
 
 const hh = parseTranscript('Happy hour menu for The Rusty Nail, Monday through Friday 4 to 6 pm. Beers: Coors Light three, PBR three. Well drinks five. House wine six a glass.');
 t('happy hour type', () => assert.equal(hh.menu_type, 'Happy hour page'));
@@ -54,6 +57,8 @@ t('never uses reserved purple', () => { for (const o of res.options) assert.ok(!
 t('Menu Studio file header', () => { const f = res.options[0].menu_studio_file; assert.equal(f.app, 'nbcc-menu-designer'); assert.equal(f.schema_version, 2); assert.ok(f.size && f.style && f.doc.sections.length); });
 t('font indices valid', () => { for (const o of res.options) for (const [k, v] of Object.entries(o.menu_studio_file.style)) if (k !== 'page') assert.ok(v.f >= 0 && v.f <= 7); });
 t('fits one page', () => { for (const o of res.options) assert.equal(o.fit.pages, 1); });
+t('footer pinned inside the margins', () => { for (const o of res.options) { const f = o.menu_studio_file.doc.sections.find(x => x.designer_role === 'footer'); if (f) { assert.ok(f.pos.x > 0.03 && f.pos.y > 0.8 && f.pos.y < 0.97, JSON.stringify(f.pos)); } } });
+t('non-alcoholic is the last list', () => { for (const o of res.options) { const n = o.menu_studio_file.doc.sections.filter(x => !x.designer_role).map(x => x.name); assert.match(n[n.length - 1], /Zero Proof|Non-Alcoholic/); } });
 t('missing prices -> needs input flag', () => assert.ok(design(missing).risk_flags.includes('missing_prices')));
 
 console.log(`${pass} passed, ${fail} failed`);

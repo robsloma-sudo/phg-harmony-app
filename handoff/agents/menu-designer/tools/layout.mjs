@@ -26,6 +26,7 @@ export function layout(file) {
   const itemH = it => S.name.s + MDC_ADV.name + (it.desc ? S.desc.s + MDC_ADV.desc : 0);
   const hdescH = node => (node && node.desc) ? S.desc.s + MDC_ADV.desc : 0;
   const sectionH = sec => {
+    if (sec.pos) return 0;                       // mdcSectionHeight: a pinned section takes no flow height
     let t = S.section.s + MDC_ADV.section + P.secGap + hdescH(sec);
     for (const it of sec.items) t += itemH(it) + P.itemGap;
     for (const sub of sec.subs) { if (!sub.items.length) continue; t += S.sub.s + MDC_ADV.sub + 6 + hdescH(sub); for (const it of sub.items) t += itemH(it) + P.itemGap; }
@@ -57,15 +58,19 @@ export function layout(file) {
   if (P.rules) { ops.push({ t: 'rule', x: M, y, w: fullW }); y += 22; } else y += 10;
   bandOpen(y);
 
-  const overflow = [];
+  const overflow = [], held = [];
   const flowItems = items => { for (const it of items) { fitAt(itemH(it)); ops.push({ t: 'item', item: it, x: colX(cur.col), y: cur.y, w: colW, inline: P.priceAlign === 'inline' || n > 1 }); cur.y += itemH(it) + P.itemGap; } };
   for (const sec of doc.sections) {
     if (sec.breakCol && !sec.breakBefore) { if (cur.y > cur.bandTop + 1) fitAt(1e9); }
     if (sec.breakBefore) { const bb = bandClose(); const pTop = Math.floor(bb / H) * H; if (bb > pTop + M + 1) bandOpen(pTop + H + M); else bandOpen(bb); }
     const sh = S.section.s + MDC_ADV.section;
+    if (sec.pos) {
+      // Pinned section (mdcDraw: held, drawn in pass two at pos; the flow still advances by secGap).
+      held.push(sec); cur.y += P.secGap; continue;
+    }
     if (P.spanHeads) {
       let hy = bandClose();
-      ops.push({ t: 'head', lvl: 'section', text: sec.name, x: M, y: hy, w: fullW, W, placed: false });
+      ops.push({ t: 'head', lvl: 'section', text: sec.name, x: M, y: hy, w: fullW, W, placed: false, node: sec });
       hy += sh;
       if (sec.desc) { ops.push({ t: 'hdesc', text: sec.desc, x: M, y: hy, w: fullW }); hy += hdescH(sec); }
       bandOpen(hy);
@@ -73,18 +78,18 @@ export function layout(file) {
       const secH = sectionH(sec);
       if (secH > usable) { overflow.push({ name: sec.name, h: secH, fits: usable }); fitAt(sh + S.name.s); } else fitAt(secH);
       cur.remaining -= secH;
-      ops.push({ t: 'head', lvl: 'section', text: sec.name, x: colX(cur.col), y: cur.y, w: colW, W, role: sec.designer_role });
+      ops.push({ t: 'head', lvl: 'section', text: sec.name, x: colX(cur.col), y: cur.y, w: colW, W, role: sec.designer_role, node: sec });
       cur.y += sh;
-      if (sec.desc) { ops.push({ t: 'hdesc', text: sec.desc, x: colX(cur.col), y: cur.y, w: colW }); cur.y += hdescH(sec); }
+      if (sec.desc) { ops.push({ t: 'hdesc', text: sec.desc, x: colX(cur.col), y: cur.y, w: colW, node: sec }); cur.y += hdescH(sec); }
     }
     flowItems(sec.items);
     for (const sub of sec.subs) {
       if (!sub.items.length) continue;
       const subH = S.sub.s + MDC_ADV.sub;
       fitAt(subH);
-      ops.push({ t: 'head', lvl: 'sub', text: sub.name, x: colX(cur.col), y: cur.y, w: colW, W });
+      ops.push({ t: 'head', lvl: 'sub', text: sub.name, x: colX(cur.col), y: cur.y, w: colW, W, node: sub });
       cur.y += subH;
-      if (sub.desc) { ops.push({ t: 'hdesc', text: sub.desc, x: colX(cur.col), y: cur.y, w: colW }); cur.y += hdescH(sub); }
+      if (sub.desc) { ops.push({ t: 'hdesc', text: sub.desc, x: colX(cur.col), y: cur.y, w: colW, node: sub }); cur.y += hdescH(sub); }
       flowItems(sub.items);
       cur.y += 6;
     }
@@ -97,11 +102,30 @@ export function layout(file) {
     colEnds[Math.min(n - 1, c)] = Math.max(colEnds[Math.min(n - 1, c)], op.y + h); }
   const used = colEnds.filter(v => v > 0);
   const imbalance = used.length > 1 ? (Math.max(...used) - Math.min(...used)) / usable : 0;
+  // Pass two: pinned sections (mdcDrawBlock, placed => heading left-aligned at pos). Items inside a pinned block are
+  // not drawn: the app's mdcDrawBlock calls mdcFlowItems with the wrong arguments (reported to the lead developer),
+  // so the designer only pins item-less blocks such as the colophon footer.
+  for (const sec of held) {
+    const pg = Math.max(0, Math.floor(sec.pos.page || 0));
+    const left = Math.min(Math.max(Number(sec.pos.x) || 0, 0), 0.95) * W, top = pg * H + (Number(sec.pos.y) || 0) * H;
+    const wAvail = Math.max(120, Math.min(colW, W - left - M));
+    ops.push({ t: 'head', lvl: 'section', text: sec.name, x: left, y: top, w: wAvail, W, placed: true, node: sec, role: sec.designer_role });
+    if (sec.desc) ops.push({ t: 'hdesc', text: sec.desc, x: left, y: top + S.section.s + MDC_ADV.section, w: wAvail, node: sec });
+  }
+  // Bottom of the last drawn line on the last page (Fabric text box = size x 1.16), for margin justification.
+  let contentBottom = 0;
+  for (const op of ops) {
+    const h = op.t === 'rule' ? 1 : op.t === 'item' ? (op.item.desc ? S.name.s + MDC_ADV.name + S.desc.s * 1.16 : S.name.s * 1.16)
+            : op.t === 'hdesc' ? S.desc.s * 1.16 : ((op.node?.format?.[op.lvl]?.s) || S[op.lvl].s) * 1.16;
+    if (op.node?.pos) continue;                 // flow bottom only; the pinned footer is placed separately
+    contentBottom = Math.max(contentBottom, op.y + h);
+  }
+  contentBottom -= (Math.max(1, Math.ceil((Math.max(cur.y, cur.bandBottom) + M) / H)) - 1) * H;
   const end = Math.max(cur.y, cur.bandBottom) + M;
   const pages = Math.max(1, Math.ceil(end / H));
   // How full is the last page (0..1) — the designer uses it to decide whether to open the layout up.
   const lastPageUsed = (Math.max(cur.y, cur.bandBottom) - (pages - 1) * H - M) / usable;
-  return { W, H, M, n, colW, gutter, pages, ops, overflow, flowH, imbalance, colEnds, lastPageUsed: Math.max(0, Math.min(1, lastPageUsed)) };
+  return { W, H, M, n, colW, gutter, pages, ops, overflow, flowH, imbalance, colEnds, contentBottom, lastPageUsed: Math.max(0, Math.min(1, lastPageUsed)) };
 }
 
 export function priceText(it) {

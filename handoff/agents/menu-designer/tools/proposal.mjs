@@ -1,13 +1,18 @@
-// Builds the agent_proposals row (brief §5) from a design result. The designer's ONLY write is inserting this row.
+// Proposal content (brief §5): status, confidence, risk flags, reasoning, evidence. handoff.mjs turns it into the
+// arguments of phg_design_proposal_submit, which the Coordinator runs. The designer writes nothing.
 
 import path from 'node:path';
 
 // Blocking = the designer cannot finish without an answer, so the proposal goes back as needs_input.
 const BLOCKING = ['missing_prices', 'unplaced_items', 'no_items', 'missing_venue_name', 'empty_list'];
+// Content gaps (missing_ingredients, missing_abv, …) are not blocking: the design is complete and the questions travel with it.
 
 export function buildProposal(result, { refs = [], taskId = null, targetRecordId = null, outDir = '.', parsed = null } = {}) {
   const req = result.request;
-  const blocking = result.risk_flags.filter(f => BLOCKING.includes(f));
+  // Missing content is missing input (brief §10): questions about descriptions, ABV, region or builds send the proposal
+  // back as needs_input, with the full design attached (Content Reviewer, round 1).
+  const CONTENT = ['missing_ingredients', 'missing_beer_detail', 'missing_wine_origin', 'missing_spirit_detail', 'standard_spec_to_confirm'];
+  const blocking = result.risk_flags.filter(f => BLOCKING.includes(f) || CONTENT.includes(f));
   const status = blocking.length ? 'needs_input' : 'submitted';
   const refIds = refs.map(r => r.document_id ?? r.id).filter(v => v !== undefined && v !== null);
   let confidence = 0.92 - 0.12 * blocking.length - 0.04 * (result.risk_flags.length - blocking.length) - (refIds.length >= 3 ? 0 : 0.08);
@@ -52,12 +57,10 @@ export function buildProposal(result, { refs = [], taskId = null, targetRecordId
   ].filter(Boolean).join('\n');
 
   return {
-    proposal_id: `menu_design_${(taskId || 'adhoc').toString().slice(0, 8)}_${Date.now().toString(36)}`,
     task_id: taskId,
-    proposal_type: 'menu_design',
-    target_table: 'phg.menu_projects',
     target_record_id: targetRecordId,
     proposal_status: status,
+    evidence_ids: refIds,
     confidence,
     risk_flags: [...new Set(risk)],
     evidence_summary: refIds.length ? `Library documents studied: ${refIds.join(', ')}` : 'No library documents cited',
@@ -74,22 +77,6 @@ export function buildProposal(result, { refs = [], taskId = null, targetRecordId
                 heard_items: parsed ? parsed.sections.flatMap(s => s.items.map(i => ({ list: s.key, heard: i.heard }))) : null },
     },
   };
-}
-
-export function proposalSQL(p) {
-  const j = v => v === null || v === undefined ? 'null' : `$mdz$${JSON.stringify(v)}$mdz$::jsonb`;
-  const t = v => v === null || v === undefined ? 'null' : `$mdz$${v}$mdz$`;
-  return `-- The PHG Menu Designer's only write: one proposal row. The Coordinator reviews and applies it.
-insert into public.agent_proposals
-  (proposal_id, task_id, proposal_type, target_table, target_record_id, proposed_data, evidence_summary,
-   confidence, reasoning_summary, dedupe_key, risk_flags, proposal_status)
-values
-  (${t(p.proposal_id)}, ${p.task_id ? `${t(p.task_id)}::uuid` : 'null'}, 'menu_design', ${t(p.target_table)},
-   ${p.target_record_id ? `${t(p.target_record_id)}::uuid` : 'null'}, ${j(p.proposed_data)}, ${t(p.evidence_summary)},
-   ${p.confidence}, ${t(p.reasoning_summary)}, ${t(p.dedupe_key)},
-   array[${p.risk_flags.map(f => `'${f.replace(/'/g, "''")}'`).join(', ')}]::text[], '${p.proposal_status}')
-returning id, proposal_id, proposal_status;
-`;
 }
 
 export function summaryMarkdown(result, p, { ms } = {}) {

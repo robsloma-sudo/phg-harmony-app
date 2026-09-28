@@ -1,0 +1,6 @@
+[{"cocktail_name":"Daiquiri","consensus_spec":"2 oz white rum; 0.75 oz lime; 0.75 oz simple","garnish":null},
+ {"cocktail_name":"Manhattan","consensus_spec":"2 oz rye or bourbon; 1 oz sweet vermouth; 2 dashes Angostura","garnish":"Cocktail cherry"},
+ {"cocktail_name":"Margarita","consensus_spec":"2 oz blanco tequila; 1 oz lime; 0.75 oz orange liqueur; optional agave","garnish":null},
+ {"cocktail_name":"Mezcal Negroni","consensus_spec":"1 oz mezcal; 1 oz Campari; 1 oz sweet vermouth","garnish":null},
+ {"cocktail_name":"Paloma","consensus_spec":"2 oz blanco tequila; lime; salt; grapefruit soda","garnish":null},
+ {"cocktail_name":"Ranch Water","consensus_spec":"2 oz blanco tequila; lime; sparkling mineral water","garnish":null}]

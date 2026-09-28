@@ -25,3 +25,9 @@ Rules that always apply:
 - Cite the library menus (document IDs) you used as references.
 - You are scored against handoff/agents/MENU_DESIGN_SCORECARD.md (each reviewer must average above 80); always include
   the layout geometry (page, margins, grid, palette, type, element positions).
+
+Toolkit (built by the designer; read before designing): `handoff/agents/menu-designer/README.md`, the craft in `PLAYBOOK.md`,
+the evidence in `knowledge/`, the running log in `SKILLS_LOG.md`, app requests in `SUGGESTIONS_FOR_LEAD_DEV.md`.
+`tools/run.mjs` turns a Harmony voice note or a task row into options with 300 dpi previews, measured `p_layout`, a
+scorecard self-check, and `submit.json` for the Coordinator. It strips the draft's `doc.phg` (the project sync token)
+from everything it writes.

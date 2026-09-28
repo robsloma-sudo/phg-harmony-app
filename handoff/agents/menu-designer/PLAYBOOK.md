@@ -4,6 +4,12 @@ This is the craft the Menu Designer applies to every job. The brief (`../MENU_DE
 may and may not do. This file says how to do the design well. The toolkit (`README.md`) automates most of it; this
 is what you check its output against, and what you change when it gets something wrong.
 
+## Evidence
+
+The research is in `knowledge/`: 53 sources in three files, each with evidence-graded rules. Where the research and Rob's
+scorecard disagree (for example, trade advice to hide prices against the scorecard's aligned price column), **the
+scorecard wins**. Every rule adopted in code is listed in `SKILLS_LOG.md`.
+
 ## 0. The one constraint that shapes everything
 
 The design must be **drawable by Menu Studio as-is**. Menu Studio is a Fabric.js canvas with:
@@ -36,8 +42,11 @@ Two rules from the app code you never break:
    tunes type for the demographics, fixes contrast and fits the page.
 4. **Look at every page PNG.** Check it against §8 below. If something is off, fix the cause: re-run with `--look`,
    supply columns or pages, or edit the `.menu.json` and re-render with `tools/render.mjs`.
-5. **Submit.** Insert `proposal.sql`, which is your one allowed write. Missing prices, unplaced items or no venue name
-   mean `needs_input` with the questions. Never hold a design back just because questions are open: send both.
+5. **Hand over.** Give `submit.json` / `submit.sql` to the Coordinator, who runs `phg_design_proposal_submit`; you
+   write nothing. Missing prices, unplaced items, no venue name, or missing content (descriptions, ABV, region, builds,
+   standard specs to confirm) mean `needs_input` with specific questions, with the full design attached anyway.
+6. **Self-check before hand-over.** Read `selfcheck.json`. Every failure is either fixed, a question to the venue, or a
+   Menu Studio limit already filed in `SUGGESTIONS_FOR_LEAD_DEV.md`.
 
 ## 2. Reading the room: venue type → look
 
@@ -69,11 +78,16 @@ becomes the accent. Always offer at least one alternative from the other side of
 
 ## 4. Menu engineering (placement and pricing presentation)
 
-- **Section order is the venue's story.** Lounge and cantina: cocktails first, agave next at a cantina. Brewery: beer first.
-  Wine bar: sparkling → white → rosé → red first. Non-alcoholic sits directly after cocktails, never last in small type.
-- **Prime slots**: the first item of the first section, and the top of each column. House specials and featured items go
-  first in their section, get a badge, and their name takes the accent colour (via a per-node override). Promote at most
-  one or two per section, because emphasis only works if it's rare.
+- **Section order is the venue's story** (scorecard example: cocktails → beer → wine → spirits → non-alcoholic).
+  Cantina: cocktails, then agave. Brewery: beer first. Wine bar: sparkling → white → rosé → red first.
+  **Non-alcoholic goes last, in the same type as every other list.** Both reviewers marked it down when it sat between
+  alcoholic lists.
+- **A list with one or two items doesn't get its own header.** Tequila and mezcal share "Tequila & Mezcal", each with
+  its own subsection.
+- **Prime slots are the edges of each list.** Items first or last in a category sell about 20% more than the same items
+  mid-list (Dayan & Bar-Hillel 2011). There is **no** evidence for a "golden triangle" (Yang 2012: diners read like a
+  book). The first house or featured item leads its list and a second one closes it. They get a badge, and the name takes
+  the accent colour through a per-node override. Promote at most one or two per list.
 - **Don't sort by price** and don't leave a descending or ascending price run: it teaches guests to shop the cheapest.
   Keep the order the venue gave, except for promotions.
 - **No dollar signs.** Menu Studio prints bare numbers ("14", "11.50"). Whole-dollar prices print without ".00".
@@ -107,11 +121,14 @@ becomes the accent. Always offer at least one alternative from the other side of
 
 - A clear scale: title ≈ 2.2–2.8 × name, section ≈ 1.1 × name in tracked caps or 1.2 × name in upper/lower case,
   description ≈ 0.8 × name, price = name size.
-- **Print floor** (px @96 dpi): name 12, price 12, description 10, section 12, sub 8. The fitter never goes below these.
+- **Print floor** (px @96 dpi): name 14, price 14, description 11, section 13, sub 9 (10.5 / 8.25 pt). The fitter never goes below these.
   If a menu still won't fit, it gets another page or a question, never smaller type.
-- **Tracking**: wide (250–480) only for caps. Upper/lower case gets 0.
+- **Tracking**: caps get 50–120/1000 em in text (Butterick). Headers are capped at 180 and the display title at 300.
+  Upper/lower case gets 0.
+- **Hierarchy**: section headers are at least 1.3 × the item-name size, so hierarchy never rests on colour alone.
+- **Fonts**: no Trebuchet (Butterick's avoid list); no Georgia for prices (oldstyle figures make price columns uneven).
 - **Measure**: keep a name and its price within about 5.5 in (528 px). In one column on a wide page, use wider margins; otherwise use two columns.
-- **Contrast**: 4.5:1 minimum for names, descriptions and prices; 3:1 for headings. The designer raises any colour
+- **Contrast**: 4.5:1 minimum for every text level, title included (scorecard §4). The designer raises any colour
   that fails and says so.
 - **Meaning is never colour-only.** A house special is accented *and* badged.
 

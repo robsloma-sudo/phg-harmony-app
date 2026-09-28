@@ -49,36 +49,81 @@ const txt = (t, st) => st.cs === 'upper' ? String(t).toUpperCase() : st.cs === '
 
 function pageHTML(file, L, p) {
   const S = file.style, P = S.page, top = p * L.H;
+  // Every visible thing carries data-kind (scorecard §3 kinds) and data-ref, so geometry is measured from the real layout.
+  const tag = (kind, ref, extra = '') => `data-kind="${kind}" data-ref="${escH(ref || '')}"${extra}`;
   let h = '';
   for (const op of L.ops) {
     if (Math.floor(op.y / L.H) !== p) continue;
     const y = op.y - top;
-    if (op.t === 'rule') h += `<div style="position:absolute;left:${op.x}px;top:${y}px;width:${op.w}px;border-top:1px solid ${P.rule}"></div>`;
+    if (op.t === 'rule') h += `<div ${tag('divider', 'masthead_rule')} style="position:absolute;left:${op.x}px;top:${y}px;width:${op.w}px;height:0;border-top:1px solid ${P.rule}"></div>`;
     else if (op.t === 'head') {
-      const st = S[op.lvl], al = st.al || 'left';
-      const pos = op.lvl === 'title' || op.lvl === 'subtitle'
-        ? (al === 'center' ? `left:0;width:${op.W}px;text-align:center` : al === 'right' ? `left:${op.x}px;width:${op.w}px;text-align:right` : `left:${op.x}px`)
-        : (al === 'center' ? `left:0;width:${op.W}px;text-align:center` : al === 'right' ? `left:${op.x}px;width:${op.w}px;text-align:right` : `left:${op.x}px`);
-      h += `<div class="t" style="position:absolute;top:${y}px;${pos};${css(st)}">${escH(txt(op.text, st))}</div>`;
-    } else if (op.t === 'hdesc') h += `<div class="t" style="position:absolute;left:${op.x}px;top:${y}px;${css(S.desc)}">${escH(op.text)}</div>`;
-    else if (op.t === 'item') {
+      const st = Object.assign({}, S[op.lvl], op.node?.format?.[op.lvl] || {}), al = op.placed ? 'left' : (st.al || 'left');
+      const pos = al === 'center' ? `left:0;width:${op.W}px;text-align:center` : al === 'right' ? `left:${op.x}px;width:${op.w}px;text-align:right` : `left:${op.x}px`;
+      const kind = op.lvl === 'title' ? 'header' : op.lvl === 'subtitle' ? 'subheader' : op.lvl === 'section' ? (op.role === 'footer' ? 'footer' : 'header') : 'subheader';
+      const ref = op.lvl === 'title' ? 'title' : op.lvl === 'subtitle' ? 'subtitle' : (op.node?.id || op.text);
+      h += `<div class="t" style="position:absolute;top:${y}px;${pos};${css(st)}"><span ${tag(kind, ref, ` data-level="${op.lvl}"`)}>${escH(txt(op.text, st))}</span></div>`;
+    } else if (op.t === 'hdesc') {
+      h += `<div class="t" style="position:absolute;left:${op.x}px;top:${y}px;${css(S.desc, op.node?.format?.desc)}"><span ${tag(op.node?.designer_role === 'footer' ? 'footer' : 'description', (op.node?.id || '') + ':desc', ' data-level="section_desc"')}>${escH(op.text)}</span></div>`;
+    } else if (op.t === 'item') {
       const it = op.item, fo = it.format || {};
       const nameSt = Object.assign({}, S.name, fo.name || {});
       const badgeSize = Math.max(7, Math.round(S.desc.s * 0.7));
-      const badges = (it.badges || []).map(b => `<span style="margin-left:6px;position:relative;top:2px;font-family:${STACKS[S.desc.f]};font-size:${badgeSize}px;letter-spacing:0.12em;color:${S.sub.c};line-height:1">${escH(String(b).toUpperCase())}</span>`).join('');
+      const badges = (it.badges || []).map(b => `<span ${tag('label', it.id, ` data-badge="${escH(b)}"`)} style="margin-left:6px;position:relative;top:2px;font-family:${STACKS[S.desc.f]};font-size:${badgeSize}px;letter-spacing:0.12em;color:${S.sub.c};line-height:1">${escH(String(b).toUpperCase())}</span>`).join('');
       const pt = priceText(it);
       const priceSt = Object.assign({}, S.price, fo.price || {});
       const dots = P.dots && !op.inline && pt;
-      let row = `<span style="${css(nameSt)}">${escH(txt(it.name, nameSt))}</span>` +
-        (it.brand ? `<span style="${css(S.brand, fo.brand)}">&nbsp;${escH(it.brand)}</span>` : '') + badges;
+      let row = `<span ${tag('item_name', it.id)} style="${css(nameSt)}">${escH(txt(it.name, nameSt))}</span>` +
+        (it.brand ? `<span ${tag('brand', it.id)} style="${css(S.brand, fo.brand)}">&nbsp;${escH(it.brand)}</span>` : '') + badges;
       if (pt) row += op.inline
-        ? `<span style="margin-left:8px;${css(priceSt)}">${escH(pt)}</span>`
-        : `<span style="flex:1 1 auto;min-width:12px;margin:0 6px;align-self:flex-start;height:${Math.round(S.name.s * 0.8)}px;${dots ? `border-bottom:0.75px dashed ${S.price.c};opacity:.6;` : ''}"></span><span style="${css(priceSt)}">${escH(pt)}</span>`;
+        ? `<span ${tag('price', it.id)} style="margin-left:8px;${css(priceSt)}">${escH(pt)}</span>`
+        : `<span ${dots ? tag('divider', it.id, ' data-level="leader"') : ''} style="flex:1 1 auto;min-width:12px;margin:0 6px;align-self:flex-start;height:${Math.round(S.name.s * 0.8)}px;${dots ? `border-bottom:0.75px dashed ${S.price.c};opacity:.6;` : ''}"></span><span ${tag('price', it.id)} style="${css(priceSt)}">${escH(pt)}</span>`;
       h += `<div class="row" data-name="${escH(it.name)}" style="position:absolute;left:${op.x}px;top:${y}px;width:${op.w}px;display:flex;align-items:flex-start">${row}</div>`;
-      if (it.desc) h += `<div class="t desc" data-name="${escH(it.name)}" data-w="${op.w}" style="position:absolute;left:${op.x}px;top:${y + S.name.s + 4}px;${css(S.desc, fo.desc)}">${escH(it.desc)}</div>`;
+      if (it.desc) h += `<div class="t desc" data-name="${escH(it.name)}" data-w="${op.w}" style="position:absolute;left:${op.x}px;top:${y + S.name.s + 4}px;${css(S.desc, fo.desc)}"><span ${tag('description', it.id)}>${escH(it.desc)}</span></div>`;
     }
   }
   return h;
+}
+
+// Scorecard §3 geometry, measured in the browser at print size (mm). Coordinates are relative to the trim edge.
+async function measureLayout(pg, file, L) {
+  const S = file.style, P = S.page, mm = px => +(px * 25.4 / 96).toFixed(2);
+  const raw = await pg.evaluate(() => {
+    const out = [];
+    document.querySelectorAll('section.pg').forEach((sec, pi) => {
+      const trim = sec.querySelector('.trim').getBoundingClientRect();
+      sec.querySelectorAll('[data-kind]').forEach(e => {
+        const r = e.getBoundingClientRect();
+        // Horizontal extent from the browser; vertical box from Menu Studio's model: Fabric text is drawn with its top
+        // at the flow y and a box of fontSize x 1.16. Browser inline boxes vary by font and are not what the app draws.
+        const holder = (e.dataset.kind === 'divider' && e.dataset.level !== 'leader') ? e : (e.closest('.row') || e.closest('.t') || e);
+        const top = parseFloat(holder.style.top || '0') + (e.dataset.kind === 'label' ? 2 : 0);
+        const fs = parseFloat(getComputedStyle(e).fontSize) || 0;
+        const h = e.dataset.kind === 'divider' ? (e.dataset.level === 'leader' ? 0.75 : 1) : fs * 1.16;
+        out.push({ kind: e.dataset.kind, level: e.dataset.level || null, badge: e.dataset.badge || null, ref: e.dataset.ref || null,
+                   page: pi + 1, x: r.left - trim.left, y: e.dataset.level === 'leader' ? top + fs * 0.8 : top, w: r.width, h, text: e.textContent });
+      });
+    });
+    return out;
+  });
+  const elements = raw.map(e => ({ kind: e.kind, ...(e.level ? { level: e.level } : {}), ...(e.badge ? { badge: e.badge } : {}),
+    page: e.page, x_mm: mm(e.x), y_mm: mm(e.y), w_mm: mm(e.w), h_mm: mm(e.h), text: e.text, ref: e.ref }));
+  const pt = st => ({ font: MDC_FONTS[st.f].label, size_pt: +(st.s * 0.75).toFixed(2), weight: st.w, italic: !!st.i,
+                      tracking_em: +((st.sp || 0) / 1000).toFixed(3), case: st.cs, colour: st.c });
+  const accent = [S.section.c, S.price.c, S.title.c].find(c => c && c.toLowerCase() !== (S.name.c || '').toLowerCase()) || S.section.c;
+  return {
+    units: 'mm', source: 'x/width measured in Chromium; y/height from the Menu Studio flow (Fabric box = size x 1.16, tools/layout.mjs); relative to the trim edge',
+    page: { size_key: file.size, width_mm: mm(L.W), height_mm: mm(L.H), pages: L.pages, background: P.bg,
+            margins_mm: { top: mm(L.M), right: mm(L.M), bottom: mm(L.M), left: mm(L.M) } },
+    grid: { columns: L.n, gutter_mm: mm(L.n > 1 ? L.gutter : 0), column_width_mm: mm(L.colW),
+            column_x_mm: Array.from({ length: L.n }, (_, i) => mm(L.M + i * (L.colW + L.gutter))),
+            baseline_pt: null, baseline_note: 'No baseline grid: Menu Studio advances by type size + fixed steps (name +4, desc +4, gaps). Item pitch and gaps are constant instead.',
+            item_gap_mm: mm(P.itemGap), section_gap_mm: mm(P.secGap), leader_dots: !!P.dots,
+            price_alignment: L.n > 1 || P.priceAlign === 'inline' ? 'inline' : 'right_column' },
+    palette: { background: P.bg, text: S.name.c, accent, muted: S.desc.c, headers: S.section.c, prices: S.price.c, rules: P.rule },
+    type: { title: pt(S.title), subtitle: pt(S.subtitle), header: pt(S.section), subheader: pt(S.sub), item: pt(S.name),
+            description: pt(S.desc), price: pt(S.price) },
+    elements,
+  };
 }
 
 function docHTML(file, L, { bleed = 0, slug = 0, marks = false } = {}) {
@@ -122,18 +167,24 @@ function phoneHTML(file) {
     return `<div style="margin:0 0 ${Math.max(12, P.itemGap * 1.6)}px">
       <div style="display:flex;gap:12px;align-items:baseline"><div style="flex:1">${`<span style="${c(Object.assign({}, T.name, fo.name || {}))}">${escH(txt(it.name, T.name))}</span>`}
       ${it.brand ? `<span style="${c(T.brand)}"> ${escH(it.brand)}</span>` : ''}
-      ${(it.badges || []).map(b => `<span style="margin-left:6px;font-family:${STACKS[S.desc.f]};font-size:10px;letter-spacing:.12em;color:${S.sub.c};border:1px solid ${S.sub.c};border-radius:3px;padding:1px 4px;vertical-align:2px">${escH(b.toUpperCase())}</span>`).join('')}</div>
+      ${(it.badges || []).map(b => `<span style="margin-left:6px;font-family:${STACKS[S.desc.f]};font-size:10px;letter-spacing:.12em;color:${S.sub.c};vertical-align:2px">${escH(b.toUpperCase())}</span>`).join('')}</div>
       ${pt ? `<div style="${c(T.price)};white-space:nowrap">${escH(pt)}</div>` : ''}</div>
       ${it.desc ? `<div style="${c(T.desc)};margin-top:3px;line-height:1.35">${escH(it.desc)}</div>` : ''}</div>`;
   };
   let body = `<header style="text-align:${S.title.al === 'left' ? 'left' : 'center'};padding:36px 22px 18px;${P.rules ? `border-bottom:1px solid ${P.rule};` : ''}margin:0 0 18px">
     <div style="${c(T.title)}">${escH(txt(doc.title, T.title))}</div>${doc.subtitle ? `<div style="${c(T.subtitle)};margin-top:8px">${escH(txt(doc.subtitle, T.subtitle))}</div>` : ''}</header>`;
+  const footer = doc.sections.find(x => x.designer_role === 'footer');
   for (const sec of doc.sections) {
+    if (sec.designer_role === 'footer') continue;
     body += `<section style="padding:6px 22px ${Math.max(16, P.secGap)}px"><h2 style="margin:0 0 12px;${c(T.section)}">${escH(txt(sec.name, T.section))}</h2>`;
     if (sec.desc) body += `<div style="${c(T.desc)};margin:-4px 0 12px;line-height:1.35">${escH(sec.desc)}</div>`;
     body += sec.items.map(item).join('');
     for (const sub of sec.subs) if (sub.items.length) body += `<h3 style="margin:14px 0 10px;${c(T.sub)}">${escH(txt(sub.name, T.sub))}</h3>` + sub.items.map(item).join('');
     body += '</section>';
+  }
+  if (footer) {
+    const fst = Object.assign({}, S.section, footer.format?.section || {});
+    body += `<footer style="padding:18px 22px 8px;${P.rules ? `border-top:1px solid ${P.rule};` : ''}margin:8px 22px 0;padding-left:0;padding-right:0"><div style="${c(Object.assign({}, fst, { s: Math.max(11, fst.s) }))}">${escH(txt(footer.name, fst))}</div>${footer.desc ? `<div style="${c(T.desc)};margin-top:6px">${escH(footer.desc)}</div>` : ''}</footer>`;
   }
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${fontCss}
     html,body{margin:0;background:${P.bg};color:${P.ink};-webkit-text-size-adjust:100%} *{box-sizing:border-box}</style></head><body>${body}<div style="height:28px"></div></body></html>`;
@@ -177,6 +228,7 @@ export async function render(file, outDir, { dpi = 300, phone = true, pdf = true
       }
       return out;
     });
+    report.layout = await measureLayout(pg, file, L);
     const sections = await pg.$$('section.pg');
     for (let i = 0; i < sections.length; i++) {
       const f = `page-${i + 1}.png`;
@@ -204,7 +256,9 @@ export async function render(file, outDir, { dpi = 300, phone = true, pdf = true
       await pc.close();
     }
   } finally { await browser.close(); }
-  fs.writeFileSync(path.join(outDir, 'render.json'), JSON.stringify(report, null, 2));
+  fs.writeFileSync(path.join(outDir, 'layout.json'), JSON.stringify(report.layout, null, 2));
+  const { layout: _l, ...slim } = report;
+  fs.writeFileSync(path.join(outDir, 'render.json'), JSON.stringify(slim, null, 2));
   return report;
 }
 

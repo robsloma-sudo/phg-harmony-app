@@ -55,7 +55,7 @@ export const MDC_PRESETS = {
 // `roles` says which levels carry the accent so a brand colour lands in the right places.
 export const LOOKS = [
   {
-    k: 'noir', label: 'Speakeasy Noir', base: 'slate', accent: '#c9a45c', roles: ['section', 'price', 'subtitle'],
+    k: 'noir', label: 'Speakeasy Noir', base: 'slate', accent: '#c9a45c', accent2: '#c7876a', roles: ['section', 'price', 'subtitle'],
     note: 'Near-black page, cream ink, antique-gold heads. Low-light legible: generous size, no hairline type.',
     fits: { venue: ['cocktail_lounge', 'nightclub', 'hotel_bar'], tone: ['dark', 'elegant', 'vintage'] },
     d: { page: { bg: '#151412', ink: '#efe6d4', rule: '#3d372e', margin: 0.7, itemGap: 8, secGap: 20, rules: true },
@@ -91,7 +91,7 @@ export const LOOKS = [
       desc: { f: 5, s: 10, c: '#5b5a55' }, price: { f: 3, s: 13, w: 'bold', c: '#1d1d1b' } },
   },
   {
-    k: 'cellar', label: 'Cellar & Vine', base: 'press', accent: '#6a1f2b', roles: ['title', 'section'],
+    k: 'cellar', label: 'Cellar & Vine', base: 'press', accent: '#6a1f2b', accent2: '#5b6b3a', roles: ['title', 'section'],
     note: 'Ivory page, bordeaux serif heads, italic tasting notes, lots of air. Glass / bottle pricing sits cleanly.',
     fits: { venue: ['wine_bar', 'fine_dining', 'restaurant'], tone: ['elegant', 'rustic'] },
     d: { page: { bg: '#fbf8f2', ink: '#2a1a1c', rule: '#d6c7b8', rules: false, margin: 0.85, itemGap: 9, secGap: 24 },
@@ -103,7 +103,7 @@ export const LOOKS = [
       desc: { f: 2, s: 11, i: true, c: '#6e6259' }, price: { f: 2, s: 14, c: '#2a1a1c' } },
   },
   {
-    k: 'grand', label: 'Grand Hotel', base: 'house', accent: '#a8873f', roles: ['subtitle', 'section'],
+    k: 'grand', label: 'Grand Hotel', base: 'house', accent: '#a8873f', accent2: '#7a4a3a', roles: ['subtitle', 'section'],
     note: 'Warm white, navy ink, brass tracking caps. Quiet luxury for hotel bars and upscale rooms.',
     fits: { venue: ['hotel_bar', 'fine_dining', 'cocktail_lounge'], tone: ['elegant', 'light', 'vintage'] },
     d: { page: { bg: '#fffdf8', ink: '#1b2a41', rule: '#cbb88c', margin: 0.85, itemGap: 8, secGap: 22 },
@@ -158,7 +158,7 @@ export const LOOKS = [
       desc: { f: 3, s: 11, c: '#6b6b6b' }, price: { f: 3, s: 13, c: '#111111' } },
   },
   {
-    k: 'deco', label: 'Midnight Deco', base: 'slate', accent: '#d4af61', roles: ['title', 'section', 'price'],
+    k: 'deco', label: 'Midnight Deco', base: 'slate', accent: '#d4af61', accent2: '#9fb8cf', roles: ['title', 'section', 'price'],
     note: 'Midnight navy, champagne-gold geometric caps, Palatino body. Jazz-age glamour without ornament.',
     fits: { venue: ['cocktail_lounge', 'hotel_bar', 'nightclub'], tone: ['vintage', 'dark', 'elegant'] },
     d: { page: { bg: '#101c2b', ink: '#f1e7cf', rule: '#3b4a5e', margin: 0.7, itemGap: 8, secGap: 20 },

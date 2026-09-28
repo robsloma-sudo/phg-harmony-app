@@ -45,4 +45,14 @@ from public.phg_menu_doc_class, jsonb_each_text(lists)
 where menu_kind = 'beverage'
 group by 1 order by menus desc;
 
--- 7. The one write the designer is allowed: tools/run.mjs writes proposal.sql (insert into public.agent_proposals ...).
+-- 8. Classic specs for items with no description  ->  --standards specs.json  (labelled "standard"; venue recipe wins)
+select public.phg_designer_query($q$
+  select cocktail_name, consensus_spec, garnish, glassware from public.cocktail_reference
+  where lower(cocktail_name) = any (array['ranch water','paloma'])      -- the draft/voice item names, lower-cased
+$q$, 200, '<task id>');
+
+-- NOTE: every query goes through public.phg_designer_query(...) (handoff/agents/MENU_DATA_ACCESS.md). The plain SELECTs
+-- above show the SQL to wrap; the designer role cannot run SQL outside the gateway.
+
+-- 7. The designer's hand-off: tools/run.mjs writes submit.json / submit.sql (phg_design_proposal_submit arguments,
+--    including p_layout). The Coordinator runs it; the designer writes nothing.

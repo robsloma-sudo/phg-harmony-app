@@ -251,9 +251,20 @@ export function parseTranscript(transcript, ctx = {}) {
   const sectionFor = key => { let s = sections.find(x => x.key === key); if (!s) { s = { key, label: LIST_BY_KEY[key]?.label || key, items: [] }; sections.push(s); } return s; };
   const venueName = findVenueName(text);
 
+  // Edit commands about items already on the menu: "put the House Daiquiri first", "feature the Paloma",
+  // "highlight the Old Fashioned", "mark the Gose as new". They change flags on an existing item, never add one.
+  const edits = [];
+  const EDIT = /^(?:please\s+)?(?:put|move|place|feature|highlight|push|mark|make|flag|star)\s+(?:the\s+|our\s+)?(.+?)(?:\s+(?:first|at the top|on top|up front|to the top|as (?:a |the |our )?(?:feature|featured|house special|special|new|seasonal)|new|seasonal))?(?:\s*,?\s*(?:it'?s|it is|that'?s|as)\s+(?:a |an |our |the )?(house special|special|signature|featured|new|seasonal))?$/i;
   for (let sent of sentences) {
     sent = sent.replace(/[.!?;]+$/, '').trim();
     if (!sent) continue;
+    const em = sent.match(EDIT);
+    if (em && !/\d/.test(sent) && em[1].split(/\s+/).length <= 6 && !DIRECTIVE.test(em[1])) {
+      const fl = new Set(detectFlags(sent));
+      if (/\b(first|top|up front|feature|highlight|push|star)\b/i.test(sent)) fl.add('featured');
+      edits.push({ name: titleCase(em[1].replace(/\s+(first|at the top|on top|up front)$/i, '')), flags: [...fl], heard: sent });
+      continue;
+    }
     if (venueName && sent.includes(venueName) && !/\d/.test(sent)) { directives.push(sent); continue; }
     // Headings can appear mid-sentence: "... and on the beer side, Modelo 7" -> split on heading phrases after a comma.
     const parts = sent.split(/,\s*(?=(?:and\s+)?(?:for|on|under|by the)\s+(?:the\s+|our\s+)?[a-z])/i);
@@ -294,6 +305,9 @@ export function parseTranscript(transcript, ctx = {}) {
   }
   design.notes = directives;
   design.venue_name = venueName;
+  // Neighbourhood as spoken: "a cantina in RiNo" -> area "RiNo" (a fact for the footer, never invented).
+  const area = text.match(/\b(?:bar|cantina|taproom|brewery|lounge|restaurant|pub|spot|place)\s+in\s+([A-Z][\w'-]*(?:\s+[A-Z][\w'-]*){0,2})/);
+  design.area = area ? area[1].trim().replace(/[,.]$/, '') : null;
   // ---- page-level directives: read only from sentences that are about the page, never from item names ----
   // ("Double Black Diamond" is a beer, not a colour request; "Nightfall" is not a mood.)
   const lower = directives.join(' . ').toLowerCase();
@@ -341,6 +355,7 @@ export function parseTranscript(transcript, ctx = {}) {
     lists: sections.map(s => s.key),
     sections: sections.map(s => ({ key: s.key, label: s.label, items: s.items })),
     unplaced_items: orphans,
+    edits,
     design,
     questions,
   };
