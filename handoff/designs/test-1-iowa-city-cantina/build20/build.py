@@ -13,7 +13,7 @@ draft = json.loads((HERE.parent / "build" / "draft_doc.json").read_text())
 #       "s" spirit (name + price only)
 # cocktail tokens: list of (text, letter_break_before, phone_break_before)
 C = {
- "beta_margarita": [("tequila blanco", 0, 0), ("fresh lime", 0, 0), ("orange liqueur", 0, 0), ("agave syrup", 0, 1), ("lime wheel", 1, 0), ("bright, citrus-forward", 0, 1)],
+ "beta_margarita": [("tequila blanco", 0, 0), ("fresh lime", 0, 0), ("orange liqueur", 0, 0), ("agave syrup", 0, 0), ("lime wheel", 1, 1), ("bright, citrus-forward", 0, 0)],
  "beta_manhattan": [("rye whiskey", 0, 0), ("sweet vermouth", 0, 0), ("cocktail cherry", 0, 0)],
  "beta_old_fashioned": [("brown butter-washed bourbon", 0, 0), ("house demerara syrup", 0, 0), ("aromatic bitters", 1, 1), ("orange peel", 0, 0)],
  "beta_daiquiri": [("white rum", 0, 0), ("fresh lime", 0, 0), ("house demerara syrup", 0, 0), ("lime coin", 1, 1)],
@@ -209,7 +209,7 @@ PHONE_HERO = f'''
  {defs("h_", .9)}
  <rect x="-6" y="-6" width="402" height="428" fill="url(#h_sky)"/>
  <circle cx="195" cy="150" r="100" fill="url(#h_gold)" filter="url(#h_disc)"/>
- {landscape("h_", -6, 396, 300, .78, 342, 195, 175, 15, 46, rosette(195, 470, .66), 430)}
+ {landscape("h_", -6, 396, 300, .78, 342, 195, 175, 15, 46, rosette(195, 452, .8), 430)}
  <rect x="-6" y="-6" width="402" height="428" filter="url(#h_fiber)" opacity=".5"/>
  <g filter="url(#h_rim)"><path d="{torn_paper_top(402, 3, 7, 0, 390, 440).replace('M-6,440 L396,440', 'M-6,440 L396,440')}" fill="#FBF6EA" transform="translate(0,-3)"/></g>
 </svg>'''
@@ -315,10 +315,10 @@ h3{{font:700 9pt/{2 * U}pt 'DM Sans',sans-serif;letter-spacing:.16em;text-transf
  .item+.item{{margin-top:16px}}
  .row{{height:24px}}
  .name{{font-size:16px;line-height:24px}}
- .item.r .name{{width:128px}}
+ .item.r .name{{width:144px}}
  .dl{{font-size:15px;line-height:24px}}
  .price{{font-size:16px;line-height:24px}}
- .desc{{font-size:15px;line-height:24px}}
+ .desc{{font-size:14px;line-height:24px}}
  .glass{{font-size:12px}}
  .bl,.sepl{{display:none}} .bp{{display:inline}} .sepp{{display:inline}}
  .legal{{margin-top:40px;font-size:14px;line-height:24px}}
