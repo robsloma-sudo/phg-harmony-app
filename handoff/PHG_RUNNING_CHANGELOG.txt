@@ -1010,3 +1010,10 @@ tough scale (best).
   The scores have plateaued at about 70. The blockers are Rob's venue data and raster-art access (media.canva.com).
 - TEST-1 round 4 scored I4 at 71.3 and J4 at 71.3 (J4 content 79.8, the best yet). The best overall is still I2 at 72.1.
   Scores have held at 68-72 for four rounds. I've paused further rounds until Rob provides the venue data (ABV, region, brand, pour, Brut Rosé glass or bottle) and allows media.canva.com.
+- TEST-1 round 5 resumed on Rob's "Resume", with no new venue data. media.canva.com is still blocked.
+  - Found sourced category facts in public.beverage_categories:
+    - Tequila blanco and añejo are classes under NOM-006-SCFI-2012.
+    - Cognac VSOP sits under grape_brandy.
+    - These give the spirits descriptions without the name echo.
+  - J5: a true side-profile elevator, a papel-picado or greca light edge in place of the borrowed stair, and procedural riso grain.
+  - I5: our own palette and concept in place of ref-02 panel 3 green/gold, cleaner engraving, fixed axis and margins.
