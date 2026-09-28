@@ -46,3 +46,21 @@ Round 13 builds from round 12:
 - Restore the sourced Draft and By the Glass subheads, written bilingually.
 - Put the agave card back at top right.
 - Use one bilingual pattern.
+
+## Round 13 (descriptions restored, sourced Draft/By the Glass subheads, split column breaks)
+Combined 71.344 (critic 73.7, content 73.0, accuracy 67.3). Just under the 71.434 best (rounds 11 and 12).
+Plateau: rounds 11-13 all land at 71.3-71.4.
+Every accuracy and content reviewer names the same cap: criteria 8 and 12 cannot pass about 70 without venue data.
+- Beer: brewery and ABV.
+- Wine: region and producer.
+- Spirits: brand, age and pour size.
+- Brut Rosé: glass or bottle.
+- Also: a Mexican lager, mezcal, agua fresca, and the venue name.
+The sample draft (ddc4bb5b) has none of these, and we must not invent them.
+Round 14 fixes the design-side items:
+- Lock the 2x2 grid with columns that end level.
+- Remove the doubled Agave/Brandy gloss.
+- Old Fashioned wording.
+- Spirits: a card-level "straight pours" note instead of lines that repeat the name.
+- Bigger name bands.
+- Phone figure-strip tabs.
