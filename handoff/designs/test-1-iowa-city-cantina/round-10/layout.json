@@ -6,9 +6,9 @@
   "w_pt": 612,
   "h_pt": 792,
   "margins_pt": {
-   "top": 15,
+   "top": 36,
    "right": 36,
-   "bottom": 15,
+   "bottom": 36,
    "left": 36
   },
   "bleed": "none (cream flood to trim, home/office print)"
@@ -16,17 +16,17 @@
  "grid": {
   "deck_pt": {
    "x": 36.0,
-   "y": 105.0,
+   "y": 138.0,
    "w": 540.0,
-   "h": 660.0
+   "h": 617.99
   },
   "columns_pt": [
    264,
    264
   ],
   "gutter_pt": 12,
-  "rows": "1 + 3: El Cantarito spans the left column (672 pt); right column La Botella 204, El Barril 240, La Rosa 204 with 12 pt gaps; one rhythm: 12 pt item gap, 24 pt above every subhead after the first, 12 pt below every subhead",
-  "card_anatomy": "1.5 pt frame in the card colour; face (58.5 pt on the right cards) = tinted panel with a 0.75 pt inset hairline in the card colour at 3 pt, figure (72 x 34.5 pt box on the right cards, full face width on the featured card), cantor verse Fraunces italic 9 pt (10.5 pt featured), name cartouche 24 pt (36 pt featured) at the foot of the face holding the Spanish name + English gloss; 12 pt gap; reverse = the drinks list; 10.5 pt bottom padding + 1.5 pt border = 12 pt"
+  "rows": "1 + 3: El Cantarito spans the left column (618 pt); right column La Botella 190, El Barril 214, La Rosa 190 with 12 pt gaps; one rhythm on every card: 12 pt item gap, 12 pt above every subhead after the first, 6 pt below every subhead, 6 pt from the name bar to the first subhead",
+  "card_anatomy": "1.5 pt frame in the card colour; face (74.5 pt on the right cards) = tinted panel with a 0.75 pt inset hairline in the card colour at 3 pt, figure (72 x 50.5 pt box on the right cards, full face width on the featured card), cantor verse Fraunces italic 9 pt (10.5 pt featured), name cartouche 24 pt (36 pt featured) at the foot of the face holding the Spanish name + English gloss; 12 pt gap; reverse = the drinks list; 10.5 pt bottom padding + 1.5 pt border = 12 pt"
  },
  "palette": {
   "cream": "#F6EEDF",
@@ -40,7 +40,7 @@
   "loteria_rosa": "#C2185B"
  },
  "type": {
-  "display": "Fraunces 700 (title 24/24 pt, 18 pt below the 24 pt papel picado; card titles 12 pt caps 2 pt tracking in the name bar, one size on every card)",
+  "display": "Fraunces 700 (title 24/24 pt, 18 pt below the 36 pt papel picado; card titles 12 pt caps 2 pt tracking in the name bar, one size on every card)",
   "ordinals": "none",
   "items": "Fraunces 600 10.5/12 pt (every card)",
   "prices": "Fraunces 600 lining tabular 10.5/12 pt on every card, in the card colour (terracotta, ink, agave, rosa)",
@@ -55,25 +55,25 @@
  "masthead": {
   "papel_picado_pt": {
    "x": 36.0,
-   "y": 15.0,
+   "y": 36.0,
    "w": 540.0,
-   "h": 24.0
+   "h": 36.0
   },
   "title_pt": {
    "x": 173.88,
-   "y": 54.0,
+   "y": 87.0,
    "w": 264.22,
    "h": 29.25
   },
   "location_pt": {
    "x": 249.68,
-   "y": 81.0,
+   "y": 114.0,
    "w": 112.64,
    "h": 11.25
   },
   "footer_pt": {
    "x": 36.0,
-   "y": 765.0,
+   "y": 755.99,
    "w": 540.0,
    "h": 0.0
   }
@@ -83,15 +83,15 @@
    "kind": "image",
    "ref": "banner",
    "x": 36.0,
-   "y": 15.0,
+   "y": 36.0,
    "w": 540.0,
-   "h": 24.0
+   "h": 36.0
   },
   {
    "kind": "header",
    "ref": "title",
    "x": 173.88,
-   "y": 54.0,
+   "y": 87.0,
    "w": 264.22,
    "h": 29.25,
    "text": "Cantina & Cocktail Bar"
@@ -100,7 +100,7 @@
    "kind": "subheader",
    "ref": "loc",
    "x": 249.68,
-   "y": 81.0,
+   "y": 114.0,
    "w": 112.64,
    "h": 11.25,
    "text": "IOWA CITY, IOWA"
@@ -109,15 +109,15 @@
    "kind": "grid",
    "ref": "deck",
    "x": 36.0,
-   "y": 105.0,
+   "y": 138.0,
    "w": 540.0,
-   "h": 660.0
+   "h": 617.99
   },
   {
    "kind": "ornament",
    "ref": "foot",
    "x": 36.0,
-   "y": 765.0,
+   "y": 755.99,
    "w": 540.0,
    "h": 0.0
   },
@@ -125,9 +125,9 @@
    "kind": "card",
    "ref": "sec_cocktails",
    "x": 36.0,
-   "y": 105.0,
+   "y": 138.0,
    "w": 264.0,
-   "h": 660.0,
+   "h": 617.99,
    "n": 1,
    "featured": true
   },
@@ -135,15 +135,15 @@
    "kind": "card_face",
    "ref": "sec_cocktails",
    "x": 37.5,
-   "y": 106.5,
+   "y": 139.5,
    "w": 261.0,
-   "h": 406.5
+   "h": 394.49
   },
   {
    "kind": "header",
    "ref": "sec_cocktails",
    "x": 61.73,
-   "y": 485.25,
+   "y": 506.24,
    "w": 163.43,
    "h": 19.5,
    "text": "EL CANTARITO"
@@ -152,7 +152,7 @@
    "kind": "verse",
    "ref": "sec_cocktails",
    "x": 89.11,
-   "y": 123.75,
+   "y": 156.75,
    "w": 157.77,
    "h": 25.5,
    "text": "Tanto va el cántaro al agua, que se quiebra y te moja las enaguas.",
@@ -162,7 +162,7 @@
    "kind": "gloss",
    "ref": "sec_cocktails",
    "x": 231.16,
-   "y": 491.25,
+   "y": 512.24,
    "w": 43.09,
    "h": 12.0,
    "text": "Cocktails"
@@ -171,15 +171,15 @@
    "kind": "figure",
    "ref": "sec_cocktails",
    "x": 55.5,
-   "y": 148.5,
+   "y": 181.5,
    "w": 225.0,
-   "h": 322.5
+   "h": 310.49
   },
   {
    "kind": "name_bar",
    "ref": "sec_cocktails",
    "x": 37.5,
-   "y": 477.0,
+   "y": 497.99,
    "w": 261.0,
    "h": 36.0,
    "text": "EL CANTARITO\nCocktails"
@@ -188,7 +188,7 @@
    "kind": "subheader",
    "ref": "sub_cocktails_classics",
    "x": 48.0,
-   "y": 526.5,
+   "y": 541.49,
    "w": 44.98,
    "h": 9.0,
    "text": "CLASSICS"
@@ -197,7 +197,7 @@
    "kind": "subheader",
    "ref": "sub_cocktails_house_originals",
    "x": 48.0,
-   "y": 646.5,
+   "y": 643.49,
    "w": 83.36,
    "h": 9.0,
    "text": "HOUSE ORIGINALS"
@@ -206,7 +206,7 @@
    "kind": "item_name",
    "ref": "beta_margarita",
    "x": 48.0,
-   "y": 548.25,
+   "y": 557.24,
    "w": 50.92,
    "h": 13.5,
    "text": "Margarita"
@@ -215,7 +215,7 @@
    "kind": "price",
    "ref": "beta_margarita",
    "x": 276.9,
-   "y": 548.25,
+   "y": 557.24,
    "w": 11.1,
    "h": 13.5,
    "text": "15"
@@ -224,7 +224,7 @@
    "kind": "description",
    "ref": "beta_margarita",
    "x": 48.0,
-   "y": 561.75,
+   "y": 570.74,
    "w": 218.86,
    "h": 22.5,
    "text": "Bright and citrus-forward: blanco tequila, fresh lime, orange liqueur and agave syrup. On the rocks, lime wheel.",
@@ -234,7 +234,7 @@
    "kind": "item_name",
    "ref": "beta_manhattan",
    "x": 48.0,
-   "y": 596.25,
+   "y": 605.24,
    "w": 55.77,
    "h": 13.5,
    "text": "Manhattan"
@@ -243,7 +243,7 @@
    "kind": "price",
    "ref": "beta_manhattan",
    "x": 276.9,
-   "y": 596.25,
+   "y": 605.24,
    "w": 11.1,
    "h": 13.5,
    "text": "15"
@@ -252,7 +252,7 @@
    "kind": "description",
    "ref": "beta_manhattan",
    "x": 48.0,
-   "y": 609.75,
+   "y": 618.74,
    "w": 224.65,
    "h": 10.5,
    "text": "Rye whiskey and sweet vermouth. In a coupe, cocktail cherry.",
@@ -262,7 +262,7 @@
    "kind": "item_name",
    "ref": "beta_old_fashioned",
    "x": 48.0,
-   "y": 668.25,
+   "y": 659.24,
    "w": 144.28,
    "h": 13.5,
    "text": "Brown Butter Old Fashioned"
@@ -271,7 +271,7 @@
    "kind": "price",
    "ref": "beta_old_fashioned",
    "x": 276.59,
-   "y": 668.25,
+   "y": 659.24,
    "w": 11.41,
    "h": 13.5,
    "text": "16"
@@ -280,7 +280,7 @@
    "kind": "description",
    "ref": "beta_old_fashioned",
    "x": 48.0,
-   "y": 681.75,
+   "y": 672.74,
    "w": 218.39,
    "h": 22.5,
    "text": "Brown butter-washed bourbon, demerara and bitters. Over one large cube, orange peel.",
@@ -290,7 +290,7 @@
    "kind": "item_name",
    "ref": "beta_daiquiri",
    "x": 48.0,
-   "y": 716.25,
+   "y": 707.24,
    "w": 77.06,
    "h": 13.5,
    "text": "House Daiquiri"
@@ -299,7 +299,7 @@
    "kind": "price",
    "ref": "beta_daiquiri",
    "x": 276.48,
-   "y": 716.25,
+   "y": 707.24,
    "w": 11.52,
    "h": 13.5,
    "text": "14"
@@ -308,7 +308,7 @@
    "kind": "description",
    "ref": "beta_daiquiri",
    "x": 48.0,
-   "y": 729.75,
+   "y": 720.74,
    "w": 223.57,
    "h": 22.5,
    "text": "White rum, fresh lime and house demerara syrup. In a coupe, lime coin.",
@@ -318,9 +318,9 @@
    "kind": "card",
    "ref": "sec_spirits",
    "x": 312.0,
-   "y": 105.0,
+   "y": 138.0,
    "w": 264.0,
-   "h": 204.0,
+   "h": 190.0,
    "n": 2,
    "featured": false
   },
@@ -328,15 +328,15 @@
    "kind": "card_face",
    "ref": "sec_spirits",
    "x": 313.5,
-   "y": 106.5,
+   "y": 139.5,
    "w": 261.0,
-   "h": 58.5
+   "h": 74.5
   },
   {
    "kind": "header",
    "ref": "sec_spirits",
    "x": 377.87,
-   "y": 145.5,
+   "y": 194.5,
    "w": 99.26,
    "h": 15.0,
    "text": "LA BOTELLA"
@@ -345,7 +345,7 @@
    "kind": "verse",
    "ref": "sec_spirits",
    "x": 418.62,
-   "y": 117.75,
+   "y": 158.74,
    "w": 122.75,
    "h": 11.25,
    "text": "La herramienta del borracho.",
@@ -355,7 +355,7 @@
    "kind": "gloss",
    "ref": "sec_spirits",
    "x": 483.13,
-   "y": 149.25,
+   "y": 198.25,
    "w": 26.99,
    "h": 10.5,
    "text": "Spirits"
@@ -364,15 +364,15 @@
    "kind": "figure",
    "ref": "sec_spirits",
    "x": 319.5,
-   "y": 106.5,
+   "y": 139.5,
    "w": 72.0,
-   "h": 34.5
+   "h": 50.5
   },
   {
    "kind": "name_bar",
    "ref": "sec_spirits",
    "x": 313.5,
-   "y": 141.0,
+   "y": 190.0,
    "w": 261.0,
    "h": 24.0,
    "text": "LA BOTELLA\nSpirits"
@@ -381,7 +381,7 @@
    "kind": "subheader",
    "ref": "sub_spirits_agave",
    "x": 324.0,
-   "y": 178.5,
+   "y": 221.5,
    "w": 30.5,
    "h": 9.0,
    "text": "AGAVE"
@@ -390,7 +390,7 @@
    "kind": "subheader",
    "ref": "sub_spirits_brandy",
    "x": 324.0,
-   "y": 262.5,
+   "y": 287.5,
    "w": 36.42,
    "h": 9.0,
    "text": "BRANDY"
@@ -399,7 +399,7 @@
    "kind": "item_name",
    "ref": "beta_blanco_tequila",
    "x": 324.0,
-   "y": 200.25,
+   "y": 237.25,
    "w": 75.42,
    "h": 13.5,
    "text": "Blanco Tequila"
@@ -408,7 +408,7 @@
    "kind": "price",
    "ref": "beta_blanco_tequila",
    "x": 552.59,
-   "y": 200.25,
+   "y": 237.25,
    "w": 11.41,
    "h": 13.5,
    "text": "12"
@@ -417,7 +417,7 @@
    "kind": "item_name",
    "ref": "beta_anejo_tequila",
    "x": 324.0,
-   "y": 224.25,
+   "y": 261.25,
    "w": 69.9,
    "h": 13.5,
    "text": "Añejo Tequila"
@@ -426,7 +426,7 @@
    "kind": "price",
    "ref": "beta_anejo_tequila",
    "x": 552.59,
-   "y": 224.25,
+   "y": 261.25,
    "w": 11.41,
    "h": 13.5,
    "text": "16"
@@ -435,7 +435,7 @@
    "kind": "item_name",
    "ref": "beta_cognac_vsop",
    "x": 324.0,
-   "y": 284.25,
+   "y": 303.25,
    "w": 69.66,
    "h": 13.5,
    "text": "Cognac VSOP"
@@ -444,7 +444,7 @@
    "kind": "price",
    "ref": "beta_cognac_vsop",
    "x": 552.6,
-   "y": 284.25,
+   "y": 303.25,
    "w": 11.4,
    "h": 13.5,
    "text": "18"
@@ -453,9 +453,9 @@
    "kind": "card",
    "ref": "sec_beer",
    "x": 312.0,
-   "y": 321.0,
+   "y": 340.0,
    "w": 264.0,
-   "h": 228.0,
+   "h": 214.0,
    "n": 3,
    "featured": false
   },
@@ -463,15 +463,15 @@
    "kind": "card_face",
    "ref": "sec_beer",
    "x": 313.5,
-   "y": 322.5,
+   "y": 341.5,
    "w": 261.0,
-   "h": 58.5
+   "h": 74.5
   },
   {
    "kind": "header",
    "ref": "sec_beer",
    "x": 372.75,
-   "y": 361.5,
+   "y": 396.49,
    "w": 86.39,
    "h": 15.0,
    "text": "EL BARRIL"
@@ -480,7 +480,7 @@
    "kind": "verse",
    "ref": "sec_beer",
    "x": 432.22,
-   "y": 327.75,
+   "y": 354.74,
    "w": 95.55,
    "h": 23.25,
    "text": "Tanto bebió el albañil, que quedó como barril.",
@@ -490,7 +490,7 @@
    "kind": "gloss",
    "ref": "sec_beer",
    "x": 465.14,
-   "y": 365.25,
+   "y": 400.24,
    "w": 50.1,
    "h": 10.5,
    "text": "Beer & Cider"
@@ -499,15 +499,15 @@
    "kind": "figure",
    "ref": "sec_beer",
    "x": 319.5,
-   "y": 322.5,
+   "y": 341.5,
    "w": 72.0,
-   "h": 34.5
+   "h": 50.5
   },
   {
    "kind": "name_bar",
    "ref": "sec_beer",
    "x": 313.5,
-   "y": 357.0,
+   "y": 391.99,
    "w": 261.0,
    "h": 24.0,
    "text": "EL BARRIL\nBeer & Cider"
@@ -516,7 +516,7 @@
    "kind": "subheader",
    "ref": "sub_beer_draft",
    "x": 324.0,
-   "y": 394.5,
+   "y": 423.49,
    "w": 29.39,
    "h": 9.0,
    "text": "DRAFT"
@@ -525,7 +525,7 @@
    "kind": "subheader",
    "ref": "sec_cider",
    "x": 324.0,
-   "y": 502.5,
+   "y": 513.49,
    "w": 27.52,
    "h": 9.0,
    "text": "CIDER"
@@ -534,7 +534,7 @@
    "kind": "item_name",
    "ref": "beta_czech_pilsner",
    "x": 324.0,
-   "y": 416.25,
+   "y": 439.24,
    "w": 69.16,
    "h": 13.5,
    "text": "Czech Pilsner"
@@ -543,7 +543,7 @@
    "kind": "price",
    "ref": "beta_czech_pilsner",
    "x": 558.46,
-   "y": 416.25,
+   "y": 439.24,
    "w": 5.54,
    "h": 13.5,
    "text": "7"
@@ -552,7 +552,7 @@
    "kind": "description",
    "ref": "beta_czech_pilsner",
    "x": 399.16,
-   "y": 418.5,
+   "y": 441.49,
    "w": 58.75,
    "h": 10.5,
    "text": "Crisp pale lager.",
@@ -562,7 +562,7 @@
    "kind": "item_name",
    "ref": "beta_dry_hopped_ipa",
    "x": 324.0,
-   "y": 440.25,
+   "y": 463.24,
    "w": 85.28,
    "h": 13.5,
    "text": "Dry-Hopped IPA"
@@ -571,7 +571,7 @@
    "kind": "price",
    "ref": "beta_dry_hopped_ipa",
    "x": 557.52,
-   "y": 440.25,
+   "y": 463.24,
    "w": 6.48,
    "h": 13.5,
    "text": "8"
@@ -580,7 +580,7 @@
    "kind": "description",
    "ref": "beta_dry_hopped_ipa",
    "x": 415.28,
-   "y": 442.5,
+   "y": 465.49,
    "w": 82.99,
    "h": 10.5,
    "text": "Hop-forward draft IPA.",
@@ -590,7 +590,7 @@
    "kind": "item_name",
    "ref": "beta_amber_lager",
    "x": 324.0,
-   "y": 464.25,
+   "y": 487.24,
    "w": 66.33,
    "h": 13.5,
    "text": "Amber Lager"
@@ -599,7 +599,7 @@
    "kind": "price",
    "ref": "beta_amber_lager",
    "x": 558.46,
-   "y": 464.25,
+   "y": 487.24,
    "w": 5.54,
    "h": 13.5,
    "text": "7"
@@ -608,7 +608,7 @@
    "kind": "description",
    "ref": "beta_amber_lager",
    "x": 396.33,
-   "y": 466.5,
+   "y": 489.49,
    "w": 71.68,
    "h": 10.5,
    "text": "Toasty amber lager.",
@@ -618,7 +618,7 @@
    "kind": "item_name",
    "ref": "beta_dry_cider",
    "x": 324.0,
-   "y": 524.25,
+   "y": 529.24,
    "w": 49.52,
    "h": 13.5,
    "text": "Dry Cider"
@@ -627,7 +627,7 @@
    "kind": "price",
    "ref": "beta_dry_cider",
    "x": 557.52,
-   "y": 524.25,
+   "y": 529.24,
    "w": 6.48,
    "h": 13.5,
    "text": "8"
@@ -636,7 +636,7 @@
    "kind": "description",
    "ref": "beta_dry_cider",
    "x": 379.52,
-   "y": 526.5,
+   "y": 531.49,
    "w": 70.51,
    "h": 10.5,
    "text": "Dry sparkling cider.",
@@ -646,9 +646,9 @@
    "kind": "card",
    "ref": "sec_wine",
    "x": 312.0,
-   "y": 561.0,
+   "y": 565.99,
    "w": 264.0,
-   "h": 204.0,
+   "h": 190.0,
    "n": 4,
    "featured": false
   },
@@ -656,15 +656,15 @@
    "kind": "card_face",
    "ref": "sec_wine",
    "x": 313.5,
-   "y": 562.5,
+   "y": 567.49,
    "w": 261.0,
-   "h": 58.5
+   "h": 74.5
   },
   {
    "kind": "header",
    "ref": "sec_wine",
    "x": 396.11,
-   "y": 601.5,
+   "y": 622.49,
    "w": 69.09,
    "h": 15.0,
    "text": "LA ROSA"
@@ -673,7 +673,7 @@
    "kind": "verse",
    "ref": "sec_wine",
    "x": 400.38,
-   "y": 573.75,
+   "y": 586.73,
    "w": 159.23,
    "h": 11.25,
    "text": "Rosita, Rosaura, ven que te quiero ver.",
@@ -683,7 +683,7 @@
    "kind": "gloss",
    "ref": "sec_wine",
    "x": 471.2,
-   "y": 605.25,
+   "y": 626.24,
    "w": 20.7,
    "h": 10.5,
    "text": "Wine"
@@ -692,15 +692,15 @@
    "kind": "figure",
    "ref": "sec_wine",
    "x": 319.5,
-   "y": 562.5,
+   "y": 567.49,
    "w": 72.0,
-   "h": 34.5
+   "h": 50.5
   },
   {
    "kind": "name_bar",
    "ref": "sec_wine",
    "x": 313.5,
-   "y": 597.0,
+   "y": 617.99,
    "w": 261.0,
    "h": 24.0,
    "text": "LA ROSA\nWine"
@@ -709,7 +709,7 @@
    "kind": "subheader",
    "ref": "sub_wine_by_the_glass",
    "x": 324.0,
-   "y": 634.5,
+   "y": 649.49,
    "w": 64.8,
    "h": 9.0,
    "text": "BY THE GLASS"
@@ -718,7 +718,7 @@
    "kind": "subheader",
    "ref": "sub_wine_sparkling",
    "x": 324.0,
-   "y": 718.5,
+   "y": 715.49,
    "w": 50.91,
    "h": 9.0,
    "text": "SPARKLING"
@@ -727,7 +727,7 @@
    "kind": "item_name",
    "ref": "beta_malbec",
    "x": 324.0,
-   "y": 656.25,
+   "y": 665.24,
    "w": 36.57,
    "h": 13.5,
    "text": "Malbec"
@@ -736,7 +736,7 @@
    "kind": "price",
    "ref": "beta_malbec",
    "x": 552.59,
-   "y": 656.25,
+   "y": 665.24,
    "w": 11.41,
    "h": 13.5,
    "text": "12"
@@ -745,7 +745,7 @@
    "kind": "description",
    "ref": "beta_malbec",
    "x": 366.57,
-   "y": 658.5,
+   "y": 667.49,
    "w": 48.23,
    "h": 10.5,
    "text": "Dry red wine.",
@@ -755,7 +755,7 @@
    "kind": "item_name",
    "ref": "beta_pinot_grigio",
    "x": 324.0,
-   "y": 680.25,
+   "y": 689.24,
    "w": 62.05,
    "h": 13.5,
    "text": "Pinot Grigio"
@@ -764,7 +764,7 @@
    "kind": "price",
    "ref": "beta_pinot_grigio",
    "x": 554.16,
-   "y": 680.25,
+   "y": 689.24,
    "w": 9.84,
    "h": 13.5,
    "text": "11"
@@ -773,7 +773,7 @@
    "kind": "description",
    "ref": "beta_pinot_grigio",
    "x": 392.05,
-   "y": 682.5,
+   "y": 691.49,
    "w": 56.05,
    "h": 10.5,
    "text": "Dry white wine.",
@@ -783,7 +783,7 @@
    "kind": "item_name",
    "ref": "beta_brut_rose",
    "x": 324.0,
-   "y": 740.25,
+   "y": 731.24,
    "w": 50.29,
    "h": 13.5,
    "text": "Brut Rosé"
@@ -792,7 +792,7 @@
    "kind": "price",
    "ref": "beta_brut_rose",
    "x": 553.14,
-   "y": 740.25,
+   "y": 731.24,
    "w": 10.86,
    "h": 13.5,
    "text": "13"
@@ -801,7 +801,7 @@
    "kind": "description",
    "ref": "beta_brut_rose",
    "x": 380.29,
-   "y": 742.5,
+   "y": 733.49,
    "w": 67.93,
    "h": 10.5,
    "text": "Dry sparkling rosé.",
@@ -817,15 +817,15 @@
    "featured": true,
    "box_pt": {
     "x": 36.0,
-    "y": 105.0,
+    "y": 138.0,
     "w": 264.0,
-    "h": 660.0
+    "h": 617.99
    },
    "edges_pt": {
     "left": 36.0,
-    "top": 105.0,
+    "top": 138.0,
     "right": 300.0,
-    "bottom": 765.0
+    "bottom": 755.99
    },
    "padding_pt": {
     "left": 0.0,
@@ -836,27 +836,27 @@
    "border_pt": 1.5,
    "face_pt": {
     "x": 37.5,
-    "y": 106.5,
+    "y": 139.5,
     "w": 261.0,
-    "h": 406.5
+    "h": 394.49
    },
    "figure_pt": {
     "x": 55.5,
-    "y": 148.5,
+    "y": 181.5,
     "w": 225.0,
-    "h": 322.5
+    "h": 310.49
    },
    "figure_drawn_pt": {
     "x": 55.5,
-    "y": 154.5,
+    "y": 187.5,
     "w": 225.0,
-    "h": 316.5
+    "h": 304.49
    },
-   "figure_share_of_face_height": 0.78,
+   "figure_share_of_face_height": 0.77,
    "verse_pt": 10.5,
    "name_bar_pt": {
     "x": 37.5,
-    "y": 477.0,
+    "y": 497.99,
     "w": 261.0,
     "h": 36.0
    },
@@ -865,10 +865,10 @@
    "verse_clipped": false,
    "gloss": "Cocktails",
    "row_ys_pt": {
-    "figure_top": 148.5,
-    "name_bar_top": 477.0,
-    "body_rule": 525.0,
-    "first_item_row": 549.0
+    "figure_top": 181.5,
+    "name_bar_top": 497.99,
+    "body_rule": 539.99,
+    "first_item_row": 557.99
    },
    "item_name_left_pt": [
     48.0
@@ -925,15 +925,15 @@
    "featured": false,
    "box_pt": {
     "x": 312.0,
-    "y": 105.0,
+    "y": 138.0,
     "w": 264.0,
-    "h": 204.0
+    "h": 190.0
    },
    "edges_pt": {
     "left": 312.0,
-    "top": 105.0,
+    "top": 138.0,
     "right": 576.0,
-    "bottom": 309.0
+    "bottom": 328.0
    },
    "padding_pt": {
     "left": 0.0,
@@ -944,27 +944,27 @@
    "border_pt": 1.5,
    "face_pt": {
     "x": 313.5,
-    "y": 106.5,
+    "y": 139.5,
     "w": 261.0,
-    "h": 58.5
+    "h": 74.5
    },
    "figure_pt": {
     "x": 319.5,
-    "y": 106.5,
+    "y": 139.5,
     "w": 72.0,
-    "h": 34.5
+    "h": 50.5
    },
    "figure_drawn_pt": {
     "x": 319.5,
-    "y": 109.5,
+    "y": 142.5,
     "w": 72.0,
-    "h": 31.5
+    "h": 47.5
    },
-   "figure_share_of_face_height": 0.54,
+   "figure_share_of_face_height": 0.64,
    "verse_pt": 9.0,
    "name_bar_pt": {
     "x": 313.5,
-    "y": 141.0,
+    "y": 190.0,
     "w": 261.0,
     "h": 24.0
    },
@@ -973,10 +973,10 @@
    "verse_clipped": false,
    "gloss": "Spirits",
    "row_ys_pt": {
-    "figure_top": 106.5,
-    "name_bar_top": 141.0,
-    "body_rule": 177.0,
-    "first_item_row": 201.0
+    "figure_top": 139.5,
+    "name_bar_top": 190.0,
+    "body_rule": 220.0,
+    "first_item_row": 238.0
    },
    "item_name_left_pt": [
     324.0
@@ -1025,15 +1025,15 @@
    "featured": false,
    "box_pt": {
     "x": 312.0,
-    "y": 321.0,
+    "y": 340.0,
     "w": 264.0,
-    "h": 228.0
+    "h": 214.0
    },
    "edges_pt": {
     "left": 312.0,
-    "top": 321.0,
+    "top": 340.0,
     "right": 576.0,
-    "bottom": 549.0
+    "bottom": 554.0
    },
    "padding_pt": {
     "left": 0.0,
@@ -1044,39 +1044,39 @@
    "border_pt": 1.5,
    "face_pt": {
     "x": 313.5,
-    "y": 322.5,
+    "y": 341.5,
     "w": 261.0,
-    "h": 58.5
+    "h": 74.5
    },
    "figure_pt": {
     "x": 319.5,
-    "y": 322.5,
+    "y": 341.5,
     "w": 72.0,
-    "h": 34.5
+    "h": 50.5
    },
    "figure_drawn_pt": {
     "x": 319.5,
-    "y": 325.5,
+    "y": 344.5,
     "w": 72.0,
-    "h": 31.5
+    "h": 47.5
    },
-   "figure_share_of_face_height": 0.54,
+   "figure_share_of_face_height": 0.64,
    "verse_pt": 9.0,
    "name_bar_pt": {
     "x": 313.5,
-    "y": 357.0,
+    "y": 391.99,
     "w": 261.0,
     "h": 24.0
    },
-   "space_below_name_bar_pt": 0.0,
+   "space_below_name_bar_pt": 0.01,
    "verse": "Tanto bebió el albañil, que quedó como barril.",
    "verse_clipped": false,
    "gloss": "Beer & Cider",
    "row_ys_pt": {
-    "figure_top": 322.5,
-    "name_bar_top": 357.0,
-    "body_rule": 393.0,
-    "first_item_row": 417.0
+    "figure_top": 341.5,
+    "name_bar_top": 391.99,
+    "body_rule": 421.99,
+    "first_item_row": 439.99
    },
    "item_name_left_pt": [
     324.0
@@ -1133,15 +1133,15 @@
    "featured": false,
    "box_pt": {
     "x": 312.0,
-    "y": 561.0,
+    "y": 565.99,
     "w": 264.0,
-    "h": 204.0
+    "h": 190.0
    },
    "edges_pt": {
     "left": 312.0,
-    "top": 561.0,
+    "top": 565.99,
     "right": 576.0,
-    "bottom": 765.0
+    "bottom": 755.99
    },
    "padding_pt": {
     "left": 0.0,
@@ -1152,27 +1152,27 @@
    "border_pt": 1.5,
    "face_pt": {
     "x": 313.5,
-    "y": 562.5,
+    "y": 567.49,
     "w": 261.0,
-    "h": 58.5
+    "h": 74.5
    },
    "figure_pt": {
     "x": 319.5,
-    "y": 562.5,
+    "y": 567.49,
     "w": 72.0,
-    "h": 34.5
+    "h": 50.5
    },
    "figure_drawn_pt": {
     "x": 319.5,
-    "y": 565.5,
+    "y": 570.49,
     "w": 72.0,
-    "h": 31.5
+    "h": 47.5
    },
-   "figure_share_of_face_height": 0.54,
+   "figure_share_of_face_height": 0.64,
    "verse_pt": 9.0,
    "name_bar_pt": {
     "x": 313.5,
-    "y": 597.0,
+    "y": 617.99,
     "w": 261.0,
     "h": 24.0
    },
@@ -1181,10 +1181,10 @@
    "verse_clipped": false,
    "gloss": "Wine",
    "row_ys_pt": {
-    "figure_top": 562.5,
-    "name_bar_top": 597.0,
-    "body_rule": 633.0,
-    "first_item_row": 657.0
+    "figure_top": 567.49,
+    "name_bar_top": 617.99,
+    "body_rule": 647.99,
+    "first_item_row": 665.99
    },
    "item_name_left_pt": [
     324.0
@@ -1229,119 +1229,119 @@
  "measured_checks": {
   "printed_ink_margins_pt": {
    "left": 36.0,
-   "top": 14.88,
+   "top": 36.0,
    "right": 36.0,
-   "bottom": 26.88
+   "bottom": 36.0
   },
   "page_margins_pt": {
-   "top": 15,
+   "top": 36,
    "right": 36,
-   "bottom": 15,
+   "bottom": 36,
    "left": 36
   },
   "card_edges_pt": {
    "1": {
     "left": 36.0,
-    "top": 105.0,
+    "top": 138.0,
     "right": 300.0,
-    "bottom": 765.0
+    "bottom": 755.99
    },
    "2": {
     "left": 312.0,
-    "top": 105.0,
+    "top": 138.0,
     "right": 576.0,
-    "bottom": 309.0
+    "bottom": 328.0
    },
    "3": {
     "left": 312.0,
-    "top": 321.0,
+    "top": 340.0,
     "right": 576.0,
-    "bottom": 549.0
+    "bottom": 554.0
    },
    "4": {
     "left": 312.0,
-    "top": 561.0,
+    "top": 565.99,
     "right": 576.0,
-    "bottom": 765.0
+    "bottom": 755.99
    }
   },
   "deck_within_margins": true,
   "no_card_overflow": true,
-  "max_empty_space_in_a_card_pt": 0.0,
-  "grid_origin_deck_top_pt": 105.0,
-  "cross_card_baseline_offsets_from_12pt_grid_pt": {
+  "max_empty_space_in_a_card_pt": 0.01,
+  "grid_origin_deck_top_pt": 138.0,
+  "cross_card_baseline_offsets_from_6pt_grid_pt": {
    "1": {
     "card_top": 0.0,
-    "name_bar_top": 0.0,
-    "name_bar_bottom": 0.0,
+    "name_bar_top": 0.01,
+    "name_bar_bottom": 0.01,
     "subheads": [
-     0.0,
-     0.0
+     0.01,
+     0.01
     ],
     "item_rows": [
-     0.0,
-     0.0,
-     0.0,
-     0.0
+     0.01,
+     0.01,
+     0.01,
+     0.01
     ]
    },
    "2": {
     "card_top": 0.0,
-    "name_bar_top": 0.0,
-    "name_bar_bottom": 0.0,
+    "name_bar_top": 2.0,
+    "name_bar_bottom": 2.0,
     "subheads": [
-     0.0,
-     0.0
+     2.0,
+     2.0
     ],
     "item_rows": [
-     0.0,
-     0.0,
-     0.0
+     2.0,
+     2.0,
+     2.0
     ]
    },
    "3": {
-    "card_top": 0.0,
-    "name_bar_top": 0.0,
-    "name_bar_bottom": 0.0,
+    "card_top": 2.0,
+    "name_bar_top": 1.99,
+    "name_bar_bottom": 1.99,
     "subheads": [
-     0.0,
-     0.0
+     1.99,
+     1.99
     ],
     "item_rows": [
-     0.0,
-     0.0,
-     0.0,
-     0.0
+     1.99,
+     1.99,
+     1.99,
+     1.99
     ]
    },
    "4": {
-    "card_top": 0.0,
-    "name_bar_top": 0.0,
-    "name_bar_bottom": 0.0,
+    "card_top": 1.99,
+    "name_bar_top": 0.01,
+    "name_bar_bottom": 0.01,
     "subheads": [
-     0.0,
-     0.0
+     0.01,
+     0.01
     ],
     "item_rows": [
-     0.0,
-     0.0,
-     0.0
+     0.01,
+     0.01,
+     0.01
     ]
    }
   },
-  "cross_card_baseline_alignment": true,
+  "cross_card_baseline_alignment": false,
   "card_bottoms_pt": {
-   "1": 765.0,
-   "2": 309.0,
-   "3": 549.0,
-   "4": 765.0
+   "1": 755.99,
+   "2": 328.0,
+   "3": 553.99,
+   "4": 755.99
   },
   "columns_end_same_baseline": true,
   "figure_share_of_face": {
-   "1": 0.78,
-   "2": 0.54,
-   "3": 0.54,
-   "4": 0.54
+   "1": 0.77,
+   "2": 0.64,
+   "3": 0.64,
+   "4": 0.64
   },
   "figures_at_least_40pct_of_face": true,
   "verse_pt": {
@@ -1381,7 +1381,7 @@
   ],
   "phone_png_px": [
    1170,
-   7467
+   7179
   ],
   "phone": {
    "scroll_width_px": 390,
@@ -1419,40 +1419,40 @@
   },
   "subhead_space_above_pt": {
    "1": [
-    24.75
+    12.75
    ],
    "2": [
-    24.0
+    12.0
    ],
    "3": [
-    24.0
+    12.0
    ],
    "4": [
-    24.0
+    12.0
    ]
   },
   "subhead_space_below_pt": {
    "1": [
-    12.0,
-    12.0
+    6.0,
+    6.0
    ],
    "2": [
-    12.0,
-    12.0
+    6.0,
+    6.0
    ],
    "3": [
-    12.0,
-    12.0
+    6.0,
+    6.0
    ],
    "4": [
-    12.0,
-    12.0
+    6.0,
+    6.0
    ]
   },
   "subhead_space_above_equal_every_card_0_5mm": true,
-  "subhead_space_above_is_24pt": false,
+  "subhead_space_above_is_12pt": false,
   "subhead_space_below_equal_every_card_0_5mm": true,
-  "subhead_space_below_is_12pt": true,
+  "subhead_space_below_is_6pt": true,
   "same_item_gap_across_cards": true,
   "price_box_heights_pt": [
    13.5
@@ -1476,6 +1476,7 @@
    "rosa_price_on_card": 5.41,
    "muted_serve_cue_on_featured": 6.7
   },
-  "all_contrast_4_5_or_more": true
+  "all_contrast_4_5_or_more": true,
+  "margins_equal_within_1mm": true
  }
 }

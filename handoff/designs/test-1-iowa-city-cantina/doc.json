@@ -1163,7 +1163,7 @@
       "gateway_query": "round 5 phg_designer_query (log_id 112) over public.beverage_categories; round 7 query log_id 130 (añejo, cognac, VSOP; rhum agricole excluded): cited rows 04d72e1f (Blanco / plata), 9f4dae69 (Añejo, nothing printable), a88f6e79 (Cognac) and bec5063c (VSOP). Beer, cider and wine lines are the draft menu_description words.",
       "manhattan_bitters": "Not printed: public_components aromatic-bitters = false (venue to confirm).",
       "brut_rose_price": "Printed under its own Espumoso (Sparkling) subheader, apart from the Por copa glass list, so it does not read as a glass price; the glass/bottle label is empty in the draft (question open).",
-      "card_layout": "1 + 3: columns 264 / 264 pt, 12 pt gutter; right cards 204 / 240 / 204 pt with 12 pt gaps = 672 pt = the featured card; everything on a 12 pt grid from the deck top",
+      "card_layout": "1 + 3: columns 264 / 264 pt, 12 pt gutter; right cards 190 / 214 / 190 pt (faces 74.5 pt) with 12 pt gaps = 618 pt = the featured card (face 394.5 pt); equal 36 pt page margins; rhythm: 12 pt item gap, 12 pt above / 6 pt below every subhead",
       "card_layout_r6": "3 x 2 portrait grid: featured column 196 pt, two 160 pt columns, 12 pt gutters. Classics and Brandy are separate one-item cards so every card stays a portrait with a full figure.",
       "retired_junmai_ginjo": "Retired Junmai Ginjo ($12) in phg.menu_items is not in the draft and is left off (please confirm).",
       "rosa": "Lotería rosa is one of the four card colours (La Rosa) and one of the four papel picado colours, like terracotta, agave and marigold; no other rosa accents.",

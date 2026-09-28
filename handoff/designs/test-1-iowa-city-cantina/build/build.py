@@ -111,7 +111,7 @@ def agave_leaves(cx, cy, r, f):
         o += f'<path d="M{cx-nx:.2f} {cy-ny:.2f} Q{(cx+tx)/2-nx*.7:.2f} {(cy+ty)/2-ny*.7:.2f} {tx:.2f} {ty:.2f} Q{(cx+tx)/2+nx*.7:.2f} {(cy+ty)/2+ny*.7:.2f} {cx+nx:.2f} {cy+ny:.2f} Z" fill="{f}"/>'
     return o
 
-def papel(n=11, W=540, H=24, cls="banner", dims='width="540pt" height="24pt"'):
+def papel(n=11, W=540, H=36, cls="banner", dims='width="540pt" height="36pt"'):
     cell = W / n; fw = cell - 6; cols = [P["terra"], P["mari"], P["agave"], P["rosa"]]
     o = [f'<svg class="{cls}" viewBox="0 0 {W} {H}" {dims} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">',
          f'<path d="M1 0.4 Q{W/2} 4 {W-1} 0.4" stroke="{P["ink"]}" stroke-width="0.8" fill="none"/>']
@@ -198,8 +198,8 @@ CSS = Template("""
 html, body { margin:0; padding:0; background:#d9d2c6; }
 body { -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:'DM Sans', sans-serif; color:$ink; }
 .c-terra { --c:$terra; --tint:#F3E3CB; } .c-agave { --c:$agave; --tint:#E4EBE2; } .c-ink { --c:$ink; --tint:#ECE4D6; } .c-rosa { --c:$rosa; --tint:#F7E3E8; }
-.page { width:612pt; height:792pt; padding:15pt 36pt; background:$cream; display:flex; flex-direction:column; margin:0 auto; }
-.banner { display:block; width:540pt; height:24pt; flex:none; }
+.page { width:612pt; height:792pt; padding:36pt; background:$cream; display:flex; flex-direction:column; margin:0 auto; }
+.banner { display:block; width:540pt; height:36pt; flex:none; }
 .banner-m, .tabs { display:none; }
 .title { font-family:'Fraunces', serif; font-weight:700; font-size:24pt; line-height:24pt; height:24pt; letter-spacing:-0.3pt; text-align:center; margin:18pt 0 0; }
 .title .amp { color:$terra; font-style:italic; font-weight:600; }
@@ -210,10 +210,10 @@ body { -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:'
 .card { position:relative; display:flex; flex-direction:column; background:$card; border:1.5pt solid var(--c); padding:0 0 10.5pt; }
 .featured { grid-column:1; grid-row:1 / span 3; }
 #card-2 { grid-column:2; grid-row:1; } #card-3 { grid-column:2; grid-row:2; } #card-4 { grid-column:2; grid-row:3; }
-.face { flex:none; height:58.5pt; display:flex; flex-direction:column; background:var(--tint); box-shadow: inset 0 0 0 3pt var(--tint), inset 0 0 0 3.75pt var(--c); }
+.face { flex:none; height:74.5pt; display:flex; flex-direction:column; background:var(--tint); box-shadow: inset 0 0 0 3pt var(--tint), inset 0 0 0 3.75pt var(--c); }
 .featured .face { flex:1 1 auto; height:auto; }
 .art { flex:1; min-height:0; display:flex; align-items:center; gap:6pt; padding:0 12pt 0 6pt; }
-.figure { position:relative; flex:none; width:72pt; height:34.5pt; }
+.figure { position:relative; flex:none; width:72pt; height:50.5pt; }
 .figure .fig { position:absolute; left:0; top:3pt; width:100%; height:calc(100% - 3pt); display:block; }
 .verse { margin:0; flex:1; text-align:center; font-family:'Fraunces', serif; font-style:italic; font-weight:400; font-size:9pt; line-height:12pt; color:$muted; text-wrap:balance; }
 .featured .art { flex-direction:column; align-items:stretch; padding:18pt 18pt 6pt; gap:0; }
@@ -224,9 +224,9 @@ body { -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:'
 .namebar h2 { margin:0; font-family:'Fraunces', serif; font-weight:700; font-size:12pt; line-height:24pt; letter-spacing:2pt; white-space:nowrap; }
 .gloss { font-family:'Fraunces', serif; font-style:italic; font-size:8.5pt; line-height:24pt; white-space:nowrap; opacity:.9; }
 .featured .namebar { height:36pt; } .featured .namebar h2 { font-size:16pt; line-height:36pt; letter-spacing:3pt; } .featured .gloss { font-size:10pt; line-height:36pt; }
-.body { flex:none; margin-top:12pt; padding:0 10.5pt; }
-.sub { display:flex; align-items:center; gap:6pt; height:12pt; margin-bottom:12pt; }
-.items + .sub { margin-top:24pt; }
+.body { flex:none; margin-top:6pt; padding:0 10.5pt; }
+.sub { display:flex; align-items:center; gap:6pt; height:12pt; margin-bottom:6pt; }
+.items + .sub { margin-top:12pt; }
 h3 { margin:0; font-size:7pt; line-height:12pt; letter-spacing:1.4pt; text-transform:uppercase; color:$ink; font-weight:700; white-space:nowrap; }
 .subrule { flex:1; border-top:0.75pt solid var(--c); }
 .item + .item { margin-top:12pt; }
@@ -266,7 +266,7 @@ h3 { margin:0; font-size:7pt; line-height:12pt; letter-spacing:1.4pt; text-trans
   .row { flex-wrap:wrap; height:auto; } .name, .price { font-size:18px; line-height:24px; }
   .desc { font-size:14.5px; line-height:20px; padding-right:24px; }
   .desc.in { order:3; flex-basis:100%; margin-left:0; white-space:normal; }
-  .item + .item { margin-top:12px; } .items + .sub { margin-top:24px; } .sub { margin-bottom:12px; }
+  .item + .item { margin-top:12px; } .items + .sub { margin-top:12px; } .sub { margin-bottom:6px; }
 }
 @media print { .tabs, .banner-m { display:none !important; } }
 """).substitute(P)
@@ -290,7 +290,7 @@ N = doc["meta"]["designer_notes"]
 N["concept"] = ("Lotería de la Cantina, 1 + 3 tabla: El Cantarito is the tall featured card filling the left column; La Botella, El Barril and La Rosa stack in the right column and end on the same baseline. "
                 "Every card has a face (framed tinted panel in its palette colour) holding a large cut-paper figure, the cantor verse (9 pt or larger) and the lotería name cartouche at its foot "
                 "(Spanish name + small English gloss, the one bilingual device); the drinks list sits below the face as the card's reverse. No ordinals. English-only subheaders.")
-N["card_layout"] = "1 + 3: columns 264 / 264 pt, 12 pt gutter; right cards 204 / 240 / 204 pt with 12 pt gaps = 672 pt = the featured card; everything on a 12 pt grid from the deck top"
+N["card_layout"] = "1 + 3: columns 264 / 264 pt, 12 pt gutter; right cards 190 / 214 / 190 pt (faces 74.5 pt) with 12 pt gaps = 618 pt = the featured card (face 394.5 pt); equal 36 pt page margins; rhythm: 12 pt item gap, 12 pt above / 6 pt below every subhead"
 N["sub_kickers"] = {sb["name"]: "(English only)" for s in new for sb in s["subs"]}
 N["rosa"] = "Lotería rosa is one of the four card colours (La Rosa) and one of the four papel picado colours, like terracotta, agave and marigold; no other rosa accents."
 N["ordinals"] = "Dropped in round 8 (read as wrong deck numbers)."

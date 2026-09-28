@@ -46,18 +46,18 @@ row_align = {f"row_{k+1}": {key: {c["n"]: c["row_ys_pt"][key] for c in rw} for k
 row_ok = all(len(set(v.values())) == 1 for r_ in row_align.values() for v in r_.values())
 DT = M["deck"]["y"] * PT
 def off(v):
-    m = (v * PT - DT) % 12; return r2(min(m, 12 - m))
+    m = (v * PT - DT) % 6; return r2(min(m, 6 - m))
 grid_offsets = {c["n"]: {"card_top": off(c["box"]["y"]), "name_bar_top": off(c["namebar"]["y"]), "name_bar_bottom": off(c["namebar"]["y"] + c["namebar"]["h"]),
                          "subheads": [off(s["y"]) for s in c["subboxes"]], "item_rows": [off(x["y"]) for x in c["rows"]]} for c in M["cards"]}
 cross_ok = all(v <= 0.3 for g in grid_offsets.values() for x in g.values() for v in (x if isinstance(x, list) else [x]))
 bottoms = {c["n"]: r2((c["box"]["y"] + c["box"]["h"]) * PT) for c in M["cards"]}
 checks = {
-    "printed_ink_margins_pt": R["ink"], "page_margins_pt": {"top": 15, "right": 36, "bottom": 15, "left": 36},
+    "printed_ink_margins_pt": R["ink"], "page_margins_pt": {"top": 36, "right": 36, "bottom": 36, "left": 36},
     "card_edges_pt": {c["n"]: c["edges_pt"] for c in cards},
     "deck_within_margins": all(c["edges_pt"]["left"] >= 35.9 and c["edges_pt"]["right"] <= 576.1 for c in cards),
     "no_card_overflow": all(c["space_below_name_bar_pt"] >= -0.5 for c in cards),
     "max_empty_space_in_a_card_pt": max(c["space_below_name_bar_pt"] for c in cards),
-    "grid_origin_deck_top_pt": r2(DT), "cross_card_baseline_offsets_from_12pt_grid_pt": grid_offsets, "cross_card_baseline_alignment": cross_ok, "card_bottoms_pt": bottoms, "columns_end_same_baseline": abs(bottoms[1] - max(v for k, v in bottoms.items() if k != 1)) <= 0.3, "figure_share_of_face": {c["n"]: c["figure_share_of_face_height"] for c in cards}, "figures_at_least_40pct_of_face": all(c["figure_share_of_face_height"] >= 0.4 for c in cards), "verse_pt": {c["n"]: c["verse_pt"] for c in cards}, "verses_9pt_or_larger": all(c["verse_pt"] >= 9 for c in cards), "no_ordinals": True, "title_clear_of_flags_pt": r2((M["title"]["y"] - M["banner"]["y"] - M["banner"]["h"]) * PT), "location_to_cards_pt": r2(DT - (M["loc"]["y"] + M["loc"]["h"]) * PT),
+    "grid_origin_deck_top_pt": r2(DT), "cross_card_baseline_offsets_from_6pt_grid_pt": grid_offsets, "cross_card_baseline_alignment": cross_ok, "card_bottoms_pt": bottoms, "columns_end_same_baseline": abs(bottoms[1] - max(v for k, v in bottoms.items() if k != 1)) <= 0.3, "figure_share_of_face": {c["n"]: c["figure_share_of_face_height"] for c in cards}, "figures_at_least_40pct_of_face": all(c["figure_share_of_face_height"] >= 0.4 for c in cards), "verse_pt": {c["n"]: c["verse_pt"] for c in cards}, "verses_9pt_or_larger": all(c["verse_pt"] >= 9 for c in cards), "no_ordinals": True, "title_clear_of_flags_pt": r2((M["title"]["y"] - M["banner"]["y"] - M["banner"]["h"]) * PT), "location_to_cards_pt": r2(DT - (M["loc"]["y"] + M["loc"]["h"]) * PT),
     
     "verses_unclipped": not any(c["verse_clipped"] for c in cards), "one_title_per_card": True,
     "no_card_more_than_12pt_empty": all(c["space_below_name_bar_pt"] <= 12 for c in cards),
@@ -87,20 +87,21 @@ RH = {c["n"]: rhythm(c) for c in M["cards"]}
 ab = [v for a, _ in RH.values() for v in a]; bl = [v for _, x in RH.values() for v in x]
 ph = [r2(i["price"]["h"] * PT) for c in M["cards"] for i in c["items"]]; nh = [r2(i["name"]["h"] * PT) for c in M["cards"] for i in c["items"]]
 checks.update({"subhead_space_above_pt": {n: a for n, (a, _) in RH.items()}, "subhead_space_below_pt": {n: x for n, (_, x) in RH.items()},
-    "subhead_space_above_equal_every_card_0_5mm": bool(ab) and (max(ab) - min(ab)) * MM <= 0.5, "subhead_space_above_is_24pt": all(abs(v - 24) <= 0.5 for v in ab),
-    "subhead_space_below_equal_every_card_0_5mm": (max(bl) - min(bl)) * MM <= 0.5, "subhead_space_below_is_12pt": all(abs(v - 12) <= 0.5 for v in bl),
+    "subhead_space_above_equal_every_card_0_5mm": bool(ab) and (max(ab) - min(ab)) * MM <= 0.5, "subhead_space_above_is_12pt": all(abs(v - 12) <= 0.5 for v in ab),
+    "subhead_space_below_equal_every_card_0_5mm": (max(bl) - min(bl)) * MM <= 0.5, "subhead_space_below_is_6pt": all(abs(v - 6) <= 0.5 for v in bl),
     "same_item_gap_across_cards": len({g for c in cards for g in c["item_gaps_pt"]}) <= 1,
     "price_box_heights_pt": sorted(set(ph)), "same_price_size_across_cards": spread(ph) <= 0.5, "same_item_name_size_across_cards": spread(nh) <= 0.5,
     "price_colour_per_card": {"1": PAL["terracotta"], "2": PAL["ink"], "3": PAL["agave"], "4": PAL["loteria_rosa"]},
     "contrast": {"cream_on_rosa_namebar": contrast(PAL["cream"], PAL["loteria_rosa"]), "cream_on_ink_namebar": contrast(PAL["cream"], PAL["ink"]), "cream_on_agave_namebar": contrast(PAL["cream"], PAL["agave"]), "cream_on_terracotta_namebar": contrast(PAL["cream"], PAL["terracotta"]),
                  "terracotta_price_on_featured": contrast(PAL["terracotta"], PAL["featured_card"]), "ink_price_on_card": contrast(PAL["ink"], PAL["card"]), "agave_price_on_card": contrast(PAL["agave"], PAL["card"]), "rosa_price_on_card": contrast(PAL["loteria_rosa"], PAL["card"]), "muted_serve_cue_on_featured": contrast(PAL["muted"], PAL["featured_card"])}})
 checks["all_contrast_4_5_or_more"] = all(v >= 4.5 for v in checks["contrast"].values())
+checks["margins_equal_within_1mm"] = (max(R["ink"].values()) - min(R["ink"].values())) * MM <= 1
 L = {"round": 10, "concept": N["concept"],
-     "page": {"size": "US Letter 8.5 x 11 in", "w_pt": 612, "h_pt": 792, "margins_pt": {"top": 15, "right": 36, "bottom": 15, "left": 36}, "bleed": "none (cream flood to trim, home/office print)"},
-     "grid": {"deck_pt": b(M["deck"]), "columns_pt": [264, 264], "gutter_pt": 12, "rows": "1 + 3: El Cantarito spans the left column (672 pt); right column La Botella 204, El Barril 240, La Rosa 204 with 12 pt gaps; one rhythm: 12 pt item gap, 24 pt above every subhead after the first, 12 pt below every subhead",
-              "card_anatomy": "1.5 pt frame in the card colour; face (58.5 pt on the right cards) = tinted panel with a 0.75 pt inset hairline in the card colour at 3 pt, figure (72 x 34.5 pt box on the right cards, full face width on the featured card), cantor verse Fraunces italic 9 pt (10.5 pt featured), name cartouche 24 pt (36 pt featured) at the foot of the face holding the Spanish name + English gloss; 12 pt gap; reverse = the drinks list; 10.5 pt bottom padding + 1.5 pt border = 12 pt"},
+     "page": {"size": "US Letter 8.5 x 11 in", "w_pt": 612, "h_pt": 792, "margins_pt": {"top": 36, "right": 36, "bottom": 36, "left": 36}, "bleed": "none (cream flood to trim, home/office print)"},
+     "grid": {"deck_pt": b(M["deck"]), "columns_pt": [264, 264], "gutter_pt": 12, "rows": "1 + 3: El Cantarito spans the left column (618 pt); right column La Botella 190, El Barril 214, La Rosa 190 with 12 pt gaps; one rhythm on every card: 12 pt item gap, 12 pt above every subhead after the first, 6 pt below every subhead, 6 pt from the name bar to the first subhead",
+              "card_anatomy": "1.5 pt frame in the card colour; face (74.5 pt on the right cards) = tinted panel with a 0.75 pt inset hairline in the card colour at 3 pt, figure (72 x 50.5 pt box on the right cards, full face width on the featured card), cantor verse Fraunces italic 9 pt (10.5 pt featured), name cartouche 24 pt (36 pt featured) at the foot of the face holding the Spanish name + English gloss; 12 pt gap; reverse = the drinks list; 10.5 pt bottom padding + 1.5 pt border = 12 pt"},
      "palette": PAL,
-     "type": {"display": "Fraunces 700 (title 24/24 pt, 18 pt below the 24 pt papel picado; card titles 12 pt caps 2 pt tracking in the name bar, one size on every card)", "ordinals": "none",
+     "type": {"display": "Fraunces 700 (title 24/24 pt, 18 pt below the 36 pt papel picado; card titles 12 pt caps 2 pt tracking in the name bar, one size on every card)", "ordinals": "none",
               "items": "Fraunces 600 10.5/12 pt (every card)", "prices": "Fraunces 600 lining tabular 10.5/12 pt on every card, in the card colour (terracotta, ink, agave, rosa)", "descriptions": "DM Sans 8/12 pt (every card); cocktails: character in ink, then the serve cue (glass, garnish) in italic muted #5A4A3F", "verse": "Fraunces italic 9/12 pt muted (featured 10.5/12)", "gloss": "Fraunces italic 8.5 pt in the cartouche (featured 10 pt)",
               "subheads": "DM Sans 700 caps 7/12 pt, English only, rule in the card colour", "name_bar": "24 pt bar; colours terracotta (El Cantarito), ink (La Botella), agave (El Barril), loteria rosa (La Rosa), cream text on all four; marigold only in the papel picado and figures", "body_baseline_pt": 12, "item_gap_pt": 12},
      "masthead": {"papel_picado_pt": b(M["banner"]), "title_pt": b(M["title"]), "location_pt": b(M["loc"]), "footer_pt": b(M["foot"])},
@@ -113,11 +114,11 @@ cs = N["copy_sources"]
 o = ['# TEST-1 round 10: "Cantina & Cocktail Bar", Iowa City (proposal v10, from round 8, loteria 1 + 3 tabla)', "",
      "Generated by `build/layout.py` from `doc.json` and the Chromium render (`build/measure.json`). needs_input = true (questions below).", "",
      "## Round 10 changes (from round 8)", "",
-     "- One vertical rhythm on all four cards: 12 pt item gap, 24 pt above every subhead after the first, 12 pt below every subhead (measured below). Right card faces 82.5 -> 58.5 pt and papel picado 36 -> 24 pt to make room; top/bottom page margins 36 -> 15 pt; El Cantarito's face absorbs the rest and its list ends level with La Rosa.",
+     "- One vertical rhythm on all four cards: 12 pt item gap, 12 pt above every subhead after the first, 6 pt below every subhead and 6 pt from the name bar to the first subhead (measured below). Equal 36 pt page margins on all four sides, 36 pt papel picado, right card faces 82.5 -> 74.5 pt; El Cantarito's face shrinks to fit and its list ends level with La Rosa.",
      "- One item-name size (Fraunces 600 10.5 pt) and one price size (10.5 pt) on every card; the featured card is signalled only by its tall face and larger cartouche.",
      "- Card colours: El Cantarito terracotta, La Botella ink, El Barril agave, La Rosa rosa #C2185B (cream text); each card's prices take its colour.",
      "- Cocktails: the draft character words first (ink), then a short serve cue (glass, garnish) in italic muted #5A4A3F; no bartender verbs.",
-     "- Masthead: title 12 pt below the flags; Iowa City, Iowa 12 pt above the cards.",
+     "- Masthead: title 18 pt below the flags; Iowa City, Iowa 12 pt above the cards.",
      "- " + N["concept"],
      "- Deck: EL CANTARITO (Classics: Margarita, Manhattan; then House Originals), LA BOTELLA (Agave: Blanco, Añejo; Brandy: Cognac VSOP), EL BARRIL (Draft + Cider), LA ROSA (By the Glass + Sparkling). No ordinals. Subheaders English only; the one bilingual device is the cartouche (Spanish name + English gloss).",
      "- Cantor verses are **cultural text** (traditional loteria caller rhymes), not item facts: " + "; ".join(f'{c["loteria_name"]}: \"{c["cantor_verse"]}\"' for c in N["cards"]) + ". The venue may drop them.",
@@ -129,7 +130,7 @@ o = ['# TEST-1 round 10: "Cantina & Cocktail Bar", Iowa City (proposal v10, from
 for c in cards:
     bx = c["box_pt"]
     o.append(f'| {c["loteria_name"]}{" (featured)" if c["featured"] else ""} | {c["gloss"]} | {bx["x"]}, {bx["y"]}, {bx["w"]}, {bx["h"]} | {c["face_pt"]["h"]} | {c["figure_drawn_pt"]["h"]} ({c["figure_share_of_face_height"]}) | {c["space_below_name_bar_pt"]} | {c["item_gaps_pt"]} |')
-o += ["", "Measured checks: " + "; ".join(f"{k} = {checks[k]}" for k in ("no_card_overflow", "no_card_more_than_12pt_empty", "cross_card_baseline_alignment", "columns_end_same_baseline", "figures_at_least_40pct_of_face", "verses_9pt_or_larger", "verses_unclipped", "one_12pt_baseline", "same_item_gap_every_card", "same_bottom_padding_every_card", "no_one_word_last_line_print", "no_one_word_last_line_phone", "deck_within_margins", "title_clear_of_flags_pt", "location_to_cards_pt", "subhead_space_above_pt", "subhead_space_below_pt", "subhead_space_above_equal_every_card_0_5mm", "same_price_size_across_cards", "same_item_name_size_across_cards", "all_contrast_4_5_or_more"))
+o += ["", "Measured checks: " + "; ".join(f"{k} = {checks[k]}" for k in ("no_card_overflow", "no_card_more_than_12pt_empty", "cross_card_baseline_alignment", "columns_end_same_baseline", "figures_at_least_40pct_of_face", "verses_9pt_or_larger", "verses_unclipped", "one_12pt_baseline", "same_item_gap_every_card", "same_bottom_padding_every_card", "no_one_word_last_line_print", "no_one_word_last_line_phone", "deck_within_margins", "title_clear_of_flags_pt", "location_to_cards_pt", "subhead_space_above_pt", "subhead_space_below_pt", "subhead_space_above_equal_every_card_0_5mm", "same_price_size_across_cards", "same_item_name_size_across_cards", "all_contrast_4_5_or_more", "margins_equal_within_1mm"))
       + f'. Printed ink margins (pt): {checks["printed_ink_margins_pt"]}. Accent contrast: {checks["accent_contrast"]["rosa_on_card"]}:1 on card, {checks["accent_contrast"]["rosa_on_featured"]}:1 on featured. '
       f'Phone: tab bar `{checks["phone"]["tab_bar_position"]}`, {checks["phone"]["tabs"]} tabs, all fit at 390 px: {checks["phone"]["all_tabs_fit_390"]}, page scroll width {checks["phone"]["scroll_width_px"]} px, single-column stack: {checks["phone"]["cards_stacked_single_column"]}.',
       "", "Subheader pairs: " + "; ".join(f"{k} / *{v}*" for k, v in N["sub_kickers"].items()) + ".", "",
