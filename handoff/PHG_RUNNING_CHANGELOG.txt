@@ -1116,3 +1116,21 @@ tough scale (best).
   Approved item names and prices are unchanged.
 2026-09-28 — K1v2 built on manifest v2: field carries the menu, 33 pours × 3 sizes, flights, glass/bottle, breweries; all gates pass (DOM diff 65 items, 0 text overlaps). The coordinator opened every page. 15-reviewer panel launched.
 2026-09-28 19:3xZ — the first K1v2 panel was killed by an API session limit (all 15 reviewers returned 429). Relaunched after the 18:00Z reset.
+
+------------------------------------------------------------------------------
+PHG-20260928-DI-NETLIFY | USER_PROMPT + PANEL | 2026-09-28
+Rob: "I'm still not pleased with the menu designs. The ChatGPT designer ... way better designs ... Deploy the
+most active version onto Netlify ... I want to be able to talk to Harmony and have her make these menus in the app directly"
+- K1v2 15-reviewer panel done: critic 62.3 / content 77.9 / accuracy 68.9 (2 gate fails: Manhattan bitters
+  missing; Vuelo Reserva highland/lowland reversed). Scorecard: designs/test-1-iowa-city-cantina/scores/K1V2_PANEL.md.
+- Netlify: the site is prismatic-rugelach-777e48 (production builds main; live is 18.49.7, main ee278f2).
+  Branch 18.49.12 smoke-loads clean (no page errors) and every edge function it calls is ACTIVE.
+  Pushing it to main was BLOCKED by the session permission gate (production deploy). Nothing was pushed to main.
+  Rob must either allow it or merge/push the branch's index.html + netlify.toml to main himself.
+- Diagnosis sent to Rob: the ChatGPT/reference designs are image-model painted art; ours are code-drawn vectors
+  (the critic ceiling is about 60-72). Fix = two layers (AI raster art with no text + exact HTML text on top).
+  Needs an image API key (Supabase secret) or the Canva download hosts allowed in the network policy.
+- Harmony in-app menu generation plan: phg-menu-design action 'generate' (menu content -> LLM brief/layout ->
+  image model art layer -> HTML text compose -> render -> proposal through the existing approval flow),
+  plus a Harmony intent ("make a menu for ...") -> Menu Studio Designer panel. Blocked on API keys
+  (ANTHROPIC_API_KEY + an image provider key as Supabase secrets, added by Rob) and approval to deploy the function.
