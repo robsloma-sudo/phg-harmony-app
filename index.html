@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.24 ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.25 FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -40633,6 +40633,62 @@ function loadKeys(){
   })();
 })();
 
+/* ---------- FIND A REAL VENUE'S MENU (18.49.25) ----------
+   "Show me Eatery A's menu in Des Moines, Iowa" -> search the PHG menu library
+   (phg-menu-corpus-browser) by the name's most distinctive word within the
+   city/state, rank candidates by normalised-name similarity ("Eatery A's" ==
+   "EATERY / A"), and open the best match in the library's full-screen viewer
+   over the Harmony view. Closing the viewer returns to Harmony. */
+var HVX_LOOKUP=/\b(show|pull up|open|find|get|bring up|see|look up|view|display|load)\b[^?.!]*\bmenus?\b/i;
+var HVX_LOOKUP_NOT=/\b(my|our|this|that|the) (own |current |new )?menus?\b(?!\s+(for|from|at|of)\b)|\bmenus? (you('| a)re|we('| a)re|i('| a)m) (working|making|building|designing)|\bmenu studio\b|\b(make|build|create|design|draft)\b/i;
+var US_STATES={alabama:'AL',alaska:'AK',arizona:'AZ',arkansas:'AR',california:'CA',colorado:'CO',connecticut:'CT',delaware:'DE',florida:'FL',georgia:'GA',hawaii:'HI',idaho:'ID',illinois:'IL',indiana:'IN',iowa:'IA',kansas:'KS',kentucky:'KY',louisiana:'LA',maine:'ME',maryland:'MD',massachusetts:'MA',michigan:'MI',minnesota:'MN',mississippi:'MS',missouri:'MO',montana:'MT',nebraska:'NE',nevada:'NV','new hampshire':'NH','new jersey':'NJ','new mexico':'NM','new york':'NY','north carolina':'NC','north dakota':'ND',ohio:'OH',oklahoma:'OK',oregon:'OR',pennsylvania:'PA','rhode island':'RI','south carolina':'SC','south dakota':'SD',tennessee:'TN',texas:'TX',utah:'UT',vermont:'VT',virginia:'VA',washington:'WA','west virginia':'WV',wisconsin:'WI',wyoming:'WY'};
+function normName(t){return String(t||'').toLowerCase().replace(/[’']s\b/g,'').replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').replace(/\b(the|restaurant|bar|grill|and)\b/g,' ').replace(/\s+/g,' ').trim();}
+function parseMenuLookup(q){
+  var t=String(q||'').replace(/^(?:(?:hey|ok|okay)[, ]+)?harmony[,.]?\s*/i,'').replace(/[?.!]+\s*$/,'').trim();
+  var city=null,state=null,m=t.match(/\s+(?:in|near|over in|out in)\s+([A-Za-z .'-]+?)(?:,\s*([A-Za-z .]+))?$/i);
+  if(m&&!/\bmenu\b/i.test(m[1])){
+    var a=m[1].trim(),b2=(m[2]||'').trim();
+    var sc=US_STATES[b2.toLowerCase()]||(/^[A-Za-z]{2}$/.test(b2)?b2.toUpperCase():null);
+    if(!sc&&US_STATES[a.toLowerCase()]){state=US_STATES[a.toLowerCase()];}
+    else{city=a.toUpperCase();state=sc;}
+    t=t.slice(0,m.index).trim();
+  }
+  var name=null,n1=t.match(/\bmenus?\s+(?:for|from|at|of)\s+(.+)$/i);
+  if(n1)name=n1[1];
+  else{var n2=t.match(/\b(?:show|pull up|open|find|get|bring up|see|look up|view|display|load)(?:\s+(?:me|us|up))?(?:\s+(?:the|a))?\s+(.+?)(?:[’']s|s[’'])?\s+(?:drinks?\s+|beverage\s+|cocktail\s+|food\s+|bar\s+|wine\s+|happy hour\s+)?menus?\b/i);if(n2)name=n2[1];}
+  if(name)name=name.replace(/^(?:the|a)\s+/i,'').trim();
+  return {name:name,city:city,state:state};
+}
+function nameScore(want,got){
+  var a=normName(want),b=normName(got);if(!a||!b)return 0;if(a===b)return 1;
+  var A=a.split(' '),B=b.split(' '),hit=0;A.forEach(function(w){if(B.indexOf(w)>=0)hit++;});
+  var j=hit/(A.length+B.length-hit);
+  if(b.indexOf(a)===0||a.indexOf(b)===0)j=Math.max(j,.8);
+  return j;
+}
+function harmonyFindMenu(q){
+  var ask=parseMenuLookup(q);
+  if(!ask.name){if(typeof agentSay==='function')agentSay('Which venue should I pull up? Say something like: show me Eatery A’s menu in Des Moines.');return;}
+  if(typeof corpusPost!=='function'){if(typeof agentSay==='function')agentSay('The menu library isn’t loaded yet.');return;}
+  var words=normName(ask.name).split(' ').filter(function(w){return w.length>=3;}).sort(function(x,y){return y.length-x.length;});
+  var term=words[0]||normName(ask.name);
+  var body={action:'list',kind:'rendered',q:term,limit:50,sign:'none',sort:'name'};
+  if(ask.city)body.city=[ask.city];if(ask.state)body.state=[ask.state];
+  window.PHG_PENDING=true;
+  corpusPost(body).then(function(j){
+    var rows=(j.rows||[]).map(function(r){return {r:r,name:(r.accounts&&r.accounts.account_name)||'',score:nameScore(ask.name,(r.accounts&&r.accounts.account_name)||'')};})
+      .filter(function(x){return x.score>=.5;})
+      .sort(function(x,y){return (y.score-x.score)||((y.r.ready_page_count||0)-(x.r.ready_page_count||0))||(String(y.r.updated_at||'')>String(x.r.updated_at||'')?1:-1);});
+    var where=(ask.city?corpusTitle(ask.city):'')+(ask.state?(ask.city?', ':'')+ask.state:'');
+    if(!rows.length){if(typeof agentSay==='function')agentSay('I couldn’t find '+ask.name+(where?' in '+where:'')+' in the menu library. The library covers Iowa, Colorado and New York venues we have captured so far.');return;}
+    var best=rows[0],same=rows.filter(function(x){return normName(x.name)===normName(best.name)&&(x.r.city||'')===(best.r.city||'');}).length;
+    if(typeof corpusView==='function')corpusView(best.r.id);
+    var nm=corpusTitle(best.name),pg=best.r.ready_page_count||best.r.page_count||0;
+    if(typeof agentSay==='function')agentSay('Here’s '+nm+' in '+corpusTitle(best.r.city||'')+(pg?', '+pg+' page'+(pg>1?'s':''):'')+'.'+(same>1?' I have '+same+' captured menus for them; this is the fullest one.':'')+' Pinch to zoom, and close it to come back to me.');
+  }).catch(function(e){if(typeof agentSay==='function')agentSay('I couldn’t reach the menu library: '+(e&&e.message||e));})
+    .then(function(){window.PHG_PENDING=false;});
+}
+
 /* ---------- CONVERSATION ROUTING (18.49.21) ----------
    In the Harmony view, ordinary conversation goes to Harmony's conversation
    brain (phg-harmony-attach in chat mode). Only business-report questions
@@ -40657,6 +40713,7 @@ if(typeof agentAnswer==='function'){
   agentAnswer=function(q){
     var inView=document.body.classList.contains('phg-view-open');
     if(inView&&HVX_NOTE.test(String(q||'')))return harmonyInboxSay(String(q||'').trim());
+    if(inView&&HVX_LOOKUP.test(String(q||''))&&!HVX_LOOKUP_NOT.test(String(q||''))&&parseMenuLookup(q).name)return harmonyFindMenu(String(q||'').trim());
     if(inView&&!HVX_FIN.test(String(q||''))){
       if(typeof harmonyCoreControl==='function'&&harmonyCoreControl(q))return;
       return harmonyChat(String(q||'').trim());

@@ -1383,3 +1383,17 @@ Rob: "Now let's build the action shortcut button."
 - Tested headless with the inbox stubbed: deep link opened view + ran "make a menu" + cleaned URL; note
   routed to inbox; Notes and key panels render and call the right actions; zero page errors.
   NOT live-tested: the deployed inbox/OpenAI routing (supabase.co blocked from this container).
+
+------------------------------------------------------------------------------
+PHG-20260928-FINDMENU | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.25, branch)
+Rob (screenshot: "show me Eatery A's menu in Des Moines, Iowa" -> "I can't pull up specific menus"):
+"I want to be able to pull up specific menus to view."
+- In the Harmony view, "show / pull up / open / find ... <venue>'s menu | menu for/at <venue> [in <city>, <state>]"
+  -> parseMenuLookup (name, city, state; state names -> codes; trailing place only after in/near) ->
+  phg-menu-corpus-browser list (q = longest name word, city/state filters, 50 rows) -> rank by normalised-name
+  similarity (drops 's, punctuation, "the/restaurant/bar/grill/and"; "Eatery A's" == "EATERY / A") -> opens the
+  best match (most ready pages, newest) in the Menu Library's full-screen zoom viewer over the Harmony view;
+  she says what she opened and how many captures exist. Not found -> says so and notes IA/CO/NY coverage.
+- Data check: "EATERY / A", Des Moines IA exists (documents 16950, 16935; 1 page each, menu_kind 'unread').
+- Tested headless with the corpus stubbed with those rows: search q=eatery city=DES MOINES state=IA, opened
+  16950, spoken summary, close returns to the view; zero page errors.
