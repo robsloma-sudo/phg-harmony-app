@@ -1523,3 +1523,13 @@ another copy clickable string of text."
   x-api-key. Live check via pg_net with x-api-key and an unknown key -> 401 "isn't valid anymore" (lookup ran).
 - Headless check at 375px: no horizontal overflow (scrollWidth = clientWidth 351), panel scrolls (1686 > 592),
   all 6 chips copy the right strings, zero page errors.
+
+------------------------------------------------------------------------------
+PHG-20260928-DEPLOY-4930 | USER_PROMPT + DEPLOY | 2026-09-28 22:39Z
+Rob: "Okay, deploy."
+- Pushed index.html (+ netlify.toml, manifest, icons unchanged) from the branch onto origin/main as 9946a81
+  (builds 18.49.28-18.49.30: Harmony data canvas + phg-harmony-data, NOM map snap, Action button fixes, live
+  tap-to-copy Shortcut setup page). Netlify production deploy 6abaec43f4457d000816ad73: ready, published
+  2026-09-28T22:39:31Z, commit 9946a81 (took ~6 min to start; a manual upload attempt through the Netlify connector
+  got 403 from this container and was not needed).
+- Server pieces were already live: phg-harmony-data v1, phg-harmony-inbox v4, migration harmony_inbox_db.
