@@ -1,0 +1,634 @@
+{
+ "title": "TEST-1 Iowa City cantina — EXPANDED content manifest v1",
+ "status": "PROPOSED. Not in phg.menu_items. Rob must approve every PROPOSED/rob_reference_image row before production; approved_db rows are unchanged.",
+ "status_legend": {
+  "approved_db": "approved in phg.menu_items (seed/sample content)",
+  "rob_reference_image": "shown in Rob's six-panel reference image, not yet in DB",
+  "PROPOSED_needs_rob_approval": "new proposal by the design lead for Rob's approval"
+ },
+ "pour_size": "1.5 oz proposed standard pour (not established)",
+ "spirits_count": 25,
+ "price_basis": "Tequila pour prices = rounded median single-pour price for that brand across current menus in the PHG corpus (public.menu_item_brands, section_type=spirits, $5–40). Expression-agnostic, so a blanco may be over-priced vs the brand median. Mezcal prices are placeholders.",
+ "iowa_basis": "iowa_accounts = public.v_brand_geography_presence distinct accounts in IA",
+ "region_note": "region filled only where the design lead is confident; verify before print",
+ "ingredient_order": "base spirit → modifier/liqueur → sweetener → citrus → bitters → soda/lengthener → other; garnish separate",
+ "cocktails": {
+  "Clásicos · Classics": [
+   {
+    "name": "Margarita",
+    "price": 15,
+    "status": "approved_db",
+    "sensory": "Bright and citrus-forward",
+    "sensory_status": "db_menu_description",
+    "ingredients": [
+     "tequila blanco",
+     "orange liqueur",
+     "agave syrup",
+     "fresh lime"
+    ],
+    "garnish": "lime wheel",
+    "glass": "rocks",
+    "source": "phg.menu_items + rv f06abb74"
+   },
+   {
+    "name": "Paloma",
+    "price": 12,
+    "status": "rob_reference_image",
+    "sensory": "Tart grapefruit, salted edge",
+    "sensory_status": "draft_not_tasted",
+    "ingredients": [
+     "tequila blanco",
+     "fresh lime",
+     "grapefruit soda"
+    ],
+    "garnish": "salt rim",
+    "glass": "highball",
+    "source": "Rob six-panel ref (ingredients as displayed: tequila, grapefruit, lime, soda); order by role"
+   },
+   {
+    "name": "Ranch Water",
+    "price": 11.5,
+    "status": "rob_reference_image",
+    "sensory": "Dry, bracing, lime-bright",
+    "sensory_status": "draft_not_tasted",
+    "ingredients": [
+     "tequila blanco",
+     "fresh lime",
+     "sparkling mineral water"
+    ],
+    "garnish": "lime wedge",
+    "glass": "highball",
+    "source": "Rob six-panel ref (tequila, lime, soda)"
+   },
+   {
+    "name": "Manhattan",
+    "price": 15,
+    "status": "approved_db",
+    "sensory": "Deep, spiced, silky",
+    "sensory_status": "draft_not_tasted",
+    "ingredients": [
+     "rye whiskey",
+     "sweet vermouth"
+    ],
+    "garnish": "cocktail cherry",
+    "glass": "coupe",
+    "source": "phg.menu_items + rv 9fb77eaa (bitters hidden: public_components)"
+   },
+   {
+    "name": "Batanga",
+    "price": 11,
+    "status": "PROPOSED_needs_rob_approval",
+    "sensory": "Cola-dark, salty, sharp lime",
+    "sensory_status": "draft_not_tasted",
+    "ingredients": [
+     "tequila blanco",
+     "fresh lime",
+     "Mexican cola"
+    ],
+    "garnish": "salt rim",
+    "glass": "highball",
+    "source": "PROPOSED classic (Tequila town, Jalisco); price proposed"
+   },
+   {
+    "name": "Carajillo",
+    "price": 13,
+    "status": "PROPOSED_needs_rob_approval",
+    "sensory": "Espresso, vanilla, bittersweet",
+    "sensory_status": "draft_not_tasted",
+    "ingredients": [
+     "Licor 43",
+     "fresh espresso"
+    ],
+    "garnish": null,
+    "glass": "rocks",
+    "source": "PROPOSED classic Mexican digestif; price proposed"
+   }
+  ],
+  "De la Casa · House": [
+   {
+    "name": "Brown Butter Old Fashioned",
+    "price": 16,
+    "status": "approved_db",
+    "sensory": "Nutty, round, warm",
+    "sensory_status": "draft_not_tasted",
+    "ingredients": [
+     "brown butter-washed bourbon",
+     "house demerara syrup",
+     "aromatic bitters"
+    ],
+    "garnish": "orange peel",
+    "glass": "rocks",
+    "source": "phg.menu_items + rv 7095fd3d (dairy allergen unconfirmed: needs_input 1)"
+   },
+   {
+    "name": "House Daiquiri",
+    "price": 14,
+    "status": "approved_db",
+    "sensory": "Crisp, clean, lightly rich",
+    "sensory_status": "draft_not_tasted",
+    "ingredients": [
+     "white rum",
+     "house demerara syrup",
+     "fresh lime"
+    ],
+    "garnish": "lime coin",
+    "glass": "coupe",
+    "source": "phg.menu_items + rv 14d45e57"
+   },
+   {
+    "name": "Mezcal Negroni",
+    "price": 15,
+    "status": "rob_reference_image",
+    "sensory": "Smoke, bitter orange, velvet",
+    "sensory_status": "draft_not_tasted",
+    "ingredients": [
+     "mezcal",
+     "Campari",
+     "sweet vermouth"
+    ],
+    "garnish": "orange peel",
+    "glass": "rocks",
+    "source": "Rob six-panel ref"
+   },
+   {
+    "name": "Spicy Pineapple Margarita",
+    "price": 13,
+    "status": "rob_reference_image",
+    "sensory": "Green heat, ripe pineapple",
+    "sensory_status": "draft_not_tasted",
+    "ingredients": [
+     "jalapeño-infused tequila blanco",
+     "fresh pineapple"
+    ],
+    "garnish": null,
+    "glass": "rocks",
+    "source": "Rob six-panel ref (as displayed; confirm liqueur/citrus)"
+   },
+   {
+    "name": "Milpa Old Fashioned",
+    "price": 15,
+    "status": "PROPOSED_needs_rob_approval",
+    "sensory": "Toasted corn, cacao, oak",
+    "sensory_status": "draft_not_tasted",
+    "ingredients": [
+     "reposado tequila",
+     "house roasted-corn syrup",
+     "mole bitters"
+    ],
+    "garnish": "orange peel",
+    "glass": "rocks",
+    "source": "PROPOSED signature: Iowa corn x Jalisco agave; recipe to be written and costed"
+   },
+   {
+    "name": "Loess",
+    "price": 14,
+    "status": "PROPOSED_needs_rob_approval",
+    "sensory": "Soft smoke, honey, ginger snap",
+    "sensory_status": "draft_not_tasted",
+    "ingredients": [
+     "mezcal espadín",
+     "Iowa wildflower honey syrup",
+     "fresh lemon",
+     "ginger"
+    ],
+    "garnish": "candied ginger",
+    "glass": "rocks",
+    "source": "PROPOSED signature (Penicillin structure); recipe to be written and costed"
+   }
+  ]
+ },
+ "spirits": {
+  "Casa · House pours": [
+   {
+    "name": "Blanco Tequila",
+    "price": 12,
+    "status": "approved_db",
+    "cls": "blanco",
+    "nom": null,
+    "region": null,
+    "iowa_accounts": null,
+    "price_evidence": null,
+    "note": "",
+    "sensory": "Unaged · peppery, bright cooked agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Añejo Tequila",
+    "price": 16,
+    "status": "approved_db",
+    "cls": "añejo",
+    "nom": null,
+    "region": null,
+    "iowa_accounts": null,
+    "price_evidence": null,
+    "note": "",
+    "sensory": "1–3 years oak · caramel, dried fruit, baking spice",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Cognac VSOP",
+    "price": 18,
+    "status": "approved_db",
+    "cls": "cognac VSOP",
+    "nom": null,
+    "region": null,
+    "iowa_accounts": null,
+    "price_evidence": null,
+    "note": "",
+    "sensory": "4+ years oak · stone fruit, toffee",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   }
+  ],
+  "Tequila · Blanco": [
+   {
+    "name": "Espolòn Blanco",
+    "price": 11,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "blanco",
+    "nom": "1440",
+    "region": null,
+    "iowa_accounts": 392,
+    "price_evidence": "corpus median $11, n=4",
+    "note": "",
+    "sensory": "Unaged · peppery, bright cooked agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Olmeca Altos Plata",
+    "price": 12,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "blanco",
+    "nom": "1111",
+    "region": "Los Altos",
+    "iowa_accounts": 249,
+    "price_evidence": "median $12, n=1 (thin)",
+    "note": "",
+    "sensory": "Unaged · peppery, bright cooked agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Milagro Silver",
+    "price": 12,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "blanco",
+    "nom": "1559",
+    "region": null,
+    "iowa_accounts": 272,
+    "price_evidence": "median $12.50, n=4",
+    "note": "",
+    "sensory": "Unaged · peppery, bright cooked agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Patrón Silver",
+    "price": 12,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "blanco",
+    "nom": "1492",
+    "region": "Los Altos",
+    "iowa_accounts": 1288,
+    "price_evidence": "median $11.50, n=14",
+    "note": "",
+    "sensory": "Unaged · peppery, bright cooked agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Siete Leguas Blanco",
+    "price": 12,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "blanco",
+    "nom": "1120",
+    "region": "Los Altos",
+    "iowa_accounts": null,
+    "price_evidence": "median $11.99, n=3",
+    "note": "Iowa availability not in brand graph",
+    "sensory": "Unaged · peppery, bright cooked agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Casamigos Blanco",
+    "price": 16,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "blanco",
+    "nom": "1609",
+    "region": null,
+    "iowa_accounts": 490,
+    "price_evidence": "median $16, n=29",
+    "note": "",
+    "sensory": "Unaged · peppery, bright cooked agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Don Julio Blanco",
+    "price": 18,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "blanco",
+    "nom": "1449",
+    "region": "Los Altos",
+    "iowa_accounts": 946,
+    "price_evidence": "median $17.99, n=23",
+    "note": "",
+    "sensory": "Unaged · peppery, bright cooked agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   }
+  ],
+  "Tequila · Reposado": [
+   {
+    "name": "Hornitos Reposado",
+    "price": 9,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "reposado",
+    "nom": "1102",
+    "region": null,
+    "iowa_accounts": 650,
+    "price_evidence": "median $9.49, n=2",
+    "note": "",
+    "sensory": "2–12 months oak · vanilla, softened agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Cazadores Reposado",
+    "price": 10,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "reposado",
+    "nom": "1487",
+    "region": "Los Altos",
+    "iowa_accounts": 250,
+    "price_evidence": "median $10, n=3",
+    "note": "",
+    "sensory": "2–12 months oak · vanilla, softened agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Teremana Reposado",
+    "price": 13,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "reposado",
+    "nom": "1613",
+    "region": null,
+    "iowa_accounts": 851,
+    "price_evidence": "median $12.50, n=8",
+    "note": "",
+    "sensory": "2–12 months oak · vanilla, softened agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Corralejo Reposado",
+    "price": 13,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "reposado",
+    "nom": "1368",
+    "region": "Guanajuato",
+    "iowa_accounts": 183,
+    "price_evidence": "median $13.49, n=4",
+    "note": "",
+    "sensory": "2–12 months oak · vanilla, softened agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Casa Noble Reposado",
+    "price": 15,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "reposado",
+    "nom": null,
+    "region": null,
+    "iowa_accounts": null,
+    "price_evidence": "median $14.99, n=4",
+    "note": "NOM missing in brand graph",
+    "sensory": "2–12 months oak · vanilla, softened agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Herradura Reposado",
+    "price": 18,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "reposado",
+    "nom": "1119",
+    "region": "Tequila Valley",
+    "iowa_accounts": 130,
+    "price_evidence": "median $17.99, n=5",
+    "note": "",
+    "sensory": "2–12 months oak · vanilla, softened agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Fortaleza Reposado",
+    "price": 20,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "reposado",
+    "nom": "1493",
+    "region": "Tequila Valley",
+    "iowa_accounts": null,
+    "price_evidence": "median $20, n=3",
+    "note": "Iowa availability not in brand graph",
+    "sensory": "2–12 months oak · vanilla, softened agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Clase Azul Reposado",
+    "price": 26,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "reposado",
+    "nom": "1595",
+    "region": null,
+    "iowa_accounts": 218,
+    "price_evidence": "median $25.50, n=8",
+    "note": "",
+    "sensory": "2–12 months oak · vanilla, softened agave",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   }
+  ],
+  "Tequila · Añejo": [
+   {
+    "name": "Tres Generaciones Añejo",
+    "price": 20,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "añejo",
+    "nom": "1102",
+    "region": "Tequila Valley",
+    "iowa_accounts": 82,
+    "price_evidence": "median $20, n=3",
+    "note": "",
+    "sensory": "1–3 years oak · caramel, dried fruit, baking spice",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Don Julio 1942",
+    "price": 25,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "añejo",
+    "nom": "1449",
+    "region": "Los Altos",
+    "iowa_accounts": null,
+    "price_evidence": "median $25, n=1 (thin)",
+    "note": "",
+    "sensory": "1–3 years oak · caramel, dried fruit, baking spice",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "El Tesoro Añejo",
+    "price": 26,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "añejo",
+    "nom": "1139",
+    "region": "Los Altos",
+    "iowa_accounts": null,
+    "price_evidence": "median $26, n=2 (thin)",
+    "note": "",
+    "sensory": "1–3 years oak · caramel, dried fruit, baking spice",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   }
+  ],
+  "Mezcal": [
+   {
+    "name": "Del Maguey Vida",
+    "price": 11,
+    "status": "rob_reference_image",
+    "cls": "mezcal espadín",
+    "nom": null,
+    "region": "Oaxaca",
+    "iowa_accounts": null,
+    "price_evidence": "Rob six-panel ref $11",
+    "note": "not in PHG brand graph (tequila-only)",
+    "sensory": "Pit-roasted espadín · smoke, green fruit",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Montelobos Espadín",
+    "price": 12,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "mezcal espadín",
+    "nom": null,
+    "region": "Oaxaca",
+    "iowa_accounts": null,
+    "price_evidence": null,
+    "note": "PRICE PLACEHOLDER; not in brand graph",
+    "sensory": "Pit-roasted espadín · smoke, green fruit",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "Ilegal Joven",
+    "price": 13,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "mezcal espadín joven",
+    "nom": null,
+    "region": "Oaxaca",
+    "iowa_accounts": null,
+    "price_evidence": null,
+    "note": "PRICE PLACEHOLDER; not in brand graph",
+    "sensory": "Unaged, pit-roasted · smoke, citrus peel",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   },
+   {
+    "name": "400 Conejos Espadín",
+    "price": 10,
+    "status": "PROPOSED_needs_rob_approval",
+    "cls": "mezcal espadín",
+    "nom": null,
+    "region": "Oaxaca",
+    "iowa_accounts": null,
+    "price_evidence": null,
+    "note": "PRICE PLACEHOLDER; not in brand graph",
+    "sensory": "Pit-roasted espadín · smoke, green fruit",
+    "sensory_status": "class-level (NOM-006 age classes); draft, not tasted"
+   }
+  ]
+ },
+ "beer_cider": {
+  "De barril · Draft": [
+   {
+    "name": "Czech Pilsner",
+    "price": 7,
+    "status": "approved_db",
+    "sensory": "Crisp pale lager"
+   },
+   {
+    "name": "Dry-Hopped IPA",
+    "price": 8,
+    "status": "approved_db",
+    "sensory": "Hop-forward draft IPA"
+   },
+   {
+    "name": "Amber Lager",
+    "price": 7,
+    "status": "approved_db",
+    "sensory": "Toasty amber lager"
+   },
+   {
+    "name": "Modelo Especial",
+    "price": 7,
+    "status": "rob_reference_image",
+    "sensory": "Mexican pilsner-style lager, clean and light"
+   }
+  ],
+  "En lata · Cans": [
+   {
+    "name": "Tecate",
+    "price": 5,
+    "status": "rob_reference_image",
+    "sensory": "Light Mexican lager"
+   }
+  ],
+  "Sidra · Cider": [
+   {
+    "name": "Dry Cider",
+    "price": 8,
+    "status": "approved_db",
+    "sensory": "Dry sparkling cider"
+   }
+  ]
+ },
+ "wine": {
+  "Por copa · By the glass": [
+   {
+    "name": "Malbec",
+    "price": 12,
+    "status": "approved_db",
+    "sensory": "Dry red wine"
+   },
+   {
+    "name": "Pinot Grigio",
+    "price": 11,
+    "status": "approved_db",
+    "sensory": "Dry white wine"
+   }
+  ],
+  "Espumosos · Sparkling": [
+   {
+    "name": "Brut Rosé",
+    "price": 13,
+    "status": "approved_db",
+    "sensory": "Dry sparkling rosé",
+    "note": "glass or bottle unknown (needs_input 5)"
+   }
+  ]
+ },
+ "zero_proof": {
+  "Sin alcohol · Zero proof": [
+   {
+    "name": "Nojito",
+    "price": 7,
+    "status": "rob_reference_image",
+    "sensory": "Mint, lime, soda"
+   },
+   {
+    "name": "Agua de Jamaica",
+    "price": 5,
+    "status": "PROPOSED_needs_rob_approval",
+    "sensory": "Tart hibiscus, lightly sweet"
+   },
+   {
+    "name": "Horchata",
+    "price": 5,
+    "status": "PROPOSED_needs_rob_approval",
+    "sensory": "Rice, cinnamon, creamy"
+   },
+   {
+    "name": "Jarritos",
+    "price": 4,
+    "status": "rob_reference_image",
+    "sensory": "Mexican fruit soda; ask for flavors"
+   }
+  ]
+ }
+}

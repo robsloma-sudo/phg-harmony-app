@@ -1071,3 +1071,15 @@ tough scale (best).
   lists; citrus before sweetener). Not paneled; sent back as round-20b with DB-role ordering and garnish separated.
 2026-09-28 — TEST-1 round-20b full panel: critic 68.5 / content 74.6 / accuracy 66.2 / combined 69.8; 15/15 gates pass.
   r17 (74.1) stays the best checkpoint. Consensus fixes are logged in scores/NOTES.md and round 21 is launched.
+2026-09-28 — Rob: "think outside the box… upper-echelon high-concept design… expand cocktails and descriptions… ~25 spirit pours."
+  Created handoff/designs/test-1-iowa-city-cantina/expanded-v1/:
+  - manifest.json (PROPOSED; not in DB): 12 cocktails, 25 spirit pours, 6 beer/cider, 3 wine, 4 zero-proof. Every row
+    carries a status (approved_db / rob_reference_image / PROPOSED).
+    - Tequila pours are chosen from the PHG brand graph (public.brands NOM; v_brand_geography_presence Iowa accounts).
+      Prices are the corpus median single-pour price per brand (menu_item_brands, spirits sections).
+    - Mezcal is not in the brand graph (tequila-only), so its prices are placeholders.
+    - Sensory lines are drafts, not tasted; spirit lines are class-level (NOM-006 age classes).
+  - CONCEPT_BRIEF.md: three structurally different directions where the image carries information —
+    K1 HILERAS (aerial field survey; Tufte spirits table), K2 EL RELOJ (sun-clock evening arc; oak-age star ladder),
+    K3 MAPA DE SABOR (two-axis flavor field plus small multiples).
+  Round 21 (incremental 20b fixes) continues as the control/baseline arm.
