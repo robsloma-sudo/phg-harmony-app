@@ -221,3 +221,17 @@ Non-blocking:
     verbatim).
 - Found in rehearsal: the promotion queue is empty today (the 6,760 promotion_ready rows are food pages the view
   excludes), so the promote test re-staged one incident sibling page -> duplicate_of_current, no menu created.
+
+## Round 3 (2026-09-28, commit 6b764f8)
+| Reviewer | R1 | R2 | R3 | Average | Gate (>80) |
+|---|---|---|---|---|---|
+| Spec | 62.5 | 76.7 | 86.3 | 75.2 | not met (R4+R5 need avg >= 87.3) |
+| Safety | 78 | 78 | 82.7 | 79.6 | not met (R4 >= 84) |
+Both: no blockers. Spec per-criterion R3: C1 88, C2 88, C3 92, C4 92, C5 93, C6 90, C7 85, C8 88, C9 88, C10 85,
+C11 82, C12 86, C13 85, C14 85, C15 85, C16 84, C17 75, C18 82.
+Safety per-area R3: data 88, correctness 82, concurrency 80, performance 86, security 76, reversibility 84.
+C18 text (for the record): "Score-gate migration 20260928030000 is correct, reversible, rehearsed, and not applied as
+part of the PHG-026 publish."
+Already fixed after round 3 (applied live, 20260928052000): SF9 / C17 designer denylist bypass - string-executing
+functions (*_to_xml, ts_stat, ts_rewrite, xmltable) and U&/UESCAPE refused, and pg_advisory_unlock_all() after every
+call (success and error); rehearsed: bypasses refused, normal reads OK, 0 advisory locks left.
