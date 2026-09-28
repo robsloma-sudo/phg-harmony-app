@@ -1090,3 +1090,9 @@ tough scale (best).
      Recommend removing the Iowa-accounts star sizing (internal distribution data) from the guest menu.
   K3 MAPA DE SABOR (flavor field + numbered index; 25 small-multiple cards). Front p:s 21.5, accent 14.7%.
   All three are sent to Rob. Next: the 15-reviewer panel on K1, K2, K3 and round 21 (control).
+2026-09-28 — K2 full panel: critic 61.3 / content 71.7 / accuracy 67.4 → 66.8. 10/15 reviewers had a gate fail.
+  Reasons: mezcal placed at 0 months in oak without a source; placeholder prices printed as firm; Ilegal Joven
+  sensory line attaches to the wrong row; Iowa-accounts discs are internal data and not area-true.
+  K3 phone map render bug (glyphs unscaled, blacking out the field) found by the K3 phone critic. The coordinator had
+  sent the phone parts to Rob without inspecting them (process miss: always open every render before sending).
+  Sent back to the K3 builder for a fix.
