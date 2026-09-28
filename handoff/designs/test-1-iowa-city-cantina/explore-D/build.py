@@ -134,24 +134,25 @@ def plate(n, sec, sub, it):
     show_qty = it["meta"]["public_visibility"].get("house_recipe", True)
     garn = [c for c in comps if c["role"] == "Garnish"]
     meas = [c for c in comps if c["role"] != "Garnish"]
-    body_h = 158
+    body_h = 144
     art, anchors = DRAW[iid]
-    svg = [f'<svg class="art" width="{LBL_X}" height="{body_h}" viewBox="0 0 {LBL_X} {body_h}">{DEFS}<g transform="translate(4,0) scale(.9)">{art()}</g>']
+    svg = [f'<svg class="art" width="{LBL_X}" height="{body_h}" viewBox="0 0 {LBL_X} {body_h}">{DEFS}<g transform="translate(4,0) scale(.82)">{art()}</g>']
     labels = []
     # garnish label (top row). Garnish name: component if present, else recipe_versions.
     gname = garn[0]["name"] if garn else rv["garnish"]
     gsrc = "garnish" + ("" if garn else "")
-    gy = 12
-    ax, ay = anchors["garnish"]; ax, ay = 4 + ax*.9, ay*.9
+    gy = 10
+    ax, ay = anchors["garnish"]; ax, ay = 4 + ax*.82, ay*.82
     svg.append(f'<polyline points="{ax},{ay} {ax+8},{gy} {LBL_X-4},{gy}" fill="none" stroke="{GREEN}" stroke-width=".8"/>'
                f'<circle cx="{ax}" cy="{ay}" r="1.8" fill="{GREEN}"/>')
     gq = qty(garn[0]) + " · " if (garn and show_qty) else ""
     labels.append((gy, f'<b class="q">{esc(gq)}</b>{esc(gname)}', "garnish"))
     # measured components: graduated scale when quantities are public
-    ys = [46 + i * ((body_h - 56) / max(1, len(meas) - 1) if len(meas) > 1 else 0) for i in range(len(meas))]
+    step = min((body_h - 62) / max(1, len(meas) - 1), 34) if show_qty else 37; y0 = 40 if show_qty else 34; ys = [y0 + i * step for i in range(len(meas))]
+    if not show_qty and len(meas) == 3: ys = [32, 67, 111]  # OF: last label wraps to 4 lines
     order = list(reversed(meas))  # top of scale first
     if show_qty:
-        SX, B, PPO = 116, 154, 25.0
+        SX, B, PPO = 108, 140, 22.0
         svg.append(f'<line x1="{SX}" y1="{B}" x2="{SX}" y2="{B-4*PPO}" stroke="{SEPIA}" stroke-width=".8"/>')
         for k in range(0, 9):
             y = B - k * PPO / 2
@@ -173,7 +174,7 @@ def plate(n, sec, sub, it):
     else:
         pts = [anchors["top"], (60, 118), anchors["liq"]]
         for i, c in enumerate(order):
-            px, py = pts[i % 3]; px, py = 4 + px*.9, py*.9
+            px, py = pts[i % 3]; px, py = 4 + px*.82, py*.82
             ly = ys[i]
             svg.append(f'<polyline points="{px},{py} {px+14},{py} {LBL_X-12},{ly:.1f} {LBL_X-4},{ly:.1f}" fill="none" stroke="{SEPIA}" stroke-width=".7"/>'
                        f'<circle cx="{px}" cy="{py}" r="1.6" fill="{SEPIA}"/>')
@@ -228,7 +229,8 @@ def build(proof=True):
             cols[c].append(f'<h4>{esc(sb["name"])}</h4>'); lastsub[c] = sb["id"]
         cols[c].append(register_entry(no, s, it, proof)); no += 1
     reg = "".join(f'<div class="rc">{"".join(c)}</div>' for c in cols)
-    proofbar = ('<div class="proofnote">PROOF · ruled fields marked “—” are facts not yet supplied (ABV, producer, region, brand, pour); they print only on this proof.</div>' if proof else "")
+    proofbar = ''
+    foot_mid = ('<span class="pf">Proof: “—” = fact not supplied</span>' if proof else '')
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face{{font-family:Fr;font-weight:600;src:url({FONTS}/Fraunces-600-normal.ttf)}}
 @font-face{{font-family:Fr;font-weight:700;src:url({FONTS}/Fraunces-700-normal.ttf)}}
@@ -239,14 +241,14 @@ def build(proof=True):
 *{{box-sizing:border-box;margin:0;padding:0}}
 html,body{{background:{IVORY}}}
 .page{{width:816px;height:1056px;position:relative;overflow:hidden;color:{SEPIA};font-family:Fr;
- background:radial-gradient(ellipse at 50% 45%, {IVORY} 60%, {IVORY_D} 100%);padding:50px 54px}}
+ background:radial-gradient(ellipse at 50% 45%, {IVORY} 60%, {IVORY_D} 100%);padding:48px 54px}}
 .page:before{{content:"";position:absolute;inset:0;pointer-events:none;opacity:.06;
  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .12 0 0 0 1 0'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>")}}
 .frame{{position:absolute;inset:40px;border:1px solid {SEPIA};pointer-events:none}}
 .frame:after{{content:"";position:absolute;inset:3px;border:.5px solid {SEPIA2}}}
 header{{position:relative;display:grid;grid-template-columns:1fr auto;align-items:end;border-bottom:1.5px solid {SEPIA};padding:8px 6px 8px}}
 .kick{{font-family:Dm;font-weight:700;font-size:10px;letter-spacing:.32em;color:{GREEN};text-transform:uppercase}}
-h1{{font-weight:700;font-size:40px;letter-spacing:.34em;line-height:1.05;text-transform:uppercase;margin-top:4px}}
+h1{{font-weight:700;font-size:36px;letter-spacing:.34em;line-height:1.05;text-transform:uppercase;margin-top:4px}}
 .sub{{font-style:italic;font-size:13px;color:{SEPIA2};margin-top:0}}
 .key{{font-family:Dm;font-size:9.5px;line-height:1.45;color:{SEPIA2};text-align:right;border-left:1px solid {SEPIA2};padding-left:12px}}
 .key b{{color:{SEPIA};letter-spacing:.2em;font-weight:700}}
@@ -254,13 +256,13 @@ h1{{font-weight:700;font-size:40px;letter-spacing:.34em;line-height:1.05;text-tr
 .sect:after,.sect:before{{content:"";flex:1;height:0;border-top:.8px solid {SEPIA}}}
 .sect:before{{flex:0 0 18px}}
 .grid{{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 14px;padding:0 6px}}
-.plate{{border:1px solid {SEPIA};outline:.5px solid {SEPIA2};outline-offset:-4px;padding:9px 14px 8px;background:rgba(244,237,220,.9)}}
+.plate{{border:1px solid {SEPIA};outline:.5px solid {SEPIA2};outline-offset:-4px;padding:8px 14px 6px;background:rgba(244,237,220,.9)}}
 .ph{{display:flex;justify-content:space-between;font-family:Dm;font-weight:700;font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:{GREEN}}}
-.row{{display:flex;align-items:baseline;gap:6px}}
-.nm{{font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}}
+.row{{display:flex;align-items:flex-end;gap:6px}}
+.nm{{font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;line-height:1.1;min-width:0}}
 .ld{{flex:1;border-bottom:1.2px dotted {SEPIA2};transform:translateY(-4px);min-width:14px}}
 .pr{{font-weight:700;font-size:19px}}
-.body{{position:relative;height:160px;margin-top:2px}}
+.body{{position:relative;height:146px;margin-top:2px}}
 .art{{position:absolute;left:0;top:0}}
 .lab{{position:absolute;left:{LBL_X}px;right:0;transform:translateY(-50%);font-size:12.5px;line-height:1.12}}
 .lab.garnish{{color:{GREEN}}}
@@ -272,21 +274,22 @@ h1{{font-weight:700;font-size:40px;letter-spacing:.34em;line-height:1.05;text-tr
 .dt td{{font-size:11px;padding:2px 4px;border-bottom:.8px solid {SEPIA}}}
 .dt th+th,.dt td+td{{border-left:.5px solid {SEPIA2}}}
 .fn{{font-style:italic;font-size:11px;color:{SEPIA2};margin-top:3px}}
-.reg{{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 16px;padding:0 6px}}
+.reg{{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:0 16px;padding:0 6px}}
 .rc+.rc{{border-left:.5px solid {SEPIA2};padding-left:14px}}
-h3{{font-family:Dm;font-weight:700;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:{GREEN};border-bottom:.8px solid {SEPIA};padding-bottom:2px;margin:2px 0 4px}}
-h4{{font-family:Dm;font-weight:500;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:{SEPIA2};margin:4px 0 1px}}
+h3{{font-family:Dm;font-weight:700;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:{GREEN};border-bottom:.8px solid {SEPIA};padding-bottom:2px;margin:0 0 3px}}
+h4{{font-family:Dm;font-weight:500;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:{SEPIA2};margin:3px 0 0}}
 .re{{margin-bottom:3px}}
 .no{{font-family:Dm;font-weight:700;font-size:9px;color:{GREEN};width:16px}}
 .nm2{{font-weight:700;font-size:13.5px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}}
 .pr2{{font-weight:700;font-size:15px}}
-.ds{{font-style:italic;font-size:12px;line-height:1.2;padding-left:22px;color:{SEPIA}}}
+.ds{{font-style:italic;font-size:11.5px;line-height:1.2;padding-left:22px;color:{SEPIA}}}
 .lat{{color:{GREEN};font-size:11px}}
-.miss{{display:flex;gap:8px;padding-left:22px;margin-top:1px;font-family:Dm;font-size:8.5px;color:{SEPIA2}}}
+.miss{{display:flex;flex-wrap:wrap;gap:0 7px;padding-left:22px;margin-top:1px;font-family:Dm;font-size:8.5px;color:{SEPIA2}}}
 .miss span{{display:flex;gap:3px;align-items:baseline}}
 .miss em{{font-style:normal;letter-spacing:.14em;text-transform:uppercase}}
-.miss u{{text-decoration:none;border-bottom:.6px solid {SEPIA2};min-width:26px;text-align:center}}
-footer{{position:absolute;left:58px;right:58px;bottom:50px;display:flex;justify-content:space-between;font-family:Dm;font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:{SEPIA2};border-top:.8px solid {SEPIA};padding-top:4px}}
+.miss u{{text-decoration:none;border-bottom:.6px solid {SEPIA2};min-width:18px;text-align:center}}
+footer .pf{{letter-spacing:.08em;text-transform:none;color:{GREEN};font-weight:700}}
+footer{{position:absolute;left:58px;right:58px;bottom:50px;display:flex;justify-content:space-between;font-family:Dm;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:{SEPIA2};border-top:.8px solid {SEPIA};padding-top:4px}}
 .proofnote{{position:absolute;left:58px;right:58px;bottom:64px;font-family:Dm;font-size:8.5px;color:{SEPIA2};text-align:center}}
 /* phone */
 body.phone .page{{width:390px;height:auto;padding:22px 16px 60px}}
@@ -309,7 +312,7 @@ body.phone footer{{flex-direction:column;gap:3px}}
 <div class="sect">The register · No. 05–14</div>
 <div class="reg">{reg}</div>
 {proofbar}
-<footer><span>Good drinks · good company</span><span>{esc(DRAFT.get('subtitle',''))}</span></footer>
+<footer><span>Good drinks · good company</span>{foot_mid}<span>{esc(DRAFT.get('subtitle',''))}</span></footer>
 </div></body></html>"""
 
 CONTRAST_JS = """() => {

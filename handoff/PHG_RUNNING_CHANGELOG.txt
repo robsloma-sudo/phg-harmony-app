@@ -989,3 +989,16 @@ tough scale (best).
 - Rehearsed A-G on live, each in a rolled-back DO block under 60 s: all pass. C's first try hit 55P03 on a live lock
   (nothing kept) and passed on re-run. Read-only check before and after: identical.
   Results: handoff/reviews/rehearsal/results_prepublish.md.
+
+2026-09-28 — TEST-1 design reset after Rob's "atrocious" verdict
+- Re-studied phg_design, covering the principles (definitions, mechanisms and failure modes), the rules, the tests and the case studies, and compared it against Rob's refs.
+- Wrote handoff/designs/DESIGN_THEORY_BRIEF.md. It covers the theory, the house grammar taken from the refs, the failure table for r17/r18 and A-F, and the corrected process with a device budget.
+- Added handoff/designs/tools/visual_tests.py. It runs the thumbnail/squint salience, accent area, value range, centroid and variant-silhouette checks.
+  - Measured accent area: refs 0.4-6%. Ours: A 48%, B 47%, E 60%.
+  - D has no dominant focal region (0.06%).
+- explore-D (the field guide) is complete. It is superseded as a direction because its 8 enclosures, tables and caps violate the brief. It is kept for the record.
+- Launched four rebuilds that differ in structure. Each follows the KB device budget:
+  - G: typographic monument
+  - H: flat sun and terrace geometry
+  - I: night field with one line-drawn agave
+  - J: horizon split with a single centred column

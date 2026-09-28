@@ -1,59 +1,52 @@
 {
  "preview-letter.png:geometry": {
-  "h": 1065,
+  "h": 1056,
   "r": [
    [
     "HEADER",
-    50,
-    142,
+    48,
+    135.796875,
     54,
     762
    ],
    [
     "plate",
-    167,
-    456,
+    160.796875,
+    432.796875,
     60,
     401
    ],
    [
     "plate",
-    167,
-    456,
+    160.796875,
+    432.796875,
     415,
     756
    ],
    [
     "plate",
-    464,
-    736,
+    440.796875,
+    704.796875,
     60,
     401
    ],
    [
     "plate",
-    464,
-    736,
+    440.796875,
+    704.796875,
     415,
     756
    ],
    [
     "reg",
-    761,
-    1014.953125,
+    729.796875,
+    976.78125,
     54,
     762
    ],
    [
-    "proofnote",
-    981,
-    992,
-    58,
-    758
-   ],
-   [
     "FOOTER",
-    989,
+    990,
     1006,
     58,
     758
@@ -62,34 +55,34 @@
  },
  "preview-letter.png": [
   {
-   "text": "16",
-   "role": "pr",
-   "min": 1.0
+   "text": "PHG Publishing Beta · Test Content",
+   "role": "SPAN",
+   "min": 6.57
   },
   {
-   "text": "Dry sparkling cider.",
-   "role": "ds",
-   "min": 1.0
+   "text": "Good drinks · good company",
+   "role": "SPAN",
+   "min": 6.62
   },
   {
-   "text": "12",
-   "role": "pr2",
-   "min": 1.0
+   "text": "Producer",
+   "role": "EM",
+   "min": 6.75
   },
   {
-   "text": "16",
-   "role": "pr2",
-   "min": 1.0
+   "text": "14",
+   "role": "no",
+   "min": 6.86
   },
   {
-   "text": "18",
-   "role": "pr2",
-   "min": 1.0
+   "text": "—",
+   "role": "U",
+   "min": 6.86
   },
   {
-   "text": "PROOF · ruled fields marked “—” are fact",
-   "role": "proofnote",
-   "min": 1.02
+   "text": "scale · 1 tick = ½ oz, measures per hous",
+   "role": "key",
+   "min": 6.87
   }
  ],
  "preview-letter-guest.png:geometry": {
@@ -97,49 +90,49 @@
   "r": [
    [
     "HEADER",
-    50,
-    142,
+    48,
+    135.796875,
     54,
     762
    ],
    [
     "plate",
-    167,
-    456,
+    160.796875,
+    432.796875,
     60,
     401
    ],
    [
     "plate",
-    167,
-    456,
+    160.796875,
+    432.796875,
     415,
     756
    ],
    [
     "plate",
-    464,
-    736,
+    440.796875,
+    704.796875,
     60,
     401
    ],
    [
     "plate",
-    464,
-    736,
+    440.796875,
+    704.796875,
     415,
     756
    ],
    [
     "reg",
-    761,
-    962.953125,
+    729.796875,
+    924.78125,
     54,
     762
    ],
    [
     "FOOTER",
-    989,
+    990,
     1006,
     58,
     758
@@ -148,24 +141,14 @@
  },
  "preview-letter-guest.png": [
   {
-   "text": "16",
-   "role": "pr",
-   "min": 1.0
-  },
-  {
-   "text": "Zea mays",
-   "role": "I",
-   "min": 1.05
+   "text": "PHG Publishing Beta · Test Content",
+   "role": "SPAN",
+   "min": 6.57
   },
   {
    "text": "Good drinks · good company",
    "role": "SPAN",
-   "min": 6.67
-  },
-  {
-   "text": "PHG Publishing Beta · Test Content",
-   "role": "SPAN",
-   "min": 6.68
+   "min": 6.62
   },
   {
    "text": "scale · 1 tick = ½ oz, measures per hous",
@@ -173,13 +156,23 @@
    "min": 6.87
   },
   {
+   "text": "No. · specimen number",
+   "role": "key",
+   "min": 6.92
+  },
+  {
+   "text": "Cantina & Cocktail Bar · Iowa City",
+   "role": "kick",
+   "min": 6.93
+  },
+  {
    "text": "A field guide: four cocktail plates, the",
    "role": "sub",
-   "min": 6.89
+   "min": 6.93
   }
  ],
  "preview-phone.png:geometry": {
-  "h": 2151,
+  "h": 2050,
   "r": [
    [
     "HEADER",
@@ -191,49 +184,42 @@
    [
     "plate",
     216.75,
-    488.75,
+    471.75,
     22,
-    406.28125
+    368
    ],
    [
     "plate",
-    496.75,
-    785.75,
+    479.75,
+    751.75,
     22,
-    406.28125
+    368
    ],
    [
     "plate",
-    793.75,
-    1065.75,
+    759.75,
+    1014.75,
     22,
-    406.28125
+    368
    ],
    [
     "plate",
-    1073.75,
-    1345.75,
+    1022.75,
+    1286.75,
     22,
-    406.28125
+    368
    ],
    [
     "reg",
-    1370.75,
-    2016.65625,
+    1311.75,
+    1935.71875,
     16,
     374
    ],
    [
-    "proofnote",
-    2026.65625,
-    2048.65625,
-    20,
-    370
-   ],
-   [
     "FOOTER",
-    2058.65625,
-    2090.65625,
+    1945.71875,
+    1989.71875,
     20,
     370
    ]
@@ -241,34 +227,34 @@
  },
  "preview-phone.png": [
   {
-   "text": "15",
-   "role": "pr",
-   "min": 1.0
+   "text": "Good drinks · good company",
+   "role": "SPAN",
+   "min": 6.55
   },
   {
-   "text": "15",
-   "role": "pr",
-   "min": 1.0
+   "text": "PHG Publishing Beta · Test Content",
+   "role": "SPAN",
+   "min": 6.55
   },
   {
-   "text": "14",
-   "role": "pr",
-   "min": 1.0
+   "text": "Brandy",
+   "role": "H4",
+   "min": 6.63
   },
   {
-   "text": "16",
-   "role": "pr",
-   "min": 1.0
+   "text": "Proof: “—” = fact not supplied",
+   "role": "pf",
+   "min": 6.72
   },
   {
-   "text": "Classics",
-   "role": "psub",
-   "min": 1.03
+   "text": "Brand",
+   "role": "EM",
+   "min": 6.73
   },
   {
-   "text": "Classics",
-   "role": "psub",
-   "min": 1.03
+   "text": "A field guide: four cocktail plates, the",
+   "role": "sub",
+   "min": 6.74
   }
  ]
 }
