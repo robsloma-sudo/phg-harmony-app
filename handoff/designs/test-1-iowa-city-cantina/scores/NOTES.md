@@ -176,3 +176,18 @@ For four rounds the KB-rebuild directions have sat in a 68-72 band, so they have
 3. The remaining fixable issues are small: rag and orphans, margins, and column balance.
 
 Recommendation: do not spend more rounds until Rob supplies the data or the art access. Another round of this kind is expected to gain about 1 point.
+
+## Round 5 (I5, J5)
+| Direction | critic | content | accuracy | combined | vs prior |
+|---|---|---|---|---|---|
+| I5 Night Field (loam + agave palette, soil line) | 80.4 | 76.2 | 64.8 | 73.8 | NEW BEST of rebuilds (I2 72.1) |
+| J5 Horizon (true elevator, papel picado band, riso raster) | 71.4 | 75.4 | 64.4 | 70.4 | vs J4 71.3: -0.9 |
+
+- First critic score over 80 (I5). All gates pass.
+- The spirits wording from public.beverage_categories ("Blanco-class agave spirit · pour") was a mistake and gets reverted:
+  - It reads as taxonomy language.
+  - Those nodes have proposal_status=proposed.
+  - In US label terms, "agave spirit" is the TTB class for spirits that are not tequila.
+- Next moves:
+  - I6: turn the loam into a real soil band with strata or furrows in place of the root fan; tighten the wordmark lock-up; ease the leaves off column 2; add plate texture.
+  - J6: cut the papel picado into the elevator itself.

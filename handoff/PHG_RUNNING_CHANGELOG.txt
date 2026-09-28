@@ -1020,3 +1020,5 @@ tough scale (best).
 - Canva connector now works: generate-image succeeded (media MAHWfVrWbfs, an agave engraving on loam with roots, text-free). The container can still only download the 149x199 thumbnail.
   media.canva.com, export-download.canva.com and www.canva.com all return 403 from the environment network policy.
   Asked Rob to add those hosts under the environment's Network access.
+- TEST-1 round 5: I5 scored 73.8 (critic 80.4), the new best of the KB rebuilds and just under the round-17 legacy best of 74.1. J5 scored 70.4.
+  Reverted the taxonomy spirits wording: the nodes are only proposed, and "agave spirit" is the US class for non-tequila spirits.
