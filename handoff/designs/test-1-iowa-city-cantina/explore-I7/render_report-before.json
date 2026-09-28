@@ -1,0 +1,1178 @@
+{
+ "tag": "-before",
+ "opt": {
+  "teeth": "1"
+ },
+ "trim_in": [
+  8.5,
+  11
+ ],
+ "bleed_px_css": 12,
+ "bleed_mm": 3.17,
+ "safe_inset_px_css": 48,
+ "pass1": {
+  "header_top": 50.0,
+  "cap_top": 64,
+  "baseline": 118,
+  "col_ends": [
+   864,
+   710
+  ]
+ },
+ "soil_line_y": 896,
+ "loam_share_of_art_height": {
+  "at_rosette": 0.256,
+  "at_list": 0.171
+ },
+ "soil": {
+  "gl": 896,
+  "top": 816,
+  "xa": 380.0,
+  "xb": 816.0
+ },
+ "letter_clamped_leaves": [
+  [
+   "back0",
+   0.61
+  ],
+  [
+   "back2",
+   0.4
+  ],
+  [
+   "cone",
+   0.73
+  ],
+  [
+   "leaf0",
+   0.34
+  ],
+  [
+   "leaf1",
+   0.34
+  ],
+  [
+   "leaf3",
+   0.4
+  ],
+  [
+   "leaf5",
+   0.46
+  ],
+  [
+   "leaf6",
+   0.49
+  ],
+  [
+   "leaf7",
+   0.64
+  ],
+  [
+   "leaf8",
+   0.97
+  ],
+  [
+   "leaf9",
+   0.52
+  ],
+  [
+   "leaf10",
+   0.46
+  ],
+  [
+   "leaf12",
+   0.61
+  ]
+ ],
+ "phone": {
+  "text_end": 1343,
+  "soil_line": 1376,
+  "page_h": 1566,
+  "clamped": [
+   [
+    "back2",
+    0.58
+   ],
+   [
+    "leaf0",
+    0.52
+   ],
+   [
+    "leaf1",
+    0.49
+   ],
+   [
+    "leaf3",
+    0.37
+   ],
+   [
+    "leaf5",
+    0.31
+   ],
+   [
+    "leaf6",
+    0.34
+   ],
+   [
+    "leaf9",
+    0.31
+   ],
+   [
+    "leaf10",
+    0.52
+   ],
+   [
+    "leaf12",
+    0.85
+   ]
+  ]
+ },
+ "preview-letter-before.png": {
+  "geometry_css_px": {
+   "page": [
+    816,
+    1056
+   ],
+   "header": [
+    64,
+    50,
+    752,
+    164
+   ],
+   "cols": [
+    [
+     64,
+     240,
+     408,
+     864
+    ],
+    [
+     440,
+     240,
+     640,
+     710
+    ]
+   ],
+   "col_text_end": [
+    864,
+    710
+   ],
+   "sections": [
+    [
+     64,
+     240,
+     408,
+     568
+    ],
+    [
+     64,
+     600,
+     408,
+     864
+    ],
+    [
+     440,
+     240,
+     640,
+     456
+    ],
+    [
+     440,
+     488,
+     640,
+     710
+    ]
+   ],
+   "art_phone": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "art_silhouette_pct_of_page": 18.0,
+   "art_bbox_css": [
+    0,
+    180,
+    816,
+    1056
+   ]
+  },
+  "price_rows": [
+   {
+    "name": "Margarita",
+    "price": "15",
+    "top": 288,
+    "gap_px": 15,
+    "travel_pct": 4,
+    "same_line": true,
+    "desc_lines": 4,
+    "col": 1,
+    "row_top_mod8": 0
+   },
+   {
+    "name": "Manhattan",
+    "price": "15",
+    "top": 368,
+    "gap_px": 15,
+    "travel_pct": 4,
+    "same_line": true,
+    "desc_lines": 2,
+    "col": 1,
+    "row_top_mod8": 0
+   },
+   {
+    "name": "House Daiquiri",
+    "price": "14",
+    "top": 448,
+    "gap_px": 15,
+    "travel_pct": 4,
+    "same_line": true,
+    "desc_lines": 3,
+    "col": 1,
+    "row_top_mod8": 0
+   },
+   {
+    "name": "Brown Butter Old Fashioned",
+    "price": "16",
+    "top": 512,
+    "gap_px": 15,
+    "travel_pct": 4,
+    "same_line": true,
+    "desc_lines": 3,
+    "col": 1,
+    "row_top_mod8": 0
+   },
+   {
+    "name": "Czech Pilsner",
+    "price": "7",
+    "top": 648,
+    "gap_px": 15,
+    "travel_pct": 4,
+    "same_line": true,
+    "desc_lines": 1,
+    "col": 1,
+    "row_top_mod8": 0
+   },
+   {
+    "name": "Dry-Hopped IPA",
+    "price": "8",
+    "top": 696,
+    "gap_px": 15,
+    "travel_pct": 4,
+    "same_line": true,
+    "desc_lines": 1,
+    "col": 1,
+    "row_top_mod8": 0
+   },
+   {
+    "name": "Amber Lager",
+    "price": "7",
+    "top": 744,
+    "gap_px": 15,
+    "travel_pct": 4,
+    "same_line": true,
+    "desc_lines": 1,
+    "col": 1,
+    "row_top_mod8": 0
+   },
+   {
+    "name": "Dry Cider",
+    "price": "8",
+    "top": 824,
+    "gap_px": 15,
+    "travel_pct": 4,
+    "same_line": true,
+    "desc_lines": 1,
+    "col": 1,
+    "row_top_mod8": 0
+   },
+   {
+    "name": "Malbec",
+    "price": "12",
+    "top": 288,
+    "gap_px": 15,
+    "travel_pct": 7,
+    "same_line": true,
+    "desc_lines": 1,
+    "col": 2,
+    "row_top_mod8": 0
+   },
+   {
+    "name": "Pinot Grigio",
+    "price": "11",
+    "top": 336,
+    "gap_px": 15,
+    "travel_pct": 7,
+    "same_line": true,
+    "desc_lines": 1,
+    "col": 2,
+    "row_top_mod8": 0
+   },
+   {
+    "name": "Brut Rosé",
+    "price": "13",
+    "top": 416,
+    "gap_px": 15,
+    "travel_pct": 7,
+    "same_line": true,
+    "desc_lines": 1,
+    "col": 2,
+    "row_top_mod8": 0
+   },
+   {
+    "name": "Blanco Tequila",
+    "price": "12",
+    "top": 536,
+    "gap_px": 52,
+    "travel_pct": 26,
+    "same_line": true,
+    "desc_lines": 1,
+    "col": 2,
+    "row_top_mod8": 0
+   },
+   {
+    "name": "Añejo Tequila",
+    "price": "16",
+    "top": 586,
+    "gap_px": 52,
+    "travel_pct": 26,
+    "same_line": true,
+    "desc_lines": 1,
+    "col": 2,
+    "row_top_mod8": 2
+   },
+   {
+    "name": "Cognac VSOP",
+    "price": "18",
+    "top": 668,
+    "gap_px": 52,
+    "travel_pct": 26,
+    "same_line": true,
+    "desc_lines": 1,
+    "col": 2,
+    "row_top_mod8": 4
+   }
+  ],
+  "text": [
+   {
+    "text": "CANTINA",
+    "role": "wm",
+    "font_px_css": "82px",
+    "lines": 1,
+    "min_contrast": 1.0,
+    "box_css": [
+     62,
+     41,
+     583,
+     141
+    ]
+   },
+   {
+    "text": "Cantina & cocktail bar · Iowa City, Iowa",
+    "role": "sub",
+    "font_px_css": "15px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     141,
+     327,
+     162
+    ]
+   },
+   {
+    "text": "Cocktails",
+    "role": "H2",
+    "font_px_css": "14.5px",
+    "lines": 1,
+    "min_contrast": 6.91,
+    "box_css": [
+     64,
+     239,
+     176,
+     257
+    ]
+   },
+   {
+    "text": "Clásicos · Classics",
+    "role": "H3",
+    "font_px_css": "11.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     264,
+     213,
+     279
+    ]
+   },
+   {
+    "text": "Margarita",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     64,
+     288,
+     142,
+     311
+    ]
+   },
+   {
+    "text": "15",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     157,
+     288,
+     174,
+     311
+    ]
+   },
+   {
+    "text": "Tequila blanco · fresh lime juice · orange lique",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 4,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     311,
+     357,
+     360
+    ]
+   },
+   {
+    "text": "over fresh ice",
+    "role": "ing sv",
+    "font_px_css": "10px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     220,
+     330,
+     313,
+     343
+    ]
+   },
+   {
+    "text": "Manhattan",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     64,
+     368,
+     150,
+     391
+    ]
+   },
+   {
+    "text": "15",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     165,
+     368,
+     182,
+     391
+    ]
+   },
+   {
+    "text": "Rye whiskey · sweet vermouth · cocktail cherry ·",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 2,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     391,
+     392,
+     408
+    ]
+   },
+   {
+    "text": "coupe",
+    "role": "ing sv",
+    "font_px_css": "10px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     353,
+     394,
+     392,
+     407
+    ]
+   },
+   {
+    "text": "De la Casa · House Originals",
+    "role": "H3",
+    "font_px_css": "11.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     424,
+     282,
+     439
+    ]
+   },
+   {
+    "text": "House Daiquiri",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     64,
+     448,
+     183,
+     471
+    ]
+   },
+   {
+    "text": "14",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     198,
+     448,
+     216,
+     471
+    ]
+   },
+   {
+    "text": "White rum · fresh lime juice · house demerara sy",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 3,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     471,
+     380,
+     504
+    ]
+   },
+   {
+    "text": "coupe",
+    "role": "ing sv",
+    "font_px_css": "10px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     129,
+     490,
+     169,
+     503
+    ]
+   },
+   {
+    "text": "Brown Butter Old Fashioned",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     64,
+     512,
+     287,
+     535
+    ]
+   },
+   {
+    "text": "16",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     302,
+     512,
+     319,
+     535
+    ]
+   },
+   {
+    "text": "Brown butter-washed bourbon · demerara syrup · a",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 3,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     535,
+     366,
+     568
+    ]
+   },
+   {
+    "text": "over a large cube",
+    "role": "ing sv",
+    "font_px_css": "10px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     248,
+     554,
+     366,
+     567
+    ]
+   },
+   {
+    "text": "Beer & Cider",
+    "role": "H2",
+    "font_px_css": "14.5px",
+    "lines": 1,
+    "min_contrast": 6.91,
+    "box_css": [
+     64,
+     599,
+     202,
+     617
+    ]
+   },
+   {
+    "text": "De Barril · Draft",
+    "role": "H3",
+    "font_px_css": "11.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     624,
+     190,
+     639
+    ]
+   },
+   {
+    "text": "Czech Pilsner",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     64,
+     648,
+     171,
+     671
+    ]
+   },
+   {
+    "text": "7",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     186,
+     648,
+     195,
+     671
+    ]
+   },
+   {
+    "text": "Crisp pale lager",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     671,
+     157,
+     688
+    ]
+   },
+   {
+    "text": "Dry-Hopped IPA",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     64,
+     696,
+     192,
+     719
+    ]
+   },
+   {
+    "text": "8",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     207,
+     696,
+     216,
+     719
+    ]
+   },
+   {
+    "text": "Hop-forward draft IPA",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     719,
+     196,
+     736
+    ]
+   },
+   {
+    "text": "Amber Lager",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     64,
+     744,
+     167,
+     767
+    ]
+   },
+   {
+    "text": "7",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     182,
+     744,
+     191,
+     767
+    ]
+   },
+   {
+    "text": "Toasty amber lager",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     767,
+     177,
+     784
+    ]
+   },
+   {
+    "text": "Sidra · Cider",
+    "role": "H3",
+    "font_px_css": "11.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     800,
+     158,
+     815
+    ]
+   },
+   {
+    "text": "Dry Cider",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     64,
+     824,
+     141,
+     847
+    ]
+   },
+   {
+    "text": "8",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     156,
+     824,
+     164,
+     847
+    ]
+   },
+   {
+    "text": "Dry sparkling cider",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     64,
+     847,
+     179,
+     864
+    ]
+   },
+   {
+    "text": "Wine",
+    "role": "H2",
+    "font_px_css": "14.5px",
+    "lines": 1,
+    "min_contrast": 6.91,
+    "box_css": [
+     440,
+     239,
+     492,
+     257
+    ]
+   },
+   {
+    "text": "Por Copa · By the Glass",
+    "role": "H3",
+    "font_px_css": "11.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     440,
+     264,
+     619,
+     279
+    ]
+   },
+   {
+    "text": "Malbec",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     440,
+     288,
+     497,
+     311
+    ]
+   },
+   {
+    "text": "12",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     512,
+     288,
+     530,
+     311
+    ]
+   },
+   {
+    "text": "Dry red wine",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     440,
+     311,
+     518,
+     328
+    ]
+   },
+   {
+    "text": "Pinot Grigio",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     440,
+     336,
+     536,
+     359
+    ]
+   },
+   {
+    "text": "11",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     550,
+     336,
+     568,
+     359
+    ]
+   },
+   {
+    "text": "Dry white wine",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     440,
+     359,
+     531,
+     376
+    ]
+   },
+   {
+    "text": "Espumoso · Sparkling",
+    "role": "H3",
+    "font_px_css": "11.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     440,
+     392,
+     603,
+     407
+    ]
+   },
+   {
+    "text": "Brut Rosé",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     440,
+     416,
+     516,
+     439
+    ]
+   },
+   {
+    "text": "13",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     531,
+     416,
+     549,
+     439
+    ]
+   },
+   {
+    "text": "Dry sparkling rosé",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     440,
+     439,
+     550,
+     456
+    ]
+   },
+   {
+    "text": "Spirits",
+    "role": "H2",
+    "font_px_css": "14.5px",
+    "lines": 1,
+    "min_contrast": 6.91,
+    "box_css": [
+     440,
+     487,
+     516,
+     505
+    ]
+   },
+   {
+    "text": "Agave",
+    "role": "H3",
+    "font_px_css": "11.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     440,
+     512,
+     485,
+     527
+    ]
+   },
+   {
+    "text": "Blanco Tequila",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     440,
+     536,
+     556,
+     559
+    ]
+   },
+   {
+    "text": "pour",
+    "role": "sv",
+    "font_px_css": "10px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     571,
+     543,
+     602,
+     556
+    ]
+   },
+   {
+    "text": "12",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     608,
+     536,
+     625,
+     559
+    ]
+   },
+   {
+    "text": "Blanco tequila",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     440,
+     561,
+     525,
+     578
+    ]
+   },
+   {
+    "text": "Añejo Tequila",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     440,
+     586,
+     548,
+     609
+    ]
+   },
+   {
+    "text": "pour",
+    "role": "sv",
+    "font_px_css": "10px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     563,
+     593,
+     594,
+     606
+    ]
+   },
+   {
+    "text": "16",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     600,
+     586,
+     617,
+     609
+    ]
+   },
+   {
+    "text": "Añejo tequila",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     440,
+     611,
+     519,
+     628
+    ]
+   },
+   {
+    "text": "Brandy",
+    "role": "H3",
+    "font_px_css": "11.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     440,
+     644,
+     494,
+     659
+    ]
+   },
+   {
+    "text": "Cognac VSOP",
+    "role": "nm",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 14.34,
+    "box_css": [
+     440,
+     668,
+     544,
+     691
+    ]
+   },
+   {
+    "text": "pour",
+    "role": "sv",
+    "font_px_css": "10px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     559,
+     675,
+     590,
+     688
+    ]
+   },
+   {
+    "text": "18",
+    "role": "pr",
+    "font_px_css": "16.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     596,
+     668,
+     613,
+     691
+    ]
+   },
+   {
+    "text": "VSOP Cognac",
+    "role": "ds",
+    "font_px_css": "12.5px",
+    "lines": 1,
+    "min_contrast": 9.33,
+    "box_css": [
+     440,
+     693,
+     519,
+     710
+    ]
+   }
+  ]
+ }
+}
