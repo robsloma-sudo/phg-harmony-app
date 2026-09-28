@@ -35,6 +35,26 @@
 | Pinot Grigio | 11 | Dry white wine. | Dry white wine. | The draft wording. | producer, region, vintage |
 | Brut Rosé | 13 | Dry sparkling rosé. | Dry sparkling rosé. | The draft wording. | producer, region, vintage, glass_or_bottle |
 
+## Design concept candidates for round 5 (ranked; round 5 builds number 1)
+
+All three use only the items, prices and draft words that are already verified. None adds a fact, a name, a date, a place or a price. The ornaments are drawn graphics, not claims.
+
+1. **Lotería de la Cantina (chosen).** Each of the 5 sections becomes a lotería card: a bordered card with a card number, a bespoke flat-colour icon cut in the papel-picado style (agave for Spirits, coupe for Cocktails, barrel tap for Beer, apple for Cider, bottle for Wine), and the section name in the lotería banner at the foot of the card, in English with the Spanish kicker ("Cócteles", "Destilados", "Cerveza", "Sidra", "Vino"). The items sit on the card.
+   - House Originals becomes the "featured card", drawn larger with the terracotta frame.
+   - It is ownable because lotería is the most recognisable Mexican popular-graphic system, and it gives each list its own image while treating every list equally.
+   - The card numbers are ordinals (1 to 5), not claims.
+   - Risk: it can read as costume. The fix is restrained icons, a strict 12 pt grid inside each card, and the same palette.
+   - Fit: the 2-column grid becomes a 2 x 3 card grid, which also answers the column-balance problem, because cards can take equal heights.
+2. **Talavera tile grid.** The page becomes a grid of 12 pt-module tiles. Each section header sits on a hand-drawn talavera tile (cobalt and marigold on cream, the palette extended with one blue), and the item lists run in the tile rows.
+   - Strong on system and print.
+   - Weaker as an "idea": the pattern is decorative rather than narrative, and a blue has to be added to the venue palette.
+3. **Mercado price ledger.** Market-stall chalk and ledger typography: items as ledger lines, prices in a stencilled price column with ruled tabs, section tabs like a vendor's price board.
+   - Very legible, with an honest price focus.
+   - Less culturally specific to a cantina than lotería.
+   - Risk: the chalkboard cliché, and it pulls away from the cut-paper identity built in rounds 1 to 4.
+
+Not taken: an agave-field map. It would need geography or origin facts (regions, distilleries) that the venue data does not supply, so it would invite invention.
+
 ## Notes kept
 - **Manhattan bitters.** The item's `public_components` has `aromatic-bitters: false`, so they are not printed. Should they be printed? (This is also in doc.meta.designer_notes.)
 - **Retired item.** The retired Junmai Ginjo ($12, section Sake) in `phg.menu_items` is left off. Please confirm. (Also in doc.meta.)
