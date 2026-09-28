@@ -1023,3 +1023,7 @@ tough scale (best).
 - TEST-1 round 5: I5 scored 73.8 (critic 80.4), the new best of the KB rebuilds and just under the round-17 legacy best of 74.1. J5 scored 70.4.
   Reverted the taxonomy spirits wording: the nodes are only proposed, and "agave spirit" is the US class for non-tequila spirits.
 - TEST-1 round 6: I6 scored 70.9 and J6 70.8, so I5 (73.8) is still the best. Single-critic noise is about ±5, so I'm running the full 15-reviewer panel on I5.
+- TEST-1: the full 15-reviewer panel on I5 gave critic 71.2, content 74.0, accuracy 65.1, combined 70.1. All gates pass.
+  - The 3-reviewer screens overstated the result by about 4 points.
+  - The round-17 legacy (74.1) is still the best full-panel score.
+  - New flag for Rob: the Brown Butter Old Fashioned has no dairy allergen note.

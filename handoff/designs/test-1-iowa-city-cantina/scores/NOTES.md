@@ -200,3 +200,31 @@ Recommendation: do not spend more rounds until Rob supplies the data or the art 
 
 - Noise: I5 and I6 differ only in the soil band, yet the critic score moved from 80.4 to 71.8. A single-critic screen is noisy by about ±5 (critic_consensus_not_truth).
 - Next: run the full 15-reviewer panel on I5, the best checkpoint, to get a reliable score before more design rounds.
+
+## Full 15-reviewer panel on I5
+- Critic: 73.2 (grid), 66.7 (type), 71.1 (palette), 74.5 (concept), 70.5 (phone). Mean 71.2.
+- Content: 77.6 (prices), 74.6 (descriptions), 74.4 (flow), 73.4 (voice), 69.8 (missing data). Mean 74.0.
+- Accuracy: 68.8 (trace), 67.6 (voice), 66.2 (venue fit), 61.2 (print), 61.8 (phone). Mean 65.1.
+- Combined 70.1. The 3-reviewer screen said 73.8, so the screen overstated it by 3.7. All gates pass.
+- Round 17 legacy was 74.1 (critic 74.0, content 77.8, accuracy 70.5). The KB rebuilds have not beaten it on the full panel yet.
+
+Consolidated fixes for I7 (asked for by several reviewers):
+- Design:
+  - Remove the marginal leaf teeth (4/5 critics).
+  - Make the Iowa soil a real engraved loam/furrow band holding about 1/3 of the art, drawn in the leaf grammar, not confetti.
+  - Modulate the hatch.
+  - Wordmark: either tie it to the soil line or change the face.
+  - Separate the sub-line from the H3.
+  - Resolve the axis: header over the text block, or narrow col 2.
+  - Put every line on the 8 px baseline.
+  - Balance the column ends.
+  - Add one warm accent on the H2s.
+  - Phone: the art should rise beside Wine, without the 93 px gap.
+- Content:
+  - Standard order: Cocktails > Beer & Cider > Wine > Spirits.
+  - Restore the bilingual subheads from rounds 11–17 (Clásicos, De la Casa, De Barril, Sidra, Por Copa, Espumoso).
+  - Spirits text: draft wording ("Blanco tequila pour" etc.), or the category names only.
+  - Use the sourced serve facts: coupe for the Manhattan and Daiquiri, "over a large cube" for the Old Fashioned (recipe_versions), and "house demerara syrup".
+  - Make the tasting-note rule consistent.
+  - Fix the stale page title.
+  - Put an item-by-item missing_ingredients table in proposal.md, including the Old Fashioned dairy allergen.
