@@ -1,4 +1,15 @@
--- PHG-026 (2026-09-27): stop order-item duplicate menus from replacing venues' real menus.
+DO $rehearse_main$
+DECLARE
+  r jsonb := '{}'; a jsonb := '{}'; b jsonb := '{}'; c jsonb := '{}'; v jsonb; res jsonb;
+  t0 timestamptz; t1 timestamptz; acct text := 'ACC-CO-LED-03-25486'; orig_url text;
+  cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x bigint;
+  rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
+  e_state text; e_msg text; e_ctx text; e_det text;
+BEGIN
+  set local statement_timeout = '58s';
+  t0 := clock_timestamp();
+  BEGIN
+    EXECUTE $rehearse_f1$-- PHG-026 (2026-09-27): stop order-item duplicate menus from replacing venues' real menus.
 --
 -- Root cause (read-only investigation wf_50c3da17-0c7):
 --  * promote_clean_menu_batch hashes account|page URL|sections, so the same full menu scraped from
@@ -487,3 +498,150 @@ end $function$;
 revoke all on function public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb,text,text,text,text,boolean) from public, anon, authenticated;
 revoke all on function public.promote_clean_menu_batch(integer) from public, anon, authenticated;
 revoke all on function public.phg_save_menu_candidate_extraction(bigint,timestamp with time zone,uuid,jsonb,text,text,text) from public, anon, authenticated;
+$rehearse_f1$;
+  EXCEPTION WHEN others THEN 
+    GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
+    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file1','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx,'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
+  END;
+  r := r || jsonb_build_object('file1_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
+  t0 := clock_timestamp();
+  BEGIN
+    a := a || jsonb_build_object('backup_rows', (select count(*) from public.phg_backup_function_defs_20260927),
+       'backup_sigs', (select jsonb_agg(signature order by signature) from public.phg_backup_function_defs_20260927),
+       'backup_service_role_can_insert', has_table_privilege('service_role','public.phg_backup_function_defs_20260927','INSERT'),
+       'backup_service_role_can_select', has_table_privilege('service_role','public.phg_backup_function_defs_20260927','SELECT'),
+       'submit_menu_10arg_exists', to_regprocedure('public.submit_menu(text,text,text,text,text,text,text,date,text,jsonb)') is not null,
+       'promote_clamp_5', (select prosrc ~ 'least\(5,' from pg_proc where oid='public.promote_clean_menu_batch(integer)'::regprocedure),
+       'multi_current_global_before', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x));
+    select id, evidence_url into cur_id, orig_url from public.menus where account_id=acct and is_current;
+    a := a || jsonb_build_object('account', acct, 'orig_current', cur_id,
+       'orig_distinct_keys', cardinality(public.phg_menu_item_keys(cur_id)), 'orig_bev', public.phg_menu_bev_count(cur_id));
+    with it as (select s.id sid, i.*, row_number() over (order by s.section_position, s.id, i.item_position, i.id) rn
+                  from public.menu_sections s join public.menu_items i on i.section_id=s.id where s.menu_id=cur_id)
+    select jsonb_agg(jsonb_build_object('section_name',s.section_name,'section_type',s.section_type,'section_position',s.section_position,
+             'items',coalesce((select jsonb_agg(jsonb_build_object('item_name',it.item_name,'item_type',it.item_type,'price',it.price,'item_position',it.item_position) order by it.rn) from it where it.sid=s.id),'[]'::jsonb)) order by s.section_position, s.id),
+           jsonb_agg(jsonb_build_object('section_name',s.section_name,'section_type',s.section_type,'section_position',s.section_position,
+             'items',coalesce((select jsonb_agg(jsonb_build_object('item_name',it.item_name,'item_type',it.item_type,'price',case when it.rn<=3 then coalesce(it.price,0)+1 else it.price end,'item_position',it.item_position) order by it.rn) from it where it.sid=s.id),'[]'::jsonb)) order by s.section_position, s.id),
+           jsonb_agg(jsonb_build_object('section_name',s.section_name,'section_type',s.section_type,'section_position',s.section_position,
+             'items',coalesce((select jsonb_agg(jsonb_build_object('item_name',it.item_name,'item_type',it.item_type,'price',it.price,'item_position',it.item_position) order by it.rn) from it where it.sid=s.id),'[]'::jsonb)
+                     || case when s.section_position = (select min(section_position) from public.menu_sections where menu_id=cur_id)
+                             then '[{"item_name":"Rehearsal Extra Pour","item_type":"spirit_pour","price":14}]'::jsonb else '[]'::jsonb end) order by s.section_position, s.id)
+      into secs, secs2, secs9 from public.menu_sections s where s.menu_id=cur_id;
+
+    -- 1 exact copy of the current menu from another URL -> duplicate, nothing inserted
+    res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS','https://rehearsal.example.com/copy1',null,'html','unknown','rehearsal',null,md5('reh1'||clock_timestamp()::text),secs,null,null,null,null,false);
+    select id into cur_now from public.menus where account_id=acct and is_current;
+    a := a || jsonb_build_object('s1_exact_copy_other_url', res || jsonb_build_object(
+       'current_after', cur_now, 'acct_current_count', (select count(*) from public.menus where account_id=acct and is_current),
+       'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x), 'expect', 'res->>''status''=''duplicate_of_current'' and cur_now=cur_id', 'pass', coalesce((res->>'status'='duplicate_of_current' and cur_now=cur_id), false)));
+    -- all live menus are < 7 days old (created 2026-09-25..27); age this one so the near-identical rule (not damping) applies
+    update public.menus set created_at = created_at - interval '30 days' where id = cur_id;
+    -- 2 same items, 3 prices changed, another URL, current menu 30 days old -> replaces
+    res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS','https://rehearsal.example.com/copy2',null,'html','unknown','rehearsal',null,md5('reh2'||clock_timestamp()::text),secs2,null,null,null,null,false);
+    select id into cur_now from public.menus where account_id=acct and is_current;
+    a := a || jsonb_build_object('s2_three_prices_changed_other_url', res || jsonb_build_object(
+       'current_after', cur_now, 'acct_current_count', (select count(*) from public.menus where account_id=acct and is_current),
+       'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x), 'expect', 'res->>''status''=''created'' and res->>''reason'' in (''newer_near_identical_capture'',''price_enrichment_other_source'') and cur_now<>cur_id', 'pass', coalesce((res->>'status'='created' and res->>'reason' in ('newer_near_identical_capture','price_enrichment_other_source') and cur_now<>cur_id), false)));
+    select id into cur2 from public.menus where account_id=acct and is_current;
+    -- 9 flip-flop damping: the original page again (original prices). Current (copy2) is minutes old and from another
+    --   source; the capture is only near-identical -> alternate, current stays copy2
+    res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS',orig_url,null,'html','unknown','rehearsal',null,md5('reh9'||clock_timestamp()::text),secs,null,null,null,null,false);
+    select id into cur_now from public.menus where account_id=acct and is_current;
+    a := a || jsonb_build_object('s9_flipflop_original_page_again', res || jsonb_build_object(
+       'current_after', cur_now, 'acct_current_count', (select count(*) from public.menus where account_id=acct and is_current),
+       'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x), 'expect', 'res->>''status'' in (''created_alternate'',''duplicate_item_set'') and coalesce(res->>''reason'',''alternate_near_identical_recent_other_source'')=''alternate_near_identical_recent_other_source'' and cur_now=cur2', 'pass', coalesce((res->>'status' in ('created_alternate','duplicate_item_set') and coalesce(res->>'reason','alternate_near_identical_recent_other_source')='alternate_near_identical_recent_other_source' and cur_now=cur2), false)));
+    -- 9b control: the original page with ONE MORE item (larger) still replaces a recent current menu
+    BEGIN
+      res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS',orig_url,null,'html','unknown','rehearsal',null,md5('reh9b'||clock_timestamp()::text),secs9,null,null,null,null,false);
+    select id into cur_now from public.menus where account_id=acct and is_current;
+    a := a || jsonb_build_object('s9b_flipflop_control_larger_replaces', res || jsonb_build_object(
+       'current_after', cur_now, 'acct_current_count', (select count(*) from public.menus where account_id=acct and is_current),
+       'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x), 'expect', 'res->>''status''=''created'' and cur_now<>cur2', 'pass', coalesce((res->>'status'='created' and cur_now<>cur2), false)));
+      RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback 9b';
+    EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
+    END;
+    -- 3 ?item= page on the current URL with 2 new items -> alternate
+    res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS','https://rehearsal.example.com/copy2?item=abc',null,'html','unknown','rehearsal',null,md5('reh3'||clock_timestamp()::text),'[{"section_name":"Order","section_type":"unsectioned","section_position":1,"items":[{"item_name":"Rehearsal Item A","item_type":"other","price":9},{"item_name":"Rehearsal Item B","item_type":"other","price":10}]}]'::jsonb,null,null,null,null,false);
+    select id into cur_now from public.menus where account_id=acct and is_current;
+    a := a || jsonb_build_object('s3_item_page_same_url', res || jsonb_build_object(
+       'current_after', cur_now, 'acct_current_count', (select count(*) from public.menus where account_id=acct and is_current),
+       'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x), 'expect', 'res->>''status''=''created_alternate'' and res->>''reason''=''alternate_item_page'' and cur_now=cur2', 'pass', coalesce((res->>'status'='created_alternate' and res->>'reason'='alternate_item_page' and cur_now=cur2), false)));
+    -- 4 same URL as current, 10 items (5 current + 5 new) < half of 33 -> alternate
+    select jsonb_build_array(jsonb_build_object('section_name','Partial','section_type','unsectioned','section_position',1,'items',
+             (select jsonb_agg(x) from (
+                (select jsonb_build_object('item_name',i.item_name,'item_type','other','price',i.price) x
+                   from public.menu_sections s join public.menu_items i on i.section_id=s.id where s.menu_id=cur2 order by i.id limit 5)
+                union all
+                select jsonb_build_object('item_name','Rehearsal Partial '||g,'item_type','other','price',5+g) from generate_series(1,5) g) q)))
+      into secs4;
+    res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS','https://rehearsal.example.com/copy2',null,'html','unknown','rehearsal',null,md5('reh4'||clock_timestamp()::text),secs4,null,null,null,null,false);
+    select id into cur_now from public.menus where account_id=acct and is_current;
+    a := a || jsonb_build_object('s4_partial_same_url', res || jsonb_build_object(
+       'current_after', cur_now, 'acct_current_count', (select count(*) from public.menus where account_id=acct and is_current),
+       'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x), 'expect', 'res->>''status''=''created_alternate'' and res->>''reason''=''alternate_partial_recapture'' and cur_now=cur2', 'pass', coalesce((res->>'status'='created_alternate' and res->>'reason'='alternate_partial_recapture' and cur_now=cur2), false)));
+    -- 5 another URL, 2 food items -> alternate
+    res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS','https://rehearsal.example.com/food',null,'html','unknown','rehearsal',null,md5('reh5'||clock_timestamp()::text),'[{"section_name":"Food","section_type":"unsectioned","section_position":1,"items":[{"item_name":"Rehearsal Fries","item_type":"other","price":7},{"item_name":"Rehearsal Burger","item_type":"other","price":15}]}]'::jsonb,null,null,null,null,false);
+    select id into cur_now from public.menus where account_id=acct and is_current;
+    a := a || jsonb_build_object('s5_small_food_other_url', res || jsonb_build_object(
+       'current_after', cur_now, 'acct_current_count', (select count(*) from public.menus where account_id=acct and is_current),
+       'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x), 'expect', 'res->>''status''=''created_alternate'' and res->>''reason''=''alternate_smaller_other_source'' and cur_now=cur2', 'pass', coalesce((res->>'status'='created_alternate' and res->>'reason'='alternate_smaller_other_source' and cur_now=cur2), false)));
+    -- 6 zero items -> ignored
+    res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS','https://rehearsal.example.com/empty',null,'html','unknown','rehearsal',null,md5('reh6'||clock_timestamp()::text),'[]'::jsonb,null,null,null,null,false);
+    select id into cur_now from public.menus where account_id=acct and is_current;
+    a := a || jsonb_build_object('s6_zero_items', res || jsonb_build_object(
+       'current_after', cur_now, 'acct_current_count', (select count(*) from public.menus where account_id=acct and is_current),
+       'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x), 'expect', 'res->>''status''=''empty_capture_ignored'' and cur_now=cur2', 'pass', coalesce((res->>'status'='empty_capture_ignored' and cur_now=cur2), false)));
+    -- 7 a missing price overlaps a priced item (both ways); price-adds helper
+    a := a || jsonb_build_object('s7_overlap',
+       jsonb_build_object('capture_noprice_vs_current_priced', public.phg_menu_keys_overlap(array[public.phg_menu_item_key('Rehearsal Negroni', null)], array[public.phg_menu_item_key('Rehearsal Negroni', 12)]),
+                          'reverse', public.phg_menu_keys_overlap(array[public.phg_menu_item_key('Rehearsal Negroni', 12)], array[public.phg_menu_item_key('Rehearsal Negroni', null)]),
+                          'different_prices', public.phg_menu_keys_overlap(array['rehearsal negroni|12'], array['rehearsal negroni|13']),
+                          'price_adds_capture_priced_vs_current_unpriced', public.phg_menu_keys_price_adds(array['rehearsal negroni|12'], array['rehearsal negroni|']),
+                          'price_adds_reverse', public.phg_menu_keys_price_adds(array['rehearsal negroni|'], array['rehearsal negroni|12']),
+                          'price_adds_when_current_has_both', public.phg_menu_keys_price_adds(array['rehearsal negroni|12'], array['rehearsal negroni|','rehearsal negroni|12'])));
+    a := jsonb_set(a, '{s7_overlap,pass}', to_jsonb(
+          (a->'s7_overlap'->>'capture_noprice_vs_current_priced')::int = 1 and (a->'s7_overlap'->>'reverse')::int = 1
+      and (a->'s7_overlap'->>'different_prices')::int = 0 and (a->'s7_overlap'->>'price_adds_capture_priced_vs_current_unpriced')::int = 1
+      and (a->'s7_overlap'->>'price_adds_reverse')::int = 0 and (a->'s7_overlap'->>'price_adds_when_current_has_both')::int = 0));
+    -- 8 price enrichment: the current menu (copy2) lost one price (stored NULL, item_keys refreshed); the capture has it
+    select i.id into item_x from public.menu_sections s join public.menu_items i on i.section_id=s.id
+     where s.menu_id=cur2 and i.price is not null order by s.section_position, s.id, i.item_position, i.id offset 5 limit 1;
+    update public.menu_items set price = null where id = item_x;
+    update public.menus set item_keys = public.phg_menu_item_keys(cur2), item_set_hash = public.phg_menu_key_set_hash(public.phg_menu_item_keys(cur2)) where id = cur2;
+    a := a || jsonb_build_object('s8_setup', jsonb_build_object('item_without_price', item_x,
+       'overlap_capture_vs_current', public.phg_menu_keys_overlap(public.phg_menu_payload_item_keys(secs2), public.phg_menu_item_keys(cur2)),
+       'capture_keys', cardinality(public.phg_menu_payload_item_keys(secs2)),
+       'price_adds', public.phg_menu_keys_price_adds(public.phg_menu_payload_item_keys(secs2), public.phg_menu_item_keys(cur2))));
+    -- 8a same source (copy2): before round 3 this was 'duplicate_of_current'; now a same-source replacement
+    BEGIN
+      res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS','https://rehearsal.example.com/copy2',null,'html','unknown','rehearsal',null,md5('reh8a'||clock_timestamp()::text),secs2,null,null,null,null,false);
+    select id into cur_now from public.menus where account_id=acct and is_current;
+    a := a || jsonb_build_object('s8a_price_enrichment_same_source', res || jsonb_build_object(
+       'current_after', cur_now, 'acct_current_count', (select count(*) from public.menus where account_id=acct and is_current),
+       'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x), 'expect', 'res->>''status''=''created'' and res->>''reason''=''same_source_price_enrichment'' and cur_now<>cur2', 'pass', coalesce((res->>'status'='created' and res->>'reason'='same_source_price_enrichment' and cur_now<>cur2), false)));
+      RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback 8a';
+    EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
+    END;
+    -- 8b another source, same size, current menu minutes old: not a duplicate, and damping does not hold back a price
+    BEGIN
+      res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS','https://rehearsal.example.com/copy8',null,'html','unknown','rehearsal',null,md5('reh8b'||clock_timestamp()::text),secs2,null,null,null,null,false);
+    select id into cur_now from public.menus where account_id=acct and is_current;
+    a := a || jsonb_build_object('s8b_price_enrichment_other_source', res || jsonb_build_object(
+       'current_after', cur_now, 'acct_current_count', (select count(*) from public.menus where account_id=acct and is_current),
+       'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x), 'expect', 'res->>''status''=''created'' and res->>''reason''=''price_enrichment_other_source'' and cur_now<>cur2', 'pass', coalesce((res->>'status'='created' and res->>'reason'='price_enrichment_other_source' and cur_now<>cur2), false)));
+      RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback 8b';
+    EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
+    END;
+    a := a || jsonb_build_object('final_acct_menus', (select jsonb_agg(jsonb_build_object('url',evidence_url,'is_current',is_current,'reason',superseded_reason,'n',cardinality(item_keys)) order by created_at, id) from public.menus where account_id=acct),
+       'multi_current_global_end', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x));
+    RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback scenarios';
+  EXCEPTION
+    WHEN sqlstate 'P0099' THEN NULL;
+    WHEN others THEN 
+      GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
+      a := a || jsonb_build_object('ERROR_A', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
+  END;
+  r := r || jsonb_build_object('A', a, 'A_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
+  RAISE EXCEPTION 'REHEARSAL %', r;
+END
+$rehearse_main$;
