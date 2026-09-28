@@ -83,7 +83,7 @@ DECLARE
   t0 timestamptz; t1 timestamptz; acct text := '{ACCT}'; orig_url text;
   cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x uuid;
   rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
-  secs10 jsonb; g jsonb := '{{}}'; skip_acct text; multi_acct text; stg_acct text; stg_url text; snap jsonb; snap2 jsonb;
+  secs10 jsonb; gres jsonb := '{{}}'; skip_acct text; multi_acct text; stg_acct text; stg_url text; snap jsonb; snap2 jsonb;
   n1 int; n2 int; tid uuid; pid uuid; dlayout jsonb; ddoc jsonb;
   e_state text; e_msg text; e_ctx text; e_det text;
 BEGIN
@@ -528,7 +528,7 @@ G = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse
       into secs from public.menu_sections s where s.menu_id = cur_id;
     {call("'https://rehearsal.example.com/skip-path'", 'rehG', 'secs', acct='skip_acct')}
     cur2 := nullif(res->>'menu_id', '')::uuid;
-    g := jsonb_build_object('skip_acct', skip_acct, 'submit', res - 'brand_references' - 'inferred_from_cocktail_reference',
+    gres := jsonb_build_object('skip_acct', skip_acct, 'submit', res - 'brand_references' - 'inferred_from_cocktail_reference',
        'skip_acct_staging_backup_rows', (select count(*) from public.phg_backup_staging_dupes_20260927 where account_id = skip_acct));
     snap := {MSNAP_SKIP};
     n1 := (select count(*) from public.staging_menu_extract s join public.phg_backup_staging_dupes_20260927 b on b.staging_id = s.id
@@ -546,10 +546,10 @@ G = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse
     insert into public.staging_menu_extract (menu_page_url, menu_format, account_id, item_type, item_name, item_price, loaded_at)
     values (stg_url, 'html', stg_acct, 'other', 'Rehearsal Re-extracted Item', 9, clock_timestamp());
     n2 := (select count(*) from public.phg_backup_staging_dupes_20260927 b where b.account_id = stg_acct and b.menu_page_url = stg_url);
-    g := g || jsonb_build_object('multi_acct', multi_acct, 'stg_acct', stg_acct, 'stg_page_backup_rows', n2);
+    gres := gres || jsonb_build_object('multi_acct', multi_acct, 'stg_acct', stg_acct, 'stg_page_backup_rows', n2);
     t1 := clock_timestamp();
     res := public.phg_repair_20260927_rollback();
-    g := g || jsonb_build_object('rollback', res, 'rollback_ms', round(extract(epoch from clock_timestamp()-t1)*1000),
+    gres := gres || jsonb_build_object('rollback', res, 'rollback_ms', round(extract(epoch from clock_timestamp()-t1)*1000),
       'skip_acct_menus_untouched', {MSNAP_SKIP} = snap,
       'skip_acct_current_is_new_menu', (select id from public.menus where account_id = skip_acct and is_current) = cur2,
       'skip_acct_staging_still_superseded', (select count(*) from public.staging_menu_extract s join public.phg_backup_staging_dupes_20260927 b on b.staging_id = s.id
@@ -566,15 +566,15 @@ G = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse
               and (m.is_current, m.superseded_by, m.superseded_reason, m.superseded_at)
                   is distinct from (bk.is_current, bk.superseded_by, bk.superseded_reason, bk.superseded_at)),
       'multi_current_global', {MULTI});
-    g := g || jsonb_build_object('pass', (res->>'venues_skipped_newer_menu')::int >= 1 and (res->>'venues_skipped_multi_current_backup')::int >= 1
-      and (g->>'skip_acct_menus_untouched')::boolean and (g->>'skip_acct_staging_still_superseded')::boolean
-      and (g->>'multi_acct_menus_untouched')::boolean and (g->>'multi_acct_current_count')::int = 1
-      and (g->>'stg_page_rows_still_superseded')::int = n2 and n2 > 0
-      and (g->>'other_backup_rows_not_restored')::int = 0 and (g->>'currency_mismatch_vs_backup_rolled_back_venues')::int = 0
-      and (g->>'multi_current_global')::int = 0);
-  EXCEPTION WHEN others THEN {soft_err('ERROR', 'g')}
+    gres := gres || jsonb_build_object('pass', (res->>'venues_skipped_newer_menu')::int >= 1 and (res->>'venues_skipped_multi_current_backup')::int >= 1
+      and (gres->>'skip_acct_menus_untouched')::boolean and (gres->>'skip_acct_staging_still_superseded')::boolean
+      and (gres->>'multi_acct_menus_untouched')::boolean and (gres->>'multi_acct_current_count')::int = 1
+      and (gres->>'stg_page_rows_still_superseded')::int = n2 and n2 > 0
+      and (gres->>'other_backup_rows_not_restored')::int = 0 and (gres->>'currency_mismatch_vs_backup_rolled_back_venues')::int = 0
+      and (gres->>'multi_current_global')::int = 0);
+  EXCEPTION WHEN others THEN {soft_err('ERROR', 'gres')}
   END;
-  r := r || jsonb_build_object('G', g, 'G_ms', {MS});""" + END
+  r := r || jsonb_build_object('G', gres, 'G_ms', {MS});""" + END
 
 blocks = {'A': A, 'B': B, 'C': C, 'D': D, 'E': E, 'F': F, 'G': G}
 allsql = []

@@ -4,7 +4,7 @@ DECLARE
   t0 timestamptz; t1 timestamptz; acct text := 'ACC-CO-LED-03-25486'; orig_url text;
   cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x uuid;
   rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
-  secs10 jsonb; g jsonb := '{}'; skip_acct text; multi_acct text; stg_acct text; stg_url text; snap jsonb; snap2 jsonb;
+  secs10 jsonb; gres jsonb := '{}'; skip_acct text; multi_acct text; stg_acct text; stg_url text; snap jsonb; snap2 jsonb;
   n1 int; n2 int; tid uuid; pid uuid; dlayout jsonb; ddoc jsonb;
   e_state text; e_msg text; e_ctx text; e_det text;
 BEGIN
