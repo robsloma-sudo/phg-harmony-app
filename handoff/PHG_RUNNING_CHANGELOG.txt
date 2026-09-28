@@ -1250,3 +1250,10 @@ Rob: "Turn the speak button into something really cool and cosmic themed."
 - Found while building: a global "button > b/span { align-self:center!important }" rule collapses
   absolutely-positioned layers to zero height, and an id+id base rule outranked the state colours;
   both handled in the star's own CSS.
+
+------------------------------------------------------------------------------
+PHG-20260928-DEPLOY2 | USER_PROMPT + PRODUCTION DEPLOY | 2026-09-28
+Rob: "deploy"
+- Pushed main d8a3f14 = index.html 18.49.18 + netlify.toml (from branch dc291a6). Includes 18.49.16-18:
+  iOS voice error fix, developer-only error banners, minimal Harmony view, cosmic Speak button.
+  Rollback: redeploy main 861813c (18.49.15) in Netlify.
