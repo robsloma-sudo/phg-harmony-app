@@ -40725,7 +40725,7 @@ function openShortcut(){
     +'<p class="hvxFine">A key only lets that Shortcut log notes and talk to Harmony as you. It is shown once and stored scrambled. Revoke it here any time. Add to Home Screen from Safari’s Share menu to get the Harmony app icon.</p>');
   if(!p)return;
   p.querySelector('#hvxMakeKey').onclick=function(){
-    var btn=this;btn.disabled=true;btn.textContent='Creating…';
+    var btn=this;btn.disabled=true;btn.textContent='Creating…';Array.prototype.forEach.call(p.querySelectorAll('.hvxErr'),function(x){x.remove();});
     inbox({action:'issue_key',name:'iPhone Shortcut'}).then(function(j){
       var box=p.querySelector('#hvxKeyBox');
       box.innerHTML='<div class="hvxWarn">Copy your key now: it will not be shown again.</div>'+copyBtn('Copy',j.key)+'<div class="hvxSheetHead" style="padding-left:0;margin-top:10px">Address</div>'+copyBtn('Copy',j.endpoint);
@@ -40734,7 +40734,7 @@ function openShortcut(){
   };
   loadKeys();
 }
-function alertInline(p,msg){var d=document.createElement('div');d.className='hvxWarn';d.textContent=msg;p.querySelector('.hvxPanelBody').prepend(d);}
+function alertInline(p,msg){Array.prototype.forEach.call(p.querySelectorAll('.hvxPanelBody > .hvxWarn.hvxErr'),function(x){x.remove();});var d=document.createElement('div');d.className='hvxWarn hvxErr';d.textContent=msg;p.querySelector('.hvxPanelBody').prepend(d);}
 function loadKeys(){
   var box=document.getElementById('hvxKeys');if(!box)return;
   inbox({action:'list_keys'}).then(function(j){
