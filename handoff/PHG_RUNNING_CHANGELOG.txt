@@ -1027,3 +1027,6 @@ tough scale (best).
   - The 3-reviewer screens overstated the result by about 4 points.
   - The round-17 legacy (74.1) is still the best full-panel score.
   - New flag for Rob: the Brown Butter Old Fashioned has no dairy allergen note.
+- TEST-1 full panel on I8: 68.1 (critic 68.1, content 73.9, accuracy 62.2). One gate failed on phone: 10 px serve labels in dim light.
+  - Standings: round 17 at 74.1 is still the best, then I5 at 70.1.
+  - Recommendation: port the KB content wins onto the round-17 base, not more code-art iterations.

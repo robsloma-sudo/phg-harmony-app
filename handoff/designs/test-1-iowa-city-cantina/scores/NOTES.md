@@ -228,3 +228,17 @@ Consolidated fixes for I7 (asked for by several reviewers):
   - Make the tasting-note rule consistent.
   - Fix the stale page title.
   - Put an item-by-item missing_ingredients table in proposal.md, including the Old Fashioned dairy allergen.
+
+## Full 15-reviewer panel on I8
+Critic 72.0/67.1/67.4/68.6/65.4 → 68.1 (phone critic FAILED environmental_legibility: 10 px reversed serve labels).
+Content 73.6/74.0/73.6/75.2/73.2 → 73.9. Accuracy 64.4/60.2/61.2/63.2/62.0 → 62.2. Combined 68.1 (I5 panel 70.1; round-17 74.1).
+
+Full-panel standings: round 17 74.1 > I5 70.1 > I8 68.1.
+Findings:
+- The KB rebuild family improved the reading layer: bilingual subheads, sourced serve facts and inline prices all got good content scores.
+- Its code-drawn art has not beaten the round-17 base. Four soil attempts in a row read as sunburst, confetti, sea and gravel/water (craft ceiling without raster art).
+- Accuracy is held at about 62 by name-echo descriptions (Rob's data gap), plus reviewers asking for Mexican items (mezcal, Mexican lager) that the draft does not have.
+- Recommendation: stop the I-line art iterations.
+  - Next: port the proven KB content wins onto the round-17 base (bilingual H2+H3, serve facts as one glass rule, one inline price rhythm, the missing-data table, a generic allergen line, 12 px+ labels).
+  - Then run a full panel.
+  - Raster art only after the Canva hosts are allowed.
