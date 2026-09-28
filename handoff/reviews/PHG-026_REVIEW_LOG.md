@@ -62,7 +62,8 @@ Fixed before round 2 (both files):
   old one, 0 smaller (was 23 smaller); 407 venues change current menu.
 - submit_menu: size decides before drinks count; drinks count includes typed sections; same-source item-page guard and
   partial-recapture (< half) guard; empty current menu can be replaced by an item page; account row locked first
-  (FOR NO KEY UPDATE) then advisory lock; SET LOCAL lock_timeout.
+  (FOR NO KEY UPDATE) then advisory lock. (Correction, round 5: this line said "SET LOCAL lock_timeout", but
+  submit_menu had none until round 5; it now has a function-level `set lock_timeout to '5s'`, see below.)
 - extraction duplicate branch: supersedes the page's own stale staged rows; never sets item_set_hash on a duplicate;
   only matches an original sibling that still has live staged rows.
 - repair Step 3: batched function phg_repair_step3_batch(300) with a progress table (was one statement over ~1M rows).
@@ -345,3 +346,74 @@ Minor:
 - M6: use a function-level lock_timeout for the rollback.
 
 Gate status after round 4: Safety 81.1 passes; Spec 78.7 does not. Round 5 needs Spec above 85.3 while Safety holds above 80.
+
+## Changes after round 4 (submitted for round 5)
+Files: 20260927190000, 20260927191000, 20260928030000 (score gate), supabase/tests/phg_026_monitor.sql, new
+supabase/tests/phg_026_rollback_check.sql; rehearsal gen.py (round 5), rehearse_round5*.sql,
+handoff/reviews/rehearsal/results_round5.md (blocks A-G, all rolled back, all pass) and live_defs_round5.md
+(pg_get_functiondef / pg_get_viewdef of the C10 and C17 functions, for reviewers without DB access). The designer
+gateway is untouched. Nothing applied; a read-only check afterwards found live exactly as before (function md5s
+identical, cron 7 / 13 paused, no PHG-026 object, no rehearsal row).
+
+Spec should-fix and minors:
+1. C1 damping: the 7-day damping condition now ends `and not (c.itemish and not v_itemish)`, so a real page is never
+   held behind an item-page current menu. Rehearsed: s11b (real page, near-identical, fewer drinks, current item page
+   0 min old) -> `newer_near_identical_capture` (round 4: damped); s11c control (real-page current) still damped.
+2. C1 (items, drinks) over an item-page current menu: another-source real page at least as large by (items, drinks)
+   replaces it (`real_page_over_item_page`, Step 2's tie rule; s11); same-source item page over an item-page current
+   compares (items, drinks) too (see SF-D).
+3. C7/C13 roll-forward: file 2's header now also clears the candidate hashes:
+   `update public.menu_source_candidates set item_set_hash = null, duplicate_of_candidate_id = null where item_set_hash
+   is not null or duplicate_of_candidate_id is not null;` (Step 4 only fills rows where both are NULL). Rehearsed in E:
+   299 rows, 5.8 s (a scan of all 550,045 candidates).
+4. C12: submit_menu now has `set lock_timeout to '5s'` as a function-level setting (the SET LOCAL form scoped to the
+   call, reset on return; a SET LOCAL in the body would leak into the caller's transaction, e.g. promotion). Rehearsed:
+   proconfig `[search_path=public, lock_timeout=5s]`. The pre-gate line above that claimed it is corrected.
+5. C14: file 2's lock-time header: ~7-9 s (round 4 6.9-8.9 s, one run 14.4 s; round 5 6.8-8.7 s, one run 14.2 s).
+6. C18 score gate: an EMPTY elements array is rejected on submit (`auto_rejected`) and blocked on approve
+   (`blocked_by_layout_gate`); the rollback re-grants EXECUTE to service_role where the saved ACL had it (the backup
+   now stores `acl`); `set local lock_timeout = '5s'` is the first statement (before the ALTER); header says it is NOT
+   part of the PHG-026 publish. Rehearsal found and fixed two bugs in the new code (CASE inside IF needs parentheses;
+   the rollback loop did not select `acl`).
+7. C11 / C16 / C5 runbook (file 2): all steps run as postgres; Edge traffic (submit-menu) stays idle from before file 1
+   until the release gate has passed, in-flight calls either finish first or queue behind the 5 s-bounded table lock,
+   55P03 / 40P01 are safe to re-run; post-release list (step 7): promote-menus should record out.status, the stale
+   submit-menu header comment, and phg-expanded-data (next item).
+8. C10 evidence and a finding (live_defs_round5.md): the views and SQL readers filter `m.is_current` (one row per venue
+   with the unique index). The Edge function phg-expanded-data (`restaurant_menu_map`) instead takes each venue's
+   NEWEST menu by captured_at and ignores is_current; after this change that can be an alternate. One-line fix (prefer
+   is_current); not deployed here (outside the PHG-026 files), listed as runbook step 7 before or with cron 7 re-enable.
+
+Safety should-fix and minors:
+- SF-A: every table file 2 creates (plan, run, damaged, step3_done, step4_done, plus the backups) is `revoke all ...
+  from anon, authenticated, service_role; grant select ... to service_role`. Rehearsed: 8 tables, select true, all
+  other privileges false.
+- SF-B: `revoke all on function ... from public, anon, authenticated, service_role` for phg_repair_step3_batch,
+  phg_repair_step4_batch, phg_repair_20260927_rollback (and phg_rollback_function_defs_20260927 in file 1,
+  phg_rollback_design_score_gate_20260928 in the score gate). Runbook still works: it runs as postgres (rehearsal
+  current_user = postgres; has_function_privilege(postgres) true on all four; every block called them successfully).
+- SF-C: monitor has two new pass/fail rows: `0 plan venues smaller than their largest pre-incident menu (except a
+  re-capture of their own page)` (a shrink is allowed only when the current menu superseded its predecessor as
+  same_source_recapture / same_source_price_enrichment; up to 20 venue ids listed) and `0 venues with > 2 non-growing
+  current-menu changes since release (flip-flop)` (growth reasons excluded; ids listed); the all-reasons churn row stays
+  informational. Rehearsed post-repair (pass) and on forged data (smaller FAILS, same-page shrink PASSES, flip-flop
+  FAILS).
+- SF-D: an item page replaces an item-page current menu of the same source only when strictly larger by (items,
+  drinks), unless it is the very same URL (then at least as large). Rehearsed: s12 sibling same size -> alternate;
+  s12b same URL -> replaces; s12c sibling larger -> replaces.
+- SF-E: new supabase/tests/phg_026_rollback_check.sql (query 1: 9 pass/fail rows; query 2: review candidates, M2). The
+  rollback returns `skipped_accounts` [{account_id, reason newer_menu | multi_current_backup, scope}] and records its
+  result in phg_repair_run_20260927 as step `rollback`. Rehearsed after a clean rollback (D: 9/9, 0 candidates) and
+  after the skip-path rollback (G: 9/9; 4 candidates = the 2 skipped venues + 2 staging pages not restored).
+- M1: drinks items are DISTINCT drinks keys (name|price) in phg_menu_payload_bev_count and phg_menu_bev_count, which
+  submit_menu and Step 2's ranking both use. Step 2 results unchanged (348; 300 / 12 / 36).
+- M2: query 2 of the rollback check (above).
+- M3: runbook Edge note (spec item 7).
+- M4: score gate lock_timeout (spec item 6).
+- M5: every score is appended to phg.menu_design_proposals.review_score_history (new column, default '[]');
+  review_scores keeps the latest per reviewer; the result reports `rescore_of_same_version`. Rehearsed: history 4 entries.
+- M6: phg_repair_20260927_rollback has a function-level `set lock_timeout to '5s'` (the in-body SET LOCAL is gone).
+
+Timings this round: file 2 steps 1-2 6.8-8.7 s (one run 14.2 s); Step 3 13.5-16.7 s per 100; Step 4 16.1 s per 500 /
+11.8 s per 200; release gate 6.4 s; rollback 6.5-7.1 s; rollback check 0.3-0.4 s; monitor 2.9 s; function rollback
+20-25 ms.

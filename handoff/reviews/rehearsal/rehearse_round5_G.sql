@@ -596,7 +596,7 @@ $rehearse_f1$;
 --   Step 2 changes the current menu of ~350 touched venues (rehearsal 2026-09-28: 348 = 300 more items, 12 same items
 --   and more drinks, 36 ties where a real page replaces an item page; exact figure is written to
 --   phg_repair_run_20260927 at run time). Steps 1-2 hold SHARE ROW EXCLUSIVE on menus for ~7-9 s (rehearsed round 4:
---   6.9-8.9 s, one run 14.4 s; round 5: see handoff/reviews/rehearsal/results_round5.md); every submit_menu waits
+--   6.9-8.9 s, one run 14.4 s; round 5: 6.8-8.7 s, one run 14.2 s); every submit_menu waits
 --   behind it or fails with 55P03 after its own 5 s lock_timeout. Acceptance: 0 venues end with fewer distinct items than their largest
 --   pre-incident menu, 0 venues with 2 current menus, 0 touched venues left without a current menu.
 --
@@ -928,7 +928,10 @@ revoke all on function public.phg_repair_20260927_rollback() from public, anon, 
 --    re-enabled (cron 7 calls phg_promote_menu_batch_safe(10); promote_clean_menu_batch now caps it at 5 pages).
 -- 6. after the first cron 13 / 7 cycles and daily for a week: supabase/tests/phg_026_monitor.sql (every pass row true).
 -- 7. post-release follow-ups (not part of this change): promote-menus Edge function should record out.status (today it
---    counts every non-'duplicate' status as created); submit-menu Edge function header comment is stale.
+--    counts every non-'duplicate' status as created); submit-menu Edge function header comment is stale;
+--    phg-expanded-data (restaurant_menu_map) shows each venue's NEWEST menu by captured_at, not its current one, so after
+--    this change it can show an alternate: make it prefer is_current (order by is_current desc first) before or together
+--    with re-enabling cron 7 (see handoff/reviews/rehearsal/live_defs_round5.md).
 -- Rollback (cron 7 and 13 paused before and during it, and until the functions are rolled back too or the change is
 --   re-applied): select public.phg_repair_20260927_rollback(); then, if the functions must go back too,
 --   select public.phg_rollback_function_defs_20260927();   (drops the one-current index, restores the 4 bodies)
