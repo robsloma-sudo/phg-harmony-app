@@ -155,16 +155,20 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
       if (!rows.length) return { speak: `I found no priced ${p.q || p.family || "drinks"} on the menus we have${p.city ? " in " + p.city : ""}.`, view: { type: "empty", title: "No prices" } };
       const prices = rows.map((r: any) => +r.item_price).sort((a: number, b: number) => a - b);
       const avg = prices.reduce((a: number, b: number) => a + b, 0) / prices.length, med = prices[Math.floor(prices.length / 2)];
+      /* typical range (10th-90th percentile) so a single odd listing doesn't set the range; the
+         query is capped at the REST row limit, so say "over" when it hits it */
+      const p10 = prices[Math.floor(prices.length * 0.1)], p90 = prices[Math.min(prices.length - 1, Math.floor(prices.length * 0.9))];
+      const countSay = (data || []).length >= 1000 ? `over ${prices.length.toLocaleString("en-US")}` : prices.length.toLocaleString("en-US");
       const g = ["city", "venue_type", "venue", "state_code"].includes(p.group_by) ? p.group_by : "city";
       const agg: Record<string, number[]> = {};
       rows.forEach((r: any) => { const k = r[g] || "—"; (agg[k] = agg[k] || []).push(+r.item_price); });
       const bars = Object.entries(agg).filter(([, v]) => v.length >= (g === "venue" ? 1 : 3)).map(([label, v]) => ({ label, value: money(v.reduce((a, b) => a + b, 0) / v.length), n: v.length })).sort((a: any, b: any) => b.n - a.n).slice(0, 12).sort((a: any, b: any) => b.value - a.value);
       const what = p.q || p.family || "drinks";
       return {
-        speak: `Across ${rows.length} priced ${what} on our menus${p.city ? " in " + p.city : ""}, the average is $${avg.toFixed(2)} and the median $${med.toFixed(2)}, from $${prices[0]} to $${prices[prices.length - 1]}.`,
+        speak: `Across ${countSay} ${what} listings with prices on our menus${p.city ? " in " + p.city : p.state ? " in " + (STATE_NAMES[String(p.state).toUpperCase()] || p.state) : ""}, the average is $${avg.toFixed(2)} and the median $${med.toFixed(2)}; most are between $${p10} and $${p90}.`,
         view: {
           type: "dashboard", title: `${title(String(what))} prices${p.city ? " · " + p.city : p.state ? " · " + p.state : ""}`,
-          tiles: [{ label: "Average", value: "$" + avg.toFixed(2) }, { label: "Median", value: "$" + med.toFixed(2) }, { label: "Range", value: `$${prices[0]}–$${prices[prices.length - 1]}` }, { label: "Menu items", value: String(rows.length) }],
+          tiles: [{ label: "Average", value: "$" + avg.toFixed(2) }, { label: "Median", value: "$" + med.toFixed(2) }, { label: "Typical range", value: `$${p10}–$${p90}` }, { label: "Menu items", value: String(rows.length) }],
           bars: { title: `Average by ${g.replace("_code", "").replace("_", " ")}`, unit: "$", bars },
           table: { cols: ["Drink", "Price", "Venue", "City"], rows: rows.slice(0, 40).map((r: any) => [r.item_name, "$" + r.item_price, r.venue, r.city]) },
         },

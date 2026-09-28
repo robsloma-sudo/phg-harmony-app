@@ -1606,3 +1606,33 @@ And she just walks through the recipe and the exact specifications of a Manhatta
   no notes written): Manhattan -> spoken spec (2 oz rye/bourbon, 1 oz sweet vermouth, 2 dashes Angostura, stir ~30 s,
   strain, cherry); NOM 1610 -> Casa Tequilera Dinastia Arandina, Zapopan, 10 brands, map link; "average margarita
   price in Denver" -> 69 priced, avg $12.43, median $12; "show me Eatery A menu in Des Moines" -> Open Harmony link.
+
+------------------------------------------------------------------------------
+PHG-20260928-CONVERSE | USER_PROMPT + CHANGE + MIGRATION (approved) | 2026-09-28
+(phg-harmony-inbox v10/v11 + phg-harmony-data v4 live; build 18.49.33 on branch; 18.49.32 deployed 23:16Z)
+Rob: "The action button is only working as a voice prompt ... I want the ability to say don't, I don't want to open
+Harmony, will you just say the things out loud to me and she says it ... she needs to ask questions that allow me to
+filter down ... like when I say give me a Manhattan recipe ... classic ... your current house menu ... one off the
+internet ... a list ... make some together ... Those sort of questions need to be prompted whenever I ask anything."
+Rob also said "Deploy." mid-work: 18.49.32 (stage orbs, Open Harmony / Done, setup page) pushed to main 7429edb,
+Netlify 6abaf55b8a43870008d0a6a9 ready 23:16:51Z.
+- Migration 20260928234500_harmony_inbox_house_recipes (Rob: "Yes, add it"): read-only house_recipes op in
+  public.phg_harmony_inbox_db (account's menu items + current recipe version, member-scoped). Verified: Rob's house
+  Manhattan returned (rye 2 oz, sweet vermouth 1 oz, aromatic bitters 2 dashes, stirred, coupe, cherry); a stranger
+  gets [].
+- inbox v10 = a conversation: stateless "context" (last 6 turns + last result detail) round-trips through the
+  Shortcut; planner actions clarify | recipe | data | note | read_back | open_screen | answer | end; replies carry
+  next = listen | open | end. Clarify asks ONE question with concrete choices (recipes: classic / house / internet /
+  list of variations / build together; data: which city or state, which drink). Recipe sources: classic
+  (cocktail_reference), house (house_recipes), internet (OpenAI web_search_preview, source named), list (variations
+  incl. house), create (collaborative). read_back reads the last result aloud; open only on "show me".
+  v11: data questions without a place ask for city/state.
+- data v4: prices speak the typical 10th-90th percentile range and "over N" when the 1000-row cap is hit (a $79.60
+  outlier and "1000" were read out before).
+- Live multi-turn tests with a temporary key (created, then deleted): "Give me a Manhattan recipe" -> the 5-way
+  question; "My house one" -> house spec in a coupe; "Don't open Harmony, just read me the ingredients again" ->
+  read back, next=listen; "average price of a margarita?" -> asks where; "Denver" -> 69 listings, avg $12.43,
+  median $12, most $8-$16; "That's all, thanks" -> goodbye, next=end.
+- Setup page 18.49.33: the Shortcut is now a Repeat loop (Context variable in, Reply/Context/Next out; If Next is
+  open -> Open URLs + stop; If Next is end -> stop). 22 copy chips; 375 px no overflow; zero page errors (fixed an
+  apostrophe that broke the panel script before commit).
