@@ -1157,3 +1157,8 @@ I can say next or make changes ... with the splash page"
   and Vuelo Reserva order fixed), labelled SAMPLE. All menu text is live text; art never contains text.
 - NEW EDGE FUNCTION supabase/functions/phg-menu-art: one text-free painted art image per call
   (OpenAI images, existing OPENAI_API_KEY secret, JWT-gated). Only called on an explicit "paint it".
+- phg-menu-art deployed to Supabase (v1, ACTIVE, verify_jwt=true). Not live-tested from this container
+  (network policy blocks supabase.co here); first real test = Rob saying "paint it" in the app.
+  Cost: one gpt-image-1 medium portrait per "paint it" (OpenAI billing on the existing key).
+- App 18.49.13 is on branch claude/phg-gallery-html-render-j246dy only; Netlify production (main) is still
+  18.49.7 - the production push was blocked by the session permission gate. Rob must allow or merge.
