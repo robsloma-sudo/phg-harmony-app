@@ -76,7 +76,15 @@ Deno.serve(async (req) => {
   const model = Deno.env.get("OPENAI_INBOX_MODEL") || "gpt-4o-mini";
   const appUrl = (Deno.env.get("PHG_APP_URL") || "https://prismatic-rugelach-777e48.netlify.app").replace(/\/+$/, "");
   if (!url || !anon || !service) return json({ ok: false, speak: "Harmony's inbox is not configured.", error: "runtime configuration missing" }, 500);
-  const db = createClient(url, service, { auth: { persistSession: false }, db: { schema: "phg" } });
+  /* v3: phg is not exposed through the REST API (direct table calls got HTTP 406), so every
+     read/write goes through public.phg_harmony_inbox_db, a service_role-only SECURITY DEFINER
+     dispatcher (migration 20260928230000), the same pattern as phg_auth_bootstrap. */
+  const admin = createClient(url, service, { auth: { persistSession: false } });
+  const dbx = async (op: string, args: Record<string, unknown>) => {
+    const { data, error } = await admin.rpc("phg_harmony_inbox_db", { p_op: op, p_args: args });
+    if (error) throw new Error(error.message);
+    return data as any;
+  };
 
   const b = await req.json().catch(() => ({}));
   const action = String(b.action || "inbox");
@@ -87,10 +95,11 @@ Deno.serve(async (req) => {
   const hkey = (req.headers.get("x-harmony-key") || String(b.key || "")).trim();
   if (hkey) {
     if (!/^hk_[A-Za-z0-9_-]{30,}$/.test(hkey)) return json({ ok: false, speak: "That Harmony key doesn't look right.", error: "bad key" }, 401);
-    const { data: k } = await db.from("harmony_device_keys").select("id,user_id,account_id,revoked_at").eq("key_hash", await sha256hex(hkey)).maybeSingle();
+    let k: any = null;
+    try { k = await dbx("key_lookup", { hash: await sha256hex(hkey) }); }
+    catch (e) { return json({ ok: false, speak: "Harmony couldn't check your key just now. Try again in a moment.", error: String(e) }, 500); }
     if (!k || k.revoked_at) return json({ ok: false, speak: "That Harmony key isn't valid anymore. Make a new one in the app.", error: "invalid key" }, 401);
     userId = k.user_id; accountId = k.account_id; via = "shortcut";
-    db.from("harmony_device_keys").update({ last_used_at: new Date().toISOString() }).eq("id", k.id).then(() => {});
   } else if (bearer && bearer.split(".").length === 3) {
     const sb = createClient(url, anon, { auth: { persistSession: false } });
     const { data: ud, error: ue } = await sb.auth.getUser(bearer);
@@ -101,64 +110,58 @@ Deno.serve(async (req) => {
     return json({ ok: false, speak: "Harmony needs your key to hear you.", error: "login or x-harmony-key required" }, 401);
   }
   if (accountId && via === "app") {
-    const { data: member } = await db.rpc("harmony_is_member", { p_user: userId, p_account: accountId });
-    if (member !== true) return json({ ok: false, error: "not a member of that account" }, 403);
+    let member = false;
+    try { member = (await dbx("is_member", { user: userId, account: accountId })) === true; }
+    catch (e) { return json({ ok: false, error: "membership check failed: " + String((e as Error)?.message || e) }, 500); }
+    if (!member) return json({ ok: false, error: "not a member of that account" }, 403);
   }
   const appOnly = () => json({ ok: false, error: "sign in to the app for this" }, 403);
 
   // ---- key management (app login only)
   if (action === "issue_key") {
     if (via !== "app") return appOnly();
-    const { count } = await db.from("harmony_device_keys").select("id", { count: "exact", head: true }).eq("user_id", userId).is("revoked_at", null);
-    if ((count || 0) >= 5) return json({ ok: false, error: "5 active keys max; revoke one first" }, 409);
     const key = newKey();
-    const { data, error } = await db.from("harmony_device_keys").insert({
-      user_id: userId, account_id: accountId, name: String(b.name || "iPhone Shortcut").slice(0, 80),
-      key_hash: await sha256hex(key), key_hint: key.slice(-4),
-    }).select("id,name,key_hint,created_at").single();
-    if (error) return json({ ok: false, error: error.message }, 500);
+    let data: any;
+    try { data = await dbx("key_issue", { user: userId, account: accountId, name: String(b.name || "iPhone Shortcut").slice(0, 80), hash: await sha256hex(key), hint: key.slice(-4) }); }
+    catch (e) { return json({ ok: false, error: String((e as Error)?.message || e) }, 500); }
+    if (data?.error === "limit") return json({ ok: false, error: "5 active keys max; revoke one first" }, 409);
     return json({ ok: true, key, ...data, endpoint: `${url}/functions/v1/phg-harmony-inbox` });
   }
   if (action === "list_keys") {
     if (via !== "app") return appOnly();
-    const { data } = await db.from("harmony_device_keys").select("id,name,key_hint,created_at,last_used_at,revoked_at").eq("user_id", userId).order("created_at", { ascending: false });
-    return json({ ok: true, items: data || [] });
+    try { return json({ ok: true, items: (await dbx("key_list", { user: userId })) || [] }); }
+    catch (e) { return json({ ok: false, error: String((e as Error)?.message || e) }, 500); }
   }
   if (action === "revoke_key") {
     if (via !== "app") return appOnly();
-    const { error } = await db.from("harmony_device_keys").update({ revoked_at: new Date().toISOString() }).eq("id", String(b.id || "")).eq("user_id", userId);
-    return json({ ok: !error, error: error?.message });
+    try { await dbx("key_revoke", { user: userId, id: String(b.id || "") }); return json({ ok: true }); }
+    catch (e) { return json({ ok: false, error: String((e as Error)?.message || e) }, 500); }
   }
 
   // ---- notes
   const listNotes = async (limit: number, openOnly: boolean) => {
-    let q = db.from("harmony_notes").select("id,kind,body,tags,due_at,done,source,created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(limit);
-    if (openOnly) q = q.eq("done", false);
-    const { data } = await q;
-    return data || [];
+    try { return ((await dbx("notes_list", { user: userId, limit, open_only: openOnly })) || []) as any[]; }
+    catch { return [] as any[]; }
   };
   const saveNote = async (text: string, kind: string, tags: string[], due: string | null) => {
-    const row = {
-      user_id: userId, account_id: accountId, kind: KINDS.includes(kind) ? kind : "note",
+    return await dbx("note_add", {
+      user: userId, account: accountId, kind: KINDS.includes(kind) ? kind : "note",
       body: text.slice(0, 4000), tags: (tags || []).map((t) => String(t).toLowerCase().slice(0, 30)).slice(0, 5),
-      due_at: due && !isNaN(Date.parse(due)) ? new Date(due).toISOString() : null, source: via,
-    };
-    const { data, error } = await db.from("harmony_notes").insert(row).select("id,kind,body,due_at,created_at").single();
-    if (error) throw new Error(error.message);
-    return data;
+      due: due && !isNaN(Date.parse(due)) ? new Date(due).toISOString() : "", source: via,
+    });
   };
   if (action === "list_notes") {
     return json({ ok: true, items: await listNotes(Math.min(200, Math.max(1, Number(b.limit) || 50)), !!b.open_only) });
   }
   if (action === "update_note") {
     if (via !== "app") return appOnly();
-    const { error } = await db.from("harmony_notes").update({ done: !!b.done, updated_at: new Date().toISOString() }).eq("id", String(b.id || "")).eq("user_id", userId);
-    return json({ ok: !error, error: error?.message });
+    try { await dbx("note_done", { user: userId, id: String(b.id || ""), done: !!b.done }); return json({ ok: true }); }
+    catch (e) { return json({ ok: false, error: String((e as Error)?.message || e) }, 500); }
   }
   if (action === "delete_note") {
     if (via !== "app") return appOnly();
-    const { error } = await db.from("harmony_notes").delete().eq("id", String(b.id || "")).eq("user_id", userId);
-    return json({ ok: !error, error: error?.message });
+    try { await dbx("note_delete", { user: userId, id: String(b.id || "") }); return json({ ok: true }); }
+    catch (e) { return json({ ok: false, error: String((e as Error)?.message || e) }, 500); }
   }
   if (action === "add_note") {
     const text = String(b.text || "").trim();

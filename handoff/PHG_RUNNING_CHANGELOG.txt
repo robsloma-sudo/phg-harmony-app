@@ -1481,3 +1481,20 @@ that page."
   donut, recipe, catalog + example tap, fallback to chat, menu lookup and sales untouched, "close the map"; zero page
   errors. Not tested end to end against the live function from this container (supabase.co blocked).
 - handoff/HARMONY_DATA_CATALOG.md documents containers, sources and example prompts.
+
+------------------------------------------------------------------------------
+PHG-20260928-INBOXFIX | USER_PROMPT + FIX + MIGRATION (approved) | 2026-09-28 (phg-harmony-inbox v3 live)
+Rob (screenshot, Action button setup): "Could not create a key: not a member of that account".
+- Root cause: phg is not an exposed REST schema. phg-harmony-inbox v2 used supabase-js with db.schema "phg", so
+  every call (harmony_is_member RPC, harmony_device_keys, harmony_notes) got HTTP 406 (edge log: POST 406
+  /rest/v1/rpc/harmony_is_member). The membership check read the failure as "not a member". Rob IS an active owner
+  of PHG Ops Test (verified). Earlier headless tests stubbed the function, so this was never exercised live.
+- Rob approved a migration. 20260928230000_harmony_inbox_db.sql: public.phg_harmony_inbox_db(p_op, p_args jsonb),
+  SECURITY DEFINER, search_path phg, execute granted to service_role only (anon/authenticated verified false).
+  Ops: key_lookup (+last_used), is_member, key_issue (5-active limit), key_list, key_revoke, notes_list, note_add,
+  note_done, note_delete; all scoped to p_args.user. Same pattern as phg_auth_bootstrap.
+- phg-harmony-inbox v3 (verify_jwt false, custom auth unchanged): all data access through that function; DB errors
+  now surface as errors instead of "not a member" / "invalid key".
+- Verified: every op in a rolled-back transaction as service_role (member true, stranger false, issue, lookup,
+  note add/list, key list); live call via pg_net with a well-formed unknown key -> 401 "isn't valid anymore"
+  (the lookup ran; a DB failure would now be a 500).
