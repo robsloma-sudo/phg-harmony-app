@@ -327,14 +327,14 @@ MONITOR = f"""
     EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || $rehearse_mon${mon}
 $rehearse_mon$ || ') g' INTO v;
     c := jsonb_build_object('monitor_post_repair', v, 'monitor_ms', {MS});
-    c := c || jsonb_build_object('menus_per_item_set_by_day', (select jsonb_object_agg(d, jsonb_build_object('menus', n, 'sets', sets, 'ratio', r)) from (
+    c := c || jsonb_build_object('menus_per_item_set_by_day', (select jsonb_object_agg(d, jsonb_build_object('menus', n, 'sets', sets, 'ratio', x.ratio)) from (
             select created_at::date::text d, count(*) n, count(distinct (account_id, item_set_hash)) sets,
-                   round(count(*)::numeric / nullif(count(distinct (account_id, item_set_hash)), 0), 3) r
+                   round(count(*)::numeric / nullif(count(distinct (account_id, item_set_hash)), 0), 3) ratio
               from public.menus group by 1) x),
-       'menus_per_item_set_windows', (select jsonb_object_agg(w, jsonb_build_object('menus', n, 'sets', sets, 'ratio', r)) from (
+       'menus_per_item_set_windows', (select jsonb_object_agg(w, jsonb_build_object('menus', n, 'sets', sets, 'ratio', x.ratio)) from (
             select case when created_at < '2026-09-27 00:00:00+00' then 'pre_incident' else 'incident_window' end w, count(*) n,
                    count(distinct (account_id, item_set_hash)) sets,
-                   round(count(*)::numeric / nullif(count(distinct (account_id, item_set_hash)), 0), 3) r
+                   round(count(*)::numeric / nullif(count(distinct (account_id, item_set_hash)), 0), 3) ratio
               from public.menus group by 1) x));
     update public.phg_repair_run_20260927 set ran_at = '2026-09-27 00:00:00+00' where step = 'step2';
     EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || $rehearse_mon${mon}
