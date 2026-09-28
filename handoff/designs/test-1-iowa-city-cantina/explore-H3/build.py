@@ -121,12 +121,12 @@ def menu_html(cols):
 
 # ------------------------------------------------------------------ layouts
 LAYOUTS = {
-    "letter": dict(W=816, H=1056, dsf=3.125, m=64, u=13, wm_w=688, cols=[(64, 240), (328, 200)],
-                   head=552, sun_r=220, bottom=992, top_min=203, sub_gap=30,
-                   fs=dict(h2=25, h3=11.5, np=17, d=12, sub=13), amp=14, lam=260, stroke=1.5),
-    "phone": dict(W=390, H=None, dsf=3, m=24, u=15, wm_w=342, cols=[(24, 246)],
-                  head=290, sun_r=112, bottom=None, top_min=150, sub_gap=20,
-                  fs=dict(h2=22, h3=11.5, np=17, d=13.5, sub=10.5), amp=8, lam=240, stroke=1.4),
+    "letter": dict(W=816, H=1056, dsf=3.125, m=64, u=13, wm_w=688, cols=[(64, 240), (328, 200)], horizon_min=205,
+                   head=552, sun_r=220, bottom=998, top_min=203, sub_gap=30,
+                   fs=dict(h2=26, h3=11.5, np=17, d=12, sub=13), amp=14, lam=260, stroke=1.5),
+    "phone": dict(W=390, H=None, dsf=3, m=24, u=15, wm_w=342, cols=[(24, 246)], horizon_min=0, hook_dx=8,
+                  head=286, sun_r=112, bottom=None, top_min=150, sub_gap=20,
+                  fs=dict(h2=22, h3=11.5, np=17, d=13.5, sub=10), amp=8, lam=240, stroke=1.4),
 }
 
 
@@ -136,7 +136,8 @@ def field_path(L, horizon_y, sun, page_h):
     u, W, H0 = L["u"], L["W"], L["head"]
     cx, cy, r = sun
     xr = W + 3 * u                      # off-page turn column (bleed)
-    flat = H0 + 4 * u                   # contour bending starts after the hooks
+    hx = L.get("hook_dx", u)             # horizontal pitch of the nested hooks and of the stair
+    flat = H0 + 4 * hx                  # contour bending starts after the hooks
 
     def bend(x, y):
         if x <= flat:
@@ -155,12 +156,12 @@ def field_path(L, horizon_y, sun, page_h):
     unit = 0
     base_h = H0
     while y < page_h + 6 * u:
-        H0 = base_h + (unit % 3) * u      # stair: each hook steps one furrow-pitch inward, then resets
+        H0 = base_h + (unit % 3) * hx     # stair: each hook steps one pitch inward, then resets
         unit += 1
         a, b, c, d, e, f = [y + i * u for i in range(6)]
         pts += [(xr, bend(xr, a))] + run(a, xr, H0) + [(H0, f)] + run(f, H0, xr)[1:]          # outer
-        pts += [(xr, bend(xr, e))] + run(e, xr, H0 + u) + [(H0 + u, b)] + run(b, H0 + u, xr)[1:]  # middle
-        pts += [(xr, bend(xr, c))] + run(c, xr, H0 + 2*u) + [(H0 + 2*u, d)] + run(d, H0 + 2*u, xr)[1:]  # inner
+        pts += [(xr, bend(xr, e))] + run(e, xr, H0 + hx) + [(H0 + hx, b)] + run(b, H0 + hx, xr)[1:]  # middle
+        pts += [(xr, bend(xr, c))] + run(c, xr, H0 + 2*hx) + [(H0 + 2*hx, d)] + run(d, H0 + 2*hx, xr)[1:]  # inner
         y += 6 * u                       # next unit starts on the next furrow: the field is continuous
     return "M" + " L".join(f"{x:.2f},{yy:.2f}" for x, yy in pts)
 
@@ -198,12 +199,12 @@ html,body{{background:{CREAM}}}
 .page{{position:relative;overflow:hidden;background:{CREAM};color:{INK};font-family:Gd;width:{W}px;height:{H}px}}
 .art{{position:absolute;left:0;top:0}}
 .wmk{{font-family:Ch;font-size:{p['wm_size']:.2f}px}}
-.sub{{position:absolute;left:{L['m']}px;top:{p['sub_top']:.1f}px;font-weight:500;font-size:{fs['sub']}px;letter-spacing:.26em;
+.sub{{position:absolute;left:{L['m']}px;top:{p['sub_top']:.1f}px;font-weight:500;font-size:{fs['sub']}px;letter-spacing:{'.26em' if cls=='letter' else '.14em'};
   color:{INK2};text-transform:uppercase;white-space:nowrap;line-height:1}}
 .col{{position:absolute;top:{p['top']}px}}
 {colcss}
 /* baseline grid: every line box is a multiple of U; baselines are shifted onto the furrow lines */
-h2{{font-weight:500;font-size:{fs['h2']}px;line-height:{2*u}px;letter-spacing:.12em;color:{TERRA};text-transform:uppercase;
+h2{{font-weight:500;font-size:{fs['h2']}px;line-height:{3*u}px;letter-spacing:.12em;color:{TERRA};text-transform:uppercase;
   position:relative;top:{p['shift']['h2']:.2f}px;margin-bottom:{u}px}}
 h3{{font-weight:500;font-size:{fs['h3']}px;line-height:{u}px;letter-spacing:.22em;color:{INK2};text-transform:uppercase;
   position:relative;top:{p['shift']['h3']:.2f}px;margin-bottom:{u}px}}
@@ -235,16 +236,48 @@ BASELINE_JS = """() => { const r={}; for (const sel of ['h2','h3','.np','.d']) {
 
 # Balance: add whole units to gaps (section gaps first, then item gaps) until every column's
 # last line box ends exactly on the bottom line; returns per-column feet.
-BALANCE_JS = """([u, bottom]) => { const feet=[];
+# Balance + field rhythm. Each column must end exactly on the bottom line. Extra whole units go
+# (a) to section margins so every section head's baseline lands on a greca-unit key furrow
+#     (the unit's top furrow or its inner return, i.e. every 3U from phase unitTop0), and (b) evenly to the item gaps inside each section.
+# Brute force over the (small) space of unit allocations; prefer all heads aligned, then even gaps.
+BALANCE_JS = """([u, bottom, unitTop0]) => { const out=[]; const U6=6*u;
+  const probe=el=>{const s=document.createElement('span');s.style.cssText='display:inline-block;width:0;height:0;vertical-align:baseline';
+    el.prepend(s);const y=s.getBoundingClientRect().top;s.remove();return y;};
   document.querySelectorAll('.col').forEach(col => {
-    const secs=[...col.querySelectorAll('section+section')], its=[...col.querySelectorAll('.it+.it, .it+h3')];
-    const foot=()=>{ const last=col.lastElementChild.lastElementChild; return last.getBoundingClientRect().bottom - (parseFloat(getComputedStyle(last).top)||0) };
-    let extra=Math.round((bottom - foot())/u), guard=0; const extra0=extra;
-    const slots=[...secs, ...secs, ...its];
-    let i=0; while(extra>0 && slots.length && guard<500){ const el=slots[i%slots.length];
-      el.style.marginTop=(parseFloat(getComputedStyle(el).marginTop)+u)+'px'; extra--; i++; guard++; }
-    feet.push([foot(), extra0]); });
-  return feet; }"""
+    const secs=[...col.querySelectorAll('section')];
+    const foot=()=>col.lastElementChild.lastElementChild.getBoundingClientRect().bottom;
+    const E=Math.round((bottom - foot())/u);
+    const bl=secs.map(s=>probe(s.querySelector('h2')));
+    const slots=secs.map(s=>[...s.querySelectorAll('.it+.it, .it+h3')]);
+    const n=secs.length; let best=null;
+    const rec=(i, used, xs, ms)=>{
+      if(i===n){ if(used!==E) return;
+        let aligned=0, shift=0;
+        for(let k=0;k<n;k++){ if(k>0) shift+=xs[k-1]+ms[k];
+          const y=bl[k]+shift*u; const r=(((y-unitTop0)%(U6/2))+U6/2)%(U6/2); if(r<0.5 || r>U6/2-0.5) aligned++; }
+        // evenness: variance of the added units per item gap across the whole column (+ a small
+        // penalty on section-margin units), so no section's items float apart from the rest
+        const loads=[]; xs.forEach((x,k)=>{ const nS=slots[k].length; for(let j=0;j<nS;j++) loads.push(Math.floor(x/nS)+(j<x%nS?1:0)); });
+        const mean=loads.reduce((a,b)=>a+b,0)/Math.max(loads.length,1);
+        let v=loads.reduce((a,q)=>a+(q-mean)**2,0)/Math.max(loads.length,1);
+        v+=0.15*ms.reduce((a,m)=>a+m*m,0);
+        const msum=ms.reduce((a,b)=>a+b,0);
+        const score=[-aligned, v, msum];
+        if(!best || score[0]<best.score[0] || (score[0]===best.score[0] && (score[1]<best.score[1]-1e-9 || (Math.abs(score[1]-best.score[1])<1e-9 && score[2]<best.score[2]))))
+          best={score, xs:[...xs], ms:[...ms], aligned};
+        return; }
+      const maxX = slots[i].length ? E-used : 0;
+      for(let m=0; m<=(i===0?0:11); m++) for(let x=0; x<=maxX-m; x++){
+        if(used+m+x>E) break; xs[i]=x; ms[i]=m; rec(i+1, used+m+x, xs, ms); } };
+    rec(0,0,new Array(n).fill(0),new Array(n).fill(0));
+    secs.forEach((s,k)=>{ if(k>0 && best.ms[k]) s.style.marginTop=(parseFloat(getComputedStyle(s).marginTop)+best.ms[k]*u)+'px';
+      for(let j=0;j<best.xs[k];j++){ const el=slots[k][j%slots[k].length]; el.style.marginTop=(parseFloat(getComputedStyle(el).marginTop)+u)+'px'; } });
+    out.push({foot:foot(), extra_units:E, section_margin_units:best.ms, item_units:best.xs, heads_on_unit_tops:best.aligned+'/'+n}); });
+  return out; }"""
+
+HEAD_BASELINE_JS = """() => { const el=document.querySelector('h2'); const s=document.createElement('span');
+  s.style.cssText='display:inline-block;width:0;height:0;vertical-align:baseline'; el.prepend(s);
+  const y=s.getBoundingClientRect().top; s.remove(); return y; }"""
 
 CONTRAST_JS = """() => { const out=[]; const walker=document.createTreeWalker(document.querySelector('.page'),NodeFilter.SHOW_TEXT);
   let n; while(n=walker.nextNode()){ if(!n.textContent.trim()) continue; const el=n.parentElement;
@@ -262,15 +295,15 @@ GEOM_JS = """() => { const q=s=>[...document.querySelectorAll(s)].map(e=>{const 
     gap_px:+(p.left-n.right).toFixed(1), gap_pct:+(100*(p.left-n.right)/W).toFixed(2),
     name_start_to_price_end_pct:+(100*(p.right-n.left)/W).toFixed(1)}});
   // baselines of every line of reading text (for the grid-registration check)
-  const bl=[]; document.querySelectorAll('h2,h3,.np,.d').forEach(el=>{ const s=document.createElement('span');
+  const bl=[], bld=[]; document.querySelectorAll('h2,h3,.np,.d').forEach(el=>{ const s=document.createElement('span');
     s.style.cssText='display:inline-block;width:0;height:0;vertical-align:baseline'; el.prepend(s);
-    bl.push(+s.getBoundingClientRect().top.toFixed(2)); s.remove(); });
+    (el.classList.contains('d')?bld:bl).push(+s.getBoundingClientRect().top.toFixed(2)); s.remove(); });
   const cols=[...document.querySelectorAll('.col')].map(c=>{const l=c.lastElementChild.lastElementChild.querySelector('.d')||c.lastElementChild.lastElementChild;
     const r=document.createRange(); r.selectNodeContents(l); const rs=[...r.getClientRects()]; const b=c.getBoundingClientRect();
     return {x:b.left,y:b.top,w:b.width,last_line_box_bottom:+c.lastElementChild.lastElementChild.getBoundingClientRect().bottom.toFixed(2),
             last_glyph_bottom:+Math.max(...rs.map(x=>x.bottom)).toFixed(2)}});
   return {wordmark:q('.wmk')[0],sub:q('.sub')[0],columns:cols,section_heads:q('h2'),sub_heads:q('h3'),
-    eye_travel:travel,baselines:bl} }"""
+    eye_travel:travel,baselines:bl,desc_baselines:bld} }"""
 
 
 def lum(c):
@@ -360,16 +393,29 @@ def render(b, cls):
         n_units = int((L["bottom"] - L["top_min"]) // u)
         top = L["bottom"] - n_units * u
     else:
-        top = int(math.ceil((p["sub_top"] + 3 * u) / u) * u)
-    horizon = top + ref - u                             # the furrow above the first baseline
-    p.update(sun=(cx, cy, r), horizon=horizon, top=top, shift=shift, art=True)
+        top = int(math.ceil((base + 50) / u) * u)       # phone: horizon + sub-line sit between wordmark and list
+    p.update(sun=(cx, cy, r), horizon=top, top=top, shift=shift, art=True)
+    load(p)
+    # field phase: a greca unit's top furrow = the first section head's baseline; the horizon is
+    # the furrow directly above that unit (or a whole unit higher, if that stays below horizon_min)
+    b0 = pg.evaluate(HEAD_BASELINE_JS)
+    if cls == "phone":   # phone: horizon just under the wordmark, sub-line under it, first head one unit + 1U lower
+        off = b0 - top
+        top = int(math.ceil((base + 10 + 7 * u - off) / u) * u)
+        p["top"] = top
+        load(p)
+        b0 = pg.evaluate(HEAD_BASELINE_JS)
+    horizon = b0 - u
+    hmin = L["horizon_min"] if cls == "letter" else base + 8
+    while horizon - 6 * u >= hmin:
+        horizon -= 6 * u
+    p["horizon"] = horizon
     if cls == "phone":
-        p["horizon"] = top + ref - u
-        p["sub_top"] = min(p["sub_top"], p["horizon"] - 18)
+        p["sub_top"] = horizon + 11                   # sub-line under the horizon, left of the field
     load(p)
     feet = None
     if L["bottom"]:
-        feet = pg.evaluate("(a) => (" + BALANCE_JS + ")(a)", [u, L["bottom"]])
+        feet = pg.evaluate("(a) => (" + BALANCE_JS + ")(a)", [u, L["bottom"], horizon + u])
     else:  # phone: page height = content + bottom margin, snapped to the grid
         bottom = pg.evaluate("() => Math.max(...[...document.querySelectorAll('.col')].map(c=>c.getBoundingClientRect().bottom))")
         p["page_h"] = int(bottom + m)
@@ -377,8 +423,10 @@ def render(b, cls):
     geo = pg.evaluate(GEOM_JS)
     grid0 = top + ref
     geo["grid"] = {"u": u, "first_baseline": round(grid0, 2), "horizon": round(p["horizon"], 2),
-                   "baselines_off_grid_max_px": round(max(abs(((y - grid0 + u / 2) % u) - u / 2) for y in geo["baselines"]), 3)}
-    del geo["baselines"]
+                   "heads_subheads_names_off_grid_max_px": round(max(abs(((y - grid0 + u / 2) % u) - u / 2) for y in geo["baselines"]), 3),
+                   "descriptions_off_half_grid_max_px": round(max(abs(((y - grid0 + u / 4) % (u / 2)) - u / 4) for y in geo["desc_baselines"]), 3),
+                   "n_baselines": len(geo["baselines"]), "n_desc_baselines": len(geo["desc_baselines"])}
+    del geo["baselines"], geo["desc_baselines"]
     geo["wordmark_font_px"] = round(size, 2)
     geo["cap"] = [round(base - cap, 2), round(base, 2)]
     geo["t_i_gap_css"] = [round(t_right, 2), round(i_left, 2)]

@@ -26,7 +26,7 @@ o = lambda k, d: float(OPT.get(k, d))
 
 GREEN, IVORY, IVORY2, IVORY3, GOLD = "#10291F", "#EFE6D2", "#C9C2AF", "#B3B09E", "#C8A765"
 STROKE = o("stroke", 1.25)     # the one stroke weight (css px)
-PITCH = o("pitch", 3.0)        # nominal hatch pitch
+PITCH = o("pitch", 2.5)        # nominal hatch pitch
 PMIN = o("pmin", 1.9)          # line dropping floor
 CLEAR = 23                     # 6 mm
 GRID = 8                       # the shared baseline increment (css px) for both columns
@@ -48,9 +48,11 @@ def desc(it):
         parts = [n.lower().replace(" ", NBSP) for n in names]          # multi-word ingredients never break
         s = (NBSP + "· ").join(parts)                                 # breaks fall after a dot, not before
         s = s[0].upper() + s[1:]
-        if it["id"] in TAIL:
-            assert TAIL[it["id"]].rstrip(".") in it["desc"]
-            s += ". " + TAIL[it["id"]]
+        assert it["id"] not in TAIL or TAIL[it["id"]].rstrip(".") in it["desc"]
+        # hyphenated words never break at the hyphen
+        s = re.sub(r"([\w\u00a0]*\w-\w[\w.]*)", r'<span class="nw">\1</span>', s)
+        if it["id"] in TAIL:   # the draft's sentence stays in the same flow but never splits into a widow
+            s += '. <span class="nw">' + TAIL[it["id"]] + "</span>"
         return s
     return it["desc"].rstrip(".")
 
@@ -214,18 +216,18 @@ class Leaf:
                 tt = min(0.999, max(0.0, t + dt))
                 seg.append(self.at_t(tt, u))
             out.append(seg)
-            spacing = PITCH * (0.75 + o("swell", 2.6) * t ** 1.5)          # css px along the axis
+            spacing = PITCH * (0.75 + o("swell", 0.8) * t ** 1.5)          # css px along the axis
             t += spacing / self.L
         return out
 
     def lines(self):
         if OPT.get("hatch", "trans") == "trans":
             n = self.n
-            out = [[self.at(i, 0.12 * -self.shadow) for i in range(int(n * 0.04), int(n * 0.9))]]   # crease
+            out = [[self.at(i, 0.12 * -self.shadow) for i in range(int(n * 0.04), int(n * 0.9))]] if OPT.get("crease", "1") == "1" else []   # crease
             sh = self.shadow
             # shaded half: arcs from the shaded edge across to the crease; near the base they cross the whole leaf
             out += self.arcs(0.05, 0.86, sh * 1.0,
-                             lambda t, k: -sh * (0.9 if t < 0.28 else (0.1 if k % 2 else -0.05)), bow=o("bow", 0.12))
+                             lambda t, k: -sh * (0.9 if t < o("full", 0.6) else (0.1 if k % 2 else -0.05)), bow=o("bow", 0.12))
             return out
         return self.lines_long()
 
@@ -280,8 +282,9 @@ def agave(bx, by, S, text_rects=None, seed=5):
     # field reads as field
     BACK = [(-4, 0.93, .050, .02, 0), (9, 0.90, .052, .03, .01), (-15, 0.74, .052, .05, .02), (21, 0.84, .055, .05, 0)]
     MID = [(-26, 0.46, .060, .07, .02), (30, 0.70, .062, .08, .02), (-9, 0.66, .058, .04, .01), (40, 0.60, .064, .06, .02),
-           (-38, 0.38, .062, .10, .04)]
-    FRONT = [(-52, 0.33, .068, .10, .04), (-64, 0.31, .066, .10, .05), (-76, 0.30, .064, .08, .06),
+           ] + ([(-38, 0.38, .062, .10, .04)] if OPT.get('stubs') == '1' else [])
+    SHARDS = [(-64, 0.31, .066, .10, .05), (-76, 0.30, .064, .08, .06)] if OPT.get("shards") == "1" else []
+    FRONT = ([(-52, 0.33, .068, .10, .04)] if OPT.get('stubs') == '1' else []) + SHARDS + [
              (-20, 0.42, .072, .05, .02), (14, 0.46, .072, .05, .02), (52, 0.46, .070, .06, .02)]
 
     def clamp(mk, name):
@@ -351,7 +354,7 @@ def field(W, horizon, bottom, vpx, ground_x, ground_y, scale=1.0):
 
     def contour_rows(top, bot):
         th = sum(b[1] - t[1] for t, b in zip(top, bot)) / len(top)
-        m = max(1, int(th / (o("rowpitch", 4.2) * scale)))
+        m = max(1, int(th / (o("rowpitch", 5.5) * scale)))
         rows = []
         for k in range(1, m + 1):
             f = k / (m + 1)
@@ -362,7 +365,7 @@ def field(W, horizon, bottom, vpx, ground_x, ground_y, scale=1.0):
         """rays to a vanishing point on the horizon, evenly spaced along the page bottom; rays are dropped
         (engraver's line dropping) where perspective would pack them tighter than PMIN."""
         vy = horizon - 1.5 * scale
-        fp = o("furpitch", 8.0) * scale
+        fp = o("furpitch", 11.0) * scale
         ymid = sum((t[1] + b[1]) / 2 for t, b in zip(top, bot)) / len(top)
         local = fp * (ymid - vy) / (bottom - vy)
         rows = []
@@ -394,13 +397,13 @@ def field(W, horizon, bottom, vpx, ground_x, ground_y, scale=1.0):
     far, near = [], []
     for j, top, bot in strips:
         poly = top + bot[::-1]
-        body = contour_rows(top, bot) if j % 2 == 0 else furrows(top, bot, j)
-        edge = [top]
+        body = furrows(top, bot, j) if (j % 2 == 1 and j >= 3) else contour_rows(top, bot)
+        edge = [top] if (OPT.get("edges", "0") == "1" or j == 0) else []
         s = (f'<path d="{pstr(poly)} Z" fill="{GREEN}" stroke="none"/>'
              f'<path d="{" ".join(pstr(l) for l in edge + body if len(l) > 1)}" fill="none"/>')
         i = min(160, max(0, int((ground_x - X0) / (X1 - X0) * 160)))
         (far if bot[i][1] <= ground_y else near).append(s)
-    hz = f'<path d="M{X0},{horizon:.2f} L{X1},{horizon:.2f}" fill="none"/>'
+    hz = ''   # the horizon is strip 0's top edge (drawn once)
     return "".join(far), "".join(near), hz
 
 
@@ -448,6 +451,7 @@ h2+.it,h3+.it{{margin-top:0}}
 .row{{font-size:16.5px;line-height:{3 * G}px}}
 .nm{{font-weight:500}}
 .pr{{font-weight:400;color:{IVORY};margin-left:.9em;font-variant-numeric:tabular-nums lining-nums}}
+.nw{{white-space:nowrap}}
 .ds{{font-weight:400;font-size:12.5px;line-height:{2 * G}px;color:{IVORY2}}}
 body.phone .page{{width:390px}}
 body.phone svg.art{{display:none}}
@@ -491,13 +495,13 @@ PROBE_JS = """() => {
  document.querySelectorAll('.wm,.sub,h2,h3,.nm,.pr,.ds').forEach(e=>{
    const r=document.createRange(); r.selectNodeContents(e); const b=r.getBoundingClientRect(); const cs=getComputedStyle(e);
    out.push({t:e.textContent.trim().slice(0,48),cls:e.className||e.tagName,c:cs.color,fs:cs.fontSize,
-     x:b.left-pg.left,y:b.top-pg.top,w:b.width,h:b.height,lines:r.getClientRects().length});});
+     x:b.left-pg.left,y:b.top-pg.top,w:b.width,h:b.height,lines:new Set([...r.getClientRects()].map(b=>Math.round(b.top))).size});});
  const rows=[...document.querySelectorAll('.row')].map(e=>{const n=e.querySelector('.nm'),p=e.querySelector('.pr');
    const col=e.closest('.col'); const cw=col.getBoundingClientRect().width-2*(parseFloat(getComputedStyle(col).paddingLeft)||0);
    const rn=document.createRange(); rn.selectNodeContents(n); const nb=rn.getBoundingClientRect(), pb=p.getBoundingClientRect();
    const ds=e.parentElement.querySelector('.ds'); const rd=document.createRange(); rd.selectNodeContents(ds);
    return {name:n.textContent, price:p.textContent, top:Math.round(nb.top-pg.top), gap_px:Math.round(pb.left-nb.right),
-     travel_pct:Math.round(100*(pb.left-nb.right)/cw), same_line:Math.abs(pb.top-nb.top)<2, desc_lines:rd.getClientRects().length,
+     travel_pct:Math.round(100*(pb.left-nb.right)/cw), same_line:Math.abs(pb.top-nb.top)<2, desc_lines:new Set([...rd.getClientRects()].map(b=>Math.round(b.top))).size,
      col:col.classList.contains('c1')?1:2, row_top_mod8:Math.round(e.getBoundingClientRect().top-pg.top)%8}});
  const box=s=>[...document.querySelectorAll(s)].map(e=>{const b=e.getBoundingClientRect();return [Math.round(b.left-pg.left),Math.round(b.top-pg.top),Math.round(b.right-pg.left),Math.round(b.bottom-pg.top)]});
  const colEnd=[...document.querySelectorAll('.col')].map(c=>{let m=0; c.querySelectorAll('.ds,.nm').forEach(e=>{const r=document.createRange(); r.selectNodeContents(e);
@@ -579,8 +583,8 @@ def main():
                      rects, o("vpx", 408))
         report["horizon_y"] = H0
         report["letter_clamped_leaves"] = rep["clamped"]
-        PHW, PHH = 390, 600
-        gph, _ = art(PHW, PHH, 330, PHH, 330, 560, 520, (322, 520), None, 120)
+        PHW, PHH = 390, 560
+        gph, _ = art(PHW, PHH, 290, PHH, 330, 520, 520, (322, 482), None, 195)
         doc = html(svg_wrap(g, PW, PH, "art"), svg_wrap(gph, PHW, PHH, "art-phone"), hdr, ex1, ex2)
         for it in all_items():
             assert f'data-id="{it["id"]}"' in doc and f'<span class="pr">{price(it)}</span>' in doc, it["id"]

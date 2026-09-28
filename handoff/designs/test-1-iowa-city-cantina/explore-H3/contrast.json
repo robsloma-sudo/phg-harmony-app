@@ -293,11 +293,6 @@
  ],
  "preview-phone.png": [
   {
-   "text": "& cocktail bar · Iowa City, Iowa",
-   "role": "sub",
-   "min": 1.31
-  },
-  {
    "text": "Cocktails",
    "role": "H2",
    "min": 4.99
@@ -321,6 +316,11 @@
    "text": "Wine",
    "role": "H2",
    "min": 4.99
+  },
+  {
+   "text": "& cocktail bar · Iowa City, Iowa",
+   "role": "sub",
+   "min": 6.53
   },
   {
    "text": "Classics",
