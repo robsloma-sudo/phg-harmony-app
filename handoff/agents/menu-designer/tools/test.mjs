@@ -138,14 +138,19 @@ t('names as spoken: capitalised number words stay words, "four pack" stays 4 Pac
 t('one pour for a list: "Drafts are poured at 16 ounces" prints once under Draft; an item\'s own pour on its line', () => {
   assert.deepEqual(parseSinglePour('Drafts are poured at 16 ounces'), { subject: 'Drafts', pour: '16 oz' });
   assert.equal(parseSinglePour('Summit Pils 7'), null); assert.equal(parseSinglePour('Drafts are great'), null);
-  const beer = haRes.options[0].menu_studio_file.doc.sections.find(x => x.name === 'Beer');
-  assert.equal(beer.subs.find(b => b.name === 'Draft').desc, '16 oz pours unless noted');
+  const secs = haRes.options[0].menu_studio_file.doc.sections, beer = secs.find(x => x.name === 'Beer');
+  // Draft is its own "On Draft" section when Cans had to leave the column (round 6), else Beer's Draft subsection.
+  const draftDesc = beer ? beer.subs.find(b => b.name === 'Draft').desc : secs.find(x => x.name === 'On Draft').desc;
+  assert.equal(draftDesc, '16 oz pours unless noted');
   assert.match(haAll(haRes.options[0]).find(i => i.name === 'Double Black Diamond').desc, /10 oz pour · 10\.5% ABV$/);
   assert.equal(haAll(haRes.options[0]).find(i => i.name === 'Double Black Diamond').prices[0].value, 9);
 });
 t('no subhead is left at a column foot without its first two items', () => {
   for (const o of haRes.options) assert.deepEqual(orphanSubs(o.menu_studio_file.doc, o.menu_studio_file.style, o.menu_studio_file.size), []);
-  assert.ok(haRes.options[0].menu_studio_file.doc.sections.some(x => x.name === 'Beer · Cans'));
+  // Round 6: Draft and Cans are peer sections, never "Beer" beside "Beer · Cans".
+  const names = haRes.options[0].menu_studio_file.doc.sections.map(x => x.name);
+  assert.ok(!names.includes('Beer · Cans'), names.join(', '));
+  assert.ok(names.includes('Beer') || (names.includes('On Draft') && names.includes('Cans to Go')), names.join(', '));
   assert.equal(haAll(haRes.options[0]).length, items(ha).length);
 });
 t('featured-name accent meets 4.5:1 (one accent value)', () => {
@@ -195,20 +200,52 @@ t('garnish question covers crafted zero-proof, never a bottled or brewed soft dr
 t('tags lead the description line (New · / Signature ·), no raised badge', () => {
   const all = res.options[0].menu_studio_file.doc.sections.flatMap(x => [...x.items, ...(x.subs || []).flatMap(b => b.items)]);
   const mn = all.find(i => i.name === 'Mezcal Negroni'), hm = all.find(i => i.name === 'House Margarita');
-  assert.match(mn.desc, /^New · /); assert.deepEqual(mn.badges, []); assert.ok(mn.meta.designer_flags.includes('new'));
-  assert.match(hm.desc, /^Signature · /); assert.deepEqual(hm.badges, []);
+  assert.match(mn.desc, /^NEW · /); assert.deepEqual(mn.badges, []); assert.ok(mn.meta.designer_flags.includes('new'));
+  assert.match(hm.desc, /^SIGNATURE · /); assert.deepEqual(hm.badges, []);
 });
 t('a tag that would push its line past the column stays a Menu Studio badge', () => {
   const o = design(sb, { venue: { city: 'Denver', state: 'CO' } }).options[0];
   const all = o.menu_studio_file.doc.sections.flatMap(x => [...x.items, ...(x.subs || []).flatMap(b => b.items)]);
   const gg = all.find(i => i.name === 'Garden Gimlet');
-  assert.ok(!/^Seasonal · /.test(gg.desc) && gg.badges.includes('seasonal'));
+  assert.ok(!/^Seasonal · /i.test(gg.desc) && gg.badges.includes('seasonal'));
 });
 t('reasoning names only the wine subsections built; a wide single column gets no forced leaders', () => {
   const txt = JSON.stringify(res);
   assert.ok(!/White \/ Rosé|Sparkling \/ White/.test(txt));
   const P = res.options[0].menu_studio_file.style?.page || res.options[0].menu_studio_file.doc.style?.page;
   if (P && P.cols === 1) assert.equal(P.dots, false);
+});
+// Panel round 6: beer light to dark by style; peer format sections; caps tags with ink names; "Czech-style".
+import { beerRank, peerName } from './design.mjs';
+t('beer ranks light to dark by style (name first, imperial from the description)', () => {
+  const r = (name, description = '') => beerRank({ name, description });
+  assert.ok(r('Mexican Lager') < r('Juniper Pale Ale') && r('Juniper Pale Ale') < r('Switchback IPA') && r('Switchback IPA') < r('Hazy Peak'));
+  assert.ok(r('Hazy Peak') < r('Raspberry Wheat') && r('Raspberry Wheat') < r('Mountain Saison') && r('Mountain Saison') < r('Sour Cherry Gose'));
+  assert.ok(r('Sour Cherry Gose') < r('Alpenglow Amber') && r('Alpenglow Amber') < r('Nightfall Stout') && r('Nightfall Stout') < r('Double Black Diamond', 'Imperial stout'));
+  assert.equal(r('Mystery Tap'), null);
+});
+t('High Altitude draft list runs light to dark; the house special keeps its slot, its tag in caps, its name in ink', () => {
+  const o = haRes.options[0], secs = o.menu_studio_file.doc.sections;
+  const draft = (secs.find(x => x.name === 'On Draft') || secs.find(x => x.name === 'Beer').subs.find(b => b.name === 'Draft')).items.map(i => i.name);
+  assert.deepEqual([draft[0], draft.at(-2), draft.at(-1)], ['Mexican Lager', 'Nightfall Stout', 'Double Black Diamond']);
+  const ns = haAll(o).find(i => i.name === 'Nightfall Stout');
+  assert.match(ns.desc, /^HOUSE SPECIAL · /); assert.equal(ns.format?.name?.c, undefined);
+  assert.match(haAll(o).find(i => i.name === 'Summit Pils').desc, /Czech-style pilsner/);
+});
+t('serve-format subsections name peer sections', () => {
+  assert.equal(peerName('Draft'), 'On Draft'); assert.equal(peerName('Cans', [{ desc: 'Pils in pint cans to go' }]), 'Cans to Go');
+  assert.equal(peerName('Cans', [{ desc: 'Mexican lager' }]), 'Cans'); assert.equal(peerName('Whiskey'), null);
+});
+import { parseLegalLine } from './parse-voice.mjs';
+t('the venue\'s legal line is heard, printed as the pinned footer line; "less than 0.5 percent" keeps its bound', () => {
+  assert.equal(parseLegalLine('Legal line: must be 21 to drink, please drink responsibly'), 'Must be 21 to drink, please drink responsibly');
+  assert.equal(parseLegalLine('Summit Pils is a Czech-style pilsner'), null);
+  assert.deepEqual(ha.design.legal_lines, ['Must be 21 to drink, please drink responsibly']);
+  assert.equal(ha.design.format, 'letter');
+  assert.equal(find(ha, 'Athletic Run Wild IPA').abv, '<0.5');
+  const foot = haRes.options[0].menu_studio_file.doc.sections.find(x => x.designer_role === 'footer');
+  assert.equal(foot.name, 'Must be 21 to drink, please drink responsibly'); assert.equal(foot.desc, '');
+  assert.match(haAll(haRes.options[0]).find(i => i.name === 'Athletic Run Wild IPA').desc, /<0\.5% ABV$/);
 });
 console.log(`${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

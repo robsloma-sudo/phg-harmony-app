@@ -316,3 +316,28 @@ prints. The measure stays 7.1 in.
   uses, set right-aligned in the sub style above the price figures.
 - Leader style when dots are on: a finer dot (period plus thin space) in `page.rule` at about 60% opacity, ending at
   a fixed price-slot width (the widest price in the file, tabular figures), so every leader stops at the same x.
+
+
+## S18. Balance the columns of a one-page menu, and a set-apart key line (review panel round 6)
+
+**Found:** on High Altitude (22 items, letter, two columns) 14 of 15 reviewers led with the bottom of the page. The
+draft list is one 12-item section, so with sections kept whole the left column ends at about 69% of the page and the
+right at about 83%. Every other split is the same imbalance mirrored. Type cannot grow past ×1.10 because descriptions
+do not wrap (S6): at ×1.15 the seltzer and root-beer lines run past a 3.66 in column. Spacing is capped at 10 mm above a
+head (the round-3 finding), so it cannot absorb the difference. Ten reviewers also said the pour notes ("16 oz pours
+unless noted", "1.5 oz pours") touch the first item name. A section description in Menu Studio prints with no space
+after it and in the description style, so it reads as that item's line (S14 spacing, still open).
+
+**Designer workaround (in the toolkit now):** when the venue gives legal wording by voice ("Legal line: …"), it
+becomes a footer pinned on the bottom margin, centred under a centred masthead, so the field is closed. The beer
+list is ordered light to dark, Draft and Cans are peer sections ("On Draft" / "Cans to Go"), and tags are set in caps.
+The left column still ends about 50 mm above the right.
+
+**Suggested change (any one helps):**
+- `page.justify: 'columns'` for single-page menus as well (S16): spread each column's leftover height over its item
+  gaps, capped at about 1.5× `itemGap`, so both columns end on the same baseline.
+- Let a long section continue into the next column at an item boundary, with its heading repeated in the subsection
+  style ("On Draft, continued"). Count it in `mdcSectionHeight`.
+- A section-note style of its own: `note: { i: true, s, c, after }`, with italic, a size one step below the description,
+  and `after` space before the first item. That lets a key line sit between the heading and the items. Menu Studio
+  already has italic in the brand style, so this adds one level and a gap.

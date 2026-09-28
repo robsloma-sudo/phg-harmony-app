@@ -233,6 +233,14 @@ export function styleDesc(desc, listKey = '') {
   return d;
 }
 
+// "Legal line: …", "For the legal lines, print …", "The footer should read …" -> the words, or null.
+export function parseLegalLine(sent) {
+  const m = String(sent).trim().match(/^(?:for\s+)?(?:the\s+|our\s+)?(?:legal|footer)(?:\s+lines?)?\s*(?::|,|\bis\b|\bare\b|\bshould (?:say|read)\b|\breads?\b)\s*(?:(?:please\s+)?(?:print|use|put|say|add)\s*:?\s*)?(.+)$/i);
+  if (!m) return null;
+  const words = m[1].replace(/^["'“‘]+|["'”’]+$/g, '').trim();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : null;
+}
+
 // Follow-up answer about a known item (panel round 2). Returns true when the sentence was consumed.
 export function answerFor(sent, sections) {
   if (/\b(dollars|bucks)\b/i.test(sent)) return false;
@@ -241,7 +249,8 @@ export function answerFor(sent, sections) {
     const m = sent.match(new RegExp(`^(?:the\\s+|our\\s+)?${esc(it.name)}\\s*(?::|,|\\bis\\b|\\bare\\b|\\bgets\\b|\\bhas\\b)\\s*(.+)$`, 'i'));
     if (!m) continue;
     let rest = m[1].trim();
-    const abv = rest.match(/,?\s*(\d{1,2}(?:\.\d)?)\s*(?:%|percent|per cent)(?:\s*(?:abv|alcohol))?/i);
+    // "less than 0.5 percent" (a non-alcoholic beer) keeps its bound: "<0.5% ABV" (panel round 6).
+    const abv = rest.match(/,?\s*(?:(less than|under|below)\s+)?(\d{1,2}(?:\.\d)?)\s*(?:%|percent|per cent)(?:\s*(?:abv|alcohol))?/i);
     if (abv) rest = rest.replace(abv[0], '').trim();
     // Pour size (panel round 3): "Double Black Diamond is an imperial stout, poured at 10 ounces" -> it.pour = '10 oz'.
     const pour = rest.match(/,?\s*(?:(?:poured|served)\s+(?:at|in|as)\s+(?:a\s+)?)?(\d{1,2}(?:\.\d{1,2})?)[\s-]*(?:oz|ounces?)(?:\s+(?:pours?|glass(?:es)?|snifters?))?/i);
@@ -254,7 +263,7 @@ export function answerFor(sent, sections) {
     const desc = rest.replace(/^(?:a|an|our)\s+/i, '').replace(/[\s,;:-]+$/, '').trim();
     if (!desc && !garnish && !abv && !pour) return false;
     if (desc) it.description = desc.charAt(0).toUpperCase() + desc.slice(1);
-    if (abv) it.abv = Number(abv[1]);
+    if (abv) it.abv = abv[1] ? `<${Number(abv[2])}` : Number(abv[2]);
     if (pour) it.pour = `${Number(pour[1])} oz`;
     if (garnish) it.garnish = garnish;
     it.heard += ' | ' + sent;
@@ -345,7 +354,7 @@ export function parseTranscript(transcript, ctx = {}) {
   const text = wordsToDigits(heard.replace(/[“”]/g, '"').replace(/[‘’]/g, "'")).replace(FILLER, ' ').replace(/\s{2,}/g, ' ');
 
   const design = { tone: [], colours: [], fonts: [], format: null, orientation: null, columns: null, pages: null,
-                   no_dollar_signs: false, venue_type: null, menu_type: null, notes: [], hours: null };
+                   no_dollar_signs: false, venue_type: null, menu_type: null, notes: [], hours: null, legal_lines: [] };
   // ---- items ----
   // Split into clauses: sentences, semicolons, and commas that are followed by a new name-ish start after a price.
   const sentences = text.split(/(?<=[.!?;])\s+|\n+/).map(s => s.trim()).filter(Boolean);
@@ -366,6 +375,10 @@ export function parseTranscript(transcript, ctx = {}) {
   for (let sent of sentences) {
     sent = sent.replace(/[.!?;]+$/, '').trim();
     if (!sent) continue;
+    // The venue's answer to the legal-lines question (panel round 6): "Legal line: Please drink responsibly, must be 21
+    // to drink". Printed exactly as said in the pinned footer, never parsed as items or a page format.
+    const lg = parseLegalLine(sent);
+    if (lg) { design.legal_lines.push(lg); continue; }
     const ps = parsePourScheme(sent);
     if (ps && !/\d+(?:\.\d+)?\s*(?:dollars|bucks)/i.test(sent)) {
       // Which lists does it apply to? Named lists in the sentence, else the open list.

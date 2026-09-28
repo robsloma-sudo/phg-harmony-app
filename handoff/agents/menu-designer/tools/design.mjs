@@ -143,8 +143,11 @@ function mdcItem(it, accent, emphasise) {
   // "NEW disappears in bar light"; "the signature is marked by gold alone", WCAG 1.4.1). The word prints at description
   // size as the line's first token ("New · Mezcal, Campari, …"); flags stay in meta.designer_flags. "House special" beside
   // a name that already says "House" reads "Signature" (the speaker's "house special", without the repeat).
-  const tagWords = badges.map(b => b === 'house' ? 'House special' : b === 'new' ? 'New' : b === 'seasonal' ? 'Seasonal' : null).filter(Boolean);
-  if ((it.flags || []).includes('house_special') && /^house\b/i.test(it.name || '')) tagWords.unshift('Signature');
+  // Round 6 (9 of 15 reviewers: "the accent means both 'section' and 'feature'; the highlight rests on colour alone"): the
+  // tag is set in caps ("HOUSE SPECIAL · Oatmeal stout …"), a typographic mark that survives bar light and colour
+  // blindness, and the name stays in ink.
+  const tagWords = badges.map(b => b === 'house' ? 'HOUSE SPECIAL' : b === 'new' ? 'NEW' : b === 'seasonal' ? 'SEASONAL' : null).filter(Boolean);
+  if ((it.flags || []).includes('house_special') && /^house\b/i.test(it.name || '')) tagWords.unshift('SIGNATURE');
   const lead = tagWords.filter(w => !new RegExp('^' + w, 'i').test(desc));
   if (lead.length) desc = [...lead, desc].filter(Boolean).join(' · ');
   // A pour that differs from the list's (panel round 3: a 10 oz imperial stout under "16 oz pours unless noted").
@@ -163,8 +166,10 @@ function mdcItem(it, accent, emphasise) {
     evidence: null,
     ...(garnish ? { components: [{ role: 'garnish', name: garnish }] } : {}),
   };
-  // Featured / house items: accent the name. Menu Studio honours node.format[level] overrides (menuNodeStyleOverride).
-  if (emphasise && (it.flags || []).some(f => f === 'featured' || f === 'house_special')) node.format = { name: { c: accent, w: 'bold' } };
+  // Featured / house items: the accent on the name is off by default since round 6 (the section-head colour on an item
+  // name read as a stray header). A caller may still ask for it (emphasise === 'accent'); Menu Studio honours
+  // node.format[level] overrides (menuNodeStyleOverride).
+  if (emphasise === 'accent' && (it.flags || []).some(f => f === 'featured' || f === 'house_special')) node.format = { name: { c: accent, w: 'bold' } };
   return node;
 }
 
@@ -194,8 +199,20 @@ export function buildDoc(req, look, opts = {}) {
     if (out.some((x, i) => x !== arr[i])) changes.push(`Placed ${hot.map(h => `"${h.name}"`).join(', ')} at the edges of their list (first${hot.length >= 2 && rest.length >= 2 ? ' and last' : ''}), where items sell best.`);
     return out;
   };
-  const buildSection = (name, items, subsFrom) => {
+  // Beer lists run light to dark by style (round 6, all five beverage reviewers: "a stout ahead of the pils and the
+  // 10.5% imperial between Raspberry Wheat and the Kölsch is not how a taproom lists its taps"). The house special
+  // keeps its style slot; its tag marks it. Only when most of the list has a recognisable style.
+  const byStyle = arr => {
+    if (arr.length < 4) return null;
+    const ranks = arr.map(beerRank);
+    if (ranks.filter(r => r !== null).length < arr.length * 0.75) return null;
+    const mid = 4.5, out = arr.map((it, i) => ({ it, i, r: ranks[i] ?? mid, a: Number(it.abv) || 0 }))
+      .sort((x, y) => x.r - y.r || x.a - y.a || x.i - y.i).map(x => x.it);
+    return out;
+  };
+  const buildSection = (name, items, subsFrom, styleOrder = false) => {
     const sec = { id: id('sec'), name, items: [], subs: [] };
+    const order = arr => { const o = styleOrder && byStyle(arr); if (!o) return promote(arr); if (o.some((x, i) => x !== arr[i])) changes.push(`${name}: ordered light to dark by style (${o.map(x => x.name).join(', ')}); a house special keeps its style slot and its tag.`); return o; };
     const bySub = new Map();
     for (const it of items) {
       const sub = subsFrom(it);
@@ -203,10 +220,10 @@ export function buildDoc(req, look, opts = {}) {
       if (!bySub.has(sub)) bySub.set(sub, []);
       bySub.get(sub).push(it);
     }
-    sec.items = promote(sec.items).map(i => mdcItem(i, accent, true));
+    sec.items = order(sec.items).map(i => mdcItem(i, accent, true));
     // A HOUSE badge under a House/Signature subhead repeats the subhead (panel round 1): drop the badge there.
-    const dropHouse = (sub, node) => { if (/house|signature/i.test(sub)) node.desc = String(node.desc || '').replace(/^(?:House special|Signature)(?: · |$)/, ''); return node; };
-    for (const [sub, arr] of bySub) sec.subs.push({ id: id('sub'), name: sub, items: promote(arr).map(i => dropHouse(sub, mdcItem(i, accent, true))) });
+    const dropHouse = (sub, node) => { if (/house|signature/i.test(sub)) node.desc = String(node.desc || '').replace(/^(?:House special|Signature)(?: · |$)/i, ''); return node; };
+    for (const [sub, arr] of bySub) sec.subs.push({ id: id('sub'), name: sub, items: order(arr).map(i => dropHouse(sub, mdcItem(i, accent, true))) });
     return sec;
   };
 
@@ -249,7 +266,7 @@ export function buildDoc(req, look, opts = {}) {
       continue;
     }
     const label = sectionLabel(l, look);
-    sections.push(buildSection(label, req.items.filter(i => i.list === l), i => i.sub || null));
+    sections.push(buildSection(label, req.items.filter(i => i.list === l), i => i.sub || null, l === 'beer'));
   }
   // A one- or two-item agave list does not earn its own header (round-1 review): tequila and mezcal share one section,
   // each keeping its own subsection so both lists stay visibly equal.
@@ -301,6 +318,36 @@ export function buildDoc(req, look, opts = {}) {
 function venueWord(t) {
   return { latin_cantina: 'Cantina', cocktail_lounge: 'Cocktail bar', brewery: 'Taproom', wine_bar: 'Wine bar', hotel_bar: 'Hotel bar',
            dive_bar: 'Bar', sports_bar: 'Sports bar', tiki: 'Tiki bar', fine_dining: 'Restaurant', restaurant: 'Restaurant' }[normVenue(t)] || null;
+}
+
+// A serve-format subsection as a section name of its own ("Draft" -> "On Draft", "Cans" -> "Cans to Go" when every
+// line says "to go"); null for anything else (the caller keeps "Parent · Sub").
+export function peerName(sub, items = []) {
+  const n = String(sub || '').trim();
+  if (/^(draft|drafts|on draft)$/i.test(n)) return 'On Draft';
+  if (/^(tap|taps|on tap)$/i.test(n)) return 'On Tap';
+  const toGo = items.length && items.every(i => /\bto go\b/i.test(i.desc || i.description || ''));
+  if (/^cans?$/i.test(n)) return toGo ? 'Cans to Go' : 'Cans';
+  if (/^bottles?$/i.test(n)) return toGo ? 'Bottles to Go' : 'Bottles';
+  if (/^(cans? (?:&|and) bottles?|bottles? (?:&|and) cans?)$/i.test(n)) return 'Cans & Bottles';
+  return null;
+}
+
+// Beer style rank, light to dark: crisp lagers 0, hop-forward 1 (pale < IPA < hazy / double), wheat 2, saison 3,
+// sour 4, amber / red / brown 5, stout / porter 6, imperial / barleywine 7. Name first, then the description; imperial
+// strength from either. null when no style is recognisable.
+export function beerRank(it) {
+  const name = String(it.name || ''), desc = String(it.description || it.desc || '');
+  if (/\b(imperial|barley ?wine|barrel[- ]aged|quad|russian imperial)\b/i.test(`${name} ${desc}`) && !/\bipa\b/i.test(`${name} ${desc}`)) return 7;
+  const T = [
+    [/\b(double|triple|imperial) ipa\b|\bhazy\b|new england|\bneipa\b/i, 1.3], [/\bipa\b/i, 1.2], [/\bpale ale\b|\bxpa\b/i, 1.1],
+    [/\b(stout|porter)\b/i, 6], [/\b(amber|red ale|brown|esb|m[aä]rzen|oktoberfest|bock|altbier|scotch ale|dunkel)\b/i, 5],
+    [/\b(gose|sour|berliner|wild ale|lambic|kriek|flanders)\b/i, 4], [/\b(saison|farmhouse|tripel|dubbel|belgian)\b/i, 3],
+    [/\b(wheat|hefeweizen|hefe|witbier|weiss|weizen)\b/i, 2],
+    [/\b(pils|pilsner|lager|k[oö]lsch|helles|blonde|cream ale|light)\b/i, 0],
+  ];
+  for (const txt of [name, desc]) for (const [re, r] of T) if (re.test(txt)) return r;
+  return null;
 }
 
 function countItems(sec) { return (sec.items || []).length + (sec.subs || []).reduce((a, b) => a + (b.items || []).length, 0); }
@@ -553,7 +600,10 @@ function knownFacts(doc) {
       if (st && /^\s*\d+(\.\d+)?%\s*ABV\s*$/i.test(d0)) { it.desc = `${st.toUpperCase() === 'IPA' || /ipa/.test(st) ? st.replace(/ipa/i, 'IPA').replace(/^./, c => c.toUpperCase()) : st.charAt(0).toUpperCase() + st.slice(1)} · ${d0.trim()}`; it.meta = { ...(it.meta || {}), style_from_name: true }; changes.push(`"${it.name}" shows its style from its name: ${it.desc}.`); }
     }
     let d = String(it.desc || '');
-    const styled = d.replace(/,\s+([^,]+?)\s+and\s+([^,]+)$/i, ', $1, $2').replace(/\b(\w+) infused\b/gi, '$1-infused');
+    // Round 6: a compound style adjective is hyphenated like the rest of the list ("Czech style pilsner" ->
+    // "Czech-style pilsner", matching "Kölsch-style", "Mexican-style" and the can line).
+    const styled = d.replace(/,\s+([^,]+?)\s+and\s+([^,]+)$/i, ', $1, $2').replace(/\b(\w+) infused\b/gi, '$1-infused')
+      .replace(/(^|[\s(])(\p{Lu}[\p{L}'-]*) style (?=\p{Ll})/gu, '$1$2-style ');
     if (styled !== d && it.meta?.description_source !== 'recipe_components') { it.desc = styled; changes.push(`"${it.name}" description set in house style (serial list, hyphenation); words unchanged.`); }
   }
   return changes;
@@ -598,8 +648,8 @@ function flattenSubs(doc) {
 
 // A tag word that pushes its description past the column (descriptions do not wrap in Menu Studio, S6) goes back to
 // Menu Studio's badge beside the name, so the line stays inside its column (panel round 5).
-const TAG_LEAD = /^(House special|Signature|New|Seasonal) · /;
-const BADGE_FOR_WORD = { 'House special': 'house', Signature: null, New: 'new', Seasonal: 'seasonal' };
+const TAG_LEAD = /^(House special|Signature|New|Seasonal) · /i;
+const BADGE_FOR_WORD = { 'house special': 'house', signature: null, new: 'new', seasonal: 'seasonal' };
 export function tagsThatFit(doc, S, sizeKey) {
   const wide = new Set(measure(doc, S, sizeKey).wide.map(w => w.item));
   const changes = [];
@@ -607,7 +657,7 @@ export function tagsThatFit(doc, S, sizeKey) {
     const mm = String(it.desc || '').match(TAG_LEAD);
     if (!mm || !wide.has(it.name)) continue;
     it.desc = it.desc.slice(mm[0].length);
-    if (BADGE_FOR_WORD[mm[1]]) it.badges = [...new Set([...(it.badges || []), BADGE_FOR_WORD[mm[1]]])];
+    if (BADGE_FOR_WORD[mm[1].toLowerCase()]) it.badges = [...new Set([...(it.badges || []), BADGE_FOR_WORD[mm[1].toLowerCase()]])];
     changes.push(`"${it.name}": "${mm[1]}" kept as Menu Studio's badge; in the description line it would run past the column.`);
   }
   return changes;
@@ -718,7 +768,19 @@ function promoteSubs(doc, subs) {
     if (i < 0) continue;
     const sec = doc.sections[i];
     sec.subs = sec.subs.filter(b => b !== sub);
-    const name = new RegExp(`\\b${sec.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(sub.name) ? sub.name : `${sec.name} · ${sub.name}`;
+    const peer = peerName(sub.name, sub.items);
+    let name = new RegExp(`\\b${sec.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(sub.name) ? sub.name : peer || `${sec.name} · ${sub.name}`;
+    // Round 6 (12 of 15 reviewers: "BEER · CANS is set as a peer section while DRAFT is a subhead under BEER"): when the
+    // parent is left holding one serve-format subsection, both become peer sections named by format ("On Draft",
+    // "Cans to Go"), so the two beer heads sit at one level. The parent's name and subhead are kept for demoteSubs.
+    const left = sec.subs.length === 1 && !(sec.items || []).length ? sec.subs[0] : null;
+    const leftPeer = left && peer ? peerName(left.name, left.items) : null;
+    if (leftPeer && !sec.designer_collapsed) {
+      sec.designer_collapsed = { name: sec.name, desc: sec.desc || '', sub: { ...left, items: undefined } };
+      changes.push(`${sec.name}: "${left.name}" and "${sub.name}" set as peer sections "${leftPeer}" and "${peer}" (one heading level for both).`);
+      sec.name = leftPeer; sec.items = left.items; sec.desc = sec.desc || left.desc || ''; sec.subs = [];
+      name = peer;
+    }
     doc.sections.splice(i + 1, 0, { id: `${sub.id}_sec`, name, desc: sub.desc || '', items: sub.items, subs: [], designer_promoted_from: sec.id, designer_sub: { ...sub, items: undefined } });
     changes.push(`"${sub.name}" would have been left at the foot of a column without its items, so it became its own section "${name}" (Menu Studio keeps sections whole).`);
   }
@@ -735,12 +797,15 @@ export function demoteSubs(doc, S, sizeKey) {
     const x = doc.sections[i], parent = doc.sections[i - 1];
     if (!x.designer_promoted_from || parent.id !== x.designer_promoted_from || x.breakBefore || x.breakCol || !x.designer_sub) continue;
     const before = layout({ doc, style: S, size: sizeKey });
-    const snapshot = [...doc.sections], subs0 = [...(parent.subs || [])];
+    const snapshot = [...doc.sections], p0 = { name: parent.name, desc: parent.desc, items: parent.items, subs: [...(parent.subs || [])], designer_collapsed: parent.designer_collapsed };
     const sub = { ...x.designer_sub, items: x.items, desc: x.desc || '' };
-    parent.subs = [...subs0, sub];
+    const c = parent.designer_collapsed;
+    // A parent collapsed to a peer section ("On Draft") gets its own heading and subhead back first.
+    if (c) { parent.subs = [{ ...c.sub, items: parent.items, desc: c.desc ? (c.sub.desc || '') : (parent.desc || '') }]; parent.items = []; parent.name = c.name; parent.desc = c.desc; delete parent.designer_collapsed; }
+    parent.subs = [...(parent.subs || []), sub];
     doc.sections = doc.sections.filter(y => y !== x);
     const after = layout({ doc, style: S, size: sizeKey });
-    if (after.pages > before.pages || orphanSubs(doc, S, sizeKey).length) { doc.sections = snapshot; parent.subs = subs0; continue; }
+    if (after.pages > before.pages || orphanSubs(doc, S, sizeKey).length) { doc.sections = snapshot; Object.assign(parent, p0); if (!p0.designer_collapsed) delete parent.designer_collapsed; continue; }
     changes.push(`"${sub.name}" back under ${parent.name} as a subsection (the final page plan keeps it with its items).`);
   }
   return changes;
@@ -824,7 +889,10 @@ function addFooter(doc, req) {
   const legal = [].concat(req.constraints.legal_lines || req.constraints.legal || []).filter(Boolean);
   if (!line && !legal.length) return;
   if (doc.sections.some(x => x.designer_role === 'footer')) return;
-  doc.sections.push({ id: 'sec_designer_footer', name: line || 'Please note', desc: legal.join('  ·  '), items: [], subs: [],
+  // Legal words alone print as the footer line itself (round 6: a "Please note" head a line above them read as a stray
+  // section); with a place line they sit under it.
+  const only = !line && legal.length === 1 && legal[0].length <= 90;
+  doc.sections.push({ id: 'sec_designer_footer', name: line || (only ? legal[0] : 'Please note'), desc: only ? '' : legal.join('  ·  '), items: [], subs: [],
                       designer_role: 'footer', pos: { page: 0, x: 0, y: 0.9 } });
 }
 

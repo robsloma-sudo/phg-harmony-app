@@ -35,7 +35,8 @@ export function requestDesignPayload(transcript, ctx = {}) {
                     orientation: d.orientation || undefined, pages: d.pages || undefined, columns: d.columns || undefined }),
     brand: clean({ colours: d.colours.length ? d.colours.map(c => c.hex) : undefined, fonts: d.fonts.length ? d.fonts : undefined,
                    tone: d.tone.length ? d.tone : undefined }),
-    constraints: clean({ hours: d.hours || undefined, no_dollar_signs: d.no_dollar_signs || undefined }),
+    constraints: clean({ hours: d.hours || undefined, no_dollar_signs: d.no_dollar_signs || undefined,
+                         legal_lines: (d.legal_lines || []).length ? d.legal_lines : undefined }),
     // One pour size said for a whole list ("Drafts are poured at 16 ounces"): printed once under that heading.
     ...((parsed.pours || []).some(p => p.single) ? { pour_notes: parsed.pours.filter(p => p.single).map(p => ({ lists: p.lists, pours: p.pours, heard: p.heard, single: true })) } : {}),
   };

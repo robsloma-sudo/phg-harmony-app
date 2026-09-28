@@ -217,3 +217,56 @@ Open, carried to later rounds:
 - **Section weight.** Section heads 1.3x names; reviewers ask for more space above heads than below.
 - High Altitude self-check bottom margin now 45–48 mm (was 34 mm); from rounds 2–4: beer order light to dark, column
   balance, altitude concept, Sample Bar page 1 short (S16).
+
+## Round 6: high-altitude
+
+Scores: Design Theory 74, 71, 71, 78, 75 (mean 73.8) · Cocktail & Beverage 85, 82, 84, 84, 79 (mean 82.8) ·
+Concept & Brand 73, 72, 77, 73, 73 (mean 73.6). Lowest 71. Gate not met (11 of 15 below 80).
+Weakest subscores: grid_space 66, graphic_craft 68, format_layout 69, brand 70, concept 72, headers 73.
+
+Most common points: dead band at the page foot, 48.4 mm against 12.7 (self-check failure) and columns ending at 70% and 83% (14 of 15); "BEER ·
+CANS" as a peer of BEER while DRAFT was a subhead (12); the ochre section colour on the Nightfall Stout name, so the feature
+rested on colour alone and read as a stray header (9); pour notes touching the first item (10); drafts in voice-note
+order, stout first and the 10.5% imperial mid-list (all 5 beverage reviewers plus the menu engineer); "Czech style" not hyphenated
+(6); Athletic Run Wild without ABV (4); no brand idea beyond a generic grotesque (4).
+
+Changed (toolkit, applies to every menu):
+- **Beer light to dark by style.** A beer list of 4 or more items, most with a recognisable style, runs crisp lagers →
+  pale / IPA / hazy → wheat → saison → sour → amber → stout → imperial, ABV ascending within a step (`beerRank`). The
+  house special keeps its style slot instead of being pulled to the top. High Altitude now opens with Mexican Lager and closes
+  with Nightfall Stout and Double Black Diamond.
+- **Peer format sections.** When a keep-with-next promotion leaves a parent with one serve-format subsection, both
+  become peer sections named by format: "On Draft" / "Cans to Go" ("to go" only when every line says so), and
+  "On Tap", "Cans", "Bottles". No more "Beer · Cans" beside "Beer". `demoteSubs` restores the parent heading and subhead
+  when the final plan no longer needs the split.
+- **Feature by type, not colour.** Tags lead the line in caps ("HOUSE SPECIAL · …", "NEW · …", "SEASONAL · …",
+  "SIGNATURE · …"). Item names stay in ink, and the accent stays on section heads only (the name accent is now opt-in).
+- **Compound style adjectives hyphenated** in house style: "Czech style pilsner" → "Czech-style pilsner".
+- **Legal lines by voice.** "Legal line: …" in the venue's answers goes to `constraints.legal_lines` and prints as
+  the pinned footer line on the bottom margin (no "Please note" head when it is the only line). That closes the page
+  foot and the open legal question.
+- **Bounded ABV.** "less than 0.5 percent" prints "<0.5% ABV".
+- **Sample transcript** (High Altitude, simulated venue answers): the legal line "Must be 21 to drink, please drink
+  responsibly"; Athletic Run Wild IPA <0.5% ABV (Athletic's own label figure); the Beer-garita made with "our Mexican Lager,
+  blanco tequila and lime" (cross-sells the draft). No price changed. Self-check now 45/45 on all three options (was
+  46/47, bottom margin), confidence 0.84 (was 0.76), no open questions.
+- Tests: 83 passed (4 new, 3 updated).
+
+Filed: S18 (balance the columns of a one-page menu: per-column justification or a section continuing at an item
+boundary; a section-note style with italic and space after).
+
+Open, carried to later rounds:
+- **Column balance.** High Altitude's left column (On Draft, 12 items) still ends about 50 mm above the right. Sections are
+  whole and descriptions do not wrap (S6, S16, S18). The footer now closes the page foot.
+- **Key lines touch their first item** ("16 oz pours unless noted", "1.5 oz pours"), which is S14/S18 spacing. Italic or a
+  gap after them needs a note style.
+- **Section rhythm.** Space above heads is about 3× the space below. Reviewers want one module (e.g. 4 / 1.5 / 1).
+- **Brand idea.** Masthead is a generic grotesque. Reviewers suggest an elevation line ("Fort Collins · 5,003 ft"),
+  trail-grade section heads, or a serif pairing (Georgia). Only use the venue's words, never invent them. Ask for a tagline.
+- **Content not yet answered:** serve format / size for cider and seltzer (can or draft), cocktail glassware (copper
+  mug?), flights / half pours, crowler fills, the tequila and vodka brands, the Hazy Peak hops, a zero-proof Mule. Ask,
+  never invent.
+- **Accent contrast.** Ochre #8e5e18 is 4.81:1 on the cream. Two reviewers ask for ≥ 6.5:1 (#74490f) for bar light.
+- **Menu engineering.** The top-right slot holds the to-go cans. The engineer suggests cocktails there, which conflicts with
+  keeping Draft and Cans side by side.
+- From earlier rounds: Sample Bar page 1 short (S16), Casa Luna measure (S17), prices sharing the description grey.
