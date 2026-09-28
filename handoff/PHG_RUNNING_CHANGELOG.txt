@@ -1736,3 +1736,15 @@ into a different model, that will be different and specific to that user."
   in several projects, explicit switching; account_id + RLS on every project table (gap: recipe_projects /
   recipe_versions, PHG-FLV-006); memory never crosses projects; per-project roles; Action button keys per project;
   admin manages shared layer and skeleton only.
+
+------------------------------------------------------------------------------
+PHG-20260928-COACH | USER_PROMPT + DESIGN (no code, no migration) | 2026-09-28
+Rob: "Harmony needs to eventually be able to figure out and improve profitability for restaurants ... your costs are
+too high on that, your labor is too high this week ... these should be your reporting periods ... you're losing
+this much in food waste ... charge this much more on these items ... cut back on dairy costs ... That's the whole
+idea of what this is going to be."
+- Spec: section 0 (north star) and 4D profit coach added: signals vs target/history/market; admin-editable detector
+  library (labor, COGS, waste, pricing vs nearby market, menu mix, purchasing, comps, budget pace, calendar/setup);
+  findings with $ impact, evidence, confidence, ranked; weekly brief + alerts + on-ask; fixes as proposals; outcome
+  tracking and learning; guardrails (DB math only, data sufficiency, evidence, opt-in anonymised benchmarks);
+  tables coach_detectors / coach_findings / coach_actions on top of management_alert_*. Build phase 8.

@@ -8,6 +8,16 @@ Invoice photo capture is deliberately left for a later phase (Rob, 2026-09-28).
 
 ---
 
+## 0. Why this exists
+
+The end goal (Rob, 2026-09-28): as each business builds out its model, Harmony finds and improves its
+**profitability**. "Your costs are too high on that. Your labor is too high this week. These should be your
+reporting periods. You're losing this much in food waste. Charge this much more on these items. Cut back on dairy
+costs." Everything else in this spec (the knowledge map, setup skeleton, folders, voice building, finance data)
+exists so Harmony has complete, trustworthy data about a business to coach it from. Section 4D describes the coach.
+
+---
+
 ## 1. The idea in one paragraph
 
 Every time Rob speaks, Harmony turns it into a **job** (find something, build something, organise
@@ -291,6 +301,66 @@ each person gets their own layer inside the project.
   projects makes one key per project or says "switch to ..." at the start.
 - The PHG admin (Rob) manages the shared layer and the skeleton, and can enter a project only as a member of it.
 
+## 4D. The profit coach
+
+### 4D.1 What already exists
+
+Registered capabilities `management_dashboard`, `management_operations` (alert lifecycle, management inbox, report
+snapshots), `management_variance` (arithmetic bridge of period changes: volume, mix, price, discounts, comps),
+`menu_engineering` (item mix, contribution), `recipe_costing`, `inventory_analysis` (theoretical vs actual use),
+`budget_forecasting`, `period_review`, and tables `management_alert_*`, `management_variance_snapshots`,
+`menu_engineering_snapshots`. PHG also has something no single restaurant has: **market prices and menus for
+41,886 venues**, so it can compare a business's prices with the real market around it.
+
+### 4D.2 How it works
+
+1. **Signals**: every metric (4A.2) per period, per location and revenue center, compared with the business's
+   target, its own history (last week, same week last year, trend) and the market (PHG menu prices nearby, and
+   anonymised peer benchmarks once enough businesses opt in).
+   (The example findings below use made-up numbers to show the format.)
+2. **Detectors**: an admin-editable library of checks, each with a data requirement, a rule and a dollar-impact
+   formula. Starting set:
+
+| Area | Detector | Example finding |
+|---|---|---|
+| Labor | labor % over target; hours by role vs sales per hour; scheduled vs actual; overtime | "Labor was 27% this week vs 22 target: Tuesday and Wednesday nights had 2 bartenders at under $300 sales/hour. About $610 over." |
+| COGS | category COGS % drift; theoretical vs actual (waste, overpour, theft, missing invoices) | "Liquor COGS 24% vs 19% theoretical: about $1,150 unaccounted this period." |
+| Waste | inventory variance by item; prep yield vs recipe | "You're losing about $180 a week on citrus: usage is 30% over what sales explain." |
+| Pricing | item margin vs target; price vs nearby market for the same drink; price not updated after cost rises | "Your Margarita is $9; 38 bars within 5 miles charge a median $12. At your volume, +$2 is about $420 a month." |
+| Menu mix | menu engineering quadrants (stars, plowhorses, puzzles, dogs); items to reprice, reposition or cut | "Espresso Martini sells well but earns $3.10; raise $1 or swap the vodka." |
+| Purchasing | vendor price increases; category spend trend (e.g. dairy); cheaper equivalent products; order vs par | "Dairy spend is up 22% in 6 weeks, mostly heavy cream from one vendor." |
+| Comps and discounts | comp % over limit; by staff, by day | "Comps were 4.8% last week vs a 2% limit, 70% on Friday." |
+| Budget | declining budget pace; forecast to overspend | "At this pace you'll overspend bar supplies by $240 this week." |
+| Calendar and setup | reporting periods that don't match the business rhythm; missing data that blocks answers | "Your week starts Monday but your busiest block is Thu to Sun; a Thursday week start would make weekly labor comparisons cleaner." |
+
+3. **Findings**: each has the problem, the dollar impact (per week, month or year), the evidence (numbers and
+   source records, tappable), confidence, and 1 to 3 actions. Ranked by dollar impact times confidence, so the
+   biggest real money comes first.
+4. **Delivery**: a weekly brief (spoken or on screen), live alerts for big items, and answers when asked ("where
+   am I losing money?", "what should I raise prices on?"). Harmony uses the same voice rules: headline and dollars
+   first, one driver, offer the detail.
+5. **Action**: Harmony can carry out the fix as a proposal: reprice items, change a par level, adjust a schedule
+   template, switch a recipe ingredient, set a new reporting calendar. Same approval rules as section 10.
+6. **Follow-up and learning**: each finding records whether it was acted on and what the metric did afterwards.
+   Harmony learns which advice pays off for this business (and, anonymised and opt-in, across businesses) and
+   stops repeating advice that is ignored or wrong. Dismissed findings stay dismissed unless the numbers get worse.
+
+### 4D.3 Guardrails
+
+- Numbers come from database functions only; the model explains, it never calculates money.
+- No finding without enough data; otherwise Harmony says what data is missing and how to add it (ties to 4B setup).
+- Every recommendation shows its evidence and assumptions; market comparisons name the sample (how many venues,
+  where, how recent).
+- Peer benchmarks use anonymised aggregates only, from businesses that opt in; one business's data is never shown
+  to another.
+
+### 4D.4 Tables (new, with the finance phase)
+
+`phg.coach_detectors` (admin library: key, area, requirement, rule, impact formula, thresholds, wording),
+`phg.coach_findings` (account, detector, period, impact $, confidence, evidence, status: new / seen / acted /
+dismissed / resolved), `phg.coach_actions` (finding, proposal id, outcome, metric before/after). Builds on
+`management_alert_*` rather than duplicating it.
+
 ---
 
 ## 5. How Harmony talks: jobs, slots and questions
@@ -549,6 +619,7 @@ native iPhone app later.
 | 6 | **Talk-over** in the app (option 1, then maybe realtime) | Frontend + tuning on Rob's phone |
 | 2A | **Projects, setup skeleton + finance data**: project/person layers and RLS audit (add account_id where missing), setting definitions, account settings, glossary/memory, guided setup, data-source adapters and mappings, chart-of-accounts template, metric functions | Migration; Rob as admin writes the first skeleton with Harmony |
 | 7 | **Costing live** in Finance views as prices arrive | Airtable prices first, invoices later |
+| 8 | **Profit coach**: detectors, findings with $ impact, weekly brief, actions as proposals, outcome learning; market price comparison first (data already here) | Finance data from 2A; migration |
 | Later | Invoice photos -> vision model -> prices; food side; native iPhone app | Separate decisions |
 
 Each phase ships with conversation tests (existing `conversation_tests` table) covering the dialogs
