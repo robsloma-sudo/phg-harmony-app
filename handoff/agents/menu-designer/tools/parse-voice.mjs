@@ -215,6 +215,24 @@ export function parseSinglePour(sent) {
   return { subject: m[1].trim(), pour: `${Number(m[2])} oz` };
 }
 
+// House style for a spoken description (panel round 4, Butterick and the sommelier): a wine region takes a comma before
+// its country or state ("Marlborough New Zealand" -> "Marlborough, New Zealand"), "non alcoholic" is hyphenated and
+// the proper names West Coast / New England are capitalised. Words are never added or dropped.
+const PLACES = ['New Zealand', 'South Africa', 'New York', 'California', 'Oregon', 'Washington', 'France', 'Italy', 'Spain',
+  'Portugal', 'Germany', 'Austria', 'Argentina', 'Chile', 'Australia', 'Greece', 'Hungary', 'Mexico', 'Colorado', 'Scotland',
+  'Ireland', 'Japan', 'Kentucky', 'Tennessee', 'Jalisco', 'Oaxaca', 'Lebanon', 'Uruguay', 'Canada', 'Virginia'];
+export function placeCommas(desc) {
+  const m = String(desc || '').match(new RegExp(`^((?:[A-Z][\\p{L}'.-]*\\s+)*[A-Z][\\p{L}'.-]*)\\s+(${PLACES.join('|')})$`, 'u'));
+  return m ? `${m[1]}, ${m[2]}` : desc;
+}
+export function styleDesc(desc, listKey = '') {
+  let d = String(desc || '');
+  if (/^wine/.test(listKey || '')) d = placeCommas(d);
+  d = d.replace(/\b(n)on[ -]alcoholic\b/gi, (_, n) => `${n}on-alcoholic`)
+       .replace(/\bwest coast\b/gi, 'West Coast').replace(/\bnew england\b/gi, 'New England');
+  return d;
+}
+
 // Follow-up answer about a known item (panel round 2). Returns true when the sentence was consumed.
 export function answerFor(sent, sections) {
   if (/\b(dollars|bucks)\b/i.test(sent)) return false;
@@ -473,7 +491,7 @@ export function parseTranscript(transcript, ctx = {}) {
     let k = 1;
     it.name = parts.map((x, i) => { if (!(i % 2)) return x; const w = hm[k++]; return /^[A-Z]/.test(w) && UNITS[w.toLowerCase()] === Number(x) ? w : x; }).join('');
   }
-  for (const s of sections) for (const it of s.items) { it.name = spell(it.name); if (it.description) it.description = spell(it.description); }
+  for (const s of sections) for (const it of s.items) { it.name = spell(it.name); if (it.description) it.description = styleDesc(spell(it.description), s.key); }
   return {
     transcript: heard,
     normalized: text,

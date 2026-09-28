@@ -61,9 +61,9 @@ t('ginger beer is not beer; New Zealand is not a "new" flag', () => { assert.equ
 t('mocktails are their own list', () => assert.equal(find(sb, 'Garden Spritz').list, 'mocktails'));
 t('pour mismatch asks', () => { const r = parseTranscript('All spirits are poured in 1 ounce, 1.50 ounce and 2.50 ounce pours. Vodka: Titos seven, ten.'); assert.ok(r.questions.some(q => /Which price goes with which pour/.test(q))); });
 const sbd = design(sb, { venue: { city: 'Denver', state: 'CO' } }).options[0].menu_studio_file.doc;
-t('pour labels printed once, values unchanged', () => { const sp = sbd.sections.find(x => x.name === 'Spirits'); const v = sp.subs.find(b => b.name === 'Vodka'); assert.match(v.desc, /1 oz.*1\.5 oz.*2\.5 oz/); const tito = v.items.find(i => i.name === "Tito's"); assert.deepEqual(tito.prices.map(p => p.value), [7, 10, 16]); assert.deepEqual(tito.meta.price_labels, ['1 oz', '1.5 oz', '2.5 oz']); });
+t('pour labels printed once, values unchanged', () => { const sp = sbd.sections.find(x => x.name === 'Spirits'); const v = sp.subs.find(b => b.name === 'Vodka'); assert.match(sp.desc, /1 oz.*1\.5 oz.*2\.5 oz/); assert.equal(v.desc, ''); const tito = v.items.find(i => i.name === "Tito's"); assert.deepEqual(tito.prices.map(p => p.value), [7, 10, 16]); assert.deepEqual(tito.meta.price_labels, ['1 oz', '1.5 oz', '2.5 oz']); });
 t('wine: glass/bottle said once for the section', () => { const w = sbd.sections.find(x => x.name === 'Wine'); assert.match(w.desc, /Glass.*Bottle/); assert.deepEqual(w.subs.map(b => b.name), ['Sparkling', 'White', 'Rosé', 'Red']); });
-t('zero-proof program in one section, last (Crafted then softs)', () => { const n = sbd.sections.filter(x => !x.designer_role).map(x => x.name); assert.ok(!n.includes('Mocktails')); assert.equal(n[n.length - 1], 'Zero Proof'); const z = sbd.sections.find(x => x.name === 'Zero Proof'); assert.deepEqual(z.subs.map(b => b.name), ['Crafted', 'Soft Drinks & Coffee']); assert.ok(z.subs[0].items.some(i => i.name === 'Nojito')); });
+t('zero-proof program in one section, beside the cocktails on a two-page menu (Crafted then softs)', () => { const n = sbd.sections.filter(x => !x.designer_role).map(x => x.name); assert.ok(!n.includes('Mocktails')); assert.equal(n[n.indexOf('Cocktails') + 1], 'Zero Proof'); const z = sbd.sections.find(x => x.name === 'Zero Proof'); assert.deepEqual(z.subs.map(b => b.name), ['Crafted', 'Soft Drinks & Coffee']); assert.ok(z.subs[0].items.some(i => i.name === 'Nojito')); });
 t('spirits in back-bar order, whiskey last', () => { const sp = sbd.sections.find(x => x.name === 'Spirits'); const k = sp.subs.map(b => b.name.toLowerCase()); assert.ok(k.indexOf('vodka') < k.indexOf('tequila') && k.indexOf('whiskey') === k.length - 1, k.join(',')); });
 t('no HOUSE badge under a House subhead', () => { const c = sbd.sections.find(x => x.name === 'Cocktails'); const lp = c.subs.find(b => /house/i.test(b.name)).items.find(i => i.name === 'Luna Paloma'); assert.ok(!lp.badges.includes('house')); });
 import { LOOKS, styleForLook, TRACKING_MAX } from '../styles/looks.mjs';
@@ -156,6 +156,37 @@ t('space above a section head is capped (item gap + section gap)', () => {
 });
 t('footer never repeats the masthead ("Fort Collins, CO" under "Taproom · Fort Collins")', () => {
   for (const o of haRes.options) { const d = o.menu_studio_file.doc; const f = d.sections.find(x => x.designer_role === 'footer'); assert.ok(!f || !/fort collins/i.test(f.name), o.look); }
+});
+// panel round 4 (sample-bar)
+import { placeCommas, styleDesc } from './parse-voice.mjs';
+t('wine region takes a comma before its country or state; words unchanged', () => {
+  assert.equal(placeCommas('Marlborough New Zealand'), 'Marlborough, New Zealand');
+  assert.equal(placeCommas('Russian River Valley California'), 'Russian River Valley, California');
+  assert.equal(placeCommas('California coast'), 'California coast');
+  assert.equal(placeCommas('Glera, Prosecco DOC, Veneto, Italy'), 'Glera, Prosecco DOC, Veneto, Italy');
+  assert.equal(styleDesc('Non alcoholic IPA'), 'Non-alcoholic IPA'); assert.equal(styleDesc('West coast IPA'), 'West Coast IPA');
+  assert.equal(find(sb, 'Catena Malbec').description, 'Mendoza, Argentina');
+});
+t('a key shared by most subsections prints once under the section; the exception keeps its own', () => {
+  const sp = sbd.sections.find(x => x.name === 'Spirits');
+  assert.equal(sp.desc, '1 oz  ·  1.5 oz  ·  2.5 oz');
+  const w = sp.subs.find(b => b.name === 'Whiskey'); assert.ok(w, 'Whiskey back under Spirits'); assert.equal(w.desc, '1.5 oz  ·  3 oz');
+  assert.equal(sp.subs.filter(b => b.desc).length, 1);
+});
+t('two-page plan: zero proof moves up only when it fills the pages more evenly; no promoted sub left beside its parent', () => {
+  const o = design(sb, { venue: { city: 'Denver', state: 'CO' } }).options[0];
+  const d = o.menu_studio_file.doc, secs = d.sections.filter(x => !x.designer_role);
+  assert.ok(secs.find(x => x.name === 'Zero Proof').breakCol, 'Zero Proof opens column 2 of page 1');
+  assert.ok(!secs.some((x, i) => x.designer_promoted_from && secs[i - 1]?.id === x.designer_promoted_from && !x.breakCol && !x.breakBefore));
+  assert.ok(/type and spacing x1\.(1|2|3)\d? to fill the planned pages \(descriptions held/.test(JSON.stringify(o)), 'type grew past the longest description');
+  assert.deepEqual(orphanSubs(d, o.menu_studio_file.style, o.menu_studio_file.size), []);
+  assert.equal(haAll(o).length, items(sb).length);
+});
+t('garnish question covers crafted zero-proof, never a bottled or brewed soft drink', () => {
+  const q = design(sb, { venue: { city: 'Denver', state: 'CO' } }).questions.join(' ');
+  for (const n of ['Mexican Coca-Cola', 'Topo Chico', 'Fever-Tree Ginger Beer', 'Cold Brew Coffee']) assert.ok(!q.includes(`"${n}"`), n);
+  const bare = parseTranscript('Mocktails: Nojito, mint, lime, soda, seven.');
+  assert.match(design(bare, {}).questions.join(' '), /Garnish: .*"Nojito"/);
 });
 console.log(`${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

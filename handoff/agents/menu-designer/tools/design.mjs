@@ -604,7 +604,18 @@ function pourHeaders(doc) {
     if (d && subs.every(b => b.desc === d) && subs.every(b => b.items.every(i => i.meta?.price_labels))) {
       sec.desc = d; for (const b of subs) b.desc = '';
       changes.push(`${sec.name}: "${d}" printed once for the whole section.`);
+      continue;
     }
+    // Most subsections share one key and the rest carry their own (panel round 4, 11 of 15 reviewers: "1 oz · 1.5 oz ·
+    // 2.5 oz" printed five times under Vodka, Gin, Rum, Tequila, Mezcal): the shared key prints once under the section
+    // heading and only the exceptions keep theirs ("1.5 oz · 3 oz" under Whiskey), so every price still has a key.
+    const keyed = subs.filter(b => b.desc && b.items.every(i => i.meta?.price_labels));
+    if (keyed.length !== subs.length) continue;
+    const count = {}; for (const b of keyed) count[b.desc] = (count[b.desc] || 0) + 1;
+    const [top, n] = Object.entries(count).sort((a, b) => b[1] - a[1])[0] || [];
+    if (!top || n < 2 || n * 2 <= subs.length) continue;
+    sec.desc = top; for (const b of subs) if (b.desc === top) b.desc = '';
+    changes.push(`${sec.name}: "${top}" printed once under the heading; ${subs.filter(b => b.desc).map(b => `${b.name} keeps its own "${b.desc}"`).join(', ')}.`);
   }
   return changes;
 }
@@ -657,24 +668,46 @@ function promoteSubs(doc, subs) {
     const sec = doc.sections[i];
     sec.subs = sec.subs.filter(b => b !== sub);
     const name = new RegExp(`\\b${sec.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(sub.name) ? sub.name : `${sec.name} · ${sub.name}`;
-    doc.sections.splice(i + 1, 0, { id: `${sub.id}_sec`, name, desc: sub.desc || '', items: sub.items, subs: [], designer_promoted_from: sec.id });
+    doc.sections.splice(i + 1, 0, { id: `${sub.id}_sec`, name, desc: sub.desc || '', items: sub.items, subs: [], designer_promoted_from: sec.id, designer_sub: { ...sub, items: undefined } });
     changes.push(`"${sub.name}" would have been left at the foot of a column without its items, so it became its own section "${name}" (Menu Studio keeps sections whole).`);
+  }
+  return changes;
+}
+
+// Undo a keep-with-next promotion the final plan no longer needs (panel round 4: "SPIRITS · WHISKEY" printed as a
+// section head directly under Spirits in the same column once the page plan had moved the break elsewhere). The
+// subsection goes back under its parent when it still sits right after it, in the same column, with no subhead
+// orphaned and no page added.
+export function demoteSubs(doc, S, sizeKey) {
+  const changes = [];
+  for (let i = doc.sections.length - 1; i > 0; i--) {
+    const x = doc.sections[i], parent = doc.sections[i - 1];
+    if (!x.designer_promoted_from || parent.id !== x.designer_promoted_from || x.breakBefore || x.breakCol || !x.designer_sub) continue;
+    const before = layout({ doc, style: S, size: sizeKey });
+    const snapshot = [...doc.sections], subs0 = [...(parent.subs || [])];
+    const sub = { ...x.designer_sub, items: x.items, desc: x.desc || '' };
+    parent.subs = [...subs0, sub];
+    doc.sections = doc.sections.filter(y => y !== x);
+    const after = layout({ doc, style: S, size: sizeKey });
+    if (after.pages > before.pages || orphanSubs(doc, S, sizeKey).length) { doc.sections = snapshot; parent.subs = subs0; continue; }
+    changes.push(`"${sub.name}" back under ${parent.name} as a subsection (the final page plan keeps it with its items).`);
   }
   return changes;
 }
 
 // Multi-page menus: Menu Studio moves whole sections between columns and pages, which can strand a half-empty page.
 // Choose, in order, which section starts each column and page (Menu Studio's own "Start on a new column/page" flags)
-// so the slots fill evenly. Order is never changed.
-function planPages(doc, S, sizeKey) {
+// so the slots fill evenly. Order is kept, with one exception below.
+function planCuts(doc, S, sizeKey) {
   const secs = doc.sections.filter(x => !x.designer_role);
   if (secs.length < 3 || secs.length > 14) return null;
   const n = Math.max(1, S.page.cols || 1);
+  const clear = () => { for (const x of secs) { delete x.breakBefore; delete x.breakCol; } };
+  clear();
   const L0 = layout({ doc, style: S, size: sizeKey });
   const pages = L0.pages;
   const slots = pages * n;
   if (slots < 2 || slots > 8) return null;
-  const clear = () => { for (const x of secs) { delete x.breakBefore; delete x.breakCol; } };
   let best = null;
   // enumerate order-preserving splits of secs into `slots` consecutive groups (small n: brute force)
   const rec = (start, k, cuts) => {
@@ -691,14 +724,41 @@ function planPages(doc, S, sizeKey) {
     for (const op of L.ops) { if (op.node?.pos) continue; const pg = Math.floor(op.y / L.H); const col = Math.max(0, Math.round((op.x - L.M) / (L.colW + L.gutter))); const k = pg * n + Math.min(col, n - 1); if (k < slots) bottoms[k] = Math.max(bottoms[k], op.y - pg * L.H); }
     if (bottoms.some(b => b === 0)) return;
     const mean = bottoms.reduce((a, b) => a + b, 0) / slots;
-    const score = bottoms.reduce((a, b) => a + (b - mean) ** 2, 0) + (L.H - L.M - Math.max(...bottoms)) * 0;
-    if (!best || score < best.score) best = { score, cuts: [...cuts] };
+    // A plan that leaves a subhead at a column foot without its items is a last resort (keep-with-next, round 3).
+    const score = bottoms.reduce((a, b) => a + (b - mean) ** 2, 0) + (orphanSubs(doc, S, sizeKey).length ? 1e9 : 0);
+    if (!best || score < best.score) best = { score, cuts: [...cuts], fill: mean / Math.max(...bottoms) };
   };
   rec(0, 0, []);
   clear();
   if (!best) return null;
   best.cuts.forEach((c, i) => { const slot = i + 1; if (slot % n === 0) secs[c].breakBefore = true; else secs[c].breakCol = true; });
-  return `planned ${pages} pages × ${n} columns: ${best.cuts.map(c => secs[c].name).join(', ')} start new ${n > 1 ? 'columns/pages' : 'pages'}`;
+  return { fill: best.fill, cuts: best.cuts, msg: `planned ${pages} pages × ${n} columns: ${best.cuts.map(c => secs[c].name).join(', ')} start new ${n > 1 ? 'columns/pages' : 'pages'}` };
+}
+// The one move the plan may make (panel round 4, all 15 reviewers: page 1 ended 121 mm short while Zero Proof closed a
+// crammed page 2): the zero-proof section may sit directly after the cocktails, as their peer on the same page
+// (knowledge/03: Dandelyan, NoMad), when that fills the pages clearly more evenly (mean/max column fill +0.05).
+export const ZP_MOVE_GAIN = 0.05;
+const secItems = x => [...(x.items || []), ...(x.subs || []).flatMap(b => b.items || [])];
+function planPages(doc, S, sizeKey) {
+  const base = planCuts(doc, S, sizeKey);
+  if (!base) return null;
+  const secs = doc.sections.filter(x => !x.designer_role);
+  const zi = secs.findIndex(x => secItems(x).length && secItems(x).every(i => ['non_alcoholic', 'mocktails'].includes(i.meta?.section)));
+  const ci = secs.findIndex(x => secItems(x).length && secItems(x).every(i => i.meta?.section === 'cocktails'));
+  if (zi < 0 || ci < 0 || zi <= ci + 1) return base.msg;
+  const orig = [...doc.sections];
+  const flags = new Map(secs.map(x => [x, [x.breakBefore, x.breakCol]]));
+  const zp = secs[zi];
+  const moved = doc.sections.filter(x => x !== zp);
+  moved.splice(moved.indexOf(secs[ci]) + 1, 0, zp);
+  doc.sections = moved;
+  const alt = planCuts(doc, S, sizeKey);
+  if (alt && alt.fill >= base.fill + ZP_MOVE_GAIN) {
+    return `${zp.name} moved up beside ${secs[ci].name} (a peer of the cocktails; column fill ${Math.round(base.fill * 100)}% -> ${Math.round(alt.fill * 100)}% of the fullest); ${alt.msg}`;
+  }
+  doc.sections = orig;
+  for (const [x, [bb, bc]] of flags) { delete x.breakBefore; delete x.breakCol; if (bb) x.breakBefore = bb; if (bc) x.breakCol = bc; }
+  return base.msg;
 }
 
 // Colophon footer: a pinned, item-less section on the bottom margin. Only known facts: city/state and website from
@@ -739,6 +799,8 @@ function scaleStyle(base, k) {
   const T = JSON.parse(JSON.stringify(base));
   for (const l of ['title', 'subtitle', 'section', 'sub', 'name', 'brand', 'desc', 'price']) T[l].s = Math.round(base[l].s * (l === 'title' ? Math.min(k, 1.35) : k));
   T.page.itemGap = Math.round(base.page.itemGap * k); T.page.secGap = Math.round(base.page.secGap * k);
+  // Round 3 rhythm: space above a section head (item gap + section gap) stays within SEC_SPACE_MAX.
+  if (T.page.itemGap + T.page.secGap > SEC_SPACE_MAX) T.page.secGap = Math.max(base.page.secGap, SEC_SPACE_MAX - T.page.itemGap);
   return T;
 }
 
@@ -791,7 +853,10 @@ export function design(input, options = {}) {
     if (built.questions) for (const q of built.questions) questions.push(q);
     if (built.flags) for (const f of built.flags) risk.add(f);
     for (const c of knownFacts(doc)) changes.push(c);
-    const noGarnish = itemsOf(doc).filter(({ it, s }) => ['cocktails', 'non_alcoholic'].includes(it.meta?.section || '') && it.desc && (it.meta?.section === 'cocktails' || (/,/.test(it.desc) && !/\bor\b/.test(it.desc))) && !(it.components || []).some(c => /garnish/i.test(c.role || '')));
+    // Mixed drinks take a garnish question (cocktails and crafted zero-proof); a bottled, canned or brewed soft drink
+    // ("Made with cane sugar, in a glass bottle") does not (panel round 4: the four sodas were asked, the mocktails not).
+    const PACKAGED = /\b(bottle|bottled|can|canned|mineral water|steeped|brewed|cola|soda water|ginger beer|tonic water|coffee)\b/i;
+    const noGarnish = itemsOf(doc).filter(({ it, s }) => ['cocktails', 'mocktails', 'non_alcoholic'].includes(it.meta?.section || '') && it.desc && (['cocktails', 'mocktails'].includes(it.meta?.section) || (/,/.test(it.desc) && !/\bor\b/.test(it.desc) && !PACKAGED.test(it.desc) && !PACKAGED.test(it.name || ''))) && !(it.components || []).some(c => /garnish/i.test(c.role || '')));
     if (noGarnish.length) questions.push(`Garnish: which garnish goes on ${noGarnish.map(x => `"${x.it.name}"`).join(', ')}? (Printed garnishes are a scorecard requirement for cocktails.)`);
     if (!fromDraft) for (const { it, s, sub } of itemsOf(doc)) {
       if (s.designer_role) continue;
@@ -831,15 +896,24 @@ export function design(input, options = {}) {
         // With the page plan fixed, grow type and spacing while every section still lands in its planned slot.
         const base = JSON.parse(JSON.stringify(style)), pages = measure(doc, style, sizeKey).pages;
         const starts = () => layout({ doc, style, size: sizeKey }).ops.filter(o => o.t === 'head' && o.lvl === 'section' && !o.node?.pos).map(o => `${Math.floor(o.y / 1e9)}|${o.node?.id}`);
-        let bestK = 1;
+        // Descriptions do not wrap in Menu Studio (S6), so the longest one used to stop all growth at x1.03 and leave
+        // page 1 a third empty (panel round 4). Once a line would run wide, the description size holds at the last size
+        // that fit and names, prices, heads and spacing keep growing.
+        let bestK = 1, descK = null;
+        const grown = k => { const T = scaleStyle(base, k); if (descK !== null) T.desc.s = Math.round(base.desc.s * descK); return T; };
         for (let k = 1.03; k <= 1.45; k += 0.03) {
-          const T = scaleStyle(base, k); for (const key of Object.keys(T)) style[key] = T[key];
-          const r = measure(doc, style, sizeKey);
-          if (r.pages !== pages || r.wide.length || r.overflowing.length) break;
+          let T = grown(k); for (const key of Object.keys(T)) style[key] = T[key];
+          let r = measure(doc, style, sizeKey);
+          if (r.wide.length && descK === null && r.pages === pages && !r.overflowing.length) {
+            descK = bestK; T = grown(k); for (const key of Object.keys(T)) style[key] = T[key];
+            r = measure(doc, style, sizeKey);
+          }
+          if (r.pages !== pages || r.wide.length || r.overflowing.length || orphanSubs(doc, style, sizeKey).length) break;
           bestK = k;
         }
-        const T = scaleStyle(base, bestK); for (const key of Object.keys(T)) style[key] = T[key];
-        if (bestK > 1) log.push(`type and spacing x${bestK.toFixed(2)} to fill the planned pages`);
+        const T = grown(bestK); for (const key of Object.keys(T)) style[key] = T[key];
+        if (bestK > 1) log.push(`type and spacing x${bestK.toFixed(2)} to fill the planned pages${descK !== null && descK < bestK ? ` (descriptions held at x${descK.toFixed(2)} so the longest line stays in its column)` : ''}`);
+        for (const c of demoteSubs(doc, style, sizeKey)) changes.push(c);
         m = measure(doc, style, sizeKey); placeFooter(doc, style, sizeKey);
       }
     }

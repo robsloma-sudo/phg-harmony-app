@@ -242,6 +242,17 @@ All 15 panel reviewers marked down three Menu Studio drawing rules that the desi
   above, now with a colour):** `top` on the name's baseline (`y + (name.s − badgeSize) × 0.8`), size
   `max(9pt, desc.s × 0.85)`, fill `style.desc.c` or darker, a fixed word-space before the price.
 
+- **Round 4 (sample-bar) repeat: the key line.** Every panel (15 of 15) again read "Glass · Bottle" and
+  "1 oz · 1.5 oz · 2.5 oz" as stray lines: `mdcDraw` advances 4 px after a heading description and adds nothing above
+  the first subhead, so a section key sits 0.6 mm above SPARKLING / VODKA and a subsection key touches its first item
+  (measured space above subheads 0.59–3.5 mm). The designer now prints a shared key once under the section heading
+  (it cannot add the gap). `page.subGap` / `page.legendGap` above would fix both; a key set in the price face and
+  colour (`hdesc` drawn with `style.price`) would tie it to the prices it labels.
+- **Round 4: tiered prices do not line up.** In a multi-column layout prices print inline (S5), so "5 / 7 / 22" and
+  "6 / 8.50 / 30" start at a different x on every line and the key cannot sit over its columns. Tabular (lining,
+  fixed-width) figures in `mdcDrawItem`'s price text (`fontFeatureSettings: 'tnum'` or a tabular price face) would at
+  least make the tiers the same width.
+
 ## S15. Keep a subhead with its first items (review panel round 3)
 
 **Found:** `mdcDraw` (index.html ~21042) fits a subsection heading with `mdcCursorFit(cur, sh)`, the heading's own
@@ -263,4 +274,23 @@ mdcCursorFit(cur, keep);
 
 Do the same for a section heading whose section is taller than a column (the `sh + name.s` branch at ~21018), and
 count nothing extra in `mdcSectionHeight`, so page counts do not change.
+
+## S16. Fill both pages of a two-page menu (review panel round 4)
+
+**Found:** on PHG Sample Bar (45 items, letter, two pages × two columns) all 15 reviewers led with the empty foot of
+page 1 (121 mm, then 107 mm after this round's fixes). Menu Studio has one type scale and one `itemGap` for the whole
+file and keeps each section whole, so with Cocktails (12 items) and Zero Proof (8) on page 1 and Beer, Wine, Spirits
+(25 items) on page 2, the only choices are which section starts which column. Type cannot grow further because
+descriptions do not wrap (S6): the longest line fixes the ceiling.
+
+**Designer workaround (in the toolkit now):** the page planner may move the zero-proof section up beside the
+cocktails when that fills the columns more evenly, grows names, prices, heads and spacing past the longest
+description (descriptions hold at the last size that fit), and puts a keep-with-next subsection back under its parent
+when the final plan no longer needs it. Page 1 still ends about 40% short.
+
+**Suggested change (either):**
+- `page.justify: 'columns'`: after the flow, spread each column's leftover height over its item gaps, capped at, say,
+  2× `itemGap`, so a short page opens up evenly instead of stopping early; or
+- let a section continue into the next column at a subsection boundary (with its heading repeated in small caps,
+  "Spirits, continued"), so a long section can share a page with a short one. Count both in `mdcSectionHeight`.
 

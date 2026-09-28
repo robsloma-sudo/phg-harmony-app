@@ -112,3 +112,58 @@ Open, carried to later rounds:
 - **Concept.** Nothing says altitude (e.g. "5,003 ft" in the deck); the masthead is a generic grotesque. Needs the
   venue's words, never invented; a condensed display face is not among the 8 system fonts.
 - From round 2: leaders style (Menu Studio), Speakeasy Noir cantina character, two golds on Casa Luna.
+
+## Round 4 — sample-bar
+
+Scores: Design Theory 69, 69, 75, 71, 70 (mean 70.9) · Cocktail & Beverage 74, 76, 75, 75, 74 (mean 75.0) ·
+Concept & Brand 69, 72, 65, 72, 71 (mean 69.8). Lowest 65. Gate not met (all 15 below 80).
+Weakest subscores: grid_space 55, format_layout 57, overall_design 64, descriptions 68.
+
+All 15 reviewers led with page balance: page 1 ended 121 mm above its margin while Zero Proof closed a crammed page 2
+and the Wine column stopped at 44%. Next most common: the spirit pour key printed five times, keys touching their
+items, no garnishes or spirit type/proof, wine regions without commas.
+
+Changed (toolkit, applies to every menu):
+- **Page plan may move Zero Proof up.** The planner tries the zero-proof section directly after the cocktails (their
+  peer, on the same page) and keeps it when the columns fill clearly more evenly (mean/max column fill +0.05). A stale
+  break flag no longer skews the page count, and a plan that orphans a subhead is a last resort. Sample Bar: Cocktails
+  | Zero Proof on page 1, Beer + Wine | Spirits on page 2.
+- **Growth past the longest description.** Type used to stop at x1.03 because descriptions do not wrap (S6). Once a
+  line would run wide, the description size holds at the last size that fit while names, prices, heads and spacing
+  keep growing (x1.24 on Sample Bar; page 2 now fills to the footer). `scaleStyle` also keeps item gap + section gap
+  within the 40 px rhythm cap.
+- **One key per section.** When most subsections share a pour key and the rest carry their own, the shared key prints
+  once under the section heading and only the exception keeps its own ("1 oz · 1.5 oz · 2.5 oz" under SPIRITS,
+  "1.5 oz · 3 oz" under WHISKEY). Frees four lines.
+- **Undo a promotion the plan no longer needs.** A keep-with-next subsection ("Spirits · Whiskey") goes back under its
+  parent when the final plan keeps it in the same column, with no orphan and no page added.
+- **House style in descriptions.** A wine region takes its comma ("Marlborough, New Zealand", "Paso Robles,
+  California"); "non alcoholic" is hyphenated; West Coast and New England are capitalised. No words added or dropped.
+- **Garnish question scope.** Crafted zero-proof drinks are now asked for a garnish (they were skipped); bottled,
+  canned or brewed soft drinks never are.
+- **Sample transcript.** Sample Bar's voice note gained the venue's (simulated, labelled) answers: garnishes for all 10
+  cocktails and 4 crafted zero-proof drinks (Cointreau named in the Margarita, simple syrup in the Garden Gimlet),
+  type and ABV for all 12 spirits (Tito's 40%, Tanqueray 47.3%, Rittenhouse bottled-in-bond 50%, Blanton's 46.5%,
+  Lagavulin Islay single malt 43%…), La Marca and Whispering Angel grapes and appellations, Athletic Run Wild's
+  brewery, soft-drink descriptors. No price changed. It now submits (confidence 0.72, one open question: legal lines).
+  Self-check 94/97 (A).
+- Tests: 76 passed (4 new, 2 updated).
+
+Filed: S16 (fill both pages of a two-page menu: column justification or a section continuing at a subsection
+boundary). S14 extended for round 4 (key-line spacing, tabular figures for tiered prices).
+
+Open, carried to later rounds:
+- **Page 1 still ends about 40% short** on Sample Bar (bottom margin 107 mm). Sections are whole and Menu Studio has
+  one type scale, so page-level balance needs S16. Moving Beer to page 1 balances pages but leaves page 2's Wine
+  column half empty; not taken.
+- **Key lines.** "Glass · Bottle" still sits right on SPARKLING and each key touches its first item (S14 spacing).
+- **Content not yet answered:** pitcher volume and can sizes, wine glass pour, breweries for the five drafts (fictional
+  beers: ask, never invent), Hazy Peak's 8.50 (confirm or round, a venue call), Athletic Run Wild also listed under Zero
+  Proof, vintages / NV.
+- **Brand.** Masthead and footer are generic ("Denver, CO"); no running head on page 2; Luna Paloma's "house special"
+  shows only as a gold name. Needs the venue's words (hours, tagline).
+- **Tags and colour.** SEASONAL / NEW still 7 pt grey (S14); subheads dimmer than descriptions; prices share the
+  description colour.
+- **Grand Hotel (option B)** runs to 3 pages on Sample Bar (too_many_items_for_format), unchanged this round.
+- From round 3: beer order light to dark, column balance on High Altitude, altitude concept. From round 2: leaders
+  style, Speakeasy Noir cantina character, two golds on Casa Luna.
