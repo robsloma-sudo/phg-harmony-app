@@ -17,10 +17,10 @@
     for (const k of ['ref', 'level', 'note']) if (o[k]) rec[k] = o[k];
     out.push(rec);
   };
-  push('image', document.querySelector('.banner'), {note: 'bespoke papel picado banner (SVG, 9 motifs)'});
+  push('image', document.querySelector('.banner'), {note: 'bespoke cut-paper papel picado (SVG, 9 flags, scalloped hem, lace cut-work, agave-derived motifs)'});
   push('header', document.querySelector('.title'), {tight: true, slot: document.querySelector('.title'), baseline: true, level: 'title'});
   push('subheader', document.querySelector('.loc'), {tight: true, slot: document.querySelector('.loc'), baseline: true, level: 'location'});
-  push('divider', document.querySelector('.mastrule'), {note: 'double rule (1.5pt + 0.5pt) inside a 12pt slot'});
+  push('divider', document.querySelector('.mastrule'), {note: 'title rule: 0.5pt hairline broken by an agave and diamond cluster, 12pt slot'});
   push('divider', document.querySelector('.divider'), {note: 'dotted column divider'});
   document.querySelectorAll('.sec').forEach(s => {
     const h = s.querySelector('.hrow');

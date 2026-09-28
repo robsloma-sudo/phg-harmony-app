@@ -211,21 +211,16 @@ def parse(s, sec):
 TEQ = parse(B,'Blanco')+parse(R,'Reposado')+parse(A,'Anejo')
 ALL = RAW + TEQ
 
-# Name corrections (source spelling -> printed spelling). Every one is listed in proposal.md.
+# Name rule (round 2): print the venue's spelling. A change is allowed only when a catalogue row supports it
+# (public.brands / public.products id cited below). Accents are never added without such a row.
 FIX = {
- 'Codico Rosa':'Código Rosa','Corallejo':'Corralejo','Tremana':'Teremana','Komos Cristalnio':'Komos Cristalino',
- 'Fleche Azul':'Flecha Azul','Hussongs':"Hussong's",'Hussongs Platinum':"Hussong's Platinum",'Ja Ja':'JAJA',
- 'Deleon':'DeLeón','Deleon Platinum':'DeLeón Platinum','Angry Orchad Green Apple':'Angry Orchard Green Apple',
- 'Johnny Walker Red':'Johnnie Walker Red','Titos':"Tito's",'Jack Daniels':"Jack Daniel's",
- 'Astral Blanco':'Astral','Avion':'Avión','Avion Reserva 44':'Avión Reserva 44','Codigo':'Código',
- 'Corazon':'Corazón','Corazon Blantons':"Corazón Blanton's",'Corazon E.H. Taylor':'Corazón E.H. Taylor',
- 'Corazon Weller':'Corazón Weller','Corazon Eagle Rare':'Corazón Eagle Rare','Espolon':'Espolòn',
- 'Espolon Cristalino':'Espolòn Cristalino','Exotico':'Exótico','Patron':'Patrón','Roca Patron':'Roca Patrón',
- 'Patron Barrel Select':'Patrón Barrel Select','Patron Sherry Cask':'Patrón Sherry Cask','Patron Extra':'Patrón Extra',
- 'Tapatio':'Tapatío','Jose Cuervo de la Familia Platino':'José Cuervo de la Familia Platino',
- 'Jose Cuervo Reserva de la Familia':'José Cuervo Reserva de la Familia','Herradura Seleccion Suprema':'Herradura Selección Suprema',
- 'House Infused Jalapeno Tequila':'House-Infused Jalapeño','Asombroso Rose':'Asombroso Rosé',
- 'Tres Generaciones la Colonial':'Tres Generaciones La Colonial','Cucumber Jalapeno':'Cucumber Jalapeño',
- 'Café Patron':'Café Patrón',
+ 'Codico Rosa': ('Codigo Rosa', 'brands 13226856-a0ac-4a4f-af5b-09aa80799bd6 "Codigo 1530"'),
+ 'Corallejo': ('Corralejo', 'brands 1a7a2d92-8bdb-44f1-b165-335b84ac84df "Corralejo"'),
+ 'Tremana': ('Teremana', 'brands ff00b87a-599d-4968-acfe-4d822c303872 "Teremana"'),
+ 'Komos Cristalnio': ('Komos Cristalino', 'brands 677b30fe-fb44-4721-a40d-de037c587662 "Komos" + beverage_categories slug cristalino'),
+ 'Fleche Azul': ('Flecha Azul', 'brands 5b6902fd-95e3-4a2a-86cb-cc2adf978ab5 "Flecha Azul"'),
+ 'Ja Ja': ('Jaja', 'brands 0bb1bf79-0262-48ba-a93f-b30df910b8d3 "Jaja"'),
+ 'Herradura Seleccion Suprema': ('Herradura Selección Suprema', 'brands df036bdd-53d5-4b05-80ba-6c2e29aab0ea "Herradura Selección Suprema de Herradura"'),
 }
-def fix(n): return FIX.get(n,n)
+def fix(n): return FIX[n][0] if n in FIX else n
+def fix_cite(n): return FIX[n][1] if n in FIX else None

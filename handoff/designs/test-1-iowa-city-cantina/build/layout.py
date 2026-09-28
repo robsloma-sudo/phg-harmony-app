@@ -49,8 +49,8 @@ blocks = {}
 for c, k, ref, y0, y1 in slots:  # merge item name+desc into one block per item
     key = (c, "item" if k in ("item_name", "description") else k, ref)
     a = blocks.get(key); blocks[key] = (min(a[0], y0), max(a[1], y1)) if a else (y0, y1)
-em = next(e for e in els if e.get("note", "").startswith("column end mark"))
-blocks[(em["column"], "endmark", "endmark")] = (em["y_pt"], em["y_pt"] + em["h_pt"])
+em = next((e for e in els if e.get("note", "").startswith("column end mark")), None)
+if em: blocks[(em["column"], "endmark", "endmark")] = (em["y_pt"], em["y_pt"] + em["h_pt"])
 seqs = {c: sorted([(v[0], v[1], k[1], k[2]) for k, v in blocks.items() if k[0] == c]) for c in (1, 2)}
 gaps = {"below_section_header": [], "above_section_header": [], "subheader_to_item": [], "items_to_next_subheader": [], "item_to_item": [], "to_endmark": []}
 for c, seq in seqs.items():
