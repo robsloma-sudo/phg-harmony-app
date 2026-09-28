@@ -102,7 +102,7 @@ def P(i): return str(int(i["prices"][0]["value"])) if float(i["prices"][0]["valu
 # bow down around the agave and frame it. One grain: the same paper-fibre overlay on every shape (the sun's speckle is gone).
 PAL = dict(paper="#F2E9D6", sky0="#F1DEC2", sky1="#E7B893", sky2="#CF7F55", hill1="#B5532F", hill2="#7C3322",
            leafA="#2E5A4B", leafB="#3F7362", leafC="#244A3E", leafD="#56866F", ground="#162C25", ink="#1D1815")
-ROWS = ["#27463A", "#8E4A2B", "#1D382E", "#7C3322", "#162C25", "#6A2B1C", "#10221C"]  # alternating crop (green) / soil strips
+ROWS = ["#27463A", "#5E4636", "#1D382E", "#4A372B", "#132720"]  # alternating crop (green) / Iowa loam (desaturated brown) strips
 
 A, B, C_, D = PAL["leafA"], PAL["leafB"], PAL["leafC"], PAL["leafD"]
 def leaf2(bx, by, ang, L, W, cl, cr, bend):
@@ -195,7 +195,7 @@ ART = f'''
  <g clip-path="url(#l_railclip)">
   <rect x="-9" y="-9" width="200" height="810" fill="url(#l_sky)"/>
   <circle cx="104" cy="286" r="104" fill="url(#l_gold)" filter="url(#l_disc)"/>
-  {landscape("l_", -9, 191, 492, 1.0, 646, 80, 96, 23, 60, rosette(79, 740, 1.0), 801)}
+  {landscape("l_", -9, 191, 500, .85, 646, 80, 96, 31, 60, rosette(79, 740, 1.0), 801)}
   <rect x="-9" y="-9" width="200" height="810" filter="url(#l_fiber)" opacity=".55"/>
  </g>
  <g filter="url(#l_rim)"><path d="{EDGE}" fill="#FBF6EA" transform="translate(-3.2,0)"/></g>
@@ -209,7 +209,7 @@ PHONE_HERO = f'''
  {defs("h_", .9)}
  <rect x="-6" y="-6" width="402" height="428" fill="url(#h_sky)"/>
  <circle cx="195" cy="150" r="100" fill="url(#h_gold)" filter="url(#h_disc)"/>
- {landscape("h_", -6, 396, 300, .78, 342, 195, 175, 15, 46, rosette(195, 452, .8), 430)}
+ {landscape("h_", -6, 396, 300, .78, 342, 195, 175, 20, 46, rosette(195, 452, .8), 430)}
  <rect x="-6" y="-6" width="402" height="428" filter="url(#h_fiber)" opacity=".5"/>
  <g filter="url(#h_rim)"><path d="{torn_paper_top(402, 3, 7, 0, 390, 440).replace('M-6,440 L396,440', 'M-6,440 L396,440')}" fill="#FBF6EA" transform="translate(0,-3)"/></g>
 </svg>'''
@@ -219,7 +219,7 @@ PHONE_FOOT = f'''
 <svg class="art phone foot" viewBox="0 0 390 96" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
  {defs("f_", .9)}
  <rect x="-6" y="-6" width="402" height="108" fill="{ROWS[0]}"/>
- {"".join(f'<g filter="url(#f_rim)"><path d="{row(18 + k * 13, 16, 195, 190, 40 + k, -6, 396, 110, 1.1)}" fill="{PAL["paper"]}" transform="translate(0,-2.2)"/></g><g filter="url(#f_cut)"><path d="{row(18 + k * 13, 16, 195, 190, 40 + k, -6, 396, 110, 1.1)}" fill="{c}"/></g>' for k, c in enumerate(ROWS))}
+ {"".join(f'<g filter="url(#f_rim)"><path d="{row(18 + k * 17, 16, 195, 190, 40 + k, -6, 396, 110, 1.1)}" fill="{PAL["paper"]}" transform="translate(0,-2.2)"/></g><g filter="url(#f_cut)"><path d="{row(18 + k * 17, 16, 195, 190, 40 + k, -6, 396, 110, 1.1)}" fill="{c}"/></g>' for k, c in enumerate(ROWS))}
  <rect x="-6" y="-6" width="402" height="108" filter="url(#f_fiber)" opacity=".5"/>
  <g filter="url(#f_rim)"><path d="{torn_paper_top(20, 3, 9, 0, 390, -10)}" fill="#FBF6EA" transform="translate(0,2.6)"/></g>
  <path d="{torn_paper_top(20, 3, 9, 0, 390, -10)}" fill="{PAL['paper']}" filter="url(#f_shadowU)"/>

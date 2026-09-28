@@ -1065,3 +1065,7 @@ tough scale (best).
   in the gesture.
   Correction: TEST-1 DB items are beta_seed/sample_content=true (sample data); the benchmark plan was amended.
   Proposed Arm D = Solstice structure.
+2026-09-28 — TEST-1 round-20 built (inline prices, no leaders; equal bilingual heads; spirits name+price; glass slot;
+  torn-paper Iowa strata; phone hero; all measured gates pass; accent 7.56%). Review before panel: it violates Rob's
+  item stack (the Margarita descriptor sits after the ingredients) and the ingredient role order (garnish inside the
+  lists; citrus before sweetener). Not paneled; sent back as round-20b with DB-role ordering and garnish separated.

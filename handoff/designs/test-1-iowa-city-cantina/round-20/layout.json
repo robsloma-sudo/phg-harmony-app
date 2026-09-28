@@ -1318,11 +1318,11 @@
    "kind": "legal",
    "page": 1,
    "x_mm": 99.48,
-   "y_mm": 263.39,
+   "y_mm": 262.79,
    "w_mm": 62.73,
    "h_mm": 3.97,
    "x_pt": 282,
-   "y_pt": 746.61,
+   "y_pt": 744.91,
    "w_pt": 177.82,
    "h_pt": 11.25,
    "text": "Please tell your server about any allergies.",
@@ -1346,24 +1346,24 @@
    "left": 188.64,
    "top": 36.0,
    "right": 57.36,
-   "bottom": 34.32
+   "bottom": 35.76
   },
   "text_ink_margins_mm": {
    "left": 66.55,
    "top": 12.7,
    "right": 20.24,
-   "bottom": 12.11
+   "bottom": 12.62
   },
-  "text_ink_margin_spread_mm": 54.44,
+  "text_ink_margin_spread_mm": 53.93,
   "margins_equal_within_1mm": false,
   "margin_note": "measured on the text layer's ink (full render minus the text-free art render, 300 dpi). Line boxes are nudged by -2.88 pt (top) and +1.44 to +3.84 pt (bottom) so cap tops and last baselines/descenders sit on the 36 pt margin optically. Art is full-bleed and exempt.",
   "safe_area_line_boxes_pt": {
    "min_left": 165.5,
    "min_top": 31.88,
    "max_right": 555.09,
-   "max_bottom": 757.86
+   "max_bottom": 756.16
   },
-  "all_text_inside_safe_inset": false,
+  "all_text_inside_safe_inset": true,
   "bleed": {
    "art_layer_box_pt": {
     "x": -9,
@@ -1471,7 +1471,7 @@
    },
    {
     "x": 282,
-    "y": 745.86,
+    "y": 744.16,
     "w": 294,
     "h": 14.0
    }
@@ -1480,7 +1480,7 @@
    21.0,
    21.0,
    21.0,
-   35.11
+   33.41
   ],
   "dead_space": "one reading column from the cap-aligned first H2 (36.0 pt) to the allergen line on the bottom margin; the allergen line sits on the last grid line (margin-top auto) with 28 pt above it; the rail sky above the sun is the one quiet zone",
   "contrast_worst_pixel_min_by_kind": {
