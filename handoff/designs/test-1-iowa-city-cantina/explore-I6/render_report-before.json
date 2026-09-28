@@ -1,8 +1,7 @@
 {
  "tag": "-before",
  "opt": {
-  "platetone": "0",
-  "ink": "0"
+  "crumbs": "900"
  },
  "trim_in": [
   8.5,
@@ -118,7 +117,7 @@
     0,
     0
    ],
-   "art_silhouette_pct_of_page": 23.1,
+   "art_silhouette_pct_of_page": 23.5,
    "art_bbox_css": [
     0,
     256,

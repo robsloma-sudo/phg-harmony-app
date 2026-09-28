@@ -2,18 +2,18 @@
  "results": [
   {
    "file": "preview-letter-before.png",
-   "squint_salient_regions": 7,
-   "primary_area_pct": 4.48,
-   "primary_to_secondary": 2.44,
-   "ground_luminance": 0.106,
+   "squint_salient_regions": 4,
+   "primary_area_pct": 7.21,
+   "primary_to_secondary": 8.98,
+   "ground_luminance": 0.109,
    "value_range_p5_p95": [
-    0.07,
-    0.456
+    0.071,
+    0.462
    ],
    "accent_area_pct": 0.0,
    "visual_centroid": [
-    0.614,
-    0.628
+    0.611,
+    0.63
    ]
   },
   {
@@ -37,7 +37,7 @@
   {
    "a": "preview-letter-before.png",
    "b": "preview-letter.png",
-   "silhouette_corr": 0.999
+   "silhouette_corr": 0.998
   }
  ],
  "notes": "silhouette_corr > 0.8 = structurally similar directions (variant_silhouette_test fails)"
