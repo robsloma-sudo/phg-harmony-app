@@ -122,7 +122,7 @@ def menu_html(cols):
 # ------------------------------------------------------------------ layouts
 LAYOUTS = {
     "letter": dict(W=816, H=1056, dsf=3.125, m=64, u=13, wm_w=688, cols=[(64, 240), (328, 200)],
-                   head=552, sun_r=220, bottom=992, top_min=203, sub_gap=30,
+                   head=552, sun_r=220, bottom=992, top_min=280, sub_gap=30,
                    fs=dict(h2=25, h3=11.5, np=17, d=12, sub=13), amp=14, lam=260, stroke=1.5),
     "phone": dict(W=390, H=None, dsf=3, m=24, u=15, wm_w=342, cols=[(24, 246)],
                   head=290, sun_r=112, bottom=None, top_min=150, sub_gap=20,
