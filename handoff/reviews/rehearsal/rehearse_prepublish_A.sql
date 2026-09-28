@@ -933,7 +933,7 @@ $rehearse_f1$;
                  jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
            where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
        'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
-  v := v || jsonb_build_object('backup_service_role_can_insert', r->'A'->'backup_service_role_can_insert', 'backup_service_role_can_select', r->'A'->'backup_service_role_can_select', 'tenarg_after', r->'A'->'submit_menu_10arg_exists', 'multi_before', r->'A'->'multi_current_global_before', 'multi_end', r->'A'->'multi_current_global_end', 'reasons', (select jsonb_object_agg(e.key, e.value->>'reason') from jsonb_each(r->'A') e where jsonb_typeof(e.value)='object' and e.value ? 'status'));
+  v := v || jsonb_build_object('backup_service_role_can_insert', r->'A'->'backup_service_role_can_insert', 'backup_service_role_can_select', r->'A'->'backup_service_role_can_select', 'tenarg_after', r->'A'->'submit_menu_10arg_exists', 'multi_before', r->'A'->'multi_current_global_before', 'multi_end', r->'A'->'multi_current_global_end', 'reasons', (select jsonb_object_agg(e.key, e.value->>'reason') from jsonb_each(r->'A') e where jsonb_typeof(e.value)='object' and e.value ? 'status'), 's13_setup', r->'A'->'s13_setup', 'prepublish_config', r->'A'->'prepublish_config');
   RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;

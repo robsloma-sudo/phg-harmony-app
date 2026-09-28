@@ -373,7 +373,7 @@ A = DECL + run_file('file1', '$rehearse_f1$', f1) + f"""
     WHEN sqlstate 'P0099' THEN NULL;
     WHEN others THEN {soft_err('ERROR_A', 'a')}
   END;
-  r := r || jsonb_build_object('A', a, 'A_ms', {MS});""" + END.replace("  RAISE EXCEPTION 'REHEARSAL SUMMARY", """  v := v || jsonb_build_object('backup_service_role_can_insert', r->'A'->'backup_service_role_can_insert', 'backup_service_role_can_select', r->'A'->'backup_service_role_can_select', 'tenarg_after', r->'A'->'submit_menu_10arg_exists', 'multi_before', r->'A'->'multi_current_global_before', 'multi_end', r->'A'->'multi_current_global_end', 'reasons', (select jsonb_object_agg(e.key, e.value->>'reason') from jsonb_each(r->'A') e where jsonb_typeof(e.value)='object' and e.value ? 'status'));
+  r := r || jsonb_build_object('A', a, 'A_ms', {MS});""" + END.replace("  RAISE EXCEPTION 'REHEARSAL SUMMARY", """  v := v || jsonb_build_object('backup_service_role_can_insert', r->'A'->'backup_service_role_can_insert', 'backup_service_role_can_select', r->'A'->'backup_service_role_can_select', 'tenarg_after', r->'A'->'submit_menu_10arg_exists', 'multi_before', r->'A'->'multi_current_global_before', 'multi_end', r->'A'->'multi_current_global_end', 'reasons', (select jsonb_object_agg(e.key, e.value->>'reason') from jsonb_each(r->'A') e where jsonb_typeof(e.value)='object' and e.value ? 'status'), 's13_setup', r->'A'->'s13_setup', 'prepublish_config', r->'A'->'prepublish_config');
   RAISE EXCEPTION 'REHEARSAL SUMMARY""")
 
 # ---------------------------------------------------------------- block B: files 1-2, B checks, promote, extraction save
@@ -535,7 +535,7 @@ $rehearse_mon$;
       select id into cur_id from public.menus where account_id = '{PROMO_ACCT}' and is_current;
       select array_agg(id) into flip_ids from (select id from public.menus where account_id = '{PROMO_ACCT}' and not is_current order by id limit 3) x;
       update public.menus m set superseded_at = clock_timestamp(), superseded_reason = 'newer_near_identical_capture', superseded_by = cur_id,
-             source_key = (select coalesce(c.source_key, public.phg_menu_source_key(c.evidence_url)) from public.menus c where c.id = cur_id)
+             source_key = (select coalesce(cm.source_key, public.phg_menu_source_key(cm.evidence_url)) from public.menus cm where cm.id = cur_id)
        where m.id = any (flip_ids);
       EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g where g.check_name ~ ' || quote_literal('flip-flop|by kind') INTO v;
       wres := wres || jsonb_build_object('flipflop_same_source', v);

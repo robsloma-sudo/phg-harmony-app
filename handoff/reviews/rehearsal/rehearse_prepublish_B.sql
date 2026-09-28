@@ -1249,7 +1249,7 @@ $rehearse_mon$;
       select id into cur_id from public.menus where account_id = 'ACC-CO-LED-03-06531' and is_current;
       select array_agg(id) into flip_ids from (select id from public.menus where account_id = 'ACC-CO-LED-03-06531' and not is_current order by id limit 3) x;
       update public.menus m set superseded_at = clock_timestamp(), superseded_reason = 'newer_near_identical_capture', superseded_by = cur_id,
-             source_key = (select coalesce(c.source_key, public.phg_menu_source_key(c.evidence_url)) from public.menus c where c.id = cur_id)
+             source_key = (select coalesce(cm.source_key, public.phg_menu_source_key(cm.evidence_url)) from public.menus cm where cm.id = cur_id)
        where m.id = any (flip_ids);
       EXECUTE 'select jsonb_agg(to_jsonb(g)) from (' || mon_sql || ') g where g.check_name ~ ' || quote_literal('flip-flop|by kind') INTO v;
       wres := wres || jsonb_build_object('flipflop_same_source', v);
