@@ -1,0 +1,44 @@
+{
+ "results": [
+  {
+   "file": "preview-front.png",
+   "squint_salient_regions": 5,
+   "primary_area_pct": 18.56,
+   "primary_to_secondary": 192.26,
+   "ground_luminance": 0.892,
+   "value_range_p5_p95": [
+    0.158,
+    0.935
+   ],
+   "accent_area_pct": 15.49,
+   "visual_centroid": [
+    0.77,
+    0.631
+   ]
+  },
+  {
+   "file": "preview-back.png",
+   "squint_salient_regions": 0,
+   "primary_area_pct": 0.0,
+   "primary_to_secondary": null,
+   "ground_luminance": 0.14,
+   "value_range_p5_p95": [
+    0.068,
+    0.365
+   ],
+   "accent_area_pct": 39.9,
+   "visual_centroid": [
+    0.486,
+    0.499
+   ]
+  }
+ ],
+ "variant_silhouette": [
+  {
+   "a": "preview-front.png",
+   "b": "preview-back.png",
+   "silhouette_corr": 0.267
+  }
+ ],
+ "notes": "silhouette_corr > 0.8 = structurally similar directions (variant_silhouette_test fails)"
+}

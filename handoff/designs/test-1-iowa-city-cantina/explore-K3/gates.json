@@ -1,0 +1,180 @@
+{
+ "contrast_worst_pixel": {
+  "front": {
+   "text": "Cube: served on ice. Tint: shown only where an ingredient se",
+   "cls": "gnote tx",
+   "px": 12,
+   "pt": 9.0,
+   "worst": 6.72,
+   "bg": [
+    243,
+    240,
+    232
+   ]
+  },
+  "back": {
+   "text": "—",
+   "cls": "reg tx",
+   "px": 12,
+   "pt": 9.0,
+   "worst": 6.72,
+   "bg": [
+    243,
+    240,
+    232
+   ]
+  },
+  "phone": {
+   "text": "Cube: served on ice. Tint: shown only where an ingredient se",
+   "cls": "gnote tx",
+   "px": 13,
+   "pt": 9.75,
+   "worst": 6.72,
+   "bg": [
+    243,
+    240,
+    232
+   ]
+  }
+ },
+ "contrast_pass_4_5": true,
+ "contrast_below_4_5": [],
+ "letter_min_font_pt": 9.0,
+ "letter_min_font_ok": true,
+ "phone_min_font_px": 12,
+ "phone_min_font_ok": true,
+ "phone_png": [
+  1170,
+  18831
+ ],
+ "phone_no_hscroll": true,
+ "letter_png": {
+  "front": [
+   2550,
+   3300
+  ],
+  "back": [
+   2550,
+   3300
+  ]
+ },
+ "price_max_gap_em": 0.42,
+ "price_all_same_line_within_1em": true,
+ "price_phone_ok": true,
+ "price_violations": [],
+ "safe_area_min_px": {
+  "left": 49,
+  "top": 48,
+  "right": 57.0,
+  "bottom": 48
+ },
+ "safe_area_min_in": {
+  "left": 0.51,
+  "top": 0.5,
+  "right": 0.594,
+  "bottom": 0.5
+ },
+ "safe_area_ok": true,
+ "bleed": {
+  "art_box_vs_trim_px": [
+   {
+    "art_left": -9,
+    "art_top": -9,
+    "art_right": 9,
+    "art_bottom": 9
+   },
+   {
+    "art_left": -9,
+    "art_top": -9,
+    "art_right": 9,
+    "art_bottom": -904
+   }
+  ],
+  "bleed_mm": 3.175,
+  "sheet": "9.25 x 11.75 in, trim offset 0.375 in, crop marks in the slug",
+  "front_field_bleeds_top_right": true,
+  "back_band_bleeds_top_left_right": true,
+  "paper_bleed": "each page carries a 12 px (9 pt) paper box-shadow on the sheet, so the ground also runs past trim"
+ },
+ "dom_diff": {
+  "items_expected": 50,
+  "items_found": 50,
+  "differences": [],
+  "extra_items": [],
+  "counts": {
+   "cocktails": 12,
+   "spirits": 25,
+   "beer_cider": 6,
+   "wine": 3,
+   "zero_proof": 4
+  }
+ },
+ "dom_diff_ok": true,
+ "spirit_sensory_all_printed": true,
+ "ingredient_role_order_ok": true,
+ "garnish_separate_ok": true,
+ "banned_lines_found": [],
+ "no_banned_lines": true,
+ "coords_phg_inference": {
+  "01 Margarita": {
+   "bright_to_rich_x": 2.6,
+   "clean_to_smoky_y": 1.4
+  },
+  "02 Paloma": {
+   "bright_to_rich_x": 1.6,
+   "clean_to_smoky_y": 0.5
+  },
+  "03 Ranch Water": {
+   "bright_to_rich_x": 0.4,
+   "clean_to_smoky_y": 0.8
+  },
+  "04 Manhattan": {
+   "bright_to_rich_x": 8.2,
+   "clean_to_smoky_y": 3.3
+  },
+  "05 Batanga": {
+   "bright_to_rich_x": 4.7,
+   "clean_to_smoky_y": 2.0
+  },
+  "06 Carajillo": {
+   "bright_to_rich_x": 8.6,
+   "clean_to_smoky_y": 5.9
+  },
+  "07 Brown Butter Old Fashioned": {
+   "bright_to_rich_x": 9.5,
+   "clean_to_smoky_y": 4.3
+  },
+  "08 House Daiquiri": {
+   "bright_to_rich_x": 3.9,
+   "clean_to_smoky_y": 0.3
+  },
+  "09 Mezcal Negroni": {
+   "bright_to_rich_x": 6.7,
+   "clean_to_smoky_y": 8.7
+  },
+  "10 Spicy Pineapple Margarita": {
+   "bright_to_rich_x": 3.1,
+   "clean_to_smoky_y": 2.9
+  },
+  "11 Milpa Old Fashioned": {
+   "bright_to_rich_x": 7.1,
+   "clean_to_smoky_y": 5.3
+  },
+  "12 Loess": {
+   "bright_to_rich_x": 4.6,
+   "clean_to_smoky_y": 7.1
+  }
+ },
+ "fonts_loaded": [
+  "Inter Tight normal",
+  "Source Serif 4 normal",
+  "Source Serif 4 italic"
+ ],
+ "block_clearances_px": {
+  "back_groups_to_bev_px": 10,
+  "back_band_to_groups_px": 12,
+  "front_index_to_zero_rule_px": 36
+ },
+ "no_block_overlap": true,
+ "min_disc_center_distance_px": 43.0
+}
