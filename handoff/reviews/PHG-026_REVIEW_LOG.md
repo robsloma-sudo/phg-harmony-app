@@ -14,6 +14,47 @@ You are not allowed to publish anything until they each give on average above 80
 |---|---|---|---|---|---|
 | 1 | 62.5 (pre-fix files) | 78 (a323e16) | 62.5 | 78 | see "Round 1 findings" |
 
+## Round-1 acceptance spec (Spec Reviewer), kept for later rounds
+Rebuilt on 2026-09-28 from the round-1 findings above and from the criteria as the Spec Reviewer listed them in round 2
+(C1-C16; C17, the designer gateway role escape, was added in round 2). Each criterion is scored 0-100; the round score
+is the average.
+- C1 Item pages never replace. An online-ordering item / event / product page (`?item=`, `/order/<menu>/<cat>/<item>`,
+  `/events/...`) never becomes the current menu over a non-empty current menu, even when it shares the menu's source
+  key; it is stored as an alternate.
+- C2 Duplicates and subsets. A capture whose items are all already in the current menu (the same page or another page) is
+  not inserted, and the current menu stays. Only a true subset is a duplicate: a capture with new items or newer prices
+  is kept (it replaces or becomes an alternate).
+- C3 A missing price is unknown. An item without a price matches the same item with any price, in both directions; it
+  never counts as a different item.
+- C4 One current menu, enforced by the database. After release no venue can have two current menus (unique index), and
+  every writer demotes before it inserts.
+- C5 The repair restores the damaged venues. Every touched venue ends with a current menu at least as large as its largest
+  pre-incident menu; ties keep the menu that is already current; the repair runs under a lock; postconditions
+  (0 multi-current, 0 without a current menu, 0 smaller) raise and roll back if any fails.
+- C6 Nothing is deleted; everything changed is backed up. Menus, staging rows and function bodies are backed up before
+  they change.
+- C7 Rollback is exact, scoped and tested. It restores exactly what the change altered and nothing else, skips venues that
+  changed after release, never leaves two current menus, is rehearsed, and the writers (submit_menu, promotion,
+  extraction) still work after it.
+- C8 Extraction save. A sibling page that returns the same item set as another page of the venue is not re-staged; the
+  page's own stale rows are retired; a duplicate never becomes the original for later pages.
+- C9 Steps 3-4 are batched and safe at table scale: each call stays well under the timeout, progress is recorded, and the
+  candidate index is built CONCURRENTLY as a runbook step.
+- C10 Readers. Every reader that assumes one current menu per venue (v_menu_composition, v_menu_brand_presence,
+  v_menu_category_share, phg_menu_composition, phg_brand_presence, phg-expanded-data) stays correct; claims about
+  staging views are accurate.
+- C11 Callers. Every caller of submit_menu (Edge functions, SQL functions, workers) keeps working with the new return
+  statuses; overloads are resolvable.
+- C12 Locking. Writers of one venue queue in a fixed order (account row, then advisory lock); no deadlock with the
+  extraction save; lock times are bounded and documented.
+- C13 Re-runnable. Both files and all batch functions can run again without harm (if-not-exists, on-conflict, done tables).
+- C14 Counts. The headline counts (touched, with a pre-incident menu, damaged, changed by Step 2) are defined, reconciled
+  and recorded at run time.
+- C15 Rehearsal coverage. Every step, check and rollback is rehearsed on live data in a rolled-back transaction, and the
+  output is recorded.
+- C16 Post-release measures. There are checks with expected values for release, plus measures for after cron resumes
+  (menus per distinct item set, promotion outcomes) that do not fail on legitimate re-captures.
+
 ## Pre-gate independent review (started before the gate rule): 1 blocker, 4 should-fix, 4 minor
 Fixed before round 2 (both files):
 - BLOCKER repair Step 2 rank: now distinct items -> drinks items (typed items + items in cocktails/wine/beer/spirits
@@ -99,3 +140,75 @@ spec: persist round-1 spec text, independent 119-damaged-venue check, report ite
 status handling evidence, near-identical flip-flop damping, migration ordering vs db push.
 Note: neither reviewer could reach the database this round (no Supabase tool in their sessions); round 3 hands them the
 rehearsal output instead.
+
+
+## Changes after round 2 (submitted for round 3)
+Code (committed in the WIP syncs dd629d5 / 3391712 and in the round-3 commit): 20260927190000, 20260927191000,
+supabase/tests/phg_026_release_gate.sql + phg_026_monitor.sql (phg_026_verification.sql is now a pointer),
+20260928030000 (SF10). Rehearsal: handoff/reviews/rehearsal/results_round3.md (blocks A-F, all rolled back).
+
+Blocking:
+- SB2 / C7 function rollback: phg_rollback_function_defs_20260927() drops menus_one_current_per_account first,
+  restores the 4 bodies, re-applies `revoke all ... from public, anon, authenticated` on each signature and re-grants
+  service_role where the saved ACL had it (the backup table now stores acl). The backup table is read-only for
+  service_role (insert/update/delete/truncate revoked; anon/authenticated have nothing). Rehearsed: returns 4, index
+  gone, 10-arg overload back, live body restored, anon/authenticated cannot execute, then one submit_menu on a venue
+  with a current menu -> created, 1 current, old demoted.
+- C16 / SF6: the verification script is split. phg_026_release_gate.sql (run once after the runbook, before cron) is
+  scoped to the plan venues and to data from before step2.ran_at: step 3 finished for venues staged before the repair,
+  step 4 for candidates found before it, 0 plan venues smaller than their largest pre-incident menu, every damaged
+  venue restored, index present, cron 7 and 13 still paused. phg_026_monitor.sql (after cron resumes) has only
+  0 multi-current, the index, and menus per distinct item set <= 1.2; the outcome counts and churn are informational.
+- Independent damaged-venue check: phg_repair_damaged_20260927 is saved BEFORE Step 2 (touched venues whose largest
+  pre-incident menu is larger than the current one). Rehearsed: 119. After Step 2 the in-file assert raises unless every one
+  has a current menu at least that large (rehearsed: 0 not restored). step2 detail now records damaged_venues,
+  damaged_not_restored, chosen_item_pages 42 (4 changed to an item page), and pre_incident_replaced_newer_same_source 22.
+- C15 rehearsal: steps 3-4 timed (Step 3 ~12.5 s per 100 venues, 19 calls, ~4 min; Step 4 ~11 s per 200 venues,
+  ~97 calls, ~18 min), release-gate SQL run and rows captured, repair rollback after Step 3 including the staging restore
+  (30,126 rows), promote_clean_menu_batch(1), and one sibling-duplicate extraction save.
+
+Non-blocking:
+- SF1 price enrichment: new phg_menu_keys_price_adds(a, b) counts capture items that supply a price the current menu lacks
+  for the same name. The duplicate / subset tests (same source and other source) require price_adds = 0; the overlap
+  and size maths still use phg_menu_keys_overlap. Same source -> replacement (`same_source_price_enrichment`); other
+  source -> the near-identical rule (`price_enrichment_other_source`) or an alternate when it is smaller. Rehearsed
+  (s8a, s8b).
+- Flip-flop damping: another source, near-identical, not larger, no added prices, current menu under 7 days old ->
+  alternate (`alternate_near_identical_recent_other_source`). Larger captures and price enrichment still replace.
+  Rehearsed (s9 alternate; s9b control, a larger capture replaces).
+- SF2: file 2 starts with `set local lock_timeout = '5s'`; header and runbook say it is applied as ONE transaction
+  (apply_migration or `psql -1 -f`). Rehearsal found that cron job 16 (every 20 s, up to 5 s on menu_source_candidates)
+  can make file 1's ADD COLUMN hit its 3 s lock_timeout (55P03, full rollback); the runbook action is to re-run it.
+- SF3: the rollback skips a venue if ANY of its menus is not in phg_backup_menus_currency_20260927; demoting a
+  repair-promoted menu restores its backed-up superseded_by / reason / at. Rehearsed: all four columns identical to the
+  backup for every menu afterwards.
+- SF4: index on phg_backup_staging_dupes_20260927(account_id); Step 3's per-venue counts use one GROUP BY.
+- SF5: see SB2 (the backup tables are read-only for service_role).
+- SF7: promote_clean_menu_batch clamps p_pages to least(p_pages, 5). Cron 7 calls phg_promote_menu_batch_safe(10), so it
+  now gets 5.
+- SF8: other live functions whose source mentions is_current (all schemas), excluding submit_menu, promote_clean_menu_batch
+  and phg_save_menu_candidate_extraction: **none**. The broader search (is_current / submit_menu / promote_clean_menu_batch)
+  finds only the two submit_menu overloads (both INSERT is_current=true then demote: they are incompatible with the
+  unique index, which is why the 10-arg is dropped, the 15-arg is replaced, and the function rollback drops the index),
+  promote_clean_menu_batch (goes through submit_menu), and phg_promote_menu_batch_safe(int) (only calls
+  promote_clean_menu_batch). There are no triggers on public.menus. No Edge function writes menus directly.
+- SF10: 20260928030000 uses coalesce(jsonb_typeof(...), '') for the layout and score checks; it saves the 3 functions it
+  replaces (10-arg phg_design_proposal_submit, phg_design_proposal_review, phg_design_status, with ACL) in
+  phg_backup_design_fn_defs_20260928; phg_rollback_design_score_gate_20260928() drops the 11-arg submit and the score
+  function and restores the 3. Rehearsed (block F); still NOT applied live.
+- Round-1 spec text: added above ("Round-1 acceptance spec").
+- Migration ordering: both files and the runbook say to apply through apply_migration (in order), not `supabase db push`,
+  because newer migrations (20260927200000 and later) are already applied.
+- Caller evidence (C11). The repo has no copies of the submit-menu / promote-menus Edge functions, no worker and no n8n
+  export that calls submit_menu. Read live (read-only):
+  - submit-menu v8 calls rpc submit_menu with p_needs_vision_pass (so the 15-arg overload is used) and returns
+    `{...data}` with HTTP 200 for any status. It handles unknown statuses generically.
+  - promote-menus rev 4.3 posts to submit-menu and does `if (out?.status === "duplicate") duplicate++; else created++`,
+    marking staging rows `promoted` for any other status. The new statuses do not fail there but are counted as created
+    and labelled `promoted`. It is not scheduled: no pg_cron job calls promote-menus or promote-menus-scheduled.
+    Follow-up after release: record out.status there.
+  - Cron 7 uses the SQL path (phg_promote_menu_batch_safe -> promote_clean_menu_batch), which maps every status
+    (created -> promoted, created_alternate -> promoted_alternate, subset_of_current -> held_subset_of_current, others
+    verbatim).
+- Found in rehearsal: the promotion queue is empty today (the 6,760 promotion_ready rows are food pages the view
+  excludes), so the promote test re-staged one incident sibling page -> duplicate_of_current, no menu created.
