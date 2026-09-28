@@ -1,4 +1,4 @@
-"""Round 6 render: letter PNG (300 dpi, full resolution), PDF, phone PNG, and per-card measurement -> measure.json."""
+"""Round 7 render: letter PNG (300 dpi, full resolution), PDF, phone PNG, and per-card measurement -> measure.json."""
 import json, pathlib
 from playwright.sync_api import sync_playwright
 from PIL import Image, ImageChops
@@ -26,10 +26,10 @@ MEASURE = r"""() => {
     const gaps = its.slice(1).map((it, k) => it.previousElementSibling ? it.getBoundingClientRect().top - its[k].getBoundingClientRect().bottom : null).filter(v => v !== null);
     return {n: +c.dataset.n, ref: c.dataset.id, featured: c.classList.contains('featured'), box: box(c.getBoundingClientRect()),
       padding_px: {left: parseFloat(cs.paddingLeft), right: parseFloat(cs.paddingRight), top: parseFloat(cs.paddingTop), bottom: parseFloat(cs.paddingBottom)},
-      border_px: parseFloat(cs.borderLeftWidth), cardno: T(c.querySelector('.cardno')), name: T(c.querySelector('h2')),
+      border_px: parseFloat(cs.borderLeftWidth), cardno: T(c.querySelector('.cardno')), name: T(c.querySelector('h2')), verse: T(c.querySelector('.verse')), gloss: T(c.querySelector('.gloss')), verse_clipped: c.querySelector('.verse').scrollWidth > c.querySelector('.verse').clientWidth + 1,
       figure: box(c.querySelector('.figure').getBoundingClientRect()), body: box(c.querySelector('.body').getBoundingClientRect()),
       namebar: Object.assign(box(c.querySelector('.namebar').getBoundingClientRect()), {text: c.querySelector('.namebar').innerText.trim()}),
-      item_gaps_px: gaps, line_heights_px: [...c.querySelectorAll('.name,.price,.desc,h3,.sub .es')].map(lh),
+      item_gaps_px: gaps, line_heights_px: [...c.querySelectorAll('.name,.price,.desc,h3,.sub .es,.gloss')].map(lh), first_row_y: (c.querySelector('.body .row') || c).getBoundingClientRect().top - pg.top, body_rule_y: c.querySelector('.body').getBoundingClientRect().top - pg.top, content_bottom: Math.max(...[...c.querySelectorAll('.body > *')].map(e => e.getBoundingClientRect().bottom)) - pg.top,
       subs: [...c.querySelectorAll('.sub')].map(s => ({ref: s.dataset.id, h3: T(s.querySelector('h3')), es: T(s.querySelector('.es'))})),
       items: its.map(it => { const d = it.querySelector('.desc'); return {ref: it.dataset.ref, block: box(it.getBoundingClientRect()), name: T(it.querySelector('.name')), price: T(it.querySelector('.price')),
         desc: d ? Object.assign(T(d), lastLineWords(d)) : null}; })};
