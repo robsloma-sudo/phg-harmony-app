@@ -83,11 +83,11 @@ def items_of(s):
 
 def cocktail_card(it):
     p = it["prices"][0]["value"]
-    return f'''<div class="ck">
-  <div class="ckhead"><h3 class="t name">{it["name"].upper()}</h3>{burst(p)}</div>
+    return f'''<div class="ck"><div class="rt">
+  <h3 class="t name">{it["name"].upper()}</h3>
   <p class="t spec">{spec_line(it)}</p>
   <p class="t serve">— {SERVE[it["id"]]}</p>
-</div>'''
+</div>{burst(p, size=66)}</div>'''
 
 
 def row(it):
@@ -138,45 +138,48 @@ html,body{{background:{WALL}}}
 .page>*{{position:relative}}
 /* header sign */
 .marquee{{background:{RED};border:4px solid {WHT};outline:3px solid {INK};border-radius:14px;
-  padding:14px 20px 12px;text-align:center}}
-.wm{{font-family:Fraunces;font-weight:700;font-size:92px;line-height:.95;letter-spacing:4px;color:{YEL};
+  padding:10px 20px 10px;text-align:center}}
+.wm{{font-family:Fraunces;font-weight:700;font-size:78px;line-height:.95;letter-spacing:4px;color:{YEL};
   -webkit-text-stroke:2.5px {INK};paint-order:stroke fill;
   text-shadow:2px 2px 0 {INK},4px 4px 0 {INK},6px 6px 0 {INK},8px 8px 0 {WHT},10px 10px 0 {INK}}}
-.sub-wm{{display:flex;justify-content:center;gap:14px;margin-top:10px}}
+.sub-wm{{display:flex;justify-content:center;gap:14px;margin-top:6px}}
 .pill{{display:inline-block;background:{WHT};color:{INK};font-weight:700;font-size:15px;letter-spacing:3px;
   padding:5px 14px;border-radius:30px;border:2.5px solid {INK}}}
 /* shop-front boards */
 .board{{background:var(--bg);border:4px solid {WHT};outline:3px solid {INK};border-radius:12px;
   padding:0 16px 12px;color:{WHT}}}
 .board.yel{{color:{INK}}}
-.sign{{margin:-2px -2px 8px;text-align:center;line-height:1}}
-.signtxt{{display:inline-block;font-family:Fraunces;font-weight:700;font-size:40px;letter-spacing:3px;
+.sign{{margin:-2px -2px 4px;text-align:center;line-height:1}}
+.signtxt{{display:inline-block;font-family:Fraunces;font-weight:700;font-size:32px;letter-spacing:3px;
   color:{WHT};-webkit-text-stroke:2px {INK};paint-order:stroke fill;
   text-shadow:2px 2px 0 {INK},4px 4px 0 {INK},5px 5px 0 {INK};
   background:{INK};padding:6px 22px 8px;border-radius:0 0 12px 12px;
   border:3px solid {WHT};border-top:0}}
-.signtxt{{background:transparent;border:0;padding:10px 0 2px}}
-.sub{{margin:6px 0 4px}}
+.signtxt{{background:transparent;border:0;padding:8px 0 0}}
+.sub{{margin:4px 0 4px}}
 .tab{{display:inline-block;font-weight:700;font-size:13px;letter-spacing:3px;background:{WHT};color:{INK};
   padding:3px 10px;border-radius:4px}}
-.ckgrid{{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;margin-bottom:6px}}
-.ckhead,.row{{display:flex;align-items:center;justify-content:space-between;gap:10px}}
-.name{{font-weight:700;font-size:19px;letter-spacing:1.6px;line-height:1.15}}
+.ckgrid{{display:grid;grid-template-columns:1fr 1fr;gap:8px 26px;margin-bottom:4px}}
+.ck,.row{{display:flex;align-items:center;justify-content:space-between;gap:10px}}
+.ck{{align-items:flex-start;gap:8px}} .ck .burst{{margin-top:-4px}}
+.name{{font-weight:700;font-size:18px;letter-spacing:1.6px;line-height:1.15}}
 .spec{{font-weight:500;font-size:13.5px;letter-spacing:.6px;line-height:1.3;margin-top:2px}}
 .serve{{font-weight:700;font-size:12.5px;letter-spacing:1px;line-height:1.3;margin-top:3px;color:{YEL}}}
 .burst{{position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;
   filter:drop-shadow(3px 3px 0 {INK})}}
 .burst svg{{position:absolute;inset:0;width:100%;height:100%}}
 .price{{position:relative;font-family:Fraunces;font-weight:700;font-size:30px;color:{INK};line-height:1}}
-.oval{{flex:none;display:inline-flex;align-items:center;justify-content:center;width:60px;height:42px;
+.oval{{flex:none;display:inline-flex;align-items:center;justify-content:center;width:56px;height:40px;
   border-radius:50%;background:{YEL};border:2.5px solid {INK};box-shadow:3px 3px 0 {INK}}}
 .oval .price{{font-size:24px}}
-.row{{padding:5px 0;border-bottom:2px dashed rgba(255,255,255,.55)}}
+.row{{padding:4px 0;border-bottom:2px dashed rgba(255,255,255,.55)}}
 .row:last-child{{border-bottom:0}}
 .yel .row{{border-bottom-color:rgba(27,21,18,.45)}}
 .yel .tab{{background:{INK};color:{YEL}}}
 .yel .signtxt{{color:{RED};-webkit-text-stroke-color:{INK}}}
-.pair{{display:grid;grid-template-columns:1fr 1fr;gap:14px}}
+.pair{{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}}
+.pair .name{{font-size:16px;letter-spacing:1.2px}} .pair .spec{{font-size:13px}}
+.strip{{display:flex;align-items:center;gap:22px;padding:6px 18px}} .strip .sign{{margin:0}} .strip .row{{flex:1}}
 .foot{{display:flex;justify-content:center;margin-top:auto}}
 .foot .pill{{background:{YEL};font-size:14px}}
 /* phone */
@@ -185,9 +188,9 @@ html,body{{background:{WALL}}}
   .page::before{{border-width:10px;box-shadow:inset 0 0 0 3px {WALL},inset 0 0 0 5px {RED}}}
   .wm{{font-size:58px;letter-spacing:2px}}
   .sub-wm{{flex-wrap:wrap;gap:6px}} .pill{{font-size:12px;letter-spacing:2px}}
-  .ckgrid,.pair{{grid-template-columns:1fr}}
+  .ckgrid,.pair{{grid-template-columns:1fr}} .strip{{flex-direction:column;align-items:stretch;gap:0;padding:0 16px 12px}} .strip .row{{flex:auto}}
   .signtxt{{font-size:34px}}
-  .name{{font-size:17px}} .spec{{font-size:14px}} .serve{{font-size:13px}}
+  .name,.pair .name{{font-size:17px}} .spec,.pair .spec{{font-size:14px}} .serve{{font-size:13px}}
 }}
 </style></head><body><main class="page">
 <header class="marquee">
@@ -198,11 +201,9 @@ html,body{{background:{WALL}}}
 <div class="pair">
 {board("BEER", GRN, simple("sec_beer"))}
 {board("WINE", RED, simple("sec_wine"))}
-</div>
-<div class="pair">
 {board("SPIRITS", INK, simple("sec_spirits"))}
-{board("CIDER", YEL, simple("sec_cider"), cls="yel")}
 </div>
+{board("CIDER", YEL, simple("sec_cider"), cls="yel strip")}
 <div class="foot"><span class="t pill">¡SALUD! · GOOD DRINKS · GOOD COMPANY</span></div>
 </main></body></html>'''
 
@@ -258,6 +259,8 @@ def render():
         col = parse_rgb(bx["col"])
         x0, y0 = int((bx["x"] - 2) * s), int((bx["y"] - 2) * s)
         x1, y1 = int((bx["x"] + bx["w"] + 2) * s), int((bx["y"] + bx["h"] + 2) * s)
+        x0, y0 = max(x0, 0), max(y0, 0); x1, y1 = min(x1, im.width), min(y1, im.height)
+        if x1 <= x0 or y1 <= y0: continue
         crop = im.crop((x0, y0, x1, y1))
         cols = crop.getcolors(10_000_000)
         m = min(cr(col, c) for _, c in cols)

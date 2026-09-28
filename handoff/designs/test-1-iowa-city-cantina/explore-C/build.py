@@ -149,12 +149,12 @@ def rocks(px, py, s):
 random.seed(7)
 W, H = 816, 1056
 art_top = (
-    halftone(agave(700, 300, 330), 440, -12, 390, 330, 7.2, PINK, 15, "ht pink")
-    + halftone(coupe(640, 170, 230), 510, 40, 240, 190, 6.4, TEAL, 75, "ht teal mis")
+    halftone(agave(690, 250, 280), 400, -12, 430, 280, 7.2, PINK, 15, "ht pink")
+    + halftone(coupe(560, 120, 190), 450, 20, 220, 160, 6.4, TEAL, 75, "ht teal mis")
 )
 art_bot = (
-    halftone(rocks(690, 975, 190), 590, 900, 210, 160, 6.4, TEAL, 75, "ht teal mis")
-    + halftone(agave(740, 1080, 230), 560, 900, 270, 170, 7.2, PINK, 15, "ht pink")
+    halftone(rocks(470, 985, 150), 380, 900, 190, 150, 6.4, TEAL, 75, "ht teal mis")
+    + halftone(agave(560, 1090, 230), 380, 890, 300, 180, 7.2, PINK, 15, "ht pink")
 )
 
 # stamp: rough circle via displacement filter
@@ -179,30 +179,30 @@ svg.art .mis{{transform:translate(3px,-2px)}}
 .safe{{position:absolute;left:48px;top:48px;right:48px;bottom:48px}}
 /* masthead */
 .mast{{position:absolute;left:0;top:0;width:420px}}
-.wm{{position:relative;font:700 118px/0.86 DMS;letter-spacing:-3px;text-transform:uppercase}}
+.wm{{position:relative;font:700 96px/0.84 DMS;letter-spacing:-2px;text-transform:uppercase}}
 .wm span{{display:block}}
 .wm .p{{color:{PINK};mix-blend-mode:multiply}}
 .wm .t{{position:absolute;left:5px;top:4px;color:{TEAL};mix-blend-mode:multiply}}
-.kick{{margin-top:14px;display:inline-block;background:{INK};color:{PAPER};font:700 13px/1 DMS;letter-spacing:4px;padding:7px 10px 6px;transform:rotate(-2deg)}}
+.kick{{margin-top:12px;display:inline-block;background:{INK};color:{PAPER};font:700 13px/1 DMS;letter-spacing:4px;padding:7px 10px 6px;transform:rotate(-2deg)}}
 /* blocks */
-.blk{{position:absolute;background:{PAPER};border:2.5px solid {INK};padding:14px 16px 12px;box-shadow:6px 6px 0 {OVER}}}
-.hd{{display:flex;align-items:center;gap:10px;margin-bottom:10px}}
-.hd h2{{font:700 25px/1 DMS;letter-spacing:5px;text-transform:uppercase}}
-.stamp{{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border:3px solid currentColor;border-radius:50%;font:700 17px/1 'Courier 10 Pitch',FreeMono,monospace;letter-spacing:0;filter:url(#rough);mix-blend-mode:multiply;flex:none}}
-.sub{{font:700 11.5px/1 DMS;letter-spacing:3px;text-transform:uppercase;margin:8px 0 6px;padding-bottom:4px;border-bottom:1.5px dashed {INK}}}
+.blk{{position:absolute;background:{PAPER};border:2.5px solid {INK};padding:12px 14px 8px;box-shadow:6px 6px 0 {OVER}}}
+.hd{{display:flex;align-items:center;gap:10px;margin-bottom:6px}}
+.hd h2{{font:700 23px/1 DMS;letter-spacing:5px;text-transform:uppercase}}
+.stamp{{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:3px solid currentColor;border-radius:50%;font:700 17px/1 'Courier 10 Pitch',FreeMono,monospace;letter-spacing:0;filter:url(#rough);mix-blend-mode:multiply;flex:none}}
+.sub{{font:700 11px/1 DMS;letter-spacing:3px;text-transform:uppercase;margin:6px 0 6px;padding-bottom:4px;border-bottom:1.5px dashed {INK}}}
 .row{{display:flex;align-items:baseline;gap:6px}}
-.nm{{font:700 17px/1.15 DMS;letter-spacing:1.6px}}
+.nm{{font:700 16px/1.15 DMS;letter-spacing:1.4px}}
 .ld{{flex:1;border-bottom:2px dotted {INK};transform:translateY(-4px);min-width:14px}}
-.pr{{font:700 19px/1 DMS}}
-.ck{{margin:0 0 12px}}
-.tags{{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}}
-.tag{{display:inline-flex;align-items:baseline;gap:5px;border:1.6px solid {INK};padding:3px 6px 2px;font:700 11.5px/1.1 DMS;letter-spacing:1.1px;background:{PAPER}}}
+.pr{{font:700 18px/1 DMS}}
+.ck{{margin:0 0 9px}}
+.tags{{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}}
+.tag{{display:inline-flex;align-items:baseline;gap:5px;border:1.6px solid {INK};padding:3px 5px 2px;font:700 11px/1.1 DMS;letter-spacing:1.1px;background:{PAPER}}}
 .tag i{{font:400 11px/1 'Liberation Mono',monospace;font-style:normal;letter-spacing:0}}
 .tag.gar{{border-style:dashed}}
 .serve{{margin-top:5px;font:600 italic 13px/1.2 FR;letter-spacing:.3px}}
-.si{{margin:0 0 9px}}
-.ds{{font:600 italic 14px/1.25 FR;margin-top:2px}}
-.tagline{{position:absolute;font:700 13px/1.35 DMS;letter-spacing:5px;text-transform:uppercase;background:{PINK};color:{INK};padding:6px 10px;mix-blend-mode:multiply}}
+.si{{margin:0 0 7px}}
+.ds{{font:600 italic 13.5px/1.22 FR;margin-top:1px}}
+.tagline{{position:absolute;font:700 13px/1.35 DMS;letter-spacing:5px;text-transform:uppercase;background:{PINK};color:{INK};padding:6px 10px}}
 .foot{{position:absolute;left:0;right:0;bottom:0;font:500 11px/1 DMS;letter-spacing:2.5px;text-transform:uppercase;display:flex;justify-content:space-between}}
 .foot b{{background:{PAPER};padding:3px 4px}}
 /* phone */
@@ -223,25 +223,25 @@ svg.art .mis{{transform:translate(3px,-2px)}}
 S = {"sections": {s["id"]: s for s in doc["sections"]}}
 subs = {sub["id"]: sub for s in doc["sections"] for sub in s.get("subs", [])}
 
-cock = f'''<div class="blk" id="b-cock" style="left:0;top:262px;width:720px;transform:rotate(-1.2deg)">
- <div class="hd">{stamp(1, PINK, -12)}<h2>Cocktails</h2></div>
- <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 26px">
+cock = f'''<div class="blk" id="b-cock" style="left:0;top:178px;width:720px;transform:rotate(-1deg)">
+ <div class="hd">{stamp(1, OVER, -12)}<h2>Cocktails</h2></div>
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 30px">
   <div><div class="sub">{subs["sub_cocktails_classics"]["name"]}</div>{cocktail("beta_margarita")}{cocktail("beta_manhattan")}</div>
   <div><div class="sub">{subs["sub_cocktails_house_originals"]["name"]}</div>{cocktail("beta_daiquiri")}{cocktail("beta_old_fashioned")}</div>
  </div></div>'''
-beer = f'''<div class="blk" id="b-beer" style="left:6px;top:600px;width:340px;transform:rotate(1.4deg)">
- <div class="hd">{stamp(2, TEAL, 9)}<h2>Beer</h2></div><div class="sub">{subs["sub_beer_draft"]["name"]}</div>
+beer = f'''<div class="blk" id="b-beer" style="left:0;top:556px;width:228px;transform:rotate(1.3deg)">
+ <div class="hd">{stamp(2, OVER, 9)}<h2>Beer</h2></div><div class="sub">{subs["sub_beer_draft"]["name"]}</div>
  {simple("beta_czech_pilsner")}{simple("beta_dry_hopped_ipa")}{simple("beta_amber_lager")}</div>'''
-wine = f'''<div class="blk" id="b-wine" style="left:372px;top:596px;width:348px;transform:rotate(-1.6deg)">
- <div class="hd">{stamp(3, PINK, 6)}<h2>Wine</h2></div><div class="sub">{subs["sub_wine_by_the_glass"]["name"]}</div>
+wine = f'''<div class="blk" id="b-wine" style="left:246px;top:548px;width:228px;transform:rotate(-1.5deg)">
+ <div class="hd">{stamp(3, OVER, 6)}<h2>Wine</h2></div><div class="sub">{subs["sub_wine_by_the_glass"]["name"]}</div>
  {simple("beta_malbec")}{simple("beta_pinot_grigio")}<div class="sub">{subs["sub_wine_sparkling"]["name"]}</div>{simple("beta_brut_rose")}</div>'''
-spir = f'''<div class="blk" id="b-spir" style="left:0;top:812px;width:356px;transform:rotate(-0.9deg)">
- <div class="hd">{stamp(4, TEAL, -8)}<h2>Spirits</h2></div>
+spir = f'''<div class="blk" id="b-spir" style="left:492px;top:560px;width:228px;transform:rotate(1deg)">
+ <div class="hd">{stamp(4, OVER, -8)}<h2>Spirits</h2></div>
  <div style="display:grid;grid-template-columns:1fr;gap:0">
  <div class="sub">{subs["sub_spirits_agave"]["name"]}</div>{simple("beta_blanco_tequila")}{simple("beta_anejo_tequila")}
  <div class="sub">{subs["sub_spirits_brandy"]["name"]}</div>{simple("beta_cognac_vsop")}</div></div>'''
-cider = f'''<div class="blk" id="b-cider" style="left:380px;top:828px;width:230px;transform:rotate(2deg)">
- <div class="hd">{stamp(5, PINK, 14)}<h2>Cider</h2></div>{simple("beta_dry_cider")}</div>'''
+cider = f'''<div class="blk" id="b-cider" style="left:486px;top:40px;width:220px;transform:rotate(3deg)">
+ <div class="hd">{stamp(5, OVER, 14)}<h2>Cider</h2></div>{simple("beta_dry_cider")}</div>'''
 
 phone_art = f'<svg class="phart" viewBox="440 -12 390 330" preserveAspectRatio="xMidYMid slice" width="100%" height="170">{art_top}</svg>'
 
@@ -255,7 +255,7 @@ HTML = f"""<!doctype html><html><head><meta charset="utf-8"><title>{html.escape(
   <div class="kick">IOWA CITY · LATE</div></div>
  {phone_art}
  {cock}{beer}{wine}{spir}{cider}
- <div class="tagline" id="b-tag" style="left:560px;top:760px;transform:rotate(-4deg)">Good drinks<br>Good company</div>
+ <div class="tagline" id="b-tag" style="left:40px;top:846px;transform:rotate(-3deg)">Good drinks<br>Good company</div>
  <div class="foot" id="b-foot"><b>{html.escape(doc['subtitle'])}</b><b>Nº 1 · Printed in two inks</b></div>
 </div></div></body></html>"""
 
@@ -266,7 +266,9 @@ pairs = {"body ink on paper card": (INK, PAPER), "paper on ink kicker": (PAPER, 
          "ink on pink tagline (multiply over paper)": (INK, mul(PINK, PAPER)),
          "ink on paper footer chip": (INK, PAPER)}
 # worst pixel behind the tagline: pink multiplied over the darkest halftone overlap
-pairs["ink on tagline over teal dot (worst)"] = (INK, mul(mul(PINK, TEAL), PAPER))
+pairs["ink on opaque pink tagline"] = (INK, PINK)
+pairs["overlap-ink stamp numerals on paper"] = (OVER, PAPER)
+pairs["ink on paper tag"] = (INK, PAPER)
 res = {k: round(cr(*v), 2) for k, v in pairs.items()}
 
 async def render():

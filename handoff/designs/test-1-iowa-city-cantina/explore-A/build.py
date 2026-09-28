@@ -80,9 +80,9 @@ body{{background:#777}}
 .bh .t{{font-size:30px;letter-spacing:-.02em}} .ix{{font-family:"Liberation Mono",monospace;margin-right:10px;font-weight:700}}
 .bh .d{{font-family:"Liberation Mono",monospace;font-weight:400;letter-spacing:0;font-size:12px}}
 .ckrule{{font-size:11px;font-weight:700;letter-spacing:.2em;padding:6px 0 0;margin-left:244px}}
-.ck{{display:grid;grid-template-columns:232px 1fr 196px;column-gap:12px;border-bottom:2px solid {INK};padding:0 0 4px;align-items:start}}
+.ck{{display:grid;grid-template-columns:232px 1fr 214px;column-gap:12px;border-bottom:2px solid {INK};padding:0 0 4px;align-items:start}}
 .ck:last-child{{border-bottom:0}}
-.big{{font-weight:700;font-size:134px;line-height:.74;letter-spacing:-.07em;text-align:right;padding-top:9px;padding-right:10px;border-right:6px solid {INK};height:100%}}
+.big{{font-weight:700;font-size:122px;line-height:.74;letter-spacing:-.07em;text-align:right;padding-top:9px;padding-right:10px;border-right:6px solid {INK};height:100%}}
 .ckb{{padding-top:8px}}
 .nm{{font-weight:700;font-size:19px;letter-spacing:.05em;line-height:1.1;margin-bottom:5px}}
 .spec{{font-family:"Liberation Mono",monospace;font-size:13px;line-height:1.3}}
@@ -90,10 +90,10 @@ body{{background:#777}}
 .meta{{display:grid;grid-template-columns:62px 1fr;font-family:"Liberation Mono",monospace;font-size:12px;line-height:1.35;padding-top:10px;border-left:2px solid {INK};padding-left:9px;align-self:stretch;align-content:start}}
 .meta dt{{font-weight:700;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;padding-top:1px}}
 .low{{display:grid;grid-template-columns:repeat(3,1fr);column-gap:12px;margin-top:12px}}
-.lc{{border-top:10px solid {INK};padding-top:4px}} .lc+.lc{{margin-top:10px}}
+.lc{{border-top:10px solid {INK};padding-top:4px}} .stack .lc+.lc{{margin-top:6px}} .low{{align-items:start}}
 .lh{{font-weight:700;font-size:21px;letter-spacing:-.01em;margin-bottom:4px}}
 .sub{{font-size:10.5px;font-weight:700;letter-spacing:.2em;margin:6px 0 1px}}
-.sm{{display:grid;grid-template-columns:52px 1fr;column-gap:8px;border-top:2px solid {INK};padding:4px 0 5px;align-items:start}}
+.sm{{display:grid;grid-template-columns:52px 1fr;column-gap:8px;border-top:2px solid {INK};padding:3px 0 4px;align-items:start}}
 .mid{{font-weight:700;font-size:40px;line-height:.8;letter-spacing:-.06em;padding-top:3px}}
 .snm{{font-weight:700;font-size:13px;letter-spacing:.05em;line-height:1.15}}
 .sd{{font-family:"Liberation Mono",monospace;font-size:12px;line-height:1.3}}
@@ -112,7 +112,7 @@ body{{background:#777}}
 </style></head><body><div class="page">
 <header class="mast"><div class="word">CANTINA</div><div class="kick">&amp; COCKTAIL BAR<br>IOWA CITY, IOWA<br>{E(DOC["title"].upper())}</div></header>
 <section class="band"><div class="bh"><span class="t"><span class="ix">01</span>{E(ck["name"].upper())}</span><span class="d">{E(ck["desc"])}</span></div>{ckhtml}</section>
-<div class="low"><div>{lower("sec_beer","02")}{lower("sec_cider","05")}</div>{lower("sec_wine","03")}{lower("sec_spirits","04")}</div>
+<div class="low"><div class="stack">{lower("sec_beer","02")}{lower("sec_cider","05")}</div>{lower("sec_wine","03")}{lower("sec_spirits","04")}</div>
 <footer class="foot"><span>GOOD DRINKS / GOOD COMPANY</span><span class="m">{E(DOC.get("subtitle",""))}</span></footer>
 </div></body></html>'''
 (HERE / "menu.html").write_text(HTML)
