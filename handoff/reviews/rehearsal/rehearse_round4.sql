@@ -5764,6 +5764,7 @@ $rehearse_f2$;
                              then '[{"item_name":"Rehearsal Skip-Path Pour","item_type":"spirit_pour","price":13}]'::jsonb else '[]'::jsonb end) order by s.section_position, s.id)
       into secs from public.menu_sections s where s.menu_id = cur_id;
     res := public.submit_menu(skip_acct,'NBCC-FIRECRAWL-MENUS','https://rehearsal.example.com/skip-path',null,'html','unknown','rehearsal',null,md5('rehG'||clock_timestamp()::text),secs,null,null,null,null,false);
+    cur2 := nullif(res->>'menu_id', '')::uuid;
     g := jsonb_build_object('skip_acct', skip_acct, 'submit', res - 'brand_references' - 'inferred_from_cocktail_reference',
        'skip_acct_staging_backup_rows', (select count(*) from public.phg_backup_staging_dupes_20260927 where account_id = skip_acct));
     snap := (select jsonb_agg(jsonb_build_object('id',m.id,'c',m.is_current,'by',m.superseded_by,'r',m.superseded_reason,'at',m.superseded_at) order by m.id) from public.menus m where m.account_id=skip_acct);
@@ -5787,7 +5788,7 @@ $rehearse_f2$;
     res := public.phg_repair_20260927_rollback();
     g := g || jsonb_build_object('rollback', res, 'rollback_ms', round(extract(epoch from clock_timestamp()-t1)*1000),
       'skip_acct_menus_untouched', (select jsonb_agg(jsonb_build_object('id',m.id,'c',m.is_current,'by',m.superseded_by,'r',m.superseded_reason,'at',m.superseded_at) order by m.id) from public.menus m where m.account_id=skip_acct) = snap,
-      'skip_acct_current_is_new_menu', (select id from public.menus where account_id = skip_acct and is_current) = (res->>'menu_id')::uuid,
+      'skip_acct_current_is_new_menu', (select id from public.menus where account_id = skip_acct and is_current) = cur2,
       'skip_acct_staging_still_superseded', (select count(*) from public.staging_menu_extract s join public.phg_backup_staging_dupes_20260927 b on b.staging_id = s.id
             where b.account_id = skip_acct and s.superseded_reason = 'duplicate_item_set_of_sibling') = n1,
       'multi_acct_menus_untouched', (select jsonb_agg(jsonb_build_object('id',m.id,'c',m.is_current,'by',m.superseded_by,'r',m.superseded_reason,'at',m.superseded_at) order by m.id) from public.menus m where m.account_id=multi_acct) = snap2,

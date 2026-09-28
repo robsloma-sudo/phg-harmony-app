@@ -526,6 +526,7 @@ G = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse
                              then '[{{"item_name":"Rehearsal Skip-Path Pour","item_type":"spirit_pour","price":13}}]'::jsonb else '[]'::jsonb end) order by s.section_position, s.id)
       into secs from public.menu_sections s where s.menu_id = cur_id;
     {call("'https://rehearsal.example.com/skip-path'", 'rehG', 'secs', acct='skip_acct')}
+    cur2 := nullif(res->>'menu_id', '')::uuid;
     g := jsonb_build_object('skip_acct', skip_acct, 'submit', res - 'brand_references' - 'inferred_from_cocktail_reference',
        'skip_acct_staging_backup_rows', (select count(*) from public.phg_backup_staging_dupes_20260927 where account_id = skip_acct));
     snap := {MSNAP_SKIP};
@@ -549,7 +550,7 @@ G = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse
     res := public.phg_repair_20260927_rollback();
     g := g || jsonb_build_object('rollback', res, 'rollback_ms', round(extract(epoch from clock_timestamp()-t1)*1000),
       'skip_acct_menus_untouched', {MSNAP_SKIP} = snap,
-      'skip_acct_current_is_new_menu', (select id from public.menus where account_id = skip_acct and is_current) = (res->>'menu_id')::uuid,
+      'skip_acct_current_is_new_menu', (select id from public.menus where account_id = skip_acct and is_current) = cur2,
       'skip_acct_staging_still_superseded', (select count(*) from public.staging_menu_extract s join public.phg_backup_staging_dupes_20260927 b on b.staging_id = s.id
             where b.account_id = skip_acct and s.superseded_reason = 'duplicate_item_set_of_sibling') = n1,
       'multi_acct_menus_untouched', {MSNAP_MULTI} = snap2,
