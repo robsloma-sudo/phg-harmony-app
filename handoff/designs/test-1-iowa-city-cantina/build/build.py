@@ -7,23 +7,23 @@ from string import Template
 HERE = pathlib.Path(__file__).parent
 OUT = pathlib.Path("/home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina")
 draft = json.loads((HERE / "draft_doc.json").read_text())
-ROUND = 7
+ROUND = 8
 
 # ------------------------------------------------------------ copy + sources (draft menu_description words; one gateway row)
 C = {  # id: (printed line, words from, gateway row ids, still missing)
- "beta_old_fashioned": ("Brown butter-washed bourbon, demerara syrup and bitters, stirred and served over a large cube with an orange peel.",
+ "beta_old_fashioned": ("Brown butter-washed bourbon with demerara syrup and bitters, stirred and strained over one large cube with an orange peel.",
    "draft desc (brown butter-washed bourbon, demerara, bitters); draft_doc components: 'Demerara Syrup' (prep); serve_format 'Stir with ice and strain over a large cube'; recipe (orange peel)", [], ["allergen confirmation (brown butter: dairy)"]),
- "beta_daiquiri": ("White rum, fresh lime and house demerara syrup, shaken and served up in a coupe with a lime coin.",
+ "beta_daiquiri": ("White rum shaken with fresh lime and house demerara syrup, served up in a coupe with a lime coin.",
    "draft desc (white rum, lime, house demerara syrup); draft_doc components: 'Fresh Lime Juice', 'Demerara Syrup' ('House 1:1 demerara syrup'); serve_format 'Shake with ice and fine strain'; recipe (lime coin, coupe)", [], []),
  "beta_margarita": ("Bright and citrus-forward: blanco tequila, fresh lime, orange liqueur and agave syrup, shaken and served on the rocks with a lime wheel.",
    "draft desc (tequila blanco, lime, orange liqueur, agave, 'Bright and citrus-forward'); draft_doc components: 'Fresh Lime Juice', 'Agave Syrup' (prep); serve_format 'Shake with ice and strain over fresh ice'; recipe (lime wheel)", [], []),
  "beta_manhattan": ("Rye whiskey and sweet vermouth, stirred and served up in a coupe with a cocktail cherry.",
    "draft desc (rye, sweet vermouth); draft_doc components: 'Rye Whiskey', 'Cocktail Cherry'; serve_format 'Stir with ice and strain'; recipe (coupe). Bitters hidden: public_components aromatic-bitters = false", [], ["venue to confirm hiding the bitters"]),
- "beta_blanco_tequila": ("The plata style of tequila.",
-   "beverage_categories row 04d72e1f: name 'Blanco / plata', node_kind 'style', path spirits.agave_spirits.tequila.blanco (gateway log_id 130). 'Unaged' is not in the row, so it is not printed",
-   ["beverage_categories 04d72e1f-650d-490c-8ad8-54a6eb8aa766"], ["brand", "pour size"]),
+ "beta_blanco_tequila": ("",
+   "name only (round 8: spirits are name-only for consistency). Row checked: beverage_categories row 04d72e1f: name 'Blanco / plata', node_kind 'style', path spirits.agave_spirits.tequila.blanco (gateway log_id 130). 'Unaged' is not in the row, so it is not printed",
+   ["beverage_categories 04d72e1f-650d-490c-8ad8-54a6eb8aa766"], ["brand", "age statement (n/a for blanco)", "pour size"]),
  "beta_anejo_tequila": ("", "name only: gateway log_id 130 found row 9f4dae69 (name 'Añejo', notes null): no guest words beyond the name; the draft line 'Añejo tequila pour.' only repeats the name", ["beverage_categories 9f4dae69-e84c-4b65-b7d9-1b417658b78d (checked, nothing printable)"], ["brand", "pour size", "age statement", "guest line"]),
- "beta_cognac_vsop": ("A grape brandy.", "beverage_categories rows a88f6e79 (Cognac, path spirits.brandy_fruit_spirits.grape_brandy.cognac) and bec5063c (VSOP, child of Cognac); 'grape brandy' is the parent node in the cited path (gateway log_id 130)", ["beverage_categories a88f6e79-9438-6e3d-2656-406fad2b829f", "beverage_categories bec5063c-5274-9534-91da-53a2f10c8255"], ["brand / house", "pour size"]),
+ "beta_cognac_vsop": ("", "name only (round 8: spirits are name-only for consistency). Rows checked: beverage_categories rows a88f6e79 (Cognac, path spirits.brandy_fruit_spirits.grape_brandy.cognac) and bec5063c (VSOP, child of Cognac); 'grape brandy' is the parent node in the cited path (gateway log_id 130)", ["beverage_categories a88f6e79-9438-6e3d-2656-406fad2b829f", "beverage_categories bec5063c-5274-9534-91da-53a2f10c8255"], ["brand / house", "pour size"]),
  "beta_czech_pilsner": ("Crisp pale lager.", "draft menu_description, verbatim", [], ["brewery", "ABV", "pour size"]),
  "beta_dry_hopped_ipa": ("Hop-forward draft IPA.", "draft menu_description, verbatim", [], ["brewery", "ABV", "pour size"]),
  "beta_amber_lager": ("Toasty amber lager.", "draft menu_description, verbatim", [], ["brewery", "ABV", "pour size"]),
@@ -36,7 +36,7 @@ BANNED = ["nom-006", "class", "shelf", "fermented", "lager family", "beside beer
 for k, v in C.items():
     assert not any(w in v[0].lower() for w in BANNED), k
     assert not any(r in " ".join(v[2]) for r in ("d4d63f58", "bc899a48")), k
-ES = {"sub_cocktails_classics": "Clásicos", "sub_cocktails_house_originals": "De la casa", "sub_spirits_agave": "Del agave",
+ES = {"sub_cocktails_classics": "Clásicos", "sub_cocktails_house_originals": "De la casa", "sub_spirits_agave": "Agave",
       "sub_spirits_brandy": "Brandy y coñac", "sub_beer_draft": "De barril", "sub_wine_by_the_glass": "Por copa", "sub_wine_sparkling": "Espumoso"}
 KICKER = {"sec_spirits": "Destilados", "sec_beer": "Cerveza", "sec_cider": "Sidra", "sec_wine": "Vino"}
 
@@ -52,13 +52,14 @@ new[0]["subs"] = [cl, ho]
 for s in new:
     for sb in s["subs"]:
         if sb["id"] not in ES:  # sub ids differ from the guessed keys: map by name
-            ES[sb["id"]] = {"Agave": "Del agave", "Brandy": "Brandy y coñac", "Draft": "De barril", "By the Glass": "Por copa", "Sparkling": "Espumoso",
+            ES[sb["id"]] = {"Agave": "Agave", "Brandy": "Brandy y coñac", "Draft": "De barril", "By the Glass": "Por copa", "Sparkling": "Espumoso",
                             "Classics": "Clásicos", "House Originals": "De la casa"}[sb["name"]]
     for it in s["items"] + [i for sb in s["subs"] for i in sb["items"]]:
         line, src, rows, miss = C[it["id"]]
         it["desc"] = line; it.pop("missing_ingredients", None)
         it["meta"] = dict(it.get("meta") or {}); it["meta"]["missing_ingredients"] = list(miss)
 assert all(";" not in C[k][0] for k in C)
+assert "pour" not in " ".join(v[0].lower() for v in C.values())
 assert "bitters" in C["beta_old_fashioned"][0] and "bitters" not in C["beta_manhattan"][0]
 assert "Bright and citrus-forward" in C["beta_margarita"][0]
 doc["sections"] = new
@@ -74,7 +75,7 @@ subn = {sb["name"]: sb for s in new for sb in s["subs"]}
 cider_sub = {"id": "sec_cider", "name": "Cider"}; ES["sec_cider"] = "Sidra"; ES[cl["id"] + "_2"] = ES[cl["id"]]
 CARDS = [  # (n, ref, english gloss, tab label, loteria title, figure, colour, groups, cantor verse)
  (1, "sec_cocktails", "Cocktails", "El Cantarito", "El Cantarito", "cantarito", "terra",
-     [(cl, [allitems["beta_margarita"]]), (ho, ho["items"]), (dict(cl, id=cl["id"] + "_2"), [allitems["beta_manhattan"]])],
+     [(cl, [allitems["beta_margarita"], allitems["beta_manhattan"]]), (ho, ho["items"])],
      "Tanto va el cántaro al agua, que se quiebra y te moja las enaguas."),
  (2, "sec_spirits", "Spirits", "La Botella", "La Botella", "bottle", "agave",
      [(subn["Agave"], subn["Agave"]["items"]), (subn["Brandy"], subn["Brandy"]["items"])], "La herramienta del borracho."),
@@ -152,28 +153,32 @@ def nb(t):
     i = t.rfind(" ")
     return t[:i] + "&nbsp;" + t[i+1:] if i > 0 else t
 
-def item_html(it):
-    d = f'<p class="desc">{nb(it["desc"])}</p>' if it["desc"] else ""
-    return (f'<div class="item" data-ref="{it["id"]}"><div class="row"><span class="name">{nb(it["name"])}</span>'
-            f'<span class="price num">{it["prices"][0]["value"]:g}</span></div>{d}</div>')
+
+def item_html(it, inline):
+    d = it["desc"]
+    if inline:
+        dd = f'<span class="desc in">{html.escape(d)}</span>' if d else ""
+        return (f'<div class="item" data-ref="{it["id"]}"><div class="row"><span class="name">{nb(it["name"])}</span>{dd}<span class="lead"></span>'
+                f'<span class="price num">{it["prices"][0]["value"]:g}</span></div></div>')
+    dd = f'<p class="desc">{nb(d)}</p>' if d else ""
+    return (f'<div class="item" data-ref="{it["id"]}"><div class="row"><span class="name">{nb(it["name"])}</span><span class="lead"></span>'
+            f'<span class="price num">{it["prices"][0]["value"]:g}</span></div>{dd}</div>')
 
 def card_html(n, cid, name, tab, lot, fig, col, groups, verse):
-    f = n == 1
+    f = n == 1; inline = cid in ("sec_beer", "sec_wine")
     body = []
     for sb, items in groups:
-        if sb is not None:
-            body.append(f'<div class="sub" data-id="{sb["id"]}"><h3>{html.escape(sb["name"])}</h3><span class="es">{ES[sb["id"]]}</span><span class="subrule"></span></div>')
-        body.append('<div class="items">' + "".join(item_html(i) for i in items) + "</div>")
+        body.append(f'<div class="sub" data-id="{sb["id"]}"><h3>{html.escape(sb["name"])}</h3><span class="subrule"></span></div>')
+        body.append('<div class="items">' + "".join(item_html(i, inline) for i in items) + "</div>")
     return (f'<article class="card c-{col}{" featured" if f else ""}" id="card-{n}" data-id="{cid}" data-n="{n}">'
-            f'<header class="head"><span class="cardno">{n}</span><p class="verse" lang="es">{html.escape(verse)}</p></header>'
-            f'<div class="figure">{icon(fig, "fig")}</div>'
-            f'<div class="namebar"><h2 lang="es">{html.escape(lot.upper())}</h2></div><p class="gloss">{html.escape(name)}</p>'
+            f'<div class="face"><div class="art"><div class="figure">{icon(fig, "fig")}</div><p class="verse" lang="es">{html.escape(verse)}</p></div>'
+            f'<div class="namebar"><h2 lang="es">{html.escape(lot.upper())}</h2><span class="gloss" lang="en">{html.escape(name)}</span></div></div>'
             f'<div class="body">{"".join(body)}</div></article>')
 
-cards = [card_html(*c).replace('class="card', 'class="' + ("r1 " if c[0] <= 2 else "r2 ") + 'card', 1) for c in CARDS]
-tabs = "".join(f'<a class="tab c-{c[6]}{" active" if c[0] == 1 else ""}" data-n="{c[0]}" href="#card-{c[0]}" aria-label="{c[0]} {html.escape(c[4])}">'
-               f'<span class="tn">{c[0]}</span>{icon(c[5], "ticon")}<span class="lbl">{html.escape(c[3])}</span></a>' for c in CARDS)
-JS = """<script>(()=>{const t=[...document.querySelectorAll('.tab')],s=n=>t.forEach(a=>a.classList.toggle('active',a.dataset.n==n));
+cards = [card_html(*c) for c in CARDS]
+tabs = "".join(f'<a class="tab c-{c[6]}{" active" if c[0] == 1 else ""}" data-n="{c[0]}" href="#card-{c[0]}" aria-label="{html.escape(c[4])}, {html.escape(c[2])}">'
+               f'{icon(c[5], "ticon")}<span class="lbl">{html.escape(c[3])}</span></a>' for c in CARDS)
+JS = """<script>(()=>{const t=[...document.querySelectorAll('.tab')],s=n=>t.forEach(a=>{const on=a.dataset.n==n;a.classList.toggle('active',on);on?a.setAttribute('aria-current','true'):a.removeAttribute('aria-current')});
 t.forEach(a=>a.addEventListener('click',()=>s(a.dataset.n)));if('IntersectionObserver'in window){const o=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)s(x.target.dataset.n)}),{rootMargin:'-35% 0px -55% 0px'});
 document.querySelectorAll('.card').forEach(c=>o.observe(c));}})();</script>"""
 
@@ -187,69 +192,76 @@ CSS = Template("""
 * { box-sizing: border-box; }
 html, body { margin:0; padding:0; background:#d9d2c6; }
 body { -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:'DM Sans', sans-serif; color:$ink; }
+.c-terra { --c:$terra; --tint:#F3E3CB; } .c-agave { --c:$agave; --tint:#E4EBE2; } .c-mari { --c:$mari; --tint:#F8EACB; } .c-rosa { --c:$rosa; --tint:#F7E3E8; }
 .page { width:612pt; height:792pt; padding:36pt; background:$cream; display:flex; flex-direction:column; margin:0 auto; }
 .banner { display:block; width:540pt; height:36pt; flex:none; }
 .banner-m, .tabs { display:none; }
-.title { font-family:'Fraunces', serif; font-weight:700; font-size:30pt; line-height:34pt; letter-spacing:-0.3pt; text-align:center; margin:0; }
+.title { font-family:'Fraunces', serif; font-weight:700; font-size:30pt; line-height:30pt; height:30pt; letter-spacing:-0.3pt; text-align:center; margin:6pt 0 0; }
 .title .amp { color:$terra; font-style:italic; font-weight:600; }
-.loc { text-align:center; font-size:8.5pt; line-height:12pt; letter-spacing:3pt; text-transform:uppercase; color:$muted; font-weight:500; margin:0; }
+.loc { text-align:center; font-size:8.5pt; line-height:12pt; height:12pt; letter-spacing:3pt; text-transform:uppercase; color:$muted; font-weight:500; margin:0 0 12pt; }
 .num { font-family:'Fraunces', serif; font-weight:600; color:$terra; font-variant-numeric:lining-nums tabular-nums; font-feature-settings:'lnum' 1,'tnum' 1; }
 .nw { white-space:nowrap; }
-.deck { flex:none; display:grid; grid-template-columns:312pt 216pt; grid-template-rows:auto auto; gap:12pt; align-content:start; }
-.card { position:relative; display:flex; flex-direction:column; background:$card; border:1.5pt solid $ink; box-shadow: inset 0 0 0 3pt $card, inset 0 0 0 3.75pt $ink; padding:10.5pt 12pt; }
-.card.featured { background:$feat; border-color:$terra; box-shadow: inset 0 0 0 3pt $feat, inset 0 0 0 3.75pt $terra; }
-.head { display:flex; align-items:baseline; gap:8pt; height:24pt; flex:none; }
-.cardno { font-family:'Fraunces', serif; font-weight:700; font-size:19pt; line-height:24pt; color:$rosa; font-variant-numeric:lining-nums; flex:none; }
-.verse { margin:0; flex:1; text-align:right; font-family:'Fraunces', serif; font-style:italic; font-weight:400; font-size:7.5pt; line-height:24pt; color:$muted; white-space:nowrap; overflow:hidden; text-overflow:clip; }
-.figure { position:relative; flex:none; height:48pt; }
-.r2 .figure { height:48pt; }
-.figure .fig { position:absolute; inset:0; width:100%; height:100%; display:block; }
-.namebar { flex:none; height:24pt; display:flex; align-items:center; justify-content:center; border-top:1.5pt solid $ink; border-bottom:1.5pt solid $ink; }
-.featured .namebar { border-color:$terra; }
-.namebar h2 { margin:0; font-family:'Fraunces', serif; font-weight:700; font-size:12pt; line-height:20pt; letter-spacing:2pt; white-space:nowrap; }
-.c-terra .namebar { background:$terra; color:$cream; } .c-agave .namebar { background:$agave; color:$cream; } .c-mari .namebar { background:$mari; color:$ink; } .c-rosa .namebar { background:$rosa; color:$cream; }
-.gloss { margin:0; height:12pt; text-align:center; font-family:'Fraunces', serif; font-style:italic; font-size:8.5pt; line-height:12pt; color:$muted; flex:none; }
-.body { flex:none; border-top:0.75pt solid $ink; margin-top:6pt; padding-top:5.25pt; }
-.featured .body { border-top-color:$terra; }
-.sub { display:flex; align-items:baseline; gap:5pt; height:12pt; }
-.items + .sub { margin-top:6pt; }
-h3 { margin:0; font-size:7pt; line-height:12pt; letter-spacing:1.4pt; text-transform:uppercase; color:$agave; font-weight:700; white-space:nowrap; }
-.sub .es { font-family:'Fraunces', serif; font-style:italic; font-size:8.5pt; line-height:12pt; color:$terra; white-space:nowrap; }
-.subrule { flex:1; border-top:0.5pt solid $agave; opacity:.5; align-self:center; }
-.item + .item { margin-top:6pt; }
-.row { display:flex; justify-content:space-between; align-items:baseline; }
+.deck { flex:none; display:grid; grid-template-columns:264pt 264pt; grid-template-rows:auto auto auto; gap:12pt; }
+.card { position:relative; display:flex; flex-direction:column; background:$card; border:1.5pt solid var(--c); padding:0 0 10.5pt; }
+.featured { grid-column:1; grid-row:1 / span 3; }
+#card-2 { grid-column:2; grid-row:1; } #card-3 { grid-column:2; grid-row:2; } #card-4 { grid-column:2; grid-row:3; }
+.face { flex:none; height:82.5pt; display:flex; flex-direction:column; background:var(--tint); box-shadow: inset 0 0 0 3pt var(--tint), inset 0 0 0 3.75pt var(--c); }
+.featured .face { flex:1 1 auto; height:auto; }
+.art { flex:1; min-height:0; display:flex; align-items:center; gap:6pt; padding:0 12pt 0 6pt; }
+.figure { position:relative; flex:none; width:72pt; height:58.5pt; }
+.figure .fig { position:absolute; left:0; top:3pt; width:100%; height:calc(100% - 3pt); display:block; }
+.verse { margin:0; flex:1; text-align:center; font-family:'Fraunces', serif; font-style:italic; font-weight:400; font-size:9pt; line-height:12pt; color:$muted; text-wrap:balance; }
+.featured .art { flex-direction:column; align-items:stretch; padding:18pt 18pt 6pt; gap:0; }
+.featured .verse { flex:none; order:-1; font-size:10.5pt; line-height:12pt; height:24pt; }
+.featured .figure { flex:1 1 auto; width:auto; height:auto; }
+.featured .figure .fig { top:6pt; height:calc(100% - 6pt); }
+.namebar { flex:none; height:24pt; display:flex; align-items:baseline; justify-content:center; gap:6pt; background:var(--c); color:$cream; }
+.namebar h2 { margin:0; font-family:'Fraunces', serif; font-weight:700; font-size:12pt; line-height:24pt; letter-spacing:2pt; white-space:nowrap; }
+.gloss { font-family:'Fraunces', serif; font-style:italic; font-size:8.5pt; line-height:24pt; white-space:nowrap; opacity:.9; }
+.featured .namebar { height:36pt; } .featured .namebar h2 { font-size:16pt; line-height:36pt; letter-spacing:3pt; } .featured .gloss { font-size:10pt; line-height:36pt; }
+.c-mari .namebar { color:$ink; }
+.body { flex:none; margin-top:12pt; padding:0 10.5pt; }
+.sub { display:flex; align-items:center; gap:6pt; height:12pt; }
+.items + .sub { margin-top:12pt; }
+h3 { margin:0; font-size:7pt; line-height:12pt; letter-spacing:1.4pt; text-transform:uppercase; color:$ink; font-weight:700; white-space:nowrap; }
+.subrule { flex:1; border-top:0.75pt solid var(--c); }
+.item + .item { margin-top:12pt; }
+.row { display:flex; align-items:baseline; height:12pt; }
+.lead { flex:1; }
 .name { font-family:'Fraunces', serif; font-size:10.5pt; line-height:12pt; font-weight:600; }
 .price { font-size:10.5pt; line-height:12pt; margin-left:8pt; }
 .desc { margin:0; padding-right:8pt; font-size:8pt; line-height:12pt; color:$muted; }
-.desc { font-size:8pt; }
+.desc.in { margin-left:6pt; padding-right:0; white-space:nowrap; }
 .foot { display:block; height:0; margin:0; flex:none; }
-.foot .fr { flex:1; border-top:0.5pt solid $ink; opacity:.5; }
-.foot .salud { font-family:'Fraunces', serif; font-style:italic; font-size:11pt; color:$terra; font-weight:600; }
 @media screen and (max-width: 600px) {
   html, body { background:$cream; }
   .page { width:auto; height:auto; padding:0 16px 24px; display:block; }
   .banner { display:none; } .banner-m { display:block; width:100%; height:auto; margin-top:12px; }
-  .title { font-size:32px; line-height:38px; margin-top:12px; text-wrap:balance; }
-  .loc { font-size:11px; line-height:16px; margin-bottom:12px; }
-  .tabs { display:grid; grid-template-columns:repeat(2, 1fr); gap:4px; position:sticky; top:0; z-index:5; background:$cream; padding:6px 0 8px; margin:0 0 14px; }
-  .tab { min-width:0; display:flex; flex-direction:row; align-items:center; gap:6px; text-decoration:none; padding:4px 8px; border:1.5px solid $ink; border-radius:2px; }
-  .tab .tn { font-family:'Fraunces', serif; font-weight:700; font-size:15px; line-height:18px; }
-  .tab .ticon { width:22px; height:22px; background:$card; border-radius:3px; }
-  .tab .lbl { display:block; font-family:'Fraunces', serif; font-size:13px; line-height:18px; font-weight:700; letter-spacing:1px; white-space:nowrap; text-transform:uppercase; } .tab.active { outline:2px solid $rosa; outline-offset:-2px; }
-  .tab.c-terra { background:$terra; color:$cream; } .tab.c-agave { background:$agave; color:$cream; } .tab.c-mari { background:$mari; color:$ink; } .tab.c-rosa { background:$rosa; color:$cream; }
+  .title { font-size:32px; line-height:38px; height:auto; margin-top:12px; text-wrap:balance; }
+  .loc { font-size:11px; line-height:16px; height:auto; margin-bottom:12px; }
+  .tabs { display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; position:sticky; top:0; z-index:5; background:$cream; padding:6px 0 8px; margin:0 0 16px; }
+  .tab { min-width:0; display:flex; align-items:center; gap:6px; text-decoration:none; padding:4px 8px; border:1.5px solid var(--c); border-radius:2px; background:$card; color:$ink; }
+  .tab .ticon { width:22px; height:22px; flex:none; }
+  .tab .lbl { font-family:'Fraunces', serif; font-size:13px; line-height:18px; font-weight:700; letter-spacing:1px; white-space:nowrap; text-transform:uppercase; }
+  .tab.active { background:var(--c); color:$cream; box-shadow: inset 0 -4px 0 $ink; } .tab.c-mari.active { color:$ink; }
+  .tab.active .ticon { background:$card; border-radius:3px; }
   .deck { display:block; }
-  .card { margin:0 4px 20px; scroll-margin-top:110px; padding:14px 16px; background:transparent; border:0; box-shadow:none; isolation:isolate; }
-  .card::before { content:""; position:absolute; inset:0; z-index:-1; background:$card; border:1.5px solid $ink; box-shadow: inset 0 0 0 4px $card, inset 0 0 0 5px $ink, 3px 4px 0 rgba(35,27,22,.18); }
-  .card.featured { background:transparent; box-shadow:none; } .card.featured::before { background:$feat; border-color:$terra; box-shadow: inset 0 0 0 4px $feat, inset 0 0 0 5px $terra, 3px 4px 0 rgba(35,27,22,.18); }
-  .card:nth-child(odd)::before { transform:rotate(-0.8deg); } .card:nth-child(even)::before { transform:rotate(0.7deg); }
-  .head { height:auto; flex-wrap:wrap; } .cardno { font-size:28px; line-height:34px; } .verse { font-size:13px; line-height:18px; white-space:normal; text-align:left; flex-basis:100%; }
-  .figure, .r2 .figure { height:96px; }
-  .namebar { height:40px; } .namebar h2 { font-size:18px; line-height:24px; } .gloss { height:auto; font-size:14px; line-height:22px; }
-  .sub { height:auto; } h3 { font-size:11.5px; line-height:20px; } .sub .es { font-size:14px; line-height:20px; }
-  .name, .price { font-size:18px; line-height:24px; }
+  .card { margin:0 4px 24px; scroll-margin-top:110px; background:transparent; border:0; padding:0 0 16px; isolation:isolate; }
+  .card::before { content:""; position:absolute; inset:0; z-index:-1; background:$card; border:1.5px solid var(--c); box-shadow:3px 4px 0 rgba(35,27,22,.18); transform:rotate(-1deg); }
+  .card:nth-child(even)::before { transform:rotate(1deg); }
+  .face, .featured .face { height:auto; background:transparent; box-shadow:none; }
+  .art, .featured .art { flex-direction:column; align-items:stretch; padding:16px 16px 8px; gap:8px; }
+  .verse, .featured .verse { order:-1; height:auto; font-size:14px; line-height:20px; }
+  .figure, .featured .figure { flex:none; width:100%; height:128px; }
+  .figure .fig, .featured .figure .fig { top:0; height:100%; }
+  .namebar, .featured .namebar { height:40px; margin:0 12px; } .namebar h2, .featured .namebar h2 { font-size:18px; line-height:40px; letter-spacing:2px; }
+  .gloss, .featured .gloss { font-size:14px; line-height:40px; }
+  .body { margin-top:14px; padding:0 16px; }
+  .sub { height:auto; } h3 { font-size:11.5px; line-height:20px; }
+  .row { flex-wrap:wrap; height:auto; } .name, .price { font-size:18px; line-height:24px; }
   .desc { font-size:14.5px; line-height:20px; padding-right:24px; }
-  .item + .item { margin-top:12px; } .items + .sub { margin-top:14px; } .body { margin-top:10px; padding-top:10px; }
-  .foot { height:0; }
+  .desc.in { order:3; flex-basis:100%; margin-left:0; white-space:normal; }
+  .item + .item { margin-top:12px; } .items + .sub { margin-top:16px; }
 }
 @media print { .tabs, .banner-m { display:none !important; } }
 """).substitute(P)
@@ -268,4 +280,16 @@ HTML = f"""<!doctype html>
 </div>{JS}</body></html>
 """
 (OUT / "menu.html").write_text(HTML)
+
+N = doc["meta"]["designer_notes"]
+N["concept"] = ("Lotería de la Cantina, 1 + 3 tabla: El Cantarito is the tall featured card filling the left column; La Botella, El Barril and La Rosa stack in the right column and end on the same baseline. "
+                "Every card has a face (framed tinted panel in its palette colour) holding a large cut-paper figure, the cantor verse (9 pt or larger) and the lotería name cartouche at its foot "
+                "(Spanish name + small English gloss, the one bilingual device); the drinks list sits below the face as the card's reverse. No ordinals. English-only subheaders.")
+N["card_layout"] = "1 + 3: columns 264 / 264 pt, 12 pt gutter; right cards 192 / 216 / 192 pt with 12 pt gaps = 624 pt = the featured card; everything on a 12 pt grid from the deck top"
+N["sub_kickers"] = {sb["name"]: "(English only)" for s in new for sb in s["subs"]}
+N["rosa"] = "Lotería rosa is one of the four card colours (La Rosa) and one of the four papel picado colours, like terracotta, agave and marigold; no other rosa accents."
+N["ordinals"] = "Dropped in round 8 (read as wrong deck numbers)."
+for cc in N["cards"]:
+    cc["printed_ordinal"] = None
+(OUT / "doc.json").write_text(json.dumps(doc, ensure_ascii=False, indent=2))
 print("built round", ROUND, "cards", [c[2] for c in CARDS])

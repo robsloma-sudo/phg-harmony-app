@@ -26,11 +26,11 @@ MEASURE = r"""() => {
     const gaps = its.slice(1).map((it, k) => it.previousElementSibling ? it.getBoundingClientRect().top - its[k].getBoundingClientRect().bottom : null).filter(v => v !== null);
     return {n: +c.dataset.n, ref: c.dataset.id, featured: c.classList.contains('featured'), box: box(c.getBoundingClientRect()),
       padding_px: {left: parseFloat(cs.paddingLeft), right: parseFloat(cs.paddingRight), top: parseFloat(cs.paddingTop), bottom: parseFloat(cs.paddingBottom)},
-      border_px: parseFloat(cs.borderLeftWidth), cardno: T(c.querySelector('.cardno')), name: T(c.querySelector('h2')), verse: T(c.querySelector('.verse')), gloss: T(c.querySelector('.gloss')), verse_clipped: c.querySelector('.verse').scrollWidth > c.querySelector('.verse').clientWidth + 1,
+      border_px: parseFloat(cs.borderLeftWidth), face: box(c.querySelector('.face').getBoundingClientRect()), fig_svg: box(c.querySelector('.figure svg').getBoundingClientRect()), rows: its.map(it => box(it.querySelector('.row').getBoundingClientRect())), subboxes: [...c.querySelectorAll('.sub')].map(s => box(s.getBoundingClientRect())), verse_pt_size: parseFloat(getComputedStyle(c.querySelector('.verse')).fontSize) * 0.75, name: T(c.querySelector('h2')), verse: T(c.querySelector('.verse')), gloss: T(c.querySelector('.gloss')), verse_clipped: c.querySelector('.verse').scrollWidth > c.querySelector('.verse').clientWidth + 1,
       figure: box(c.querySelector('.figure').getBoundingClientRect()), body: box(c.querySelector('.body').getBoundingClientRect()),
       namebar: Object.assign(box(c.querySelector('.namebar').getBoundingClientRect()), {text: c.querySelector('.namebar').innerText.trim()}),
-      item_gaps_px: gaps, line_heights_px: [...c.querySelectorAll('.name,.price,.desc,h3,.sub .es,.gloss')].map(lh), first_row_y: (c.querySelector('.body .row') || c).getBoundingClientRect().top - pg.top, body_rule_y: c.querySelector('.body').getBoundingClientRect().top - pg.top, content_bottom: Math.max(...[...c.querySelectorAll('.body > *')].map(e => e.getBoundingClientRect().bottom)) - pg.top,
-      subs: [...c.querySelectorAll('.sub')].map(s => ({ref: s.dataset.id, h3: T(s.querySelector('h3')), es: T(s.querySelector('.es'))})),
+      item_gaps_px: gaps, line_heights_px: [...c.querySelectorAll('.name,.price,.desc,h3')].map(lh), first_row_y: (c.querySelector('.body .row') || c).getBoundingClientRect().top - pg.top, body_rule_y: c.querySelector('.body').getBoundingClientRect().top - pg.top, content_bottom: Math.max(...[...c.querySelectorAll('.body > *')].map(e => e.getBoundingClientRect().bottom)) - pg.top,
+      subs: [...c.querySelectorAll('.sub')].map(s => ({ref: s.dataset.id, h3: T(s.querySelector('h3'))})),
       items: its.map(it => { const d = it.querySelector('.desc'); return {ref: it.dataset.ref, block: box(it.getBoundingClientRect()), name: T(it.querySelector('.name')), price: T(it.querySelector('.price')),
         desc: d ? Object.assign(T(d), lastLineWords(d)) : null}; })};
   });
@@ -44,9 +44,9 @@ PHONE = r"""() => { const tb = document.querySelector('.tabs');
     if (!ws.length) return 99; const last = Math.max(...ws); return new Set(ws.map(y => Math.round(y))).size > 1 ? ws.filter(y => Math.abs(y - last) < 2).length : 99; };
   return {scrollWidth: document.documentElement.scrollWidth, tabs: getComputedStyle(tb).position, tab_count: document.querySelectorAll('.tab').length,
     tabbar_scroll_vs_client: [tb.scrollWidth, tb.clientWidth], tab_rects: [...document.querySelectorAll('.tab')].map(t => { const r = t.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)]; }),
-    active_label: (document.querySelector('.tab.active .lbl') || {}).innerText,
+    active_label: (document.querySelector('.tab.active .lbl') || {}).innerText, active_bg: getComputedStyle(document.querySelector('.tab.active')).backgroundColor, inactive_bg: getComputedStyle(document.querySelector('.tab:not(.active)')).backgroundColor,
     min_last_line_tokens: Math.min(...[...document.querySelectorAll('.desc,.name,h2')].map(lastLine)),
-    cards: [...document.querySelectorAll('.card')].map(c => { const r = c.getBoundingClientRect(); return {n: +c.dataset.n, x: r.left, w: r.width, y: r.top + scrollY, transform: getComputedStyle(c).transform}; })}; }"""
+    cards: [...document.querySelectorAll('.card')].map(c => { const r = c.getBoundingClientRect(); return {n: +c.dataset.n, x: r.left, w: r.width, y: r.top + scrollY, transform: getComputedStyle(c).transform, frame_transform: getComputedStyle(c, '::before').transform, verse_px: parseFloat(getComputedStyle(c.querySelector('.verse')).fontSize)}; })}; }"""
 
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path=CHROME)
