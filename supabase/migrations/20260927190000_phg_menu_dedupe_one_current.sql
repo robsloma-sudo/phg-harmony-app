@@ -14,16 +14,27 @@
 -- (v_menu_composition, v_menu_brand_presence, v_menu_category_share, phg_menu_composition,
 -- phg_brand_presence, phg-expanded-data) assumes ONE current menu per venue. This keeps that
 -- invariant and decides which capture should be current:
+-- (Rules as of the pre-publish fixes; "larger" always means larger by (distinct items, then drinks items), Step 2's order.)
 --   same source (canonical URL)      -> re-capture replaces, unless identical or a strict subset (no URL = never same)
 --   other source, a true subset       -> duplicate, nothing inserted (a missing price matches any price: unknown)
---   other source, near-identical (>=90% of the current items) and at least as large -> replaces (newer prices kept),
---                                     except when the current menu is under 7 days old (flip-flop damping -> alternate)
+--   other source, near-identical (>=90% of the current items) and at least as many items -> replaces (newer prices
+--                                     kept), except when the current menu is a REAL page under 7 days old (flip-flop
+--                                     damping -> alternate)
 --   a capture that supplies a price the current menu lacks for the same item is never a duplicate / subset
 --   zero-item capture beside a menu  -> ignored
---   item/event/product page          -> never replaces a non-empty current menu (stored as alternate), even
---                                       when it shares the menu's source key (?item= is stripped from the key)
+--   item/event/product page, other source -> never replaces a non-empty current menu (stored as alternate)
+--   item page, same source key (?item= is stripped from the key) -> replaces only when it is near-identical (>=90%)
+--                                       AND strictly larger; otherwise stored as alternate. Exception: the very same
+--                                       page URL (compared after phg_menu_exact_url normalisation) re-captured over
+--                                       itself is an ordinary same-source re-capture: no overlap or size requirement,
+--                                       only the partial-recapture guard below (safety SF-1, pre-publish).
 --   same source, less than half the items -> partial re-capture, stored as alternate
---   other source, more distinct items (then more drinks items) -> replaces; otherwise stored as alternate
+--   other source, larger              -> replaces; otherwise stored as alternate
+--   current menu is an item page, capture is a real page from another source -> the real page replaces it when at
+--                                       least as large ('real_page_over_item_page'), and also when it has at least as
+--                                       many items and is near-identical even with FEWER drinks items
+--                                       ('newer_near_identical_capture'): the 7-day damping never holds a real page
+--                                       behind an item-page current menu
 -- "Drinks items" = cocktail / spirit_pour items plus every item in a cocktails / wine / beer / spirits section
 -- (beer and wine are stored as item_type 'other' inside typed sections).
 -- Alternates are real rows with is_current=false and superseded_reason, so nothing is lost.
@@ -60,6 +71,17 @@
 --  * submit_menu has lock_timeout 5s as a function-level setting (SET LOCAL scoped to the call; reset on return):
 --    a writer waiting on the account row or menus longer than 5 s fails with 55P03 and changes nothing.
 --  * phg_rollback_function_defs_20260927 is not executable by service_role (runbook runs as postgres).
+--
+-- Pre-publish fixes after review round 5 (2026-09-28):
+--  * SF-1: the exact-URL exemption no longer requires the 90% overlap (nor a size): the same item page URL re-captured
+--    over itself replaces like any same-source re-capture, e.g. with 4 of 33 prices changed; the partial-recapture guard
+--    (fewer than half the items -> alternate) still applies. URLs are compared with phg_menu_exact_url (trimmed,
+--    '&amp;' decoded, fragment dropped, scheme dropped, host lower-cased without www / default port, trailing slash of
+--    the path dropped; path and query otherwise exact, including ?item=).
+--  * the damping condition is written `and not c.itemish` (the earlier `not (c.itemish and not v_itemish)` was the
+--    same thing: an item-page capture over a non-empty current menu of another source never reaches that branch).
+--  * submit_menu search_path is 'public', 'pg_temp' (m6); phg_save_menu_candidate_extraction has lock_timeout 5s as a
+--    function-level setting (spec minor): a wait longer than that raises 55P03, the worker marks the candidate retry.
 --
 -- Apply with cron 7 (promotion) and 13 (extraction) PAUSED. Data repair is a separate script.
 -- Apply through the runbook (apply_migration, or psql -1 -f), in order: this file, then 20260927191000. Not with
@@ -156,6 +178,24 @@ returns boolean language sql immutable parallel safe set search_path = '' as $$
   select coalesce(p_url, '') ~* '([?&](amp;)?(item|matchitemname)=|/order/[^/?#]+/[^/?#]+/[^/?#]+|/(events?|event-details|calendar|products?|producto)/[^/?#]+)'
 $$;
 
+-- Exact identity of an evidence URL (for "the very same page"): unlike phg_menu_source_key it keeps every query
+-- parameter (including ?item=) in its original order. Normalised only where two spellings cannot be different pages:
+-- surrounding blanks, '&amp;', the fragment, the scheme, host case, a leading www., a default port, and trailing slashes
+-- at the end of the path.
+create or replace function public.phg_menu_exact_url(p_url text)
+returns text language plpgsql immutable parallel safe set search_path = '' as $$
+declare u text; h text; rest text;
+begin
+  if p_url is null or btrim(p_url) = '' then return null; end if;
+  u := regexp_replace(replace(btrim(p_url), '&amp;', '&'), '#.*$', '');
+  h := lower(substring(u from '^[A-Za-z][A-Za-z0-9+.-]*://([^/?#]+)'));
+  if h is null then return u; end if;
+  h := regexp_replace(regexp_replace(h, '^www\.', ''), ':(80|443)$', '');
+  rest := coalesce(substring(u from '^[A-Za-z][A-Za-z0-9+.-]*://[^/?#]+(.*)$'), '');
+  rest := regexp_replace(rest, '/+(\?|$)', '\1');
+  return h || rest;
+end $$;
+
 -- One comparable key per item: normalized name + normalized price.
 create or replace function public.phg_menu_item_key(p_name text, p_price numeric)
 returns text language sql immutable parallel safe as $$
@@ -243,7 +283,7 @@ returns text language sql immutable parallel safe as $$
   select pg_catalog.md5(pg_catalog.array_to_string(coalesce(p_keys, '{}'::text[]), '~'))
 $$;
 
-revoke all on function public.phg_menu_source_key(text), public.phg_menu_url_is_item_page(text),
+revoke all on function public.phg_menu_source_key(text), public.phg_menu_url_is_item_page(text), public.phg_menu_exact_url(text),
   public.phg_menu_item_key(text, numeric), public.phg_menu_payload_item_keys(jsonb),
   public.phg_menu_payload_bev_count(jsonb), public.phg_menu_extract_item_keys(jsonb),
   public.phg_menu_item_keys(uuid), public.phg_menu_bev_count(uuid), public.phg_menu_key_set_hash(text[]),
@@ -255,7 +295,7 @@ create or replace function public.submit_menu(p_account_id text, p_source_code t
  returns jsonb
  language plpgsql
  security definer
- set search_path to 'public'
+ set search_path to 'public', 'pg_temp'
  set lock_timeout to '5s'
 as $function$
 declare v_menu_id uuid;v_menu_code text;v_source_id uuid;v_section jsonb;v_item jsonb;v_brand jsonb;v_section_id uuid;v_item_id uuid;v_brand_id uuid;v_items int:=0;v_brands int:=0;v_inferred int:=0;v_expected_items int:=0;v_existing uuid;v_cat text;v_has_brands boolean;
@@ -308,13 +348,14 @@ begin
    if v_n = 0 and c_n > 0 then
     return jsonb_build_object('status','empty_capture_ignored','menu_id',c.id,'items',0,'message','zero-item re-capture ignored; current menu kept');
    end if;
-   if v_itemish and c_n > 0 and not (v_ov >= ceil(c_dup_ratio * c_n)
-                                     and ((v_n, v_bev) > (c_n, c_bev)
-                                          or (c.itemish and p_evidence_url = c.evidence_url and (v_n, v_bev) >= (c_n, c_bev)))) then
-    -- an item page shares the menu's key (?item= is stripped) but is not a fuller copy of it. It must be strictly
-    -- larger by (items, then drinks items: Step 2's order), over a real page (C1, round 4) and over another item page
-    -- alike (SF-D, round 5), so sibling item pages of one menu never swap places. The one exemption: the SAME item page
-    -- URL re-captured, over itself, replaces when at least as large (its own newer prices).
+   if v_itemish and c_n > 0
+      and public.phg_menu_exact_url(p_evidence_url) is distinct from public.phg_menu_exact_url(c.evidence_url)
+      and not (v_ov >= ceil(c_dup_ratio * c_n) and (v_n, v_bev) > (c_n, c_bev)) then
+    -- an item page shares the menu's key (?item= is stripped) but is not a fuller copy of it. It must be near-identical
+    -- and strictly larger by (items, then drinks items: Step 2's order), over a real page (C1, round 4) and over another
+    -- item page alike (SF-D, round 5), so sibling item pages of one menu never swap places. Exempt: the SAME page URL
+    -- (phg_menu_exact_url) re-captured over itself is an ordinary re-capture of that page (safety SF-1, pre-publish):
+    -- no overlap or size requirement, so its own price updates are never frozen; only the partial guard below applies.
     v_make_current := false; v_alt_of := c.id; v_reason := 'alternate_item_page';
    elsif c_n > 0 and v_n < ceil(0.5 * c_n) then
     -- a partial parse of the same page must not replace the full menu
@@ -344,10 +385,11 @@ begin
     v_supersede := v_supersede || c.id;
     v_reason := coalesce(v_reason, 'real_page_over_item_page');
    elsif v_n >= c_n and c_n > 0 and v_ov >= ceil(c_dup_ratio * c_n) and v_adds = 0
-         and c.created_at > now() - c_damping and not (c.itemish and not v_itemish) then
+         and c.created_at > now() - c_damping and not c.itemish then
     -- flip-flop damping: two pages of the same menu must not keep swapping current. The current menu came from
     -- another source less than 7 days ago and this capture is only near-identical (not larger): keep it as an alternate.
-    -- Never applied to a real page behind an item-page current menu (round 5, C1): that page should become current.
+    -- Never applied behind an item-page current menu (round 5, C1): a real page there should become current (an
+    -- item-page capture over a non-empty current menu of another source was already made an alternate above).
     v_make_current := false; v_alt_of := c.id; v_reason := 'alternate_near_identical_recent_other_source';
    elsif v_n >= c_n and c_n > 0 and v_ov >= ceil(c_dup_ratio * c_n) then
     -- same menu, same size, from another page, with some new prices (or prices the current menu lacked):
@@ -471,6 +513,7 @@ create or replace function public.phg_save_menu_candidate_extraction(p_candidate
  language plpgsql
  security definer
  set search_path to 'public', 'pg_temp'
+ set lock_timeout to '5s'
 as $function$
 declare c public.menu_source_candidates%rowtype; v_hash text; v_scope text; n integer; v_set text; v_dup bigint;
 begin

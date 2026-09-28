@@ -14,31 +14,55 @@
 --   supabase/tests/phg_026_rollback_check.sql; the roll-forward also clears menu_source_candidates.item_set_hash /
 --   duplicate_of_candidate_id; Step 2's drinks count is DISTINCT drinks item keys (phg_menu_bev_count, the same
 --   function submit_menu uses); runbook: Edge traffic, post-release follow-ups.
+-- Pre-publish version after review round 5 (2026-09-28): the phg-expanded-data Edge function change (restaurant_menu_map
+--   reads only is_current menus; prepared in supabase/functions/phg-expanded-data/, NOT deployed) is runbook step 0, a
+--   hard precondition in the same window as this file (spec B1 / safety SF-2); the release gate checks it; in-flight
+--   call wording corrected (m1); the roll-forward saves the rollback-check review list and the run rows before the DROP
+--   (m3), resets candidates the new extraction save marked as duplicates to 'retry' and clears the hashes under
+--   lock_timeout 5s (m2, spec should-fix 2).
 --
 -- CRON DURING A ROLLBACK: keep cron 7 (promotion) and 13 (extraction) PAUSED before and during either rollback
 --   (phg_repair_20260927_rollback and phg_rollback_function_defs_20260927), and keep them paused afterwards until
 --   the functions are rolled back too, or the change is re-applied. The data rollback alone leaves the new
 --   submit_menu and the one-current index in place; promotion running against half-rolled-back data would promote the
 --   restored duplicate staging rows.
--- SAFE RETRIES: a deadlock (40P01) or lock timeout (55P03) against an in-flight submit_menu (the Edge function or a
---   promotion that was already running), in this file or in either rollback, rolls that transaction back completely
---   and changes nothing: re-run it. The same holds for every Step 3 / Step 4 batch call (see those steps).
+-- SAFE RETRIES: a lock timeout (55P03) and a deadlock (40P01) are both safe to re-run. Either one rolls back the whole
+--   transaction that received it (this file, either rollback, one Step 3 / Step 4 batch call, or the submit_menu call on
+--   the other side) and that transaction changes nothing. See runbook step 1 for what happens to an in-flight call.
 -- ROLL FORWARD AFTER A ROLLBACK: the tables below are created with `if not exists` and the step-2 run row with
---   `on conflict do nothing`, so a re-run would reuse the OLD plan, backups and done lists. Drop them first, then
---   apply 20260927190000 (if the functions were rolled back) and this file again through the runbook:
---     drop table if exists public.phg_repair_plan_menus_20260927, public.phg_backup_menus_currency_20260927,
---       public.phg_backup_staging_dupes_20260927, public.phg_repair_damaged_20260927, public.phg_repair_run_20260927,
---       public.phg_repair_step3_done, public.phg_repair_step4_done;
---   and clear the candidate hashes, so Step 4 recomputes every one from the (restored) staging rows and no candidate
---   stays marked as a duplicate of a page whose rows were restored (Step 4 only fills rows where both are NULL):
---     update public.menu_source_candidates set item_set_hash = null, duplicate_of_candidate_id = null
---      where item_set_hash is not null or duplicate_of_candidate_id is not null;
---   (one statement, with cron 13 paused; it touches every hashed candidate, up to ~550k rows, and contends with cron 16:
---   on 55P03 / 40P01 re-run it.)
+--   `on conflict do nothing`, so a re-run would reuse the OLD plan, backups and done lists. With cron 7 and 13 paused,
+--   as postgres, in this order:
+--   RF1. save what the review needs, BEFORE the drop (m3): run query 3 of supabase/tests/phg_026_rollback_check.sql.
+--        It creates public.phg_repair_rollback_saved_20260927 (SELECT-only for service_role) holding the run rows
+--        (step2, rollback) and the query-2 review list (skipped venues, staging pages not restored, staging rows
+--        superseded after release, candidates marked as duplicates). Check it returned 1 row.
+--   RF2. one transaction (m2: lock_timeout 5s; it contends with cron 16 on menu_source_candidates; on 55P03 / 40P01
+--        nothing changed, re-run it):
+--          begin;
+--          set local lock_timeout = '5s';
+--          -- candidates the new extraction save marked as duplicates (status 'review', duplicate_of_candidate_id set)
+--          -- go back to the retry queue, so they are extracted again against the restored staging rows (spec
+--          -- should-fix 2). Must run before the hash reset below, which clears duplicate_of_candidate_id.
+--          update public.menu_source_candidates
+--             set status = 'retry', extraction_next_retry_at = now(),
+--                 last_error = 'PHG-026 roll-forward: was ' || coalesce(last_error, 'duplicate')
+--           where duplicate_of_candidate_id is not null and status = 'review';
+--          -- clear the candidate hashes, so Step 4 recomputes every one from the (restored) staging rows and no
+--          -- candidate stays marked as a duplicate of a page whose rows were restored (Step 4 fills only rows where
+--          -- both are NULL). Touches every hashed candidate (rehearsed: a scan of all ~550k candidates, ~6 s).
+--          update public.menu_source_candidates set item_set_hash = null, duplicate_of_candidate_id = null
+--           where item_set_hash is not null or duplicate_of_candidate_id is not null;
+--          commit;
+--   RF3. drop table if exists public.phg_repair_plan_menus_20260927, public.phg_backup_menus_currency_20260927,
+--          public.phg_backup_staging_dupes_20260927, public.phg_repair_damaged_20260927, public.phg_repair_run_20260927,
+--          public.phg_repair_step3_done, public.phg_repair_step4_done;
+--   RF4. apply 20260927190000 (if the functions were rolled back) and this file again through the runbook (step 0's
+--        Edge function stays deployed; it is correct before and after).
 --   Do NOT drop public.phg_backup_function_defs_20260927: it holds the ORIGINAL function bodies (file 1 keeps them
 --   with `on conflict do nothing`); dropping it while the new bodies are live would lose the only copy.
---   Staging rows the rollback did not restore (skipped venues, re-extracted pages) keep
---   superseded_reason = 'duplicate_item_set_of_sibling', so they stay identifiable after the drop.
+--   Staging rows the rollback did not restore (skipped venues, re-extracted pages) and staging rows the new extraction
+--   save superseded after release keep superseded_reason = 'duplicate_item_set_of_sibling', so they stay identifiable
+--   after the drop (and are listed in phg_repair_rollback_saved_20260927).
 --
 -- HOW TO APPLY: as ONE transaction, after 20260927190000 and through the runbook (apply_migration, which runs the file
 --   in one transaction, or `psql -1 -f`). Not `supabase db push` (newer migrations are already applied). If any lock
@@ -360,36 +384,57 @@ begin
 end $$;
 revoke all on function public.phg_repair_20260927_rollback() from public, anon, authenticated, service_role;   -- runbook runs it as postgres
 
--- ---------- Runbook ----------
--- Every step runs as postgres (the SQL editor / apply_migration / psql as postgres). service_role can read the repair
--- tables but cannot execute the batch functions or either rollback.
--- 0. Pause cron 7 and 13 (already paused). Apply 20260927190000 then this file, each as ONE transaction, through
---    apply_migration (or psql -1 -f), in that order. Not `supabase db push`.
---    EDGE TRAFFIC: the submit-menu Edge function is the only writer not behind cron. Before step 0, check its logs
---    (no calls in the last hour) and keep it idle (nothing scheduled calls it; promote-menus is not scheduled) until the
---    release gate (step 5) has passed. A call already in flight when file 2 starts either finishes first (file 2 waits
---    up to 5 s for its table lock) or queues behind the lock and then sees the repaired data; if file 2 or a call hits
---    55P03 / 40P01, that transaction changes nothing: re-run it. A call that lands between file 2 and the gate goes
---    through the new submit_menu and cannot break the one-current index, but it can make a plan venue look changed to
---    the gate: re-run the gate and read the venue's menus.
--- 1. loop:  select public.phg_repair_step3_batch(100);   until it returns 0   (see results_round4.md for timings;
+-- ---------- Runbook (publish, in this order) ----------
+-- Every SQL step runs as postgres (the SQL editor / apply_migration / psql as postgres). service_role can read the repair
+-- tables but cannot execute the batch functions or either rollback. Cron 7 (promotion) and 13 (extraction) are PAUSED
+-- from before step 0 until step 7.
+-- EDGE TRAFFIC: the submit-menu Edge function is the only writer not behind cron. Before step 0, check its logs (no calls
+--   in the last hour) and keep it idle (nothing scheduled calls it; promote-menus is not scheduled) until the release
+--   gate (step 6) has passed.
+-- 0. HARD PRECONDITION (spec B1 / safety SF-2), in the same window as steps 1-6: deploy the phg-expanded-data Edge
+--    function from supabase/functions/phg-expanded-data/index.ts (v5, verify_jwt true; the only change from live v4 is
+--    that restaurant_menu_map selects `.eq("is_current", true)`, which also keeps the read far below the PostgREST
+--    1000-row cap). Deploy it BEFORE step 1, so it is live before any app preview build that calls restaurant_menu_map
+--    goes live and strictly before cron 7 is re-enabled (step 7). Without it the app map keeps showing each venue's
+--    NEWEST menu, and after Step 2 that is not the current one at ~350 venues (index.html restaurant_menu_map caller).
+--    v5 is correct before the repair too (read-only check 2026-09-28: 6,162 venues with menus, 0 without a current menu,
+--    0 with two; v4 already shows a non-current menu at 190 venues). Check: the function list shows phg-expanded-data
+--    version 5, and one restaurant_menu_map call for a city with captured menus returns menus. If the deploy fails,
+--    STOP: do not run step 1. Step-0 list (every deployed Edge function that selects from menus without is_current and
+--    is user-facing; survey in handoff/reviews/rehearsal/live_defs_round5.md, pre-publish section): phg-expanded-data
+--    only. Undo: redeploy supabase/functions/phg-expanded-data/v4.rollback.index.ts (only together with a full rollback
+--    of the data and the functions; v5 is safe to keep in every other state).
+-- 1. Apply 20260927190000 then this file, each as ONE transaction, through apply_migration (or psql -1 -f), in that
+--    order. Not `supabase db push`.
+--    IN-FLIGHT CALLS (m1): this file takes SHARE ROW EXCLUSIVE on menus with lock_timeout 5s and holds it ~7-9 s.
+--    (a) A submit_menu call already running when this file starts holds its locks until it commits; this file waits for
+--        it, up to 5 s, and then plans on data that includes that call's menu. If the call takes longer, this file fails
+--        with 55P03 and nothing has changed: re-run it.
+--    (b) A submit_menu call that starts while this file holds the lock waits up to its own lock_timeout (5 s). If this
+--        file commits within that time, the call then runs against the repaired data through the new submit_menu (it
+--        cannot break the one-current index, but it can make a plan venue look changed to the gate: re-run the gate and
+--        read that venue's menus). Otherwise the call fails with 55P03, changes nothing, and must be re-sent after the
+--        release gate has passed.
+--    (c) Either side can instead receive 40P01 (deadlock detected); the transaction that receives it is rolled back
+--        completely and changed nothing: re-run this file, or re-send the call. 55P03 and 40P01 are both safe to re-run.
+-- 2. loop:  select public.phg_repair_step3_batch(100);   until it returns 0   (~15 s per call, ~19 calls;
 --    on 40P01 / 55P03 just call again)
--- 2. vacuum (analyze) public.staging_menu_extract;
--- 3. loop:  select public.phg_repair_step4_batch(500);   until it returns 0   (rehearsed: ~17 s per call, ~39 calls;
+-- 3. vacuum (analyze) public.staging_menu_extract;
+-- 4. loop:  select public.phg_repair_step4_batch(500);   until it returns 0   (rehearsed: ~16 s per call, ~39 calls;
 --    it contends with cron 16 on menu_source_candidates: on 55P03 / 40P01 just call again)
--- 4. create index concurrently if not exists menu_source_candidates_item_set_idx
+-- 5. create index concurrently if not exists menu_source_candidates_item_set_idx
 --      on public.menu_source_candidates (account_id, item_set_hash) where item_set_hash is not null;
--- 5. run supabase/tests/phg_026_release_gate.sql; every row must say pass = true before cron 13, then 7, are
---    re-enabled (cron 7 calls phg_promote_menu_batch_safe(10); promote_clean_menu_batch now caps it at 5 pages).
--- 6. after the first cron 13 / 7 cycles and daily for a week: supabase/tests/phg_026_monitor.sql (every pass row true).
--- 7. post-release follow-ups (not part of this change): promote-menus Edge function should record out.status (today it
---    counts every non-'duplicate' status as created); submit-menu Edge function header comment is stale;
---    phg-expanded-data (restaurant_menu_map) shows each venue's NEWEST menu by captured_at, not its current one, so after
---    this change it can show an alternate: make it prefer is_current (order by is_current desc first) before or together
---    with re-enabling cron 7 (see handoff/reviews/rehearsal/live_defs_round5.md).
+-- 6. run supabase/tests/phg_026_release_gate.sql; every row must say pass = true (it includes the restaurant_menu_map
+--    check of step 0 on 3 venues Step 2 changed) before cron 13, then 7, are re-enabled.
+-- 7. re-enable cron 13, then cron 7 (cron 7 calls phg_promote_menu_batch_safe(10); promote_clean_menu_batch now caps it
+--    at 5 pages). Never before step 0 is live and step 6 has passed.
+-- 8. after the first cron 13 / 7 cycles and daily for a week: supabase/tests/phg_026_monitor.sql (every pass row true).
+-- 9. post-release follow-ups (not part of this change): promote-menus Edge function should record out.status (today it
+--    counts every non-'duplicate' status as created); submit-menu Edge function header comment is stale.
 -- Rollback (cron 7 and 13 paused before and during it, and until the functions are rolled back too or the change is
 --   re-applied): select public.phg_repair_20260927_rollback(); then, if the functions must go back too,
 --   select public.phg_rollback_function_defs_20260927();   (drops the one-current index, restores the 4 bodies)
---   On 40P01 / 55P03 re-run. After the data rollback run supabase/tests/phg_026_rollback_check.sql: every pass row
---   true; its second query lists the venues and pages to review by hand (skipped venues, staging rows not restored).
---   To roll forward afterwards: the drop statement and the candidate-hash update in the header, then re-apply.
+--   On 40P01 / 55P03 re-run. After the data rollback run supabase/tests/phg_026_rollback_check.sql: every query-1 row
+--   true; query 2 lists the venues, pages and candidates to review by hand (skipped venues, staging rows not restored,
+--   staging rows the new extraction save superseded after release, candidates it marked as duplicates).
+--   To roll forward afterwards: RF1-RF4 in the header (save, reset candidates + hashes, drop, re-apply).

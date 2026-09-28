@@ -3,6 +3,9 @@
 -- incident's duplicate-menu rate, no plan venue shrinking below its largest pre-incident menu except through a
 -- re-capture of its own page, and no venue flip-flopping. Everything else is informational (pass is always true).
 -- Round 5 (safety SF-C): the smaller-than-pre-incident row and the churn row are pass/fail.
+-- Pre-publish (safety m4, spec minor): the flip-flop row counts only current-menu changes between DIFFERENT sources (the
+-- replaced menu's source key differs from its replacement's; a venue re-capturing its own page is not a flip-flop), and
+-- the changes since release are shown split by kind (growth / non-growing same source / non-growing other source).
 with
 since as (select ran_at t from public.phg_repair_run_20260927 where step = 'step2'),
 multi as (select count(*) n from (select account_id from public.menus where is_current group by 1 having count(*) > 1) x),
@@ -26,14 +29,27 @@ churn as (select count(*) n from (select account_id from public.menus, since
                                           'same_source_price_enrichment','larger_beverage_capture','contained_in_larger_capture',
                                           'real_page_over_item_page')
                                    group by 1 having count(*) > 2) x),
--- pass/fail churn: current-menu changes that did NOT grow the menu (a larger capture is progress, not a flip-flop).
--- More than 2 such changes in one venue since release is the flip-flop pattern the damping is meant to stop.
+-- every current-menu change since release: the replaced menu, its replacement, growth or not, same source or not
+changes as (select o.account_id,
+                   o.superseded_reason in ('larger_beverage_capture','contained_in_larger_capture') as growth,
+                   coalesce(o.source_key, public.phg_menu_source_key(o.evidence_url))
+                     is not distinct from coalesce(r.source_key, public.phg_menu_source_key(r.evidence_url)) as same_source
+              from public.menus o join public.menus r on r.id = o.superseded_by, since
+             where o.superseded_at > since.t and o.superseded_reason in
+                   ('newer_near_identical_capture','price_enrichment_other_source','same_source_recapture',
+                    'same_source_price_enrichment','larger_beverage_capture','contained_in_larger_capture',
+                    'real_page_over_item_page')),
+-- pass/fail churn: current-menu changes that did NOT grow the menu (a larger capture is progress, not a flip-flop) and
+-- went from one source to ANOTHER (m4). More than 2 such changes in one venue since release is the flip-flop pattern
+-- the damping is meant to stop.
 flip as (select count(*) n, coalesce(string_agg(account_id, ',' order by account_id) filter (where rn <= 20), '') ids
-           from (select account_id, row_number() over (order by account_id) rn from public.menus, since
-                  where superseded_at > since.t and superseded_reason in
-                        ('newer_near_identical_capture','price_enrichment_other_source','same_source_recapture',
-                         'same_source_price_enrichment','real_page_over_item_page')
+           from (select account_id, row_number() over (order by account_id) rn from changes
+                  where not growth and not same_source
                   group by 1 having count(*) > 2) x),
+by_kind as (select count(*) filter (where growth) g, count(distinct account_id) filter (where growth) gv,
+                   count(*) filter (where not growth and same_source) s, count(distinct account_id) filter (where not growth and same_source) sv,
+                   count(*) filter (where not growth and not same_source) o, count(distinct account_id) filter (where not growth and not same_source) ov
+              from changes),
 -- plan venues whose current menu has fewer distinct items than their largest pre-incident menu. Allowed only when the
 -- current menu is a re-capture of the previous current menu's own page (the venue shortened that page).
 shrunk as (
@@ -61,8 +77,12 @@ select * from (values
                                                             (select n - allowed from shrunk) = 0,
                                                             (select n || ' smaller, ' || allowed || ' allowed (same-page re-capture)'
                                                                     || case when ids <> '' then '; review (first 20): ' || ids else '' end from shrunk)),
-  ('0 venues with > 2 non-growing current-menu changes since release (flip-flop)',
+  ('0 venues with > 2 non-growing current-menu changes between different sources since release (flip-flop)',
                                                             (select n from flip) = 0,
                                                             (select n || case when ids <> '' then ' (first 20: ' || ids || ')' else '' end from flip)),
-  ('venues with > 2 current-menu changes of any kind since release (informational)', true, (select n::text from churn))
+  ('venues with > 2 current-menu changes of any kind since release (informational)', true, (select n::text from churn)),
+  ('current-menu changes since release by kind (informational): changes / venues',
+                                                            true,
+                                                            (select 'growth ' || g || ' / ' || gv || '; non-growing same source ' || s || ' / ' || sv
+                                                                    || '; non-growing other source ' || o || ' / ' || ov from by_kind))
 ) v(check_name, pass, value)

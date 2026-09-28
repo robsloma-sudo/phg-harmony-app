@@ -133,8 +133,8 @@ ART = f'''
    <feDisplacementMap in="SourceGraphic" scale="2.6" result="d"/>
    <feDropShadow in="d" dx="-2" dy="3" stdDeviation="2" flood-color="#0C1A15" flood-opacity=".45"/></filter>
   <filter id="goldleaf" x="-5%" y="-5%" width="110%" height="110%">
-   <feTurbulence type="fractalNoise" baseFrequency=".11" numOctaves="4" seed="21" result="n"/>
-   <feColorMatrix in="n" type="matrix" values="0 0 0 0 .95  0 0 0 0 .83  0 0 0 0 .52  0 0 0 2.4 -1.05" result="fleck"/>
+   <feTurbulence type="fractalNoise" baseFrequency=".32" numOctaves="3" seed="21" result="n"/>
+   <feColorMatrix in="n" type="matrix" values="0 0 0 0 .96  0 0 0 0 .85  0 0 0 0 .56  0 0 0 2.0 -1.02" result="fleck"/>
    <feComposite in="fleck" in2="SourceGraphic" operator="in" result="f2"/>
    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="f2"/></feMerge></filter>
   <filter id="fiber" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="4" result="n"/>
@@ -162,7 +162,7 @@ ART = f'''
 def item(i, half=False):
     return (f'<div class="item" data-ref="{i["id"]}"><div class="row"><span class="name tx">{i["name"]}</span>'
             f'<span class="lead"></span><span class="price tx">{P(i)}</span></div>'
-            f'<div class="desc tx">{LINE[i["id"]][0]}</div></div>')
+            f'<div class="desc tx">{" · ".join(t.replace(" ", "&nbsp;") for t in LINE[i["id"]][0].split(" · "))}</div></div>')
 
 def sub(label, its, sid, half=False):
     return f'<div class="sub" data-id="{sid}"><h3 class="tx">{label}</h3>' + "".join(item(i, half) for i in its) + "</div>"
@@ -219,7 +219,7 @@ h3{{font:700 7.5pt/12pt 'DM Sans',sans-serif;letter-spacing:.26em;text-transform
 /* phone: one reading column; the art becomes a hero band */
 @media (max-width:600px){{
  .page{{width:100%;height:auto;overflow:visible}}
- .art{{position:relative;left:0;top:0;width:100%;height:auto;aspect-ratio:390/330;display:block}}
+ .art{{position:relative;left:0;top:0;width:100%;height:auto;aspect-ratio:390/421;display:block}}
  .rail{{display:none}}
  .wm{{position:relative;left:0;top:0;height:auto;display:block;padding:18px 22px 6px;background:{PAL['paper']}}}
  .wm .big{{writing-mode:horizontal-tb;height:auto;font-size:58px;line-height:62px;letter-spacing:.06em}}
@@ -239,7 +239,7 @@ h3{{font:700 7.5pt/12pt 'DM Sans',sans-serif;letter-spacing:.26em;text-transform
 }}
 .phonefoot{{display:none;padding:0 22px 40px;font:500 11px/18px 'DM Sans',sans-serif;letter-spacing:.34em;color:{PAL['ink']}}}
 """
-PHONE_ART = ART.replace('viewBox="-9 -9 630 810" preserveAspectRatio="xMinYMin slice"', 'viewBox="-9 150 390 330" preserveAspectRatio="xMidYMid slice"')
+PHONE_ART = ART.replace('viewBox="-9 -9 630 810" preserveAspectRatio="xMinYMin slice"', 'viewBox="-9 318 150 162" preserveAspectRatio="xMidYMid slice"')
 HTML = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cantina &amp; Cocktail Bar · Iowa City, Iowa</title><style>{CSS}
 .art.phone{{display:none}} @media (max-width:600px){{.art.print{{display:none}} .art.phone{{display:block}}}}</style></head><body>

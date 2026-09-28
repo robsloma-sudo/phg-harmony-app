@@ -90,9 +90,9 @@ with sync_playwright() as p:
       pairs: [...document.querySelectorAll('.item')].map(it => { const n = it.querySelector('.name').getBoundingClientRect(), p = it.querySelector('.price').getBoundingClientRect(), c = it.getBoundingClientRect();
         return {ref: it.dataset.ref, travel_frac: (p.left - n.right) / c.width, same_row: Math.abs(n.bottom - p.bottom) < 3}; })})""")
     ph.screenshot(path=str(OUT / "preview-phone.png"), full_page=True)
-    ph.evaluate(HIDE); ph.screenshot(path=str(HERE / "art-only-phone.png"), full_page=True)
     PHE = ph.evaluate("""() => [...document.querySelectorAll('.tx')].filter(e => e.offsetParent !== null).map(e => { const r = document.createRange(); r.selectNodeContents(e);
        return {text: e.innerText.trim().slice(0, 40), color: getComputedStyle(e).color.replace('rgba','rgb'), rects: [...r.getClientRects()].filter(a => a.width > 0).map(a => [a.left, a.top + scrollY, a.width, a.height])}; })""")
+    ph.evaluate(HIDE); ph.screenshot(path=str(HERE / "art-only-phone.png"), full_page=True)
     b.close()
 
 full = Image.open(OUT / "preview-letter.png").convert("RGB"); art = Image.open(HERE / "art-only.png").convert("RGB")
