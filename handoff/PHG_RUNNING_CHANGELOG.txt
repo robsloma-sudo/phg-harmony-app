@@ -1237,3 +1237,16 @@ the bottom of that main viewport page. Let's simplify the whole view."
   conversation settings, Sign out, Close Harmony view.
 - Tested headless 390x844: float types/fades, 10-line cap (283 px), + sheet, typing, gear, Menu Studio,
   close; zero page errors.
+
+------------------------------------------------------------------------------
+PHG-20260928-STAR | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.18)
+Rob: "Turn the speak button into something really cool and cosmic themed."
+- Speak is now a small black hole, centred: dark event horizon with a white photon ring and corona,
+  a tilted accretion disk whose light orbits it (front half masked to cross in front of the horizon,
+  back half behind), a moon on a star-dusted orbit, gravitational-wave ripples while listening/speaking.
+  States recolour the whole object: idle cyan/violet, listening rose/gold (core swells with the voice
+  level), thinking violet with a fast disk, speaking aurora teal/lime. Label in tracked mono caps below.
+- Motion is transform/opacity only (composited); prefers-reduced-motion stops it.
+- Found while building: a global "button > b/span { align-self:center!important }" rule collapses
+  absolutely-positioned layers to zero height, and an id+id base rule outranked the state colours;
+  both handled in the star's own CSS.
