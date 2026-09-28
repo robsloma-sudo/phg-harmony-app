@@ -1,0 +1,224 @@
+{
+ "results": [
+  {
+   "file": "preview-letter.png",
+   "squint_salient_regions": 2,
+   "primary_area_pct": 24.46,
+   "primary_to_secondary": 1055.92,
+   "ground_luminance": 0.899,
+   "value_range_p5_p95": [
+    0.156,
+    0.935
+   ],
+   "accent_area_pct": 11.28,
+   "visual_centroid": [
+    0.531,
+    0.214
+   ]
+  },
+  {
+   "file": "before/preview-letter.png",
+   "squint_salient_regions": 1,
+   "primary_area_pct": 24.63,
+   "primary_to_secondary": null,
+   "ground_luminance": 0.897,
+   "value_range_p5_p95": [
+    0.164,
+    0.935
+   ],
+   "accent_area_pct": 8.37,
+   "visual_centroid": [
+    0.528,
+    0.218
+   ]
+  },
+  {
+   "file": "../explore-J4/preview-letter.png",
+   "squint_salient_regions": 1,
+   "primary_area_pct": 31.32,
+   "primary_to_secondary": null,
+   "ground_luminance": 0.901,
+   "value_range_p5_p95": [
+    0.138,
+    0.932
+   ],
+   "accent_area_pct": 29.49,
+   "visual_centroid": [
+    0.582,
+    0.274
+   ]
+  },
+  {
+   "file": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-read.png",
+   "squint_salient_regions": 7,
+   "primary_area_pct": 0.52,
+   "primary_to_secondary": 1.21,
+   "ground_luminance": 0.932,
+   "value_range_p5_p95": [
+    0.692,
+    0.935
+   ],
+   "accent_area_pct": 0.1,
+   "visual_centroid": [
+    0.366,
+    0.599
+   ]
+  },
+  {
+   "file": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-read.png",
+   "squint_salient_regions": 10,
+   "primary_area_pct": 0.52,
+   "primary_to_secondary": 1.21,
+   "ground_luminance": 0.932,
+   "value_range_p5_p95": [
+    0.642,
+    0.936
+   ],
+   "accent_area_pct": 0.63,
+   "visual_centroid": [
+    0.377,
+    0.633
+   ]
+  },
+  {
+   "file": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-lower.png",
+   "squint_salient_regions": 0,
+   "primary_area_pct": 0.0,
+   "primary_to_secondary": null,
+   "ground_luminance": 0.932,
+   "value_range_p5_p95": [
+    0.728,
+    0.935
+   ],
+   "accent_area_pct": 0.11,
+   "visual_centroid": [
+    0.46,
+    0.416
+   ]
+  },
+  {
+   "file": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-lower.png",
+   "squint_salient_regions": 0,
+   "primary_area_pct": 0.0,
+   "primary_to_secondary": null,
+   "ground_luminance": 0.932,
+   "value_range_p5_p95": [
+    0.728,
+    0.935
+   ],
+   "accent_area_pct": 0.11,
+   "visual_centroid": [
+    0.46,
+    0.416
+   ]
+  }
+ ],
+ "variant_silhouette": [
+  {
+   "a": "preview-letter.png",
+   "b": "before/preview-letter.png",
+   "silhouette_corr": 0.999
+  },
+  {
+   "a": "preview-letter.png",
+   "b": "../explore-J4/preview-letter.png",
+   "silhouette_corr": 0.538
+  },
+  {
+   "a": "preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-read.png",
+   "silhouette_corr": -0.31
+  },
+  {
+   "a": "preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-read.png",
+   "silhouette_corr": -0.353
+  },
+  {
+   "a": "preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-lower.png",
+   "silhouette_corr": -0.035
+  },
+  {
+   "a": "preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-lower.png",
+   "silhouette_corr": -0.035
+  },
+  {
+   "a": "before/preview-letter.png",
+   "b": "../explore-J4/preview-letter.png",
+   "silhouette_corr": 0.546
+  },
+  {
+   "a": "before/preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-read.png",
+   "silhouette_corr": -0.311
+  },
+  {
+   "a": "before/preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-read.png",
+   "silhouette_corr": -0.355
+  },
+  {
+   "a": "before/preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-lower.png",
+   "silhouette_corr": -0.035
+  },
+  {
+   "a": "before/preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-lower.png",
+   "silhouette_corr": -0.035
+  },
+  {
+   "a": "../explore-J4/preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-read.png",
+   "silhouette_corr": -0.366
+  },
+  {
+   "a": "../explore-J4/preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-read.png",
+   "silhouette_corr": -0.411
+  },
+  {
+   "a": "../explore-J4/preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-lower.png",
+   "silhouette_corr": -0.041
+  },
+  {
+   "a": "../explore-J4/preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-lower.png",
+   "silhouette_corr": -0.041
+  },
+  {
+   "a": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-read.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-read.png",
+   "silhouette_corr": 0.891
+  },
+  {
+   "a": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-read.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-lower.png",
+   "silhouette_corr": 0.093
+  },
+  {
+   "a": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-read.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-lower.png",
+   "silhouette_corr": 0.093
+  },
+  {
+   "a": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-read.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-lower.png",
+   "silhouette_corr": 0.021
+  },
+  {
+   "a": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-read.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-lower.png",
+   "silhouette_corr": 0.021
+  },
+  {
+   "a": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-after-lower.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J5-before-lower.png",
+   "silhouette_corr": 1.0
+  }
+ ],
+ "notes": "silhouette_corr > 0.8 = structurally similar directions (variant_silhouette_test fails)"
+}
