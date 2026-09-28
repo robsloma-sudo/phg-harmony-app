@@ -263,7 +263,7 @@ MENU = (
  + f'<p class="legal tx">{ALLERGY}</p>')
 
 U = 7  # letter baseline unit, pt
-Y0 = 35.0; WM_TOP = 33.12; AXIS = 224.5  # tuned from the render (cap alignment, wordmark axis)
+Y0 = 31.88; WM_TOP = 33.12; AXIS = 224.5  # tuned from the render (cap alignment, wordmark axis)
 CSS = f"""
 @font-face {{font-family:'Fraunces';src:url('{FONTS}/fraunces.woff2') format('woff2');font-weight:300 900;font-style:normal;font-display:block}}
 @font-face {{font-family:'Fraunces';src:url('{FONTS}/fraunces-i.woff2') format('woff2');font-weight:300 900;font-style:italic;font-display:block}}
@@ -278,7 +278,7 @@ html,body{{background:#fff}}
 .wm .big{{position:absolute;left:{AXIS}pt;top:{WM_TOP}pt;transform:translateX(-50%);writing-mode:vertical-rl;font-weight:380;font-size:96pt;line-height:74pt;letter-spacing:.075em;
   font-variation-settings:'opsz' 144, 'SOFT' 0, 'WONK' 0;color:{PAL['ink']};white-space:nowrap}}
 .wm .rl{{position:absolute;left:{AXIS}pt;bottom:36pt;transform:translateX(-50%);writing-mode:vertical-rl;font:500 8pt/12pt 'DM Sans',sans-serif;letter-spacing:.42em;color:#6E2F1D;white-space:nowrap}}
-.menu{{position:absolute;left:282pt;top:{Y0}pt;width:294pt;height:{103 * U}pt;display:flex;flex-direction:column}}
+.menu{{position:absolute;left:282pt;top:{Y0}pt;width:294pt;height:{104 * U}pt;display:flex;flex-direction:column}}
 .sec+.sec{{margin-top:{3 * U}pt}}
 .hrow{{height:{4 * U}pt;border-bottom:.75pt solid #6B5A4C;margin-bottom:{U}pt}}
 h2{{font-weight:600;font-size:17pt;line-height:{3 * U}pt;white-space:nowrap;font-variation-settings:'opsz' 36}}
@@ -288,11 +288,11 @@ h3{{font:700 9pt/{2 * U}pt 'DM Sans',sans-serif;letter-spacing:.16em;text-transf
 .item+.item{{margin-top:{U}pt}}
 .row{{display:flex;align-items:baseline;height:{2 * U}pt;white-space:nowrap}}
 .name{{font-weight:600;font-size:11pt;line-height:{2 * U}pt;font-variation-settings:'opsz' 14}}
-.item.r .name{{flex:none;width:94pt}}
+.item.r .name{{flex:none;width:100pt}}
 .dl{{font-weight:400;font-size:10.5pt;line-height:{2 * U}pt;color:#40352D;font-variation-settings:'opsz' 12}}
 .price{{font-weight:500;font-size:11pt;line-height:{2 * U}pt;color:#5A4B3F;margin-left:1em}}
 .desc{{font-weight:400;font-size:10.5pt;line-height:{2 * U}pt;color:#40352D;font-variation-settings:'opsz' 12}}
-.glass{{font:600 9pt/1 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#40352D;white-space:nowrap}}
+.glass{{font:600 9pt/1 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#40352D;white-space:nowrap;margin-left:.25em}}
 .bp,.sepp{{display:none}}
 .legal{{margin-top:auto;font-style:italic;font-weight:400;font-size:9.5pt;line-height:{2 * U}pt;color:#4F4238}}
 /* phone: one reading column on an 8 px grid; own hero and footer art */

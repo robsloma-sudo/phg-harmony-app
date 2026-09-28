@@ -1,6 +1,6 @@
 # PHG Design Intelligence — Audited Status + Controlled Benchmark Plan
 
-Version 2026-09-28.2 · for Rob Sloma · responds to handoff 2026-09-28.1 (FIRST DELIVERABLE)
+Version 2026-09-28.3 (adds script-03 results) · for Rob Sloma · responds to handoff 2026-09-28.1 (FIRST DELIVERABLE)
 Project: lqjtwabzmgjcufftuqvu (older robsloma@gmail.com's Project). Schema `phg_design`.
 **No writes, grants, migrations, paid renders or deploys were made for this audit.** Every figure below came from read-only `SELECT`s / read-only function calls run today by this agent. The handoff's D-01 note ("fresh count blocked") is now resolved: the query ran under this session's authorised connector; no security gate was bypassed.
 
@@ -55,7 +55,41 @@ All 37 DB titles were read today. They are 14 books, 8 web resources/archives (A
 
 - "Interaction of Color" appears twice, as print and as Complete Digital Edition. That is two editions, not a duplicate error, but they should be aliased (D-10).
 - The 50-entry and 20-entry lists were **not** in the uploads (files 02, 04, 05 and 09, plus visual_examples/ and media/, are missing). Line-by-line reconciliation is blocked until they arrive.
+- **Provisional reconciliation from the lists in 00 §3.2** (file 02 has not arrived, so this is by title only):
+  - **In both the lists and the DB (≈20):**
+    - MIT Art of Color, Media and Methods, Digital Typography
+    - New Basics, Primer of Visual Literacy, Graphic Design Manual, Interaction of Color (×2 editions)
+    - Thinking with Type, Elements of Typographic Style, Grid Systems, Ruder (*Typography: A Manual of Design* = *Typographie*), Designing Programmes, Vignelli Canon, Tufte VDQI
+    - Google Fonts Knowledge, Letterform Archive, Fonts In Use, AIGA Design Archives, Design Issues
+    - HIG, Material; W3C WAI ≈ "Designing for Web Accessibility" (to verify)
+  - **On the lists, not in the DB (≈30):**
+    - courses and centres: Yale S131, CalArts, BCcampus, RIT Vignelli Center, Cooper Union Lubalin
+    - books: Arnheim, Tschichold, Rand, Munari, Hara, Armstrong, Wheeler, Pater, Meggs, Berger, Lupton *Design Is Storytelling*, Tufte *Envisioning Information*, Munzner
+    - web sources: Butterick, Letterform Toolkit, Emigre, PGDA, Cooper Hewitt Bauhaus, Eye, Design Observer, readings.design
+    - journals: Visible Language, Dialectic
+    - applied systems: IBM Carbon, Atomic Design
+    - other professional-list entries: Brand New, BP&O, Eye on Design, Communication Arts, D&AD, TDC, Typographica, Dieline, It's Nice That, Creative Review
+  - **In the DB, not on the lists:**
+    - *Introduction to Graphic Design*, *Visual Communication Fundamentals*, Design Teaching Resource, *Digital Color Composition*, MIT 6.831 activity page
+    - the **9 menu-research citations**, which matches the handoff's "nine"
 - `ingestion_runs = 0` means no source has a logged read or extract. Reading completeness is "unknown", not "partial" (D-07).
+
+### 1.4b Results of handoff script 03 (groups 1–9, run read-only 2026-09-28T14:26Z as `postgres` via the Supabase connector)
+
+- **G1** — every object exists: `v_knowledge_counts`, `brief_profiles`, `phg_design_knowledge`, `phg_design_packet`.
+- **G3** — the view returns 37 / 316 / 192 / 187 / 7 / 69 / 49 / 60 / 58, with `structured_knowledge_records` = 938. This matches the checkpoint exactly.
+- **G4** — all 37 sources have `access_status = 'reference'`. Not one is marked acquired, read or blocked, so reading state is not recorded at all (D-07). Every source has a creator filled in; accuracy is unchecked (D-09).
+- **G5** — **all 69 decision rules have no principle link.** 144 of 187 principles have no source link.
+  - Principles *claiming* empirical or standard evidence but with no source: perceptual_research 7/13, academic_research 3/10, production_standard 3/3, technical_standard 1/3, human_factors 2/2, color_science 2/2.
+  - These 18 rows are the highest-priority provenance repair: each needs a citation or reclassification to `phg_synthesis`.
+- **G6** — `ingestion_runs` = 0. Cases 7/7 have `artifact_ref` NULL. visual_objects, visual_relationships, palettes, typography_profiles, composition_profiles, critiques and revision_decisions all have 0 rows.
+- **G7** — ingredient-order rule: **no match** in agent_guidance (the only hit is `hard_gates`) and none in decision_rules. The 6 matching rules (fix_remote_prices, responsive_menu_recompose, audience_specific_menu, numeric_column_figures, menu_item_block_spacing, expressive_type_boundary) cover price and description layout, not ingredient role order. **D-04 confirmed: not persisted.**
+- **G8** — 0 RLS policies and 0 forced-RLS tables. Table grants go to `postgres` only. Gateways: DEFINER, owner postgres, pinned `search_path`, EXECUTE to authenticated + service_role.
+- **G9** — `evidence_class` has **33 distinct uncontrolled values** across 187 principles (e.g. professional_education 24, phg_synthesis 21, design_theory 16, typographic_practice 16). This needs a controlled vocabulary (D-11).
+  - No duplicate concept names by normalised string. Overlaps are semantic, not lexical (D-10).
+  - Flagged variables include `value_difference` vs `luminance_contrast_ratio`, `chroma_difference` vs `image_mean_saturation`, `cielab_delta_e` (formula unspecified), `center_gravity_x/y` vs `visual_mass_x/y`, `corner_distance`, and `reading_order_confidence`. Each needs a unit, estimator and coordinate frame before any value is reported (D-12).
+- **G10–G11** — the gateways were called with test queries and returned data (§1.2). A full packet dump was not saved.
+- **G12** (full export) — **not run.** The export would pass several hundred KB through the connector. I'll run it into a dated repo snapshot if you want a portable checkpoint. It is read-only either way.
 
 ### 1.5 TEST-1 (Iowa City cantina) design loop [FILE + scores/NOTES.md]
 
