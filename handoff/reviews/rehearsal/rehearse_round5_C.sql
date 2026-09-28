@@ -961,6 +961,14 @@ $rehearse_f2$;
   END LOOP;
   r := r || jsonb_build_object('step4', jsonb_build_object('calls', calls,
      'hashed', (select count(*) from public.menu_source_candidates where item_set_hash is not null)));
-  RAISE EXCEPTION 'REHEARSAL %', r;
+  -- round 5: a compact summary first (every 'pass' flag one or two levels deep, and every timing), then the full result
+  v := jsonb_build_object('passes', (select jsonb_object_agg(k, p) from (
+          select e1.key k, e1.value->'pass' p from jsonb_each(r) e1 where jsonb_typeof(e1.value) = 'object' and e1.value ? 'pass'
+          union all
+          select e1.key || '.' || e2.key, e2.value->'pass' from jsonb_each(r) e1,
+                 jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
+           where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
+       'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
+  RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;

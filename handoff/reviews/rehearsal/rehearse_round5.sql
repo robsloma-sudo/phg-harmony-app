@@ -800,7 +800,16 @@ $rehearse_f1$;
       a := a || jsonb_build_object('ERROR_A', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
   END;
   r := r || jsonb_build_object('A', a, 'A_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
-  RAISE EXCEPTION 'REHEARSAL %', r;
+  -- round 5: a compact summary first (every 'pass' flag one or two levels deep, and every timing), then the full result
+  v := jsonb_build_object('passes', (select jsonb_object_agg(k, p) from (
+          select e1.key k, e1.value->'pass' p from jsonb_each(r) e1 where jsonb_typeof(e1.value) = 'object' and e1.value ? 'pass'
+          union all
+          select e1.key || '.' || e2.key, e2.value->'pass' from jsonb_each(r) e1,
+                 jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
+           where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
+       'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
+  v := v || jsonb_build_object('backup_service_role_can_insert', r->'A'->'backup_service_role_can_insert', 'backup_service_role_can_select', r->'A'->'backup_service_role_can_select', 'tenarg_after', r->'A'->'submit_menu_10arg_exists', 'multi_before', r->'A'->'multi_current_global_before', 'multi_end', r->'A'->'multi_current_global_end', 'reasons', (select jsonb_object_agg(e.key, e.value->>'reason') from jsonb_each(r->'A') e where jsonb_typeof(e.value)='object' and e.value ? 'status'));
+  RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;
 
@@ -1961,7 +1970,26 @@ $rehearse_mon$;
       c := c || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
   END;
   r := r || jsonb_build_object('monitor', c); c := '{}';
-  RAISE EXCEPTION 'REHEARSAL %', r;
+  -- round 5: a compact summary first (every 'pass' flag one or two levels deep, and every timing), then the full result
+  v := jsonb_build_object('passes', (select jsonb_object_agg(k, p) from (
+          select e1.key k, e1.value->'pass' p from jsonb_each(r) e1 where jsonb_typeof(e1.value) = 'object' and e1.value ? 'pass'
+          union all
+          select e1.key || '.' || e2.key, e2.value->'pass' from jsonb_each(r) e1,
+                 jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
+           where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
+       'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
+  v := v || jsonb_build_object('step2', r->'B'->'repair_run'->'step2', 'changed_by_reason', r->'B'->'changed_by_reason',
+    'touched', r->'B'->'touched_venues', 'with_pre_incident', r->'B'->'touched_with_pre_incident_menu', 'plan_rows', r->'B'->'plan_rows',
+    'damaged_saved', r->'B'->'damaged_saved', 'real_multi_current_backup_venues', r->'B'->'real_multi_current_backup_venues',
+    'current_user', r->'B'->'current_user', 'fn_execute', r->'B'->'fn_execute', 'rollback_proconfig', r->'B'->'rollback_proconfig',
+    'table_privs_select_only', not exists (select 1 from jsonb_each(r->'B'->'backup_privs_service_role') t, jsonb_each_text(t.value) pr where (pr.key = 'select') <> pr.value::boolean),
+    'tables_checked', (select jsonb_agg(key) from jsonb_each(r->'B'->'backup_privs_service_role')),
+    'extraction', r->'extraction_sibling_duplicate'->'result',
+    'monitor_post_repair', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 60), 'pass', x->'pass', 'v', x->'value')) from jsonb_array_elements(r->'monitor'->'monitor_post_repair') x),
+    'monitor_ms', r->'monitor'->'monitor_ms', 'monitor_forged', r->'monitor'->'monitor_new_rows_forged',
+    'monitor_replay', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 60), 'pass', x->'pass', 'v', x->'value')) from jsonb_array_elements(r->'monitor'->'monitor_replay_incident_window') x),
+    'windows', r->'monitor'->'menus_per_item_set_windows');
+  RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;
 
@@ -2929,7 +2957,15 @@ $rehearse_f2$;
   END LOOP;
   r := r || jsonb_build_object('step4', jsonb_build_object('calls', calls,
      'hashed', (select count(*) from public.menu_source_candidates where item_set_hash is not null)));
-  RAISE EXCEPTION 'REHEARSAL %', r;
+  -- round 5: a compact summary first (every 'pass' flag one or two levels deep, and every timing), then the full result
+  v := jsonb_build_object('passes', (select jsonb_object_agg(k, p) from (
+          select e1.key k, e1.value->'pass' p from jsonb_each(r) e1 where jsonb_typeof(e1.value) = 'object' and e1.value ? 'pass'
+          union all
+          select e1.key || '.' || e2.key, e2.value->'pass' from jsonb_each(r) e1,
+                 jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
+           where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
+       'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
+  RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;
 
@@ -4106,7 +4142,15 @@ $rehearse_rbc$ || ') g' INTO v;
       c := c || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
   END;
   r := r || jsonb_build_object('function_rollback_and_submit', c); c := '{}';
-  RAISE EXCEPTION 'REHEARSAL %', r;
+  -- round 5: a compact summary first (every 'pass' flag one or two levels deep, and every timing), then the full result
+  v := jsonb_build_object('passes', (select jsonb_object_agg(k, p) from (
+          select e1.key k, e1.value->'pass' p from jsonb_each(r) e1 where jsonb_typeof(e1.value) = 'object' and e1.value ? 'pass'
+          union all
+          select e1.key || '.' || e2.key, e2.value->'pass' from jsonb_each(r) e1,
+                 jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
+           where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
+       'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
+  RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;
 
@@ -5144,7 +5188,15 @@ $rehearse_f2$;
       c := c || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
   END;
   r := r || jsonb_build_object('function_rollback_and_submit', c); c := '{}';
-  RAISE EXCEPTION 'REHEARSAL %', r;
+  -- round 5: a compact summary first (every 'pass' flag one or two levels deep, and every timing), then the full result
+  v := jsonb_build_object('passes', (select jsonb_object_agg(k, p) from (
+          select e1.key k, e1.value->'pass' p from jsonb_each(r) e1 where jsonb_typeof(e1.value) = 'object' and e1.value ? 'pass'
+          union all
+          select e1.key || '.' || e2.key, e2.value->'pass' from jsonb_each(r) e1,
+                 jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
+           where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
+       'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
+  RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;
 
@@ -5423,7 +5475,15 @@ $rehearse_f3$;
       GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
       r := r || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
   END;
-  RAISE EXCEPTION 'REHEARSAL %', r;
+  -- round 5: a compact summary first (every 'pass' flag one or two levels deep, and every timing), then the full result
+  v := jsonb_build_object('passes', (select jsonb_object_agg(k, p) from (
+          select e1.key k, e1.value->'pass' p from jsonb_each(r) e1 where jsonb_typeof(e1.value) = 'object' and e1.value ? 'pass'
+          union all
+          select e1.key || '.' || e2.key, e2.value->'pass' from jsonb_each(r) e1,
+                 jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
+           where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
+       'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
+  RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;
 
@@ -6552,6 +6612,14 @@ $rehearse_rbc$ || ') g' INTO v;
         and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = skip_acct and x->>'review_reason' = 'skipped_newer_menu')
         and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = multi_acct and x->>'review_reason' = 'skipped_multi_current_backup')
         and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = stg_acct and x->>'review_reason' = 'staging_page_not_restored'));
-  RAISE EXCEPTION 'REHEARSAL %', r;
+  -- round 5: a compact summary first (every 'pass' flag one or two levels deep, and every timing), then the full result
+  v := jsonb_build_object('passes', (select jsonb_object_agg(k, p) from (
+          select e1.key k, e1.value->'pass' p from jsonb_each(r) e1 where jsonb_typeof(e1.value) = 'object' and e1.value ? 'pass'
+          union all
+          select e1.key || '.' || e2.key, e2.value->'pass' from jsonb_each(r) e1,
+                 jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
+           where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
+       'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
+  RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;

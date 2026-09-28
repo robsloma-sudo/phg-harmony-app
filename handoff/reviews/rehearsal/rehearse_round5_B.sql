@@ -1154,6 +1154,25 @@ $rehearse_mon$;
       c := c || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
   END;
   r := r || jsonb_build_object('monitor', c); c := '{}';
-  RAISE EXCEPTION 'REHEARSAL %', r;
+  -- round 5: a compact summary first (every 'pass' flag one or two levels deep, and every timing), then the full result
+  v := jsonb_build_object('passes', (select jsonb_object_agg(k, p) from (
+          select e1.key k, e1.value->'pass' p from jsonb_each(r) e1 where jsonb_typeof(e1.value) = 'object' and e1.value ? 'pass'
+          union all
+          select e1.key || '.' || e2.key, e2.value->'pass' from jsonb_each(r) e1,
+                 jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
+           where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
+       'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
+  v := v || jsonb_build_object('step2', r->'B'->'repair_run'->'step2', 'changed_by_reason', r->'B'->'changed_by_reason',
+    'touched', r->'B'->'touched_venues', 'with_pre_incident', r->'B'->'touched_with_pre_incident_menu', 'plan_rows', r->'B'->'plan_rows',
+    'damaged_saved', r->'B'->'damaged_saved', 'real_multi_current_backup_venues', r->'B'->'real_multi_current_backup_venues',
+    'current_user', r->'B'->'current_user', 'fn_execute', r->'B'->'fn_execute', 'rollback_proconfig', r->'B'->'rollback_proconfig',
+    'table_privs_select_only', not exists (select 1 from jsonb_each(r->'B'->'backup_privs_service_role') t, jsonb_each_text(t.value) pr where (pr.key = 'select') <> pr.value::boolean),
+    'tables_checked', (select jsonb_agg(key) from jsonb_each(r->'B'->'backup_privs_service_role')),
+    'extraction', r->'extraction_sibling_duplicate'->'result',
+    'monitor_post_repair', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 60), 'pass', x->'pass', 'v', x->'value')) from jsonb_array_elements(r->'monitor'->'monitor_post_repair') x),
+    'monitor_ms', r->'monitor'->'monitor_ms', 'monitor_forged', r->'monitor'->'monitor_new_rows_forged',
+    'monitor_replay', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 60), 'pass', x->'pass', 'v', x->'value')) from jsonb_array_elements(r->'monitor'->'monitor_replay_incident_window') x),
+    'windows', r->'monitor'->'menus_per_item_set_windows');
+  RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;

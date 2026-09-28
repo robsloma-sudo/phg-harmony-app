@@ -799,6 +799,15 @@ $rehearse_f1$;
       a := a || jsonb_build_object('ERROR_A', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
   END;
   r := r || jsonb_build_object('A', a, 'A_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
-  RAISE EXCEPTION 'REHEARSAL %', r;
+  -- round 5: a compact summary first (every 'pass' flag one or two levels deep, and every timing), then the full result
+  v := jsonb_build_object('passes', (select jsonb_object_agg(k, p) from (
+          select e1.key k, e1.value->'pass' p from jsonb_each(r) e1 where jsonb_typeof(e1.value) = 'object' and e1.value ? 'pass'
+          union all
+          select e1.key || '.' || e2.key, e2.value->'pass' from jsonb_each(r) e1,
+                 jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
+           where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
+       'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
+  v := v || jsonb_build_object('backup_service_role_can_insert', r->'A'->'backup_service_role_can_insert', 'backup_service_role_can_select', r->'A'->'backup_service_role_can_select', 'tenarg_after', r->'A'->'submit_menu_10arg_exists', 'multi_before', r->'A'->'multi_current_global_before', 'multi_end', r->'A'->'multi_current_global_end', 'reasons', (select jsonb_object_agg(e.key, e.value->>'reason') from jsonb_each(r->'A') e where jsonb_typeof(e.value)='object' and e.value ? 'status'));
+  RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;
