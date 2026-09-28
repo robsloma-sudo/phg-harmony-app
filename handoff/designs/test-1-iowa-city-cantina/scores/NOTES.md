@@ -242,3 +242,26 @@ Findings:
   - Next: port the proven KB content wins onto the round-17 base (bilingual H2+H3, serve facts as one glass rule, one inline price rhythm, the missing-data table, a generic allergen line, 12 px+ labels).
   - Then run a full panel.
   - Raster art only after the Canva hosts are allowed.
+
+## Full 15-reviewer panel on round 19 (r17 base + KB content wins)
+- Critic: 67.7 grid / 70.3 type / 71.2 palette / 73.1 concept / 72.4 phone. Mean 70.9.
+- Content: 78.8 prices / 80.2 descriptions / 76.0 flow / 77.8 voice / 72.4 missing data. Mean 77.0, the best content mean so far.
+- Accuracy: 62.0 trace / 62.8 voice / 67.8 venue / 60.0 print / 58.8 phone. Mean 62.3.
+- Combined 70.1.
+- Three accuracy reviewers failed content_integrity over Junmai Ginjo. phg.menu_items has status='retired' for it (verified by query), so omitting it is correct. The failures are false positives. The next proposal must cite the retired status.
+
+Round-20 fixes, requested by several reviewers:
+- Prices inline, about 1 em after the text, same size as names or muted, no leaders.
+- Item names in title case, not tracked caps.
+- Bilingual heads at equal status: Spanish in italic, English in roman, same ink and weight.
+- Agave and Brandy follow the pattern.
+- Spirits: name + price only (no echo lines).
+- "rye whiskey".
+- "house demerara syrup" on both cocktails (the OF component role is House prep).
+- Drop "draft" from the IPA line.
+- Glass labels get their own quiet slot, not joined by "·".
+- Margarita tasting note in the same voice.
+- Balanced ingredient breaks.
+- Art: torn-paper Iowa strata (loess bluffs or corn rows) under the agave.
+- One grain treatment on all shapes (no speckle sun).
+- Phone hero: its own crop with the torn edge and a footer.

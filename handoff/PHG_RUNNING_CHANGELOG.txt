@@ -1030,3 +1030,5 @@ tough scale (best).
 - TEST-1 full panel on I8: 68.1 (critic 68.1, content 73.9, accuracy 62.2). One gate failed on phone: 10 px serve labels in dim light.
   - Standings: round 17 at 74.1 is still the best, then I5 at 70.1.
   - Recommendation: port the KB content wins onto the round-17 base, not more code-art iterations.
+- TEST-1 round 19 (round 17 + KB content wins) full panel: 70.1 (critic 70.9, content 77.0, the best yet; accuracy 62.3).
+  Junmai Ginjo is status='retired' in phg.menu_items, so omitting it is correct. The 3 accuracy gate fails on it were false positives.
