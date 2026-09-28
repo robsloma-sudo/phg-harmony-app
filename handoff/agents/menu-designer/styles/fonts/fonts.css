@@ -1,0 +1,13 @@
+/* Latin subsets from Google Fonts (SIL OFL). Stand-ins for Georgia, Avenir, Trebuchet in previews. */
+@font-face{font-family:'Gelasio';font-style:italic;font-weight:400;src:url('Gelasio-400i.woff2') format('woff2');}
+@font-face{font-family:'Gelasio';font-style:italic;font-weight:700;src:url('Gelasio-700i.woff2') format('woff2');}
+@font-face{font-family:'Gelasio';font-style:normal;font-weight:400;src:url('Gelasio-400.woff2') format('woff2');}
+@font-face{font-family:'Gelasio';font-style:normal;font-weight:700;src:url('Gelasio-700.woff2') format('woff2');}
+@font-face{font-family:'Nunito Sans';font-style:italic;font-weight:400;src:url('NunitoSans-400i.woff2') format('woff2');}
+@font-face{font-family:'Nunito Sans';font-style:italic;font-weight:700;src:url('NunitoSans-700i.woff2') format('woff2');}
+@font-face{font-family:'Nunito Sans';font-style:normal;font-weight:400;src:url('NunitoSans-400.woff2') format('woff2');}
+@font-face{font-family:'Nunito Sans';font-style:normal;font-weight:700;src:url('NunitoSans-700.woff2') format('woff2');}
+@font-face{font-family:'Fira Sans';font-style:italic;font-weight:400;src:url('FiraSans-400i.woff2') format('woff2');}
+@font-face{font-family:'Fira Sans';font-style:italic;font-weight:700;src:url('FiraSans-700i.woff2') format('woff2');}
+@font-face{font-family:'Fira Sans';font-style:normal;font-weight:400;src:url('FiraSans-400.woff2') format('woff2');}
+@font-face{font-family:'Fira Sans';font-style:normal;font-weight:700;src:url('FiraSans-700.woff2') format('woff2');}
