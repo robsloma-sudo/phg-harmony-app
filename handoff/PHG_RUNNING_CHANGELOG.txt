@@ -1558,3 +1558,12 @@ cosmic viewport sort of thing or a black hole or something like that?"
   Show notification [Dictionary Value] (Title "Harmony" chip, Attachment Orb) before Speak. Chips: orb URL, Orb,
   Harmony added. 375 px check: no overflow, zero page errors.
 - DEPLOY NOTE: img/harmony-orb.gif must be pushed to main with index.html.
+
+------------------------------------------------------------------------------
+PHG-20260928-INBOXFIELD | USER_PROMPT + FIX | 2026-09-28 (phg-harmony-inbox v6 live)
+Rob: "She's saying she's not getting any words."
+- Logs after v5: Shortcut bodies 38-49 bytes (vary with speech, so words are sent) and every reply 189 bytes, which
+  matches the "I received <one field name ~16 chars>" message: the words arrive under a field not named "text".
+- v6: the words are taken from text/input/query/prompt/message/"dictated text", else the longest filled-in text field,
+  else a field NAME containing spaces (words typed as the key). Logs field names and text length only (never the
+  words) so the next failure can be read from function_logs.

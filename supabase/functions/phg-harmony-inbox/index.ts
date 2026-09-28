@@ -201,7 +201,21 @@ Deno.serve(async (req) => {
 
   // ---- inbox: one spoken sentence from the Shortcut (or the app)
   if (action !== "inbox") return json({ ok: false, error: "unknown action" }, 400);
-  const text = String(b.text || b.input || "").trim().slice(0, 2000);
+  /* v6: take the words from whatever field the Shortcut used. Prefer the usual names, then any
+     other filled-in text field; if the words ended up as a field NAME (empty value), use that. */
+  const RESERVED = new Set(["key", "action", "tz", "account_id", "kind", "tags", "due_iso", "limit", "open_only", "id", "done", "name"]);
+  const others = Object.entries(b).filter(([k]) => !RESERVED.has(k));
+  const pick = () => {
+    for (const k of ["text", "input", "query", "prompt", "message", "dictated text", "dictated_text", "words", "q"]) {
+      if (typeof b[k] === "string" && b[k].trim()) return b[k];
+    }
+    const filled = others.filter(([, v]) => typeof v === "string" && v.trim()).sort((x, y) => String(y[1]).length - String(x[1]).length);
+    if (filled.length) return String(filled[0][1]);
+    const named = others.map(([k]) => k).filter((k) => /\s/.test(k)).sort((x, y) => y.length - x.length);
+    return named[0] || "";
+  };
+  const text = String(pick()).trim().slice(0, 2000);
+  console.log(JSON.stringify({ inbox: via, fields: Object.keys(b).filter((k) => k !== "key"), text_len: text.length }));
   if (!text) {
     const fields = Object.keys(b).filter((k) => k !== "key");
     return json({ ok: true, route: "answer", url: "", speak: fields.length
