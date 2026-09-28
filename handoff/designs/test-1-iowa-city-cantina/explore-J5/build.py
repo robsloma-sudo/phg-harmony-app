@@ -135,10 +135,12 @@ def beer_cider_html(measures):
 
 # ---- ART (raster) ----------------------------------------------------------------------------------------------
 def flags():
-    f = dict(grain=True, misreg=True, density=True, piercings=True, picos=True, seams=True, posts=True,
-             leg=True, gallery=True, caps=True, headhouse_gap=True, band_top_rule=True)
+    f = dict(grain=True, misreg=True, density=True, piercings=True, piercing_dots=True, picos=True, seams=True,
+             posts=True, leg=True, leg_roof=True, gallery=True, caps=True, headhouse_gap=True, band_top_rule=True,
+             amber_pinholes=True)
     if not BEFORE:
-        f.update(density=False, band_top_rule=False, posts=False)
+        f.update(density=False, band_top_rule=False, posts=False, piercing_dots=False, leg_roof=False,
+                 amber_pinholes=False)
     for k in filter(None, os.environ.get("J5_ABL", "").split(",")):
         f[k] = False
     return f
@@ -168,7 +170,7 @@ def draw_art(W, H, s, Hz, G, P, F, safe_boxes, seed=5):
         x, k = -B + pico / 2, 0
         cy = G + bh * 0.52
         while x < W + B:
-            if k % 2 == 0:
+            if k % 2 == 0 or not F["piercing_dots"]:
                 r = P["rombo"]
                 da.polygon([(S(x), S(cy - r)), (S(x + r * 0.62), S(cy)), (S(x), S(cy + r)), (S(x - r * 0.62), S(cy))], fill=0)
             else:
@@ -184,7 +186,8 @@ def draw_art(W, H, s, Hz, G, P, F, safe_boxes, seed=5):
     if F["leg"]:
         lx, lw, lh = hx + P["leg_off"], P["leg_w"], P["leg_h"]
         dk.rectangle([S(lx), S(ht - lh), S(lx + lw), S(ht)], fill=255)                    # leg housing
-        dk.polygon([(S(lx - 2), S(ht - lh)), (S(lx + lw / 2), S(ht - lh - P["leg_roof"])), (S(lx + lw + 2), S(ht - lh))], fill=255)
+        if F["leg_roof"]:
+            dk.polygon([(S(lx - 2), S(ht - lh)), (S(lx + lw / 2), S(ht - lh - P["leg_roof"])), (S(lx + lw + 2), S(ht - lh))], fill=255)
     bx0 = hx + hw + (P["hgap"] if F["headhouse_gap"] else 0)
     bw, bt, cap = P["bin_w"], P["bin_top"], P["cap_h"]
     x = bx0
@@ -202,6 +205,8 @@ def draw_art(W, H, s, Hz, G, P, F, safe_boxes, seed=5):
             x += bw
     if F["gallery"]:
         gy, gh = P["gal_y"], P["gal_h"]
+        if not F["posts"]:
+            gy = bt - cap - gh + 1
         dk.rectangle([S(hx + hw - 1), S(gy), S(W + B), S(gy + gh)], fill=255)
         if F["posts"]:
             for cx in tops:
@@ -239,7 +244,7 @@ def draw_art(W, H, s, Hz, G, P, F, safe_boxes, seed=5):
 
     if F["grain"]:
         n = grain(n, 0.0, 0.10)       # navy: mottling only, no pinholes (type sits on it)
-        a = grain(a, 0.008, 0.10)
+        a = grain(a, 0.008 if F["amber_pinholes"] else 0.0, 0.10)
     paper = np.array(PAPER, np.float32) / 255
     img = np.ones((Hp, Wp, 3), np.float32) * paper
     for cov, ink in ((a, AMBER), (n, NAVY)):     # multiply overprint, amber pass first

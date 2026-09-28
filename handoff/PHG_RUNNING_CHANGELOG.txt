@@ -1017,3 +1017,6 @@ tough scale (best).
     - These give the spirits descriptions without the name echo.
   - J5: a true side-profile elevator, a papel-picado or greca light edge in place of the borrowed stair, and procedural riso grain.
   - I5: our own palette and concept in place of ref-02 panel 3 green/gold, cleaner engraving, fixed axis and margins.
+- Canva connector now works: generate-image succeeded (media MAHWfVrWbfs, an agave engraving on loam with roots, text-free). The container can still only download the 149x199 thumbnail.
+  media.canva.com, export-download.canva.com and www.canva.com all return 403 from the environment network policy.
+  Asked Rob to add those hosts under the environment's Network access.
