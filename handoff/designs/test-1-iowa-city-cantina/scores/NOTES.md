@@ -33,3 +33,16 @@ Round 12 builds from round 11. Round-12 fixes:
 - Order: Margarita first, agave card top-right.
 - Card numbers are distinct from prices.
 - Use Spanish-first subheads.
+
+## Round 12 (verse fixed, TBC removed, spirits name-only, beer/spirits cards swapped)
+Combined 71.434, which ties round 11 exactly (critic 73.0, content 72.1, accuracy 69.2). Not an improvement.
+- Accuracy rose from 64.4 to 69.2 because the "TBC" proof note came off the guest print.
+- Content and critic fell because of the name-only spirits and 84 pt of empty space in El Barril.
+Coordinator finding: build/draft_doc.json DOES have a "Draft" subhead for all three beers, a "By the Glass" subhead for Malbec and Pinot Grigio, and a "Sparkling" subhead for Brut Rosé.
+- The round-11 reviewer's claim that "draft" was unsupported was wrong.
+- These are sourced labels and answer part of criterion 14.
+Round 13 builds from round 12:
+- Restore the draft spirit lines.
+- Restore the sourced Draft and By the Glass subheads, written bilingually.
+- Put the agave card back at top right.
+- Use one bilingual pattern.
