@@ -6624,6 +6624,11 @@ $rehearse_rbc$ || ') g' INTO v;
                  jsonb_each(case when jsonb_typeof(e1.value) = 'object' then e1.value else '{}'::jsonb end) e2
            where jsonb_typeof(e2.value) = 'object' and e2.value ? 'pass') x),
        'ms', (select jsonb_object_agg(key, value) from jsonb_each(r) where key ~ '_ms$'));
+  v := v || jsonb_build_object('G_review_list_pass', r->'G_review_list_pass', 'G_rollback', r->'G'->'rollback', 'G_accts', jsonb_build_object('skip', skip_acct, 'multi', multi_acct, 'stg', stg_acct, 'stg_rows', n2),
+    'G_flags', (r->'G') - 'rollback' - 'submit' - 'skipped_accounts',
+    'rollback_check', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 70), 'pass', x->'pass', 'v', left(x->>'value', 200))) from jsonb_array_elements(r->'rollback_check'->'checks') x),
+    'review_candidates_n', r->'rollback_check'->'review_candidates_n',
+    'review_first10', (select jsonb_agg(x) from (select x from jsonb_array_elements(r->'rollback_check'->'review_candidates') x limit 10) y));
   RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;

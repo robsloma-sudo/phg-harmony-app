@@ -773,7 +773,12 @@ G = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse
   r := r || jsonb_build_object('G_review_list_pass', coalesce((r->'rollback_check'->>'checks_all_pass')::boolean, false)
         and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = skip_acct and x->>'review_reason' = 'skipped_newer_menu')
         and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = multi_acct and x->>'review_reason' = 'skipped_multi_current_backup')
-        and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = stg_acct and x->>'review_reason' = 'staging_page_not_restored'));""" + END
+        and exists (select 1 from jsonb_array_elements(r->'rollback_check'->'review_candidates') x where x->>'account_id' = stg_acct and x->>'review_reason' = 'staging_page_not_restored'));""" + END.replace("  RAISE EXCEPTION 'REHEARSAL SUMMARY", """  v := v || jsonb_build_object('G_review_list_pass', r->'G_review_list_pass', 'G_rollback', r->'G'->'rollback', 'G_accts', jsonb_build_object('skip', skip_acct, 'multi', multi_acct, 'stg', stg_acct, 'stg_rows', n2),
+    'G_flags', (r->'G') - 'rollback' - 'submit' - 'skipped_accounts',
+    'rollback_check', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 70), 'pass', x->'pass', 'v', left(x->>'value', 200))) from jsonb_array_elements(r->'rollback_check'->'checks') x),
+    'review_candidates_n', r->'rollback_check'->'review_candidates_n',
+    'review_first10', (select jsonb_agg(x) from (select x from jsonb_array_elements(r->'rollback_check'->'review_candidates') x limit 10) y));
+  RAISE EXCEPTION 'REHEARSAL SUMMARY""")
 
 blocks = {'A': A, 'B': B, 'C': C, 'D': D, 'E': E, 'F': F, 'G': G}
 allsql = []
