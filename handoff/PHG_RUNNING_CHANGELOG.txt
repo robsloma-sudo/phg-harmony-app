@@ -1069,3 +1069,5 @@ tough scale (best).
   torn-paper Iowa strata; phone hero; all measured gates pass; accent 7.56%). Review before panel: it violates Rob's
   item stack (the Margarita descriptor sits after the ingredients) and the ingredient role order (garnish inside the
   lists; citrus before sweetener). Not paneled; sent back as round-20b with DB-role ordering and garnish separated.
+2026-09-28 — TEST-1 round-20b full panel: critic 68.5 / content 74.6 / accuracy 66.2 / combined 69.8; 15/15 gates pass.
+  r17 (74.1) stays the best checkpoint. Consensus fixes are logged in scores/NOTES.md and round 21 is launched.

@@ -265,3 +265,28 @@ Round-20 fixes, requested by several reviewers:
 - Art: torn-paper Iowa strata (loess bluffs or corn rows) under the agave.
 - One grain treatment on all shapes (no speckle sun).
 - Phone hero: its own crop with the torn edge and a footer.
+
+## Round 20b full panel (2026-09-28)
+critic 68.5 · content 74.6 · accuracy 66.2 · combined 69.8. 15/15 gates pass. r17 (74.1) remains best.
+Consensus across reviewers (number of reviewers raising each):
+- two price grammars (price after the name in cocktails and spirits, after the descriptor in beer and wine;
+  price right-edge spread 136 pt): 15/15
+- Fraunces italic 'l' reads as a long-s ('Cócteſes', 'Destiſados'); verified at full resolution: 6
+- 'BRANDY · BRANDY' / 'DESTILADOS DE AGAVE' under 'Destilados' / 'SIDRA' under 'Cerveza y Sidra' redundancies: 12
+- Old Fashioned 'aromatic bitters' widow with the separator lost at the break: 9
+- beer and wine descriptors echo the name ('hop-forward IPA', 'dry red wine'): 10. They are the DB menu_description.
+- lone italic sensory line (Margarita only) looks accidental: 6
+- dead right third / H2 rules longer than the text: 5 (all critics)
+- serve line (DM Sans tracked caps) is the same treatment as the H3s: 1
+- prices in the same muted ink as descriptions: 2
+- art reads as generic Southwest, and Iowa is not structural: 3 critics
+- paperwork: proposal needs_input 13 and 21 pt notes are stale: 2
+Round-21 plan:
+- one item grammar everywhere: name + price / italic sensory line (beer and wine descriptors move there, sourced
+  menu_description) / ingredients / garnish·glass
+- WONK off; dedupe the H3s
+- rebreak the Old Fashioned keeping the separator
+- rules to the content measure
+- serve line in Fraunces small caps
+- prices a weight step up in agave green
+- fix the paperwork
