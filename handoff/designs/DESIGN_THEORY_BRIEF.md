@@ -57,3 +57,10 @@ All ten panels of ref-02 and most of ref-03 share one grammar; only the art gest
 7. Art: no raster until `media.canva.com` is allowed. Use gestures that code can execute at reference craft —
    monumental type, flat geometric abstraction, a single disciplined line drawing with one stroke weight — never
    multi-object hand-drawn scenes.
+
+## 5. Corrections after the G-J screening (binding from round 2 on)
+- **Prices**: set each price inline, a short hop (~1 em) after its name. Use a lighter weight or the muted ink so that "Cognac VSOP 18" never reads as an age statement. No row may exceed 40% eye travel on letter or phone.
+- **Descriptions**: use the draft's full description text, and keep the style words even where they partly echo the name ("Toasty amber lager", "Dry sparkling rosé", "Hop-forward draft IPA"). "Pour" in the spirits descriptions is a sourced serve label, so print it. For cocktails, use the full component names ("fresh lime juice", "agave syrup", "demerara syrup" everywhere) plus the garnish from phg.recipe_versions. Keep the Margarita's "Bright and citrus-forward".
+- **Order**: put the Margarita first, and place Spirits/Agave before Wine. Keep the draft's Agave/Brandy sub heads.
+- **No borrowed taglines.**
+- **Ownable concept**: the gesture must fail the substitution test with any other bar. Fuse Mexico and Iowa City in the idea itself, not in labels.

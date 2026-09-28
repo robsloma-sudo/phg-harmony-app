@@ -119,3 +119,14 @@ Consensus fixes for round 18:
 - (i) Give Cider its own header again.
 - (j) Machine-readable meta.missing per item.
 - (k) Prices in a palette colour with stronger leaders.
+
+## KB rebuild screening (explore G-J, 1 critic + 1 content + 1 accuracy each)
+G Monument 63.5 (60.4/70.8/59.4) · H Sun & Terrace 61.1 (57.0/65.6/60.6) · I Night Field 65.4 (65.4/69.2/61.6) · J Horizon 66.3 (58.0/75.4/65.4).
+All are below the round-17 best of 74.1. Price-association gate fails on G, H and I. The unanimous causes are:
+1. Remote prices. My brief banned leaders, and the price track was sized to the longest name, so 10-13 of 14 rows exceed 40% eye travel.
+2. Thin descriptions. My "no name echo" rule cut the draft down to one-word stubs and blank spirits. This is the same mistake as round 18.
+3. Menus copy the reference panels and are not ownable. They fail the substitution test and have no Mexico x Iowa City idea.
+4. Venue order. The Manhattan leads, and agave sits below wine; H dropped the Agave sub head.
+5. The "Good drinks / Good people" tagline is costume.
+6. Garnishes from recipe_versions are unused. "agave" is ambiguous (should be agave syrup), and demerara/demerara syrup is inconsistent.
+Data drift: phg.menu_items has Junmai Ginjo (12), which is not in draft rev 3. Flagged to Rob.
