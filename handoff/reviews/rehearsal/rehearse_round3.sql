@@ -3,7 +3,7 @@ DO $rehearse_main$
 DECLARE
   r jsonb := '{}'; a jsonb := '{}'; b jsonb := '{}'; c jsonb := '{}'; v jsonb; res jsonb;
   t0 timestamptz; t1 timestamptz; acct text := 'ACC-CO-LED-03-25486'; orig_url text;
-  cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x bigint;
+  cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x uuid;
   rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
   e_state text; e_msg text; e_ctx text; e_det text;
 BEGIN
@@ -502,7 +502,7 @@ revoke all on function public.phg_save_menu_candidate_extraction(bigint,timestam
 $rehearse_f1$;
   EXCEPTION WHEN others THEN 
     GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file1','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx,'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
+    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file1','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',right(e_ctx, 600),'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
   END;
   r := r || jsonb_build_object('file1_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
   t0 := clock_timestamp();
@@ -652,7 +652,7 @@ DO $rehearse_main$
 DECLARE
   r jsonb := '{}'; a jsonb := '{}'; b jsonb := '{}'; c jsonb := '{}'; v jsonb; res jsonb;
   t0 timestamptz; t1 timestamptz; acct text := 'ACC-CO-LED-03-25486'; orig_url text;
-  cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x bigint;
+  cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x uuid;
   rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
   e_state text; e_msg text; e_ctx text; e_det text;
 BEGIN
@@ -1151,7 +1151,7 @@ revoke all on function public.phg_save_menu_candidate_extraction(bigint,timestam
 $rehearse_f1$;
   EXCEPTION WHEN others THEN 
     GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file1','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx,'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
+    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file1','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',right(e_ctx, 600),'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
   END;
   r := r || jsonb_build_object('file1_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
   t0 := clock_timestamp();
@@ -1452,7 +1452,7 @@ revoke all on function public.phg_repair_20260927_rollback() from public, anon, 
 $rehearse_f2$;
   EXCEPTION WHEN others THEN 
     GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file2','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx,'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
+    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file2','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',right(e_ctx, 600),'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
   END;
   r := r || jsonb_build_object('file2_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
   t0 := clock_timestamp();
@@ -1546,7 +1546,7 @@ DO $rehearse_main$
 DECLARE
   r jsonb := '{}'; a jsonb := '{}'; b jsonb := '{}'; c jsonb := '{}'; v jsonb; res jsonb;
   t0 timestamptz; t1 timestamptz; acct text := 'ACC-CO-LED-03-25486'; orig_url text;
-  cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x bigint;
+  cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x uuid;
   rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
   e_state text; e_msg text; e_ctx text; e_det text;
 BEGIN
@@ -2045,7 +2045,7 @@ revoke all on function public.phg_save_menu_candidate_extraction(bigint,timestam
 $rehearse_f1$;
   EXCEPTION WHEN others THEN 
     GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file1','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx,'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
+    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file1','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',right(e_ctx, 600),'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
   END;
   r := r || jsonb_build_object('file1_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
   t0 := clock_timestamp();
@@ -2346,7 +2346,7 @@ revoke all on function public.phg_repair_20260927_rollback() from public, anon, 
 $rehearse_f2$;
   EXCEPTION WHEN others THEN 
     GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file2','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx,'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
+    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file2','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',right(e_ctx, 600),'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
   END;
   r := r || jsonb_build_object('file2_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
   -- Step 3: phg_repair_step3_batch(100) until done, the time budget, or the call cap
@@ -2378,7 +2378,7 @@ DO $rehearse_main$
 DECLARE
   r jsonb := '{}'; a jsonb := '{}'; b jsonb := '{}'; c jsonb := '{}'; v jsonb; res jsonb;
   t0 timestamptz; t1 timestamptz; acct text := 'ACC-CO-LED-03-25486'; orig_url text;
-  cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x bigint;
+  cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x uuid;
   rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
   e_state text; e_msg text; e_ctx text; e_det text;
 BEGIN
@@ -2877,7 +2877,7 @@ revoke all on function public.phg_save_menu_candidate_extraction(bigint,timestam
 $rehearse_f1$;
   EXCEPTION WHEN others THEN 
     GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file1','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx,'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
+    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file1','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',right(e_ctx, 600),'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
   END;
   r := r || jsonb_build_object('file1_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
   t0 := clock_timestamp();
@@ -3178,7 +3178,7 @@ revoke all on function public.phg_repair_20260927_rollback() from public, anon, 
 $rehearse_f2$;
   EXCEPTION WHEN others THEN 
     GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file2','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx,'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
+    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file2','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',right(e_ctx, 600),'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
   END;
   r := r || jsonb_build_object('file2_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
   -- Step 3: phg_repair_step3_batch(100) until done, the time budget, or the call cap

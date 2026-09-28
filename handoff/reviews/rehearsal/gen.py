@@ -30,7 +30,7 @@ SIB_ID, CAND_ID = 515238, 13965
 def err(stage, into='r'):
     return f"""
     GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
-    RAISE EXCEPTION 'REHEARSAL %', {into} || jsonb_build_object('stage','{stage}','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx,'ms',{MS});"""
+    RAISE EXCEPTION 'REHEARSAL %', {into} || jsonb_build_object('stage','{stage}','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',right(e_ctx, 600),'ms',{MS});"""
 
 
 def soft_err(key, into):
@@ -74,7 +74,7 @@ DECL = f"""DO $rehearse_main$
 DECLARE
   r jsonb := '{{}}'; a jsonb := '{{}}'; b jsonb := '{{}}'; c jsonb := '{{}}'; v jsonb; res jsonb;
   t0 timestamptz; t1 timestamptz; acct text := '{ACCT}'; orig_url text;
-  cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x bigint;
+  cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x uuid;
   rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
   e_state text; e_msg text; e_ctx text; e_det text;
 BEGIN
