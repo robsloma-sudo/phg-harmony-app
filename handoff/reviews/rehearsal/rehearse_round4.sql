@@ -4825,11 +4825,12 @@ $rehearse_f3$;
       update phg.menu_design_proposals set layout = null where id = pid;
       v := v || jsonb_build_object('approve_layout_null', public.phg_design_proposal_review(pid, true));
       update phg.menu_design_proposals set layout = '{"page":{"w":612}}' where id = pid;
-      v := v || jsonb_build_object('approve_layout_no_elements', public.phg_design_proposal_review(pid, true),
-                                   'status_after_blocked', (select status from phg.menu_design_proposals where id = pid));
+      v := v || jsonb_build_object('approve_layout_no_elements', public.phg_design_proposal_review(pid, true));
+      v := v || jsonb_build_object('status_after_blocked', (select status from phg.menu_design_proposals where id = pid));
       update phg.menu_design_proposals set layout = dlayout where id = pid;
-      v := v || jsonb_build_object('approve_ok', public.phg_design_proposal_review(pid, true),
-                                   'status_after_approve', (select status from phg.menu_design_proposals where id = pid));
+      v := v || jsonb_build_object('approve_ok', public.phg_design_proposal_review(pid, true));
+      -- read in a separate statement: a read in the same statement as the call sees the statement's snapshot
+      v := v || jsonb_build_object('status_after_approve', (select status from phg.menu_design_proposals where id = pid));
       v := v || jsonb_build_object('pass', v->>'submit_null_layout' = 'auto_rejected' and v->>'submit_with_layout' = 'submitted'
         and v->'approve_accuracy_at_80'->>'status' = 'blocked_by_score_gate' and (v->'approve_accuracy_at_80'->>'accuracy_reviewer')::numeric = 80
         and v->'approve_layout_null'->>'status' = 'blocked_by_layout_gate' and v->'approve_layout_no_elements'->>'status' = 'blocked_by_layout_gate'

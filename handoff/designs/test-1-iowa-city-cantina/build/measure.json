@@ -11,9 +11,9 @@
     "featured": true,
     "box": {
      "x": 48,
-     "y": 176,
+     "y": 140,
      "w": 352,
-     "h": 832
+     "h": 880
     },
     "padding_px": {
      "left": 0,
@@ -24,38 +24,38 @@
     "border_px": 2,
     "face": {
      "x": 50,
-     "y": 178,
+     "y": 142,
      "w": 348,
-     "h": 494
+     "h": 542
     },
     "fig_svg": {
      "x": 74,
-     "y": 242,
+     "y": 206,
      "w": 300,
-     "h": 374
+     "h": 422
     },
     "rows": [
      {
       "x": 64,
-      "y": 704,
+      "y": 732,
       "w": 320,
       "h": 16
      },
      {
       "x": 64,
-      "y": 784,
+      "y": 796,
       "w": 320,
       "h": 16
      },
      {
       "x": 64,
-      "y": 864,
+      "y": 892,
       "w": 320,
       "h": 16
      },
      {
       "x": 64,
-      "y": 944,
+      "y": 956,
       "w": 320,
       "h": 16
      }
@@ -63,13 +63,13 @@
     "subboxes": [
      {
       "x": 64,
-      "y": 688,
+      "y": 700,
       "w": 320,
       "h": 16
      },
      {
       "x": 64,
-      "y": 848,
+      "y": 860,
       "w": 320,
       "h": 16
      }
@@ -78,7 +78,7 @@
     "name": {
      "text": "EL CANTARITO",
      "x": 82.3125,
-     "y": 635,
+     "y": 647,
      "w": 217.90625,
      "h": 26,
      "lines": 1
@@ -86,7 +86,7 @@
     "verse": {
      "text": "Tanto va el cántaro al agua, que se quiebra y te moja las enaguas.",
      "x": 118.8125,
-     "y": 201,
+     "y": 165,
      "w": 210.359375,
      "h": 34,
      "lines": 2
@@ -94,7 +94,7 @@
     "gloss": {
      "text": "Cocktails",
      "x": 308.21875,
-     "y": 643,
+     "y": 655,
      "w": 57.453125,
      "h": 16,
      "lines": 1
@@ -102,19 +102,19 @@
     "verse_clipped": false,
     "figure": {
      "x": 74,
-     "y": 234,
+     "y": 198,
      "w": 300,
-     "h": 382
+     "h": 430
     },
     "body": {
      "x": 50,
-     "y": 688,
+     "y": 700,
      "w": 348,
      "h": 304
     },
     "namebar": {
      "x": 50,
-     "y": 624,
+     "y": 636,
      "w": 348,
      "h": 48,
      "text": "EL CANTARITO\nCocktails"
@@ -139,16 +139,16 @@
      16,
      16
     ],
-    "first_row_y": 704,
-    "body_rule_y": 688,
-    "content_bottom": 992,
+    "first_row_y": 732,
+    "body_rule_y": 700,
+    "content_bottom": 1004,
     "subs": [
      {
       "ref": "sub_cocktails_classics",
       "h3": {
        "text": "CLASSICS",
        "x": 64,
-       "y": 690,
+       "y": 702,
        "w": 59.96875,
        "h": 12,
        "lines": 1
@@ -159,7 +159,7 @@
       "h3": {
        "text": "HOUSE ORIGINALS",
        "x": 64,
-       "y": 850,
+       "y": 862,
        "w": 111.140625,
        "h": 12,
        "lines": 1
@@ -171,14 +171,14 @@
       "ref": "beta_margarita",
       "block": {
        "x": 64,
-       "y": 704,
+       "y": 732,
        "w": 320,
-       "h": 64
+       "h": 48
       },
       "name": {
        "text": "Margarita",
        "x": 64,
-       "y": 703,
+       "y": 731,
        "w": 67.890625,
        "h": 18,
        "lines": 1
@@ -186,33 +186,33 @@
       "price": {
        "text": "15",
        "x": 369.203125,
-       "y": 703,
+       "y": 731,
        "w": 14.796875,
        "h": 18,
        "lines": 1
       },
       "desc": {
-       "text": "Bright and citrus-forward: blanco tequila, fresh lime, orange liqueur and agave syrup, shaken and served on the rocks with a lime wheel.",
+       "text": "Bright and citrus-forward: blanco tequila, fresh lime, orange liqueur and agave syrup. On the rocks, lime wheel.",
        "x": 64,
-       "y": 721,
-       "w": 302.03125,
-       "h": 46,
-       "lines": 3,
-       "tokens_on_last_line": 3
+       "y": 749,
+       "w": 291.8125,
+       "h": 30,
+       "lines": 2,
+       "tokens_on_last_line": 9
       }
      },
      {
       "ref": "beta_manhattan",
       "block": {
        "x": 64,
-       "y": 784,
+       "y": 796,
        "w": 320,
-       "h": 48
+       "h": 32
       },
       "name": {
        "text": "Manhattan",
        "x": 64,
-       "y": 783,
+       "y": 795,
        "w": 74.359375,
        "h": 18,
        "lines": 1
@@ -220,33 +220,33 @@
       "price": {
        "text": "15",
        "x": 369.203125,
-       "y": 783,
+       "y": 795,
        "w": 14.796875,
        "h": 18,
        "lines": 1
       },
       "desc": {
-       "text": "Rye whiskey and sweet vermouth, stirred and served up in a coupe with a cocktail cherry.",
+       "text": "Rye whiskey and sweet vermouth. In a coupe, cocktail cherry.",
        "x": 64,
-       "y": 801,
-       "w": 293.90625,
-       "h": 30,
-       "lines": 2,
-       "tokens_on_last_line": 5
+       "y": 813,
+       "w": 299.53125,
+       "h": 14,
+       "lines": 1,
+       "tokens_on_last_line": 10
       }
      },
      {
       "ref": "beta_old_fashioned",
       "block": {
        "x": 64,
-       "y": 864,
+       "y": 892,
        "w": 320,
-       "h": 64
+       "h": 48
       },
       "name": {
        "text": "Brown Butter Old Fashioned",
        "x": 64,
-       "y": 863,
+       "y": 891,
        "w": 192.375,
        "h": 18,
        "lines": 1
@@ -254,33 +254,33 @@
       "price": {
        "text": "16",
        "x": 368.78125,
-       "y": 863,
+       "y": 891,
        "w": 15.21875,
        "h": 18,
        "lines": 1
       },
       "desc": {
-       "text": "Brown butter-washed bourbon with demerara syrup and bitters, stirred and strained over one large cube with an orange peel.",
+       "text": "Brown butter-washed bourbon, demerara and bitters. Over one large cube, orange peel.",
        "x": 64,
-       "y": 881,
-       "w": 279.53125,
-       "h": 46,
-       "lines": 3,
-       "tokens_on_last_line": 2
+       "y": 909,
+       "w": 291.1875,
+       "h": 30,
+       "lines": 2,
+       "tokens_on_last_line": 5
       }
      },
      {
       "ref": "beta_daiquiri",
       "block": {
        "x": 64,
-       "y": 944,
+       "y": 956,
        "w": 320,
        "h": 48
       },
       "name": {
        "text": "House Daiquiri",
        "x": 64,
-       "y": 943,
+       "y": 955,
        "w": 102.75,
        "h": 18,
        "lines": 1
@@ -288,19 +288,19 @@
       "price": {
        "text": "14",
        "x": 368.640625,
-       "y": 943,
+       "y": 955,
        "w": 15.359375,
        "h": 18,
        "lines": 1
       },
       "desc": {
-       "text": "White rum shaken with fresh lime and house demerara syrup, served up in a coupe with a lime coin.",
+       "text": "White rum, fresh lime and house demerara syrup. In a coupe, lime coin.",
        "x": 64,
-       "y": 961,
-       "w": 300.96875,
+       "y": 973,
+       "w": 298.09375,
        "h": 30,
        "lines": 2,
-       "tokens_on_last_line": 9
+       "tokens_on_last_line": 2
       }
      }
     ]
@@ -311,9 +311,9 @@
     "featured": false,
     "box": {
      "x": 416,
-     "y": 176,
+     "y": 140,
      "w": 352,
-     "h": 256
+     "h": 272
     },
     "padding_px": {
      "left": 0,
@@ -324,32 +324,32 @@
     "border_px": 2,
     "face": {
      "x": 418,
-     "y": 178,
+     "y": 142,
      "w": 348,
-     "h": 110
+     "h": 78
     },
     "fig_svg": {
      "x": 426,
-     "y": 182,
+     "y": 146,
      "w": 96,
-     "h": 74
+     "h": 42
     },
     "rows": [
      {
       "x": 432,
-      "y": 320,
+      "y": 268,
       "w": 320,
       "h": 16
      },
      {
       "x": 432,
-      "y": 352,
+      "y": 300,
       "w": 320,
       "h": 16
      },
      {
       "x": 432,
-      "y": 400,
+      "y": 380,
       "w": 320,
       "h": 16
      }
@@ -357,13 +357,13 @@
     "subboxes": [
      {
       "x": 432,
-      "y": 304,
+      "y": 236,
       "w": 320,
       "h": 16
      },
      {
       "x": 432,
-      "y": 384,
+      "y": 348,
       "w": 320,
       "h": 16
      }
@@ -372,7 +372,7 @@
     "name": {
      "text": "LA BOTELLA",
      "x": 503.828125,
-     "y": 262,
+     "y": 194,
      "w": 132.34375,
      "h": 20,
      "lines": 1
@@ -380,7 +380,7 @@
     "verse": {
      "text": "La herramienta del borracho.",
      "x": 558.15625,
-     "y": 209,
+     "y": 157,
      "w": 163.671875,
      "h": 15,
      "lines": 1
@@ -388,7 +388,7 @@
     "gloss": {
      "text": "Spirits",
      "x": 644.171875,
-     "y": 267,
+     "y": 199,
      "w": 35.984375,
      "h": 14,
      "lines": 1
@@ -396,19 +396,19 @@
     "verse_clipped": false,
     "figure": {
      "x": 426,
-     "y": 178,
+     "y": 142,
      "w": 96,
-     "h": 78
+     "h": 46
     },
     "body": {
      "x": 418,
-     "y": 304,
+     "y": 236,
      "w": 348,
-     "h": 112
+     "h": 160
     },
     "namebar": {
      "x": 418,
-     "y": 256,
+     "y": 188,
      "w": 348,
      "h": 32,
      "text": "LA BOTELLA\nSpirits"
@@ -426,16 +426,16 @@
      16,
      16
     ],
-    "first_row_y": 320,
-    "body_rule_y": 304,
-    "content_bottom": 416,
+    "first_row_y": 268,
+    "body_rule_y": 236,
+    "content_bottom": 396,
     "subs": [
      {
       "ref": "sub_spirits_agave",
       "h3": {
        "text": "AGAVE",
        "x": 432,
-       "y": 306,
+       "y": 238,
        "w": 40.671875,
        "h": 12,
        "lines": 1
@@ -446,7 +446,7 @@
       "h3": {
        "text": "BRANDY",
        "x": 432,
-       "y": 386,
+       "y": 350,
        "w": 48.5625,
        "h": 12,
        "lines": 1
@@ -458,14 +458,14 @@
       "ref": "beta_blanco_tequila",
       "block": {
        "x": 432,
-       "y": 320,
+       "y": 268,
        "w": 320,
        "h": 16
       },
       "name": {
        "text": "Blanco Tequila",
        "x": 432,
-       "y": 319,
+       "y": 267,
        "w": 100.5625,
        "h": 18,
        "lines": 1
@@ -473,7 +473,7 @@
       "price": {
        "text": "12",
        "x": 736.78125,
-       "y": 319,
+       "y": 267,
        "w": 15.21875,
        "h": 18,
        "lines": 1
@@ -484,14 +484,14 @@
       "ref": "beta_anejo_tequila",
       "block": {
        "x": 432,
-       "y": 352,
+       "y": 300,
        "w": 320,
        "h": 16
       },
       "name": {
        "text": "Añejo Tequila",
        "x": 432,
-       "y": 351,
+       "y": 299,
        "w": 93.203125,
        "h": 18,
        "lines": 1
@@ -499,7 +499,7 @@
       "price": {
        "text": "16",
        "x": 736.78125,
-       "y": 351,
+       "y": 299,
        "w": 15.21875,
        "h": 18,
        "lines": 1
@@ -510,14 +510,14 @@
       "ref": "beta_cognac_vsop",
       "block": {
        "x": 432,
-       "y": 400,
+       "y": 380,
        "w": 320,
        "h": 16
       },
       "name": {
        "text": "Cognac VSOP",
        "x": 432,
-       "y": 399,
+       "y": 379,
        "w": 92.875,
        "h": 18,
        "lines": 1
@@ -525,7 +525,7 @@
       "price": {
        "text": "18",
        "x": 736.796875,
-       "y": 399,
+       "y": 379,
        "w": 15.203125,
        "h": 18,
        "lines": 1
@@ -540,9 +540,9 @@
     "featured": false,
     "box": {
      "x": 416,
-     "y": 448,
+     "y": 428,
      "w": 352,
-     "h": 288
+     "h": 304
     },
     "padding_px": {
      "left": 0,
@@ -553,38 +553,38 @@
     "border_px": 2,
     "face": {
      "x": 418,
-     "y": 450,
+     "y": 430,
      "w": 348,
-     "h": 110
+     "h": 78
     },
     "fig_svg": {
      "x": 426,
-     "y": 454,
+     "y": 434,
      "w": 96,
-     "h": 74
+     "h": 42
     },
     "rows": [
      {
       "x": 432,
-      "y": 592,
+      "y": 556,
       "w": 320,
       "h": 16
      },
      {
       "x": 432,
-      "y": 624,
+      "y": 588,
       "w": 320,
       "h": 16
      },
      {
       "x": 432,
-      "y": 656,
+      "y": 620,
       "w": 320,
       "h": 16
      },
      {
       "x": 432,
-      "y": 704,
+      "y": 700,
       "w": 320,
       "h": 16
      }
@@ -592,13 +592,13 @@
     "subboxes": [
      {
       "x": 432,
-      "y": 576,
+      "y": 524,
       "w": 320,
       "h": 16
      },
      {
       "x": 432,
-      "y": 688,
+      "y": 668,
       "w": 320,
       "h": 16
      }
@@ -607,7 +607,7 @@
     "name": {
      "text": "EL BARRIL",
      "x": 497,
-     "y": 534,
+     "y": 482,
      "w": 115.1875,
      "h": 20,
      "lines": 1
@@ -615,7 +615,7 @@
     "verse": {
      "text": "Tanto bebió el albañil, que quedó como barril.",
      "x": 576.296875,
-     "y": 473,
+     "y": 437,
      "w": 127.40625,
      "h": 31,
      "lines": 2
@@ -623,7 +623,7 @@
     "gloss": {
      "text": "Beer & Cider",
      "x": 620.1875,
-     "y": 539,
+     "y": 487,
      "w": 66.796875,
      "h": 14,
      "lines": 1
@@ -631,19 +631,19 @@
     "verse_clipped": false,
     "figure": {
      "x": 426,
-     "y": 450,
+     "y": 430,
      "w": 96,
-     "h": 78
+     "h": 46
     },
     "body": {
      "x": 418,
-     "y": 576,
+     "y": 524,
      "w": 348,
-     "h": 144
+     "h": 192
     },
     "namebar": {
      "x": 418,
-     "y": 528,
+     "y": 476,
      "w": 348,
      "h": 32,
      "text": "EL BARRIL\nBeer & Cider"
@@ -668,16 +668,16 @@
      16,
      16
     ],
-    "first_row_y": 592,
-    "body_rule_y": 576,
-    "content_bottom": 720,
+    "first_row_y": 556,
+    "body_rule_y": 524,
+    "content_bottom": 716,
     "subs": [
      {
       "ref": "sub_beer_draft",
       "h3": {
        "text": "DRAFT",
        "x": 432,
-       "y": 578,
+       "y": 526,
        "w": 39.1875,
        "h": 12,
        "lines": 1
@@ -688,7 +688,7 @@
       "h3": {
        "text": "CIDER",
        "x": 432,
-       "y": 690,
+       "y": 670,
        "w": 36.6875,
        "h": 12,
        "lines": 1
@@ -700,14 +700,14 @@
       "ref": "beta_czech_pilsner",
       "block": {
        "x": 432,
-       "y": 592,
+       "y": 556,
        "w": 320,
        "h": 16
       },
       "name": {
        "text": "Czech Pilsner",
        "x": 432,
-       "y": 591,
+       "y": 555,
        "w": 92.21875,
        "h": 18,
        "lines": 1
@@ -715,7 +715,7 @@
       "price": {
        "text": "7",
        "x": 744.609375,
-       "y": 591,
+       "y": 555,
        "w": 7.390625,
        "h": 18,
        "lines": 1
@@ -723,7 +723,7 @@
       "desc": {
        "text": "Crisp pale lager.",
        "x": 532.21875,
-       "y": 594,
+       "y": 558,
        "w": 78.328125,
        "h": 14,
        "lines": 1,
@@ -734,14 +734,14 @@
       "ref": "beta_dry_hopped_ipa",
       "block": {
        "x": 432,
-       "y": 624,
+       "y": 588,
        "w": 320,
        "h": 16
       },
       "name": {
        "text": "Dry-Hopped IPA",
        "x": 432,
-       "y": 623,
+       "y": 587,
        "w": 113.703125,
        "h": 18,
        "lines": 1
@@ -749,7 +749,7 @@
       "price": {
        "text": "8",
        "x": 743.359375,
-       "y": 623,
+       "y": 587,
        "w": 8.640625,
        "h": 18,
        "lines": 1
@@ -757,7 +757,7 @@
       "desc": {
        "text": "Hop-forward draft IPA.",
        "x": 553.703125,
-       "y": 626,
+       "y": 590,
        "w": 110.65625,
        "h": 14,
        "lines": 1,
@@ -768,14 +768,14 @@
       "ref": "beta_amber_lager",
       "block": {
        "x": 432,
-       "y": 656,
+       "y": 620,
        "w": 320,
        "h": 16
       },
       "name": {
        "text": "Amber Lager",
        "x": 432,
-       "y": 655,
+       "y": 619,
        "w": 88.4375,
        "h": 18,
        "lines": 1
@@ -783,7 +783,7 @@
       "price": {
        "text": "7",
        "x": 744.609375,
-       "y": 655,
+       "y": 619,
        "w": 7.390625,
        "h": 18,
        "lines": 1
@@ -791,7 +791,7 @@
       "desc": {
        "text": "Toasty amber lager.",
        "x": 528.4375,
-       "y": 658,
+       "y": 622,
        "w": 95.578125,
        "h": 14,
        "lines": 1,
@@ -802,14 +802,14 @@
       "ref": "beta_dry_cider",
       "block": {
        "x": 432,
-       "y": 704,
+       "y": 700,
        "w": 320,
        "h": 16
       },
       "name": {
        "text": "Dry Cider",
        "x": 432,
-       "y": 703,
+       "y": 699,
        "w": 66.03125,
        "h": 18,
        "lines": 1
@@ -817,7 +817,7 @@
       "price": {
        "text": "8",
        "x": 743.359375,
-       "y": 703,
+       "y": 699,
        "w": 8.640625,
        "h": 18,
        "lines": 1
@@ -825,7 +825,7 @@
       "desc": {
        "text": "Dry sparkling cider.",
        "x": 506.03125,
-       "y": 706,
+       "y": 702,
        "w": 94.015625,
        "h": 14,
        "lines": 1,
@@ -840,9 +840,9 @@
     "featured": false,
     "box": {
      "x": 416,
-     "y": 752,
+     "y": 748,
      "w": 352,
-     "h": 256
+     "h": 272
     },
     "padding_px": {
      "left": 0,
@@ -853,32 +853,32 @@
     "border_px": 2,
     "face": {
      "x": 418,
-     "y": 754,
+     "y": 750,
      "w": 348,
-     "h": 110
+     "h": 78
     },
     "fig_svg": {
      "x": 426,
-     "y": 758,
+     "y": 754,
      "w": 96,
-     "h": 74
+     "h": 42
     },
     "rows": [
      {
       "x": 432,
-      "y": 896,
+      "y": 876,
       "w": 320,
       "h": 16
      },
      {
       "x": 432,
-      "y": 928,
+      "y": 908,
       "w": 320,
       "h": 16
      },
      {
       "x": 432,
-      "y": 976,
+      "y": 988,
       "w": 320,
       "h": 16
      }
@@ -886,13 +886,13 @@
     "subboxes": [
      {
       "x": 432,
-      "y": 880,
+      "y": 844,
       "w": 320,
       "h": 16
      },
      {
       "x": 432,
-      "y": 960,
+      "y": 956,
       "w": 320,
       "h": 16
      }
@@ -901,7 +901,7 @@
     "name": {
      "text": "LA ROSA",
      "x": 528.140625,
-     "y": 838,
+     "y": 802,
      "w": 92.125,
      "h": 20,
      "lines": 1
@@ -909,7 +909,7 @@
     "verse": {
      "text": "Rosita, Rosaura, ven que te quiero ver.",
      "x": 533.84375,
-     "y": 785,
+     "y": 765,
      "w": 212.3125,
      "h": 15,
      "lines": 1
@@ -917,7 +917,7 @@
     "gloss": {
      "text": "Wine",
      "x": 628.265625,
-     "y": 843,
+     "y": 807,
      "w": 27.59375,
      "h": 14,
      "lines": 1
@@ -925,19 +925,19 @@
     "verse_clipped": false,
     "figure": {
      "x": 426,
-     "y": 754,
+     "y": 750,
      "w": 96,
-     "h": 78
+     "h": 46
     },
     "body": {
      "x": 418,
-     "y": 880,
+     "y": 844,
      "w": 348,
-     "h": 112
+     "h": 160
     },
     "namebar": {
      "x": 418,
-     "y": 832,
+     "y": 796,
      "w": 348,
      "h": 32,
      "text": "LA ROSA\nWine"
@@ -958,16 +958,16 @@
      16,
      16
     ],
-    "first_row_y": 896,
-    "body_rule_y": 880,
-    "content_bottom": 992,
+    "first_row_y": 876,
+    "body_rule_y": 844,
+    "content_bottom": 1004,
     "subs": [
      {
       "ref": "sub_wine_by_the_glass",
       "h3": {
        "text": "BY THE GLASS",
        "x": 432,
-       "y": 882,
+       "y": 846,
        "w": 86.40625,
        "h": 12,
        "lines": 1
@@ -978,7 +978,7 @@
       "h3": {
        "text": "SPARKLING",
        "x": 432,
-       "y": 962,
+       "y": 958,
        "w": 67.875,
        "h": 12,
        "lines": 1
@@ -990,14 +990,14 @@
       "ref": "beta_malbec",
       "block": {
        "x": 432,
-       "y": 896,
+       "y": 876,
        "w": 320,
        "h": 16
       },
       "name": {
        "text": "Malbec",
        "x": 432,
-       "y": 895,
+       "y": 875,
        "w": 48.765625,
        "h": 18,
        "lines": 1
@@ -1005,7 +1005,7 @@
       "price": {
        "text": "12",
        "x": 736.78125,
-       "y": 895,
+       "y": 875,
        "w": 15.21875,
        "h": 18,
        "lines": 1
@@ -1013,7 +1013,7 @@
       "desc": {
        "text": "Dry red wine.",
        "x": 488.765625,
-       "y": 898,
+       "y": 878,
        "w": 64.3125,
        "h": 14,
        "lines": 1,
@@ -1024,14 +1024,14 @@
       "ref": "beta_pinot_grigio",
       "block": {
        "x": 432,
-       "y": 928,
+       "y": 908,
        "w": 320,
        "h": 16
       },
       "name": {
        "text": "Pinot Grigio",
        "x": 432,
-       "y": 927,
+       "y": 907,
        "w": 82.734375,
        "h": 18,
        "lines": 1
@@ -1039,7 +1039,7 @@
       "price": {
        "text": "11",
        "x": 738.875,
-       "y": 927,
+       "y": 907,
        "w": 13.125,
        "h": 18,
        "lines": 1
@@ -1047,7 +1047,7 @@
       "desc": {
        "text": "Dry white wine.",
        "x": 522.734375,
-       "y": 930,
+       "y": 910,
        "w": 74.734375,
        "h": 14,
        "lines": 1,
@@ -1058,14 +1058,14 @@
       "ref": "beta_brut_rose",
       "block": {
        "x": 432,
-       "y": 976,
+       "y": 988,
        "w": 320,
        "h": 16
       },
       "name": {
        "text": "Brut Rosé",
        "x": 432,
-       "y": 975,
+       "y": 987,
        "w": 67.046875,
        "h": 18,
        "lines": 1
@@ -1073,7 +1073,7 @@
       "price": {
        "text": "13",
        "x": 737.515625,
-       "y": 975,
+       "y": 987,
        "w": 14.484375,
        "h": 18,
        "lines": 1
@@ -1081,7 +1081,7 @@
       "desc": {
        "text": "Dry sparkling rosé.",
        "x": 507.046875,
-       "y": 978,
+       "y": 990,
        "w": 90.578125,
        "h": 14,
        "lines": 1,
@@ -1093,35 +1093,35 @@
   ],
   "banner": {
    "x": 48,
-   "y": 48,
+   "y": 20,
    "w": 720,
-   "h": 48
+   "h": 32
   },
   "title": {
    "text": "Cantina & Cocktail Bar",
-   "x": 186.71875,
-   "y": 99,
-   "w": 442.5625,
-   "h": 49,
+   "x": 231.84375,
+   "y": 72,
+   "w": 352.296875,
+   "h": 39,
    "lines": 1
   },
   "loc": {
    "text": "IOWA CITY, IOWA",
    "x": 332.90625,
-   "y": 144,
+   "y": 108,
    "w": 150.1875,
    "h": 15,
    "lines": 1
   },
   "deck": {
    "x": 48,
-   "y": 176,
+   "y": 140,
    "w": 720,
-   "h": 832
+   "h": 880
   },
   "foot": {
    "x": 48,
-   "y": 1008,
+   "y": 1020,
    "w": 720,
    "h": 0
   }
@@ -1170,7 +1170,7 @@
     "n": 2,
     "x": 20,
     "w": 350,
-    "y": 998.953125,
+    "y": 950.953125,
     "transform": "none",
     "frame_transform": "matrix(0.999848, 0.0174524, -0.0174524, 0.999848, 0, 0)",
     "verse_px": 14
@@ -1179,7 +1179,7 @@
     "n": 3,
     "x": 20,
     "w": 350,
-    "y": 1412.953125,
+    "y": 1396.953125,
     "transform": "none",
     "frame_transform": "matrix(0.999848, -0.0174524, 0.0174524, 0.999848, 0, 0)",
     "verse_px": 14
@@ -1188,7 +1188,7 @@
     "n": 4,
     "x": 20,
     "w": 350,
-    "y": 1942.953125,
+    "y": 1958.953125,
     "transform": "none",
     "frame_transform": "matrix(0.999848, 0.0174524, -0.0174524, 0.999848, 0, 0)",
     "verse_px": 14
@@ -1197,9 +1197,9 @@
  },
  "ink": {
   "left": 36.0,
-  "top": 36.0,
+  "top": 14.88,
   "right": 36.0,
-  "bottom": 36.0
+  "bottom": 26.88
  },
  "fonts": 6,
  "png": [
@@ -1208,6 +1208,6 @@
  ],
  "phone_png": [
   1170,
-  7323
+  7467
  ]
 }

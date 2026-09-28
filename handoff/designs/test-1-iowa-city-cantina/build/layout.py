@@ -52,7 +52,7 @@ grid_offsets = {c["n"]: {"card_top": off(c["box"]["y"]), "name_bar_top": off(c["
 cross_ok = all(v <= 0.3 for g in grid_offsets.values() for x in g.values() for v in (x if isinstance(x, list) else [x]))
 bottoms = {c["n"]: r2((c["box"]["y"] + c["box"]["h"]) * PT) for c in M["cards"]}
 checks = {
-    "printed_ink_margins_pt": R["ink"], "page_margins_pt": {"top": 36, "right": 36, "bottom": 36, "left": 36},
+    "printed_ink_margins_pt": R["ink"], "page_margins_pt": {"top": 15, "right": 36, "bottom": 15, "left": 36},
     "card_edges_pt": {c["n"]: c["edges_pt"] for c in cards},
     "deck_within_margins": all(c["edges_pt"]["left"] >= 35.9 and c["edges_pt"]["right"] <= 576.1 for c in cards),
     "no_card_overflow": all(c["space_below_name_bar_pt"] >= -0.5 for c in cards),
@@ -78,14 +78,31 @@ checks = {
               "active_tab_label": PH["active_label"], "cards_stacked_single_column": max(c["x"] for c in PH["cards"]) - min(c["x"] for c in PH["cards"]) < 8,
               "text_rotation": [c["transform"] for c in PH["cards"]], "frame_rotation": [c["frame_transform"] for c in PH["cards"]], "verse_px": [c["verse_px"] for c in PH["cards"]], "verse_9pt_or_larger": all(c["verse_px"] * 0.75 >= 9 for c in PH["cards"]), "active_tab_bg": PH["active_bg"], "inactive_tab_bg": PH["inactive_bg"], "active_state_distinct": PH["active_bg"] != PH["inactive_bg"]},
 }
-L = {"round": 8, "concept": N["concept"],
-     "page": {"size": "US Letter 8.5 x 11 in", "w_pt": 612, "h_pt": 792, "margins_pt": {"top": 36, "right": 36, "bottom": 36, "left": 36}, "bleed": "none (cream flood to trim, home/office print)"},
-     "grid": {"deck_pt": b(M["deck"]), "columns_pt": [264, 264], "gutter_pt": 12, "rows": "1 + 3: El Cantarito spans the left column (624 pt); right column La Botella 192, El Barril 216, La Rosa 192 with 12 pt gaps",
-              "card_anatomy": "1.5 pt frame in the card colour; face = tinted panel with a 0.75 pt inset hairline in the card colour at 3 pt, figure (72 x 58.5 pt box on the right cards, full face width on the featured card), cantor verse Fraunces italic 9 pt (10.5 pt featured), name cartouche 24 pt (36 pt featured) at the foot of the face holding the Spanish name + English gloss; 12 pt gap; reverse = the drinks list; 10.5 pt bottom padding + 1.5 pt border = 12 pt"},
+def rhythm(c):
+    blocks = list(c["rows"]) + [i["desc"] for i in c["items"] if i["desc"]]
+    above = [r2((sb["y"] - max(x["y"] + x["h"] for x in blocks if x["y"] + x["h"] <= sb["y"] + 0.5)) * PT) for sb in c["subboxes"][1:]]
+    below = [r2((min(x["y"] for x in c["rows"] if x["y"] >= sb["y"] + sb["h"] - 0.5) - (sb["y"] + sb["h"])) * PT) for sb in c["subboxes"]]
+    return above, below
+RH = {c["n"]: rhythm(c) for c in M["cards"]}
+ab = [v for a, _ in RH.values() for v in a]; bl = [v for _, x in RH.values() for v in x]
+ph = [r2(i["price"]["h"] * PT) for c in M["cards"] for i in c["items"]]; nh = [r2(i["name"]["h"] * PT) for c in M["cards"] for i in c["items"]]
+checks.update({"subhead_space_above_pt": {n: a for n, (a, _) in RH.items()}, "subhead_space_below_pt": {n: x for n, (_, x) in RH.items()},
+    "subhead_space_above_equal_every_card_0_5mm": bool(ab) and (max(ab) - min(ab)) * MM <= 0.5, "subhead_space_above_is_24pt": all(abs(v - 24) <= 0.5 for v in ab),
+    "subhead_space_below_equal_every_card_0_5mm": (max(bl) - min(bl)) * MM <= 0.5, "subhead_space_below_is_12pt": all(abs(v - 12) <= 0.5 for v in bl),
+    "same_item_gap_across_cards": len({g for c in cards for g in c["item_gaps_pt"]}) <= 1,
+    "price_box_heights_pt": sorted(set(ph)), "same_price_size_across_cards": spread(ph) <= 0.5, "same_item_name_size_across_cards": spread(nh) <= 0.5,
+    "price_colour_per_card": {"1": PAL["terracotta"], "2": PAL["ink"], "3": PAL["agave"], "4": PAL["loteria_rosa"]},
+    "contrast": {"cream_on_rosa_namebar": contrast(PAL["cream"], PAL["loteria_rosa"]), "cream_on_ink_namebar": contrast(PAL["cream"], PAL["ink"]), "cream_on_agave_namebar": contrast(PAL["cream"], PAL["agave"]), "cream_on_terracotta_namebar": contrast(PAL["cream"], PAL["terracotta"]),
+                 "terracotta_price_on_featured": contrast(PAL["terracotta"], PAL["featured_card"]), "ink_price_on_card": contrast(PAL["ink"], PAL["card"]), "agave_price_on_card": contrast(PAL["agave"], PAL["card"]), "rosa_price_on_card": contrast(PAL["loteria_rosa"], PAL["card"]), "muted_serve_cue_on_featured": contrast(PAL["muted"], PAL["featured_card"])}})
+checks["all_contrast_4_5_or_more"] = all(v >= 4.5 for v in checks["contrast"].values())
+L = {"round": 10, "concept": N["concept"],
+     "page": {"size": "US Letter 8.5 x 11 in", "w_pt": 612, "h_pt": 792, "margins_pt": {"top": 15, "right": 36, "bottom": 15, "left": 36}, "bleed": "none (cream flood to trim, home/office print)"},
+     "grid": {"deck_pt": b(M["deck"]), "columns_pt": [264, 264], "gutter_pt": 12, "rows": "1 + 3: El Cantarito spans the left column (672 pt); right column La Botella 204, El Barril 240, La Rosa 204 with 12 pt gaps; one rhythm: 12 pt item gap, 24 pt above every subhead after the first, 12 pt below every subhead",
+              "card_anatomy": "1.5 pt frame in the card colour; face (58.5 pt on the right cards) = tinted panel with a 0.75 pt inset hairline in the card colour at 3 pt, figure (72 x 34.5 pt box on the right cards, full face width on the featured card), cantor verse Fraunces italic 9 pt (10.5 pt featured), name cartouche 24 pt (36 pt featured) at the foot of the face holding the Spanish name + English gloss; 12 pt gap; reverse = the drinks list; 10.5 pt bottom padding + 1.5 pt border = 12 pt"},
      "palette": PAL,
-     "type": {"display": "Fraunces 700 (title 30/34 pt; card titles 12 pt caps 2 pt tracking in the name bar, one size on every card)", "ordinals": "none",
-              "items": "Fraunces 600 10.5/12 pt (every card)", "prices": "Fraunces 600 terracotta lining tabular 10.5/12 pt", "descriptions": "DM Sans 8/12 pt (every card)", "verse": "Fraunces italic 9/12 pt muted (featured 10.5/12)", "gloss": "Fraunces italic 8.5 pt in the cartouche (featured 10 pt)",
-              "subheads": "DM Sans 700 caps 7/12 pt, English only, rule in the card colour", "name_bar": "24 pt bar; colours terracotta (El Cantarito), agave (La Botella), marigold (El Barril), loteria rosa (La Rosa)", "body_baseline_pt": 12, "item_gap_pt": 12},
+     "type": {"display": "Fraunces 700 (title 24/24 pt, 18 pt below the 24 pt papel picado; card titles 12 pt caps 2 pt tracking in the name bar, one size on every card)", "ordinals": "none",
+              "items": "Fraunces 600 10.5/12 pt (every card)", "prices": "Fraunces 600 lining tabular 10.5/12 pt on every card, in the card colour (terracotta, ink, agave, rosa)", "descriptions": "DM Sans 8/12 pt (every card); cocktails: character in ink, then the serve cue (glass, garnish) in italic muted #5A4A3F", "verse": "Fraunces italic 9/12 pt muted (featured 10.5/12)", "gloss": "Fraunces italic 8.5 pt in the cartouche (featured 10 pt)",
+              "subheads": "DM Sans 700 caps 7/12 pt, English only, rule in the card colour", "name_bar": "24 pt bar; colours terracotta (El Cantarito), ink (La Botella), agave (El Barril), loteria rosa (La Rosa), cream text on all four; marigold only in the papel picado and figures", "body_baseline_pt": 12, "item_gap_pt": 12},
      "masthead": {"papel_picado_pt": b(M["banner"]), "title_pt": b(M["title"]), "location_pt": b(M["loc"]), "footer_pt": b(M["foot"])},
      "elements": elements, "cards": cards, "measured_checks": checks}
 (OUT / "layout.json").write_text(json.dumps(L, ensure_ascii=False, indent=1))
@@ -93,9 +110,14 @@ L = {"round": 8, "concept": N["concept"],
 # ------------------------------------------------------------ proposal.md (generated; nothing hand-typed about the render)
 it_by = {i["id"]: i for s in doc["sections"] for i in s["items"] + [x for sb in s["subs"] for x in sb["items"]]}
 cs = N["copy_sources"]
-o = ['# TEST-1 round 8: "Cantina & Cocktail Bar", Iowa City (proposal v8, loteria 1 + 3 tabla)', "",
+o = ['# TEST-1 round 10: "Cantina & Cocktail Bar", Iowa City (proposal v10, from round 8, loteria 1 + 3 tabla)', "",
      "Generated by `build/layout.py` from `doc.json` and the Chromium render (`build/measure.json`). needs_input = true (questions below).", "",
-     "## Round 8 changes", "",
+     "## Round 10 changes (from round 8)", "",
+     "- One vertical rhythm on all four cards: 12 pt item gap, 24 pt above every subhead after the first, 12 pt below every subhead (measured below). Right card faces 82.5 -> 58.5 pt and papel picado 36 -> 24 pt to make room; top/bottom page margins 36 -> 15 pt; El Cantarito's face absorbs the rest and its list ends level with La Rosa.",
+     "- One item-name size (Fraunces 600 10.5 pt) and one price size (10.5 pt) on every card; the featured card is signalled only by its tall face and larger cartouche.",
+     "- Card colours: El Cantarito terracotta, La Botella ink, El Barril agave, La Rosa rosa #C2185B (cream text); each card's prices take its colour.",
+     "- Cocktails: the draft character words first (ink), then a short serve cue (glass, garnish) in italic muted #5A4A3F; no bartender verbs.",
+     "- Masthead: title 12 pt below the flags; Iowa City, Iowa 12 pt above the cards.",
      "- " + N["concept"],
      "- Deck: EL CANTARITO (Classics: Margarita, Manhattan; then House Originals), LA BOTELLA (Agave: Blanco, Añejo; Brandy: Cognac VSOP), EL BARRIL (Draft + Cider), LA ROSA (By the Glass + Sparkling). No ordinals. Subheaders English only; the one bilingual device is the cartouche (Spanish name + English gloss).",
      "- Cantor verses are **cultural text** (traditional loteria caller rhymes), not item facts: " + "; ".join(f'{c["loteria_name"]}: \"{c["cantor_verse"]}\"' for c in N["cards"]) + ". The venue may drop them.",
@@ -107,7 +129,7 @@ o = ['# TEST-1 round 8: "Cantina & Cocktail Bar", Iowa City (proposal v8, loteri
 for c in cards:
     bx = c["box_pt"]
     o.append(f'| {c["loteria_name"]}{" (featured)" if c["featured"] else ""} | {c["gloss"]} | {bx["x"]}, {bx["y"]}, {bx["w"]}, {bx["h"]} | {c["face_pt"]["h"]} | {c["figure_drawn_pt"]["h"]} ({c["figure_share_of_face_height"]}) | {c["space_below_name_bar_pt"]} | {c["item_gaps_pt"]} |')
-o += ["", "Measured checks: " + "; ".join(f"{k} = {checks[k]}" for k in ("no_card_overflow", "no_card_more_than_12pt_empty", "cross_card_baseline_alignment", "columns_end_same_baseline", "figures_at_least_40pct_of_face", "verses_9pt_or_larger", "verses_unclipped", "one_12pt_baseline", "same_item_gap_every_card", "same_bottom_padding_every_card", "no_one_word_last_line_print", "no_one_word_last_line_phone", "deck_within_margins", "title_clear_of_flags_pt", "location_to_cards_pt"))
+o += ["", "Measured checks: " + "; ".join(f"{k} = {checks[k]}" for k in ("no_card_overflow", "no_card_more_than_12pt_empty", "cross_card_baseline_alignment", "columns_end_same_baseline", "figures_at_least_40pct_of_face", "verses_9pt_or_larger", "verses_unclipped", "one_12pt_baseline", "same_item_gap_every_card", "same_bottom_padding_every_card", "no_one_word_last_line_print", "no_one_word_last_line_phone", "deck_within_margins", "title_clear_of_flags_pt", "location_to_cards_pt", "subhead_space_above_pt", "subhead_space_below_pt", "subhead_space_above_equal_every_card_0_5mm", "same_price_size_across_cards", "same_item_name_size_across_cards", "all_contrast_4_5_or_more"))
       + f'. Printed ink margins (pt): {checks["printed_ink_margins_pt"]}. Accent contrast: {checks["accent_contrast"]["rosa_on_card"]}:1 on card, {checks["accent_contrast"]["rosa_on_featured"]}:1 on featured. '
       f'Phone: tab bar `{checks["phone"]["tab_bar_position"]}`, {checks["phone"]["tabs"]} tabs, all fit at 390 px: {checks["phone"]["all_tabs_fit_390"]}, page scroll width {checks["phone"]["scroll_width_px"]} px, single-column stack: {checks["phone"]["cards_stacked_single_column"]}.',
       "", "Subheader pairs: " + "; ".join(f"{k} / *{v}*" for k, v in N["sub_kickers"].items()) + ".", "",
@@ -123,11 +145,11 @@ o += ["", "Gateway query (the only one this round): " + N["gateway_query"] + "."
       "3. **Manhattan bitters:** " + N["manhattan_bitters"] + " The Old Fashioned prints \"bitters\" (draft word).",
       "4. Beer, cider and wine lines are the draft words only. Brand, producer, region, vintage and ABV are still missing (see the table).",
       "5. Brown Butter Old Fashioned: please confirm the dairy allergen note.",
-      "6. " + N["retired_junmai_ginjo"], "",
+      "6. " + N["retired_junmai_ginjo"], "7. **Drinking-joke verses (responsible-service tone):** La Botella (\"La herramienta del borracho.\") and El Barril (\"Tanto bebió el albañil, que quedó como barril.\") are traditional lotería verses that joke about drunkenness. Keep, or replace/drop them? The venue decides.", "",
       "## References (library `menu_visual_documents.id`)", "",
       "572 (Coa Cantina Iowa City: agave first, the price band); 7923 (Coa Cantina Des Moines: a compact list led by cocktails); 4969 (Blue Agave, Iowa: the Classic / Signature tiers); "
       "208 (Alta Calidad, Brooklyn: pour size in the header, once supplied); 2585 (La Buena Vida, Fort Collins: Spanish/English headers).", "",
       "## Files", "", "menu.html, menu.pdf, preview-letter.png (" + "x".join(map(str, R["png"])) + " px, 300 dpi, not downscaled), preview-phone.png ("
-      + "x".join(map(str, R["phone_png"])) + " px), doc.json, layout.json, proposal.md; copies in round-8/. Earlier rounds: round-1/ to round-7/proposal.md.", ""]
+      + "x".join(map(str, R["phone_png"])) + " px), doc.json, layout.json, proposal.md; copies in round-10/. Restarted from round 8 (round-8/); round 9 superseded.", ""]
 (OUT / "proposal.md").write_text("\n".join(o))
 print(json.dumps({k: v for k, v in checks.items() if k not in ("card_edges_pt",)}, ensure_ascii=False))
