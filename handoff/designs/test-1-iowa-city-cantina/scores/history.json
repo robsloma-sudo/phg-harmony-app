@@ -5,5 +5,12 @@
   "content": 87.7,
   "accuracy": 76.0,
   "n": 15
+ },
+ "3": {
+  "combined": 84.1,
+  "critic": 85.6,
+  "content": 85.7,
+  "accuracy": 80.2,
+  "n": 14
  }
 }
