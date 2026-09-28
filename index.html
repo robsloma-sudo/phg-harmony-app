@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.28 HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.29 ACTION BUTTON FIX + PICTURE SETUP · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -40510,6 +40510,8 @@ body.pms-open .hvxSheet button.nomenu{display:none!important}
 .hvxCopy code{flex:1;min-width:0;font:500 12px/1.4 'JetBrains Mono',monospace;color:#e0f7ff;word-break:break-all}
 .hvxCopy button{flex:0 0 auto;height:34px;padding:0 14px;border-radius:17px;border:0;background:#0e7490;color:#fff;font:600 13px 'Inter',sans-serif;cursor:pointer}
 .hvxWarn{margin:6px 0;padding:10px 12px;border-radius:12px;background:rgba(253,230,138,.10);color:#fde68a;font-size:13px;line-height:1.4}
+.hvxShot{display:block;margin:16px 0 0;border-radius:18px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(103,232,249,.22),0 10px 30px rgba(0,0,0,.5);background:#000}
+.hvxShot img{display:block;width:100%;height:auto}
 .hvxSteps{margin:16px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5;color:#cbd5e1}
 .hvxSteps b{color:#f1f5f9}.hvxSteps code,.hvxLead code{font:500 12px 'JetBrains Mono',monospace;color:#a5f3fc;background:rgba(103,232,249,.08);padding:1px 5px;border-radius:5px}
 .hvxKey{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid rgba(148,163,184,.12)}
@@ -40709,15 +40711,10 @@ function wireCopy(root){Array.prototype.forEach.call(root.querySelectorAll('[dat
   var done=function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1500);};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(done,function(){prompt('Copy this',v);});else prompt('Copy this',v);};});}
 function openShortcut(){
-  var steps='<ol class="hvxSteps">'
-    +'<li>Tap <b>Create my key</b> below and copy the key and the address.</li>'
-    +'<li>Open the <b>Shortcuts</b> app, tap <b>+</b>, name it <b>Harmony</b>.</li>'
-    +'<li>Add <b>Dictate Text</b> (Stop Listening: After Pause).</li>'
-    +'<li>Add <b>Get Contents of URL</b>: paste the address · Method <b>POST</b> · leave Headers empty · Request Body <b>JSON</b> with two Text fields: <code>text</code> = <i>Dictated Text</i> and <code>key</code> = your key.</li>'
-    +'<li>Add <b>Get Dictionary Value</b>: Value for <code>speak</code> in <i>Contents of URL</i>, then <b>Speak Text</b> (Dictionary Value).</li>'
-    +'<li>Add <b>Get Dictionary Value</b>: Value for <code>url</code> in <i>Contents of URL</i> → <b>If</b> it has any value → <b>Open URLs</b>.</li>'
-    +'<li>iPhone <b>Settings → Action Button → Shortcut → Harmony</b>. Also works with Back Tap, Siri (“Harmony”) or a widget.</li>'
-    +'</ol>';
+  /* 18.49.29: a picture of the finished Shortcut instead of written steps */
+  var steps='<a class="hvxShot" href="img/harmony-shortcut.jpg" target="_blank" rel="noopener" aria-label="Open the finished Shortcut picture full size">'
+    +'<img src="img/harmony-shortcut.jpg" alt="The finished Harmony shortcut in the Shortcuts app: Dictate text; Get contents of the address with Method POST and a JSON body with text = Dictated Text and key = your key; Get Value for speak; Speak; Get Value for url; If it has any value, Open it." loading="lazy"></a>'
+    +'<p class="hvxLead" style="margin-top:12px">Make this in the <b>Shortcuts</b> app, then <b>Settings → Action Button → Shortcut → Harmony</b>.</p>';
   var p=panel('shortcut','iPhone · Action button',
     '<p class="hvxLead">Press the Action button and talk. Harmony logs notes, answers out loud, or opens the app when you ask to see something.</p>'
     +'<div id="hvxKeyBox"><button class="hvxBig" id="hvxMakeKey">Create my key</button></div>'+steps
