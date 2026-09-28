@@ -23,6 +23,7 @@ OPT = dict(a.split("=", 1) for a in sys.argv[1:] if "=" in a and not a.startswit
 GREEN, IVORY, IVORY2, IVORY3, GOLD = "#10291F", "#EFE6D2", "#C9C2AF", "#A8A796", "#C8A765"
 STROKE = float(OPT.get("stroke", 1.25))       # the one stroke weight (css px; x3.125 at print)
 HATCH = float(OPT.get("hatch", 3.3))          # target hatch pitch (css px)
+WF = float(OPT.get('wf', 1.35))
 CLEAR = 23                                    # 6 mm at 96 css px / in
 
 # ---- content -----------------------------------------------------------------------------
@@ -120,7 +121,7 @@ class Leaf:
     def hw(self, t):
         if self.ribbon:   # constant width (slowly widening) once out of the rosette: a strip of field
             return self.W * min(1.0, (t / 0.12) ** 0.5) * (1 + 0.5 * t)
-        p, q = 0.30, 0.85
+        p, q = 0.28, 1.0
         pk = (p / (p + q)) ** p * (q / (p + q)) ** q
         return self.W * (t ** p) * ((1 - t) ** q) / pk
 
@@ -207,7 +208,7 @@ class Cone(Leaf):
             if u * self.shadow < -0.2:        # lit side: keep open, three lines only
                 if k % 3:
                     continue
-            out.append([self.at(i, u) for i in range(int(n * 0.03), int(n * (0.86 - 0.12 * abs(u))))])
+            out.append([self.at(i, u) for i in range(int(n * 0.03), int(n * 0.80))])
         for t0 in (0.18, 0.40, 0.60):          # wrapped leaf margins spiralling across the cone
             seg = []
             for j in range(0, 41):
@@ -225,8 +226,8 @@ def agave(bx, by, S, text_rects=None, seed=11):
     j = lambda a: a * (1 + rnd.uniform(-0.07, 0.07))
     parts, report = [], {"clamped": []}
     # (angle, length factor, half-width factor, droop, curl)
-    FURROWS = [(-67, 1.9, 0.050, 0.02, 0.020), (-73, 2.1, 0.060, 0.01, -0.015),
-               (-80, 2.3, 0.075, 0.00, 0.012)]
+    FURROWS = [(-71, 1.9, 0.040, 0.03, 0.018), (-77, 2.1, 0.050, 0.02, -0.012),
+               (-83, 2.3, 0.062, 0.01, 0.010)]
     BACK = [(-6, 0.90, .050, .02, 0), (6, 0.94, .052, .03, .01), (-15, 0.80, .052, .05, .02), (15, 0.86, .055, .05, 0)]
     MID = [(-24, 0.64, .060, .06, .02), (-33, 0.60, .060, .09, .03), (24, 0.74, .062, .08, .02),
            (-44, 0.62, .062, .12, .04), (36, 0.66, .064, .10, .03), (-56, 0.66, .064, .14, .05)]
@@ -270,12 +271,12 @@ def agave(bx, by, S, text_rects=None, seed=11):
     for k, (a, lf_, wf, dr, cu) in enumerate(BACK):
         a2, l2 = j(a) if a else a, j(lf_)
         emit(clamp_leaf(lambda f, a2=a2, l2=l2, wf=wf, dr=dr, cu=cu:
-                        Leaf(bx, by, a2, S * l2 * f, S * wf * (0.8 + 0.2 * f), droop=dr, curl=cu), f"back{k}"))
+                        Leaf(bx, by, a2, S * l2 * f, S * wf * WF * (0.8 + 0.2 * f), droop=dr, curl=cu), f"back{k}"))
     emit(clamp_leaf(lambda f: Cone(bx - 6, by, -2.5, S * 1.05 * f, S * 0.058, droop=0.0, teeth=False), "cone"))
     for k, (a, lf_, wf, dr, cu) in enumerate(MID + FRONT):
         a2, l2 = j(a), j(lf_)
         emit(clamp_leaf(lambda f, a2=a2, l2=l2, wf=wf, dr=dr, cu=cu:
-                        Leaf(bx, by, a2, S * l2 * f, S * wf * (0.8 + 0.2 * f), droop=dr, curl=cu), f"leaf{k}"))
+                        Leaf(bx, by, a2, S * l2 * f, S * wf * WF * (0.8 + 0.2 * f), droop=dr, curl=cu), f"leaf{k}"))
     g = (f'<g stroke="{GOLD}" stroke-width="{STROKE}" stroke-linejoin="round" stroke-linecap="round">'
          + "".join(parts) + "</g>")
     return g, report

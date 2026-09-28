@@ -207,7 +207,7 @@ h3{{font-weight:500;color:{INK2};text-transform:uppercase}}
 body.letter .sub{{left:64px;top:{wm_base + 28:.0f}px;font-size:13px;letter-spacing:.28em}}
 body.letter .col{{width:322px}}
 body.letter .col1{{left:64px}} body.letter .col2{{left:430px}}
-body.letter section+section{{margin-top:calc(var(--u)*3)}}
+body.letter section+section{{margin-top:calc(var(--u)*4)}}
 body.letter h2{{font-size:18px;letter-spacing:.16em;line-height:1;margin-bottom:var(--u)}}
 body.letter h3{{font-size:11.5px;letter-spacing:.22em;line-height:1;margin:var(--u) 0 calc(var(--u)*.6)}}
 body.letter h2+h3{{margin-top:0}}

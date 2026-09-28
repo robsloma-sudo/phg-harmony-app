@@ -26,8 +26,8 @@ GARNISH = {"beta_manhattan": "Cocktail cherry", "beta_margarita": "Lime wheel",
 # Style sentences kept from the draft desc (brief section 5): only the Margarita has one
 STYLE = {"beta_margarita": "Bright and citrus-forward."}
 
-# Reading order: Cocktails, Beer, Cider | Spirits, Wine (Spirits/Agave before Wine; brief section 5; cider sits with beer)
-ORDER = ["sec_cocktails", "sec_beer", "sec_cider", "sec_spirits", "sec_wine"]
+# Reading order: Cocktails, Beer | Spirits, Wine, Cider (Spirits/Agave before Wine; brief section 5)
+ORDER = ["sec_cocktails", "sec_beer", "sec_spirits", "sec_wine", "sec_cider"]
 FIRST = {"sub_cocktails_classics": ["beta_margarita", "beta_manhattan"]}  # Margarita first
 
 VARIANTS = {
@@ -254,7 +254,7 @@ def contrast(a, b):
 def main():
     from playwright.sync_api import sync_playwright
     variant = "before" if sys.argv[-1] == "before" else "after"
-    split = 3  # left: Cocktails, Beer, Cider | right: Spirits, Wine
+    split = 2  # left: Cocktails, Beer | right: Spirits, Wine, Cider
     doc = build(variant, split)
     sfx = "-before" if variant == "before" else ""
     if variant == "after":
