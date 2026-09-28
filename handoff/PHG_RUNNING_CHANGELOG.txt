@@ -1451,3 +1451,33 @@ Rob: "deploy."
   origin/main as fa0d4c0 (builds 18.49.24-18.49.27: Action button + notes + home-screen app, venue menu lookup,
   menus from the conversation, edit menus as you talk).
 - Netlify production deploy 6abae41de357e0000843cc94: state ready, published 2026-09-28T22:03:19Z, commit fa0d4c0.
+
+------------------------------------------------------------------------------
+PHG-20260928-DATAVIEW | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.28, branch; phg-harmony-data v1 live)
+Rob: "Now allow Harmony to pull, pull up menus based on request. Allow her to also show any kind of data that we have in
+this entire program and display it in some way. Maybe come up with a catalog of, of different containers and different
+ways of displaying that data. I also want the map view to be able to show up where if I ask where a NOM 1610 distillery
+is, it pulls up a map view and snaps to that part on the map in Mexico. I want all these cool features for Harmony on
+that page."
+- New edge function phg-harmony-data (verify_jwt true, ACTIVE v1; source in supabase/functions/phg-harmony-data):
+  fixed catalog of 12 read-only sources (distillery, distilleries, venues, drink_prices, category_share, top_brands,
+  cocktail_recipe, zip_demographics, coverage, venue_profile, label_approvals, menu_breakdown) + menu_lookup/none.
+  gpt-4o-mini picks source + parameters with a strict schema (never SQL); NOM numbers, ZIP+census, "distilleries in X"
+  and coverage skip the model. Service-role reads only; login required. Speech built from the real numbers.
+- Distillery placement: production_sites has no coordinates (0/201). Pins use the municipality seat of the CRT
+  registered address in organizations.notes (53 towns mapped; state centre fallback) and are labelled approximate
+  ("registered address, may be an office"). No database writes.
+- App (<style id="phgDataCanvasCSS"> + <script id="phgDataCanvasV1">): data canvas in the Harmony view with
+  containers map (dark Esri canvas tiles, opens on Mexico/US then flies in to the pin, pulsing marker, profile card
+  with brand chips), bars, donut, table, tiles, dashboard, profile, recipe, catalog. Gear menu -> "What Harmony can
+  show" (tap an example to run it); "what can you show", "close the map" by voice.
+- Routing in the view: notes -> inbox; "show me X's menu" -> menu library viewer (unchanged); data questions (where
+  is / NOM / map / average / prices / top / which / census / ZIP / recipe / profile / label approvals / coverage) ->
+  phg-harmony-data; its "none" answer falls back to the conversation brain; sales/labor/P&L stay with the report router.
+- Checked against live data (SQL): v_menu_category_share (unknown bucket 46,657 items excluded), brand presence (Jose
+  Cuervo 73 venues), Paloma spec, ZIP 50309, coverage (NY 16,633 / CO 7,540 / IA 4,682 venues), 69 priced margaritas
+  in Denver, NOM 1610 = Casa Tequilera Dinastia Arandina (Zapopan, 10 brands).
+- Tested headless (data function stubbed with those shapes, local Leaflet): NOM 1610 map snap + card, dashboard,
+  donut, recipe, catalog + example tap, fallback to chat, menu lookup and sales untouched, "close the map"; zero page
+  errors. Not tested end to end against the live function from this container (supabase.co blocked).
+- handoff/HARMONY_DATA_CATALOG.md documents containers, sources and example prompts.

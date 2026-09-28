@@ -1,0 +1,366 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+
+/* PHG HARMONY DATA — lets Harmony show any PHG data in the Harmony view.
+
+   The model never writes SQL. It only picks one entry from SOURCES (a fixed
+   catalog of read-only, parameterised queries) plus parameters and a display
+   container; this function runs that query with the service role and returns
+   a "view" the app renders (map, bars, donut, table, tiles, profile card,
+   recipe card) together with one spoken sentence built from the real numbers.
+   Obvious requests (a NOM number, a ZIP code) skip the model entirely.
+
+   Distillery coordinates: production_sites has no coordinates yet, so each
+   NOM is placed at the centre of the municipality in its CRT registered
+   address and flagged approx=true ("registered address, may be an office"). */
+
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+const json = (x: unknown, s = 200) =>
+  new Response(JSON.stringify(x), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
+
+/* municipality seat coordinates (lat, lng) for every town in the CRT addresses */
+const MUNI: Record<string, [number, number]> = {
+  "GUADALAJARA": [20.6767, -103.3475], "TEQUILA": [20.882, -103.8363], "AMATITAN": [20.834, -103.724],
+  "ZAPOPAN": [20.7236, -103.3848], "ARANDAS": [20.7048, -102.3458], "EL ARENAL": [20.776, -103.692],
+  "TEPATITLAN DE MORELOS": [20.817, -102.763], "ATOTONILCO EL ALTO": [20.551, -102.51],
+  "SAN JUANITO DE ESCOBEDO": [20.8, -104.0], "JESUS MARIA": [20.609, -102.223],
+  "TLAJOMULCO DE ZUÑIGA": [20.474, -103.443], "TLAJOMULCO DE ZUNIGA": [20.474, -103.443], "TEPIC": [21.5042, -104.8946],
+  "SAN IGNACIO CERRO GORDO": [20.74, -102.51], "VILLA CORONA": [20.399, -103.689],
+  "CUAUHTEMOC": [19.433, -99.147], "DEGOLLADO": [20.467, -102.154], "ALVARO OBREGON": [19.359, -99.204],
+  "ZAPOTLAN DEL REY": [20.466, -102.926], "TLAQUEPAQUE": [20.641, -103.293], "MIGUEL HIDALGO": [19.432, -99.2],
+  "IXTLAN DEL RIO": [21.035, -104.367], "TALA": [20.653, -103.701], "TOTOTLAN": [20.54, -102.79],
+  "SAHUAYO": [20.058, -102.724], "UNION DE TULA": [19.957, -104.267], "AGUASCALIENTES": [21.881, -102.291],
+  "VILLA HIDALGO": [21.676, -102.588], "HUANIMARO": [20.367, -101.499], "AMACUECA": [19.999, -103.6],
+  "EL SALTO": [20.519, -103.181], "JUANACATLAN": [20.509, -103.169], "PURISIMA DEL RINCON": [21.035, -101.878],
+  "AYOTLAN": [20.53, -102.336], "EL GRULLO": [19.806, -104.216], "JAMAY": [20.294, -102.709],
+  "AUTLAN DE NAVARRO": [19.771, -104.365], "QUERETARO": [20.5888, -100.3899], "PENJAMO": [20.431, -101.722],
+  "GONZALEZ": [22.828, -98.429], "BENITO JUAREZ": [19.372, -99.157], "MARCOS CASTELLANOS": [19.966, -103.017],
+  "MARAVATIO": [19.894, -100.443], "ZAPOTLAN EL GRANDE": [19.704, -103.461], "TULTITLAN": [19.645, -99.169],
+  "SAN MARTIN HIDALGO": [20.435, -103.928], "SAN JULIAN": [21.01, -102.172], "TIZAPAN EL ALTO": [20.16, -103.05],
+  "CUAJIMALPA DE MORELOS": [19.357, -99.299], "ROMITA": [20.871, -101.516], "MAGDALENA": [20.911, -103.98],
+  "TONAYA": [19.786, -103.972], "VALLE DE JUAREZ": [19.93, -102.943],
+};
+const STATE_CENTRE: Record<string, [number, number]> = {
+  "JALISCO": [20.66, -103.35], "NAYARIT": [21.75, -104.85], "GUANAJUATO": [21.02, -101.26],
+  "MICHOACAN DE OCAMPO": [19.57, -101.71], "TAMAULIPAS": [24.27, -98.84], "CIUDAD DE MÉXICO": [19.43, -99.13],
+  "AGUASCALIENTES": [21.88, -102.29], "QUERETARO DE ARTEAGA": [20.59, -100.39], "MEXICO": [19.35, -99.63],
+};
+const STATE_NAMES: Record<string, string> = { IA: "Iowa", CO: "Colorado", NY: "New York" };
+
+function addressOf(notes: string | null) {
+  const n = String(notes || "");
+  const m = n.match(/Registered address[^:]*:\s*(.*?)\.\s*May be/i);
+  const addr = m ? m[1].replace(/\s+/g, " ").trim() : "";
+  const t = n.match(/C\.P\.\s*\d{5}\.?\s*\.?\s*([^,.]+),\s*([^.]+?)\.\s*May be/i);
+  const muni = t ? t[1].trim().toUpperCase() : "";
+  const state = t ? t[2].trim().toUpperCase() : "";
+  const c = MUNI[muni] || STATE_CENTRE[state] || null;
+  return { addr, muni, state, coord: c, approx: MUNI[muni] ? "municipality" : c ? "state" : null };
+}
+const title = (s: string) => s.toLowerCase().replace(/(^|[\s(\-/])([a-zà-ÿ])/g, (_a, p, ch) => p + ch.toUpperCase());
+const money = (n: unknown) => (n == null || !isFinite(Number(n)) ? null : Math.round(Number(n) * 100) / 100);
+const esc = (s: string) => s.replace(/[%_,()]/g, " ").trim();
+
+/* ---------------- the catalog ---------------- */
+type P = Record<string, any>;
+type View = Record<string, any>;
+type Result = { speak: string; view: View };
+
+const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<Result> }> = {
+  distillery: {
+    about: "One tequila/mezcal distillery by NOM number or producer name: map pin in Mexico + profile card with its brands.",
+    async run(db, p) {
+      let q = db.from("organizations").select("id,organization_name,nom,notes,organization_types,verified_at").not("nom", "is", null).limit(8);
+      const nom = String(p.nom || "").replace(/\D/g, "");
+      if (nom) q = q.eq("nom", nom);
+      else if (p.q) q = q.ilike("organization_name", `%${esc(p.q)}%`);
+      else throw new Error("say a NOM number or a producer name");
+      const { data: orgs, error } = await q;
+      if (error) throw error;
+      if (!orgs?.length) {
+        // brand name -> its NOM
+        if (p.q) {
+          const { data: br } = await db.from("brands").select("brand_name,primary_nom").ilike("brand_name", `%${esc(p.q)}%`).not("primary_nom", "is", null).limit(1);
+          if (br?.length) return SOURCES.distillery.run(db, { nom: br[0].primary_nom });
+        }
+        return { speak: `I could not find ${nom ? "NOM " + nom : p.q} in the tequila distillery register.`, view: { type: "empty", title: "Not found" } };
+      }
+      const o = orgs[0], a = addressOf(o.notes);
+      const { data: brands } = await db.from("brands").select("brand_name,category,brand_status").eq("primary_nom", o.nom).order("brand_name").limit(40);
+      const names = (brands || []).map((b: any) => b.brand_name);
+      const name = title(String(o.organization_name).replace(/,?\s*S\.?\s*A\.?.*$/i, ""));
+      const pins = a.coord ? [{ lat: a.coord[0], lng: a.coord[1], label: `NOM ${o.nom} · ${name}`, sub: a.muni ? title(a.muni) + ", " + title(a.state) : "", approx: a.approx }] : [];
+      return {
+        speak: `NOM ${o.nom} is ${name}${a.muni ? `, registered in ${title(a.muni)}, ${title(a.state)}` : ""}.` +
+          (names.length ? ` It makes ${names.length} brand${names.length > 1 ? "s" : ""} we track, including ${names.slice(0, 3).join(", ")}.` : "") +
+          (a.approx ? " The pin is the town centre of its registered address, which may be an office." : ""),
+        view: {
+          type: "map", title: `NOM ${o.nom} · ${name}`, pins, focus: a.coord ? { lat: a.coord[0], lng: a.coord[1], zoom: a.approx === "state" ? 7 : 11 } : null, region: "MX",
+          card: { kind: "profile", title: name, badge: `NOM ${o.nom}`, rows: [["Legal name", o.organization_name], ["Registered address", a.addr || "—"], ["Town", a.muni ? title(a.muni) + ", " + title(a.state) : "—"], ["Register", "CRT, verified " + (o.verified_at || "")]], chips: names, note: "Location is the municipality centre of the registered address (may be an office, not the distillery)." },
+        },
+      };
+    },
+  },
+  distilleries: {
+    about: "All NOM distilleries, optionally in one Mexican town or state (e.g. Arandas, Tequila, Jalisco): map of pins + counts by town.",
+    async run(db, p) {
+      const { data, error } = await db.from("organizations").select("organization_name,nom,notes").not("nom", "is", null).limit(1000);
+      if (error) throw error;
+      const want = String(p.town || p.state || p.q || "").toUpperCase().trim();
+      const rows = (data || []).map((o: any) => ({ o, a: addressOf(o.notes) })).filter((r: any) => r.a.coord && (!want || r.a.muni.includes(want) || r.a.state.includes(want)));
+      const jitter = (i: number) => ((i * 7919) % 100) / 100 - 0.5;
+      const pins = rows.map((r: any, i: number) => ({ lat: r.a.coord[0] + jitter(i) * 0.03, lng: r.a.coord[1] + jitter(i + 13) * 0.03, label: `NOM ${r.o.nom} · ${title(String(r.o.organization_name).replace(/,?\s*S\.?\s*A\.?.*$/i, ""))}`, sub: title(r.a.muni), nom: r.o.nom }));
+      const by: Record<string, number> = {};
+      rows.forEach((r: any) => { const k = title(r.a.muni); by[k] = (by[k] || 0) + 1; });
+      const bars = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([label, value]) => ({ label, value }));
+      return {
+        speak: `${rows.length} registered distilleries${want ? " in " + title(want) : ""}${bars.length > 1 ? `. The most are in ${bars[0].label} with ${bars[0].value}` : ""}.`,
+        view: { type: "map", title: `Tequila distilleries${want ? " · " + title(want) : ""}`, pins, region: "MX", side: { type: "bars", title: "By town", bars } },
+      };
+    },
+  },
+  venues: {
+    about: "Bars/restaurants we track in IA, CO, NY, filtered by city, state, venue type or name: map of pins.",
+    async run(db, p) {
+      let q = db.from("mv_dash_pins").select("venue,city,state_code,venue_type,rating,lat,lng,drink_items").not("lat", "is", null).limit(800);
+      if (p.state) q = q.eq("state_code", String(p.state).toUpperCase().slice(0, 2));
+      if (p.city) q = q.ilike("city", esc(p.city));
+      if (p.venue_type) q = q.ilike("venue_type", `%${esc(p.venue_type)}%`);
+      if (p.q) q = q.ilike("venue", `%${esc(p.q)}%`);
+      if (p.with_menus) q = q.gt("drink_items", 0);
+      const { data, error } = await q.order("drink_items", { ascending: false });
+      if (error) throw error;
+      const pins = (data || []).map((v: any) => ({ lat: +v.lat, lng: +v.lng, label: v.venue, sub: `${v.city}, ${v.state_code}${v.venue_type ? " · " + v.venue_type : ""}${v.drink_items ? " · " + v.drink_items + " drinks" : ""}`, weight: v.drink_items || 0 }));
+      const where = [p.q, p.venue_type, p.city, p.state && (STATE_NAMES[String(p.state).toUpperCase()] || p.state)].filter(Boolean).join(", ");
+      return { speak: pins.length ? `${pins.length}${pins.length >= 800 ? "+" : ""} venues${where ? " for " + where : ""} on the map.` : `No venues found${where ? " for " + where : ""}.`, view: { type: "map", title: `Venues${where ? " · " + where : ""}`, pins, region: "US" } };
+    },
+  },
+  drink_prices: {
+    about: "Prices of a drink or drink family (e.g. margarita, espresso martini, IPA, tequila) across menus, optionally in a city/state; group_by city, venue_type or venue: stat tiles + bars + sample table.",
+    async run(db, p) {
+      let q = db.from("mv_drink_explorer").select("item_name,item_price,venue,city,state_code,venue_type,family,drink_name").not("item_price", "is", null).gt("item_price", 0).limit(4000);
+      if (p.q) q = q.or(`item_name.ilike."%${esc(p.q)}%",drink_name.ilike."%${esc(p.q)}%"`);
+      if (p.family) q = q.eq("family", String(p.family).toLowerCase());
+      if (p.state) q = q.eq("state_code", String(p.state).toUpperCase().slice(0, 2));
+      if (p.city) q = q.ilike("city", esc(p.city));
+      const { data, error } = await q;
+      if (error) throw error;
+      const rows = (data || []).filter((r: any) => r.item_price < 500);
+      if (!rows.length) return { speak: `I found no priced ${p.q || p.family || "drinks"} on the menus we have${p.city ? " in " + p.city : ""}.`, view: { type: "empty", title: "No prices" } };
+      const prices = rows.map((r: any) => +r.item_price).sort((a: number, b: number) => a - b);
+      const avg = prices.reduce((a: number, b: number) => a + b, 0) / prices.length, med = prices[Math.floor(prices.length / 2)];
+      const g = ["city", "venue_type", "venue", "state_code"].includes(p.group_by) ? p.group_by : "city";
+      const agg: Record<string, number[]> = {};
+      rows.forEach((r: any) => { const k = r[g] || "—"; (agg[k] = agg[k] || []).push(+r.item_price); });
+      const bars = Object.entries(agg).filter(([, v]) => v.length >= (g === "venue" ? 1 : 3)).map(([label, v]) => ({ label, value: money(v.reduce((a, b) => a + b, 0) / v.length), n: v.length })).sort((a: any, b: any) => b.n - a.n).slice(0, 12).sort((a: any, b: any) => b.value - a.value);
+      const what = p.q || p.family || "drinks";
+      return {
+        speak: `Across ${rows.length} priced ${what} on our menus${p.city ? " in " + p.city : ""}, the average is $${avg.toFixed(2)} and the median $${med.toFixed(2)}, from $${prices[0]} to $${prices[prices.length - 1]}.`,
+        view: {
+          type: "dashboard", title: `${title(String(what))} prices${p.city ? " · " + p.city : p.state ? " · " + p.state : ""}`,
+          tiles: [{ label: "Average", value: "$" + avg.toFixed(2) }, { label: "Median", value: "$" + med.toFixed(2) }, { label: "Range", value: `$${prices[0]}–$${prices[prices.length - 1]}` }, { label: "Menu items", value: String(rows.length) }],
+          bars: { title: `Average by ${g.replace("_code", "").replace("_", " ")}`, unit: "$", bars },
+          table: { cols: ["Drink", "Price", "Venue", "City"], rows: rows.slice(0, 40).map((r: any) => [r.item_name, "$" + r.item_price, r.venue, r.city]) },
+        },
+      };
+    },
+  },
+  category_share: {
+    about: "Which spirit categories appear most on menus (tequila, whiskey, vodka...): donut + table with venues, brands and average price.",
+    async run(db) {
+      const { data, error } = await db.from("v_menu_category_share").select("*").not("spirit_category", "in", "(unknown,unclassified)").order("items", { ascending: false }).limit(20);
+      if (error) throw error;
+      const rows = data || [];
+      return {
+        speak: rows.length ? `${title(rows[0].spirit_category)} leads with ${rows[0].items} menu items across ${rows[0].venues} venues, then ${rows.slice(1, 3).map((r: any) => title(r.spirit_category)).join(" and ")}.` : "No category data yet.",
+        view: { type: "donut", title: "Spirit categories on menus", slices: rows.slice(0, 9).map((r: any) => ({ label: title(r.spirit_category), value: +r.items })), table: { cols: ["Category", "Items", "Venues", "Brands", "Avg $"], rows: rows.map((r: any) => [title(r.spirit_category), r.items, r.venues, r.distinct_brands, r.avg_price ? "$" + (+r.avg_price).toFixed(2) : "—"]) } },
+      };
+    },
+  },
+  top_brands: {
+    about: "Most-listed spirit brands on menus (optionally one brand's presence): ranked bars by venues, with menu items and average price.",
+    async run(db, p) {
+      let q = db.from("v_menu_brand_presence").select("*").order("venues", { ascending: false }).limit(p.q ? 10 : 20);
+      if (p.q) q = q.ilike("brand_name", `%${esc(p.q)}%`);
+      const { data, error } = await q;
+      if (error) throw error;
+      const rows = data || [];
+      if (!rows.length) return { speak: `${p.q || "That brand"} does not show up on the menus we have read yet.`, view: { type: "empty", title: "No brand matches" } };
+      return {
+        speak: p.q ? `${rows[0].brand_name} is on ${rows[0].venues} venue menus in ${rows[0].menu_items} items${rows[0].avg_price ? `, averaging $${(+rows[0].avg_price).toFixed(2)}` : ""}.` : `${rows[0].brand_name} is the most-listed brand, on ${rows[0].venues} venue menus, followed by ${rows.slice(1, 3).map((r: any) => r.brand_name).join(" and ")}.`,
+        view: { type: "bars", title: p.q ? `Brand presence · ${p.q}` : "Top brands on menus", bars: rows.map((r: any) => ({ label: r.brand_name, value: +r.venues, sub: `${r.menu_items} items${r.avg_price ? " · $" + (+r.avg_price).toFixed(2) : ""}` })), unit: " venues" },
+      };
+    },
+  },
+  cocktail_recipe: {
+    about: "A classic cocktail's reference spec (build, glass, garnish, method) plus how often and at what price it appears on menus: recipe card.",
+    async run(db, p) {
+      const name = esc(String(p.q || ""));
+      if (!name) throw new Error("which cocktail?");
+      const { data } = await db.from("cocktail_reference").select("cocktail_name,base_spirit,profile,consensus_spec,method,glassware,garnish,harmony_build_family").ilike("cocktail_name", `%${name}%`).limit(1);
+      const r = data?.[0];
+      const { data: seen } = await db.from("mv_drink_explorer").select("item_price").ilike("drink_name", `%${name}%`).not("item_price", "is", null).limit(3000);
+      const pr = (seen || []).map((x: any) => +x.item_price).filter((x: number) => x > 0 && x < 200);
+      const avg = pr.length ? pr.reduce((a: number, b: number) => a + b, 0) / pr.length : null;
+      if (!r && !pr.length) return { speak: `I do not have a reference spec for ${p.q}.`, view: { type: "empty", title: "No spec" } };
+      return {
+        speak: (r ? `${r.cocktail_name}: ${r.consensus_spec || r.profile || ""}`.trim() : title(name)) + (pr.length ? ` It is on ${pr.length} menu listings we have read, averaging $${avg!.toFixed(2)}.` : ""),
+        view: { type: "recipe", title: r?.cocktail_name || title(name), spec: r?.consensus_spec || "", rows: r ? [["Base", r.base_spirit], ["Family", r.harmony_build_family], ["Method", r.method], ["Glass", r.glassware], ["Garnish", r.garnish], ["Profile", r.profile]].filter((x) => x[1]) : [], tiles: pr.length ? [{ label: "On menus", value: String(pr.length) }, { label: "Average", value: "$" + avg!.toFixed(2) }] : [] },
+      };
+    },
+  },
+  zip_demographics: {
+    about: "Census (ACS) demographics for a US ZIP code: population, median age, income, share 21-34, households over $100k, degrees: stat tiles.",
+    async run(db, p) {
+      const z = String(p.zip || "").replace(/\D/g, "").slice(0, 5);
+      if (z.length !== 5) throw new Error("say a five-digit ZIP code");
+      const { data } = await db.from("phg_census_zcta").select("*").eq("zcta", z).limit(1);
+      const c = data?.[0];
+      if (!c) return { speak: `I do not have census data for ZIP ${z}. We loaded Iowa, Colorado and New York.`, view: { type: "empty", title: "No census data" } };
+      const pct = (x: any) => (x == null ? "—" : (+x).toFixed(1) + "%");
+      return {
+        speak: `ZIP ${z} has about ${(+c.total_population).toLocaleString("en-US")} people, median age ${c.median_age}, and median household income $${(+c.median_household_income).toLocaleString("en-US")}.`,
+        view: { type: "tiles", title: `ZIP ${z}${c.state ? " · " + c.state : ""} · ACS ${c.acs_vintage || ""}`, tiles: [{ label: "Population", value: (+c.total_population).toLocaleString("en-US") }, { label: "Median age", value: String(c.median_age) }, { label: "Median income", value: "$" + (+c.median_household_income).toLocaleString("en-US") }, { label: "Age 21–34", value: pct(c.pop_21_34_pct) }, { label: "Households $100k+", value: pct(c.households_over_100k_pct) }, { label: "Bachelor's+", value: pct(c.bachelors_or_higher_pct) }, { label: "Hispanic/Latino", value: pct(c.hispanic_latino_pct) }] },
+      };
+    },
+  },
+  coverage: {
+    about: "How much data PHG has: venues, websites, menus read, drink items, brands per state (IA, CO, NY): tiles + bars.",
+    async run(db) {
+      const { data, error } = await db.from("v_public_stats").select("*");
+      if (error) throw error;
+      const rows = data || [];
+      const sum = (k: string) => rows.reduce((a: number, r: any) => a + (+r[k] || 0), 0);
+      return {
+        speak: `We track ${sum("venues").toLocaleString("en-US")} venues, have read ${sum("menus_read").toLocaleString("en-US")} menus and ${sum("drink_items").toLocaleString("en-US")} drink items across ${rows.length} states.`,
+        view: { type: "dashboard", title: "PHG data coverage", tiles: [{ label: "Venues", value: sum("venues").toLocaleString("en-US") }, { label: "Websites", value: sum("websites").toLocaleString("en-US") }, { label: "Menus read", value: sum("menus_read").toLocaleString("en-US") }, { label: "Drink items", value: sum("drink_items").toLocaleString("en-US") }], bars: { title: "Drink items by state", bars: rows.map((r: any) => ({ label: STATE_NAMES[r.state_code] || r.state_code, value: +r.drink_items, sub: `${(+r.venues).toLocaleString("en-US")} venues` })) } },
+      };
+    },
+  },
+  venue_profile: {
+    about: "One venue's drinks profile: counts of cocktails/beer/wine/spirits, cocktail median price, neighbourhood income and age band, spirit mix: profile card + donut.",
+    async run(db, p) {
+      if (!p.q) throw new Error("which venue?");
+      let q = db.from("mv_menu_dev_venue_profile").select("*").ilike("venue", `%${esc(p.q)}%`).limit(1);
+      if (p.city) q = q.ilike("city", esc(p.city));
+      const { data } = await q;
+      const v = data?.[0];
+      if (!v) return { speak: `I have no drinks profile for ${p.q}${p.city ? " in " + p.city : ""} yet.`, view: { type: "empty", title: "No profile" } };
+      const { data: cp } = await db.from("v_venue_cocktail_profile").select("spirit_mix,originals,share_originals").ilike("venue", v.venue).limit(1);
+      const mix = cp?.[0]?.spirit_mix && typeof cp[0].spirit_mix === "object" ? Object.entries(cp[0].spirit_mix).map(([k, n]) => ({ label: title(k), value: +(n as number) })).filter((s) => s.value > 0) : [];
+      return {
+        speak: `${v.venue} in ${v.city} lists ${v.cocktail_items} cocktails${v.cocktail_median_price ? ` at a median of $${(+v.cocktail_median_price).toFixed(2)}` : ""}, ${v.beer_items} beers, ${v.wine_items} wines and ${v.liquor_items} spirits.`,
+        view: { type: "profile", title: v.venue, badge: `${v.city}, ${v.state_code}`, rows: [["Type", v.venue_type], ["Rating", v.rating], ["Area income", v.income ? "$" + (+v.income).toLocaleString("en-US") + " · " + v.income_band : v.income_band], ["Area age", v.median_age ? v.median_age + " · " + v.age_band : v.age_band]].filter((r) => r[1]), tiles: [{ label: "Cocktails", value: String(v.cocktail_items) }, { label: "Median cocktail", value: v.cocktail_median_price ? "$" + (+v.cocktail_median_price).toFixed(2) : "—" }, { label: "Beer", value: String(v.beer_items) }, { label: "Wine", value: String(v.wine_items) }, { label: "Spirits", value: String(v.liquor_items) }, { label: "Zero proof", value: String(v.na_items) }], donut: mix.length ? { title: "Cocktail spirit mix", slices: mix } : null },
+      };
+    },
+  },
+  label_approvals: {
+    about: "US TTB COLA label approvals for a brand or product name (recent first): table.",
+    async run(db, p) {
+      if (!p.q) throw new Error("which brand?");
+      const { data, error } = await db.from("cola_label_approvals").select("ttb_id,completed_date,brand_name_raw,fanciful_name,class_type_desc,origin_desc").or(`brand_name_raw.ilike."%${esc(p.q)}%",fanciful_name.ilike."%${esc(p.q)}%"`).order("completed_date", { ascending: false }).limit(60);
+      if (error) throw error;
+      const rows = data || [];
+      return {
+        speak: rows.length ? `${rows.length}${rows.length >= 60 ? "+" : ""} label approvals for ${p.q}, the latest on ${rows[0].completed_date}.` : `No COLA label approvals found for ${p.q}.`,
+        view: { type: "table", title: `Label approvals · ${p.q}`, table: { cols: ["Approved", "Brand", "Product", "Class", "Origin"], rows: rows.map((r: any) => [r.completed_date, r.brand_name_raw, r.fanciful_name || "", r.class_type_desc || "", r.origin_desc || ""]) } },
+      };
+    },
+  },
+  menu_breakdown: {
+    about: "Breakdown of one menu section (cocktails, beer, wine, liquor, non_alcoholic) by dimension (item, subfamily, city, venue_type, serve_format) in a state: bars with average prices.",
+    async run(db, p) {
+      const section = ["cocktails", "beer", "wine", "liquor", "non_alcoholic"].includes(p.section) ? p.section : "cocktails";
+      const dim = ["item", "subfamily", "city", "venue_type", "serve_format"].includes(p.group_by) ? p.group_by : "item";
+      let q = db.from("mv_dash_breakdown").select("label,items,avg_price,venues,state_code").eq("section", section).eq("dimension", dim).order("items", { ascending: false }).limit(15);
+      if (p.state) q = q.eq("state_code", String(p.state).toUpperCase().slice(0, 2));
+      const { data, error } = await q;
+      if (error) throw error;
+      const rows = data || [];
+      return {
+        speak: rows.length ? `Top ${section.replace("_", " ")} by ${dim.replace("_", " ")}${p.state ? " in " + (STATE_NAMES[String(p.state).toUpperCase()] || p.state) : ""}: ${rows.slice(0, 3).map((r: any) => `${r.label} (${r.items})`).join(", ")}.` : "No breakdown data.",
+        view: { type: "bars", title: `${title(section.replace("_", " "))} by ${dim.replace("_", " ")}${p.state ? " · " + String(p.state).toUpperCase() : ""}`, bars: rows.map((r: any) => ({ label: r.label, value: +r.items, sub: `${r.venues} venues${r.avg_price ? " · $" + (+r.avg_price).toFixed(2) : ""}` })), unit: " items" },
+      };
+    },
+  },
+};
+
+const PLAN_SCHEMA = {
+  type: "object", additionalProperties: false, required: ["source", "params"],
+  properties: {
+    source: { type: "string", enum: [...Object.keys(SOURCES), "menu_lookup", "none"] },
+    params: {
+      type: "object", additionalProperties: false,
+      required: ["q", "nom", "city", "state", "town", "zip", "family", "venue_type", "section", "group_by"],
+      properties: {
+        q: { type: "string" }, nom: { type: "string" }, city: { type: "string" }, state: { type: "string" }, town: { type: "string" },
+        zip: { type: "string" }, family: { type: "string" }, venue_type: { type: "string" }, section: { type: "string" }, group_by: { type: "string" },
+      },
+    },
+  },
+};
+
+function fastPlan(t: string): { source: string; params: P } | null {
+  const s = t.toLowerCase();
+  const nom = s.match(/\bnom\s*#?\s*-?\s*(\d{3,4})\b/);
+  if (nom) return { source: "distillery", params: { nom: nom[1] } };
+  const zip = s.match(/\b(\d{5})\b/);
+  if (zip && /\b(zip|census|demograph|income|population|age)\b/.test(s)) return { source: "zip_demographics", params: { zip: zip[1] } };
+  if (/\b(all|every|map)\b.*\bdistilleries\b|\bdistilleries\b.*\b(map|in)\b/.test(s)) {
+    const m = s.match(/\bin ([a-zà-ÿ ]+?)(?:\?|$|,)/);
+    return { source: "distilleries", params: { town: m ? m[1].replace(/\b(mexico|jalisco state)\b/, "").trim() : "" } };
+  }
+  if (/\b(how much data|coverage|how many (venues|menus)|data do we have)\b/.test(s)) return { source: "coverage", params: {} };
+  return null;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method !== "POST") return json({ error: "POST required" }, 405);
+  const url = Deno.env.get("SUPABASE_URL"), anon = Deno.env.get("SUPABASE_ANON_KEY"), svc = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"), oa = Deno.env.get("OPENAI_API_KEY");
+  if (!url || !anon || !svc) return json({ error: "runtime configuration missing" }, 500);
+  const auth = req.headers.get("Authorization") || "";
+  if (!auth.toLowerCase().startsWith("bearer ")) return json({ error: "login required" }, 401);
+  const sbu = createClient(url, anon, { auth: { persistSession: false }, global: { headers: { Authorization: auth } } });
+  const { data: ud, error: ue } = await sbu.auth.getUser(auth.slice(7).trim());
+  if (ue || !ud?.user) return json({ error: "invalid or expired login" }, 401);
+  const db = createClient(url, svc, { auth: { persistSession: false } });
+
+  const b = await req.json().catch(() => ({}));
+  if (b.action === "catalog") return json({ status: "ok", sources: Object.fromEntries(Object.entries(SOURCES).map(([k, v]) => [k, v.about])) });
+  const ask = String(b.prompt || "").trim().slice(0, 600);
+  if (!ask && !b.source) return json({ error: "prompt required" }, 400);
+
+  let plan: { source: string; params: P } | null = b.source && SOURCES[b.source] ? { source: b.source, params: b.params || {} } : fastPlan(ask);
+  if (!plan) {
+    if (!oa) return json({ error: "planner unavailable" }, 500);
+    const r = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST", headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: Deno.env.get("OPENAI_DATA_MODEL") || "gpt-4o-mini", max_output_tokens: 300,
+        instructions: "Pick the one PHG data source that answers the request and fill its parameters (empty string when unused). state is a US two-letter code (we have IA, CO, NY). group_by is one of city, venue_type, venue, state_code, item, subfamily, serve_format. section is one of cocktails, beer, wine, liquor, non_alcoholic. family is one of tequila, mezcal, whiskey, vodka, gin, rum, brandy, liqueur, wine, beer, non_alcoholic. Use menu_lookup when they want to SEE a specific venue's menu document. Use none when no source fits.\nSources:\n" + Object.entries(SOURCES).map(([k, v]) => `${k}: ${v.about}`).join("\n") + "\nmenu_lookup: open a specific venue's menu document (q=venue, city, state).",
+        input: ask,
+        text: { format: { type: "json_schema", name: "phg_data_plan", strict: true, schema: PLAN_SCHEMA } },
+      }),
+    });
+    const raw = await r.json().catch(() => ({}));
+    let t = typeof raw.output_text === "string" ? raw.output_text : "";
+    if (!t && Array.isArray(raw.output)) for (const o of raw.output) for (const c of (o?.content || [])) if (c?.type === "output_text") t += c.text || "";
+    try { plan = JSON.parse(t); } catch { return json({ error: "could not plan that request", detail: raw?.error?.message }, 502); }
+  }
+  const params: P = {};
+  for (const [k, v] of Object.entries(plan!.params || {})) if (v != null && String(v).trim() !== "") params[k] = String(v).trim().slice(0, 80);
+  if (plan!.source === "menu_lookup" || plan!.source === "none") return json({ status: "ok", source: plan!.source, params });
+  const src = SOURCES[plan!.source];
+  if (!src) return json({ status: "ok", source: "none", params });
+  try {
+    const out = await src.run(db, params);
+    return json({ status: "ok", source: plan!.source, params, ...out });
+  } catch (e) {
+    return json({ status: "ok", source: plan!.source, params, speak: "I could not pull that: " + String((e as Error)?.message || e), view: { type: "empty", title: "Could not load" } });
+  }
+});
