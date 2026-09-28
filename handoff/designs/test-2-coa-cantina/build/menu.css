@@ -1,16 +1,18 @@
 
-/* Coa Cantina drinks — US Legal 8.5 x 14 in, 0.5 in margins, 6-column grid (75pt columns, 18pt gutters) */
+/* Coa Cantina drinks, round 2. US Legal 8.5 x 14 in, 0.5 in margins, 12-column grid (28.5pt columns, 18pt gutters). */
 :root{
   --paper:#F5EEDF; --ink:#1F1B18; --terra:#A8361F; --teal:#135651; --mari:#E3A33B; --muted:#57504A; --tint:#EEE3CD; --dot:#B9A98F;
+  --l1gap:21pt;      /* space above every level-1 header = 7.41 mm */
+  --igap:var(--igap-v,15pt);   /* gap between cocktail items */
+  --row:var(--row-v,16pt);     /* list row pitch */
 }
 @page{size:8.5in 14in;margin:0}
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body{background:#CFC6B6;font-family:'DM Sans',sans-serif;color:var(--ink);font-feature-settings:"tnum" 1,"lnum" 1}
-.page{width:8.5in;height:14in;padding:36pt;background:var(--paper);margin:0 auto 24px;display:flex;flex-direction:column;overflow:hidden;position:relative;page-break-after:always;break-after:page}
+.page{width:8.5in;height:14in;padding:36pt;background:var(--paper);margin:0 auto 24px;display:flex;flex-direction:column;overflow:hidden;position:relative;break-after:page}
 @media print{body{background:none}.page{margin:0}}
 
-/* masthead */
 .mast{flex:none}
 .papel{display:block;width:540pt;height:20pt}
 .mastrow{display:flex;justify-content:space-between;align-items:flex-end;margin-top:12pt}
@@ -20,93 +22,104 @@ body{background:#CFC6B6;font-family:'DM Sans',sans-serif;color:var(--ink);font-f
 .kicker{font-size:7.5pt;line-height:12pt;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
 .doublerule{height:5pt;border-top:2pt solid var(--mari);border-bottom:.75pt solid var(--ink);margin-top:10pt}
 
-.body{flex:1;display:flex;flex-direction:column;margin-top:21pt}
+.body{flex:1;display:flex;flex-direction:column;margin-top:var(--l1gap)}
 .halves{display:grid;grid-template-columns:261pt 261pt;column-gap:18pt}
 .thirds{display:grid;grid-template-columns:168pt 168pt 168pt;column-gap:18pt}
 .quarters{display:grid;grid-template-columns:121.5pt 121.5pt 121.5pt 121.5pt;column-gap:18pt}
+.single{display:grid;grid-template-columns:540pt}
 .col{display:flex;flex-direction:column;min-width:0}
-.band{margin-top:21pt}
+.band{margin-top:var(--l1gap)}
 .body > .band:first-child{margin-top:0}
 
-/* level 1 header: Fraunces 18pt terracotta with a hairline running to the column edge */
-.h1{display:flex;align-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:18pt;line-height:24pt;color:var(--terra);margin:0 0 9pt;font-variation-settings:"opsz" 72,"SOFT" 30}
-.h1::after{content:"";flex:1;border-top:.75pt solid var(--terra);margin-left:9pt;transform:translateY(2pt)}
-/* level 2 header: DM Sans caps, teal */
+/* level 1 header, with Spanish kicker and a hairline to the column edge */
+.h1{display:flex;align-items:baseline;font-family:'Fraunces',serif;font-weight:800;font-size:18pt;line-height:24pt;color:var(--terra);margin:0 0 9pt;font-variation-settings:"opsz" 72,"SOFT" 30}
+.h1 .es{font-style:italic;font-weight:500;font-size:11pt;color:var(--teal);margin-left:8pt;font-variation-settings:"opsz" 24}
+.h1::after{content:"";flex:1;border-top:.75pt solid var(--terra);margin-left:9pt;align-self:center;transform:translateY(2pt)}
+/* level 2 header */
 .h2{font-size:8pt;line-height:12pt;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);padding-bottom:3pt;border-bottom:.75pt solid var(--teal);margin:0 0 4.5pt}
-.blk + .blk{margin-top:21pt}
 .band .thirds .blk + .blk,.band .quarters .blk + .blk{margin-top:15pt}
+.intro{font-size:9pt;line-height:12pt;font-style:italic;color:var(--muted);margin:0 0 9pt}
 
 .line{display:flex;align-items:baseline;justify-content:space-between;gap:6pt}
 .pr{font-weight:700;color:var(--teal);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums lining-nums}
-.pr.na{color:var(--muted);font-weight:500}
 
 /* cocktail items */
-.ritem{margin-bottom:12pt}
-.ritem:last-child{margin-bottom:0}
+.ritem{margin-bottom:var(--igap)}
+.rows > .ritem:last-child,.col > .ritem:last-child{margin-bottom:0}
 .ritem .nm{font-family:'Fraunces',serif;font-weight:650;font-size:12.5pt;line-height:16pt;font-variation-settings:"opsz" 24}
 .ritem .pr{font-size:12pt;line-height:16pt}
-.ritem .pr.small{font-size:9.5pt;line-height:12pt;font-weight:700}
+.ritem .pr.small{font-size:9.5pt;line-height:12pt}
 .ritem .ds{font-size:9pt;line-height:12pt;color:var(--muted)}
 .ritem .up .ds{font-style:italic}
 .ritem .line:first-child .nm{flex:1;display:flex;align-items:baseline}
 .ritem .line:first-child .nm::after{content:"";flex:1;border-bottom:.75pt dotted var(--dot);margin:0 0 3pt 6pt}
-.feature .nm{color:var(--terra)}
-.feature{padding:0 0 5.25pt;border-bottom:1.5pt solid var(--mari);margin-bottom:5.25pt}
-.feature .nm{font-size:14pt}
+.feature .nm{color:var(--terra);font-size:14pt}
 .feature .pr{font-size:13pt}
+.feature{padding-bottom:calc((var(--igap) - 1.5pt) / 2);border-bottom:1.5pt solid var(--mari);margin-bottom:calc((var(--igap) - 1.5pt) / 2)}
 
-/* list rows (beer, spirits) */
-.row .nm{font-size:9.5pt;line-height:14pt;font-weight:500;flex:1;display:flex;align-items:baseline;min-width:0}
+/* list rows */
+.row .nm{font-size:9.5pt;line-height:var(--row);font-weight:500;flex:1;display:flex;align-items:baseline;min-width:0}
 .row .nm::after{content:"";flex:1;border-bottom:.75pt dotted var(--dot);margin:0 0 3pt 5pt;min-width:6pt}
-.row .pr{font-size:9.5pt;line-height:14pt}
-.row .ds{font-size:8pt;line-height:11pt;color:var(--muted);margin-top:-1pt;padding-bottom:2pt}
+.row .pr{font-size:9.5pt;line-height:var(--row)}
+.row .ds{font-size:8pt;line-height:11pt;color:var(--muted);margin-top:-2pt;padding-bottom:3pt}
 
-/* tequila matrix */
-.matrix .mhead,.matrix .mrow{display:grid;grid-template-columns:1fr 36pt 36pt 36pt;align-items:baseline;padding:0 4pt}
-.mhead{border-bottom:1pt solid var(--teal);padding-bottom:3pt!important;margin-bottom:2pt}
-.mhead .mc{font-size:6.5pt;line-height:12pt;font-weight:800;letter-spacing:0;color:var(--teal);text-align:right}
+/* tequila grid: labels in level-2 style */
+.matrix .mhead,.matrix .mrow,.tq-phone .mhead,.tq-phone .mrow{display:grid;grid-template-columns:1fr 34pt 42pt 34pt;align-items:baseline;padding:0 0 0 4pt}
+.mhead{border-bottom:.75pt solid var(--teal);padding-bottom:3pt!important;margin-bottom:2pt}
+.mhead .mc{font-size:7.5pt;line-height:12pt;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--teal);text-align:right}
 .mrow{min-height:13pt}
 .mrow .nm{font-size:9pt;line-height:13pt;font-weight:500;letter-spacing:-0.06pt}
 .mrow .mc{font-size:9pt;line-height:13pt;text-align:right}
 .mrow .empty{color:var(--dot)}
-.matrix > .mrow:nth-of-type(even), .mgroup > .mrow:nth-of-type(even){background:var(--tint)}
-.mgroup{margin-top:9pt}
-.mgroup .h2{margin:0 4pt 4.5pt}
+.matrix > .mrow:nth-of-type(even), .mgroup > .mrow:nth-of-type(even), .tq-phone > .mrow:nth-of-type(even){background:var(--tint)}
+.mgroup{margin-top:12pt}
+.mgroup .h2{margin:0}
+.mgroup .mhead.rep{border-bottom:.75pt solid var(--teal)}
+.tq-phone{display:none}
 
 /* ornaments */
-.divider{display:flex;align-items:center;gap:10pt;margin-top:auto;padding-top:18pt}
+.divider{display:flex;align-items:center;gap:10pt}
 .divider .rule{flex:1;border-top:.75pt solid var(--mari)}
 .divider .agave{width:54pt;height:31pt}
 .foot{flex:none;display:flex;justify-content:space-between;align-items:center;border-top:.75pt solid var(--ink);padding-top:6pt;margin-top:18pt;font-size:7pt;line-height:12pt;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 .foot .agave{width:22pt;height:12pt;display:block}
 
-/* phone */
+/* phone: one masthead, one footer, reading order Margaritas > Cocktails > Frozen > Beer > Seltzer & Cider > Tequila & Spirits > Sin Alcohol */
 @media (max-width:640px){
-  body{background:var(--paper)}
-  .page{width:auto;height:auto;padding:20px 18px 24px;margin:0;overflow:visible}
+  body{background:var(--paper);display:flex;flex-direction:column;padding:20px 18px 24px}
+  .page,.page > .body,.top,.top > .col{display:contents}
+  #page-2 .mast,#page-1 .foot,.foot .pg,.divider{display:none}
+  .mast,.blk,.band,.foot{order:var(--o,0)}
+  .top .blk + .blk,.top > .col + .col .blk{margin-top:26px}
+  .top > .col:last-child .blk{margin-top:26px}
+  .band{display:flex;flex-direction:column;margin-top:26px}
+  .band > .h1,.band > .intro{order:-1}
+  .band .thirds,.band .quarters,.band .thirds > .col,.band .quarters > .col{display:contents}
+  .band .blk{order:var(--po,0);margin-top:18px}
+  .band .halves,.band .single{display:block}
+  .band .halves > .col + .col{margin-top:15pt}
+  .tq-print{display:none}
+  .tq-phone{display:block}
+  .tq-phone .mhead.sticky{position:sticky;top:0;background:var(--paper);z-index:2;padding-top:6px!important}
   .papel{width:100%;height:auto}
   .mastrow{flex-direction:column;align-items:flex-start;gap:6px}
   .wordmark{font-size:40px;line-height:44px}
   .mastright{text-align:left}
   .masttitle{font-size:22px;line-height:26px}
   .kicker{font-size:10px;line-height:16px}
-  .halves,.thirds,.quarters{display:block}
-  .halves > .col + .col,.thirds > .col + .col,.quarters > .col + .col{margin-top:26px}
-  .h1{font-size:24px;line-height:30px;margin-bottom:10px}
+  .h1{font-size:24px;line-height:30px;margin-bottom:10px;flex-wrap:wrap}
+  .h1 .es{font-size:15px}
   .h2{font-size:11px;line-height:16px}
+  .intro{font-size:13px;line-height:18px}
   .ritem .nm{font-size:17px;line-height:22px}
   .feature .nm{font-size:19px}
   .ritem .pr,.feature .pr{font-size:17px;line-height:22px}
-  .ritem .ds{font-size:13px;line-height:18px}
-  .ritem .pr.small{font-size:13px;line-height:18px}
-  .row .nm,.row .pr{font-size:14px;line-height:24px}
+  .ritem .ds,.ritem .pr.small{font-size:13px;line-height:18px}
+  .row .nm,.row .pr{font-size:14px;line-height:26px}
   .row .ds{font-size:12px;line-height:16px}
-  .matrix .mhead,.matrix .mrow{grid-template-columns:1fr 54px 54px 54px}
-  .mrow{height:auto}
-  .mrow .nm,.mrow .mc{font-size:14px;line-height:19px;padding:4px 0}
-  .mhead .mc{font-size:9.5px}
-  .divider{margin-top:22px}
-  .foot{font-size:9px;line-height:14px;flex-wrap:wrap;gap:6px}
+  .tq-phone .mhead,.tq-phone .mrow{grid-template-columns:1fr 52px 70px 52px}
+  .tq-phone .mrow .nm,.tq-phone .mrow .mc{font-size:14px;line-height:19px;padding:4px 0}
+  .tq-phone .mhead .mc{font-size:10px}
+  .tq-phone .mgroup .h2{margin:8px 0 4px}
+  .foot{font-size:9px;line-height:14px;flex-wrap:wrap;gap:6px;margin-top:30px}
 }
-#page-1 .body{justify-content:space-between}
-@media (max-width:640px){#page-1 .body{justify-content:flex-start}}

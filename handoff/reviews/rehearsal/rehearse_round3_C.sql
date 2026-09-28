@@ -808,7 +808,7 @@ $rehearse_f2$;
   -- Step 3: phg_repair_step3_batch(100) until done, the time budget, or the call cap
   calls := '[]'; rem := -1;
   WHILE rem <> 0 and jsonb_array_length(calls) < 100
-        and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 38000 LOOP
+        and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 30000 LOOP
     t0 := clock_timestamp();
     rem := public.phg_repair_step3_batch(100);
     calls := calls || jsonb_build_object('ms', round(extract(epoch from clock_timestamp()-t0)*1000), 'remaining_venues', rem);

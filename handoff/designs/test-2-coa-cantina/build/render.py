@@ -2,7 +2,9 @@ import json, os, statistics
 from collections import defaultdict
 from playwright.sync_api import sync_playwright
 os.environ.setdefault('PLAYWRIGHT_BROWSERS_PATH', '/opt/pw-browsers')
-OUT = '/home/user/phg-harmony-app/handoff/designs/test-2-coa-cantina'
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.dirname(HERE)
+ELS = os.environ.get('COA_ELS', '/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/t2r2/els.json')
 URL = f'file://{OUT}/menu.html'
 PX2MM = 25.4 / 96; PX2PT = 0.75
 SCALE = 3.125  # 816 css px * 3.125 = 2550 px = 300 dpi at 8.5 in
@@ -12,7 +14,7 @@ JS = r'''
   const out = [];
   document.querySelectorAll('.page').forEach((pg, pi) => {
     const P = pg.getBoundingClientRect();
-    const cols = [...pg.querySelectorAll('.halves > .col, .thirds > .col, .quarters > .col')];
+    const cols = [...pg.querySelectorAll('.halves > .col, .thirds > .col, .quarters > .col, .single > .col')];
     pg.querySelectorAll('[data-k]').forEach(el => {
       const r = el.getBoundingClientRect();
       if (r.width === 0) return;
@@ -29,7 +31,7 @@ JS = r'''
         block: blk ? (blk.querySelector('[data-k=header],[data-k=subheader]')||{}).textContent || blk.className : null,
         x: r.left - P.left, y: r.top - P.top, w: r.width, h: r.height, tw, text: text.slice(0, 90),
         font: cs.fontFamily.split(',')[0].replace(/"/g,''), size: parseFloat(cs.fontSize), color: cs.color, weight: cs.fontWeight,
-        lvl: el.dataset.lvl || null, mcol: el.dataset.col || null});
+        lvl: el.dataset.lvl || null, lvl2: el.dataset.lvl2 || null, mcol: el.dataset.col || null});
     });
     // decorative elements
     pg.querySelectorAll('.papel, .divider, .doublerule, .foot, .feature').forEach(el => {
@@ -58,7 +60,7 @@ def main():
         ph.goto(URL); ph.wait_for_timeout(400)
         ph.screenshot(path=f'{OUT}/preview-phone.png', full_page=True)
         b.close()
-    json.dump(els, open(os.path.join(os.path.dirname(__file__), 'els.json'), 'w'), indent=0)
+    json.dump(els, open(ELS, 'w'), indent=0)
     print('elements', len(els))
 
 if __name__ == '__main__':

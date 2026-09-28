@@ -805,10 +805,38 @@ $rehearse_f2$;
     RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file2','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',right(e_ctx, 600),'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
   END;
   r := r || jsonb_build_object('file2_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
+  t0 := clock_timestamp();
+  BEGIN
+    -- The promotion queue is empty today (v_menu_staging_promotion_candidates = 0 rows). Re-stage one incident item
+    -- page's 13 beverage rows under a NEW sibling ?item= URL: same items, new content hash (the incident pattern).
+    update public.staging_menu_extract
+       set menu_page_url = 'https://thesherpagrill.com/menu?item=rehearsal-new-sibling', promoted_at = null, promotion_status = null, quality_status = 'promotion_ready'
+     where account_id = 'ACC-CO-LED-03-06531' and menu_page_url = 'https://thesherpagrill.com/menu?item=aloo-gobi-NKZx' and superseded_at is null;
+    get diagnostics rem = row_count;
+    select id into cur_id from public.menus where account_id = 'ACC-CO-LED-03-06531' and is_current;
+    t1 := clock_timestamp();
+    res := public.promote_clean_menu_batch(1);
+    c := jsonb_build_object('rows_requeued', rem, 'result', res, 'ms', round(extract(epoch from clock_timestamp()-t1)*1000),
+      'current_unchanged', (select id from public.menus where account_id = 'ACC-CO-LED-03-06531' and is_current) = cur_id,
+      'acct_menus_created', (select count(*) from public.menus where account_id = 'ACC-CO-LED-03-06531' and created_at >= now()),
+      'staging_outcome', (select jsonb_object_agg(coalesce(promotion_status,'(null)'), n) from (select promotion_status, count(*) n from public.staging_menu_extract
+                            where account_id = 'ACC-CO-LED-03-06531' and menu_page_url = 'https://thesherpagrill.com/menu?item=rehearsal-new-sibling' group by 1) x),
+      'multi_current_global', (select count(*) from (select account_id from public.menus where is_current group by 1 having count(*)>1) x));
+    c := c || jsonb_build_object('pass', coalesce((res->>'failed')::int, 1) = 0 and (res->>'created')::int = 0
+              and (coalesce((res->>'alternate')::int,0)+coalesce((res->>'duplicate')::int,0)+coalesce((res->>'held_subset')::int,0)) = 1
+              and (c->>'current_unchanged')::boolean and (c->>'multi_current_global')::int = 0 and (c->>'acct_menus_created')::int = 0);
+    RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback promote';
+  EXCEPTION
+    WHEN sqlstate 'P0099' THEN NULL;
+    WHEN others THEN 
+      GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
+      c := c || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
+  END;
+  r := r || jsonb_build_object('promote_clean_menu_batch_1', c); c := '{}';
   -- Step 3: phg_repair_step3_batch(100) until done, the time budget, or the call cap
   calls := '[]'; rem := -1;
   WHILE rem <> 0 and jsonb_array_length(calls) < 3
-        and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 12000 LOOP
+        and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 8000 LOOP
     t0 := clock_timestamp();
     rem := public.phg_repair_step3_batch(100);
     calls := calls || jsonb_build_object('ms', round(extract(epoch from clock_timestamp()-t0)*1000), 'remaining_venues', rem);
@@ -818,7 +846,7 @@ $rehearse_f2$;
      'venues_done', (select count(*) from public.phg_repair_step3_done)));
   -- Step 4: phg_repair_step4_batch(200)
   calls := '[]'; rem := -1;
-  WHILE rem <> 0 and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 6000 LOOP
+  WHILE rem <> 0 and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 4000 LOOP
     t0 := clock_timestamp();
     rem := public.phg_repair_step4_batch(200);
     calls := calls || jsonb_build_object('ms', round(extract(epoch from clock_timestamp()-t0)*1000), 'remaining_venues', rem);

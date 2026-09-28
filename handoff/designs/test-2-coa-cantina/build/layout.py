@@ -1,8 +1,8 @@
 import json, os
 from collections import defaultdict
-HERE = os.path.dirname(__file__)
-OUT = '/home/user/phg-harmony-app/handoff/designs/test-2-coa-cantina'
-els = json.load(open(f'{HERE}/els.json'))
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.dirname(HERE)
+els = json.load(open(os.environ.get('COA_ELS', '/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/t2r2/els.json')))
 MM = 25.4 / 96; PT = 0.75
 r2 = lambda v: round(v, 2)
 W_MM, H_MM = 215.9, 355.6
@@ -34,7 +34,7 @@ for e in els:
     if e.get('size'): el['font'] = e['font']; el['size_pt'] = r2(e['size'] * PT)
     if e.get('tw'): el['text_w_mm'] = r2(e['tw'] * MM)
     if e.get('lvl'): el['level'] = 'masthead'
-    elif k == 'subheader' and e['text'] in ('Blanco', 'Reposado', 'Añejo') and e.get('col') in ('p2c0', 'p2c1'): el['level'] = 'column_label'
+    elif e.get('lvl2') == 'label': el['level'] = 'column_label'
     elif k == 'header': el['level'] = 1
     elif k == 'subheader': el['level'] = 2
     elements.append(el)

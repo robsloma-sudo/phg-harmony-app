@@ -284,7 +284,7 @@ EXTRACT = f"""
   END;
   r := r || jsonb_build_object('extraction_sibling_duplicate', c); c := '{{}}';"""
 
-B = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + B_CHECKS + PROMOTE + EXTRACT + END
+B = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + B_CHECKS + EXTRACT + END
 
 
 # ---------------------------------------------------------------- blocks C/D: steps 3-4, gate, rollbacks, submit after
@@ -370,9 +370,9 @@ ROLLBACKS = f"""
   r := r || jsonb_build_object('function_rollback_and_submit', c); c := '{{}}';"""
 
 # C: timing - as much of Step 3 as fits in ~40 s
-C = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(38000, 0, 100) + END
+C = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(30000, 0, 100) + END
 # D: a few batches of each step, then the gate, the repair rollback (with staging restore), function rollback + submit
-D = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(12000, 6000, 3) + GATE + ROLLBACKS + END
+D = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + PROMOTE + steps(8000, 4000, 3) + GATE + ROLLBACKS + END
 
 blocks = {'A': A, 'B': B, 'C': C, 'D': D}
 allsql = []
