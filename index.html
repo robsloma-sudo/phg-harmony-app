@@ -6291,7 +6291,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.20 VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.21 HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -39801,7 +39801,7 @@ function say(text){
 }
 
 /* ---------- commands ------------------------------------------------------- */
-var MENU_INTENT=/\b(make|build|create|design|generate|start|draft|mock ?up)\b[^.]*\bmenus?\b|\bmenu (studio|designer|design)\b/i;
+var MENU_INTENT=/\b(make|build|create|design|generate|start|draft|mock ?up)\b[^.]*\bmenus?\b|\bmenu (studio|designer|design)\b|\b(show|open|see|pull up|bring up)\b[^.]*\b(menus?|menu designs?)\b[^.]*\b(working on|you('| a)re (making|building|designing|doing)|studio|designs?)\b/i;
 function stageCommand(q){
   var s=q.toLowerCase().replace(/[.!?]+$/,'').trim(),m,d;
   if(/^(close|exit|done|that'?s all|stop (the )?(studio|menu))\b/.test(s)){PMS.close();return 'Closing Menu Studio.';}
@@ -40166,7 +40166,8 @@ body.phg-view-open #phgViewHarmony,
 body.phg-view-open #phgViewX,
 body.phg-view-open .phgPrimaryModeToggle,
 body.phg-view-open #harmonyApprovalStrip:not(.show),
-body.phg-view-open #jsErr{display:none!important}
+body.phg-view-open #jsErr,
+body.phg-view-open #harmonyWorkFloat:has(.harmonyFloatPrompt){display:none!important}
 #hvxFloat{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;width:min(88vw,620px);
   max-height:calc(10 * 1.45em);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;
   font:500 clamp(19px,5vw,26px)/1.45 'Inter',system-ui,sans-serif;color:#f8fafc;text-align:center;pointer-events:none;
@@ -40444,6 +40445,48 @@ function askWithAttachments(q){
     .catch(function(e){var m=String(e&&e.message||e);if(typeof agentSay==='function')agentSay(/404|Failed to fetch/i.test(m)?'Attachment reading is not switched on yet.':'I could not read that: '+m);})
     .then(function(){window.PHG_PENDING=false;document.body.classList.remove('hvx-asking');});
 }
+/* ---------- CONVERSATION ROUTING (18.49.21) ----------
+   In the Harmony view, ordinary conversation goes to Harmony's conversation
+   brain (phg-harmony-attach in chat mode). Only business-report questions
+   (sales, labor, costs, P&L, budgets...) still go to the finance command
+   router - which used to receive EVERYTHING and answered any unclassified
+   question with "Management dashboard completed. Evidence: computed_dashboard." */
+var HVX_FIN=/\b(sales|revenue|cogs|cost of goods|food cost|pour cost|labou?r|payroll|wages|expenses?|p\s*&\s*l|p and l|profit|losses?|budgets?|forecasts?|variance|margins?|inventory|invoices?|purchas\w*|vendors?|close (the )?(period|month|books)|month[- ]end|dashboard|kpis?|reconcil\w*|costing|period review|daily brief|management brief)\b/i;
+function harmonyChat(q){
+  var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
+  if(!tok){if(typeof agentSay==='function')agentSay('Sign in to PHG so I can talk with you.');return;}
+  var hist=(typeof AGENT!=='undefined'&&AGENT.chat?AGENT.chat.slice(0,-1).slice(-6):[]).map(function(m){return {role:m.who==='you'?'user':'assistant',text:String(m.text||'').replace(/<[^>]+>/g,' ').slice(0,400)};});
+  window.PHG_PENDING=true;
+  if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('Harmony · thinking…');
+  fetch(ATTACH_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify({prompt:q,recent:hist})})
+    .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.reply)throw new Error(j.detail||j.error||('HTTP '+r.status));return j;});})
+    .then(function(j){if(typeof agentSay==='function')agentSay(j.reply);})
+    .catch(function(e){if(typeof agentSay==='function')agentSay('I could not reach my conversation service just now. Try again in a moment.');if(window.console)console.warn('harmonyChat',e);})
+    .then(function(){window.PHG_PENDING=false;if(typeof AGENT!=='undefined')AGENT.thinking=false;if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('');});
+}
+if(typeof agentAnswer==='function'){
+  var _answer=agentAnswer;
+  agentAnswer=function(q){
+    var inView=document.body.classList.contains('phg-view-open');
+    if(inView&&!HVX_FIN.test(String(q||''))){
+      if(typeof harmonyCoreControl==='function'&&harmonyCoreControl(q))return;
+      return harmonyChat(String(q||'').trim());
+    }
+    return _answer.apply(this,arguments);
+  };
+  window.agentAnswer=agentAnswer;
+}
+/* Report replies end with an audit tag ("Evidence: computed_dashboard.") that
+   is meaningful in the chat log but noise when spoken or floated. */
+if(typeof agentSay==='function'){
+  var _say=agentSay;
+  agentSay=function(text){
+    if(document.body.classList.contains('phg-view-open'))text=String(text||'').replace(/\s*Evidence:\s*[\w_ ,\-]+\.?\s*$/,'');
+    return _say.call(this,text);
+  };
+  window.agentSay=agentSay;
+}
+
 /* Anything typed or spoken while attachments are waiting goes with them. */
 function hookHear(){
   if(!window.PMS||PMS._attHooked)return;PMS._attHooked=true;

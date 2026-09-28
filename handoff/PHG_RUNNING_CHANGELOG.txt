@@ -1311,3 +1311,18 @@ Rob: "fix the history."
 - Verified: service_role SELECT/INSERT true, UPDATE/DELETE false; a rolled-back insert as service_role
   wrote and read back 1 row; 0 test rows left. Table still has 0 real rows - history starts filling
   from the next Harmony request. Revert: revoke select, insert on phg.language_interpretations from service_role.
+
+------------------------------------------------------------------------------
+PHG-20260928-CHAT | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.21, branch; phg-harmony-attach v2 live)
+Rob (2 screenshots): "Replies always say this." - every reply was "Management dashboard completed.
+Evidence: computed_dashboard." ("show me the map view", "show me the menus you're working on").
+- Cause: agentAnswer sent every non-local question to commandRouteAndRun (finance command router);
+  unclassified questions fell to the management dashboard intent, whose summary is
+  "<label> completed. Evidence: <state>." Harmony had no general conversation path.
+- Fix: phg-harmony-attach v2 (ACTIVE) adds chat mode (no attachments) with a Harmony persona that knows
+  the app's features and never invents business figures. In the Harmony view, agentAnswer routes to it
+  unless the question is a business-report question (sales, labor, COGS, expenses, P&L, budget,
+  forecast, variance, inventory, invoices, dashboard...), which still go to the command router.
+  "Evidence: ..." audit tags are stripped from spoken/floated replies in the view. "Show me the menus
+  you're working on" now opens Menu Studio. The leftover "HARMONY PROMPT" float is hidden in the view.
+- Tested headless: chat question -> chat brain; sales question -> command router; menus request -> stage.

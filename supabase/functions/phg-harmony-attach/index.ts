@@ -1,7 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-/* PHG HARMONY ATTACH — answer a prompt about attached photos, video, PDFs or
+/* PHG HARMONY ATTACH — Harmony's conversation brain in the Harmony view.
+   v2: also answers plain conversation with no attachments (mode "chat"), so
+   everyday questions no longer fall through to the finance command router
+   (which answered everything with "Management dashboard completed").
+
+   With attachments it answers a prompt about attached photos, video, PDFs or
    text files.
 
    The app prepares everything in the browser: photos are downscaled JPEGs,
@@ -27,6 +32,15 @@ const INSTRUCTIONS = [
   "Describe only what is actually visible or written in the attachments. Never invent prices, quantities, names or numbers; if something cannot be read, say so.",
   "Video arrives as still frames sampled in order; treat them as a sequence, and say you are looking at frames rather than full video when it matters.",
   "When useful for a bar or restaurant (menus, drinks, plating, invoices, inventory, spaces), add one practical observation or next step.",
+].join(" ");
+
+const CHAT_INSTRUCTIONS = [
+  "You are Harmony, the voice assistant inside PHG (Perfect Harmony Group), a hospitality operations and menu-design app for bars and restaurants.",
+  "Speak naturally and warmly, like a sharp bar-industry colleague. Plain spoken sentences only: no markdown, no lists, no headings. Your reply is typed on screen and read aloud, so keep it to one to four sentences unless asked for more.",
+  "What the app can do from this screen, so you can guide the user: say 'make a menu' (or tap + then Start a menu) to open Menu Studio, where they can say next, back, darker, use gold, title something, change the splash page, paint it, or add reference photos;",
+  "tap + then 'Photo, video or file' to show you a photo, a short video, a PDF or a spreadsheet export and ask about it; ask about sales, labor, costs, expenses, P&L, budgets or forecasts to run the business reports; the gear menu has Brief, Recent work, Tools, Chat history and Voice settings.",
+  "You cannot see the user's live business numbers in this conversation; if they ask for figures, tell them to ask for the specific report (for example 'show me last week's sales') and it will run.",
+  "Never invent prices, figures, names or facts about their business. Bar and restaurant expertise (cocktails, spirits, menu design, pricing strategy, service, operations) is welcome.",
 ].join(" ");
 
 const isImg = (x: unknown) => typeof x === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(x);
@@ -60,7 +74,8 @@ Deno.serve(async (req) => {
     .filter((t: any) => t && typeof t.content === "string")
     .slice(0, 3)
     .map((t: any) => ({ name: String(t.name || "file.txt").slice(0, 120), content: t.content.slice(0, 60_000) }));
-  if (!images.length && !video?.frames.length && !pdf && !texts.length) return json({ error: "no readable attachment" }, 400);
+  const chat = !images.length && !video?.frames.length && !pdf && !texts.length;
+  if (chat && !String(b.prompt || "").trim()) return json({ error: "prompt required" }, 400);
 
   const content: any[] = [];
   const recent = Array.isArray(b.recent) ? b.recent.slice(-6) : [];
@@ -74,12 +89,12 @@ Deno.serve(async (req) => {
     content.push({ type: "input_text", text: `Video "${video.name}"${video.duration ? ` (${Math.round(video.duration)} s)` : ""}: ${video.frames.length} frames sampled evenly, in order:` });
     for (const f of video.frames) content.push({ type: "input_image", image_url: f, detail: "low" });
   }
-  content.push({ type: "input_text", text: "User's question: " + prompt });
+  content.push({ type: "input_text", text: (chat ? "User: " : "User's question: ") + prompt });
 
   const rr = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model, instructions: INSTRUCTIONS, input: [{ role: "user", content }], max_output_tokens: 500 }),
+    body: JSON.stringify({ model, instructions: chat ? CHAT_INSTRUCTIONS : INSTRUCTIONS, input: [{ role: "user", content }], max_output_tokens: chat ? 300 : 500 }),
   });
   const raw = await rr.json().catch(() => ({}));
   if (!rr.ok) return json({ error: "attachment reading failed", detail: raw?.error?.message || raw }, 502);
@@ -91,7 +106,7 @@ Deno.serve(async (req) => {
   reply = reply.trim();
   if (!reply) return json({ error: "no reply returned" }, 502);
   return json({
-    status: "ok", model, reply,
+    status: "ok", mode: chat ? "chat" : "attachments", model, reply,
     counts: { images: images.length, video_frames: video?.frames.length || 0, pdf: pdf ? 1 : 0, texts: texts.length },
   });
 });
