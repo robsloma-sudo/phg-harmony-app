@@ -1002,3 +1002,7 @@ tough scale (best).
   - H: flat sun and terrace geometry
   - I: night field with one line-drawn agave
   - J: horizon split with a single centred column
+- TEST-1 KB rebuild round 2 scored:
+  - I2 72.1, G2 70.5, H2 67.8, J2 66.1.
+  - All gates pass, and three of the four directions improved by about 7.
+  - The ceiling now is the missing venue data: beer ABV, wine region, spirit brand/age/pour.

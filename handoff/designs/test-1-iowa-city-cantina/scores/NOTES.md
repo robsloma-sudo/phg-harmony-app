@@ -130,3 +130,19 @@ All are below the round-17 best of 74.1. Price-association gate fails on G, H an
 5. The "Good drinks / Good people" tagline is costume.
 6. Garnishes from recipe_versions are unused. "agave" is ambiguous (should be agave syrup), and demerara/demerara syrup is inconsistent.
 Data drift: phg.menu_items has Junmai Ginjo (12), which is not in draft rev 3. Flagged to Rob.
+
+## Round 2 of the KB rebuilds (G2-J2, 3-reviewer screening)
+| Direction | critic | content | accuracy | combined | change |
+|---|---|---|---|---|---|
+| I2 Night Field | 73.1 | 75.6 | 67.6 | 72.1 | +6.7 |
+| G2 Monument | 71.2 | 72.0 | 68.2 | 70.5 | +7.0 |
+| H2 Sun & Furrow | 66.5 | 69.0 | 67.8 | 67.8 | +6.7 |
+| J2 Horizon | 62.9 | 75.0 | 60.4 | 66.1 | -0.2 |
+
+- Every gate passes on all four. The price-association failures from round 1 are fixed by inline prices.
+- The round-17 best is still 74.1. I2 is closest at 72.1.
+- Garnishes are verified against phg.recipe_versions (f06abb74 lime wheel, 9fb77eaa cocktail cherry, 14d45e57 lime coin, 7095fd3d orange peel).
+- Remaining ceiling: the description criteria (8 and 12) sit at 40-61 everywhere.
+  - The draft only has name-like text for 10 of the 14 non-cocktail descriptions: beer ABV, wine region and spirit brand/age are all missing.
+  - This is a data gap, so we need Rob's venue facts. Design work can't fix it.
+- Reviewer contradiction to note: round 1 penalised stubs ("Toasty"), and round 2 penalises the full draft text as a name echo.
