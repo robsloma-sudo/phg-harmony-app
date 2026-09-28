@@ -1567,3 +1567,22 @@ Rob: "She's saying she's not getting any words."
 - v6: the words are taken from text/input/query/prompt/message/"dictated text", else the longest filled-in text field,
   else a field NAME containing spaces (words typed as the key). Logs field names and text length only (never the
   words) so the next failure can be read from function_logs.
+
+------------------------------------------------------------------------------
+PHG-20260928-ASKOPEN | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.32, branch; phg-harmony-inbox v7 live)
+Rob: "Let's make sure Harmony can only open the screen past the phone lock screen, if face verification or a passcode
+is enabled ... I just want a screensaver view on the top of the iPhone setting with the black hole for when Harmony
+is in different stages and then I want a button ... that allows someone to click open the app"
+- Nothing opens by itself any more: the Shortcut's automatic If url -> Open URLs is replaced by Choose from Menu
+  "Harmony" with Open Harmony / Done; Open URLs runs only on Open Harmony, and iPhone requires Face ID / passcode to
+  open anything from the lock screen (enforced by iOS, not by us).
+- Stages at the top of the screen: native dictation (listening) -> notification "Thinking…" with the violet orb
+  (img/harmony-orb-thinking.gif, recorded from the real #hvTalk .thinking state, 24 x 100 ms, 300 px, 315 KB) ->
+  notification with her reply and the cyan speaking orb (img/harmony-orb.gif) while she speaks (Wait Until Finished
+  off) -> the Open Harmony / Done menu.
+- Response kept in a named variable Reply (avoids the two "Contents of URL" variables being confused); orbs in
+  variables Thinking and Speaking.
+- phg-harmony-inbox v7: url is always returned (the Harmony view; with &q= for "open" requests) so Open Harmony always
+  works; spoken "open" replies say to tap Open Harmony.
+- Setup page rebuilt with stage headings; 375 px: no overflow, all 17 chips copy, zero page errors.
+- DEPLOY NOTE: img/harmony-orb.gif and img/harmony-orb-thinking.gif must go to main with index.html.

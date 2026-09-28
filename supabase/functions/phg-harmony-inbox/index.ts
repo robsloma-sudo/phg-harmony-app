@@ -47,7 +47,7 @@ const ROUTER = [
   "route = 'answer' for questions or conversation you can answer in speech, including questions about their saved notes (their recent notes are provided).",
   "route = 'open' when they want to see or do something on screen in the app: design or show a menu, show photos, open the dashboard, show reports, maps. open_query is the request to run in the app.",
   "For notes: kind is task (something to do), reminder (time-bound), idea, or note; note_text is their content cleaned up (no 'log that'/'remind me to' prefix, keep names and numbers exactly); due_iso only if they gave a time, in ISO 8601 with offset for their time zone; tags are 0-3 short lowercase words.",
-  "reply is what you say out loud: one or two short, warm, natural sentences. For a note, confirm briefly (e.g. 'Got it, I logged that the Tito's delivery was two cases short.'). For open, say what you're opening. Plain text, no markdown.",
+  "reply is what you say out loud: one or two short, warm, natural sentences. For a note, confirm briefly (e.g. 'Got it, I logged that the Tito's delivery was two cases short.'). For open, say what's ready and that they can tap Open Harmony to see it. Plain text, no markdown.",
   "Never invent business figures. If they ask for live numbers, route to open with their request so the app runs the report.",
 ].join(" ");
 
@@ -218,13 +218,13 @@ Deno.serve(async (req) => {
   console.log(JSON.stringify({ inbox: via, fields: Object.keys(b).filter((k) => k !== "key"), text_len: text.length }));
   if (!text) {
     const fields = Object.keys(b).filter((k) => k !== "key");
-    return json({ ok: true, route: "answer", url: "", speak: fields.length
+    return json({ ok: true, route: "answer", url: `${appUrl}/?harmony=1`, speak: fields.length
       ? `I got your key but no words. In the Shortcut, the Request Body field should be named text, set to Dictated Text. I received ${fields.join(", ")}.`
       : "I got your key but no words came through. In the Shortcut, set Request Body to a field named text with Dictated Text in it." });
   }
   if (!oa) {
     const n = await saveNote(text, "note", [], null).catch(() => null);
-    return json({ ok: !!n, route: "note", speak: n ? "Logged." : "I couldn't save that.", url: "" });
+    return json({ ok: !!n, route: "note", speak: n ? "Logged." : "I couldn't save that.", url: `${appUrl}/?harmony=1` });
   }
   const tz = String(b.tz || "America/Chicago");
   const recent = await listNotes(15, false);
@@ -254,13 +254,16 @@ Deno.serve(async (req) => {
   if (!rr.ok || !out) {
     // never lose what they said: fall back to logging it
     const n = await saveNote(text, "note", [], null).catch(() => null);
-    return json({ ok: !!n, route: "note", speak: n ? "I couldn't think it through just now, so I logged it as a note." : "Something went wrong. Try again.", url: "", error: raw?.error?.message });
+    return json({ ok: !!n, route: "note", speak: n ? "I couldn't think it through just now, so I logged it as a note." : "Something went wrong. Try again.", url: `${appUrl}/?harmony=1`, error: raw?.error?.message });
   }
 
-  let note = null, link = "";
+  /* v7: url is ALWAYS the Harmony view, so the Shortcut's "Open Harmony" button always works;
+     for an "open" request it carries the request. Nothing opens by itself: the Shortcut asks, and
+     iPhone requires Face ID / passcode to open anything from the lock screen. */
+  let note = null, link = `${appUrl}/?harmony=1`;
   if (out.route === "note") {
     try { note = await saveNote(out.note_text || text, out.kind, out.tags, out.due_iso); }
-    catch (e) { return json({ ok: false, route: "note", speak: "I couldn't save that note.", url: "", error: String(e) }, 500); }
+    catch (e) { return json({ ok: false, route: "note", speak: "I couldn't save that note.", url: link, error: String(e) }, 500); }
   } else if (out.route === "open") {
     link = `${appUrl}/?harmony=1&q=${encodeURIComponent(out.open_query || text)}`;
   }

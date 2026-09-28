@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.31 HARMONY ORB NOTIFICATION · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.32 HARMONY STAGE ORBS + ASK BEFORE OPENING · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -40516,7 +40516,7 @@ body.pms-open .hvxSheet button.nomenu{display:none!important}
 .scCard.in{margin-left:18px}.scCard.dim{color:#8e8e93;font-size:15px}
 .scH{display:flex;align-items:center;gap:8px;min-width:0}.scH.wrap{flex-wrap:wrap;row-gap:6px}
 .scIc{flex:none;width:24px;height:24px;border-radius:7px;display:inline-block}
-.scIc.mic{background:#5ac8fa}.scIc.web{background:#34c759}.scIc.dict{background:#ff9f0a}.scIc.spk{box-shadow:inset 0 0 0 2px #636366}.scIc.iff{background:#8e8e93}.scIc.saf{background:#0a84ff}.scIc.var{background:#ff9f0a}.scIc.note{background:#ff375f}
+.scIc.mic{background:#5ac8fa}.scIc.web{background:#34c759}.scIc.dict{background:#ff9f0a}.scIc.spk{box-shadow:inset 0 0 0 2px #636366}.scIc.iff{background:#8e8e93}.scIc.saf{background:#0a84ff}.scIc.var{background:#ff9f0a}.scIc.menu{background:#5e5ce6}.scIc.note{background:#ff375f}
 .scVar .scIc{width:16px;height:16px;border-radius:4px}
 .scRow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0 0;margin-top:9px;border-top:1px solid #38383a;font-size:15px}
 .scRow.col{flex-direction:column;align-items:stretch}
@@ -40533,6 +40533,8 @@ body.pms-open .hvxSheet button.nomenu{display:none!important}
 .scChip.ok{box-shadow:inset 0 0 0 1px #34c759}.scChip.ok em{background:#34c759}
 .scChip.url,.scChip.key{display:flex;width:100%}.scChip.url span,.scChip.key span{flex:1}
 .scField .scChip.key{flex:1 1 100%}
+.scStage{margin:6px 4px -2px;font:600 11px/1.2 'Inter',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#a78bfa}
+.scOpts{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
 .scNeed{color:#fde68a;font-size:13px;line-height:1.35}
 .hvxSteps{margin:16px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5;color:#cbd5e1}
 .hvxSteps b{color:#f1f5f9}.hvxSteps code,.hvxLead code{font:500 12px 'JetBrains Mono',monospace;color:#a5f3fc;background:rgba(103,232,249,.08);padding:1px 5px;border-radius:5px}
@@ -40735,34 +40737,41 @@ function wireCopy(root){Array.prototype.forEach.call(root.querySelectorAll('[dat
 /* 18.49.30: the Action button setup is a live, scrollable copy of the finished
    Shortcut page. Every value you type into Shortcuts (address, header name,
    key, field names) is a tap-to-copy chip sitting in the box it belongs in. */
-var SC_KEY=null,ORB_URL=location.origin.indexOf('http')===0?location.origin+'/img/harmony-orb.gif':'https://prismatic-rugelach-777e48.netlify.app/img/harmony-orb.gif';
+var SC_KEY=null,SC_BASE=location.origin.indexOf('http')===0?location.origin:'https://prismatic-rugelach-777e48.netlify.app',ORB_URL=SC_BASE+'/img/harmony-orb.gif',ORB_THINK_URL=SC_BASE+'/img/harmony-orb-thinking.gif';
 function scChip(v,cls,label){return '<button type="button" class="scChip'+(cls?' '+cls:'')+'" data-copy="'+esc(v)+'"><span>'+esc(label||v)+'</span><em>Copy</em></button>';}
 function scVar(ic,t){return '<span class="scVar"><i class="scIc '+ic+'"></i>'+t+'</span>';}
 function scPage(){
+  /* 18.49.32: nothing opens by itself. Harmony shows her stage at the top of the screen
+     (violet orb = thinking, cyan orb = speaking) and asks: Open Harmony / Done. Opening
+     from the lock screen needs Face ID or the passcode - iPhone enforces that itself. */
   var key=SC_KEY?scChip(SC_KEY,'key'):'<span class="scNeed">Tap <b>Create my key</b> above, then copy it here</span>';
+  var card=function(ic,h,extra,cls){return '<div class="scCard'+(cls?' '+cls:'')+'"><div class="scH wrap"><i class="scIc '+ic+'"></i>'+h+'</div>'+(extra||'')+'</div>';};
+  var row=function(l,r){return '<div class="scRow"><span>'+l+'</span>'+r+'</div>';};
   return '<div class="scPage" aria-label="The finished Harmony shortcut">'
    +'<div class="scTop"><span>‹ Shortcuts</span><b>Harmony</b><span>Done</span></div>'
-   +'<div class="scCard"><div class="scH"><i class="scIc web"></i>Get contents of</div><div class="scBox">'+scChip(ORB_URL,'url')+'</div></div>'
-   +'<div class="scCard"><div class="scH wrap"><i class="scIc var"></i>Set variable '+scChip('Orb')+' to '+scVar('web','Contents of URL')+'</div></div>'
-   +'<div class="scCard"><div class="scH"><i class="scIc mic"></i>Dictate text</div><div class="scRow"><span>Stop Listening</span><span class="scDim">After Pause</span></div></div>'
-   +'<div class="scCard"><div class="scH"><i class="scIc web"></i>Get contents of</div>'
-     +'<div class="scBox">'+scChip(INBOX_URL,'url')+'</div>'
-     +'<div class="scRow"><span>Method</span><span class="scDim">POST</span></div>'
-     +'<div class="scRow col"><span>Headers</span>'
-       +'<div class="scField"><small>Key</small>'+scChip('x-api-key')+'</div>'
-       +'<div class="scField"><small>Text</small>'+key+'</div></div>'
-     +'<div class="scRow col"><span>Request Body <span class="scDim">· JSON</span></span>'
-       +'<div class="scField"><small>Text</small>'+scChip('text')+'<span class="scEq">=</span>'+scVar('mic','Dictated Text')+'</div></div>'
-   +'</div>'
-   +'<div class="scCard"><div class="scH wrap"><i class="scIc dict"></i>Get <span class="scTok">Value</span> for '+scChip('speak')+' in '+scVar('web','Contents of URL')+'</div></div>'
-   +'<div class="scCard"><div class="scH wrap"><i class="scIc note"></i>Show notification '+scVar('dict','Dictionary Value')+'</div>'
-     +'<div class="scRow"><span>Title</span>'+scChip('Harmony')+'</div>'
-     +'<div class="scRow"><span>Attachment</span>'+scVar('var','Orb')+'</div></div>'
-   +'<div class="scCard"><div class="scH wrap"><i class="scIc spk"></i>Speak '+scVar('dict','Dictionary Value')+'</div></div>'
-   +'<div class="scCard"><div class="scH wrap"><i class="scIc dict"></i>Get <span class="scTok">Value</span> for '+scChip('url')+' in '+scVar('web','Contents of URL')+'</div></div>'
-   +'<div class="scCard"><div class="scH wrap"><i class="scIc iff"></i>If '+scVar('dict','Dictionary Value')+' <span class="scTok">has any value</span></div></div>'
-   +'<div class="scCard in"><div class="scH wrap"><i class="scIc saf"></i>Open URLs '+scVar('dict','Dictionary Value')+'</div></div>'
-   +'<div class="scCard dim">Otherwise</div><div class="scCard dim">End If</div>'
+   +'<div class="scStage">Load the two orbs</div>'
+   +card('web','Get contents of','<div class="scBox">'+scChip(ORB_THINK_URL,'url')+'</div>')
+   +card('var','Set variable '+scChip('Thinking')+' to '+scVar('web','Contents of URL'))
+   +card('web','Get contents of','<div class="scBox">'+scChip(ORB_URL,'url')+'</div>')
+   +card('var','Set variable '+scChip('Speaking')+' to '+scVar('web','Contents of URL'))
+   +'<div class="scStage">Listen, then think</div>'
+   +card('mic','Dictate text',row('Stop Listening','<span class="scDim">After Pause</span>'))
+   +card('note','Show notification '+scChip('Thinking…'),row('Title',scChip('Harmony'))+row('Attachment',scVar('var','Thinking')))
+   +card('web','Get contents of','<div class="scBox">'+scChip(INBOX_URL,'url')+'</div>'
+     +row('Method','<span class="scDim">POST</span>')
+     +'<div class="scRow col"><span>Headers</span><div class="scField"><small>Key</small>'+scChip('x-api-key')+'</div><div class="scField"><small>Text</small>'+key+'</div></div>'
+     +'<div class="scRow col"><span>Request Body <span class="scDim">· JSON</span></span><div class="scField"><small>Text</small>'+scChip('text')+'<span class="scEq">=</span>'+scVar('mic','Dictated Text')+'</div></div>')
+   +card('var','Set variable '+scChip('Reply')+' to '+scVar('web','Contents of URL'))
+   +'<div class="scStage">Speak</div>'
+   +card('dict','Get <span class="scTok">Value</span> for '+scChip('speak')+' in '+scVar('var','Reply'))
+   +card('note','Show notification '+scVar('dict','Dictionary Value'),row('Title',scChip('Harmony'))+row('Attachment',scVar('var','Speaking')))
+   +card('spk','Speak '+scVar('dict','Dictionary Value'),row('Wait Until Finished','<span class="scDim">Off</span>'))
+   +'<div class="scStage">Ask before opening</div>'
+   +card('dict','Get <span class="scTok">Value</span> for '+scChip('url')+' in '+scVar('var','Reply'))
+   +card('menu','Choose from Menu with '+scChip('Harmony'),row('Options','<span class="scDim">2</span>')+'<div class="scOpts">'+scChip('Open Harmony')+scChip('Done')+'</div>')
+   +'<div class="scCard dim">Open Harmony</div>'
+   +card('saf','Open URLs '+scVar('dict','Dictionary Value'),'','in')
+   +'<div class="scCard dim">Done</div><div class="scCard dim">End Menu</div>'
    +'</div>';
 }
 function scWire(root){Array.prototype.forEach.call(root.querySelectorAll('.scChip[data-copy]'),function(b){b.onclick=function(e){e.stopPropagation();
@@ -40771,7 +40780,7 @@ function scWire(root){Array.prototype.forEach.call(root.querySelectorAll('.scChi
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(done,function(){prompt('Copy this',v);});else prompt('Copy this',v);};});}
 function openShortcut(){
   var p=panel('shortcut','iPhone · Action button',
-    '<p class="hvxLead">Press the Action button and talk. Harmony logs notes, answers out loud, or opens the app when you ask to see something.</p>'
+    '<p class="hvxLead">Press the Action button and talk. Harmony shows a black-hole orb at the top of the screen while she thinks and speaks, then asks before opening anything. Opening from the lock screen needs Face ID or your passcode.</p>'
     +'<div id="hvxKeyBox">'+(SC_KEY?'<div class="hvxWarn">Your key is in the Headers box below. Copy it now: it will not be shown again.</div>':'<button class="hvxBig" id="hvxMakeKey">Create my key</button>')+'</div>'
     +'<p class="hvxLead" style="margin:16px 0 8px">Make this in the <b>Shortcuts</b> app. Tap any chip to copy it.</p>'
     +'<div id="scWrap">'+scPage()+'</div>'
