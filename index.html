@@ -6282,7 +6282,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.14 REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.15 HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -39347,7 +39347,18 @@ window.phgSay = function(text, opts){
 #pmsStage .pmsAsk button{height:42px;padding:0 16px;border-radius:21px;border:0;background:#1e293b;color:#e8edf5;font-weight:600}
 body.pms-painting #pmsStage .pmsScaler{animation:pmsPulse 1.6s ease-in-out infinite}
 @keyframes pmsPulse{50%{opacity:.82}}
-#hvRail .pmsRailBtn{border-color:rgba(125,211,252,.55)!important}
+#phgView .hvRail>.pmsRailBtn{box-sizing:border-box;width:100%;height:44px;min-width:0;margin:0;padding:4px 6px;border-radius:12px;
+  border:1px solid rgba(125,211,252,.55);background:rgba(5,10,18,.90);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;text-align:center}
+#phgView .hvRail>.pmsRailBtn b{font:700 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7dd3fc;white-space:nowrap}
+#phgView .hvRail>.pmsRailBtn small{font:500 8.5px/1 'JetBrains Mono',monospace;color:rgba(220,237,244,.6);white-space:nowrap}
+#hvTalk{--lvl:0;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:3;
+  display:flex;align-items:center;gap:8px;height:48px;padding:0 22px;border-radius:24px;border:1px solid #22d3ee;background:#0e7490;
+  color:#fff;font:600 15px 'Inter',system-ui,sans-serif;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.45)}
+#hvTalk i{width:12px;height:12px;border-radius:50%;background:#e0f7ff;transform:scale(calc(1 + var(--lvl)*.9));transition:transform .08s}
+#hvTalk.listening{background:#be123c;border-color:#fb7185}
+#hvTalk.thinking{background:#6d28d9;border-color:#a78bfa}
+#hvTalk.speaking{background:#0f766e;border-color:#5eead4}
+body.pms-open #hvTalk{display:none}
 #hvRail .pmsRailBtn b{color:#7dd3fc}
 
 /* ---- Page base (850 x 1100 = US letter at 100 px/in) ---- */
@@ -39897,9 +39908,11 @@ function speakingNow(){
   return false;
 }
 function talkUI(){
-  var b=document.getElementById('pmsTalk');if(!b)return;
-  b.className='pmsTalk '+T.state;
-  b.querySelector('span').textContent=T.state==='off'?'Talk':T.state==='listening'?'Listening…':T.state==='thinking'?'Thinking…':'Speaking…';
+  var label=T.state==='off'?'Talk':T.state==='listening'?'Listening…':T.state==='thinking'?'Thinking…':'Speaking…';
+  ['pmsTalk','hvTalk'].forEach(function(id){
+    var b=document.getElementById(id);if(!b)return;
+    b.className='pmsTalk '+T.state;var sp=b.querySelector('span');if(sp)sp.textContent=label;
+  });
 }
 function setState(st){
   T.state=st;talkUI();
@@ -39910,6 +39923,8 @@ function startTalk(){
   if(typeof phgAuthAccessToken!=='function'||!phgAuthAccessToken()){say('Sign in to PHG so I can hear you.');return;}
   PMS.talk=true;
   try{if(typeof VOICE!=='undefined'){VOICE.on=true;VOICE.muted=false;}}catch(e){}
+  /* in talk mode she answers everything out loud; the user's setting comes back when talk stops */
+  try{if(typeof HARMONY_PREFS!=='undefined'&&T.prevOutput==null){T.prevOutput=HARMONY_PREFS.output;HARMONY_PREFS.output='all';}}catch(e){}
   navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).then(function(stream){
     if(!PMS.talk){stream.getTracks().forEach(function(t){t.stop();});return;}
     T.stream=stream;
@@ -39920,6 +39935,7 @@ function startTalk(){
 }
 function stopTalk(){
   PMS.talk=false;
+  try{if(typeof HARMONY_PREFS!=='undefined'&&T.prevOutput!=null){HARMONY_PREFS.output=T.prevOutput;T.prevOutput=null;}}catch(e){}
   if(T.raf)cancelAnimationFrame(T.raf);T.raf=null;clearInterval(T.wait);T.wait=null;
   try{if(T.rec&&T.rec.state!=='inactive'){T.rec.onstop=null;T.rec.stop();}}catch(e){}
   try{if(T.stream)T.stream.getTracks().forEach(function(t){t.stop();});}catch(e){}
@@ -39927,9 +39943,11 @@ function stopTalk(){
   T.stream=null;T.ctx=null;T.an=null;T.rec=null;
   setState('off');
 }
+function talkSurfaceGone(){return !PMS.open&&!document.getElementById('phgView');}
 function listen(){
   if(!PMS.talk||!T.stream)return;
-  T.chunks=[];T.heard=0;T.quiet=0;T.start=performance.now();
+  if(talkSurfaceGone()){stopTalk();return;}
+  T.chunks=[];T.heard=0;T.quiet=0;T.start=performance.now();T.floor=T.floor==null?null:T.floor;
   var mime='';['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].some(function(m){try{if(MediaRecorder.isTypeSupported(m)){mime=m;return true;}}catch(e){}return false;});
   try{T.rec=mime?new MediaRecorder(T.stream,{mimeType:mime}):new MediaRecorder(T.stream);}catch(e){T.rec=new MediaRecorder(T.stream);}
   T.rec.ondataavailable=function(e){if(e.data&&e.data.size)T.chunks.push(e.data);};
@@ -39943,12 +39961,19 @@ function listen(){
   var last=performance.now();
   (function vad(){
     if(!PMS.talk||!T.rec||T.rec.state!=='recording')return;
+    if(talkSurfaceGone()){stopTalk();return;}
     var now=performance.now(),dt=now-last;last=now;
     var lvl=0;
     if(T.an){T.an.getByteTimeDomainData(T.data);var sum=0;for(var i=0;i<T.data.length;i+=2){var v=(T.data[i]-128)/128;sum+=v*v;}lvl=Math.sqrt(sum/(T.data.length/2));}
     else lvl=.05;
-    if(lvl>.035){T.heard+=dt;T.quiet=0;}else if(T.heard>250){T.quiet+=dt;}
-    var b=document.getElementById('pmsTalk');if(b)b.style.setProperty('--lvl',Math.min(1,lvl*8).toFixed(2));
+    /* Adaptive noise floor: in a loud room the ambient level is well above a
+       fixed threshold, so speech/silence are judged relative to the room. The
+       floor falls fast toward quiet and creeps up slowly under steady noise. */
+    if(T.floor==null)T.floor=lvl;
+    T.floor=lvl<T.floor?T.floor*.85+lvl*.15:T.floor*.997+lvl*.003;
+    var on=Math.max(.035,T.floor*2.2),off=Math.max(.028,T.floor*1.6);
+    if(lvl>on){T.heard+=dt;T.quiet=0;}else if(T.heard>250&&lvl<off){T.quiet+=dt;}else if(T.heard>250){T.quiet=Math.max(0,T.quiet-dt/2);}
+    var _l=Math.min(1,lvl*8).toFixed(1);['pmsTalk','hvTalk'].forEach(function(id){var b=document.getElementById(id);if(b&&b._l!==_l){b._l=_l;b.style.setProperty('--lvl',_l);}});
     var elapsed=now-T.start;
     if((T.heard>250&&T.quiet>1100)||elapsed>20000||(!T.heard&&elapsed>12000)){try{T.rec.stop();}catch(e){}return;}
     T.raf=requestAnimationFrame(vad);
@@ -39974,7 +39999,7 @@ function afterReply(expect){
     var sp=speakingNow();
     if(sp){started=true;quietFor=0;return;}
     quietFor+=200;
-    if((started&&quietFor>=500)||(!started&&Date.now()-t0>(expect?9000:600))){clearInterval(T.wait);T.wait=null;listen();}
+    if((started&&quietFor>=500)||(!started&&Date.now()-t0>(expect?(PMS.open?9000:16000):600))){clearInterval(T.wait);T.wait=null;listen();}
   },200);
 }
 
@@ -40006,9 +40031,9 @@ PMS.toggleTalk=function(){
 PMS.cmd=function(q){PMS.hear(q);};
 PMS.hear=function(text){
   var q=String(text||'').trim();if(!q)return;
+  if(!PMS.open&&!MENU_INTENT.test(q)){if(typeof harmonyAsk==='function')harmonyAsk(q);return;}
   try{if(typeof AGENT!=='undefined'&&AGENT.chat){AGENT.chat.push({who:'you',text:q});}}catch(e){}
   if(!PMS.content)PMS.content=loadContent();
-  if(!PMS.open&&!MENU_INTENT.test(q)){if(typeof harmonyAsk==='function')harmonyAsk(q);return;}
   if(!PMS.open)openStage();
   var r=stageCommand(q);
   if(typeof r==='string'){say(r);return;}
@@ -40045,6 +40070,14 @@ function addRailButton(){
   b.innerHTML='<b>Menu Studio</b><small>design by voice</small>';
   b.onclick=function(e){e.stopPropagation();startDesigns();};
   rail.insertBefore(b,rail.firstChild);
+  var view=document.getElementById('phgView');
+  if(view&&!document.getElementById('hvTalk')){
+    var t=document.createElement('button');t.id='hvTalk';t.className='pmsTalk off';t.setAttribute('aria-label','Talk to Harmony hands-free');
+    t.innerHTML='<i></i><span>Talk</span>';
+    t.onclick=function(e){e.stopPropagation();PMS.toggleTalk();};
+    ['pointerdown','touchstart'].forEach(function(ev){t.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
+    view.appendChild(t);talkUI();
+  }
 }
 if(typeof phgViewport==='function'){
   var _vp=phgViewport;

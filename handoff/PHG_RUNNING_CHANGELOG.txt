@@ -1176,3 +1176,17 @@ files for photos or something like that. So she has reference"
   images (subject/palette/mood only, no copied text or logos); without refs, plain generation as before.
 - Verified in headless phone at 375 and 390 wide: no horizontal overflow, commands answer correctly.
   Painting itself not live-tested from this container (supabase.co blocked by network policy here).
+
+------------------------------------------------------------------------------
+PHG-20260928-HMS3 | RESUME + CHANGE | 2026-09-28 (build 18.49.15)
+Rob: "Resume" -> finished the open part of "talk into it and it talk back to me" for the whole Harmony view.
+- Harmony view now has a hands-free Talk button (bottom centre). Same loop as the menu stage: listens,
+  transcribes, answers out loud, listens again. General questions go to Harmony's normal brain; menu
+  requests open the stage. While Talk is on she speaks every reply; the user's spoken-output setting is
+  restored when Talk stops. Talk stops itself when the view and the stage are both closed.
+- Silence detection now uses an adaptive noise floor: simulated loud room (ambient 0.06 RMS) previously
+  never ended a turn (fixed 0.035 threshold); now ends ~1.1 s after speech stops, same as a quiet room.
+- End-to-end loop verified headless with a fake microphone + stubbed transcription: listen -> transcribe
+  "make a menu for a cantina" -> stage opens -> she replies -> listening again.
+- Menu Studio rail button restyled to match the rail.
+- Production still 18.49.7 (main); this build is on the branch only.
