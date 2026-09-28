@@ -1,0 +1,44 @@
+{
+ "results": [
+  {
+   "file": "preview-letter-before.png",
+   "squint_salient_regions": 7,
+   "primary_area_pct": 4.48,
+   "primary_to_secondary": 2.44,
+   "ground_luminance": 0.106,
+   "value_range_p5_p95": [
+    0.07,
+    0.456
+   ],
+   "accent_area_pct": 0.0,
+   "visual_centroid": [
+    0.614,
+    0.628
+   ]
+  },
+  {
+   "file": "preview-letter.png",
+   "squint_salient_regions": 5,
+   "primary_area_pct": 7.3,
+   "primary_to_secondary": 8.9,
+   "ground_luminance": 0.107,
+   "value_range_p5_p95": [
+    0.07,
+    0.459
+   ],
+   "accent_area_pct": 0.0,
+   "visual_centroid": [
+    0.616,
+    0.628
+   ]
+  }
+ ],
+ "variant_silhouette": [
+  {
+   "a": "preview-letter-before.png",
+   "b": "preview-letter.png",
+   "silhouette_corr": 0.999
+  }
+ ],
+ "notes": "silhouette_corr > 0.8 = structurally similar directions (variant_silhouette_test fails)"
+}
