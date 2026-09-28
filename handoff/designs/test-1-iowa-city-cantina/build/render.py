@@ -1,4 +1,4 @@
-"""Round 5 render: letter PNG (300 dpi, full resolution), PDF, phone PNG, and per-card measurement -> measure.json."""
+"""Round 6 render: letter PNG (300 dpi, full resolution), PDF, phone PNG, and per-card measurement -> measure.json."""
 import json, pathlib
 from playwright.sync_api import sync_playwright
 from PIL import Image, ImageChops
@@ -12,27 +12,41 @@ r2 = lambda v: round(v, 2)
 MEASURE = r"""() => {
   const pg = document.querySelector('.page').getBoundingClientRect();
   const box = b => ({x: b.left - pg.left, y: b.top - pg.top, w: b.width, h: b.height});
-  const tight = el => { const r = document.createRange(); r.selectNodeContents(el); const rs = [...r.getClientRects()].filter(a => a.width > 0);
-    if (!rs.length) return box(el.getBoundingClientRect());
+  const lines = el => { const r = document.createRange(); r.selectNodeContents(el); return [...r.getClientRects()].filter(a => a.width > 0); };
+  const tight = el => { const rs = lines(el); if (!rs.length) return box(el.getBoundingClientRect());
     const x = Math.min(...rs.map(a => a.left)), y = Math.min(...rs.map(a => a.top)), R = Math.max(...rs.map(a => a.right)), B = Math.max(...rs.map(a => a.bottom));
-    return {x: x - pg.left, y: y - pg.top, w: R - x, h: B - y, lines: new Set(rs.map(a => Math.round(a.top))).size}; };
-  const T = (el) => Object.assign({text: (el.innerText || '').trim().replace(/\s+/g, ' ').slice(0, 160)}, tight(el));
+    return {x: x - pg.left, y: y - pg.top, w: R - x, h: B - y, lines: Math.max(1, Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)))}; };
+  const lastLineWords = el => { const tn = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); const ws = []; let n;
+    while ((n = tn.nextNode())) { const re = /\S+/g; let m; while ((m = re.exec(n.data))) { const r = document.createRange(); r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length); ws.push(r.getBoundingClientRect().top); } }
+    const nb = el.textContent.split(/[ ]+/); if (!ws.length) return 0; const last = Math.max(...ws); const onLast = ws.filter(y => Math.abs(y - last) < 2).length; return {tokens_on_last_line: onLast, lines: new Set(ws.map(y => Math.round(y))).size}; };
+  const T = el => Object.assign({text: (el.innerText || '').trim().replace(/\s+/g, ' ').slice(0, 160)}, tight(el));
+  const lh = el => parseFloat(getComputedStyle(el).lineHeight);
   const cards = [...document.querySelectorAll('.card')].map(c => {
-    const cs = getComputedStyle(c), body = c.querySelector('.body');
+    const cs = getComputedStyle(c), its = [...c.querySelectorAll('.item')];
+    const gaps = its.slice(1).map((it, k) => it.previousElementSibling ? it.getBoundingClientRect().top - its[k].getBoundingClientRect().bottom : null).filter(v => v !== null);
     return {n: +c.dataset.n, ref: c.dataset.id, featured: c.classList.contains('featured'), box: box(c.getBoundingClientRect()),
       padding_px: {left: parseFloat(cs.paddingLeft), right: parseFloat(cs.paddingRight), top: parseFloat(cs.paddingTop), bottom: parseFloat(cs.paddingBottom)},
-      border_px: parseFloat(cs.borderLeftWidth),
-      content_bottom: Math.max(...[...body.children].map(e => e.getBoundingClientRect().bottom)) - pg.top,
-      cardno: T(c.querySelector('.cardno')), banner: box(c.querySelector('.bannerband').getBoundingClientRect()),
-      name: T(c.querySelector('h2')), kicker: T(c.querySelector('.kicker')), eyebrow: c.querySelector('.eyebrow') ? T(c.querySelector('.eyebrow')) : null,
-      icon: box(c.querySelector('.icon').getBoundingClientRect()),
+      border_px: parseFloat(cs.borderLeftWidth), cardno: T(c.querySelector('.cardno')), name: T(c.querySelector('h2')),
+      figure: box(c.querySelector('.figure').getBoundingClientRect()), body: box(c.querySelector('.body').getBoundingClientRect()),
+      namebar: Object.assign(box(c.querySelector('.namebar').getBoundingClientRect()), {text: c.querySelector('.namebar').innerText.trim()}),
+      item_gaps_px: gaps, line_heights_px: [...c.querySelectorAll('.name,.price,.desc,h3,.sub .es')].map(lh),
       subs: [...c.querySelectorAll('.sub')].map(s => ({ref: s.dataset.id, h3: T(s.querySelector('h3')), es: T(s.querySelector('.es'))})),
-      items: [...c.querySelectorAll('.item')].map(it => ({ref: it.dataset.ref, name: T(it.querySelector('.name')), price: T(it.querySelector('.price')), desc: T(it.querySelector('.desc'))}))};
+      items: its.map(it => { const d = it.querySelector('.desc'); return {ref: it.dataset.ref, block: box(it.getBoundingClientRect()), name: T(it.querySelector('.name')), price: T(it.querySelector('.price')),
+        desc: d ? Object.assign(T(d), lastLineWords(d)) : null}; })};
   });
   return {page: {w: pg.width, h: pg.height}, cards, banner: box(document.querySelector('.banner').getBoundingClientRect()),
           title: T(document.querySelector('.title')), loc: T(document.querySelector('.loc')), deck: box(document.querySelector('.deck').getBoundingClientRect()),
           foot: box(document.querySelector('.foot').getBoundingClientRect())};
 }"""
+PHONE = r"""() => { const tb = document.querySelector('.tabs');
+  const lastLine = el => { const tn = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); const ws = []; let n;
+    while ((n = tn.nextNode())) { const re = /\S+/g; let m; while ((m = re.exec(n.data))) { const r = document.createRange(); r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length); ws.push(r.getBoundingClientRect().top); } }
+    if (!ws.length) return 99; const last = Math.max(...ws); return new Set(ws.map(y => Math.round(y))).size > 1 ? ws.filter(y => Math.abs(y - last) < 2).length : 99; };
+  return {scrollWidth: document.documentElement.scrollWidth, tabs: getComputedStyle(tb).position, tab_count: document.querySelectorAll('.tab').length,
+    tabbar_scroll_vs_client: [tb.scrollWidth, tb.clientWidth], tab_rects: [...document.querySelectorAll('.tab')].map(t => { const r = t.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)]; }),
+    active_label: (document.querySelector('.tab.active .lbl') || {}).innerText,
+    min_last_line_tokens: Math.min(...[...document.querySelectorAll('.desc,.name,h2')].map(lastLine)),
+    cards: [...document.querySelectorAll('.card')].map(c => { const r = c.getBoundingClientRect(); return {n: +c.dataset.n, x: r.left, w: r.width, y: r.top + scrollY, transform: getComputedStyle(c).transform}; })}; }"""
 
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path=CHROME)
@@ -44,8 +58,7 @@ with sync_playwright() as p:
     pg.pdf(path=str(OUT / "menu.pdf"), width="8.5in", height="11in", print_background=True, margin={"top": "0", "right": "0", "bottom": "0", "left": "0"})
     ph = b.new_page(viewport={"width": 390, "height": 844}, device_scale_factor=3, is_mobile=True, has_touch=True)
     ph.goto(URL, wait_until="load"); ph.evaluate("document.fonts.ready")
-    PH = ph.evaluate("""() => ({scrollWidth: document.documentElement.scrollWidth, tabs: getComputedStyle(document.querySelector('.tabs')).position,
-        tab_count: document.querySelectorAll('.tab').length, cards: [...document.querySelectorAll('.card')].map(c => { const r = c.getBoundingClientRect(); return {n: +c.dataset.n, x: r.left, w: r.width, y: r.top + scrollY}; })})""")
+    PH = ph.evaluate(PHONE)
     ph.screenshot(path=str(OUT / "preview-phone.png"), full_page=True)
     b.close()
 

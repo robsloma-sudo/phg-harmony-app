@@ -4215,12 +4215,12 @@ BEGIN
 
 -- ---------- 0. save the definitions this migration replaces ----------
 create table if not exists public.phg_backup_design_fn_defs_20260928 (
-  signature text primary key, definition text not null, acl text, saved_at timestamptz not null default now());
+  signature text primary key, definition text not null, saved_at timestamptz not null default now());
 alter table public.phg_backup_design_fn_defs_20260928 enable row level security;
 revoke all on public.phg_backup_design_fn_defs_20260928 from anon, authenticated;
 revoke insert, update, delete, truncate on public.phg_backup_design_fn_defs_20260928 from service_role;
-insert into public.phg_backup_design_fn_defs_20260928 (signature, definition, acl)
-select p.oid::regprocedure::text, pg_get_functiondef(p.oid), p.proacl::text
+insert into public.phg_backup_design_fn_defs_20260928 (signature, definition)
+select p.oid::regprocedure::text, pg_get_functiondef(p.oid)
   from pg_proc p
  where p.oid in (to_regprocedure('public.phg_design_proposal_submit(uuid,jsonb,jsonb,jsonb,jsonb,text,bigint[],numeric,text[],boolean)'),
                  to_regprocedure('public.phg_design_proposal_review(uuid,boolean,text)'),
@@ -4231,8 +4231,7 @@ do $$ begin
     raise exception 'expected 3 saved function definitions before replacing them';
   end if;
 end $$;
--- Rollback: drops the new submit (11 args) and the score function, restores the three saved bodies, re-applies revokes
--- and the service_role grant each had (live 2026-09-28: postgres + service_role only).
+-- Rollback: drops the new submit (11 args) and the score function, restores the three saved bodies, re-applies revokes.
 -- The added columns (layout, review_scores) stay: nullable / defaulted, unused by the restored functions.
 create or replace function public.phg_rollback_design_score_gate_20260928()
 returns int language plpgsql set search_path to 'public', 'pg_temp' as $$
@@ -4240,12 +4239,9 @@ declare r record; n int := 0;
 begin
   drop function if exists public.phg_design_proposal_submit(uuid,jsonb,jsonb,jsonb,jsonb,text,bigint[],numeric,text[],boolean,jsonb);
   drop function if exists public.phg_design_proposal_score(uuid,text,jsonb,jsonb,jsonb);
-  for r in select signature, definition, acl from public.phg_backup_design_fn_defs_20260928 order by signature loop
+  for r in select signature, definition from public.phg_backup_design_fn_defs_20260928 order by signature loop
     execute r.definition;
     execute format('revoke all on function %s from public, anon, authenticated', r.signature::regprocedure);
-    if r.acl like '%service_role=X%' then
-      execute format('grant execute on function %s to service_role', r.signature::regprocedure);
-    end if;
     n := n + 1;
   end loop;
   return n;
