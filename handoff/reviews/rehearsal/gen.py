@@ -191,9 +191,10 @@ A = DECL + run_file('file1', '$rehearse_f1$', f1) + f"""
         RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback 11';
       EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
       END;
-      -- 11b: the damping condition itself: same items but one wine section re-typed 'unsectioned' (28 drinks < 33), so
-      --     only the near-identical rule applies. Round 4 damped it (alternate_near_identical_recent_other_source).
-      secs11 := jsonb_set(secs, '{{1,section_type}}', '"unsectioned"');
+      -- 11b: the damping condition itself: the s10 prices (an item set never stored, so no duplicate_item_set) with one
+      --     wine section re-typed 'unsectioned' (28 drinks < 33), so only the near-identical rule applies. Round 4
+      --     damped it (alternate_near_identical_recent_other_source).
+      secs11 := jsonb_set(secs10, '{{1,section_type}}', '"unsectioned"');
       BEGIN
         {call("'https://rehearsal.example.com/drinks'", 'reh11b', 'secs11')}{after('s11b_real_page_not_damped_behind_item_page', "res->>'status'='created' and res->>'reason'='newer_near_identical_capture' and cur_now<>cur2")}
         a := jsonb_set(a, '{{s11b_real_page_not_damped_behind_item_page,capture_bev}}', to_jsonb(public.phg_menu_payload_bev_count(secs11)));

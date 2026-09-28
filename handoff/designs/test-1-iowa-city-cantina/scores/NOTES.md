@@ -64,3 +64,17 @@ Round 14 fixes the design-side items:
 - Spirits: a card-level "straight pours" note instead of lines that repeat the name.
 - Bigger name bands.
 - Phone figure-strip tabs.
+
+## Round 14 (locked 2x2 tabla, name bands, marigold La Botella, phone chip tabs)
+Combined 72.305 (critic 74.0, content 73.3, accuracy 69.7). NEW BEST (the previous best was 71.434).
+Round-15 fixes that reviewers agree on:
+- Use one item pitch on every card; drop the stretched 24/6 pt padding.
+- Take up row-height differences in the face, the band, or real content.
+- Put "Straight pours." in the band so the first subheads align.
+- Price colour on La Botella: deep ochre, 4.5:1 or better.
+- Card numbers no larger than the prices on the phone.
+- Put the Manhattan public_components aromatic-bitters=false conflict on the needs_input list, since it is unflagged.
+- Use the Margarita's "tequila blanco" word order.
+- Add a "copa" price label under By the Glass.
+- One description measure per card.
+- Consistent SPANISH · English subheads.

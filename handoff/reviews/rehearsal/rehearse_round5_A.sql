@@ -671,9 +671,10 @@ $rehearse_f1$;
         RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback 11';
       EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
       END;
-      -- 11b: the damping condition itself: same items but one wine section re-typed 'unsectioned' (28 drinks < 33), so
-      --     only the near-identical rule applies. Round 4 damped it (alternate_near_identical_recent_other_source).
-      secs11 := jsonb_set(secs, '{1,section_type}', '"unsectioned"');
+      -- 11b: the damping condition itself: the s10 prices (an item set never stored, so no duplicate_item_set) with one
+      --     wine section re-typed 'unsectioned' (28 drinks < 33), so only the near-identical rule applies. Round 4
+      --     damped it (alternate_near_identical_recent_other_source).
+      secs11 := jsonb_set(secs10, '{1,section_type}', '"unsectioned"');
       BEGIN
         res := public.submit_menu(acct,'NBCC-FIRECRAWL-MENUS','https://rehearsal.example.com/drinks',null,'html','unknown','rehearsal',null,md5('reh11b'||clock_timestamp()::text),secs11,null,null,null,null,false);
     select id into cur_now from public.menus where account_id=acct and is_current;
