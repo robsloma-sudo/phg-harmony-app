@@ -383,7 +383,9 @@ export function tuneStyle(req, look, style) {
   // avoid list; Georgia's oldstyle figures make price columns uneven.
   for (const lvl of ['section', 'sub', 'subtitle']) if (style[lvl].cs === 'upper' && style[lvl].sp > 180) style[lvl].sp = 180;
   if (style.subtitle.cs === 'upper' && style.subtitle.sp > 120) style.subtitle.sp = 120;
-  if (style.title.cs === 'upper' && style.title.sp > 300) style.title.sp = 300;
+  // Round 7 (all five Design Theory reviewers): display caps tracked at 150 fall apart into single letters; the panel's
+  // band for caps is 50-120 and a large title needs less than small caps, so the title holds at TITLE_CAPS_SP.
+  if (style.title.cs === 'upper' && style.title.sp > TITLE_CAPS_SP) style.title.sp = TITLE_CAPS_SP;
   for (const lvl of Object.keys(style)) if (lvl !== 'page' && style[lvl].f === 5) style[lvl].f = 3;
   if (style.price.f === 0) style.price.f = style.name.f === 0 ? 2 : style.name.f;
   for (const [lvl, min] of Object.entries(FLOOR)) if (style[lvl].s < min) style[lvl].s = min;
@@ -404,6 +406,15 @@ export function tuneStyle(req, look, style) {
       style[lvl].c = fixed;
     }
   }
+  // Value follows rank (panel round 7, colour theorist: subheads #a39a88 at 6.6:1 sat dimmer than the descriptions under
+  // them at 9.6:1). A neutral subhead (not the accent) is never weaker than the description line; it takes that value.
+  if (style.sub.c !== style.section.c && contrast(style.sub.c, style.page.bg) < contrast(style.desc.c, style.page.bg)) {
+    notes.push(`Subheads lifted ${style.sub.c} -> ${style.desc.c} so a higher level is never dimmer than the descriptions.`);
+    style.sub.c = style.desc.c;
+  }
+  // Prices sit with the name, not the description (round 7: "5 / 7 / 22 blends into the secondary text"). A price that
+  // shared the description colour takes the name's ink; a look that puts its accent on prices keeps it.
+  if (style.price.c === style.desc.c && style.name.c !== style.desc.c) style.price.c = style.name.c;
   return notes;
 }
 
@@ -840,22 +851,64 @@ function planCuts(doc, S, sizeKey) {
     for (const op of L.ops) { if (op.node?.pos) continue; const pg = Math.floor(op.y / L.H); const col = Math.max(0, Math.round((op.x - L.M) / (L.colW + L.gutter))); const k = pg * n + Math.min(col, n - 1); if (k < slots) bottoms[k] = Math.max(bottoms[k], op.y - pg * L.H); }
     if (bottoms.some(b => b === 0)) return;
     const mean = bottoms.reduce((a, b) => a + b, 0) / slots;
-    // A plan that leaves a subhead at a column foot without its items is a last resort (keep-with-next, round 3).
-    const score = bottoms.reduce((a, b) => a + (b - mean) ** 2, 0) + (orphanSubs(doc, S, sizeKey).length ? 1e9 : 0);
+    // Pages end on one baseline (panel round 7, all 15 reviewers: page 1 ended 107 mm above its margin while page 2 ran to
+    // the footer). Type grows until the fullest column meets the margin, so a page whose own fullest column is short
+    // keeps a dead band at its foot; each page's fullest column counts (PAGE_BALANCE_W) beside the column spread.
+    const pageMax = Array.from({ length: pages }, (_, p) => Math.max(...bottoms.slice(p * n, p * n + n)));
+    const pMean = pageMax.reduce((a, b) => a + b, 0) / pages;
+    const score = bottoms.reduce((a, b) => a + (b - mean) ** 2, 0) + PAGE_BALANCE_W * n * pageMax.reduce((a, b) => a + (b - pMean) ** 2, 0)
+      + (orphanSubs(doc, S, sizeKey).length ? 1e9 : 0);
     if (!best || score < best.score) best = { score, cuts: [...cuts], fill: mean / Math.max(...bottoms) };
   };
   rec(0, 0, []);
   clear();
   if (!best) return null;
   best.cuts.forEach((c, i) => { const slot = i + 1; if (slot % n === 0) secs[c].breakBefore = true; else secs[c].breakCol = true; });
-  return { fill: best.fill, cuts: best.cuts, msg: `planned ${pages} pages × ${n} columns: ${best.cuts.map(c => secs[c].name).join(', ')} start new ${n > 1 ? 'columns/pages' : 'pages'}` };
+  return { fill: best.fill, score: best.score, cuts: best.cuts, msg: `planned ${pages} pages × ${n} columns: ${best.cuts.map(c => secs[c].name).join(', ')} start new ${n > 1 ? 'columns/pages' : 'pages'}` };
 }
 // The one move the plan may make (panel round 4, all 15 reviewers: page 1 ended 121 mm short while Zero Proof closed a
 // crammed page 2): the zero-proof section may sit directly after the cocktails, as their peer on the same page
 // (knowledge/03: Dandelyan, NoMad), when that fills the pages clearly more evenly (mean/max column fill +0.05).
 export const ZP_MOVE_GAIN = 0.05;
+export const PAGE_BALANCE_W = 2;
 const secItems = x => [...(x.items || []), ...(x.subs || []).flatMap(b => b.items || [])];
 function planPages(doc, S, sizeKey) {
+  const msg = planOrder(doc, S, sizeKey);
+  if (!msg) return null;
+  const split = splitAtSub(doc, S, sizeKey);
+  return split ? `${msg.replace(/(?:;\s*)?planned \d+ pages[^;]*$/, '')}${/planned \d+ pages/.test(msg.split(';')[0]) ? '' : '; '}${split}`.replace(/^;\s*/, '') : msg;
+}
+// A section may continue at a subsection boundary (panel round 7, all 15 reviewers: page 1 ended 107 mm above its
+// margin because Menu Studio keeps sections whole, S16). The planner tries each section's last subsection as its own
+// peer section (Beer -> "On Draft" + "Cans"; Wine -> "Wine" + "Wine · Red") and keeps the one split that balances the
+// pages and columns clearly better (plan score x SPLIT_GAIN or lower). demoteSubs folds it back when the final plan
+// keeps both parts in one column.
+export const SPLIT_GAIN = 0.7;
+function splitAtSub(doc, S, sizeKey) {
+  const now = planCuts(doc, S, sizeKey);
+  if (!now) return null;
+  const flags = new Map(doc.sections.map(x => [x, [x.breakBefore, x.breakCol]]));
+  const restoreFlags = () => { for (const [x, [bb, bc]] of flags) { delete x.breakBefore; delete x.breakCol; if (bb) x.breakBefore = bb; if (bc) x.breakCol = bc; } };
+  const cands = doc.sections.filter(x => !x.designer_role && !x.designer_promoted_from && !(x.items || []).length && (x.subs || []).filter(b => b.items.length).length >= 2);
+  let best = null;
+  const trySplit = sec => {
+    const secs0 = [...doc.sections], p0 = { name: sec.name, desc: sec.desc, items: sec.items, subs: [...sec.subs], designer_collapsed: sec.designer_collapsed };
+    const changes = promoteSubs(doc, [sec.subs[sec.subs.length - 1]]);
+    const r = planCuts(doc, S, sizeKey);
+    const undo = () => { doc.sections = secs0; Object.assign(sec, p0); if (!p0.designer_collapsed) delete sec.designer_collapsed; };
+    return { r, changes, undo };
+  };
+  for (const sec of cands) {
+    const { r, undo } = trySplit(sec);
+    if (r && r.score <= now.score * SPLIT_GAIN && (!best || r.score < best.score)) best = { sec, score: r.score };
+    undo();
+  }
+  if (!best) { planCuts(doc, S, sizeKey); restoreFlags(); return null; }
+  const { r, changes } = trySplit(best.sec);
+  const heads = changes.filter(c => /peer sections|became its own section/.test(c)).length ? changes[0] : '';
+  return `${best.sec.name === (best.sec.designer_collapsed?.name || best.sec.name) ? best.sec.name : best.sec.designer_collapsed.name} continues at a subsection boundary so both pages fill (plan score ${Math.round(now.score)} -> ${Math.round(r.score)})${heads ? ` [${heads}]` : ''}; ${r.msg}`;
+}
+function planOrder(doc, S, sizeKey) {
   const base = planCuts(doc, S, sizeKey);
   if (!base) return null;
   const secs = doc.sections.filter(x => !x.designer_role);
@@ -869,7 +922,8 @@ function planPages(doc, S, sizeKey) {
   moved.splice(moved.indexOf(secs[ci]) + 1, 0, zp);
   doc.sections = moved;
   const alt = planCuts(doc, S, sizeKey);
-  if (alt && alt.fill >= base.fill + ZP_MOVE_GAIN) {
+  // Round 7: the move also stands when it balances the pages at least as well (lower plan score), not only on fill.
+  if (alt && (alt.fill >= base.fill + ZP_MOVE_GAIN || alt.score <= base.score)) {
     return `${zp.name} moved up beside ${secs[ci].name} (a peer of the cocktails; column fill ${Math.round(base.fill * 100)}% -> ${Math.round(alt.fill * 100)}% of the fullest); ${alt.msg}`;
   }
   doc.sections = orig;
@@ -914,9 +968,21 @@ function placeFooter(doc, S, sizeKey) {
   return top;
 }
 
+// Inline prices read after the name, not as a second headline (panel round 7, 9 of 15 reviewers: 17 pt prices beside
+// 17 pt names made "6 / 8.50 / 30" the loudest thing on the page). When prices sit inline (every multi-column layout,
+// S5) they are set at PRICE_RATIO of the name size, never under the price floor. A right-aligned price column keeps
+// the name size.
+export const PRICE_RATIO = 0.8, TITLE_CAPS_SP = 100;
+export function inlinePriceSize(S) {
+  if (S.page.priceAlign !== 'inline' || (S.page.cols || 1) < 2) return false;
+  const s = Math.max(FLOOR.price, Math.round(S.name.s * PRICE_RATIO));
+  if (s >= S.price.s) return false;
+  S.price.s = s; return true;
+}
 function scaleStyle(base, k) {
   const T = JSON.parse(JSON.stringify(base));
   for (const l of ['title', 'subtitle', 'section', 'sub', 'name', 'brand', 'desc', 'price']) T[l].s = Math.round(base[l].s * (l === 'title' ? Math.min(k, 1.35) : k));
+  inlinePriceSize(T);
   T.page.itemGap = Math.round(base.page.itemGap * k); T.page.secGap = Math.round(base.page.secGap * k);
   // Round 3 rhythm: space above a section head (item gap + section gap) stays within SEC_SPACE_MAX.
   if (T.page.itemGap + T.page.secGap > SEC_SPACE_MAX) T.page.secGap = Math.max(base.page.secGap, SEC_SPACE_MAX - T.page.itemGap);
@@ -1013,6 +1079,7 @@ export function design(input, options = {}) {
       style.page.dots = false; style.page.priceAlign = 'inline';
       log.push('prices inline beside each name (Menu Studio sets multi-column prices inline), leader dots off');
     }
+    if (inlinePriceSize(style)) log.push(`inline prices at ${style.price.s} pt beside ${style.name.s} pt names (read after the name, not as a second column)`);
     let m = m0;
     if (m.pages > 1) {
       const pl = planPages(doc, style, sizeKey);

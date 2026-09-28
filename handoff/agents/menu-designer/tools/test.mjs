@@ -247,5 +247,34 @@ t('the venue\'s legal line is heard, printed as the pinned footer line; "less th
   assert.equal(foot.name, 'Must be 21 to drink, please drink responsibly'); assert.equal(foot.desc, '');
   assert.match(haAll(haRes.options[0]).find(i => i.name === 'Athletic Run Wild IPA').desc, /<0\.5% ABV$/);
 });
+// Panel round 7 (sample-bar): pages end on one baseline; inline prices under the name; caps title tracking; value order.
+import { inlinePriceSize, PRICE_RATIO, TITLE_CAPS_SP } from './design.mjs';
+t('two-page plan may continue a section at a subsection boundary so both pages fill (Beer -> On Draft | Cans)', () => {
+  const o = design(sb, { venue: { city: 'Denver', state: 'CO' } }).options[0];
+  const secs = o.menu_studio_file.doc.sections.filter(x => !x.designer_role), names = secs.map(x => x.name);
+  const zp = names.indexOf('Zero Proof'), dr = names.indexOf('On Draft'), cans = names.indexOf('Cans');
+  assert.ok(zp >= 0 && dr === zp + 1 && cans === dr + 1, names.join(' | '));
+  assert.ok(!secs[dr].breakCol && !secs[dr].breakBefore, 'On Draft follows Zero Proof in page 1 column 2');
+  assert.ok(secs[cans].breakBefore, 'Cans opens page 2');
+  assert.equal(haAll(o).length, items(sb).length);
+  assert.match(JSON.stringify(o.fit_log), /continues at a subsection boundary/);
+});
+t('inline prices sit at PRICE_RATIO of the name, never under the floor; a price column keeps the name size', () => {
+  const S = { page: { cols: 2, priceAlign: 'inline' }, name: { s: 19 }, price: { s: 19 } };
+  assert.ok(inlinePriceSize(S)); assert.equal(S.price.s, Math.round(19 * PRICE_RATIO));
+  const F = { page: { cols: 2, priceAlign: 'inline' }, name: { s: 14 }, price: { s: 14 } };
+  assert.ok(!inlinePriceSize(F)); assert.equal(F.price.s, 14);
+  const C = { page: { cols: 1, priceAlign: 'right' }, name: { s: 19 }, price: { s: 19 } };
+  assert.ok(!inlinePriceSize(C)); assert.equal(C.price.s, 19);
+});
+t('caps title tracking held in the panel band; subheads never dimmer than descriptions; prices take the name ink', () => {
+  for (const o of design(sb, { venue: { city: 'Denver', state: 'CO' } }).options) {
+    const S = o.menu_studio_file.style;
+    if (S.title.cs === 'upper') assert.ok(S.title.sp <= TITLE_CAPS_SP, `${o.look} title ${S.title.sp}`);
+    if (S.sub.c !== S.section.c) assert.ok(contrast(S.sub.c, S.page.bg) >= contrast(S.desc.c, S.page.bg) - 1e-9, `${o.look} sub ${S.sub.c} vs desc ${S.desc.c}`);
+    assert.ok(S.price.c !== S.desc.c || S.name.c === S.desc.c, `${o.look} price shares the description colour`);
+    if (S.page.cols > 1) assert.ok(S.price.s < S.name.s || S.price.s === 14, `${o.look} price ${S.price.s} vs name ${S.name.s}`);
+  }
+});
 console.log(`${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

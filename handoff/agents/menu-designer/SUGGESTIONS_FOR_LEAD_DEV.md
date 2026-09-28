@@ -252,6 +252,15 @@ All 15 panel reviewers marked down three Menu Studio drawing rules that the desi
   "6 / 8.50 / 30" start at a different x on every line and the key cannot sit over its columns. Tabular (lining,
   fixed-width) figures in `mdcDrawItem`'s price text (`fontFeatureSettings: 'tnum'` or a tabular price face) would at
   least make the tiers the same width.
+- **Round 7 (sample-bar) repeat: key lines and tags.** 12 of 15 reviewers again read "Glass · Bottle" and
+  "1 oz · 1.5 oz · 2.5 oz" as captions of SPARKLING / VODKA (0.59–3.77 mm above subheads). Two asks, in order:
+  a `page.legendGap` (space after a heading description, e.g. 0.5 line) and a right-aligned section key on the heading
+  line (`sec.key`, drawn in the price face at the price x). Also a badge style: `style.badge` (size, colour) so NEW /
+  SEASONAL / HOUSE can be set at description size in the accent when the tag does not fit the description line (the
+  designer falls back to the 7 pt grey badge for Garden Gimlet and Midnight Espresso; Luna Paloma's HOUSE SPECIAL is
+  too wide for its description line and a "HOUSE" badge under the HOUSE subhead repeats it, so it prints no mark;
+  4 reviewers asked for one). Tabular figures for prices (`tnum`) remain
+  open; the designer now sets inline prices at 0.8x the name in the name's ink.
 
 ## S15. Keep a subhead with its first items (review panel round 3)
 
@@ -293,6 +302,15 @@ when the final plan no longer needs it. Page 1 still ends about 40% short.
   2× `itemGap`, so a short page opens up evenly instead of stopping early; or
 - let a section continue into the next column at a subsection boundary (with its heading repeated in small caps,
   "Spirits, continued"), so a long section can share a page with a short one. Count both in `mdcSectionHeight`.
+- **Round 7 (sample-bar) update.** The toolkit now emulates the second option: the planner may split a section at its
+  last subsection into two peer sections (Beer -> "On Draft" on page 1 under Zero Proof, "Cans" opening page 2) when
+  that balances the pages and columns clearly better, and scores each page's fullest column as well as the column
+  spread. Page 1 now reaches its margin (was 107 mm short), type grew x1.24 -> x1.39, but page 2 still ends about
+  40 mm above the footer and the Wine column about 25% short, and a split changes the heading level ("CANS" as a peer
+  of "SPIRITS"). A native continuation (`sec.continueAt: subId`, heading repeated as "Beer, continued" in the subhead
+  face) or `page.justify: 'columns'` would balance without renaming. Menu Studio also adds a different gap above a
+  section head after a subsection's last item than after a section's own items (7.2 vs 8.8 mm, self-check
+  `header_space_above_section`); one `secGap` regardless of the previous level would fix it.
 
 
 ## S17. A measure for a single column, and a price-column key (review panel round 5)

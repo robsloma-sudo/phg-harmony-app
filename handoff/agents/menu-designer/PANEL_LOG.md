@@ -270,3 +270,61 @@ Open, carried to later rounds:
 - **Menu engineering.** The top-right slot holds the to-go cans. The engineer suggests cocktails there, which conflicts with
   keeping Draft and Cans side by side.
 - From earlier rounds: Sample Bar page 1 short (S16), Casa Luna measure (S17), prices sharing the description grey.
+
+## Round 7: sample-bar
+
+Scores: Design Theory 73, 75, 72, 75, 74 (mean 73.8) · Cocktail & Beverage 79, 84, 78, 82, 84 (mean 81.2) ·
+Concept & Brand 70, 74, 75, 73, 72 (mean 72.9). Lowest 70. Gate not met (11 of 15 below 80).
+Weakest subscores: grid_space 61, format_layout 63, overall_design 68, headers 70, graphic_craft 71, list_conventions 73.
+
+Most common points: page 1 ended 107 mm above its margin while page 2 ran to the footer (15 of 15); pour/glass keys
+sitting on VODKA / SPARKLING, 0.59–3.5 mm above subheads (13); prices at 17 pt, the same size as the names, in the
+description colour (9); title tracked at 150 (all 5 Design Theory reviewers); Luna Paloma unmarked as the house special
+(4); SEASONAL / NEW badges at 7 pt grey (5); Hazy Peak's lone 8.50 (5); no pitcher volume or wine glass pour (4); Athletic
+Run Wild not findable from Zero Proof (4); "California coast" for Meiomi.
+
+Changed (toolkit, applies to every menu):
+- **Pages end on one baseline.** The page planner scores each page's fullest column as well as the column spread
+  (`PAGE_BALANCE_W`), and the zero-proof move also stands when it lowers that score.
+- **A section may continue at a subsection boundary** (toolkit emulation of S16). The planner tries each section's
+  last subsection as its own peer section and keeps the one split that lowers the plan score by 30% or more
+  (`SPLIT_GAIN`). `demoteSubs` folds it back if both parts end in one column. Sample Bar: Cocktails | Zero Proof + On
+  Draft on page 1, Cans + Wine | Spirits on page 2. Page 1 now reaches its margin (was 107 mm short), and type grew
+  x1.39 (was x1.24; names 19 pt, heads 25 pt).
+- **Inline prices under the name.** In multi-column layouts, where prices are inline, prices print at 0.8x the name
+  size (`PRICE_RATIO`, never under the 14 pt floor): 15 pt beside 19 pt names. A price that shared the description
+  colour now takes the name's ink. Looks that put their accent on prices keep it.
+- **Caps title tracking** is capped at 100/1000 em (`TITLE_CAPS_SP`, `TRACKING_MAX.title`), down from 150/300.
+- **Value follows rank.** A neutral subhead is never dimmer than the description line under it. Noir's subheads
+  #a39a88 (6.6:1) now take the description value #c4baa4.
+- **Sample transcript** (simulated venue answers): Athletic Run Wild is under 0.5% ABV ("<0.5% ABV", Athletic's label
+  figure). Meiomi is "Monterey, Santa Barbara and Sonoma counties, California", its real sourcing, replacing "California
+  coast". Legal line: "Must be 21 to order alcohol, please drink responsibly", now in the footer on page 2. No price
+  changed. Confidence 0.76 (was 0.72), no open questions. Self-check 94/98. Remaining failures: page 2 bottom 42 mm,
+  page 2 right 22 mm (inline prices), space above section heads 7.2–8.8 mm (Menu Studio adds a different gap after a
+  subsection), and space above subheads (key lines).
+- Casa Luna (42/42) and High Altitude (45/45) are unchanged. Both are one-page, and the new rules only touch two-page
+  plans and inline prices.
+- Tests: 86 passed (3 new).
+
+Filed: S16 extended for round 7 (native section continuation or column justification; one `secGap` whatever the
+previous level). S14 extended for round 7 (`page.legendGap`, a right-aligned section key `sec.key`, a `style.badge`
+size and colour, tabular figures).
+
+Open, carried to later rounds:
+- **Page 2 foot.** Spirits ends about 40 mm above the footer and the Wine column about 25% short. The split renames
+  Beer to the peer heads "On Draft" / "Cans", and the Cans head now sits at the level of SPIRITS (S16).
+- **Key lines** ("Glass · Bottle", "1 oz · 1.5 oz · 2.5 oz") still sit right on SPARKLING / VODKA (S14 legendGap). A
+  right-aligned key over the prices needs `sec.key`.
+- **Luna Paloma house special.** It has no mark: the tag is too wide for its description line, and a HOUSE badge under
+  the HOUSE subhead repeats the subhead. It needs a badge style (S14) or a shorter description line.
+- **Descriptions held at 11 pt** (x1.03) because the longest line (Del Maguey Vida, Garden Spritz) fixes the ceiling
+  (S6). The legibility reviewer asks for 13.
+- **Content not yet answered:** pitcher volume, wine glass pour, breweries for the five fictional drafts (ask, never
+  invent), Hazy Peak 8.50 (confirm or round, a venue call), Athletic Run Wild also listed under Zero Proof, vintages / NV,
+  "salted rim" vs "salt rim" (the venue's words), a Colorado craft can.
+- **Brand.** Masthead is still generic. There is no running head on page 2. Gold is on both the subtitle and the
+  section heads (Colour theorist: keep gold for section heads).
+- **Grand Hotel (option B)** still runs to 3 pages on Sample Bar.
+- From earlier rounds: Casa Luna measure (S17), High Altitude column balance (S18), section rhythm module, accent
+  contrast on Taproom.
