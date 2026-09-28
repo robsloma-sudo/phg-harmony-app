@@ -6,8 +6,9 @@
 --   1,547 venues "touched" = have a menu created since 2026-09-27 00:00Z (the incident window).
 --     185 of them also had a menu from before the incident.
 --     119 of those 185 had a pre-incident menu with MORE distinct items than today's current one (the damaged venues).
---   Step 2 changes the current menu of ~350-410 touched venues (all to an equal-or-larger menu; exact figure is written
---   to phg_repair_run_20260927 at run time). Acceptance: 0 venues end with fewer distinct items than their largest
+--   Step 2 changes the current menu of ~350 touched venues (rehearsal 2026-09-28: 348 = 300 more items, 12 same items
+--   and more drinks, 36 ties where a real page replaces an item page; exact figure is written to
+--   phg_repair_run_20260927 at run time). Steps 1-2 hold SHARE ROW EXCLUSIVE on menus for ~8 s (rehearsed 7.7 s). Acceptance: 0 venues end with fewer distinct items than their largest
 --   pre-incident menu, 0 venues with 2 current menus, 0 touched venues left without a current menu.
 --
 -- Step 1  backfill menus.source_key / item_keys / item_set_hash (12,229 rows, ~8 s)

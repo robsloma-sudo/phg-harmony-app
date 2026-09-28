@@ -63,3 +63,16 @@ Spec (S1-S16) and Safety (B1, S1-S7) overlap on:
 - Verification: supabase/tests/phg_026_verification.sql (pass/fail rows, expected values).
 - Documented: re-enable cron 7 with p_pages <= 5 (account row locks held per promotion transaction).
 - Follow-up after release (not part of this change): stale header comment in the submit-menu Edge function.
+
+## Rehearsal before round 2 (2026-09-28)
+Both files run on the live DB inside one DO block ending in RAISE EXCEPTION (fully rolled back; verified afterwards
+that no PHG-026 object exists). Script: handoff/reviews/rehearsal/rehearse_all.sql (generator gen.py).
+- A (file 1, 152 ms): 4 defs saved; 10-arg dropped; scenarios 1-7 all PASS (duplicate_of_current, near-identical
+  replace, item page alternate, partial re-capture alternate, smaller other source alternate, empty ignored,
+  unknown-price overlap both ways); 0 multi-current throughout.
+- B (file 2, 7.7 s under SHARE ROW EXCLUSIVE): step2 {current_changed 348, multi_current 0, no_current 0, smaller 0};
+  unique index created; 0 exact-tie changes (300 larger, 12 more drinks, 36 real page over item page).
+- C: repair rollback 348/348 restored, 0 multi-current, is_current identical to backup; function-def rollback
+  returned 4 and restored the 10-arg overload.
+- Header estimate corrected to ~350 (348) and the 7.7 s lock documented.
+- Note: empty_capture_ignored returns the current menu's id as menu_id (intended: the caller keeps pointing at it).
