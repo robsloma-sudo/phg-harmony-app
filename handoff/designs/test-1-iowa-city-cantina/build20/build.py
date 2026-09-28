@@ -294,7 +294,7 @@ h3{{font:700 9pt/{2 * U}pt 'DM Sans',sans-serif;letter-spacing:.16em;text-transf
 .desc{{font-weight:400;font-size:10.5pt;line-height:{2 * U}pt;color:#40352D;font-variation-settings:'opsz' 12}}
 .glass{{font:600 9pt/1 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#40352D;white-space:nowrap;margin-left:.25em}}
 .bp,.sepp{{display:none}}
-.legal{{margin-top:auto;font-style:italic;font-weight:400;font-size:9.5pt;line-height:{2 * U}pt;color:#4F4238}}
+.legal{{margin-top:auto;position:relative;top:-1.7pt;font-style:italic;font-weight:400;font-size:9.5pt;line-height:{2 * U}pt;color:#4F4238}}
 /* phone: one reading column on an 8 px grid; own hero and footer art */
 @media (max-width:600px){{
  .page{{width:100%;height:auto;overflow:visible}}
@@ -321,7 +321,7 @@ h3{{font:700 9pt/{2 * U}pt 'DM Sans',sans-serif;letter-spacing:.16em;text-transf
  .desc{{font-size:15px;line-height:24px}}
  .glass{{font-size:12px}}
  .bl,.sepl{{display:none}} .bp{{display:inline}} .sepp{{display:inline}}
- .legal{{margin-top:40px;font-size:14px;line-height:24px}}
+ .legal{{margin-top:40px;top:0;font-size:14px;line-height:24px}}
 }}
 """
 HTML = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">

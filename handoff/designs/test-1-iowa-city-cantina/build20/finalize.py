@@ -1,6 +1,6 @@
-"""Round 19: layout.json (scorecard section 3 schema + measured_checks) from measure.json; price check vs the draft."""
+"""Round 20: layout.json (scorecard section 3 schema + measured_checks) from measure.json; price check vs the draft."""
 import json, math, pathlib
-HERE = pathlib.Path(__file__).parent; OUT = HERE.parent / "round-19"
+HERE = pathlib.Path(__file__).parent; OUT = HERE.parent / "round-20"
 m = json.loads((HERE / "measure.json").read_text()); M = m["M"]
 draft = json.loads((HERE.parent / "build" / "draft_doc.json").read_text()); doc = json.loads((OUT / "doc.json").read_text())
 mm = lambda v: round(v * 25.4 / 72, 2)
@@ -27,7 +27,7 @@ for e in M["els"]:
         if k in e: r[k] = round(e[k], 2) if isinstance(e[k], float) else e[k]
     els.append(r)
 els.insert(0, {"kind": "image", "page": 1, "x_mm": mm(M["art"]["x"]), "y_mm": mm(M["art"]["y"]), "w_mm": mm(M["art"]["w"]), "h_mm": mm(M["art"]["h"]), "ref": "art_layer",
-               "note": "text-free SVG art layer, unchanged from round 17 (sky, gold-leaf sun, torn hills, cut-paper agave rosette, torn page edge, paper fibre); drawn 9 pt (3.175 mm) past trim on all sides"})
+               "note": "text-free SVG art layer: sky, gold sun (no speckle), two torn loess bluffs, round-17 agave rosette, seven contour strip rows bowing around the agave, torn page edge, one paper-fibre grain; drawn 9 pt (3.175 mm) past trim on all sides"})
 
 def col(kind, c): return [e for e in M["els"] if e["kind"] == kind and e.get("column") == c]
 cols = ["full"]
@@ -64,15 +64,15 @@ checks = {
  "description_left_edges_pt": desc_left,
  "header_x_pt": head_x, "header_sizes_pt": head_sz, "subheader_sizes_pt": sub_sz, "one_style_per_level": len(head_sz) == 1 and len(sub_sz) == 1,
  "item_gaps_pt": [[round(g, 2) for g in s] for s in M["item_gaps"]],
- "item_gap_note": "7 pt between cocktails, 5 pt between one-row items inside a sub; 24 pt where a subhead intervenes (9 pt sub gap + 12 pt subhead line + 3 pt); section gap 18.2 pt + 28.75 pt head block",
+ "item_gap_note": "7 pt baseline unit: every line box is 14 pt (names, ingredient lines, H3, allergen line) or 21 pt (H2); item gap 7 pt; sub gap 7 pt + 14 pt H3 line; section gap 21 pt + 28 pt H2 block (21 pt line + rule) + 7 pt",
  "section_blocks_pt": [{k: round(v, 2) for k, v in s.items()} for s in M["secs"]],
  "section_gaps_pt": [round(M["secs"][i + 1]["y"] - (M["secs"][i]["y"] + M["secs"][i]["h"]), 2) for i in range(len(M["secs"]) - 1)],
- "dead_space": "one reading column fills the 36 pt inset top to bottom (allergen line ends on the bottom margin); four equal flex gaps (18.2 pt) separate sections; the rail's empty sky above the sun is the page's one quiet zone (taglines removed)",
+ "dead_space": "one reading column from the cap-aligned first H2 (36.0 pt) to the allergen line on the bottom margin; the allergen line sits on the last grid line (margin-top auto) with 28 pt above it; the rail sky above the sun is the one quiet zone",
  "contrast_worst_pixel_min_by_kind": ctr, "contrast_all_at_least_4_5": min(ctr.values()) >= 4.5,
  "contrast_method": "text-free render at 300 dpi; each text line box narrowed to its ink box (+2 px); every background pixel compared with the text colour; the minimum ratio is reported",
  "contrast_per_element": m["contrast"],
- "price_pair_scan": [{"ref": p["ref"], "column": p["column"], "eye_travel_pt": round(p["travel_pt"], 1), "eye_travel_frac": round(p["travel_frac"], 3), "name_to_price_frac": round(p["name_to_price_frac"], 3), "leader_pt": round(p["leader_w"], 1)} for p in pairs],
- "price_pair_max_travel_frac": round(max(p["travel_frac"] for p in pairs), 3), "every_row_over_40pct_has_leader": all(p["leader_w"] > 6 for p in pairs if p["travel_frac"] > .4),
+ "price_pair_scan": [{"ref": p["ref"], "column": p["column"], "eye_travel_pt": round(p["travel_pt"], 1), "eye_travel_frac": round(p["travel_frac"], 3), "name_to_price_frac": round(p["name_to_price_frac"], 3), "tab_stop_rows": p["ref"] in ("beta_czech_pilsner","beta_dry_hopped_ipa","beta_amber_lager","beta_dry_cider","beta_malbec","beta_pinot_grigio","beta_brut_rose")} for p in pairs],
+ "price_pair_max_travel_frac": round(max(p["travel_frac"] for p in pairs), 3), "every_row_within_40pct": all(p["travel_frac"] <= .4 for p in pairs), "leaders": "none (round 20: prices inline, 1 em after the last word of the row)",
  "prices_same_row_as_names": True,
  "legibility_1m": leg, "legibility_threshold": "essential text >= 5 arcmin at 1 m (Snellen 20/20 letter detail): cap height for caps-only roles (names, prices, heads, subheads), x-height for the lowercase ingredient lines",
  "legibility_1m_pass": leg_ok,
@@ -83,22 +83,24 @@ checks = {
  "every_item_has_description": all(NI[k]["desc"] for k in NI), "prices_match_draft": not price_mismatch and not printed_mismatch, "names_match_draft": not name_mismatch,
  "price_mismatches": price_mismatch + printed_mismatch,
 }
-layout = {"round": 19, "concept": "Sun Behind the Page (round-17 art, KB reading layer)",
+layout = {"round": 20, "concept": "Sun Behind the Page, landed in Iowa",
  "page": {"width_mm": 215.9, "height_mm": 279.4, "width_pt": 612, "height_pt": 792, "margins_mm": {"top": 12.7, "right": 12.7, "bottom": 12.7, "left": 12.7}, "bleed_mm": 3.175},
  "grid": {"zones_pt": {"art_rail": [-9, 158], "wordmark_lane": [166, 262], "menu_column": [282, 576]}, "columns": {"full": [282, 576]},
-          "gutter_mm": mm(20), "gutter_note": "20 pt from the wordmark lane (262) to the menu column (282); one reading column (the round-17 Wine/Spirits pair could not hold the bilingual labels at 12 px)",
-          "baseline_pt": "15 pt name row / 14 pt ingredient line; 7 pt cocktail gap, 5 pt one-row gap, 18.2 pt section gap", "menu_column_width_mm": mm(294),
-          "phone": "390 css px, 24 px side margins, every row top on an 8 px grid (24 px lines, 16/24/40 px gaps)"},
- "palette": {"background": "#F2E9D6", "text": "#1D1815", "ingredient_text": "#40352D", "subhead": "#9A3B22", "spanish_half_of_header": "#4F4238", "allergen_line": "#4F4238", "rule": "#6B5A4C", "leader": "#9C8B7B",
-             "art": {"sky": ["#F1DEC2", "#E7B893", "#CF7F55"], "gold_accent_sun_only": "#C99532 -> #E4BF66", "hills": ["#B5532F", "#7C3322"], "agave": ["#244A3E", "#2E5A4B", "#3F7362", "#56866F"], "ground": "#162C25"}},
- "type": {"title": {"font": "Fraunces (opsz 144)", "size_pt": 96, "weight": 380, "note": "vertical, writing-mode vertical-rl, tracking .075em"},
-          "header": {"font": "Fraunces", "size_pt": 13, "weight": "420 Spanish / 650 English", "tracking_em": .12, "case": "caps", "pattern": "Spanish · English, English heavier"},
-          "subheader": {"font": "DM Sans", "size_pt": 9, "css_px": 12, "weight": "500 Spanish / 700 English", "tracking_em": .16},
-          "serve_label": {"font": "DM Sans", "size_pt": 9, "css_px": 12, "weight": 700, "tracking_em": .12, "case": "caps", "rule": "last element of every cocktail ingredient line, no full stop"},
-          "legal": {"font": "Fraunces italic", "size_pt": 9.5}, "item": {"font": "Fraunces", "size_pt": 11, "weight": 600, "tracking_em": .11, "case": "caps"},
-          "description": {"font": "Fraunces (opsz 12)", "size_pt": 10.5, "weight": 400}, "price": {"font": "Fraunces tabular lining", "size_pt": 12.5, "weight": 600}},
+          "gutter_mm": mm(20), "gutter_note": "wordmark ink 188.7-258.8 pt, axis 224 pt shared with the vertical rail line (224.0); 23 pt from wordmark ink to the reading column (282)", "tab_stop_pt": 382, "tab_stop_note": "one-row items: draft descriptor on one tab stop at 282 + 100 pt",
+          "baseline_pt": 7, "baseline_note": "all line boxes are multiples of 7 pt (14 / 21); menu top 31.88 pt so the first H2 cap line sits at 36.0 pt, level with the CANTINA ink top (36.0 pt)", "menu_column_width_mm": mm(294),
+          "phone": "390 css px, 24 px side margins, every row top on an 8 px grid (24/32 px lines, 16/24/40 px gaps); own hero 416 px and footer 96 px"},
+ "palette": {"background": "#F2E9D6", "text": "#1D1815", "ingredient_text": "#40352D", "subhead": "#9A3B22", "price": "#5A4B3F", "allergen_line": "#4F4238", "rule": "#6B5A4C", "leader": "#9C8B7B",
+             "art": {"sky": ["#F1DEC2", "#E7B893", "#CF7F55"], "gold_accent_sun_only": "#C99532 -> #E4BF66", "loess_bluffs": ["#B5532F", "#7C3322"], "contour_strips": ["#27463A", "#8E4A2B", "#1D382E", "#7C3322", "#162C25", "#6A2B1C", "#10221C"], "agave": ["#244A3E", "#2E5A4B", "#3F7362", "#56866F"], "ground": "#162C25"}},
+ "type": {"title": {"font": "Fraunces (opsz 144)", "size_pt": 96, "weight": 380, "note": "vertical, writing-mode vertical-rl, tracking .075em; ink top 36.0 pt = first H2 cap line"},
+          "header": {"font": "Fraunces", "size_pt": 17, "line_pt": 21, "weight": 600, "pattern": "Spanish italic · English roman, same ink and weight", "ratio_to_name": round(17 / 11, 2)},
+          "subheader": {"font": "DM Sans", "size_pt": 9, "css_px": 12, "weight": 700, "tracking_em": .16, "case": "caps", "pattern": "Spanish italic · English roman"},
+          "item": {"font": "Fraunces", "size_pt": 11, "weight": 600, "case": "title", "tracking_em": 0},
+          "description": {"font": "Fraunces (opsz 12)", "size_pt": 10.5, "line_pt": 14, "weight": 400, "color": "#40352D"},
+          "serve_label": {"font": "DM Sans", "size_pt": 9, "css_px": 12, "weight": 600, "tracking_em": .1, "case": "caps", "rule": "own slot after the ingredients: thin space + .25em, no separator, ingredient colour"},
+          "price": {"font": "Fraunces tabular lining", "size_pt": 11, "weight": 500, "color": "#5A4B3F", "position": "inline, 1 em after the last word of the row"},
+          "legal": {"font": "Fraunces italic", "size_pt": 9.5}},
  "elements": els, "measured_checks": checks}
 (OUT / "layout.json").write_text(json.dumps(layout, ensure_ascii=False, indent=1))
-print(json.dumps({k: checks[k] for k in ["text_ink_margins_mm", "margins_equal_within_1mm", "all_text_inside_safe_inset", "item_name_left_edge_spread_pt", "price_right_edge_spread_pt", "one_style_per_level", "section_gaps_pt", "contrast_worst_pixel_min_by_kind", "price_pair_max_travel_frac", "every_row_over_40pct_has_leader", "legibility_1m_pass", "phone", "prices_match_draft", "every_item_has_description"]}, ensure_ascii=False, indent=0))
+print(json.dumps({k: checks[k] for k in ["text_ink_margins_mm", "margins_equal_within_1mm", "all_text_inside_safe_inset", "item_name_left_edge_spread_pt", "price_right_edge_spread_pt", "one_style_per_level", "section_gaps_pt", "contrast_worst_pixel_min_by_kind", "price_pair_max_travel_frac", "every_row_within_40pct", "legibility_1m_pass", "phone", "prices_match_draft", "every_item_has_description"]}, ensure_ascii=False, indent=0))
 print({k: (v["cap_height_arcmin_at_1m"], v["x_height_arcmin_at_1m"], v["x_height_mm"]) for k, v in leg.items()})
 print(checks["bleed"]["bleed_at_least_3mm"])
