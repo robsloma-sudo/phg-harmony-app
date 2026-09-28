@@ -14,8 +14,8 @@
  },
  "price_proximity_letter": {
   "inline_rows": 25,
-  "max_gap_em": 0,
-  "worst": "Margarita",
+  "max_gap_em": 0.544,
+  "worst": "Czech Pilsner",
   "all_same_line": true,
   "pass_inline": true,
   "table_rows": 25,
@@ -26,7 +26,7 @@
  },
  "price_proximity_phone": {
   "inline_rows": 25,
-  "max_gap_em": 0,
+  "max_gap_em": 0.444,
   "worst": "Margarita",
   "all_same_line": true,
   "pass_inline": true,

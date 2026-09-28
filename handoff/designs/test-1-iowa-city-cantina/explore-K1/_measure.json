@@ -1362,9 +1362,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 153.171875,
+    "price_right": 149.171875,
     "name_font_px": 16
    },
    {
@@ -1383,9 +1383,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 404.203125,
+    "price_right": 400.203125,
     "name_font_px": 16
    },
    {
@@ -1404,9 +1404,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 700.703125,
+    "price_right": 696.703125,
     "name_font_px": 16
    },
    {
@@ -1425,9 +1425,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 161.671875,
+    "price_right": 157.671875,
     "name_font_px": 16
    },
    {
@@ -1446,9 +1446,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 409.890625,
+    "price_right": 405.890625,
     "name_font_px": 16
    },
    {
@@ -1467,9 +1467,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 648.1875,
+    "price_right": 644.1875,
     "name_font_px": 16
    },
    {
@@ -1488,9 +1488,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 290.859375,
+    "price_right": 286.859375,
     "name_font_px": 16
    },
    {
@@ -1509,9 +1509,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 462.15625,
+    "price_right": 458.15625,
     "name_font_px": 16
    },
    {
@@ -1530,9 +1530,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 701.640625,
+    "price_right": 697.640625,
     "name_font_px": 16
    },
    {
@@ -1551,9 +1551,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 276.359375,
+    "price_right": 272.359375,
     "name_font_px": 16
    },
    {
@@ -1572,9 +1572,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 504.859375,
+    "price_right": 500.859375,
     "name_font_px": 16
    },
    {
@@ -1593,9 +1593,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 626,
+    "price_right": 622,
     "name_font_px": 16
    },
    {
@@ -1614,9 +1614,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 116,
+    "price_right": 112,
     "name_font_px": 16
    },
    {
@@ -1635,9 +1635,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 377.734375,
+    "price_right": 373.734375,
     "name_font_px": 16
    },
    {
@@ -1656,9 +1656,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 509.25,
+    "price_right": 505.25,
     "name_font_px": 16
    },
    {
@@ -1677,9 +1677,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4990234375,
     "same_line": true,
-    "price_right": 682.125,
+    "price_right": 678.125,
     "name_font_px": 16
    }
   ],
@@ -4533,7 +4533,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 43.029017857142854,
+    "gap_em": 43.26674107142857,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4554,7 +4554,7 @@
     "oak": "bar:12-36",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 43.474330357142854,
+    "gap_em": 43.71205357142857,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4575,7 +4575,7 @@
     "oak": "over:48-48",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 43.44642857142857,
+    "gap_em": 43.684151785714285,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4596,7 +4596,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 42.646205357142854,
+    "gap_em": 42.88392857142857,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4617,7 +4617,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 41.036830357142854,
+    "gap_em": 41.27455357142857,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4638,7 +4638,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 43.245535714285715,
+    "gap_em": 43.48325892857143,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4659,7 +4659,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 43.78236607142857,
+    "gap_em": 44.020089285714285,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4680,7 +4680,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 40.607142857142854,
+    "gap_em": 40.84486607142857,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4701,7 +4701,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 41.45200892857143,
+    "gap_em": 41.689732142857146,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4722,7 +4722,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 41.99330357142857,
+    "gap_em": 42.231026785714285,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4743,7 +4743,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 41.448660714285715,
+    "gap_em": 41.68638392857143,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4764,7 +4764,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 40.268973214285715,
+    "gap_em": 40.50669642857143,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4785,7 +4785,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 40.43080357142857,
+    "gap_em": 40.668526785714285,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4806,7 +4806,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 40.74330357142857,
+    "gap_em": 40.981026785714285,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4827,7 +4827,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 39.861607142857146,
+    "gap_em": 40.099330357142854,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4848,7 +4848,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 40.208705357142854,
+    "gap_em": 40.44642857142857,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4869,7 +4869,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 40.75669642857143,
+    "gap_em": 40.994419642857146,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4890,7 +4890,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 40.21986607142857,
+    "gap_em": 40.457589285714285,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4911,7 +4911,7 @@
     "oak": "bar:12-36",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 38.237723214285715,
+    "gap_em": 38.47544642857143,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4932,7 +4932,7 @@
     "oak": "bar:12-36",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 42.75111607142857,
+    "gap_em": 42.988839285714285,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4953,7 +4953,7 @@
     "oak": "bar:12-36",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 42.5859375,
+    "gap_em": 42.823660714285715,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4974,7 +4974,7 @@
     "oak": "ns:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 41.925223214285715,
+    "gap_em": 42.16294642857143,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -4995,7 +4995,7 @@
     "oak": "ns:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 40.20200892857143,
+    "gap_em": 40.439732142857146,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -5016,7 +5016,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 44.455357142857146,
+    "gap_em": 44.693080357142854,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -5037,7 +5037,7 @@
     "oak": "ns:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 39.984375,
+    "gap_em": 40.222098214285715,
     "same_line": true,
     "price_right": 767.984375,
     "name_font_px": 14
@@ -5058,9 +5058,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.5443879673000743,
     "same_line": true,
-    "price_right": 162.296875,
+    "price_right": 158.296875,
     "name_font_px": 14.6667
    },
    {
@@ -5079,9 +5079,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.5443879673000743,
     "same_line": true,
-    "price_right": 184.453125,
+    "price_right": 180.453125,
     "name_font_px": 14.6667
    },
    {
@@ -5100,9 +5100,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.5443879673000743,
     "same_line": true,
-    "price_right": 158.375,
+    "price_right": 154.375,
     "name_font_px": 14.6667
    },
    {
@@ -5121,9 +5121,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.5443879673000743,
     "same_line": true,
-    "price_right": 181.578125,
+    "price_right": 177.578125,
     "name_font_px": 14.6667
    },
    {
@@ -5142,9 +5142,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.5443879673000743,
     "same_line": true,
-    "price_right": 414.28125,
+    "price_right": 410.28125,
     "name_font_px": 14.6667
    },
    {
@@ -5163,9 +5163,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.5443879673000743,
     "same_line": true,
-    "price_right": 437.828125,
+    "price_right": 433.828125,
     "name_font_px": 14.6667
    },
    {
@@ -5184,9 +5184,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.5443879673000743,
     "same_line": true,
-    "price_right": 632.84375,
+    "price_right": 628.84375,
     "name_font_px": 14.6667
    },
    {
@@ -5205,9 +5205,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.5443879673000743,
     "same_line": true,
-    "price_right": 667.203125,
+    "price_right": 663.203125,
     "name_font_px": 14.6667
    },
    {
@@ -5226,9 +5226,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.5443879673000743,
     "same_line": true,
-    "price_right": 649.84375,
+    "price_right": 645.84375,
     "name_font_px": 14.6667
    }
   ],
@@ -9247,9 +9247,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 139.875,
+    "price_right": 135.875,
     "name_font_px": 18
    },
    {
@@ -9268,9 +9268,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 116.84375,
+    "price_right": 112.84375,
     "name_font_px": 18
    },
    {
@@ -9289,9 +9289,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 186.09375,
+    "price_right": 182.09375,
     "name_font_px": 18
    },
    {
@@ -9310,9 +9310,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 149.4375,
+    "price_right": 145.4375,
     "name_font_px": 18
    },
    {
@@ -9331,9 +9331,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 123.21875,
+    "price_right": 119.21875,
     "name_font_px": 18
    },
    {
@@ -9352,9 +9352,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 126.3125,
+    "price_right": 122.3125,
     "name_font_px": 18
    },
    {
@@ -9373,9 +9373,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 294.78125,
+    "price_right": 290.78125,
     "name_font_px": 18
    },
    {
@@ -9394,9 +9394,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 182.03125,
+    "price_right": 178.03125,
     "name_font_px": 18
    },
    {
@@ -9415,9 +9415,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 186.4375,
+    "price_right": 182.4375,
     "name_font_px": 18
    },
    {
@@ -9436,9 +9436,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 278.453125,
+    "price_right": 274.453125,
     "name_font_px": 18
    },
    {
@@ -9457,9 +9457,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 230.078125,
+    "price_right": 226.078125,
     "name_font_px": 18
    },
    {
@@ -9478,9 +9478,9 @@
     "oak": null,
     "glyph": true,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 101.34375,
+    "price_right": 97.34375,
     "name_font_px": 18
    },
    {
@@ -9499,9 +9499,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 97.78125,
+    "price_right": 93.78125,
     "name_font_px": 18
    },
    {
@@ -9520,9 +9520,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 184.125,
+    "price_right": 180.125,
     "name_font_px": 18
    },
    {
@@ -9541,9 +9541,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 123.953125,
+    "price_right": 119.953125,
     "name_font_px": 18
    },
    {
@@ -9562,9 +9562,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 110.328125,
+    "price_right": 106.328125,
     "name_font_px": 18
    },
    {
@@ -9583,7 +9583,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 11.920036764705882,
+    "gap_em": 12.115808823529411,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9604,7 +9604,7 @@
     "oak": "bar:12-36",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 12.364889705882353,
+    "gap_em": 12.560661764705882,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9625,7 +9625,7 @@
     "oak": "over:48-48",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 12.336397058823529,
+    "gap_em": 12.532169117647058,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9646,7 +9646,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 11.536764705882353,
+    "gap_em": 11.732536764705882,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9667,7 +9667,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 9.927389705882353,
+    "gap_em": 10.123161764705882,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9688,7 +9688,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 12.136029411764707,
+    "gap_em": 12.331801470588236,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9709,7 +9709,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 12.673713235294118,
+    "gap_em": 12.869485294117647,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9730,7 +9730,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 9.497242647058824,
+    "gap_em": 9.693014705882353,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9751,7 +9751,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 10.342830882352942,
+    "gap_em": 10.538602941176471,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9772,7 +9772,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 10.884191176470589,
+    "gap_em": 11.079963235294118,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9793,7 +9793,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 10.306985294117647,
+    "gap_em": 10.502757352941176,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9814,7 +9814,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 9.159926470588236,
+    "gap_em": 9.355698529411764,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9835,7 +9835,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 9.321691176470589,
+    "gap_em": 9.517463235294118,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9856,7 +9856,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 9.633272058823529,
+    "gap_em": 9.829044117647058,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9877,7 +9877,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 8.751838235294118,
+    "gap_em": 8.947610294117647,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9898,7 +9898,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 9.099264705882353,
+    "gap_em": 9.295036764705882,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9919,7 +9919,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 9.647058823529411,
+    "gap_em": 9.842830882352942,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9940,7 +9940,7 @@
     "oak": "bar:2-12",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 9.111213235294118,
+    "gap_em": 9.306985294117647,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9961,7 +9961,7 @@
     "oak": "bar:12-36",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 7.1286764705882355,
+    "gap_em": 7.3244485294117645,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -9982,7 +9982,7 @@
     "oak": "bar:12-36",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 11.641544117647058,
+    "gap_em": 11.837316176470589,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -10003,7 +10003,7 @@
     "oak": "bar:12-36",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 11.477022058823529,
+    "gap_em": 11.672794117647058,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -10024,7 +10024,7 @@
     "oak": "ns:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 10.816176470588236,
+    "gap_em": 11.011948529411764,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -10045,7 +10045,7 @@
     "oak": "ns:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 9.092830882352942,
+    "gap_em": 9.288602941176471,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -10066,7 +10066,7 @@
     "oak": "dot:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 13.346507352941176,
+    "gap_em": 13.542279411764707,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -10087,7 +10087,7 @@
     "oak": "ns:0-0",
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 8.875,
+    "gap_em": 9.070772058823529,
     "same_line": true,
     "price_right": 366,
     "name_font_px": 17
@@ -10108,9 +10108,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 159.921875,
+    "price_right": 155.921875,
     "name_font_px": 18
    },
    {
@@ -10129,9 +10129,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 187.109375,
+    "price_right": 183.109375,
     "name_font_px": 18
    },
    {
@@ -10150,9 +10150,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 155.09375,
+    "price_right": 151.09375,
     "name_font_px": 18
    },
    {
@@ -10171,9 +10171,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 183.578125,
+    "price_right": 179.578125,
     "name_font_px": 18
    },
    {
@@ -10192,9 +10192,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 100,
+    "price_right": 96,
     "name_font_px": 18
    },
    {
@@ -10213,9 +10213,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 128.921875,
+    "price_right": 124.921875,
     "name_font_px": 18
    },
    {
@@ -10234,9 +10234,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 116.59375,
+    "price_right": 112.59375,
     "name_font_px": 18
    },
    {
@@ -10255,9 +10255,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 158.78125,
+    "price_right": 154.78125,
     "name_font_px": 18
    },
    {
@@ -10276,9 +10276,9 @@
     "oak": null,
     "glyph": false,
     "gar_in_ig": false,
-    "gap_em": 0,
+    "gap_em": 0.4435763888888889,
     "same_line": true,
-    "price_right": 137.484375,
+    "price_right": 133.484375,
     "name_font_px": 18
    }
   ],

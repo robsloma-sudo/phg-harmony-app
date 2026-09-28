@@ -10,7 +10,7 @@
     0.223,
     0.946
    ],
-   "accent_area_pct": 19.16,
+   "accent_area_pct": 12.11,
    "visual_centroid": [
     0.499,
     0.287
@@ -19,17 +19,17 @@
   {
    "file": "preview-back.png",
    "squint_salient_regions": 1,
-   "primary_area_pct": 10.04,
+   "primary_area_pct": 9.27,
    "primary_to_secondary": null,
-   "ground_luminance": 0.915,
+   "ground_luminance": 0.916,
    "value_range_p5_p95": [
-    0.345,
+    0.35,
     0.946
    ],
-   "accent_area_pct": 8.07,
+   "accent_area_pct": 6.06,
    "visual_centroid": [
-    0.455,
-    0.247
+    0.452,
+    0.251
    ]
   }
  ],
@@ -37,7 +37,7 @@
   {
    "a": "preview-front.png",
    "b": "preview-back.png",
-   "silhouette_corr": 0.571
+   "silhouette_corr": 0.54
   }
  ],
  "notes": "silhouette_corr > 0.8 = structurally similar directions (variant_silhouette_test fails)"

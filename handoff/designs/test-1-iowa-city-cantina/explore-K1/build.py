@@ -631,5 +631,13 @@ h3 i{font-style:normal}
 """
 
 if __name__ == "__main__":
+    import sys, subprocess
     (HERE / "menu.html").write_text(build_html())
     print("menu.html", len((HERE / "menu.html").read_text()) // 1024, "KB; manifest sha256", hashlib.sha256(MAN_PATH.read_bytes()).hexdigest()[:16])
+    if "--html-only" not in sys.argv:   # render (render.py), gates (finalize.py), KB visual tests
+        subprocess.run([sys.executable, str(HERE / "render.py")], check=True, cwd=HERE)
+        subprocess.run([sys.executable, str(HERE / "finalize.py")], check=True, cwd=HERE)
+        vt = subprocess.run([sys.executable, str(HERE.parent.parent / "tools" / "visual_tests.py"), "preview-front.png", "preview-back.png"], check=True, cwd=HERE, capture_output=True, text=True)
+        (HERE / "visual_tests.json").write_text(vt.stdout)
+        for r in json.loads(vt.stdout)["results"]:
+            print(r["file"], "primary", r["primary_area_pct"], "p:s", r["primary_to_secondary"], "accent", r["accent_area_pct"], "regions", r["squint_salient_regions"])
