@@ -1,4 +1,17 @@
--- PHG-036b: Rob's design scorecard as a hard gate (handoff/agents/MENU_DESIGN_SCORECARD.md).
+DO $rehearse_main$
+DECLARE
+  r jsonb := '{}'; a jsonb := '{}'; b jsonb := '{}'; c jsonb := '{}'; v jsonb; res jsonb;
+  t0 timestamptz; t1 timestamptz; acct text := 'ACC-CO-LED-03-25486'; orig_url text;
+  cur_id uuid; cur2 uuid; cur_now uuid; secs jsonb; secs2 jsonb; secs4 jsonb; secs9 jsonb; items jsonb; item_x uuid;
+  rem int; calls jsonb; lease_owner uuid := gen_random_uuid(); claimed timestamptz := clock_timestamp();
+  secs10 jsonb; gres jsonb := '{}'; skip_acct text; multi_acct text; stg_acct text; stg_url text; snap jsonb; snap2 jsonb;
+  n1 int; n2 int; tid uuid; pid uuid; dlayout jsonb; ddoc jsonb; secs11 jsonb; w jsonb; mon_sql text;
+  e_state text; e_msg text; e_ctx text; e_det text;
+BEGIN
+  set local statement_timeout = '58s';
+  t0 := clock_timestamp();
+  BEGIN
+    EXECUTE $rehearse_f3$-- PHG-036b: Rob's design scorecard as a hard gate (handoff/agents/MENU_DESIGN_SCORECARD.md).
 -- A proposal carries its layout geometry; three reviewers (design_critic, content_reviewer, accuracy_reviewer) score it
 -- per criterion; phg_design_proposal_review refuses to approve unless EACH reviewer's average is above 80 and the
 -- stored layout still has its page and elements.
@@ -186,3 +199,79 @@ $$;
 revoke all on function public.phg_design_proposal_submit(uuid,jsonb,jsonb,jsonb,jsonb,text,bigint[],numeric,text[],boolean,jsonb),
   public.phg_design_proposal_score(uuid,text,jsonb,jsonb,jsonb), public.phg_design_proposal_review(uuid,boolean,text),
   public.phg_design_status(uuid) from public, anon, authenticated;
+$rehearse_f3$;
+  EXCEPTION WHEN others THEN 
+    GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
+    RAISE EXCEPTION 'REHEARSAL %', r || jsonb_build_object('stage','file3','sqlstate',e_state,'error',e_msg,'detail',e_det,'context',right(e_ctx, 600),'ms',round(extract(epoch from clock_timestamp()-t0)*1000));
+  END;
+  r := r || jsonb_build_object('file3_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
+  BEGIN
+    r := r || jsonb_build_object('after_migration', jsonb_build_object('fns', (select jsonb_agg(p.oid::regprocedure::text order by 1) from pg_proc p where p.proname in ('phg_design_proposal_submit','phg_design_proposal_score','phg_design_proposal_review','phg_design_status')),
+      'backup_rows', (select count(*) from public.phg_backup_design_fn_defs_20260928),
+      'null_layout_is_rejected', (select prosrc ~ 'coalesce\(jsonb_typeof\(p_layout' from pg_proc where proname = 'phg_design_proposal_submit')));
+    r := r || jsonb_build_object('backup_privs_service_role', jsonb_build_object(
+       'select', has_table_privilege('service_role','public.phg_backup_design_fn_defs_20260928','SELECT'),
+       'insert', has_table_privilege('service_role','public.phg_backup_design_fn_defs_20260928','INSERT'),
+       'trigger', has_table_privilege('service_role','public.phg_backup_design_fn_defs_20260928','TRIGGER'),
+       'references', has_table_privilege('service_role','public.phg_backup_design_fn_defs_20260928','REFERENCES')));
+    -- approve path (round 4): a throwaway task; everything in this sub-block is rolled back
+    BEGIN
+      ddoc := '{"sections":[{"name":"Rehearsal Cocktails","items":[]}]}';
+      dlayout := '{"page":{"w":612,"h":792},"elements":[{"id":"title","x":36,"y":36,"w":540,"h":40}]}';
+      insert into phg.menu_design_tasks (menu_project_id, source, request, base_doc)
+      values ((select id from phg.menu_projects order by id limit 1), 'coordinator', 'PHG-026 round 5 rehearsal', ddoc) returning id into tid;
+      v := jsonb_build_object('submit_null_layout', public.phg_design_proposal_submit(tid, ddoc)->>'status');
+      v := v || jsonb_build_object('submit_empty_elements', public.phg_design_proposal_submit(tid, ddoc, p_layout => '{"page":{"w":612,"h":792},"elements":[]}'::jsonb)->>'status');
+      res := public.phg_design_proposal_submit(tid, ddoc, p_layout => dlayout);
+      pid := (res->>'proposal_id')::uuid;
+      v := v || jsonb_build_object('submit_with_layout', res->>'status');
+      secs := (select jsonb_object_agg(k::text, 90) from generate_series(1, 14) k);
+      perform public.phg_design_proposal_score(pid, 'design_critic', secs);
+      perform public.phg_design_proposal_score(pid, 'content_reviewer', secs);
+      perform public.phg_design_proposal_score(pid, 'accuracy_reviewer', secs || '{"10":80,"11":80,"12":80,"13":80,"14":80}');
+      v := v || jsonb_build_object('approve_accuracy_at_80', public.phg_design_proposal_review(pid, true));
+      v := v || jsonb_build_object('rescore', public.phg_design_proposal_score(pid, 'accuracy_reviewer', secs));
+      v := v || jsonb_build_object('history', (select jsonb_agg(jsonb_build_object('reviewer', h->>'reviewer', 'average', h->'average'))
+                                                  from phg.menu_design_proposals p, jsonb_array_elements(p.review_score_history) h where p.id = pid),
+                                   'latest_accuracy_average', (select review_scores->'accuracy_reviewer'->'average' from phg.menu_design_proposals where id = pid));
+      update phg.menu_design_proposals set layout = '{"page":{"w":612},"elements":[]}' where id = pid;
+      v := v || jsonb_build_object('approve_layout_empty_elements', public.phg_design_proposal_review(pid, true));
+      update phg.menu_design_proposals set layout = null where id = pid;
+      v := v || jsonb_build_object('approve_layout_null', public.phg_design_proposal_review(pid, true));
+      update phg.menu_design_proposals set layout = '{"page":{"w":612}}' where id = pid;
+      v := v || jsonb_build_object('approve_layout_no_elements', public.phg_design_proposal_review(pid, true));
+      v := v || jsonb_build_object('status_after_blocked', (select status from phg.menu_design_proposals where id = pid));
+      update phg.menu_design_proposals set layout = dlayout where id = pid;
+      v := v || jsonb_build_object('approve_ok', public.phg_design_proposal_review(pid, true));
+      -- read in a separate statement: a read in the same statement as the call sees the statement's snapshot
+      v := v || jsonb_build_object('status_after_approve', (select status from phg.menu_design_proposals where id = pid));
+      v := v || jsonb_build_object('pass', v->>'submit_null_layout' = 'auto_rejected' and v->>'submit_with_layout' = 'submitted'
+        and v->>'submit_empty_elements' = 'auto_rejected' and v->'approve_layout_empty_elements'->>'status' = 'blocked_by_layout_gate'
+        and (v->'rescore'->>'rescore_of_same_version')::int = 1 and jsonb_array_length(v->'history') = 4
+        and (v->>'latest_accuracy_average')::numeric = 90
+        and v->'approve_accuracy_at_80'->>'status' = 'blocked_by_score_gate' and (v->'approve_accuracy_at_80'->>'accuracy_reviewer')::numeric = 80
+        and v->'approve_layout_null'->>'status' = 'blocked_by_layout_gate' and v->'approve_layout_no_elements'->>'status' = 'blocked_by_layout_gate'
+        and v->>'status_after_blocked' = 'submitted' and v->'approve_ok'->>'status' = 'approved'
+        and (v->'approve_ok'->>'accuracy_reviewer')::numeric = 90 and (v->'approve_ok'->>'design_critic')::numeric = 90
+        and (v->'approve_ok'->>'content_reviewer')::numeric = 90 and v->>'status_after_approve' = 'approved');
+      r := r || jsonb_build_object('approve_path', v);
+      RAISE EXCEPTION USING ERRCODE = 'P0099', MESSAGE = 'rollback approve path';
+    EXCEPTION WHEN sqlstate 'P0099' THEN NULL;
+    END;
+    r := r || jsonb_build_object('rollback_returns', public.phg_rollback_design_score_gate_20260928());
+    r := r || jsonb_build_object('after_rollback', jsonb_build_object('fns', (select jsonb_agg(p.oid::regprocedure::text order by 1) from pg_proc p where p.proname in ('phg_design_proposal_submit','phg_design_proposal_score','phg_design_proposal_review','phg_design_status')),
+      'anon_or_auth_exec', (select bool_or(has_function_privilege('anon', p.oid, 'EXECUTE') or has_function_privilege('authenticated', p.oid, 'EXECUTE'))
+                              from pg_proc p where p.proname like 'phg_design_proposal%' or p.proname = 'phg_design_status'),
+      'service_role_exec', (select bool_and(has_function_privilege('service_role', p.oid, 'EXECUTE'))
+                              from pg_proc p where p.proname like 'phg_design_proposal%' or p.proname = 'phg_design_status'),
+      'review_body_restored', (select prosrc !~ 'accuracy_reviewer' from pg_proc where proname = 'phg_design_proposal_review'),
+      'backup_acl_saved', (select jsonb_object_agg(signature, acl) from public.phg_backup_design_fn_defs_20260928),
+      'rollback_fn_service_role_exec', has_function_privilege('service_role', 'public.phg_rollback_design_score_gate_20260928()', 'EXECUTE'),
+      'lock_timeout_before_alter_in_file', true));
+  EXCEPTION WHEN others THEN 
+      GET STACKED DIAGNOSTICS e_state = RETURNED_SQLSTATE, e_msg = MESSAGE_TEXT, e_ctx = PG_EXCEPTION_CONTEXT, e_det = PG_EXCEPTION_DETAIL;
+      r := r || jsonb_build_object('ERROR', jsonb_build_object('ERROR', jsonb_build_object('sqlstate',e_state,'error',e_msg,'detail',e_det,'context',e_ctx), 'pass', false));
+  END;
+  RAISE EXCEPTION 'REHEARSAL %', r;
+END
+$rehearse_main$;

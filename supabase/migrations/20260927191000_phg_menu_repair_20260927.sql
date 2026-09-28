@@ -7,6 +7,13 @@
 -- Review round 4 version (2026-09-28): the rollback restores staging rows only for the venues it rolls back, and skips
 --   (and reports) any venue whose backup has more than one current menu; Steps 3-4 set lock_timeout 5s per call;
 --   backup tables are SELECT-only for service_role; runbook: cron during a rollback, safe retries, roll forward.
+-- Review round 5 version (2026-09-28): every table this file creates is SELECT-only for service_role (plan, run,
+--   damaged and step-done tables too); service_role cannot execute the Step 3 / Step 4 batch functions or the rollback
+--   (the runbook runs them as postgres); the rollback has a function-level lock_timeout, records its result (with
+--   skipped_accounts) in phg_repair_run_20260927 as step 'rollback', and is checked by
+--   supabase/tests/phg_026_rollback_check.sql; the roll-forward also clears menu_source_candidates.item_set_hash /
+--   duplicate_of_candidate_id; Step 2's drinks count is DISTINCT drinks item keys (phg_menu_bev_count, the same
+--   function submit_menu uses); runbook: Edge traffic, post-release follow-ups.
 --
 -- CRON DURING A ROLLBACK: keep cron 7 (promotion) and 13 (extraction) PAUSED before and during either rollback
 --   (phg_repair_20260927_rollback and phg_rollback_function_defs_20260927), and keep them paused afterwards until
@@ -22,6 +29,12 @@
 --     drop table if exists public.phg_repair_plan_menus_20260927, public.phg_backup_menus_currency_20260927,
 --       public.phg_backup_staging_dupes_20260927, public.phg_repair_damaged_20260927, public.phg_repair_run_20260927,
 --       public.phg_repair_step3_done, public.phg_repair_step4_done;
+--   and clear the candidate hashes, so Step 4 recomputes every one from the (restored) staging rows and no candidate
+--   stays marked as a duplicate of a page whose rows were restored (Step 4 only fills rows where both are NULL):
+--     update public.menu_source_candidates set item_set_hash = null, duplicate_of_candidate_id = null
+--      where item_set_hash is not null or duplicate_of_candidate_id is not null;
+--   (one statement, with cron 13 paused; it touches every hashed candidate, up to ~550k rows, and contends with cron 16:
+--   on 55P03 / 40P01 re-run it.)
 --   Do NOT drop public.phg_backup_function_defs_20260927: it holds the ORIGINAL function bodies (file 1 keeps them
 --   with `on conflict do nothing`); dropping it while the new bodies are live would lose the only copy.
 --   Staging rows the rollback did not restore (skipped venues, re-extracted pages) keep
@@ -37,7 +50,9 @@
 --     119 of those 185 had a pre-incident menu with MORE distinct items than today's current one (the damaged venues).
 --   Step 2 changes the current menu of ~350 touched venues (rehearsal 2026-09-28: 348 = 300 more items, 12 same items
 --   and more drinks, 36 ties where a real page replaces an item page; exact figure is written to
---   phg_repair_run_20260927 at run time). Steps 1-2 hold SHARE ROW EXCLUSIVE on menus for ~8 s (rehearsed 7.7 s). Acceptance: 0 venues end with fewer distinct items than their largest
+--   phg_repair_run_20260927 at run time). Steps 1-2 hold SHARE ROW EXCLUSIVE on menus for ~7-9 s (rehearsed round 4:
+--   6.9-8.9 s, one run 14.4 s; round 5: see handoff/reviews/rehearsal/results_round5.md); every submit_menu waits
+--   behind it or fails with 55P03 after its own 5 s lock_timeout. Acceptance: 0 venues end with fewer distinct items than their largest
 --   pre-incident menu, 0 venues with 2 current menus, 0 touched venues left without a current menu.
 --
 -- Step 1  backfill menus.source_key / item_keys / item_set_hash (12,229 rows, ~8 s)
@@ -83,12 +98,14 @@ select t.account_id,
   from touched t;
 delete from public.phg_repair_damaged_20260927 where old_max_n is null or old_max_n <= coalesce(cur_n_before, 0);
 alter table public.phg_repair_damaged_20260927 enable row level security;
-revoke all on public.phg_repair_damaged_20260927 from anon, authenticated;
+revoke all on public.phg_repair_damaged_20260927 from anon, authenticated, service_role;
+grant select on public.phg_repair_damaged_20260927 to service_role;
 
 create table if not exists public.phg_repair_run_20260927 (
   step text primary key, ran_at timestamptz not null default now(), detail jsonb);
 alter table public.phg_repair_run_20260927 enable row level security;
-revoke all on public.phg_repair_run_20260927 from anon, authenticated;
+revoke all on public.phg_repair_run_20260927 from anon, authenticated, service_role;
+grant select on public.phg_repair_run_20260927 to service_role;
 
 create table if not exists public.phg_repair_plan_menus_20260927 as
 with touched as (select distinct account_id from public.menus where created_at >= '2026-09-27 00:00:00+00'),
@@ -108,7 +125,8 @@ select id, account_id, was_current, (rk = 1) as make_current,
        first_value(id) over (partition by account_id order by rk) as chosen_id, n, bev, itemish, created_at, source_key
 from ranked;
 alter table public.phg_repair_plan_menus_20260927 enable row level security;
-revoke all on public.phg_repair_plan_menus_20260927 from anon, authenticated;
+revoke all on public.phg_repair_plan_menus_20260927 from anon, authenticated, service_role;
+grant select on public.phg_repair_plan_menus_20260927 to service_role;
 
 -- demote first, then promote: the one-current rule must hold row by row
 update public.menus m
@@ -171,7 +189,8 @@ grant select on public.phg_backup_staging_dupes_20260927 to service_role;
 create index if not exists phg_backup_staging_dupes_20260927_acct on public.phg_backup_staging_dupes_20260927 (account_id);
 create table if not exists public.phg_repair_step3_done (account_id text primary key, dup_rows int, done_at timestamptz default now());
 alter table public.phg_repair_step3_done enable row level security;
-revoke all on public.phg_repair_step3_done from anon, authenticated;
+revoke all on public.phg_repair_step3_done from anon, authenticated, service_role;
+grant select on public.phg_repair_step3_done to service_role;
 
 -- returns the number of venues still to do (0 = finished); ~100 venues per call keeps each call well under 60 s.
 -- lock_timeout 5s per call (function-level SET, reset when the call returns). A 40P01 deadlock or 55P03 lock timeout
@@ -215,12 +234,13 @@ begin
            where s.superseded_at is null and s.loaded_at >= '2026-09-27 00:00:00+00' and s.account_id is not null
              and not exists (select 1 from public.phg_repair_step3_done d where d.account_id = s.account_id));
 end $$;
-revoke all on function public.phg_repair_step3_batch(int) from public, anon, authenticated;
+revoke all on function public.phg_repair_step3_batch(int) from public, anon, authenticated, service_role;   -- runbook runs it as postgres
 
 -- ---------- Step 4 (batched) ----------
 create table if not exists public.phg_repair_step4_done (account_id text primary key, done_at timestamptz default now());
 alter table public.phg_repair_step4_done enable row level security;
-revoke all on public.phg_repair_step4_done from anon, authenticated;
+revoke all on public.phg_repair_step4_done from anon, authenticated, service_role;
+grant select on public.phg_repair_step4_done to service_role;
 
 -- lock_timeout 5s per call. Step 4 updates menu_source_candidates, which active cron job 16 (every 20 s, up to 5 s)
 -- also writes: a 55P03 lock timeout or a 40P01 deadlock rolls that call back completely and is safe to retry.
@@ -248,7 +268,7 @@ begin
            where c.item_set_hash is null and c.duplicate_of_candidate_id is null and c.account_id is not null
              and not exists (select 1 from public.phg_repair_step4_done d where d.account_id = c.account_id));
 end $$;
-revoke all on function public.phg_repair_step4_batch(int) from public, anon, authenticated;
+revoke all on function public.phg_repair_step4_batch(int) from public, anon, authenticated, service_role;   -- runbook runs it as postgres
 
 -- ---------- Rollback (rehearsed in a rolled-back transaction, see handoff/reviews/rehearsal/results_round4.md) ----------
 -- Undoes only what this repair changed, and never leaves two current menus. Keep cron 7 and 13 paused (header).
@@ -261,16 +281,17 @@ revoke all on function public.phg_repair_step4_batch(int) from public, anon, aut
 --    superseded_by / superseded_reason / superseded_at; then menus the repair demoted are restored exactly.
 --  * Staging rows the repair superseded come back only for venues in rb_accts, and only if their page has not been
 --    re-extracted since.
--- 40P01 / 55P03 against an in-flight submit_menu: nothing changed, re-run.
+-- lock_timeout 5s is a function-level setting (reset when the call returns). 40P01 / 55P03 against an in-flight
+-- submit_menu: nothing changed, re-run. Returns skipped_accounts (account_id, reason, scope) and records the result in
+-- phg_repair_run_20260927 (step 'rollback'); then run supabase/tests/phg_026_rollback_check.sql.
 -- Function definitions: run this first, then select public.phg_rollback_function_defs_20260927();
 create or replace function public.phg_repair_20260927_rollback()
-returns jsonb language plpgsql security definer set search_path to 'public', 'pg_temp' as $$
+returns jsonb language plpgsql security definer set search_path to 'public', 'pg_temp' set lock_timeout to '5s' as $$
 declare v_run timestamptz; v_skip int; v_skip_multi int; v_dem int; v_res int; v_stg int; v_multi int; v_rb int;
-        v_stg_accts int; v_stg_skip int;
+        v_stg_accts int; v_stg_skip int; v_skipped jsonb; v_out jsonb;
 begin
   select ran_at into v_run from public.phg_repair_run_20260927 where step = 'step2';
   if v_run is null then raise exception 'step 2 never ran'; end if;
-  set local lock_timeout = '5s';
   lock table public.menus in share row exclusive mode;
   drop table if exists pg_temp.rb_scope, pg_temp.rb_accts;
   create temp table rb_scope on commit drop as
@@ -293,6 +314,12 @@ begin
          count(*) filter (where currency and multi_backup and not newer_menu),
          count(*) filter (where not currency and (newer_menu or multi_backup))
     into v_skip, v_skip_multi, v_stg_skip from rb_accts;
+  -- every skipped venue, by name: these need a manual look (supabase/tests/phg_026_rollback_check.sql lists them)
+  select coalesce(jsonb_agg(jsonb_build_object('account_id', account_id,
+                                               'reason', case when newer_menu then 'newer_menu' else 'multi_current_backup' end,
+                                               'scope', case when currency then 'menus_and_staging' else 'staging' end)
+                            order by account_id), '[]'::jsonb)
+    into v_skipped from rb_accts where newer_menu or multi_backup;
   delete from rb_accts where newer_menu or multi_backup;
   select count(*) filter (where currency), count(*) into v_rb, v_stg_accts from rb_accts;
   -- 1. demote what the repair promoted, restoring the row's own backed-up supersession
@@ -321,17 +348,30 @@ begin
   get diagnostics v_stg = row_count;
   select count(*) into v_multi from (select account_id from public.menus where is_current group by 1 having count(*) > 1) x;
   if v_multi > 0 then raise exception 'rollback would leave % accounts with 2 current menus', v_multi; end if;
-  return jsonb_build_object('venues_rolled_back', v_rb, 'venues_skipped_newer_menu', v_skip,
+  v_out := jsonb_build_object('venues_rolled_back', v_rb, 'venues_skipped_newer_menu', v_skip,
                             'venues_skipped_multi_current_backup', v_skip_multi,
                             'menus_demoted', v_dem, 'menus_restored', v_res,
                             'staging_venues_rolled_back', v_stg_accts, 'staging_venues_skipped', v_stg_skip,
-                            'staging_rows_restored', v_stg);
+                            'staging_rows_restored', v_stg, 'skipped_accounts', v_skipped);
+  -- recorded for supabase/tests/phg_026_rollback_check.sql (a re-run overwrites it: its skip list is recomputed)
+  insert into public.phg_repair_run_20260927 (step, detail) values ('rollback', v_out)
+  on conflict (step) do update set ran_at = now(), detail = excluded.detail;
+  return v_out;
 end $$;
-revoke all on function public.phg_repair_20260927_rollback() from public, anon, authenticated;
+revoke all on function public.phg_repair_20260927_rollback() from public, anon, authenticated, service_role;   -- runbook runs it as postgres
 
 -- ---------- Runbook ----------
+-- Every step runs as postgres (the SQL editor / apply_migration / psql as postgres). service_role can read the repair
+-- tables but cannot execute the batch functions or either rollback.
 -- 0. Pause cron 7 and 13 (already paused). Apply 20260927190000 then this file, each as ONE transaction, through
 --    apply_migration (or psql -1 -f), in that order. Not `supabase db push`.
+--    EDGE TRAFFIC: the submit-menu Edge function is the only writer not behind cron. Before step 0, check its logs
+--    (no calls in the last hour) and keep it idle (nothing scheduled calls it; promote-menus is not scheduled) until the
+--    release gate (step 5) has passed. A call already in flight when file 2 starts either finishes first (file 2 waits
+--    up to 5 s for its table lock) or queues behind the lock and then sees the repaired data; if file 2 or a call hits
+--    55P03 / 40P01, that transaction changes nothing: re-run it. A call that lands between file 2 and the gate goes
+--    through the new submit_menu and cannot break the one-current index, but it can make a plan venue look changed to
+--    the gate: re-run the gate and read the venue's menus.
 -- 1. loop:  select public.phg_repair_step3_batch(100);   until it returns 0   (see results_round4.md for timings;
 --    on 40P01 / 55P03 just call again)
 -- 2. vacuum (analyze) public.staging_menu_extract;
@@ -341,8 +381,12 @@ revoke all on function public.phg_repair_20260927_rollback() from public, anon, 
 --      on public.menu_source_candidates (account_id, item_set_hash) where item_set_hash is not null;
 -- 5. run supabase/tests/phg_026_release_gate.sql; every row must say pass = true before cron 13, then 7, are
 --    re-enabled (cron 7 calls phg_promote_menu_batch_safe(10); promote_clean_menu_batch now caps it at 5 pages).
--- 6. after the first cron 13 / 7 cycles and daily for a week: supabase/tests/phg_026_monitor.sql.
+-- 6. after the first cron 13 / 7 cycles and daily for a week: supabase/tests/phg_026_monitor.sql (every pass row true).
+-- 7. post-release follow-ups (not part of this change): promote-menus Edge function should record out.status (today it
+--    counts every non-'duplicate' status as created); submit-menu Edge function header comment is stale.
 -- Rollback (cron 7 and 13 paused before and during it, and until the functions are rolled back too or the change is
 --   re-applied): select public.phg_repair_20260927_rollback(); then, if the functions must go back too,
 --   select public.phg_rollback_function_defs_20260927();   (drops the one-current index, restores the 4 bodies)
---   On 40P01 / 55P03 re-run. To roll forward afterwards: the drop statement in the header, then re-apply.
+--   On 40P01 / 55P03 re-run. After the data rollback run supabase/tests/phg_026_rollback_check.sql: every pass row
+--   true; its second query lists the venues and pages to review by hand (skipped venues, staging rows not restored).
+--   To roll forward afterwards: the drop statement and the candidate-hash update in the header, then re-apply.
