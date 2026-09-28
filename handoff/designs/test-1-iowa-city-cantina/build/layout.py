@@ -1,163 +1,103 @@
+"""Round 5: layout.json (geometry + per-card edges) and proposal.md, both generated from doc.json and the render's measure.json."""
 import json, pathlib
 HERE = pathlib.Path(__file__).parent
 OUT = pathlib.Path("/home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina")
 R = json.loads((HERE / "measure.json").read_text()); M = R["M"]
-doc = json.loads((OUT / "doc.json").read_text())
+doc = json.loads((OUT / "doc.json").read_text()); N = doc["meta"]["designer_notes"]
 PT = 0.75; MM = 25.4 / 72
 r2 = lambda v: round(v + 0.0, 2)
-def pt(b): return {k: r2(b[k] * PT) for k in ("x", "y", "w", "h")}
+def b(o): return {k: r2(o[k] * PT) for k in ("x", "y", "w", "h")}
+spread = lambda v: r2(max(v) - min(v)) if v else 0.0
 
-els = []
-for e in M["elements"]:
-    b = pt(e)
-    d = {"kind": e["kind"], "page": 1, "column": e["column"], "x_pt": b["x"], "y_pt": b["y"], "w_pt": b["w"], "h_pt": b["h"],
-         "x_mm": r2(b["x"] * MM), "y_mm": r2(b["y"] * MM), "w_mm": r2(b["w"] * MM), "h_mm": r2(b["h"] * MM), "text": e["text"]}
-    if "slot" in e:
-        s = pt(e["slot"]); d["slot_pt"] = {"x": s["x"], "y": s["y"], "w": s["w"], "h": s["h"]}
-    if "baseline" in e: d["baseline_pt"] = r2(e["baseline"] * PT)
-    if e.get("lines"): d["lines"] = e["lines"]
-    for k in ("ref", "level", "note"):
-        if e.get(k): d[k] = e[k]
-    els.append(d)
-
-chk = {}
-spread = lambda v: r2(max(v) - min(v))
-vis = [e for e in els if e["kind"] != "item_block"]
-L = min(e["x_pt"] for e in vis); T = min(e["y_pt"] for e in vis)
-Rr = 612 - max(e["x_pt"] + e["w_pt"] for e in vis); B = 792 - max(e["y_pt"] + e["h_pt"] for e in vis)
-chk["margins_element_boxes_pt"] = {"left": r2(L), "top": r2(T), "right": r2(Rr), "bottom": r2(B), "declared": 36}
-chk["margins_printed_ink_pt"] = dict(R["ink"], method="non-background pixels in the 2550x3300 preview (threshold 24/255)",
-                                     max_dev_mm=r2(max(abs(v - 36) for k, v in R["ink"].items()) * MM))
-for col in (1, 2):
-    g = lambda kind, lvl=None: [e for e in els if e["kind"] == kind and e["column"] == col and (lvl is None or e.get("level") == lvl)]
-    chk[f"col{col}"] = {
-        "item_name_x_pt": sorted({e["x_pt"] for e in g("item_name")}),
-        "description_x_pt": sorted({e["x_pt"] for e in g("description")}),
-        "price_right_edge_pt": sorted({r2(e["x_pt"] + e["w_pt"]) for e in g("price")}),
-        "price_right_spread_mm": r2(spread([e["x_pt"] + e["w_pt"] for e in g("price")]) * MM),
-        "section_header_x_pt": sorted({e["x_pt"] for e in g("header", "section")}),
-        "subheader_x_pt": sorted({e["x_pt"] for e in g("subheader", "sub")}),
-        "kicker_right_edge_pt": sorted({r2(e["x_pt"] + e["w_pt"]) for e in els if e.get("level") == "kicker" and e["column"] == col}),
-    }
-
-# ---- vertical rhythm on slots (the layout geometry)
-slots = []
-for e in els:
-    if e["column"] and "slot_pt" in e and e["kind"] in ("header", "subheader", "item_name", "description") :
-        slots.append((e["column"], e["kind"], e.get("ref"), e["slot_pt"]["y"], e["slot_pt"]["y"] + e["slot_pt"]["h"]))
-blocks = {}
-for c, k, ref, y0, y1 in slots:  # merge item name+desc into one block per item
-    key = (c, "item" if k in ("item_name", "description") else k, ref)
-    a = blocks.get(key); blocks[key] = (min(a[0], y0), max(a[1], y1)) if a else (y0, y1)
-em = next((e for e in els if e.get("note", "").startswith("column end mark")), None)
-if em: blocks[(em["column"], "endmark", "endmark")] = (em["y_pt"], em["y_pt"] + em["h_pt"])
-seqs = {c: sorted([(v[0], v[1], k[1], k[2]) for k, v in blocks.items() if k[0] == c]) for c in (1, 2)}
-gaps = {"below_section_header": [], "above_section_header": [], "subheader_to_item": [], "items_to_next_subheader": [], "item_to_item": [], "to_endmark": []}
-for c, seq in seqs.items():
-    for (a0, a1, ak, ar), (b0, b1, bk, br) in zip(seq, seq[1:]):
-        gap = r2(b0 - a1)
-        if ak == "header": gaps["below_section_header"].append({"section": ar, "next": bk, "gap_pt": gap})
-        elif bk == "header": gaps["above_section_header"].append(gap)
-        elif ak == "subheader": gaps["subheader_to_item"].append(gap)
-        elif bk == "subheader": gaps["items_to_next_subheader"].append(gap)
-        elif bk == "endmark": gaps["to_endmark"].append(gap)
-        else: gaps["item_to_item"].append(gap)
-chk["vertical_gaps_pt"] = {k: (v if k == "below_section_header" else sorted(set(v))) for k, v in gaps.items()}
-allvals = [x["gap_pt"] for x in gaps["below_section_header"]] + [g for k, v in gaps.items() if k != "below_section_header" for g in v]
-chk["all_gaps_multiple_of_12"] = all(abs(v / 12 - round(v / 12)) < 1e-6 for v in allvals)
-chk["all_slot_tops_and_heights_multiple_of_12"] = all(abs((v[0]) % 12) < 1e-6 and abs((v[1] - v[0]) % 12) < 1e-6 for v in blocks.values())
-
-# ---- baselines on the shared 12pt grid (both columns + masthead)
-bls = []
-for e in els:
-    if "baseline_pt" not in e: continue
-    if e["kind"] == "description":
-        n = e.get("lines", 1); last = e["baseline_pt"]
-        bls += [("description", e["column"], r2(last - 12 * i)) for i in range(n)]
-    else:
-        bls.append((e.get("level") or e["kind"], e["column"], e["baseline_pt"]))
-phase = sorted({r2(b % 12) for _, c, b in bls if c or _ in ("title", "location")})
-chk["baseline_grid_12pt"] = {"phases_mod_12": phase, "text_lines_checked": len(bls),
-                             "note": "every text baseline (title, location, headers, kickers, subheaders, names, prices, every description line, both columns) sits at y = 12k + phase"}
-hb = {e["ref"]: e["baseline_pt"] for e in els if e.get("level") == "section"}
-kb = {e["ref"]: e["baseline_pt"] for e in els if e.get("level") == "kicker"}
-chk["kicker_vs_header_baseline_delta_pt"] = {k: r2(kb[k] - hb[k]) for k in hb}
-nb = {e["ref"]: e["baseline_pt"] for e in els if e["kind"] == "item_name"}
-pb = {e["ref"]: e["baseline_pt"] for e in els if e["kind"] == "price"}
-chk["name_price_baseline_max_delta_pt"] = r2(max(abs(nb[k] - pb[k]) for k in nb))
-# header baseline -> next baseline distance (identical whatever follows)
-nxt = {}
-for c, seq in seqs.items():
-    for (a0, a1, ak, ar), (b0, b1, bk, br) in zip(seq, seq[1:]):
-        if ak == "header":
-            nb_ = next(e["baseline_pt"] for e in els if e["column"] == c and "baseline_pt" in e and e["kind"] in ("subheader", "item_name") and e["slot_pt"]["y"] == b0)
-            nxt[ar] = r2(nb_ - hb[ar])
-chk["section_header_baseline_to_next_baseline_pt"] = nxt
-chk["column_bottoms_pt"] = [r2((c["y"] + c["h"]) * PT) for c in M["cols"]]
-dv = next(e for e in els if e.get("note") == "dotted column divider")
-chk["divider_pt"] = {"top": dv["y_pt"], "bottom": r2(dv["y_pt"] + dv["h_pt"]),
-                     "last_content_slot_bottom": max(v[1] for k, v in blocks.items() if k[1] == "item")}
-chk["footer_slot_pt"] = [r2(M["foot"]["y"] * PT), r2((M["foot"]["y"] + M["foot"]["h"]) * PT)]
-chk["baseline_shifts_pt"] = R["shifts"]
-
-def lum(h):
-    c = [int(h[i:i + 2], 16) / 255 for i in (1, 3, 5)]
-    c = [v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4 for v in c]
-    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
-def cr(a, b):
-    la, lb = sorted((lum(a), lum(b)), reverse=True); return round((la + 0.05) / (lb + 0.05), 2)
-BG = "#F6EEDF"
-chk["contrast_vs_background"] = {"text #231B16": cr("#231B16", BG), "prices/kickers/ampersand #A63C1A": cr("#A63C1A", BG),
-                                  "subheaders #2F5D50": cr("#2F5D50", BG), "descriptions #5A4A3F": cr("#5A4A3F", BG),
-                                  "marigold #E3A018 (non-text ornaments only)": cr("#E3A018", BG)}
-
-items = {i["id"]: i for s in doc["sections"] for i in s["items"] + [x for sb in s["subs"] for x in sb["items"]]}
-price_txt = {e["ref"]: e["text"] for e in els if e["kind"] == "price"}
-desc_txt = {e["ref"]: e["text"].replace("\u00a0", " ") for e in els if e["kind"] == "description"}
-chk["items_rendered"] = len(price_txt)
-chk["printed_prices_match_doc"] = all(price_txt[k] == f'{items[k]["prices"][0]["value"]:g}' for k in items)
-chk["printed_desc_equals_doc_desc"] = all(desc_txt[k] == items[k]["desc"] for k in items)
-chk["desc_lines"] = {e["ref"]: e["lines"] for e in els if e["kind"] == "description"}
-chk["png_px"] = {"letter": R["png"], "phone": R["phone_png"], "phone_scrollWidth_css": R["ph_w"]}
-chk["phone_gap_below_every_section_header_px"] = {x["sec"]: x["gap_px"] for x in R["ph"]}
-
-SPEC = json.loads((HERE / "spec.json").read_text())
-import re as _re
-_css = _re.search(r"<style>(.*?)</style>", (OUT / "menu.html").read_text(), _re.S).group(1)
-_css = _re.sub(r"@font-face \{[^}]*\}", "", _css).split("@media")[0]
-def css_spec(sel):
-    m = _re.search(r"(?:^|\n)" + _re.escape(sel) + r"\s*\{([^}]*)\}", _css)
-    d = dict((a.strip(), b.strip()) for a, b in (x.split(":", 1) for x in m.group(1).split(";") if ":" in x))
-    out = {}
-    if "font-family" in d: out["font"] = d["font-family"].split(",")[0].strip("'\" ")
-    for k, n in (("font-weight", "weight"), ("font-style", "style"), ("font-size", "size"), ("line-height", "line"), ("letter-spacing", "tracking"), ("text-transform", "case"), ("color", "colour")):
-        if k in d: out[n] = d[k]
-    out.setdefault("font", "DM Sans"); return out
-TYPE = {k: css_spec(v) for k, v in {"title": ".title", "location": ".loc", "header": "h2", "kicker": ".kicker", "subheader": "h3",
-        "subheader_spanish": ".sub .es", "item": ".name", "price": ".price", "description": ".desc", "footer": ".foot .salud"}.items()}
-TYPE["price"]["numerals"] = "lining, tabular"; TYPE["min_print_size_pt"] = 9
-TYPE["source"] = "parsed from the print CSS inside menu.html at layout time"
-layout = {
-    "round": SPEC["round"],
-    "units": "pt (1/72 in) and mm; origin top-left of the page; every number measured from the Chromium render of menu.html",
-    "page": {"size": "US Letter portrait", "width_pt": 612, "height_pt": 792, "width_mm": 215.9, "height_mm": 279.4,
-             "margins_pt": {"top": 36, "right": 36, "bottom": 36, "left": 36}, "margins_mm": {"top": 12.7, "right": 12.7, "bottom": 12.7, "left": 12.7},
-             "bleed": "none; background is full-bleed cream, extend it 0.125in for trade printing"},
-    "grid": {"columns": 2, "column_x_pt": [36, 318], "column_width_pt": 258, "column_width_mm": 91.02, "gutter_pt": 24, "gutter_mm": 8.47,
-             "baseline_pt": 12, "baseline_phase_pt": phase,
-             "rows_pt": {"banner": [36, 84], "title": [108, 156], "location": [156, 168], "double_rule": [180, 192],
-                         "columns": [216, 720], "footer": [732, 756]},
-             "note": "every slot height and every vertical gap is a multiple of 12pt; baselines are nudged within their slots so all sit 3pt above a 12pt grid line"},
-    "palette": {"background": "#F6EEDF", "text": "#231B16", "accent": "#A63C1A", "secondary": "#2F5D50", "highlight": "#E3A018", "muted": "#5A4A3F",
-                "flag_terracotta": "#B4441F",
-                "roles": {"#A63C1A": "prices, kickers, ampersand, footer sign-off", "#2F5D50": "subheaders, rules, agave ornaments",
-                          "#E3A018": "non-text ornaments only (diamonds, dotted divider, flags)", "#5A4A3F": "descriptions, location line",
-                          "#B4441F": "papel picado flags (graphic only)"}},
-    "type": TYPE,
-    "spacing_pt": {"section_gap": 36, "below_section_header": 12, "subheader_to_first_item": 12, "items_to_next_subheader": 24,
-                   "item_gap": 12, "desc_right_indent": 6, "house_originals_panel": "0.75pt terracotta frame, 12pt outside the text block top and bottom, 10pt inner side padding, cut-paper corner ticks", "columns_to_footer": 12},
-    "elements": els,
-    "measured_checks": chk,
+cards = []
+for c in M["cards"]:
+    cb = b(c["box"]); right = cb["x"] + cb["w"]; bottom = cb["y"] + cb["h"]
+    nl = [r2(i["name"]["x"] * PT) for i in c["items"]]
+    pr = [r2((i["price"]["x"] + i["price"]["w"]) * PT) for i in c["items"]]
+    dl = [r2(i["desc"]["x"] * PT) for i in c["items"]]
+    sl = [r2(s["h3"]["x"] * PT) for s in c["subs"]]
+    cn = b(c["cardno"]); ic = b(c["icon"])
+    cards.append({
+        "n": c["n"], "ref": c["ref"], "name": c["name"]["text"], "kicker": c["kicker"]["text"], "featured": c["featured"], "box_pt": cb,
+        "border_pt": r2(c["border_px"] * PT), "padding_pt": {k: r2(v * PT) for k, v in c["padding_px"].items()},
+        "cardno_left_pt": cn["x"], "icon_right_pt": r2(ic["x"] + ic["w"]),
+        "item_name_left_pt": sorted(set(nl)), "name_left_spread_mm": r2(spread(nl) * MM),
+        "price_right_pt": sorted(set(pr)), "price_right_spread_mm": r2(spread(pr) * MM),
+        "desc_left_pt": sorted(set(dl)), "subheader_left_pt": sorted(set(sl)),
+        "inner_left_pt": r2(min(nl) - cb["x"]), "inner_right_pt": r2(right - max(pr)),
+        "free_space_below_content_pt": r2(bottom - c["padding_px"]["bottom"] * PT - c["border_px"] * PT - c["content_bottom"] * PT),
+        "banner_pt": b(c["banner"]), "icon_pt": ic,
+        "items": [{"ref": i["ref"], "name": i["name"]["text"], "price": i["price"]["text"], "name_pt": b(i["name"]), "price_pt": b(i["price"]),
+                   "desc_pt": b(i["desc"]), "desc_lines": i["desc"].get("lines"), "desc": i["desc"]["text"]} for i in c["items"]],
+        "subs": [{"ref": s["ref"], "text": s["h3"]["text"], "es": s["es"]["text"], "x_pt": r2(s["h3"]["x"] * PT)} for s in c["subs"]],
+    })
+rows = {}
+for c in cards: rows.setdefault(c["box_pt"]["y"], []).append(c)
+checks = {
+    "inner_left_spread_mm_across_cards": r2(spread([c["inner_left_pt"] for c in cards]) * MM),
+    "inner_right_spread_mm_across_cards": r2(spread([c["inner_right_pt"] for c in cards]) * MM),
+    "max_name_left_spread_in_a_card_mm": max(c["name_left_spread_mm"] for c in cards),
+    "max_price_right_spread_in_a_card_mm": max(c["price_right_spread_mm"] for c in cards),
+    "names_desc_subs_share_left_edge": all(set(c["item_name_left_pt"]) | set(c["desc_left_pt"]) | set(c["subheader_left_pt"]) == set(c["item_name_left_pt"]) for c in cards),
+    "cardno_on_name_edge": all(abs(c["cardno_left_pt"] - c["item_name_left_pt"][0]) < 0.6 for c in cards),
+    "icon_on_price_edge": all(abs(c["icon_right_pt"] - c["price_right_pt"][0]) < 0.6 for c in cards),
+    "row_heights_pt": {str(y): sorted({c["box_pt"]["h"] for c in cs}) for y, cs in sorted(rows.items())},
+    "equal_height_within_every_row": all(len({c["box_pt"]["h"] for c in cs}) == 1 for cs in rows.values()),
+    "no_card_overflow": all(c["free_space_below_content_pt"] >= 0 for c in cards),
+    "printed_ink_margins_pt": R["ink"], "fonts_loaded": R["fonts"], "letter_png_px": R["png"], "phone_png_px": R["phone_png"],
+    "phone": {"scroll_width_px": R["ph"]["scrollWidth"], "tab_bar_position": R["ph"]["tabs"], "tabs": R["ph"]["tab_count"],
+              "cards_stacked_single_column": len({round(c["x"]) for c in R["ph"]["cards"]}) == 1},
 }
-(OUT / "layout.json").write_text(json.dumps(layout, indent=1, ensure_ascii=False))
-print(json.dumps(chk, indent=1, ensure_ascii=False))
+L = {"round": 5, "concept": N["concept"],
+     "page": {"size": "US Letter 8.5 x 11 in", "w_pt": 612, "h_pt": 792, "margins_pt": {"top": 36, "right": 36, "bottom": 36, "left": 36}, "bleed": "none (cream flood to trim, home/office print)"},
+     "grid": {"deck_pt": b(M["deck"]), "gutter_pt": 12, "rows": "featured row (House Originals 318 pt | Classics 210 pt) + 2 rows of 2 x 264 pt; rows sized to content, spare height shared equally; cards stretch to equal height per row",
+              "card_inner": "1.5 pt ink frame + inset hairline at 3 pt (lotería double rule); padding 9 / 12 / 10 / 12 pt on every card"},
+     "palette": {"cream": "#F6EEDF", "card": "#FBF5EA", "featured_card": "#F3E3CB", "ink": "#231B16", "terracotta": "#A63C1A", "agave": "#2F5D50", "marigold": "#E3A018", "muted": "#5A4A3F"},
+     "type": {"display": "Fraunces 700 (title 30/34 pt, banner names 13.5/15 pt, featured 17/19 pt)", "numerals": "Fraunces 600 terracotta, lining tabular: card ordinals 26 pt (featured 36 pt), prices 11.5 pt (featured 14 pt)",
+              "items": "Fraunces 600 11.5/14 pt (featured 14/17 pt)", "descriptions": "DM Sans 8.5/11 pt (featured 9.5/12.5 pt)", "subheads": "DM Sans 700 caps 7.5 pt + Fraunces italic 9 pt Spanish",
+              "kickers": "Fraunces italic 9/11 pt", "min_print_size_pt": 6.5},
+     "masthead": {"papel_picado_pt": b(M["banner"]), "title_pt": b(M["title"]), "location_pt": b(M["loc"]), "footer_pt": b(M["foot"])},
+     "cards": cards, "checks": checks}
+(OUT / "layout.json").write_text(json.dumps(L, ensure_ascii=False, indent=1))
+
+# ------------------------------------------------------------ proposal.md (generated; nothing hand-typed about the render)
+it_by = {i["id"]: i for s in doc["sections"] for i in s["items"] + [x for sb in s["subs"] for x in sb["items"]]}
+cs = N["copy_sources"]
+o = ['# TEST-1 round 5: "Cantina & Cocktail Bar", Iowa City (proposal v5, concept round)', "",
+     "Generated by `build/layout.py` from `doc.json` and the Chromium render (`build/measure.json`). needs_input = true (questions below).", "",
+     "## Round 5: Lotería de la Cantina", "",
+     "- " + N["concept"],
+     "- The card system is the structure. Six cards, numbered in reading order. Card 1, House Originals, is the large featured card (318 pt wide against 210 pt, terracotta frame, 36 pt ordinal, 46 pt icon) in the top-left prime spot.",
+     "- Card 2, Classics, leads with the Margarita. Cards 3 to 6 are Spirits, Beer, Cider and Wine, on a 2 x 2 grid of equal cards. Every card stretches to its row height, so the columns balance by construction.",
+     "- The papel picado tops the page only. The icons are flat cut-paper SVGs: tumbler with a cube, coupe, agave, tap handle, apple and bottle.",
+     "- Numeral system: card ordinals and prices use one face (Fraunces 600), one colour (terracotta) and lining tabular figures. The icon's right edge sits on the price edge, and the ordinal's left edge sits on the name edge.",
+     "- Phone: the cards stack in one column, under a sticky bar of pennant-shaped flag tabs (numeral + English name) that jump to each card.",
+     "- Copy: no line repeats its item name or says \"pour\" (the build asserts both). The spirits, beer and cider lines come from one gateway query (log_id 112). Serve phrases are in guest voice.", "",
+     "## Cards (measured)", "", "| # | Card | Spanish | Box (x, y, w, h pt) | Inner L / R pt | Name-edge spread | Price-edge spread | Free space pt |", "|---|---|---|---|---|---|---|---|"]
+for c in cards:
+    bx = c["box_pt"]
+    o.append(f'| {c["n"]} | {c["name"]}{" (featured)" if c["featured"] else ""} | {c["kicker"]} | {bx["x"]}, {bx["y"]}, {bx["w"]}, {bx["h"]} | {c["inner_left_pt"]} / {c["inner_right_pt"]} | {c["name_left_spread_mm"]} mm | {c["price_right_spread_mm"]} mm | {c["free_space_below_content_pt"]} |')
+o += ["", f'Inner padding spread across all cards: left {checks["inner_left_spread_mm_across_cards"]} mm, right {checks["inner_right_spread_mm_across_cards"]} mm. '
+      f'Equal height within every row: {checks["equal_height_within_every_row"]}. No overflow: {checks["no_card_overflow"]}. Printed ink margins (pt): {checks["printed_ink_margins_pt"]}. '
+      f'Phone: tab bar `{checks["phone"]["tab_bar_position"]}`, {checks["phone"]["tabs"]} tabs, scroll width {checks["phone"]["scroll_width_px"]} px, single-column stack: {checks["phone"]["cards_stacked_single_column"]}.',
+      "", "Subheader pairs: " + "; ".join(f"{k} / *{v}*" for k, v in N["sub_kickers"].items()) + ".", "",
+      "## Printed copy and source table (matches menu.html)", "", "| Item | Price | Printed line | Words from | Gateway row ids | Still missing |", "|---|---|---|---|---|---|"]
+for c in cards:
+    for i in c["items"]:
+        s = cs[i["ref"]]
+        o.append(f'| {i["name"]} | {i["price"]} | {s["printed"]} | {s["words_from"]} | {", ".join(s["gateway_rows"]) or "none"} | {", ".join(s["missing"]) or "none"} |')
+o += ["", "Gateway query (the only one this round): " + N["gateway_query"] + ".", "",
+      "## Flags and needs_input (questions for the venue, via the Coordinator)", "",
+      "1. **Pour sizes are missing** for Blanco Tequila, Añejo Tequila, Cognac VSOP and all draft beers; wine pour sizes too. None is printed.",
+      "2. **Brut Rosé: glass or bottle?** The price label is empty in the draft. " + N["brut_rose_price"],
+      "3. **Manhattan bitters:** " + N["manhattan_bitters"] + " The Old Fashioned prints \"bitters\" (draft word).",
+      "4. No gateway rows exist for malbec, pinot grigio or brut rosé, and none for cognac VSOP specifically. Those lines use only the draft words. Brand, producer, region, vintage and ABV are still missing (see the table).",
+      "5. Brown Butter Old Fashioned: please confirm the dairy allergen note.",
+      "6. " + N["retired_junmai_ginjo"], "",
+      "## References (library `menu_visual_documents.id`)", "",
+      "572 (Coa Cantina Iowa City: agave first, the price band); 7923 (Coa Cantina Des Moines: a compact list led by cocktails); 4969 (Blue Agave, Iowa: the Classic / Signature tiers); "
+      "208 (Alta Calidad, Brooklyn: pour size in the header, once supplied); 2585 (La Buena Vida, Fort Collins: Spanish/English headers).", "",
+      "## Files", "", "menu.html, menu.pdf, preview-letter.png (" + "x".join(map(str, R["png"])) + " px, 300 dpi, not downscaled), preview-phone.png ("
+      + "x".join(map(str, R["phone_png"])) + " px), doc.json, layout.json, proposal.md; copies in round-5/. Earlier rounds: round-1/ to round-4/proposal.md.", ""]
+(OUT / "proposal.md").write_text("\n".join(o))
+print(json.dumps({k: v for k, v in checks.items() if k not in ("printed_ink_margins_pt",)}, ensure_ascii=False))

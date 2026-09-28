@@ -16,7 +16,8 @@ T = ROOT / 'supabase' / 'tests'
 f1 = (M / '20260927190000_phg_menu_dedupe_one_current.sql').read_text()
 f2 = (M / '20260927191000_phg_menu_repair_20260927.sql').read_text()
 gate = (T / 'phg_026_release_gate.sql').read_text().rstrip().rstrip(';')
-for tag in ('$rehearse_f1$', '$rehearse_f2$', '$rehearse_main$', '$rehearse_gate$'):
+f3 = (M / '20260928030000_phg_menu_design_score_gate.sql').read_text()   # SF10 (not applied live)
+for tag in ('$rehearse_f1$', '$rehearse_f2$', '$rehearse_f3$', '$rehearse_main$', '$rehearse_gate$'):
     for src in (f1, f2, gate):
         assert tag not in src
 
@@ -384,7 +385,24 @@ D = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse
 #    rollback + submit_menu again (its catalog check fixed to run in a separate statement)
 E = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + PROMOTE + steps(0, 1, 0) + FN_RB + END
 
-blocks = {'A': A, 'B': B, 'C': C, 'D': D, 'E': E}
+# F: SF10 - the design score-gate migration and its new rollback function (the migration is not applied live)
+SIGS = "(select jsonb_agg(p.oid::regprocedure::text order by 1) from pg_proc p where p.proname in ('phg_design_proposal_submit','phg_design_proposal_score','phg_design_proposal_review','phg_design_status'))"
+F = DECL + run_file('file3', '$rehearse_f3$', f3) + f"""
+  BEGIN
+    r := r || jsonb_build_object('after_migration', jsonb_build_object('fns', {SIGS},
+      'backup_rows', (select count(*) from public.phg_backup_design_fn_defs_20260928),
+      'null_layout_is_rejected', (select prosrc ~ 'coalesce\\(jsonb_typeof\\(p_layout' from pg_proc where proname = 'phg_design_proposal_submit')));
+    r := r || jsonb_build_object('rollback_returns', public.phg_rollback_design_score_gate_20260928());
+    r := r || jsonb_build_object('after_rollback', jsonb_build_object('fns', {SIGS},
+      'anon_or_auth_exec', (select bool_or(has_function_privilege('anon', p.oid, 'EXECUTE') or has_function_privilege('authenticated', p.oid, 'EXECUTE'))
+                              from pg_proc p where p.proname like 'phg_design_proposal%' or p.proname = 'phg_design_status'),
+      'service_role_exec', (select bool_and(has_function_privilege('service_role', p.oid, 'EXECUTE'))
+                              from pg_proc p where p.proname like 'phg_design_proposal%' or p.proname = 'phg_design_status'),
+      'review_body_restored', (select prosrc !~ 'accuracy_reviewer' from pg_proc where proname = 'phg_design_proposal_review')));
+  EXCEPTION WHEN others THEN {soft_err('ERROR', 'r')}
+  END;""" + END
+
+blocks = {'A': A, 'B': B, 'C': C, 'D': D, 'E': E, 'F': F}
 allsql = []
 for k, sql in blocks.items():
     (HERE / f'rehearse_round3_{k}.sql').write_text(sql)
