@@ -114,7 +114,7 @@ doc["meta"]["designer_notes"] = {
     "recipe_versions": {k: list(v) for k, v in RV.items()},
     "concept": ("Lotería de la Cantina, a real tabla of four cards. Top: El Cantarito (44, cocktails, Margarita first) and La Botella (8, agave & brandy); "
                 "below: La Rosa (41, wine) under El Cantarito and El Barril (9, beer & cider) under La Botella. Every card: 3 pt frame in its colour; one face template "
-                "(105 pt cut-paper figure at the same x on every card, its traditional Don Clemente number as a 12 pt italic ink numeral in the figure's top-left corner, "
+                "(105 pt cut-paper figure at the same x on every card, its traditional Don Clemente number as an 11 pt italic ink numeral in the figure's top-left corner, "
                 "cantor verse and name band in a column at the same x offset); the drinks list below under the draft's own subheads, SPANISH · English."),
     "cards": [{"n": c[0], "ref": c[1], "name": c[2], "loteria_name": c[3].upper(), "loteria_number": c[4], "number_source": "traditional Don Clemente lotería numbering",
                "cantor_verse": c[8], "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input", "figure": c[5], "featured": c[0] == 1,
@@ -247,7 +247,7 @@ body { -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:'
 .face { position:relative; flex:none; height:${face}pt; display:flex; gap:12pt; padding:6pt; background:var(--tint); box-shadow: inset 0 0 0 3pt var(--tint), inset 0 0 0 3.75pt var(--c); }
 .figure { position:relative; flex:none; width:${fig}pt; height:${fig}pt; }
 .figure .fig { display:block; width:100%; height:100%; }
-.cardno { position:absolute; left:3pt; top:0; font-family:'Fraunces', serif; font-style:italic; font-weight:600; font-size:12pt; line-height:18pt; color:$ink; font-feature-settings:'lnum' 0; }
+.cardno { position:absolute; left:3pt; top:0; font-family:'Fraunces', serif; font-style:italic; font-weight:600; font-size:11pt; line-height:18pt; color:$ink; font-feature-settings:'lnum' 0; }
 .vcol { flex:1; min-width:0; display:flex; flex-direction:column; }
 .verse { margin:0; flex:1; display:flex; align-items:center; justify-content:center; text-align:center; font-family:'Fraunces', serif; font-style:italic; font-weight:400; font-size:10pt; line-height:12pt; color:$muted; text-wrap:balance; }
 .namebar { flex:none; height:36pt; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--c); color:$cream; }

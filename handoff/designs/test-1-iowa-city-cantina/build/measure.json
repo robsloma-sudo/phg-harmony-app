@@ -31,7 +31,7 @@
     "cardno": {
      "x": 64,
      "y": 180,
-     "w": 19.328125,
+     "w": 17.71875,
      "h": 24,
      "text": "44"
     },
@@ -125,7 +125,7 @@
      "family": "Fraunces, serif",
      "style": "italic",
      "weight": "600",
-     "size_pt": 12,
+     "size_pt": 11.000025,
      "color": "rgb(35, 27, 22)",
      "background": "rgba(0, 0, 0, 0)"
     },
@@ -379,7 +379,7 @@
     "cardno": {
      "x": 436,
      "y": 180,
-     "w": 9.4375,
+     "w": 8.640625,
      "h": 24,
      "text": "8"
     },
@@ -467,7 +467,7 @@
      "family": "Fraunces, serif",
      "style": "italic",
      "weight": "600",
-     "size_pt": 12,
+     "size_pt": 11.000025,
      "color": "rgb(35, 27, 22)",
      "background": "rgba(0, 0, 0, 0)"
     },
@@ -666,7 +666,7 @@
     "cardno": {
      "x": 64,
      "y": 668,
-     "w": 16.53125,
+     "w": 15.140625,
      "h": 24,
      "text": "41"
     },
@@ -754,7 +754,7 @@
      "family": "Fraunces, serif",
      "style": "italic",
      "weight": "600",
-     "size_pt": 12,
+     "size_pt": 11.000025,
      "color": "rgb(35, 27, 22)",
      "background": "rgba(0, 0, 0, 0)"
     },
@@ -953,7 +953,7 @@
     "cardno": {
      "x": 436,
      "y": 564,
-     "w": 9.796875,
+     "w": 8.96875,
      "h": 24,
      "text": "9"
     },
@@ -1047,7 +1047,7 @@
      "family": "Fraunces, serif",
      "style": "italic",
      "weight": "600",
-     "size_pt": 12,
+     "size_pt": 11.000025,
      "color": "rgb(35, 27, 22)",
      "background": "rgba(0, 0, 0, 0)"
     },
