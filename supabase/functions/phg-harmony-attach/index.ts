@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 /* PHG HARMONY ATTACH — Harmony's conversation brain in the Harmony view.
+   v3: mode "menu" drafts/revises a whole menu as strict JSON (see MENU_INSTRUCTIONS).
    v2: also answers plain conversation with no attachments (mode "chat"), so
    everyday questions no longer fall through to the finance command router
    (which answered everything with "Management dashboard completed").
@@ -41,7 +42,47 @@ const CHAT_INSTRUCTIONS = [
   "tap + then 'Photo, video or file' to show you a photo, a short video, a PDF or a spreadsheet export and ask about it; ask about sales, labor, costs, expenses, P&L, budgets or forecasts to run the business reports; the gear menu has Brief, Recent work, Tools, Chat history and Voice settings.",
   "You cannot see the user's live business numbers in this conversation; if they ask for figures, tell them to ask for the specific report (for example 'show me last week's sales') and it will run.",
   "Never invent prices, figures, names or facts about their business. Bar and restaurant expertise (cocktails, spirits, menu design, pricing strategy, service, operations) is welcome.",
+  "When they are describing a menu concept (venue, style, spirits, number of drinks, price point), help shape it with them, then offer: say 'build it' or 'make the menu' and you will draft it on screen from this conversation.",
 ].join(" ");
+
+/* v3: MENU mode - Harmony drafts or revises a whole drinks menu from the
+   conversation, so the Menu Studio shows what was discussed instead of a
+   built-in sample. Output is strict JSON the app renders as live text. */
+const MENU_INSTRUCTIONS = [
+  "You are Harmony, the menu designer inside PHG, working with a bar or restaurant owner.",
+  "Write or revise a complete drinks menu as JSON for the concept in the conversation. If a current menu is given and the request is an edit (add, remove, rename, reprice, more of, fewer, swap), change only what was asked and keep everything else exactly; set changed=true. If they ask for a brand new or different menu, write a new one; changed=true. If they only asked a question or gave feedback that needs no change, answer in reply, set changed=false and return the current menu unchanged (or an empty menu if none).",
+  "Menu shape: a short venue-style title (the venue name if they gave one, otherwise a fitting name), a subtitle like 'Cocktail Bar · Des Moines, Iowa' when a place is known, 3 to 5 sections, 14 to 28 items in total. Section kinds: cocktails, zero (non-alcoholic), beer, wine, spirits, food, other.",
+  "Each item: name; price as a plain number string (wine may be 'glass / bottle' like '12 / 44'); sensory = a short evocative tasting line of 3 to 7 words; ingredients = ingredients in role order (base spirit, modifiers, sweetener, acid, lengthener, bitters) joined with ' · ' (for beer: brewery · city; for wine: producer · region; for spirits: region or style); serve = garnish · glass for cocktails, otherwise empty.",
+  "Price realistically for the concept and city (US bar pricing). Use real, widely available brands only when the user asked for them or they are generic category names; otherwise use generic names (e.g. 'reposado tequila', 'house amaro').",
+  "No slogans, no taglines, no filler lines anywhere. style_hint picks the visual direction that suits the concept: solstice (sunny, Mexican, coastal, citrus), garden (brunch, botanical, wine, daytime), noche (night, cocktail lounge, speakeasy, tiki, neon), swiss (modern, brewery, minimal), letterpress (classic, supper club, steakhouse, whiskey). concept = a short visual subject for painted art (no text).",
+  "reply = one or two warm spoken sentences saying what you made or changed. Plain text.",
+].join(" ");
+const MENU_SCHEMA = {
+  type: "object", additionalProperties: false, required: ["reply", "changed", "menu"],
+  properties: {
+    reply: { type: "string" },
+    changed: { type: "boolean" },
+    menu: {
+      type: "object", additionalProperties: false,
+      required: ["title", "subtitle", "concept", "style_hint", "sections"],
+      properties: {
+        title: { type: "string" }, subtitle: { type: "string" }, concept: { type: "string" },
+        style_hint: { type: "string", enum: ["solstice", "garden", "noche", "swiss", "letterpress"] },
+        sections: { type: "array", items: {
+          type: "object", additionalProperties: false, required: ["name", "kind", "items"],
+          properties: {
+            name: { type: "string" },
+            kind: { type: "string", enum: ["cocktails", "zero", "beer", "wine", "spirits", "food", "other"] },
+            items: { type: "array", items: {
+              type: "object", additionalProperties: false, required: ["name", "price", "sensory", "ingredients", "serve"],
+              properties: { name: { type: "string" }, price: { type: "string" }, sensory: { type: "string" }, ingredients: { type: "string" }, serve: { type: "string" } },
+            } },
+          },
+        } },
+      },
+    },
+  },
+};
 
 const isImg = (x: unknown) => typeof x === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(x);
 
@@ -62,6 +103,32 @@ Deno.serve(async (req) => {
   if (ue || !ud?.user) return json({ error: "invalid or expired login" }, 401);
 
   const b = await req.json().catch(() => ({}));
+
+  if (b.mode === "menu") {
+    const recentM = Array.isArray(b.recent) ? b.recent.slice(-12) : [];
+    const cur = b.current && typeof b.current === "object" ? JSON.stringify(b.current).slice(0, 20000) : "";
+    const ask = String(b.prompt || "").trim().slice(0, 2000) || "Draft the menu we discussed.";
+    const rm = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: Deno.env.get("OPENAI_MENU_MODEL") || model, instructions: MENU_INSTRUCTIONS, max_output_tokens: 6000,
+        input: [{ role: "user", content: [
+          { type: "input_text", text: "Conversation so far:\n" + (recentM.map((m: any) => `${m.role === "user" ? "Owner" : "Harmony"}: ${String(m.text || "").slice(0, 600)}`).join("\n") || "(none)") },
+          { type: "input_text", text: cur ? "Current menu JSON:\n" + cur : "There is no current menu yet." },
+          { type: "input_text", text: "Request: " + ask },
+        ] }],
+        text: { format: { type: "json_schema", name: "harmony_menu", strict: true, schema: MENU_SCHEMA } },
+      }),
+    });
+    const rawM = await rm.json().catch(() => ({}));
+    if (!rm.ok) return json({ error: "menu drafting failed", detail: rawM?.error?.message || rawM }, 502);
+    let t = typeof rawM.output_text === "string" ? rawM.output_text : "";
+    if (!t && Array.isArray(rawM.output)) for (const o of rawM.output) for (const c of (o?.content || [])) if (c?.type === "output_text") t += c.text || "";
+    try { const out = JSON.parse(t); return json({ status: "ok", mode: "menu", model, ...out }); }
+    catch { return json({ error: "menu drafting returned no menu" }, 502); }
+  }
+
   const prompt = String(b.prompt || "").trim().slice(0, 4000) || "What is this? Tell me what matters about it.";
   const images: string[] = (Array.isArray(b.images) ? b.images : []).filter(isImg).slice(0, 6);
   const video = b.video && Array.isArray(b.video.frames)

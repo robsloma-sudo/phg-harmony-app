@@ -1397,3 +1397,23 @@ Rob (screenshot: "show me Eatery A's menu in Des Moines, Iowa" -> "I can't pull 
 - Data check: "EATERY / A", Des Moines IA exists (documents 16950, 16935; 1 page each, menu_kind 'unread').
 - Tested headless with the corpus stubbed with those rows: search q=eatery city=DES MOINES state=IA, opened
   16950, spoken summary, close returns to the view; zero page errors.
+
+------------------------------------------------------------------------------
+PHG-20260928-MENUCONV | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.26, branch; phg-harmony-attach v3 live)
+Rob: "Harmony isn't properly linking the conversation about building a menu over when then going into the menu
+builder. It won't get rid of the solstice preset menu ... It's not rotating out menus."
+- Causes: startDesigns always loaded the built-in TEST-1 cantina sample (or the Studio doc) and reset to design 0
+  (Solstice); PMS.hear / + "Start a menu" / reference photos opened the stage on that sample before anything
+  else; "next" only rotated designs; content requests inside the studio went to the chat brain.
+- phg-harmony-attach v3 (ACTIVE): mode "menu" - strict-JSON menu draft/revision from the recent conversation
+  (+ current menu for edits): title, subtitle, concept (art subject), style_hint, 3-5 sections, 14-28 items
+  (name, price, sensory line, ingredients in role order, garnish · glass); changed=false for pure questions.
+  Chat persona now offers "say build it / make the menu" when a concept is being discussed.
+- App: "make a menu ..." / "build it" (after Harmony mentioned a menu) drafts from the last 14 chat turns, opens
+  in the design matching style_hint, resets overrides/art, labels DRAFT · HARMONY. Inside the studio: design
+  commands as before; "new / different / another menu", "start over" -> fresh draft; anything else -> content
+  revision of the current menu. Never opens on the preset; sample only when signed out or "use the sample";
+  "use my menu" loads the Menu Studio doc. Photos added before a menu wait for the draft.
+- Tested headless (brain stubbed): tiki conversation -> "Build it" -> draft request carried the conversation ->
+  Lava Lounge in Noche (not Solstice), not sample -> "add a shots section" sent current menu, section added ->
+  "next" changed design only -> "new menu" fresh draft; zero page errors.

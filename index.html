@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.25 FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.26 MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -39413,7 +39413,7 @@ window.phgSay = function(text, opts){
 #pmsStage .pmsAsk{display:flex;gap:8px;max-width:640px;width:100%;margin:0 auto}
 #pmsStage .pmsAsk input{flex:1;min-width:0;height:42px;border-radius:21px;border:1px solid rgba(148,163,184,.28);background:#0b0f19;color:#e8edf5;padding:0 16px;font-size:16px}
 #pmsStage .pmsAsk button{height:42px;padding:0 16px;border-radius:21px;border:0;background:#1e293b;color:#e8edf5;font-weight:600}
-body.pms-painting #pmsStage .pmsScaler{animation:pmsPulse 1.6s ease-in-out infinite}
+body.pms-painting #pmsStage .pmsScaler,body.pms-drafting #pmsStage .pmsScaler{animation:pmsPulse 1.6s ease-in-out infinite}
 @keyframes pmsPulse{50%{opacity:.82}}
 /* ---- MENU STUDIO INSIDE THE HARMONY VIEW (18.49.22) -----------------------
    The stage becomes a transparent layer of the view: the page sits where the
@@ -39724,7 +39724,7 @@ function coverHTML(d,p,c){
     +artLayer(d,p,key,'cov')
     +'<div class="pmsCovText"><div class="pmsKicker">'+esc(head||'Drinks')+'</div><h1>'+esc(title)+'</h1>'+(sub?'<div class="pmsSub">'+esc(sub)+'</div>':'')+'</div>'
     +(d.id==='solstice'?'<div class="pmsSun"></div>':'')
-    +(c.sample?'<div class="pmsSample">SAMPLE CONTENT</div>':'')
+    +(c.sample?'<div class="pmsSample">SAMPLE CONTENT</div>':c.draft?'<div class="pmsSample">DRAFT · HARMONY</div>':'')
     +'</div>';
 }
 function pageHTML(d,p,c,pg,idx){
@@ -39868,6 +39868,7 @@ function stageCommand(q){
     m=s.match(/\b(?:of|with|showing)\b (.+)$/);if(m)PMS.ov.subject=tidy(m[1]);
     paint();return m?'Painting '+PMS.ov.subject+'. This takes about half a minute.':'Painting the artwork for this design. This takes about half a minute.';
   }
+  if(/\b(new|different|another|fresh|whole new|other)\s+(menu|drink menu|cocktail menu|set of drinks|lineup|list of drinks|drinks)\b|\b(start over|redo the menu|rewrite (it|the menu))\b/.test(s)){draftMenu(q,true);return null;}
   if(/^(next|another|next one|next design|show me another|different|something else|try another|nope|no)\b|\bnext (design|one|look|style)\b|\b(show|try) (me )?(another|something different)\b/.test(s)){next();d=current();return d.name+(PMS.variant?' variation '+(PMS.variant+1):'')+'. What do you think?';}
   if(/^(back|previous|go back|last one|the one before)\b|\b(previous|last) (design|one)\b/.test(s)){prev();return 'Back to '+current().name+'.';}
   if(/\bnext page\b|\bturn the page\b/.test(s)){goPage(PMS.page+1);return 'Page '+PMS.page+'.';}
@@ -39890,7 +39891,7 @@ function stageCommand(q){
   if(/\b(save|keep|love|like) (this|it|that)\b|\bsave (the )?design\b/.test(s)){saveCurrent();return 'Saved '+current().name+'. You have '+PMS.saved.length+' saved.';}
   if(/\b(use|load) (my|the) (menu|current menu|studio menu)\b/.test(s)){PMS.content=loadContent();PMS.page=0;render();return PMS.content.sample?'There is no menu open in Menu Studio yet, so I am still using the sample cantina menu.':'Loaded '+PMS.content.title+' from Menu Studio.';}
   if((m=s.match(/\b(?:menu )?for (?:an? |the )?(.+)$/))&&MENU_INTENT.test(s)){PMS.ov.title=PMS.ov.title||null;PMS.ov.subject=tidy(m[1]);}
-  if(MENU_INTENT.test(s)){startDesigns();return null;}
+  if(MENU_INTENT.test(s)){startDesigns(q);return null;}
   return false;
 }
 function tidy(t){t=String(t).trim().replace(/^(to|as|is|be)\s+/,'');return t.replace(/\b\w/g,function(c){return c.toUpperCase();});}
@@ -39901,11 +39902,58 @@ function saveCurrent(){
   PMS.saved.push({dir:current().id,variant:PMS.variant,ov:JSON.parse(JSON.stringify(PMS.ov)),title:PMS.ov.title||PMS.content.title,at:new Date().toISOString()});
   try{localStorage.setItem('phg_pms_saved_v1',JSON.stringify(PMS.saved.slice(-30)));}catch(e){}
 }
-function startDesigns(){
-  PMS.content=loadContent();PMS.dir=0;PMS.variant=0;PMS.page=0;
-  openStage();
-  var c=PMS.content;
-  say('Here is a first direction, '+current().name+', for '+(PMS.ov.title||c.title)+(c.sample?', using the sample cantina menu':'')+'. Say next for another look, tell me what to change, or say paint it and I will paint real artwork.');
+/* 18.49.26: the Menu Studio shows the menu from the CONVERSATION.
+   "make a menu ..." drafts one with Harmony's menu brain (phg-harmony-attach
+   mode "menu") from the request plus the recent chat, opens it in the design
+   that suits the concept, and anything said inside the studio that is not a
+   design command revises the content. The built-in cantina sample is only a
+   fallback when signed out ("use the sample"); "use my menu" loads Menu Studio. */
+var MENU_BRAIN=FN+'phg-harmony-attach';
+function startDesigns(q){
+  var t=String(q||'');
+  if(/\b(use|load|open) (my|our|the current|the studio) menu\b/i.test(t)||/\buse the sample\b/i.test(t)){
+    PMS.content=/\bsample\b/i.test(t)?JSON.parse(JSON.stringify(SAMPLE)):loadContent();PMS.dir=0;PMS.variant=0;PMS.page=0;openStage();
+    say('Here is '+(PMS.content.sample?'the sample cantina menu':PMS.content.title)+' in '+current().name+'. Say next for another look.');return;
+  }
+  draftMenu(t||'Draft the menu we have been discussing.',true);
+}
+function chatHistory(n){
+  return (typeof AGENT!=='undefined'&&AGENT.chat?AGENT.chat.slice(-n):[]).map(function(m){return {role:m.who==='you'?'user':'assistant',text:String(m.text||'').replace(/<[^>]+>/g,' ').slice(0,600)};});
+}
+function toManifest(c){
+  if(!c||c.sample)return null;
+  return {title:c.title,subtitle:c.sub||'',sections:(c.sections||[]).map(function(s){return {name:s.s,kind:s.k||'other',items:(s.items||[]).map(function(i){return {name:i.n,price:i.p||'',sensory:i.d||'',ingredients:i.i||'',serve:i.g||''};})};})};
+}
+function fromDraft(m){
+  var K={cocktails:'cocktails',zero:'zero',spirits:'spirits',beer:'beer',wine:'wine'};
+  return {title:m.title||'Menu',sub:m.subtitle||'',sample:false,draft:true,concept:m.concept||'',
+    sections:(m.sections||[]).filter(function(s){return s.items&&s.items.length;}).map(function(s){
+      return {s:s.name,k:K[s.kind]||'',items:s.items.map(function(i){return {n:i.name,p:String(i.price||''),d:i.sensory||'',i:i.ingredients||'',g:i.serve||''};})};})};
+}
+function draftMenu(instruction,fresh){
+  var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
+  if(!tok){PMS.content=JSON.parse(JSON.stringify(SAMPLE));PMS.page=0;openStage();say('Sign in to PHG and I can draft your menu from our conversation. For now, here is the sample cantina menu.');return;}
+  if(PMS.drafting){say('Still drafting. One moment.');return;}
+  PMS.drafting=true;window.PHG_PENDING=true;document.body.classList.add('pms-drafting');
+  if(fresh)say(PMS.open?'Writing a new menu for you.':'Give me a moment, I am drafting the menu from what we talked about.');
+  fetch(MENU_BRAIN,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
+    body:JSON.stringify({mode:'menu',prompt:instruction,recent:chatHistory(14),current:fresh?null:toManifest(PMS.content)})})
+  .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.menu)throw new Error(j.detail||j.error||('HTTP '+r.status));return j;});})
+  .then(function(j){
+    if(j.changed===false&&!fresh){say(j.reply||'Okay.');return;}
+    var c=fromDraft(j.menu);
+    if(!c.sections.length){say(j.reply||'I need a little more to go on. Tell me the concept and the kind of drinks.');return;}
+    PMS.content=c;PMS.page=0;
+    if(fresh){
+      PMS.ov={subject:c.concept||''};PMS.variant=0;PMS.art={};
+      var ix=DIRS.map(function(d){return d.id;}).indexOf({solstice:'solstice',garden:'garden',noche:'noche',swiss:'swiss',letterpress:'letterpress'}[j.menu.style_hint]||'solstice');
+      PMS.dir=ix<0?0:ix;
+    }else if(c.concept)PMS.ov.subject=c.concept;
+    if(!PMS.open)openStage();else render();
+    say((j.reply||'Here it is.')+(fresh?' Say next for another look, new menu for different drinks, or tell me what to change.':''));
+  })
+  .catch(function(e){say('I could not draft the menu just now: '+(e&&e.message||e));})
+  .then(function(){PMS.drafting=false;window.PHG_PENDING=false;document.body.classList.remove('pms-drafting');});
 }
 
 /* ---------- reference photos ---------------------------------------------- */
@@ -39943,8 +39991,8 @@ function addFiles(list){
   Promise.all(files.map(function(f){return loadRef(f).catch(function(){return null;});})).then(function(rs){
     rs=rs.filter(Boolean);if(!rs.length){say('I could not open those photos.');return;}
     PMS.refs=PMS.refs.concat(rs);
-    if(!PMS.open){if(!PMS.content)PMS.content=loadContent();openStage();}else render();
-    say('Got '+(rs.length>1?rs.length+' photos':'your photo')+'. Say paint it and I will paint from '+(PMS.refs.length>1?'them':'it')+', use my photo as the cover, or match the photo colours.');
+    if(PMS.open){render();say('Got '+(rs.length>1?rs.length+' photos':'your photo')+'. Say paint it and I will paint from '+(PMS.refs.length>1?'them':'it')+', use my photo as the cover, or match the photo colours.');}
+    else say('Got '+(rs.length>1?rs.length+' photos':'your photo')+'. Tell me about the menu, then say make the menu, and I will use '+(PMS.refs.length>1?'them':'it')+' for the look.');
   });
 }
 function useRef(i,where){
@@ -40134,15 +40182,14 @@ PMS.cmd=function(q){PMS.hear(q);};
 PMS.hear=function(text){
   var q=String(text||'').trim();if(!q)return;
   if(!PMS.open&&!MENU_INTENT.test(q)){if(typeof harmonyAsk==='function')harmonyAsk(q);return;}
-  try{if(typeof AGENT!=='undefined'&&AGENT.chat){AGENT.chat.push({who:'you',text:q});}}catch(e){}
-  if(!PMS.content)PMS.content=loadContent();
-  if(!PMS.open)openStage();
+  try{if(typeof AGENT!=='undefined'&&AGENT.chat){AGENT.chat.push({who:'you',text:q});if(typeof agentDraw==='function')agentDraw();}}catch(e){}
+  /* never open on a preset: the menu is drafted first, then the studio opens */
+  if(!PMS.open){startDesigns(q);return;}
   var r=stageCommand(q);
   if(typeof r==='string'){say(r);return;}
   if(r===null)return;
-  /* not a menu command: hand it to Harmony's normal brain, keep the stage up */
-  if(typeof agentAnswer==='function'){try{agentAnswer(q);}catch(e){say('I am not sure how to do that on the menu yet.');}}
-  else say('I am not sure how to do that on the menu yet.');
+  /* not a design command: it is about the menu itself - revise the content */
+  draftMenu(q,false);
 };
 
 /* Route typed/dictated Harmony requests: menu design intents open the stage;
@@ -40151,11 +40198,18 @@ if(typeof agentHeard==='function'){
   var _heard=agentHeard;
   agentHeard=function(text){
     var q=String(text||'');
-    if(MENU_INTENT.test(q)||(PMS.open&&stageCommand.length&&looksLikeStage(q))){
+    var noteish=/^(?:(?:hey|ok|okay)?,?\s*harmony[,.]?\s*)?(?:log|note|jot|remind me|what did i log)\b/i.test(q);
+    /* "build it" right after Harmony offered to make the menu */
+    if(!PMS.open&&/^(?:(?:ok(?:ay)?|yes|yeah|yep|sure|great|perfect|sounds good|let'?s do it)[,.!]*\s*)?(?:go ahead and\s+)?(?:build|make|draft|do|create) (?:it|that|this|the menu|that menu)\b/i.test(q)){
+      var lastH=(AGENT.chat||[]).slice().reverse().filter(function(m){return m.who==='agent';})[0];
+      if(lastH&&/\bmenu\b/i.test(String(lastH.text||''))){AGENT.chat.push({who:'you',text:q});if(typeof agentDraw==='function')agentDraw();startDesigns(q);return;}
+    }
+    if(MENU_INTENT.test(q)||(PMS.open&&!noteish)){
       AGENT.chat.push({who:'you',text:q});if(typeof agentDraw==='function')agentDraw();
-      if(!PMS.content)PMS.content=loadContent();
-      if(!PMS.open)openStage();
-      var r=stageCommand(q);if(typeof r==='string')say(r);
+      if(MENU_INTENT.test(q)&&!PMS.open){startDesigns(q);return;}
+      var r=stageCommand(q);
+      if(typeof r==='string')say(r);
+      else if(r===false)draftMenu(q,false);
       return;
     }
     return _heard.apply(this,arguments);
@@ -40170,7 +40224,7 @@ function addRailButton(){
   if(!rail||rail.querySelector('[data-pms]'))return;
   var b=document.createElement('button');b.setAttribute('data-pms','1');b.className='pmsRailBtn';
   b.innerHTML='<b>Menu Studio</b><small>design by voice</small>';
-  b.onclick=function(e){e.stopPropagation();startDesigns();};
+  b.onclick=function(e){e.stopPropagation();startDesigns('');};
   rail.insertBefore(b,rail.firstChild);
   var view=document.getElementById('phgView');
   if(view&&!document.getElementById('hvTalk')){
