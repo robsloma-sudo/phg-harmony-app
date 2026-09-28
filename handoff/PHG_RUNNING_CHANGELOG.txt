@@ -1219,3 +1219,21 @@ as laggy and not as many errors."
   interaction frame rewrote body's classes every frame - now only on state change.
 - Tested headless 390x844: caption shows the exchange, More menu, full chat opens/closes, Menu Studio opens,
   Close works, zero page errors, no banner. Idle fps unchanged vs 18.49.15 (42.5 vs 43.2).
+
+------------------------------------------------------------------------------
+PHG-20260928-HVX2 | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.17)
+Rob: "have Harmony's response be floating text that types in the middle of the screen and disappears after
+like 10 lines or after a few seconds ... There should be a plus button and a speak button on that main page,
+and that's it ... collapse them all into a little expand and collapsible little gearbox menu somewhere on
+the bottom of that main viewport page. Let's simplify the whole view."
+- Main Harmony view is now: the field, floating words, "+" and "Speak". Nothing else.
+- Floating reply: types in the centre (>=45 chars/s; long answers finish in ~3.5 s), keeps the last 10
+  lines (older lines fade off the top only when it overflows), your line shown small above it, holds
+  2.5-6 s after typing (longer while her voice is still playing, capped +25 s), then fades. The field dims
+  to 38% opacity while words are up (opacity only - composited, no repaint).
+- "+" sheet: Type a message (input appears, disappears after send/blur), Add photos (menu reference ->
+  Menu Studio), Start a menu.
+- Gear (bottom-left) sheet: Menu Studio, Brief, Recent work, Tools, Chat history (old panel), Voice &
+  conversation settings, Sign out, Close Harmony view.
+- Tested headless 390x844: float types/fades, 10-line cap (283 px), + sheet, typing, gear, Menu Studio,
+  close; zero page errors.
