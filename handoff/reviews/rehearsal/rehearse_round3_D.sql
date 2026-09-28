@@ -791,7 +791,7 @@ revoke all on function public.phg_repair_20260927_rollback() from public, anon, 
 --    apply_migration (or psql -1 -f), in that order. Not `supabase db push`.
 -- 1. loop:  select public.phg_repair_step3_batch(100);   until it returns 0   (see results_round3.md for timings)
 -- 2. vacuum (analyze) public.staging_menu_extract;
--- 3. loop:  select public.phg_repair_step4_batch(200);   until it returns 0
+-- 3. loop:  select public.phg_repair_step4_batch(500);   until it returns 0   (rehearsed: ~17 s per call, ~39 calls)
 -- 4. create index concurrently if not exists menu_source_candidates_item_set_idx
 --      on public.menu_source_candidates (account_id, item_set_hash) where item_set_hash is not null;
 -- 5. run supabase/tests/phg_026_release_gate.sql; every row must say pass = true before cron 13, then 7, are

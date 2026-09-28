@@ -902,3 +902,29 @@ related, if they're being the menu designer."
 - PHG-026 round 2: spec reviewer 76.7 (average of 2 rounds 69.6, gate 80). Blockers being fixed: function rollback vs
   unique index + revokes, verification script post-cron false-fails, rehearsal gaps (steps 3-4, staging rollback,
   promote batch, extraction save, verification SQL).
+
+2026-09-28 PHG-026 round 3 submitted (not applied live)
+- Function rollback: phg_rollback_function_defs_20260927 drops the one-current index first, restores the 4 bodies, and
+  re-applies the revokes and the service_role grants. The backup tables are read-only for service_role. Rehearsed:
+  after the rollback, one submit_menu call succeeds.
+- The verification script is split in two: supabase/tests/phg_026_release_gate.sql (run once, before cron) and
+  phg_026_monitor.sql (run after cron resumes).
+- The 119 damaged venues are saved before Step 2 and asserted after it (0 not restored). The picks are recorded:
+  42 item pages chosen (4 changed), 22 pre-incident menus that replaced a newer capture of the same page.
+- Non-blocking fixes:
+  - SF1 price enrichment is no longer treated as a duplicate.
+  - Near-identical captures from another source are damped for 7 days (flip-flop).
+  - SF2 lock_timeout 5s.
+  - SF3 the rollback skip test uses backup membership, with a full row restore.
+  - SF4 index on the staging-dupes backup.
+  - SF7 p_pages is clamped to 5.
+  - SF8 the other is_current writers are listed: none.
+  - The log has the migration-ordering note and the caller evidence.
+- Rehearsal: every block re-run on the live DB and rolled back; all pass. Timings:
+  - file 2 steps 1-2: ~8-11 s
+  - Step 3: ~13-14.5 s per 100 venues (~4.5 min in total)
+  - Step 4: ~17 s per 500 venues (~11 min). The runbook now says step4_batch(500).
+  - release gate: 6 s; repair rollback: 10.6 s; function rollback: 38 ms
+  Results: handoff/reviews/rehearsal/results_round3.md.
+- Score-gate migration 20260928030000 was reverted to the Coordinator's text. The coalesce fix (SF10) was already
+  there. Rehearsed; not applied.

@@ -144,8 +144,8 @@ rehearsal output instead.
 
 ## Changes after round 2 (submitted for round 3)
 Code (committed in the WIP syncs dd629d5 / 3391712 and in the round-3 commit): 20260927190000, 20260927191000,
-supabase/tests/phg_026_release_gate.sql + phg_026_monitor.sql (phg_026_verification.sql is now a pointer),
-20260928030000 (SF10). Rehearsal: handoff/reviews/rehearsal/results_round3.md (blocks A-F, all rolled back).
+supabase/tests/phg_026_release_gate.sql + phg_026_monitor.sql (phg_026_verification.sql is now a pointer).
+20260928030000 is the Coordinator's text unchanged (SF10 was already in it). Rehearsal: handoff/reviews/rehearsal/results_round3.md (blocks A-F, all rolled back).
 
 Blocking:
 - SB2 / C7 function rollback: phg_rollback_function_defs_20260927() drops menus_one_current_per_account first,
@@ -163,9 +163,13 @@ Blocking:
   pre-incident menu is larger than the current one). Rehearsed: 119. After Step 2 the in-file assert raises unless every one
   has a current menu at least that large (rehearsed: 0 not restored). step2 detail now records damaged_venues,
   damaged_not_restored, chosen_item_pages 42 (4 changed to an item page), and pre_incident_replaced_newer_same_source 22.
-- C15 rehearsal: steps 3-4 timed (Step 3 ~12.5 s per 100 venues, 19 calls, ~4 min; Step 4 ~11 s per 200 venues,
-  ~97 calls, ~18 min), release-gate SQL run and rows captured, repair rollback after Step 3 including the staging restore
-  (30,126 rows), promote_clean_menu_batch(1), and one sibling-duplicate extraction save.
+- C15 rehearsal: steps 3-4 timed.
+  - Step 3: ~13-14.5 s per 100 venues, 19 calls, ~4.5 min.
+  - Step 4: ~11 s per 200 venues (~97 calls, ~18 min), or ~17 s per 500 venues (~39 calls, ~11 min). The runbook now
+    says 500.
+  - Also rehearsed: the release-gate SQL (rows captured), the repair rollback after Step 3 including the staging
+    restore (30,126 rows), promote_clean_menu_batch(1), and one sibling-duplicate extraction save.
+  - The final re-run of every block by the round-3 session all passed. See results_round3.md.
 
 Non-blocking:
 - SF1 price enrichment: new phg_menu_keys_price_adds(a, b) counts capture items that supply a price the current menu lacks
@@ -192,10 +196,15 @@ Non-blocking:
   unique index, which is why the 10-arg is dropped, the 15-arg is replaced, and the function rollback drops the index),
   promote_clean_menu_batch (goes through submit_menu), and phg_promote_menu_batch_safe(int) (only calls
   promote_clean_menu_batch). There are no triggers on public.menus. No Edge function writes menus directly.
-- SF10: 20260928030000 uses coalesce(jsonb_typeof(...), '') for the layout and score checks; it saves the 3 functions it
-  replaces (10-arg phg_design_proposal_submit, phg_design_proposal_review, phg_design_status, with ACL) in
-  phg_backup_design_fn_defs_20260928; phg_rollback_design_score_gate_20260928() drops the 11-arg submit and the score
-  function and restores the 3. Rehearsed (block F); still NOT applied live.
+- SF10: the coalesce(jsonb_typeof(...), '') layout and score checks were already in the Coordinator's version of
+  20260928030000 (9e41e78). A mid-round edit had added an acl column and a service_role re-grant to that file's
+  backup/rollback, which went beyond SF10. It was reverted to the Coordinator's text (the revert landed in abc0066).
+  Rehearsed as-is (block F):
+  - 3 definitions saved; a NULL layout is rejected.
+  - The rollback returns 3, drops the 11-arg submit and the score function, and restores the 10-arg submit, the review
+    and the status functions.
+  - anon/authenticated cannot execute; service_role keeps EXECUTE through default privileges.
+  - Still NOT applied live.
 - Round-1 spec text: added above ("Round-1 acceptance spec").
 - Migration ordering: both files and the runbook say to apply through apply_migration (in order), not `supabase db push`,
   because newer migrations (20260927200000 and later) are already applied.
