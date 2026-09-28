@@ -1181,7 +1181,7 @@ $rehearse_rbc$ || ') g' INTO v;
   v := v || jsonb_build_object('step3', r->'step3', 'gate', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 50), 'pass', x->'pass', 'v', left(x->>'value', 400))) from jsonb_array_elements(r->'release_gate') x),
     'rollback', r->'repair_rollback'->'result', 'rollback_check', (select jsonb_agg(jsonb_build_object('c', left(x->>'check_name', 70), 'pass', x->'pass', 'v', left(x->>'value', 300))) from jsonb_array_elements(r->'rollback_check'->'checks') x),
     'rbc_all_pass', r->'rollback_check'->'checks_all_pass', 'review_candidates_n', r->'rollback_check'->'review_candidates_n', 'rbc_ms', jsonb_build_object('checks', r->'rollback_check'->'checks_ms', 'review', r->'rollback_check'->'review_ms'),
-    'fn_rb', r->'function_rollback_and_submit' - 'submit_after_rollback', 'submit_after', (r->'function_rollback_and_submit'->'submit_after_rollback')->>'status');
+    'fn_rb', (r->'function_rollback_and_submit') - 'submit_after_rollback', 'submit_after', (r->'function_rollback_and_submit'->'submit_after_rollback')->>'status');
   RAISE EXCEPTION 'REHEARSAL SUMMARY % FULL %', v, r;
 END
 $rehearse_main$;
