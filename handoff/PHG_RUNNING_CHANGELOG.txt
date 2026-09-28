@@ -1417,3 +1417,29 @@ builder. It won't get rid of the solstice preset menu ... It's not rotating out 
 - Tested headless (brain stubbed): tiki conversation -> "Build it" -> draft request carried the conversation ->
   Lava Lounge in Noche (not Solstice), not sample -> "add a shots section" sent current menu, section added ->
   "next" changed design only -> "new menu" fresh draft; zero page errors.
+
+------------------------------------------------------------------------------
+PHG-20260928-LIVEEDIT | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.27, branch; app only, no server change)
+Rob: "allow me to make edits to the menu continually as I talk to her."
+- Causes: while a draft/revision was in flight she answered "Still drafting" and dropped the edit; the talk
+  loop stopped listening during drafting (PHG_PENDING); edits said before the first draft opened went to chat;
+  design regexes stole content edits ("add a dark rum drink" -> Darker, "light beer" -> Lighter, "no, make the
+  paloma 14" -> next design, "change the name of X" -> retitled the menu, "art deco" -> paid paint call,
+  "keep the negroni" -> save).
+- Edits queue while she is working and go out together ("A. Also: B") the moment the current one lands;
+  "new menu" during a draft replaces the queue. Short "Got it, that is next." acknowledgement.
+- Talk loop keeps listening while she redraws (no PHG_PENDING for menu drafts; 0.7 s re-listen); her reply is
+  held while you are mid-sentence and spoken when you stop.
+- Content gate: edit verbs, prices/$, ingredients/garnish/recipe/taste words, more/fewer/another + drink nouns,
+  or any item name on the current menu -> content edit, unless the sentence names splash/cover/title/paint.
+  "next/no/another/different" and "back" only as whole commands; title only via title/name it/call it/rename
+  the menu; painting only on paint/artwork/illustrate.
+- Mixed sentences split on sentence ends and "and then / and also": design clauses apply at once, content
+  clauses go to Harmony as one edit.
+- Changed items glow for ~3 s and the stage jumps to the page with the first change. "Undo / revert / put it
+  back / never mind / scratch that" restores the previous menu version (12 kept).
+- Tested headless (brain stubbed, 1.2 s latency): two edits during the first draft queued and sent as one
+  request (Smoke Signal added, Lava Flow 14); "add a dark rum drink" edited content, theme untouched; "make it
+  darker and then add a pineapple mocktail" -> dark theme + content edit; jump to page 1 with glow; undo; "replace
+  the volcano bowl with an art deco drink" -> no paint; "no" -> next design; "rename the menu Magma Room";
+  zero page errors. Not tested against live OpenAI (supabase.co blocked from this container) or a live mic.
