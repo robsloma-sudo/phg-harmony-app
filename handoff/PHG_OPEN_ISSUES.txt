@@ -16,7 +16,7 @@ PHG-DI-05 OPEN P1  Handoff files 02/04/05/09 + visual_examples + media not recei
 PHG-001 IN PROGRESS P1  Menu Library: 18.49.5 on branch (images fixed, filters expanded); device acceptance + release open
 PHG-002 RESOLVED    P0  HTML worker closed-browser incident (redeploy 144c7bdb, 2026-09-27T00:08Z)
 PHG-003 OPEN        P1  Physical iPhone/iPad/desktop acceptance (node geometry, gallery, transitions)
-PHG-004 OPEN        P1  Exact Netlify production bytes vs GitHub main
+PHG-004 OPEN        P1  Exact Netlify production bytes vs GitHub main (main 861813c = 18.49.15 pushed 2026-09-28)
 PHG-005 OPEN        P2  PDF worker HTTP 401 logs (not rechecked since takeover)
 PHG-006 OPEN        P1  Extraction provider 402
 PHG-007 OPEN        P1  Railway worker source (WORKER_CODE_B64) not under version control

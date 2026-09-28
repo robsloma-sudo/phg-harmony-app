@@ -1190,3 +1190,10 @@ Rob: "Resume" -> finished the open part of "talk into it and it talk back to me"
   "make a menu for a cantina" -> stage opens -> she replies -> listening again.
 - Menu Studio rail button restyled to match the rail.
 - Production still 18.49.7 (main); this build is on the branch only.
+
+------------------------------------------------------------------------------
+PHG-20260928-DEPLOY | USER_PROMPT + PRODUCTION DEPLOY | 2026-09-28
+Rob: "deploy."
+- Pushed main 861813c = index.html 18.49.15 + netlify.toml (adds /workers/* 404) from branch 8c29827.
+  Netlify site prismatic-rugelach-777e48 builds main. Previous production: main ee278f2 (18.49.7),
+  deploy 6ab977c8. Rollback: redeploy 6ab977c8 in Netlify, or push ee278f2's index.html to main.
