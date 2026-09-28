@@ -351,7 +351,7 @@ B = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse
 
 
 # ---------------------------------------------------------------- blocks C/D: steps 3-4, gate, rollbacks, submit after
-def steps(step3_budget_ms, step4_budget_ms, step3_max_calls):
+def steps(step3_budget_ms, step4_budget_ms, step3_max_calls, step4_batch=200):
     return f"""
   -- Step 3: phg_repair_step3_batch(100) until done, the time budget, or the call cap
   calls := '[]'; rem := -1;
@@ -364,11 +364,11 @@ def steps(step3_budget_ms, step4_budget_ms, step3_max_calls):
   r := r || jsonb_build_object('step3', jsonb_build_object('calls', calls,
      'backup_rows', (select count(*) from public.phg_backup_staging_dupes_20260927),
      'venues_done', (select count(*) from public.phg_repair_step3_done)));
-  -- Step 4: phg_repair_step4_batch(200)
+  -- Step 4: phg_repair_step4_batch({step4_batch})
   calls := '[]'; rem := -1;
   WHILE rem <> 0 and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < {step4_budget_ms} LOOP
     t0 := clock_timestamp();
-    rem := public.phg_repair_step4_batch(200);
+    rem := public.phg_repair_step4_batch({step4_batch});
     calls := calls || jsonb_build_object('ms', {MS}, 'remaining_venues', rem);
   END LOOP;
   r := r || jsonb_build_object('step4', jsonb_build_object('calls', calls,
@@ -438,8 +438,9 @@ FN_RB = f"""
   r := r || jsonb_build_object('function_rollback_and_submit', c); c := '{{}}';"""
 
 
-# C: timing - as much of Step 3 as fits in ~40 s
-C = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(30000, 0, 100) + END
+# C: timing - one Step 3 call and one Step 4 call at the runbook batch size (500); round 4 runs it as generated
+#    (round 3's C looped Step 3 for 30 s and had to be run as a reduced C')
+C = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(1, 1, 1, 500) + END
 # D: a few batches of each step, then the gate, the repair rollback (with staging restore), function rollback + submit
 # D: one Step 3 call and one Step 4 call, then the gate, the repair rollback (with staging restore), function rollback + submit
 D = DECL + run_file('file1', '$rehearse_f1$', f1) + run_file('file2', '$rehearse_f2$', f2) + steps(1, 1, 1) + GATE + REPAIR_RB + FN_RB + END

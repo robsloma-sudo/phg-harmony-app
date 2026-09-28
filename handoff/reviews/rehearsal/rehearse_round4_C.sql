@@ -875,8 +875,8 @@ $rehearse_f2$;
   r := r || jsonb_build_object('file2_ms', round(extract(epoch from clock_timestamp()-t0)*1000));
   -- Step 3: phg_repair_step3_batch(100) until done, the time budget, or the call cap
   calls := '[]'; rem := -1;
-  WHILE rem <> 0 and jsonb_array_length(calls) < 100
-        and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 30000 LOOP
+  WHILE rem <> 0 and jsonb_array_length(calls) < 1
+        and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 1 LOOP
     t0 := clock_timestamp();
     rem := public.phg_repair_step3_batch(100);
     calls := calls || jsonb_build_object('ms', round(extract(epoch from clock_timestamp()-t0)*1000), 'remaining_venues', rem);
@@ -884,11 +884,11 @@ $rehearse_f2$;
   r := r || jsonb_build_object('step3', jsonb_build_object('calls', calls,
      'backup_rows', (select count(*) from public.phg_backup_staging_dupes_20260927),
      'venues_done', (select count(*) from public.phg_repair_step3_done)));
-  -- Step 4: phg_repair_step4_batch(200)
+  -- Step 4: phg_repair_step4_batch(500)
   calls := '[]'; rem := -1;
-  WHILE rem <> 0 and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 0 LOOP
+  WHILE rem <> 0 and coalesce((select sum((x->>'ms')::numeric) from jsonb_array_elements(calls) x), 0) < 1 LOOP
     t0 := clock_timestamp();
-    rem := public.phg_repair_step4_batch(200);
+    rem := public.phg_repair_step4_batch(500);
     calls := calls || jsonb_build_object('ms', round(extract(epoch from clock_timestamp()-t0)*1000), 'remaining_venues', rem);
   END LOOP;
   r := r || jsonb_build_object('step4', jsonb_build_object('calls', calls,
