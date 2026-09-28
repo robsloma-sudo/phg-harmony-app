@@ -43,22 +43,35 @@ Deno.serve(async (req) => {
   const size = ["1024x1536", "1536x1024", "1024x1024"].includes(String(b.size)) ? String(b.size) : "1024x1536";
   const quality = ["low", "medium", "high"].includes(String(b.quality)) ? String(b.quality) : "medium";
 
-  const rr = await fetch("https://api.openai.com/v1/images/generations", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model,
-      prompt: prompt + NO_TEXT,
-      size,
-      quality,
-      n: 1,
-      output_format: "jpeg",
-      output_compression: 88,
-    }),
-  });
+  /* Reference photos (up to 4 data: URLs from the app) go to the edits
+     endpoint as image inputs; without them this is a plain generation. */
+  const refs: string[] = Array.isArray(b.refs) ? b.refs.filter((x: unknown) => typeof x === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(x as string)).slice(0, 4) : [];
+  let rr: Response;
+  if (refs.length) {
+    const form = new FormData();
+    form.append("model", model);
+    form.append("prompt", prompt + " Use the attached reference photos for subject, palette, materials and mood; do not copy any text, labels or logos from them." + NO_TEXT);
+    form.append("size", size);
+    form.append("quality", quality);
+    form.append("n", "1");
+    form.append("output_format", "jpeg");
+    form.append("output_compression", "88");
+    refs.forEach((d, i) => {
+      const m = d.match(/^data:(image\/[a-z]+);base64,(.*)$/)!;
+      const bin = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
+      if (bin.byteLength <= 8 * 1024 * 1024) form.append("image[]", new Blob([bin], { type: m[1] }), `ref${i}.${m[1].split("/")[1]}`);
+    });
+    rr = await fetch("https://api.openai.com/v1/images/edits", { method: "POST", headers: { Authorization: `Bearer ${oa}` }, body: form });
+  } else {
+    rr = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model, prompt: prompt + NO_TEXT, size, quality, n: 1, output_format: "jpeg", output_compression: 88 }),
+    });
+  }
   const raw = await rr.json().catch(() => ({}));
   if (!rr.ok) return json({ error: "image generation failed", detail: raw?.error?.message || raw }, 502);
   const b64 = raw?.data?.[0]?.b64_json;
   if (!b64) return json({ error: "no image returned" }, 502);
-  return json({ status: "ok", model, size, quality, image: "data:image/jpeg;base64," + b64 });
+  return json({ status: "ok", model, size, quality, refs: refs.length, image: "data:image/jpeg;base64," + b64 });
 });

@@ -6282,7 +6282,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.13 HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.14 REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -39318,7 +39318,7 @@ window.phgSay = function(text, opts){
 
 <style id="phgMenuStageCSS">
 /* ---- Harmony Menu Stage shell ---- */
-#pmsStage{position:fixed;inset:0;z-index:4300;display:grid;grid-template-rows:auto 1fr auto auto auto;
+#pmsStage{position:fixed;inset:0;z-index:4300;display:grid;grid-template-rows:auto 1fr auto auto auto auto auto;grid-template-columns:minmax(0,1fr);
   background:#07080d;color:#e8edf5;font-family:'Inter',system-ui,sans-serif;
   padding:calc(env(safe-area-inset-top,0px) + 8px) 12px calc(env(safe-area-inset-bottom,0px) + 10px);gap:8px}
 #pmsStage .pmsTop{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px}
@@ -39332,10 +39332,12 @@ window.phgSay = function(text, opts){
 #pmsStage .pmsDots button.on{background:#7dd3fc;width:22px;border-radius:5px}
 #pmsStage .pmsSay{min-height:0;font-size:14px;line-height:1.4;color:#cbd5e1;text-align:center;opacity:0;transition:opacity .25s;max-width:640px;margin:0 auto}
 #pmsStage .pmsSay.show{opacity:1}
-#pmsStage .pmsBar{display:flex;justify-content:center;align-items:center;gap:10px}
+#pmsStage .pmsBar{display:flex;justify-content:center;align-items:center;gap:8px}
+@media (max-width:420px){#pmsStage .pmsBar button{padding:0 12px}}
 #pmsStage .pmsBar button{height:46px;min-width:46px;padding:0 16px;border-radius:23px;border:1px solid rgba(148,163,184,.28);background:#111623;color:#e8edf5;font:600 14px 'Inter',system-ui,sans-serif;cursor:pointer}
 #pmsStage .pmsBar button:disabled{opacity:.6}
-#pmsStage .pmsTalk{--lvl:0;display:flex;align-items:center;gap:8px;min-width:132px!important;justify-content:center;background:#0e7490!important;border-color:#22d3ee!important}
+#pmsStage>*{min-width:0}
+#pmsStage .pmsTalk{--lvl:0;display:flex;align-items:center;gap:8px;min-width:112px!important;justify-content:center;background:#0e7490!important;border-color:#22d3ee!important}
 #pmsStage .pmsTalk i{width:12px;height:12px;border-radius:50%;background:#e0f7ff;transform:scale(calc(1 + var(--lvl)*.9));transition:transform .08s}
 #pmsStage .pmsTalk.listening{background:#be123c!important;border-color:#fb7185!important}
 #pmsStage .pmsTalk.thinking{background:#6d28d9!important;border-color:#a78bfa!important}
@@ -39368,6 +39370,18 @@ body.pms-painting #pmsStage .pmsScaler{animation:pmsPulse 1.6s ease-in-out infin
 .pmsNum{display:none}
 .pmsIt{break-inside:avoid;margin:0 0 .9em}
 .pmsKeep{break-inside:avoid}
+#pmsStage .pmsRefs{display:none;gap:8px;overflow-x:auto;justify-content:safe center;padding:2px 0}
+#pmsStage .pmsRefs.show{display:flex}
+#pmsStage .pmsRef{position:relative;flex:0 0 auto;width:108px;height:74px;border-radius:10px;overflow:hidden;border:1px solid rgba(148,163,184,.35)}
+#pmsStage .pmsRef img{width:100%;height:100%;object-fit:cover;display:block}
+#pmsStage .pmsRefN{position:absolute;left:4px;top:3px;font:700 11px 'Inter',sans-serif;color:#fff;text-shadow:0 1px 2px #000}
+#pmsStage .pmsRefX{position:absolute;right:2px;top:2px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:14px;line-height:1;padding:0;cursor:pointer}
+#pmsStage .pmsRefAct{position:absolute;left:0;right:0;bottom:0;display:flex;background:rgba(0,0,0,.62)}
+#pmsStage .pmsRefAct button{flex:1;border:0;background:none;color:#fff;font:600 10px 'Inter',sans-serif;padding:5px 0;cursor:pointer}
+#pmsStage .pmsRefAct button+button{border-left:1px solid rgba(255,255,255,.25)}
+#pmsStage .pmsRefAdd{flex:0 0 auto;width:44px;height:74px;border-radius:10px;border:1px dashed rgba(148,163,184,.5);background:none;color:#cbd5e1;font-size:22px;cursor:pointer}
+#pmsStage .pmsPhoto{height:42px;padding:0 12px;border-radius:21px;border:1px solid rgba(125,211,252,.45);background:#0b1624;color:#7dd3fc;font-weight:600;white-space:nowrap}
+#pmsStage.drop{outline:3px dashed #7dd3fc;outline-offset:-10px}
 .pmsPage h1,.pmsPage h3{color:var(--ink);background:none;-webkit-text-fill-color:currentColor;text-shadow:none;filter:none}
 .t-noche .pmsCovText h1{color:#fff}
 .pmsItTop{display:flex;align-items:baseline;gap:.6em}
@@ -39541,6 +39555,7 @@ function palette(d){
   var p=Object.assign({},d.pal),o=PMS.ov;
   var va=VARIANT_ACCENTS[PMS.variant%VARIANT_ACCENTS.length];if(va){p.accent=va;p.art3=va;}
   if(o.accent){p.accent=o.accent;p.art3=o.accent;}
+  if(d._refPal){p.art1=d._refPal.art1;p.art2=d._refPal.art2;}
   if(o.dark===true&&d.id!=='noche'){p.bg=mix(p.ink,'#000000',.35);p.paper=mix(p.ink,'#000000',.15);var t=p.ink;p.ink='#f4efe6';p.muted='#b7ad9f';p.art2=mix(p.art2,'#000000',.4);}
   if(o.dark===false&&d.id==='noche'){p.bg='#f1ece4';p.paper='#faf7f1';p.ink='#16131d';p.muted='#6b6474';}
   if(o.warmth){['bg','art1','art2'].forEach(function(k){p[k]=warm(p[k],o.warmth);});}
@@ -39645,6 +39660,7 @@ function ensureStage(){
     +'<div id="pmsView" class="pmsView"><div id="pmsScaler" class="pmsScaler"></div></div>'
     +'<div id="pmsDots" class="pmsDots"></div>'
     +'<div id="pmsSay" class="pmsSay" aria-live="polite"></div>'
+    +'<div id="pmsRefs" class="pmsRefs" aria-label="Reference photos"></div>'
     +'<div class="pmsBar">'
       +'<button onclick="PMS.cmd(\'back\')" aria-label="Previous design">◀</button>'
       +'<button id="pmsTalk" class="pmsTalk" onclick="PMS.toggleTalk()"><i></i><span>Talk</span></button>'
@@ -39652,7 +39668,9 @@ function ensureStage(){
       +'<button onclick="PMS.cmd(\'next\')" aria-label="Next design">▶</button>'
     +'</div>'
     +'<form class="pmsAsk" onsubmit="event.preventDefault();var i=this.q;if(i.value.trim()){PMS.hear(i.value.trim());i.value=\'\';}">'
-      +'<input name="q" autocomplete="off" placeholder="Say or type: next · darker · use gold · title Casa Sol · paint it">'
+      +'<button type="button" class="pmsPhoto" aria-label="Add reference photos" onclick="PMS.pickPhotos()">+ Photo</button>'
+      +'<input id="pmsFile" type="file" accept="image/*" multiple hidden onchange="PMS.addFiles(this.files);this.value=\'\'">'
+      +'<input name="q" autocomplete="off" placeholder="next · darker · use gold · paint it · use my photo">'
       +'<button>Go</button></form>';
   host().appendChild(el);
   var v=el.querySelector('#pmsView'),sx=null,sy=null;
@@ -39662,6 +39680,9 @@ function ensureStage(){
     if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.3)goPage(PMS.page+(dx<0?1:-1));
   });
   ['pointerdown','pointermove','touchstart','touchmove','wheel'].forEach(function(ev){el.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
+  el.addEventListener('dragover',function(e){e.preventDefault();el.classList.add('drop');});
+  el.addEventListener('dragleave',function(){el.classList.remove('drop');});
+  el.addEventListener('drop',function(e){e.preventDefault();el.classList.remove('drop');if(e.dataTransfer&&e.dataTransfer.files)PMS.addFiles(e.dataTransfer.files);});
   window.addEventListener('resize',fit);
   if(window.visualViewport)visualViewport.addEventListener('resize',fit);
   return el;
@@ -39676,6 +39697,7 @@ function render(){
   el.querySelector('#pmsInfo').textContent=d.name+(PMS.variant?' · v'+(PMS.variant+1):'')+' · '+(PMS.page===0?'Cover':'Page '+PMS.page)+' of '+(PMS.designs.length-1)+(PMS.content.sample?' · sample':'');
   var dots='';for(var i=0;i<PMS.designs.length;i++)dots+='<button class="'+(i===PMS.page?'on':'')+'" aria-label="'+(i?'Page '+i:'Cover')+'" onclick="PMS.go('+i+')"></button>';
   el.querySelector('#pmsDots').innerHTML=dots;
+  renderRefs();
   fit();
   requestAnimationFrame(autofit);
 }
@@ -39714,6 +39736,15 @@ function stageCommand(q){
   var s=q.toLowerCase().replace(/[.!?]+$/,'').trim(),m,d;
   if(/^(close|exit|done|that'?s all|stop (the )?(studio|menu))\b/.test(s)){PMS.close();return 'Closing Menu Studio.';}
   if(/\b(stop listening|stop talking|mute)\b/.test(s)){stopTalk();return 'Okay, I stopped listening. Tap Talk when you want me again.';}
+  if(/\b(add|upload|attach) (a |some |my )?(photo|picture|image|reference)s?\b/.test(s)){pickPhotos();return PMS.refs.length?'Opening your photos.':'Tap the Photo button next to the text box and pick your reference photos.';}
+  if(/\b(clear|remove|delete) (all )?(the |my )?(photos|pictures|references)\b/.test(s)){PMS.refs=[];render();return 'Cleared the reference photos.';}
+  if(/\bmatch\b.*\b(photo|picture|image|reference)\b|\b(photo|picture)('?s)? colou?rs\b/.test(s)){
+    if(!PMS.refs.length)return 'Add a photo first with the Photo button, then I can match its colours.';
+    matchColors(refIndex(s));return 'Matched the colours to your photo.';}
+  if(/\buse (my|the|this|that) (photo|picture|image)\b|\b(photo|picture) (as|for|on) the\b/.test(s)){
+    if(!PMS.refs.length)return 'Add a photo first with the Photo button next to the text box.';
+    var ri=refIndex(s),pages=/\b(page|pages|inside|menu pages)\b/.test(s)&&!/\b(cover|splash)\b/.test(s);
+    useRef(ri,pages?'page':'cover');return 'Using your photo '+(pages?'on the menu pages':'as the splash page art')+'.';}
   if((m=s.match(/\b(?:title|name|call it|rename it)\b(?: (?:it|to|as|should be|is))* ["“]?(.+?)["”]?$/))&&m[1]&&!/^(bigger|smaller)/.test(m[1])){PMS.ov.title=tidy(m[1]);render();return 'Retitled it '+PMS.ov.title+'.';}
   if((m=s.match(/\b(?:subtitle|tagline|second line)\b(?: (?:to|as|should be|is))* ["“]?(.+?)["”]?$/))&&m[1]){PMS.ov.sub=tidy(m[1]);render();return 'Subtitle updated.';}
   if(/\b(splash|cover|front page|first page)\b/.test(s)){
@@ -39743,7 +39774,7 @@ function stageCommand(q){
   if(/\b(modern|sans|clean) (font|type)/.test(s)||/\bfont\b.*\b(modern|sans|clean)\b/.test(s)){PMS.ov.df="'Space Grotesk','Inter',sans-serif";render();return 'Modern sans headings.';}
   if(/\b(bold|poster|condensed) (font|type)/.test(s)){PMS.ov.df="'Bebas Neue',Impact,sans-serif";render();return 'Bold poster headings.';}
   for(var k in COLORS){if(new RegExp('\\b'+k+'\\b').test(s)&&/\b(use|make|change|color|colour|accent|more|go|try|with)\b/.test(s)){PMS.ov.accent=COLORS[k];render();return 'Using '+k+' as the accent.';}}
-  if(/\b(reset|start over|undo (all|everything))\b/.test(s)){PMS.ov={};PMS.variant=0;render();return 'Reset to the original '+current().name+'.';}
+  if(/\b(reset|start over|undo (all|everything))\b/.test(s)){PMS.ov={};PMS.variant=0;DIRS.forEach(function(d){delete d._refPal;});render();return 'Reset to the original '+current().name+'.';}
   if(/\b(save|keep|love|like) (this|it|that)\b|\bsave (the )?design\b/.test(s)){saveCurrent();return 'Saved '+current().name+'. You have '+PMS.saved.length+' saved.';}
   if(/\b(use|load) (my|the) (menu|current menu|studio menu)\b/.test(s)){PMS.content=loadContent();PMS.page=0;render();return PMS.content.sample?'There is no menu open in Menu Studio yet, so I am still using the sample cantina menu.':'Loaded '+PMS.content.title+' from Menu Studio.';}
   if((m=s.match(/\b(?:menu )?for (?:an? |the )?(.+)$/))&&MENU_INTENT.test(s)){PMS.ov.title=PMS.ov.title||null;PMS.ov.subject=tidy(m[1]);}
@@ -39765,6 +39796,71 @@ function startDesigns(){
   say('Here is a first direction, '+current().name+', for '+(PMS.ov.title||c.title)+(c.sample?', using the sample cantina menu':'')+'. Say next for another look, tell me what to change, or say paint it and I will paint real artwork.');
 }
 
+/* ---------- reference photos ---------------------------------------------- */
+PMS.refs=[];
+function pickPhotos(){var f=document.getElementById('pmsFile');if(f)f.click();}
+function refIndex(s){var m=s.match(/\b(first|second|third|fourth|last|1|2|3|4)\b/);if(!m)return PMS.refs.length-1;return m[1]==='last'?PMS.refs.length-1:Math.min(PMS.refs.length-1,({first:0,second:1,third:2,fourth:3,'1':0,'2':1,'3':2,'4':3})[m[1]]);}
+/* Downscale to <=1280px JPEG so references are small enough to send, and
+   pull a palette from a 40x40 sample (most-saturated mid-tones first). */
+function loadRef(file){
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(file),img=new Image();
+    img.onload=function(){
+      var k=Math.min(1,1280/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.round(img.naturalWidth*k),h=Math.round(img.naturalHeight*k);
+      var c=document.createElement('canvas');c.width=w;c.height=h;var x=c.getContext('2d');x.drawImage(img,0,0,w,h);
+      var data=c.toDataURL('image/jpeg',.86);
+      var t=document.createElement('canvas');t.width=40;t.height=40;var tx=t.getContext('2d');tx.drawImage(img,0,0,40,40);
+      var px=tx.getImageData(0,0,40,40).data,bins={};
+      for(var i=0;i<px.length;i+=4){var r=px[i],g=px[i+1],b=px[i+2],key=(r>>5)+','+(g>>5)+','+(b>>5);var e=bins[key]||(bins[key]={n:0,r:0,g:0,b:0});e.n++;e.r+=r;e.g+=g;e.b+=b;}
+      var cols=Object.keys(bins).map(function(k2){var e=bins[k2];var r=e.r/e.n,g=e.g/e.n,b=e.b/e.n,mx=Math.max(r,g,b),mn=Math.min(r,g,b);return {hex:rgbToHex([r,g,b]),n:e.n,sat:mx?(mx-mn)/mx:0,lum:(r*.3+g*.59+b*.11)};});
+      cols.sort(function(a,b){return b.n-a.n;});
+      var vivid=cols.filter(function(q){return q.sat>.35&&q.lum>50&&q.lum<200;}).sort(function(a,b){return (b.sat*Math.sqrt(b.n))-(a.sat*Math.sqrt(a.n));});
+      var dark=cols.filter(function(q){return q.lum<70;})[0],light=cols.filter(function(q){return q.lum>200;})[0];
+      URL.revokeObjectURL(url);
+      res({name:file.name||'photo',data:data,pal:{accent:(vivid[0]||cols[0]).hex,art1:(vivid[1]||cols[1]||cols[0]).hex,art2:(vivid[2]||cols[2]||cols[0]).hex,dark:dark&&dark.hex,light:light&&light.hex}});
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);rej(new Error('unreadable image'));};
+    img.src=url;
+  });
+}
+function addFiles(list){
+  var files=Array.prototype.slice.call(list||[]).filter(function(f){return /^image\//.test(f.type)||/\.(jpe?g|png|webp|heic|heif|gif)$/i.test(f.name||'');});
+  if(!files.length){say('Those files are not photos I can read. Use JPG, PNG, WebP or iPhone photos.');return;}
+  var room=6-PMS.refs.length;if(room<=0){say('I can hold six reference photos. Remove one first.');return;}
+  files=files.slice(0,room);
+  Promise.all(files.map(function(f){return loadRef(f).catch(function(){return null;});})).then(function(rs){
+    rs=rs.filter(Boolean);if(!rs.length){say('I could not open those photos.');return;}
+    PMS.refs=PMS.refs.concat(rs);
+    if(!PMS.open){if(!PMS.content)PMS.content=loadContent();openStage();}else render();
+    say('Got '+(rs.length>1?rs.length+' photos':'your photo')+'. Say paint it and I will paint from '+(PMS.refs.length>1?'them':'it')+', use my photo as the cover, or match the photo colours.');
+  });
+}
+function useRef(i,where){
+  var r=PMS.refs[i];if(!r)return;var d=current();
+  PMS.art[d.id+':'+where+':'+PMS.variant]=r.data;
+  if(where==='cover')PMS.page=0;else if(PMS.page===0)PMS.page=1;
+  render();
+}
+function matchColors(i){
+  var r=PMS.refs[i];if(!r)return;
+  PMS.ov.accent=r.pal.accent;
+  DIRS.forEach(function(d){d._refPal={art1:r.pal.art1,art2:r.pal.art2};});
+  render();
+}
+function renderRefs(){
+  var t=document.getElementById('pmsRefs');if(!t)return;
+  if(!PMS.refs.length){t.innerHTML='';t.classList.remove('show');return;}
+  t.classList.add('show');
+  t.innerHTML=PMS.refs.map(function(r,i){
+    return '<div class="pmsRef"><img src="'+r.data+'" alt="Reference '+(i+1)+'"><span class="pmsRefN">'+(i+1)+'</span>'
+      +'<div class="pmsRefAct"><button onclick="PMS.useRef('+i+',\'cover\')">Cover</button><button onclick="PMS.useRef('+i+',\'page\')">Pages</button><button onclick="PMS.matchColors('+i+')">Tint</button></div>'
+      +'<button class="pmsRefX" aria-label="Remove photo '+(i+1)+'" onclick="PMS.removeRef('+i+')">×</button></div>';
+  }).join('')+'<button class="pmsRefAdd" onclick="PMS.pickPhotos()" aria-label="Add more photos">+</button>';
+}
+PMS.pickPhotos=pickPhotos;PMS.addFiles=addFiles;PMS.useRef=function(i,w){useRef(i,w);say(w==='cover'?'Photo '+(i+1)+' is the splash page art.':'Photo '+(i+1)+' is on the menu pages.');};
+PMS.matchColors=function(i){matchColors(i);say('Matched the colours to photo '+(i+1)+'.');};
+PMS.removeRef=function(i){PMS.refs.splice(i,1);render();};
+
 /* ---------- painting ------------------------------------------------------- */
 function paint(){
   if(PMS.painting){say('I am still painting the last one.');return;}
@@ -39775,12 +39871,13 @@ function paint(){
   PMS.painting=true;var b=document.getElementById('pmsPaint');if(b){b.textContent='Painting…';b.disabled=true;}
   document.body.classList.add('pms-painting');
   fetch(ART_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
-    body:JSON.stringify({prompt:artPrompt(d,c,where),size:'1024x1536',quality:'medium'})})
+    body:JSON.stringify({prompt:artPrompt(d,c,where)+(PMS.refs.length?' Take the subject, palette and mood from the reference photos.':''),size:'1024x1536',quality:'medium',
+      refs:PMS.refs.slice(0,4).map(function(r){return r.data;})})})
   .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.image)throw new Error(j.detail||j.error||('HTTP '+r.status));return j;});})
   .then(function(j){
     PMS.art[key]=j.image;
     if(where==='cover'&&!PMS.art[d.id+':page:'+PMS.variant])PMS.art[d.id+':page:'+PMS.variant]=j.image;
-    render();say('Done. How is that?');
+    render();say(j.refs?'Done, painted from your '+(j.refs>1?j.refs+' photos':'photo')+'. How is that?':'Done. How is that?');
   })
   .catch(function(e){
     var msg=String(e&&e.message||e);

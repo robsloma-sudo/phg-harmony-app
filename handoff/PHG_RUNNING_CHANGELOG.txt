@@ -1162,3 +1162,17 @@ I can say next or make changes ... with the splash page"
   Cost: one gpt-image-1 medium portrait per "paint it" (OpenAI billing on the existing key).
 - App 18.49.13 is on branch claude/phg-gallery-html-render-j246dy only; Netlify production (main) is still
   18.49.7 - the production push was blocked by the session permission gate. Rob must allow or merge.
+
+------------------------------------------------------------------------------
+PHG-20260928-HMS2 | USER_PROMPT + CHANGE | 2026-09-28 (build 18.49.14)
+Rob: "I also need an option added for the Harmony viewport when building the menus to be able to add in
+files for photos or something like that. So she has reference"
+- Menu stage: "+ Photo" button (file picker, multiple, JPG/PNG/WebP/iPhone photos) and drag-and-drop.
+  Up to 6 references, downscaled in the browser to <=1280px JPEG; palette pulled from each photo.
+  Tray thumbnails: Cover (photo = splash art), Pages (photo = page art), Tint (match its colours), x remove.
+  Voice/typed: "use my photo as the cover", "use the second photo on the pages", "match the photo colours",
+  "clear the photos", "paint it" (now paints FROM the photos). Photos stay in the browser session only.
+- phg-menu-art v2 deployed (ACTIVE, JWT): with refs it calls OpenAI images/edits with up to 4 reference
+  images (subject/palette/mood only, no copied text or logos); without refs, plain generation as before.
+- Verified in headless phone at 375 and 390 wide: no horizontal overflow, commands answer correctly.
+  Painting itself not live-tested from this container (supabase.co blocked by network policy here).
