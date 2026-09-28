@@ -1293,3 +1293,11 @@ Rob: "Harmony still isn't responding and talking back."
   SELECT/INSERT on phg.language_interpretations (0 rows ever; interpret inserts fail silently).
   Proposed fix `grant select, insert on phg.language_interpretations to service_role` - NOT applied,
   awaiting Rob.
+
+------------------------------------------------------------------------------
+PHG-20260928-DEPLOY3 | USER_PROMPT + PRODUCTION DEPLOY | 2026-09-28
+Rob: "Is it because my N8N service is down?" -> No: the app has no n8n dependency (voice = Supabase
+functions + OpenAI key). Rob: "Deploy."
+- Pushed main 95c192b = index.html 18.49.20 + netlify.toml (includes 18.49.19 attachments + cosmic menus,
+  18.49.20 voice fix). Rollback: redeploy main d8a3f14 (18.49.18). language_interpretations grant still
+  NOT applied (not approved).
