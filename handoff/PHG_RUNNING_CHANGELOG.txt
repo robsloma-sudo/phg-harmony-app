@@ -1362,3 +1362,24 @@ text comes out."
 ------------------------------------------------------------------------------
 PHG-20260928-DEPLOY5 | USER_PROMPT + PRODUCTION DEPLOY | 2026-09-28
 Rob: "deploy." - Pushed main 662fda8 = index.html 18.49.23 + netlify.toml. Rollback: redeploy main c856195 (18.49.22).
+
+------------------------------------------------------------------------------
+PHG-20260928-ACTION | USER_PROMPT + CHANGE + DB | 2026-09-28 (build 18.49.24, branch; DB + function live)
+Rob: "Now let's build the action shortcut button."
+- DB (applied): phg.harmony_notes (kind note/task/idea/reminder, body, tags, due_at, done, source app/shortcut)
+  and phg.harmony_device_keys (SHA-256 key_hash, key_hint, revoked_at); RLS on, no policies, anon/authenticated
+  revoked, service_role only. phg.harmony_is_member(user, account) SECURITY DEFINER yes/no check, execute
+  granted to service_role only (verified: real member true, random user false). Files:
+  supabase/migrations/20260928213000_harmony_notes_and_device_keys.sql, 20260928213500_harmony_is_member.sql.
+- EDGE phg-harmony-inbox v2 (ACTIVE, verify_jwt=false with its own auth): app login (JWT) or x-harmony-key.
+  Actions: inbox (gpt-4o-mini strict-JSON router -> note | answer | open; always logs the text if the model
+  fails), add_note, list_notes, update_note, delete_note, issue_key/list_keys/revoke_key (app login only,
+  5 active keys max). Returns {speak, url}; "open" url = app /?harmony=1&q=...
+- APP: manifest.webmanifest + icons/harmony-180/192/512.png (black-hole icon), apple-mobile-web-app tags
+  (Add to Home Screen opens full-screen at /?harmony=1). Deep link /?harmony=1[&q=] opens the Harmony view
+  after sign-in and runs q. Gear: Notes (list, done, delete) and iPhone Action button (create key shown once,
+  copy key + address, 7 Shortcut steps, key list with revoke). In the view "log / note / remind me / idea /
+  what did I log ..." goes to the inbox.
+- Tested headless with the inbox stubbed: deep link opened view + ran "make a menu" + cleaned URL; note
+  routed to inbox; Notes and key panels render and call the right actions; zero page errors.
+  NOT live-tested: the deployed inbox/OpenAI routing (supabase.co blocked from this container).

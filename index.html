@@ -7,6 +7,15 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Perfect Harmony Group</title>
+<!-- 18.49.24 home-screen app: Safari > Share > Add to Home Screen opens straight into Harmony -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#05070d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Harmony">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/icons/harmony-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/harmony-192.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script>
 /* SAY WHAT THE ERROR WAS.
@@ -6291,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.23 TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.24 ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -40346,6 +40355,39 @@ body.pms-open .hvxSheet button.nomenu{display:none!important}
 /* send = a tiny event horizon with an arrow */
 #hvxType .hvxSend{background:radial-gradient(circle,#010208 0 52%,#e0f7ff 57%,#67e8f9 61%,rgba(167,139,250,.5) 70%,transparent 76%);box-shadow:0 0 16px rgba(34,211,238,.45)}
 #hvxType .hvxSend svg{width:16px;height:16px;stroke:#e0f7ff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+#hvxPanel{position:absolute;z-index:8;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 14px);bottom:calc(env(safe-area-inset-bottom,0px) + 150px);
+  display:flex;flex-direction:column;border-radius:24px;overflow:hidden;font-family:'Inter',system-ui,sans-serif;color:#e2e8f0;
+  background:radial-gradient(140% 70% at 0% 0%,rgba(103,232,249,.10),transparent 50%),radial-gradient(140% 70% at 100% 100%,rgba(240,171,252,.08),transparent 55%),rgba(5,7,16,.97);
+  box-shadow:inset 0 0 0 1px rgba(103,232,249,.28),0 24px 70px rgba(0,0,0,.65);animation:hvxSheetIn .22s cubic-bezier(.2,.8,.3,1)}
+#hvxPanel[hidden]{display:none!important}
+.hvxPanelHead{display:flex;align-items:center;justify-content:space-between;padding:14px 10px 6px 6px}
+.hvxPanelX{width:36px;height:36px;border-radius:50%;border:0;background:rgba(240,171,252,.08);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.hvxPanelX svg{width:17px;height:17px;stroke:#f5d0fe;stroke-width:1.8;fill:none;stroke-linecap:round}
+.hvxPanelBody{flex:1;overflow-y:auto;padding:4px 16px 18px;-webkit-overflow-scrolling:touch}
+.hvxEmpty{color:#8b9ab3;font-size:14px;line-height:1.5;padding:18px 4px}
+.hvxNote{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid rgba(148,163,184,.12)}
+.hvxNote.done .hvxNoteBody{text-decoration:line-through;color:#64748b}
+.hvxCheck{flex:0 0 26px;width:26px;height:26px;border-radius:50%;border:0;padding:0;margin-top:2px;background:rgba(103,232,249,.06);box-shadow:inset 0 0 0 1.5px rgba(103,232,249,.5);color:#67e8f9;font-size:14px;cursor:pointer}
+.hvxNoteMain{flex:1;min-width:0}
+.hvxNoteMeta{display:flex;flex-wrap:wrap;gap:8px;font:500 11px/1.4 'Inter',sans-serif;color:#8b9ab3;margin-bottom:3px}
+.hvxNoteMeta .k{font:700 9.5px/1.6 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;padding:0 7px;border-radius:6px;background:rgba(103,232,249,.12);color:#67e8f9}
+.hvxNoteMeta .k-task{background:rgba(253,164,175,.14);color:#fda4af}.hvxNoteMeta .k-idea{background:rgba(240,171,252,.14);color:#f0abfc}.hvxNoteMeta .k-reminder{background:rgba(253,230,138,.14);color:#fde68a}
+.hvxNoteBody{font-size:15px;line-height:1.45;color:#f1f5f9;word-wrap:break-word}
+.hvxDel{flex:0 0 28px;width:28px;height:28px;border:0;border-radius:50%;background:none;color:#64748b;font-size:18px;cursor:pointer}
+.hvxLead{font-size:15px;line-height:1.5;color:#cbd5e1;margin:4px 0 14px}
+.hvxBig{width:100%;height:50px;border-radius:25px;border:0;cursor:pointer;font:600 16px 'Inter',sans-serif;color:#021018;background:linear-gradient(90deg,#67e8f9,#a78bfa 60%,#f0abfc);box-shadow:0 0 24px rgba(34,211,238,.35)}
+.hvxBig:disabled{opacity:.6}
+.hvxCopy{display:flex;gap:8px;align-items:center;margin:8px 0;padding:6px 6px 6px 12px;border-radius:14px;background:rgba(103,232,249,.06);box-shadow:inset 0 0 0 1px rgba(103,232,249,.25)}
+.hvxCopy code{flex:1;min-width:0;font:500 12px/1.4 'JetBrains Mono',monospace;color:#e0f7ff;word-break:break-all}
+.hvxCopy button{flex:0 0 auto;height:34px;padding:0 14px;border-radius:17px;border:0;background:#0e7490;color:#fff;font:600 13px 'Inter',sans-serif;cursor:pointer}
+.hvxWarn{margin:6px 0;padding:10px 12px;border-radius:12px;background:rgba(253,230,138,.10);color:#fde68a;font-size:13px;line-height:1.4}
+.hvxSteps{margin:16px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5;color:#cbd5e1}
+.hvxSteps b{color:#f1f5f9}.hvxSteps code,.hvxLead code{font:500 12px 'JetBrains Mono',monospace;color:#a5f3fc;background:rgba(103,232,249,.08);padding:1px 5px;border-radius:5px}
+.hvxKey{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid rgba(148,163,184,.12)}
+.hvxKey b{font-size:14px}.hvxKey span{font:500 12px 'JetBrains Mono',monospace;color:#8b9ab3}.hvxKey small{display:block;color:#8b9ab3;font-size:12px;margin-top:2px}
+.hvxKey.off{opacity:.5}
+.hvxKey button{height:32px;padding:0 12px;border-radius:16px;border:0;background:rgba(240,171,252,.12);color:#f5d0fe;font:600 12.5px 'Inter',sans-serif;cursor:pointer}
+.hvxFine{font-size:12px;line-height:1.5;color:#64748b;margin-top:16px}
 #hvxAttach{position:absolute;left:12px;right:12px;z-index:7;bottom:calc(var(--hvx-dock,0px) + env(safe-area-inset-bottom,0px) + 150px);display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 #hvxAttach:empty{display:none}
 body.hvx-typing #hvxAttach{bottom:calc(var(--hvx-dock,0px) + env(safe-area-inset-bottom,0px) + 76px)}
@@ -40484,6 +40526,113 @@ function askWithAttachments(q){
     .catch(function(e){var m=String(e&&e.message||e);if(typeof agentSay==='function')agentSay(/404|Failed to fetch/i.test(m)?'Attachment reading is not switched on yet.':'I could not read that: '+m);})
     .then(function(){window.PHG_PENDING=false;document.body.classList.remove('hvx-asking');});
 }
+/* ---------- NOTES + iPHONE ACTION BUTTON (18.49.24) ----------
+   phg-harmony-inbox holds the notes log and the personal Shortcut keys. In the
+   view, "log / note / remind me / idea ..." and "what did I log" go through the
+   same inbox the Shortcut uses, so the phone and the app share one log. */
+var INBOX_URL='https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-harmony-inbox';
+var HVX_NOTE=/^(?:(?:hey|ok|okay)?,?\s*harmony[,.]?\s*)?(?:(?:can|could|would|will) you\s+)?(?:please\s+)?(?:log|note|jot|remember|remind me|add (?:a |an )?(?:task|note|reminder|idea|to-?do)|idea\b|to-?do\b|put .{1,60} on my list)\b|\b(?:my notes|what did i (?:log|note|save|jot)|my tasks|my reminders|my to-?dos?|my list|my ideas|read (?:me )?my)\b/i;
+function inbox(body){
+  var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
+  if(!tok)return Promise.reject(new Error('Sign in to PHG first.'));
+  var acct=(typeof PHGAUTH!=='undefined'&&PHGAUTH.workspace&&PHGAUTH.workspace.account&&PHGAUTH.workspace.account.id)||null;
+  body.account_id=body.account_id||acct;
+  return fetch(INBOX_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify(body)})
+    .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j;});});
+}
+function harmonyInboxSay(q){
+  window.PHG_PENDING=true;
+  inbox({action:'inbox',text:q,tz:(Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Chicago')})
+    .then(function(j){if(typeof agentSay==='function')agentSay(j.speak||'Done.');var np=document.getElementById('hvxPanel');if(np&&np.dataset.kind==='notes')loadNotes();})
+    .catch(function(e){if(typeof agentSay==='function')agentSay('I could not save that: '+(e&&e.message||e));})
+    .then(function(){window.PHG_PENDING=false;});
+}
+function panel(kind,title,html){
+  var view=document.getElementById('phgView');if(!view)return null;
+  var p=document.getElementById('hvxPanel');
+  if(!p){p=document.createElement('div');p.id='hvxPanel';stop(p);view.appendChild(p);}
+  p.dataset.kind=kind;p.hidden=false;
+  p.innerHTML='<div class="hvxPanelHead"><div class="hvxSheetHead">'+title+'</div><button class="hvxPanelX" aria-label="Close">'+ICON.close+'</button></div><div class="hvxPanelBody">'+html+'</div>';
+  p.querySelector('.hvxPanelX').onclick=function(){p.hidden=true;};
+  return p;
+}
+function ago(iso){var s=(Date.now()-Date.parse(iso))/1000;if(s<60)return 'just now';if(s<3600)return Math.round(s/60)+' min ago';if(s<86400)return Math.round(s/3600)+' h ago';return new Date(iso).toLocaleDateString();}
+function openNotes(){panel('notes','Harmony · Notes','<div class="hvxEmpty">Loading your notes…</div>');loadNotes();}
+function loadNotes(){
+  var p=document.getElementById('hvxPanel');if(!p||p.dataset.kind!=='notes')return;
+  inbox({action:'list_notes',limit:100}).then(function(j){
+    var items=j.items||[],b=p.querySelector('.hvxPanelBody');
+    if(!items.length){b.innerHTML='<div class="hvxEmpty">Nothing logged yet. Say “log …”, “remind me to …” or “idea …”, or use the iPhone Action button.</div>';return;}
+    b.innerHTML=items.map(function(n){
+      return '<div class="hvxNote'+(n.done?' done':'')+'" data-id="'+n.id+'"><button class="hvxCheck" aria-label="'+(n.done?'Mark not done':'Mark done')+'">'+(n.done?'✓':'')+'</button>'
+        +'<div class="hvxNoteMain"><div class="hvxNoteMeta"><span class="k k-'+n.kind+'">'+n.kind+'</span>'+(n.due_at?'<span>due '+new Date(n.due_at).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span>':'')+'<span>'+ago(n.created_at)+(n.source==='shortcut'?' · iPhone':'')+'</span></div>'
+        +'<div class="hvxNoteBody">'+esc(n.body)+'</div></div><button class="hvxDel" aria-label="Delete note">×</button></div>';
+    }).join('');
+    Array.prototype.forEach.call(b.querySelectorAll('.hvxNote'),function(r){
+      var id=r.getAttribute('data-id');
+      r.querySelector('.hvxCheck').onclick=function(){var d=!r.classList.contains('done');r.classList.toggle('done',d);this.textContent=d?'✓':'';inbox({action:'update_note',id:id,done:d}).catch(function(){});};
+      r.querySelector('.hvxDel').onclick=function(){r.remove();inbox({action:'delete_note',id:id}).catch(function(){});};
+    });
+  }).catch(function(e){var b=p.querySelector('.hvxPanelBody');if(b)b.innerHTML='<div class="hvxEmpty">Could not load notes: '+esc(e&&e.message||e)+'</div>';});
+}
+function copyBtn(label,value){return '<div class="hvxCopy"><code>'+esc(value)+'</code><button data-copy="'+esc(value)+'">'+label+'</button></div>';}
+function wireCopy(root){Array.prototype.forEach.call(root.querySelectorAll('[data-copy]'),function(b){b.onclick=function(){var v=b.getAttribute('data-copy');
+  var done=function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(done,function(){prompt('Copy this',v);});else prompt('Copy this',v);};});}
+function openShortcut(){
+  var steps='<ol class="hvxSteps">'
+    +'<li>Tap <b>Create my key</b> below and copy the key and the address.</li>'
+    +'<li>Open the <b>Shortcuts</b> app, tap <b>+</b>, name it <b>Harmony</b>.</li>'
+    +'<li>Add <b>Dictate Text</b> (Stop Listening: After Pause).</li>'
+    +'<li>Add <b>Get Contents of URL</b>: paste the address · Method <b>POST</b> · Headers: add <code>x-harmony-key</code> = your key · Request Body <b>JSON</b>: add field <code>text</code> = <i>Dictated Text</i>.</li>'
+    +'<li>Add <b>Get Dictionary Value</b>: Value for <code>speak</code> in <i>Contents of URL</i>, then <b>Speak Text</b> (Dictionary Value).</li>'
+    +'<li>Add <b>Get Dictionary Value</b>: Value for <code>url</code> in <i>Contents of URL</i> → <b>If</b> it has any value → <b>Open URLs</b>.</li>'
+    +'<li>iPhone <b>Settings → Action Button → Shortcut → Harmony</b>. Also works with Back Tap, Siri (“Harmony”) or a widget.</li>'
+    +'</ol>';
+  var p=panel('shortcut','iPhone · Action button',
+    '<p class="hvxLead">Press the Action button and talk. Harmony logs notes, answers out loud, or opens the app when you ask to see something.</p>'
+    +'<div id="hvxKeyBox"><button class="hvxBig" id="hvxMakeKey">Create my key</button></div>'+steps
+    +'<div class="hvxSheetHead" style="padding-left:0;margin-top:14px">Your keys</div><div id="hvxKeys" class="hvxEmpty">Loading…</div>'
+    +'<p class="hvxFine">A key only lets that Shortcut log notes and talk to Harmony as you. It is shown once and stored scrambled. Revoke it here any time. Add to Home Screen from Safari’s Share menu to get the Harmony app icon.</p>');
+  if(!p)return;
+  p.querySelector('#hvxMakeKey').onclick=function(){
+    var btn=this;btn.disabled=true;btn.textContent='Creating…';
+    inbox({action:'issue_key',name:'iPhone Shortcut'}).then(function(j){
+      var box=p.querySelector('#hvxKeyBox');
+      box.innerHTML='<div class="hvxWarn">Copy your key now: it will not be shown again.</div>'+copyBtn('Copy',j.key)+'<div class="hvxSheetHead" style="padding-left:0;margin-top:10px">Address</div>'+copyBtn('Copy',j.endpoint);
+      wireCopy(box);loadKeys();
+    }).catch(function(e){btn.disabled=false;btn.textContent='Create my key';alertInline(p,'Could not create a key: '+(e&&e.message||e));});
+  };
+  loadKeys();
+}
+function alertInline(p,msg){var d=document.createElement('div');d.className='hvxWarn';d.textContent=msg;p.querySelector('.hvxPanelBody').prepend(d);}
+function loadKeys(){
+  var box=document.getElementById('hvxKeys');if(!box)return;
+  inbox({action:'list_keys'}).then(function(j){
+    var items=(j.items||[]);
+    if(!items.length){box.textContent='No keys yet.';return;}
+    box.className='';
+    box.innerHTML=items.map(function(k){return '<div class="hvxKey'+(k.revoked_at?' off':'')+'"><div><b>'+esc(k.name)+'</b> <span>…'+esc(k.key_hint)+'</span><small>'+(k.revoked_at?'revoked':'last used '+(k.last_used_at?ago(k.last_used_at):'never'))+'</small></div>'
+      +(k.revoked_at?'':'<button data-rev="'+k.id+'">Revoke</button>')+'</div>';}).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('[data-rev]'),function(b){b.onclick=function(){b.disabled=true;inbox({action:'revoke_key',id:b.getAttribute('data-rev')}).then(loadKeys).catch(loadKeys);};});
+  }).catch(function(e){box.textContent='Could not load keys: '+(e&&e.message||e);});
+}
+/* Deep link used by the home-screen icon and by the Shortcut's "open" answers:
+   /?harmony=1 opens the Harmony view once signed in; &q=... then runs that request. */
+(function deepLink(){
+  var p;try{p=new URLSearchParams(location.search);}catch(e){return;}
+  if(p.get('harmony')!=='1')return;
+  var q=(p.get('q')||'').slice(0,500);
+  try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){}
+  var tries=0;
+  (function wait(){
+    var ready=typeof PHGAUTH!=='undefined'&&PHGAUTH.workspace&&PHGAUTH.workspace.account&&typeof phgViewport==='function';
+    if(!ready){if(++tries<240)setTimeout(wait,500);return;}
+    if(!document.getElementById('phgView'))phgViewport();
+    if(q)setTimeout(function(){if(window.PMS)PMS.hear(q);else if(typeof harmonyAsk==='function')harmonyAsk(q);},1000);
+  })();
+})();
+
 /* ---------- CONVERSATION ROUTING (18.49.21) ----------
    In the Harmony view, ordinary conversation goes to Harmony's conversation
    brain (phg-harmony-attach in chat mode). Only business-report questions
@@ -40507,6 +40656,7 @@ if(typeof agentAnswer==='function'){
   var _answer=agentAnswer;
   agentAnswer=function(q){
     var inView=document.body.classList.contains('phg-view-open');
+    if(inView&&HVX_NOTE.test(String(q||'')))return harmonyInboxSay(String(q||'').trim());
     if(inView&&!HVX_FIN.test(String(q||''))){
       if(typeof harmonyCoreControl==='function'&&harmonyCoreControl(q))return;
       return harmonyChat(String(q||'').trim());
@@ -40550,7 +40700,9 @@ function build(){
   gm.innerHTML='<div class="hvxSheetHead">Harmony · Control</div>'
     +row('studio','spark','Menu Studio','Design menus with Harmony','warm')+'<hr>'
     +row('brief','doc','Brief','What Harmony is tracking')+row('recent','clock','Recent work','Your latest requests')
+    +row('notes','doc','Notes','Everything you have logged with Harmony')
     +row('tools','tools','Tools','Workflows and shortcuts')+row('chat','chat','Chat history','The full conversation')+'<hr>'
+    +row('shortcut','wave','iPhone Action button','Talk to Harmony without opening the app')
     +row('voice','wave','Voice & conversation','How she sounds and replies')+row('signout','exit','Sign out','')
     +row('close','close','Close Harmony view','');
   var pm=document.createElement('div');pm.id='hvxPlusMenu';pm.className='hvxSheet';pm.hidden=true;
@@ -40593,6 +40745,8 @@ function build(){
     var r=e.target&&e.target.closest&&e.target.closest('[data-k]'),k=r&&r.getAttribute('data-k');if(!k)return;closeSheets();
     if(k==='studio'){if(window.PMS){if(PMS.open)PMS.close();else PMS.hear('make a menu');}}
     else if(k==='brief'||k==='recent'||k==='tools'){if(typeof hviewMobileSelect==='function')hviewMobileSelect(k);}
+    else if(k==='notes')openNotes();
+    else if(k==='shortcut')openShortcut();
     else if(k==='chat'){document.body.classList.add('hvx-chat');if(typeof agentOpen==='function')agentOpen(true);if(typeof harmonyExpandedModeSet==='function')try{harmonyExpandedModeSet('expanded');}catch(_){}}
     else if(k==='voice'){closeView();if(typeof aiVoiceOpenSettings==='function')aiVoiceOpenSettings();}
     else if(k==='signout'){if(typeof phgAuthSignOut==='function')phgAuthSignOut();}
