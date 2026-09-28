@@ -27,10 +27,10 @@ for e in M["els"]:
         if k in e: r[k] = round(e[k], 2) if isinstance(e[k], float) else e[k]
     els.append(r)
 els.insert(0, {"kind": "image", "page": 1, "x_mm": mm(M["art"]["x"]), "y_mm": mm(M["art"]["y"]), "w_mm": mm(M["art"]["w"]), "h_mm": mm(M["art"]["h"]), "ref": "art_layer",
-               "note": "text-free SVG art layer (sky, gold-leaf sun, torn hills, cut-paper agave rosette, torn page edge, paper fibre); drawn 9 pt (3.175 mm) past trim on all sides"})
+               "note": "text-free SVG art layer: dusk sky, gold-leaf sun, torn prairie hills, corn-row field and agave field converging on one vanishing point and meeting at a torn seam, cut-paper agave rosette, torn page seam, three torn paper strata (dusk/late/evening) and the night ground band; drawn 9 pt (3.175 mm) past trim"})
 
 def col(kind, c): return [e for e in M["els"] if e["kind"] == kind and e.get("column") == c]
-cols = ["full", "pair_left", "pair_right"]
+cols = ["left", "right"]
 left_edges = {c: sorted({round(e["x"], 2) for e in col("item_name", c)}) for c in cols}
 price_rights = {c: sorted({round(e["x"] + e["w"], 2) for e in col("price", c)}) for c in cols}
 desc_left = {c: sorted({round(e["x"], 2) for e in col("description", c)}) for c in cols}
@@ -63,12 +63,12 @@ checks = {
  "price_right_edges_pt": price_rights, "price_right_edge_spread_pt": {c: spread(v) for c, v in price_rights.items()},
  "description_left_edges_pt": desc_left,
  "header_x_pt": head_x, "header_sizes_pt": head_sz, "subheader_sizes_pt": sub_sz, "one_style_per_level": len(head_sz) == 1 and len(sub_sz) == 1,
- "item_gaps_pt": [[round(g, 2) for g in s] for s in M["item_gaps"]],
- "item_gap_note": "10 pt between items inside a sub; 30 pt where a subhead intervenes (15 pt sub gap + 12 pt subhead line + 3 pt)",
- "section_blocks_pt": [{k: round(v, 2) for k, v in s.items()} for s in M["secs"]],
- "section_gaps_pt": [round(M["secs"][i + 1]["y"] - (M["secs"][i]["y"] + M["secs"][i]["h"]), 2) for i in range(len(M["secs"]) - 1)],
- "pair_column_bottoms_pt": [round(v, 2) for v in M["pair_bottoms"]], "columns_end_same_line": abs(M["pair_bottoms"][0] - M["pair_bottoms"][1]) < 0.5,
- "dead_space": "menu column ends on the bottom margin (last description line box 756 pt in both pair columns); the two section gaps (29 pt each) separate sections and are ~3x the item gap; the rail's empty sky above the sun frames the top tagline and is the page's one quiet zone",
+ "baseline_grid": "one 13 pt increment for the whole menu column: every name, description, subhead and label line is 13 pt; heads 26 pt (2 x 13); item gap 6.5 pt (half step); sub gap 13; section gap 26 (2 x 13); Cider head gap 19.5",
+ "name_baselines_pt": sorted({round(e["y"] + e["h"], 2) for e in M["els"] if e["kind"] == "item_name"}),
+ "section_boxes_pt": M["secboxes"],
+ "grid_columns_pt": [{"col": c["col"], "x": round(c["x"], 2), "w": round(c["w"], 2), "price_measure": round(c["measure"], 2)} for c in M["cols"]],
+ "pair_column_bottoms_pt": [round(v, 2) for v in M["pair_bottoms"]],
+ "dead_space": "the left column ends on the bottom margin; the shorter Wine column is closed by the night ground rising as a prairie swell under it (the empty field has a job: it ends the dusk-to-night descent)",
  "contrast_worst_pixel_min_by_kind": ctr, "contrast_all_at_least_4_5": min(ctr.values()) >= 4.5,
  "contrast_method": "text-free render at 300 dpi; each text line box narrowed to its ink box (+2 px); every background pixel compared with the text colour; the minimum ratio is reported",
  "contrast_per_element": m["contrast"],
@@ -81,22 +81,29 @@ checks = {
            "min_font_css_px": m["PH"]["min_font_px"], "prices_on_name_row": all(p["same_row"] for p in m["PH"]["pairs"]),
            "max_price_travel_frac": round(max(p["travel_frac"] for p in m["PH"]["pairs"]), 3), "contrast_min": min(c["worst_ratio"] for c in m["phone_contrast"])},
  "letter_png_px": m["png"], "fonts_loaded": m["fonts"],
- "every_item_has_description": all(NI[k]["desc"] for k in NI), "prices_match_draft": not price_mismatch and not printed_mismatch, "names_match_draft": not name_mismatch,
+ "every_item_has_description": all(NI[k]["desc"] for k in NI),
+ "items_without_printed_description": [k for k in NI if not NI[k]["desc"]],
+ "items_with_meta_missing": {k: NI[k]["meta"]["missing"] for k in NI if NI[k].get("meta", {}).get("missing")}, "prices_match_draft": not price_mismatch and not printed_mismatch, "names_match_draft": not name_mismatch,
  "price_mismatches": price_mismatch + printed_mismatch,
 }
-layout = {"round": 18, "concept": "Sun Behind the Page",
+layout = {"round": 18, "concept": "Where agave country meets the Iowa prairie at dusk",
  "page": {"width_mm": 215.9, "height_mm": 279.4, "width_pt": 612, "height_pt": 792, "margins_mm": {"top": 12.7, "right": 12.7, "bottom": 12.7, "left": 12.7}, "bleed_mm": 3.175},
- "grid": {"zones_pt": {"art_rail": [-9, 158], "wordmark_lane": [166, 262], "menu_column": [282, 576]}, "columns": {"full": [282, 576], "pair_left": [282, 420], "pair_right": [438, 576]},
-          "gutter_mm": mm(18), "baseline_pt": "15 pt name line / 14 pt ingredient line; 10 pt item gap; 29 pt section gap", "menu_column_width_mm": mm(294)},
- "palette": {"background": "#F2E9D6", "text": "#1D1815", "ingredient_text": "#40352D", "subhead": "#9A3B22", "section_tagline": "#5A4B3F", "rule": "#6B5A4C", "leader": "#9C8B7B",
-             "art": {"sky": ["#F1DEC2", "#E7B893", "#CF7F55"], "gold_accent_sun_only": "#C99532 -> #E4BF66", "hills": ["#B5532F", "#7C3322"], "agave": ["#244A3E", "#2E5A4B", "#3F7362", "#56866F"], "ground": "#162C25"}},
- "type": {"title": {"font": "Fraunces (opsz 144)", "size_pt": 96, "weight": 380, "note": "vertical, writing-mode vertical-rl, tracking .075em"},
-          "header": {"font": "Fraunces", "size_pt": 15, "weight": 600, "tracking_em": .2}, "section_tagline": {"font": "Fraunces italic", "size_pt": 9.5},
-          "subheader": {"font": "DM Sans", "size_pt": 7.5, "weight": 700, "tracking_em": .26}, "item": {"font": "Fraunces", "size_pt": 11, "weight": 600, "tracking_em": .11, "case": "caps"},
-          "description": {"font": "Fraunces (opsz 12)", "size_pt": 10.5, "weight": 400}, "price": {"font": "Fraunces tabular lining", "size_pt": 12.5, "weight": 600},
-          "rail_tagline": {"font": "DM Sans", "size_pt": 7.5, "weight": 500, "tracking_em": .38}},
+ "grid": {"columns": 2, "column_width_pt": 261, "gutter_pt": 18, "gutter_mm": mm(18), "columns_pt": {"left": [36, 297], "right": [315, 576]},
+          "price_measure_pt": round(M["cols"][0]["measure"], 2), "price_edges_pt": {"left": round(36 + M["cols"][0]["measure"], 2), "right": round(315 + M["cols"][0]["measure"], 2)},
+          "baseline_pt": 13, "zones_pt": {"hero_art": [-9, 246], "menu": [round(M["top"], 2), 756], "night_ground": "torn band from ~770 pt (left) rising to ~" + str(round(M["secboxes"]["wine_end"] + 22)) + " pt under Wine"}},
+ "palette": {"background": "#F2E9D6 (dusk) / #EADBC1 (late) / #E1CBA9 (evening) strata", "text": "#1D1815", "ingredient_text": "#40352D", "price": "#7C3322", "leader": "#7C3322",
+             "subhead": "#86301A", "wordmark": "#4A1B0E", "tagline": "#5A3A2A",
+             "art": {"sky": ["#F3DCBC", "#F2D2A8", "#EBB17F", "#E09567"], "sun_gold": "#EBC872 -> #D4A24A", "prairie_hills": ["#C9774E", "#A8472A"], "corn_rows": ["#C99A45", "#E0B865", "#6F8A4A"],
+                     "agave": ["#244A3E", "#2E5A4B", "#3F7362", "#56866F", "#4E7F6A", "#3F6E5B"], "night_ground": "#17262B", "fibre_rim": "#FBF6EA"}},
+ "type": {"title": {"font": "Fraunces (opsz 144, SOFT 30)", "size_pt": 88, "weight": 760, "tracking_em": -0.012, "note": "SVG text cut as paper: scissor-roughened edge, cream fibre rim, paper shadow; sun behind the first A"},
+          "venue_line": {"font": "DM Sans", "size_pt": 8.5, "weight": 700, "tracking_em": .3},
+          "header": {"font": "Fraunces (opsz 144, SOFT 50)", "size_pt": 25, "weight": 330, "case": "upper and lower"},
+          "subheader": {"font": "DM Sans", "size_pt": 8.5, "weight": 700, "tracking_em": .24, "case": "caps"},
+          "item": {"font": "Fraunces", "size_pt": 10, "weight": 620, "tracking_em": .1, "case": "caps"},
+          "description": {"font": "Fraunces (opsz 12)", "size_pt": 10.5, "weight": 400}, "price": {"font": "Fraunces tabular lining", "size_pt": 11.5, "weight": 640, "color": "#7C3322"},
+          "section_tagline": {"font": "Fraunces italic", "size_pt": 12, "text": "¡salud!"}, "pour_label": {"font": "DM Sans", "size_pt": 8.5, "weight": 700, "text": "PER POUR"}},
  "elements": els, "measured_checks": checks}
 (OUT / "layout.json").write_text(json.dumps(layout, ensure_ascii=False, indent=1))
-print(json.dumps({k: checks[k] for k in ["text_ink_margins_mm", "margins_equal_within_1mm", "all_text_inside_safe_inset", "item_name_left_edge_spread_pt", "price_right_edge_spread_pt", "one_style_per_level", "section_gaps_pt", "columns_end_same_line", "contrast_worst_pixel_min_by_kind", "price_pair_max_travel_frac", "every_row_over_40pct_has_leader", "legibility_1m_pass", "phone", "prices_match_draft", "every_item_has_description"]}, ensure_ascii=False, indent=0))
+print(json.dumps({k: checks[k] for k in ["text_ink_margins_mm", "margins_equal_within_1mm", "all_text_inside_safe_inset", "item_name_left_edge_spread_pt", "price_right_edge_spread_pt", "one_style_per_level", "section_boxes_pt", "grid_columns_pt", "contrast_worst_pixel_min_by_kind", "price_pair_max_travel_frac", "every_row_over_40pct_has_leader", "legibility_1m_pass", "phone", "prices_match_draft", "items_without_printed_description", "items_with_meta_missing"]}, ensure_ascii=False, indent=0))
 print({k: (v["cap_height_arcmin_at_1m"], v["x_height_arcmin_at_1m"], v["x_height_mm"]) for k, v in leg.items()})
 print(checks["bleed"]["bleed_at_least_3mm"])

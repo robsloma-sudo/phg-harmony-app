@@ -163,3 +163,39 @@ post-release list in file 2's runbook (step 7) and should be done before or with
 
 Observation (pre-existing, outside PHG-026): the three views grant `arwdDxtm` to anon and authenticated. They are
 aggregate (GROUP BY) views, so they are not updatable and only the SELECT part has any effect.
+
+## Pre-publish (after round 5): Edge function survey (spec should-fix 1)
+
+Method: `list_edge_functions` on project lqjtwabzmgjcufftuqvu, then `get_edge_function` for every function. I read
+each source for any read of `public.menus`. That means `from("menus")` or SQL `from public.menus`, a view built on
+it, or an RPC that reads it. Secrets were not copied. One function (probe-iowa) has a hard-coded token in its source.
+It is not reproduced here, and it has nothing to do with menus.
+
+The post-check listing returned 79 functions. Another log entry says "83". The count below is what the listing
+returned on 2026-09-28 after the rehearsal. Every version was the same before and after, and phg-expanded-data is
+still v4.
+
+| Function | Reads menus? | Filters is_current? | User-facing | Action |
+|---|---|---|---|---|
+| **phg-expanded-data** (v4, verify_jwt) | yes: `sb.from("menus")` in `restaurant_menu_map` | **no**: picks the newest by `captured_at` | yes (app map, index.html:28488) | **Step 0**: v5 prepared in `supabase/functions/phg-expanded-data/index.ts` with `.eq("is_current",true)`. The v4 copy for rollback is `v4.rollback.index.ts`. |
+| phg-menu-context (v2) | through the views `v_menu_composition`, `v_menu_brand_presence` | yes: both views filter `m.is_current` | yes | none |
+| phg-capability-router (v5), phg-execute-readonly (v6), phg-conversation (v2) | through the RPCs `phg_menu_composition` / `phg_brand_presence`, which read the two views above | yes (in the views) | yes | none |
+| submit-menu (v8) | writes through `submit_menu` (file 1 replaces the RPC) | n/a (writer) | no | none. Its stale header comment is a step-9 follow-up. |
+| promote-menus (v4) | writes through `promote_clean_menu_batch` | n/a (writer) | no | none. The out.status follow-up is step 9. |
+| the other 72 functions | no read of `public.menus`. They use other tables (menu_visual_*, staging_menu_extract, menu_source_candidates, public_menu_experiences, phg.*, licences, observations, ...) or no menu data at all | n/a | - | none |
+
+DB side, from pg_depend / pg_rewrite and a prosrc scan: the only objects that reference `public.menus` are:
+- the views `v_menu_brand_presence`, `v_menu_category_share` and `v_menu_composition`, which all filter `is_current`;
+- `submit_menu`.
+
+`v_pipeline_status` has a CTE named "menus", but it is built over staging and accounts, not `public.menus`.
+
+**Result:** only one deployed function reads menus without the current-menu filter: **phg-expanded-data**. It is the
+whole step-0 list in file 2's runbook.
+
+Live numbers today (before any repair):
+- 6,162 venues have menus. 0 have no current menu and 0 have two current menus.
+- At 190 venues the newest menu is not the current one, so v4 already shows a non-current menu at those 190 venues.
+- In rehearsal, after Step 2 that count is 407. The new release-gate row showed that the v5 read returns the Step-2
+  menu at 3 of 3 changed venues, and that the v4 read would have returned a different menu at all three:
+  ACC-CO-LED-01-55836, ACC-CO-LED-01-64433 and ACC-CO-LED-02-41796.
