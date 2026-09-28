@@ -774,7 +774,7 @@
    "role": "wm",
    "font_px_css": 44,
    "print_pt": 33.0,
-   "min_contrast": 2.37,
+   "min_contrast": 13.23,
    "box_css": [
     22.5,
     39,
@@ -787,7 +787,7 @@
    "role": "sub",
    "font_px_css": 10.5,
    "print_pt": 7.88,
-   "min_contrast": 2.13,
+   "min_contrast": 11.88,
    "box_css": [
     24,
     98,

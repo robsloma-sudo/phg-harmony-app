@@ -152,7 +152,7 @@ def art_svg(W, H, Hz, G, P, flags, rule_x0=None):
 
 LETTER = dict(steps=6, run=16, glow_x_top=520, band=10, hx=556, hw=74, h_top=64, set_w=44, set_h=30,
               bins_top=300, bins_n=3, arc_d=16)
-PHONE = dict(steps=6, run=10, glow_x_top=258, band=8, hx=262, hw=40, h_top=92, set_w=24, set_h=18,
+PHONE = dict(steps=6, run=8, glow_x_top=286, band=8, hx=284, hw=36, h_top=92, set_w=22, set_h=18,
              bins_top=170, bins_n=2, arc_d=10)
 HZ_L, HZ_P = 204, 250
 
