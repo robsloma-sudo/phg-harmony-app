@@ -2238,3 +2238,13 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   37 item pages, 3 near-identical recent. Promotion: 5,395 staging rows promoted, 2,772 as alternates, 339 duplicate
   of current, 9 duplicate item set. Cron 7/13: 120/120 runs succeeded in 30 min. Job 2 still paused.
 - Resumed: inbox v29 deploy, recipe reload m2_14-70, map/voice survey (all restarted after the container restart).
+
+2026-09-29 PHG-051 explorer v2 (additive part applied; swap NOT done)
+- Applied migration phg_explorer_v2_view_and_builder (= draft 10 parts A+B): v_public_drink_explorer_v2 (live staging
+  rows only; census falls back to the venue ZIP via phg_census_zcta; staging_id appended) and
+  phg_explorer_build_next() which builds mv_*_next copies of all six explorer MVs with unique indexes (future refreshes
+  can be CONCURRENT). Nothing live reads these yet.
+- Build started as one-off pg_cron job 25 'phg-explorer-build-next' (unschedules itself first; 30 min timeout).
+- Next: compare _next vs live (rows, CO/NY income coverage, prices), write + review the swap (part C), then point
+  cron 8 at a concurrent refresh (part D).
+- phg-harmony-data v13 committed (c1e0b7d): price/income/age/sort params, drink_map, view.query; deploy running.
