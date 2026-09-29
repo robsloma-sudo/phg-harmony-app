@@ -2014,3 +2014,8 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   approval; all researchers told not to use Firecrawl.
 - Loaded live (13 chunks, all counts match): 41 sources, 24 creators, 41 recipes (148 lines, 84 variants), 46 preps
   (135 lines), 223 attributions, 57 uses. Recipe grades: B 30, C 11 (top: Oaxaca Old Fashioned B79, Revolver B79).
+- phg-harmony-inbox v21: classic recipe answers now come from the graded library (phg_mix) through the read-only
+  gateway when the user and project are known: best-graded spec for exactly that drink (name or aka), spoken with
+  up to two sources and one named variation offered; the recipe card shows grade, build, method, glass, garnish,
+  sources and variations. Falls back to public.cocktail_reference. Gateway test: Manhattan -> B77, 4 sources,
+  3 variations, 72 ms.
