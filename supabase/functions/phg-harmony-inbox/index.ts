@@ -23,6 +23,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
    v22 SPEED: planner and spoken answers are streamed; with the app's voice settings (tts) the first sentence is
    voiced while the rest is written and returned as voice_first; notes, library and reference lookups run in parallel;
    {warm:true} wakes the function.
+   v24: cocktail VERSIONS (one drink, many full recipes; the named version wins, others are offered).
    v23: OpenAI priority processing (OPENAI_SERVICE_TIER, falls back automatically); per-turn timings in the turn log. */
 
 const cors = {
@@ -77,7 +78,7 @@ const RECIPE_VOICE = [
 ].join(" ");
 
 const LIST_VOICE = [
-  "You are Harmony, an expert bartender speaking hands-free. List four or five well-known variations of the drink (include their house version first if one is given), one short sentence each on what makes it different, then ask which one they want walked through. Plain speech, no lists or markdown, under 110 words.",
+  "You are Harmony, an expert bartender speaking hands-free. List four or five versions of the drink (their house version first if one is given; then the versions in PHG's graded library, by name, if listed; then other well-known variations), one short sentence each on what makes it different, then ask which one they want walked through. Plain speech, no lists or markdown, under 110 words.",
 ].join(" ");
 
 const CREATE_VOICE = [
@@ -585,13 +586,25 @@ Deno.serve(async (req) => {
       const nm = drink.normalize("NFC").replace(/[^\p{L}\p{N} '\-]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 60).replace(/'/g, "''");
       if (nm) {
         try {
-          const sql = `select r.key, r.name, r.family, r.method, r.glass, r.garnish, r.quality_grade, r.quality_score, r.verification,
- (select json_agg(json_build_object('i', l.ingredient, 'a', l.amount, 'u', l.unit, 'n', l.note) order by l.position) from phg_mix.recipe_lines l where l.recipe_key = r.key) as lines,
- (select json_agg(json_build_object('n', v.name, 'c', v.change)) from (select * from phg_mix.recipe_variants v2 where v2.recipe_key = r.key limit 6) v) as variants,
- (select json_agg(distinct s.title) from phg_mix.attributions a join phg_mix.sources s on s.key = a.source_key where a.record_type = 'recipe' and a.record_key = r.key) as sources
-from phg_mix.recipes r
-where lower(r.name) = lower('${nm}') or exists (select 1 from unnest(r.aka) x where lower(x) = lower('${nm}'))
-order by r.quality_score desc nulls last limit 1`;
+          /* v24 VERSIONS: a drink has many full recipes (classic, traditional, Tommy's, Cadillac, frozen, happy hour...).
+             The drink is found by name inside what they asked ("cadillac margarita" -> Margarita); the version they named
+             wins, otherwise the drink's reference spec; the other versions are listed so Harmony can offer them. */
+          const N = (x: string) => `regexp_replace(lower(${x}), '[^a-z0-9 ]', '', 'g')`;
+          const sql = `with w as (select ${N(`'${nm}'`)} as q),
+d as (select dr.key from phg_mix.drinks dr, w where w.q = ${N("dr.name")} or w.q like '%' || ${N("dr.name")} || '%'
+  or exists (select 1 from unnest(dr.aka) a where w.q = ${N("a")}) order by length(dr.name) desc limit 1),
+c as (select r.*, case when ${N("r.name")} = w.q then 0
+    when r.version_label is not null and w.q like '%' || ${N("split_part(r.version_label, ' (', 1)")} || '%' then 1
+    when r.is_reference then 2 else 3 end as rnk
+  from phg_mix.recipes r, w
+  where r.drink_key = (select key from d) or ${N("r.name")} = w.q or exists (select 1 from unnest(r.aka) x where ${N("x")} = w.q))
+select c.key, c.name, c.family, c.method, c.glass, c.garnish, c.quality_grade, c.quality_score, c.verification, c.version_label, c.version_type, c.serve,
+ (select json_agg(json_build_object('i', l.ingredient, 'a', l.amount, 'u', l.unit, 'n', l.note) order by l.position) from phg_mix.recipe_lines l where l.recipe_key = c.key) as lines,
+ (select json_agg(json_build_object('n', v.name, 'c', v.change)) from (select * from phg_mix.recipe_variants v2 where v2.recipe_key = c.key limit 6) v) as variants,
+ (select json_agg(distinct s.title) from phg_mix.attributions a join phg_mix.sources s on s.key = a.source_key where a.record_type = 'recipe' and a.record_key = c.key) as sources,
+ (select json_agg(json_build_object('label', coalesce(o.version_label, o.name), 'type', o.version_type, 'grade', o.quality_grade) order by o.is_reference desc, o.quality_score desc nulls last)
+    from phg_mix.recipes o where o.drink_key = c.drink_key and o.key <> c.key) as versions
+from c order by c.rnk, c.quality_score desc nulls last limit 1`;
           const t0 = Date.now();
           const res: any = await Promise.race([admin.rpc("phg_harmony_query", { p_account: accountId, p_user: userId, p_sql: sql, p_max_rows: 5 }), new Promise((r) => setTimeout(() => r({ data: null }), 4000))]);
           const d = res?.data;
@@ -624,7 +637,7 @@ order by r.quality_score desc nulls last limit 1`;
       const w = await speakLlm(Deno.env.get("OPENAI_WEB_MODEL") || "gpt-4.1", RECIPE_VOICE + " Search the web for a well-regarded recipe for EXACTLY the drink asked for (keep every modifier, e.g. a chocolate Manhattan uses chocolate bitters or crème de cacao, not a plain Manhattan) from a reputable cocktail source (for example Difford's Guide, PUNCH, Liquor.com, Imbibe), follow its measurements, and name the source.", `Find and speak a recipe for: ${drink}. What they said: ${text}`, { tools: [{ type: "web_search_preview" }] });
       speakText = w.text || (await speakLlm(model, RECIPE_VOICE, `Drink: ${drink}. The web search failed; use the classic spec and say it's the classic.` + (ref ? ` PHG reference: ${JSON.stringify(ref)}` : ""))).text;
     } else if (src === "list") {
-      speakText = (await speakLlm(model, LIST_VOICE, `Drink: ${drink}.` + (house.length ? ` Their house version: ${JSON.stringify(house[0])}` : " They have no house version.") + (ref ? ` Classic reference: ${JSON.stringify(ref)}` : "") + (variantsKnown.length ? ` Variations in PHG's reference: ${variantsKnown.join(", ")}.` : ""))).text;
+      speakText = (await speakLlm(model, LIST_VOICE, `Drink: ${drink}.` + (house.length ? ` Their house version: ${JSON.stringify(house[0])}` : " They have no house version.") + (ref ? ` Classic reference: ${JSON.stringify(ref)}` : "") + (variantsKnown.length ? ` Variations in PHG's reference: ${variantsKnown.join(", ")}.` : "") + (lib ? ` Versions in PHG's graded library: ${[lib.version_label || lib.name, ...(lib.versions || []).map((v: any) => v.label)].filter(Boolean).join(", ")}.` : ""))).text;
       return reply(speakText || `I couldn't list ${drink} variations just now.`, "listen", inApp ? { view: { type: "recipe", title: `${drink} variations`, spec: speakText, rows: [] } } : {}, { title: `${drink} variations`, detail: speakText, url: cardUrl });
     } else if (src === "create") {
       const convo = ctx.turns.map((t: any) => `User: ${t.u}\nHarmony: ${t.h}`).join("\n");
@@ -633,7 +646,8 @@ order by r.quality_score desc nulls last limit 1`;
     } else if (lib) {
       /* v21: the library spec, with where it comes from and its grade */
       const srcs = (lib.sources || []).slice(0, 3).join(", ");
-      speakText = (await speakLlm(model, RECIPE_VOICE + " Say it is PHG's library spec and name up to two of its sources. If variations are given, end by offering one of them in a few words (for example 'Jeremy Oertel's version uses more rye').", `Drink: ${lib.name}. What they said: ${text}. PHG library spec (grade ${lib.quality_grade}, sources: ${srcs}): ${JSON.stringify({ lines: lib.lines, method: lib.method, glass: lib.glass, garnish: lib.garnish })}. Named variations: ${JSON.stringify((lib.variants || []).slice(0, 3))}`)).text;
+      const others = (lib.versions || []).slice(0, 6).map((v: any) => v.label).filter(Boolean);
+      speakText = (await speakLlm(model, RECIPE_VOICE + " Say it is PHG's library spec (and which version, if a version label is given) and name up to two of its sources. If other versions of this drink are listed, end by naming up to three of them in a few words and offering one (for example 'I also have Tommy's and a Cadillac version'); otherwise, if variations are given, offer one of them.", `Drink: ${lib.name}${lib.version_label ? ` (version: ${lib.version_label})` : ""}. What they said: ${text}. PHG library spec (grade ${lib.quality_grade}, sources: ${srcs}): ${JSON.stringify({ lines: lib.lines, method: lib.method, glass: lib.glass, garnish: lib.garnish })}. Other versions of this drink in PHG's library: ${others.length ? others.join(", ") : "none"}. Named variations: ${JSON.stringify((lib.variants || []).slice(0, 3))}`)).text;
     } else {
       speakText = (await speakLlm(model, RECIPE_VOICE, `Drink: ${ref?.cocktail_name || drink}. What they said: ${text}. ` + (ref ? `PHG classic reference spec: ${JSON.stringify(ref)}` : "No PHG reference; use the widely accepted classic spec for exactly this drink."))).text;
     }
@@ -643,9 +657,9 @@ order by r.quality_score desc nulls last limit 1`;
     const useLib = !!lib && src !== "internet" && src !== "house" && src !== "list" && src !== "create";
     const src2 = src === "house" ? "Your house recipe" : src === "internet" ? "From the web" : useLib ? `PHG library · grade ${lib.quality_grade} (${lib.quality_score})` : ref ? "PHG classic reference" : "Classic spec";
     const rv = useLib
-      ? [["Build", (lib.lines || []).map((l: any) => [l.a, l.u, l.i].filter((x: any) => x != null && x !== "").join(" ")).join(" · ")], ["Method", lib.method], ["Glass", lib.glass], ["Garnish", lib.garnish], ["Sources", (lib.sources || []).join(", ")], ["Variations", (lib.variants || []).map((v: any) => v.n).join(", ")]].filter((x) => x[1])
+      ? [["Build", (lib.lines || []).map((l: any) => [l.a, l.u, l.i].filter((x: any) => x != null && x !== "").join(" ")).join(" · ")], ["Method", lib.method], ["Glass", lib.glass], ["Garnish", lib.garnish], ["Sources", (lib.sources || []).join(", ")], ["Variations", (lib.variants || []).map((v: any) => v.n).join(", ")], ["Other versions", (lib.versions || []).map((v: any) => v.label).join(", ")]].filter((x) => x[1])
       : ref && src !== "internet" && src !== "house" ? [["Glass", ref.glassware], ["Garnish", ref.garnish], ["Method", ref.method]].filter((x) => x[1]) : [];
-    const view = { type: "recipe", title: src === "house" && house[0] ? house[0].name : useLib ? lib.name : ref?.cocktail_name && src !== "internet" ? ref.cocktail_name : drink, spec: speakText, rows: [["Source", src2], ...rv, ...(!useLib && variantsKnown.length ? [["Also", variantsKnown.slice(0, 5).join(", ")]] : [])] };
+    const view = { type: "recipe", title: src === "house" && house[0] ? house[0].name : useLib ? lib.name + (lib.version_label && !String(lib.name).toLowerCase().includes(String(lib.version_label).toLowerCase().split(" (")[0]) ? ` · ${lib.version_label}` : "") : ref?.cocktail_name && src !== "internet" ? ref.cocktail_name : drink, spec: speakText, rows: [["Source", src2], ...rv, ...(!useLib && variantsKnown.length ? [["Also", variantsKnown.slice(0, 5).join(", ")]] : [])] };
     return reply((speakText || `I couldn't pull that recipe just now.`) + " Want another version, or anything else?", "listen", inApp ? { view } : {}, last);
   }
   return reply(say || "Say that again?", "listen");
