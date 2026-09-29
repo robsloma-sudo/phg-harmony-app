@@ -2291,3 +2291,11 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   FL and NJ pages refuse automated requests (403); GA page has no direct file link.
 - ingest-state-licenses v5 (03f485a): adds MI (master xlsx), WA (weekly On Premise xlsx), CA (daily zipped CSV),
   ME (FOAA xlsx) with download-link discovery; probe + load running.
+- PHG-051 round-2 build (job 26) SUCCEEDED; all six *_next MVs exist (not readable by the app). Gate numbers
+  (live -> next): CO 16,920 -> 37,325 rows, 773 -> 1,641 venues, census income 0% -> 100%; IA 11,627 -> 15,144,
+  522 -> 770, 99.6% -> 100%; NY 9,110 -> 75,549, 383 -> 3,218, 0% -> 99.1%. NY 'unclassified' 25,176 rows avg $239
+  (food/outliers) skews NY means; drink sections 50,373.
+- Swap BLOCKED on the app: index.html heavyLoad pulls select=* per state through getAll (40-page cap, no ORDER BY)
+  -> NY would be silently truncated. App change (explicit columns, stable order with staging_id fallback, higher cap
+  with warning, unclassified loaded in the background) being built as 18.49.45; then safety review round 2 +
+  swap rehearsal before the real swap.

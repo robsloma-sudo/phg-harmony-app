@@ -398,3 +398,9 @@ PHG-051 (P0, open) Market explorer is 4 days stale and missing most menus. mv_dr
   fallback (coalesce city demo, phg_census_zcta by left(postal_code,5)) + staging_id appended; build *_next MVs
   alongside (no reader locks), unique indexes so future refreshes are CONCURRENT, recreate the 4 dependents on the
   new MV, then swap names in one short transaction (lock_timeout 3 s); re-enable refresh as a concurrent job.
+PHG-051 update: v2 *_next MVs built and checked (see changelog). Swap waits on app 18.49.45 (no truncation for NY
+  75,549 rows) + safety review round 2 + rehearsal. Data-quality follow-up: NY 'unclassified' rows avg $239 (food items,
+  bottle prices, misparsed prices) - exclude from price stats or classify.
+PHG-052 (open) Licence sources needing another free route: CT (open data = brand registrations), VA (TLS chain not
+  trusted), FL + NJ (403 to automated requests), GA (no direct file link). Options: records requests, or a browser-
+  based download by Rob.
