@@ -1914,3 +1914,9 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
     repo sha256 3554b8be26eba5b5...
   phg-harmony-inbox v16 (in-app surface: no open-the-app offers, returns view + menu_lookup, ranked classic lookup)
     repo sha256 826f7bd9f8b625c0...
+
+[2026-09-29] DRAFTS-02-06-FIXED
+- Safety-review fixes applied to migration drafts 02-06 (files only, NOT applied). Apply order 02 -> 04 -> 03 -> 05 -> 06.
+  All parse; 06 section 3 md5 still matches live (bc1b0d15...). Follow-ups logged as PHG-045.
+- Live-only edge function sources copied into supabase/functions/ (secret scan clean).
+- Waiting on Rob's explicit permission to apply 02-06 to the live database.

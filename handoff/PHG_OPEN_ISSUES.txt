@@ -341,3 +341,9 @@ PHG-043 | TABLED | P3 | Cross-project export/link (folders dropped 2026-09-29: e
 PHG-044 | OPEN | P2 | needs approval | Live read of phg_design for Harmony: a service_role-only SECURITY DEFINER accessor
   (e.g. public.phg_design_digest(domains, min_confidence)) so phg-harmony-attach reads principles live instead of the
   design_knowledge.ts snapshot (2026-09-29). Existing phg_designer_query gets "permission denied for schema phg_design".
+
+PHG-045 (P1, open) Per-project ingredient/prep keys: once draft 04 swaps the global unique keys for per-project ones,
+  four live functions still look up ingredient_key / prep_key with no account filter:
+  phg_upsert_draft_ingredient, phg_resolve_invoice_line_new_ingredient, phg_command_recipe_candidate_prepare,
+  phg_persist_generated_menu_candidates. Patch them (add account scoping) together with, or right after, applying 04.
+  Also: the 'party' entity still shares the aliases 'distributor'/'supplier' with the live 'vendor' entity.
