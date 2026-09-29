@@ -2258,3 +2258,14 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   upsert now de-duplicates; IL 'COMBINATION' at stores/stations/groceries no longer counts as on-premise (v2). Reruns
   in progress. CT timed out on TLS (retry later), DC ArcGIS layer URL moved (find the new layer).
 - Next: geocode (free: Census geocoder batch API) and match to existing venues; add CA/FL/MI/VA/KY (file downloads).
+- PHG-051 round 1 build (job 25) failed after ~8 min on review blocker B1 (duplicate venue_key ilili|new york|NY in
+  the venue profile). MISTAKE: the job's command put cron.unschedule inside the same transaction as the build, so each
+  failure rolled the unschedule back and the job re-ran every minute (3 runs). Cancelled the runs, unscheduled job 25.
+  Round 2 (draft 10 rewritten for safety review round 1 = 68: B1-B4, S1-S10) parts A+B applied as
+  phg_explorer_v2_round2_view_and_builder; build job 26 started 15:56 UTC and was unscheduled by hand once running.
+- Licences: MO 13,745 (7,642 on-premise) and OR 17,884 (8,026) loaded after the per-batch de-dupe fix. IL recomputed
+  from raw with the store rule: 19,110 on-premise (was 20,459). Removed a 1-hour "sticky on_premise" rule from
+  phg_license_upsert (migration phg_license_upsert_no_sticky) that had blocked the IL reclassification.
+  Totals: TX 78,806 / IL 33,240 / OR 17,884 / MO 13,745 = 143,675 licences, 67,891 on-premise.
+- Cocktail library reload complete: 255 recipes, 104 drinks, 198 styles, 73 creators, 105 sources (B 58, C 177, D 18,
+  E 2); one reference per drink.
