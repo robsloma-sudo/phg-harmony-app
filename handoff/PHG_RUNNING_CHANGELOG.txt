@@ -2284,3 +2284,10 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
 - Limits: live `venues` pins carry no price (price filters work on drink_map pins); Menu Library has no price/rating;
   panel paging is client-side over the rows the server returned.
 - Deployed 18.49.44 to main (ddde0cc); Netlify deploy 6abbe0459dcf2800081a0f39 ready 15:59 UTC.
+- Licences round 2: DC 2,328 (1,734 on-premise after the retail-class fix) and KY/Louisville 5,523 (1,817 after the
+  NQ4 malt-drink + caterer fix) loaded via ArcGIS, with coordinates. CT removed: data.ct.gov gwv2-eswx 'ACTIVE' rows are
+  mostly brand registrations (LBD.*; 23,718 deleted, 260 LCT rows kept, on_premise unknown) -> CT needs a manual
+  source. VA blocked: abc.virginia.gov certificate chain not trusted (UnknownIssuer) by pg_net/curl or Deno fetch.
+  FL and NJ pages refuse automated requests (403); GA page has no direct file link.
+- ingest-state-licenses v5 (03f485a): adds MI (master xlsx), WA (weekly On Premise xlsx), CA (daily zipped CSV),
+  ME (FOAA xlsx) with download-link discovery; probe + load running.
