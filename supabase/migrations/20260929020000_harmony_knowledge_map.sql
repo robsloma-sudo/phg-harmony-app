@@ -1,4 +1,4 @@
--- DRAFT — NOT APPLIED. Needs Rob's approval. Spec: handoff/HARMONY_CONVERSATION_MODEL.md §4, §4.1-4.3, §4C, §10
+-- APPLIED 2026-09-29 (Rob approved; safety review rounds 1-2 fixed; forward + rollback dry-run clean). Spec: handoff/HARMONY_CONVERSATION_MODEL.md §4, §4.1-4.3, §4C, §10
 --
 -- What this does (plain English)
 --   Gives Harmony a map of PHG data and one safe door to ask it questions.
@@ -112,7 +112,6 @@
 --          (select count(*) from pg_policy where polname in ('harmony_read','harmony_scope','menu_designer_read_h')) policies;
 --   commit;
 
-begin;
 set local lock_timeout = '3s';   -- off-peak; on 55P03 nothing is applied, retry later
 
 -- ---------------------------------------------------------------------------------------------------------------
@@ -696,5 +695,3 @@ returns void language sql volatile security definer set search_path = phg, pg_te
 $$;
 revoke all on function public.phg_harmony_query_finish(bigint, int, int, text) from public, anon, authenticated;
 grant execute on function public.phg_harmony_query_finish(bigint, int, int, text) to service_role;
-
-commit;

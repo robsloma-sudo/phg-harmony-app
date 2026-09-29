@@ -1895,3 +1895,9 @@ Rob: "Is there a way to speed up Harmony's processing time? It's taking a while 
   speaking flag continuous; zero page errors. Expected real saving ~1.5-2.5 s on longer replies.
 - Next candidates: trim the planner input (recent notes every turn), shorter end-of-speech wait (0.8-0.9 s),
   a spoken "one moment" for slow paths (web recipes), faster planner model if accuracy holds.
+- APPLIED migration 20260929020000_harmony_knowledge_map (after safety review round 1 = 66 with 5 blockers, fixed;
+  round 2 = 83 no blockers, 5 small fixes done; forward + scripted rollback dry-run clean). Live verification:
+  34 entities, 109 access rules, 7 paths, role phg_harmony_reader, harmony_read on 66 tables, restrictive
+  harmony_scope on 25, menu_designer_read_h on 10, RLS newly on 24 phg tables (only phg_menu_designer was affected
+  and keeps its access: sees phg.menu_projects). Gateway: public.phg_harmony_query(account, user, sql) counted
+  public.accounts = 41,886 in 40 ms (log id 1, finished). Callers must enforce their own timeout.
