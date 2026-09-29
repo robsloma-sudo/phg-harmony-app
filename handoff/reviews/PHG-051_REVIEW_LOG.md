@@ -534,3 +534,27 @@ S-R3-3 are done and the timing is recorded here.
   mv_menu_dev_venue_profile: CO 380 -> 840, IA 248 -> 282, NY 210 -> 1,837. mv_dash_pins 28,286.
 - Timed refresh: one-off pg_cron job 27 `CALL public.refresh_explorer_v2()` started 16:45:00 UTC and was unscheduled
   after start. Result below when it finishes.
+
+## Timed refresh and cron 8 switch (2026-09-29, lead developer)
+- Job 27: `CALL refresh_explorer_v2()`, unscheduled after start -> 'job canceled' at 37 s. pg_cron cancels a running
+  job when it is unscheduled, so a one-off job must stay scheduled (use a date-specific schedule) until it ends.
+- Job 28: `CALL refresh_explorer_v2()` failed at exactly 2 min: "canceling statement due to statement timeout" in
+  mv_drink_explorer. The server's statement_timeout bounds the whole CALL (one statement). A procedure cannot SET it
+  (proconfig forbids COMMIT), and a SET in front of CALL makes the string an implicit transaction block (no COMMIT).
+- **Design change (for review):** the refresh is now a multi-statement cron command, the project's SET-first
+  convention (jobs 5/7/13/15/16/18/20/22/23/24). On PG13+ statement_timeout applies per statement, and COMMIT between
+  statements ends each implicit transaction:
+  `SELECT public.phg_explorer_refresh_lock(); SET statement_timeout='30min'; SET lock_timeout='5s'; REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_drink_explorer; COMMIT; ...(dash_pins, menu_dev_venue_profile, dash_sections, dash_breakdown, dash_filters, each + COMMIT)...; SELECT pg_advisory_unlock(hashtext('phg_explorer'));`
+  phg_explorer_refresh_lock() (migration phg_explorer_refresh_lock_helper) takes the session advisory lock or raises
+  'explorer busy'. On any error the rest of the string is skipped and pg_cron closes the connection, which releases
+  the lock. refresh_explorer_v2() remains but is unused.
+- Job 29 (this command, one-off): **succeeded in 12 min 57 s** (16:54:00 -> 17:06:57 UTC). Nearly all
+  of it was mv_drink_explorer (held for ~12 min; readers are not blocked, since CONCURRENTLY takes ExclusiveLock only).
+  pg_stat after the run: drink_explorer live 128,018 / dead 0; pins 28,286; venue profile 2,959; sections 18;
+  breakdown 15,713; filters 1,437; no row changes (data unchanged since the build). Advisory lock holders afterwards: 0.
+- **cron 8 switched:** schedule '17 * * * *' (hourly; a 13 min run rules out */10), active, command as above.
+- **Watchdog** job 30 'phg_explorer_refresh_watchdog' every 5 min: pg_cancel_backend on an active refresh older than 40 min.
+- Rollback: `cron.alter_job(8, active := false)`, then swap_back per the runbook (recorded old command:
+  'select public.refresh_explorer()', '*/10 * * * *', active false).
+- Follow-ups: drop *_old after a week of clean runs; ORDER BY in the classify_item pick; speed up mv_drink_explorer
+  (EXPLAIN the v2 view; the city-demographics LATERAL and serve_format() are the likely costs).
