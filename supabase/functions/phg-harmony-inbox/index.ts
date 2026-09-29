@@ -23,6 +23,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
    v22 SPEED: planner and spoken answers are streamed; with the app's voice settings (tts) the first sentence is
    voiced while the rest is written and returned as voice_first; notes, library and reference lookups run in parallel;
    {warm:true} wakes the function.
+   v28: a named venue's menu skips the data router (menu_venue from the planner).
    v27: Shortcut turns plan while the name check runs (saves ~2 s when no name is corrected).
    v25: drink -> STYLE -> recipes (a style can hold hundreds of recipes; best-graded or the style's reference is given).
    v24: cocktail VERSIONS (one drink, many full recipes; the named version wins, others are offered).
@@ -59,7 +60,7 @@ const CONVERSE = [
   "clarify: when a request is open-ended or has meaningfully different versions, ask ONE short question offering 2 to 5 concrete choices before answering. Recipes: 'Do you want the classic Manhattan, your house Manhattan, one from the internet, a few variations to pick from, or should we build one together?'. Data: ask for the missing piece. Prices, venues, bars and menus need a place: if they gave no city or state, ask which one (PHG covers Iowa, Colorado and New York, or all three). Prices also need the drink; venues may need the kind of place. Menus: which venue and city. Do NOT clarify when they already chose, answered your question in context, said 'just', 'quick' or 'the usual', or for notes.",
   "recipe: once the drink and version are known. recipe_drink = the drink exactly as they named it, keeping every modifier (a 'chocolate Manhattan' is NOT a Manhattan; 'smoked', 'spicy', 'frozen', 'mezcal' versions keep that word). recipe_source = classic | house | internet | list | create. If they already said where they want it from ('from the internet', 'my house one', 'the classic'), use that and do not ask again. Twists that are not classics (chocolate Manhattan, spicy margarita) default to internet or create, never to the classic spec of the base drink.",
   "Understand context: read the whole conversation. Short answers ('the second one', 'yeah the internet', 'Denver', 'my house') answer your last question. Never repeat a question they already answered. Sound like a sharp bartender colleague, not a form: one natural question at a time, and only when it changes the answer.",
-  "data: PHG data they want answered (NOM distilleries and where they are, distilleries in a town, venues or bars in a city, a venue's real menu, drink prices and averages, top brands, spirit categories on menus, a venue's drinks profile, ZIP census demographics, label approvals, how much data PHG has, the menu pipeline right now (are menus uploading, how fast, what is waiting, is anything stuck)); data_query = the full, specific question.",
+  "data: PHG data they want answered (NOM distilleries and where they are, distilleries in a town, venues or bars in a city, a venue's real menu, drink prices and averages, top brands, spirit categories on menus, a venue's drinks profile, ZIP census demographics, label approvals, how much data PHG has, the menu pipeline right now (are menus uploading, how fast, what is waiting, is anything stuck)); data_query = the full, specific question. When they want to see or hear ONE specific venue's menu, also fill menu_venue (venue name, city, two-letter state or empty); otherwise menu_venue is null.",
   "note: they want something logged or remembered (task, reminder, idea, note); note_text cleaned up, kind, tags, due_iso (ISO 8601 with their offset) only if they gave a time. Never clarify notes.",
   "read_back: they want the last result read out loud instead of opened ('don't open it', 'just tell me', 'read it to me', 'what were they'); put the full read-out, from context.last.detail, in say, in natural speech.",
   "Questions PHG data can answer (where a NOM distillery is, even 'show me on a map'; venues, menus, prices, brands, demographics) are ALWAYS data first, so they hear the real answer; the app offer comes after. offer_open: only when they explicitly ask to open the app or the screen and there is nothing to look up first; you may ASK 'Want me to open it in the Harmony app?' (put that question in say). open_screen: ONLY when your previous turn asked whether to open the app AND they now clearly agree (yes, sure, do it, let's do it, approve, open it, go ahead). Otherwise never open anything. open_query = what to show if it isn't the last result.",
@@ -90,7 +91,7 @@ const CREATE_VOICE = [
 const KIND_ENUM = KINDS;
 const SCHEMA = {
   type: "object", additionalProperties: false,
-  required: ["action", "say", "recipe_drink", "recipe_source", "data_query", "open_query", "note_text", "kind", "tags", "due_iso", "repair", "heard_fix"],
+  required: ["action", "say", "recipe_drink", "recipe_source", "data_query", "open_query", "note_text", "kind", "tags", "due_iso", "repair", "heard_fix", "menu_venue"],
   properties: {
     action: { type: "string", enum: ["clarify", "recipe", "data", "note", "read_back", "offer_open", "open_screen", "answer", "end"] },
     say: { type: "string" },
@@ -103,6 +104,8 @@ const SCHEMA = {
     tags: { type: "array", items: { type: "string" } },
     due_iso: { type: ["string", "null"] },
     repair: { type: "string", enum: ["none", "item", "version", "place", "source", "intent", "amount", "time"] },
+    menu_venue: { anyOf: [{ type: "null" }, { type: "object", additionalProperties: false, required: ["venue", "city", "state"],
+      properties: { venue: { type: "string" }, city: { type: "string" }, state: { type: "string" } } }] },
     heard_fix: {
       type: "object", additionalProperties: false, required: ["wrong", "right", "kind"],
       properties: { wrong: { type: "string" }, right: { type: "string" }, kind: { type: "string", enum: ["brand", "venue", "cocktail", "ingredient", "place", "term"] } },
@@ -539,15 +542,25 @@ Deno.serve(async (req) => {
   }
   if (out.action === "data") {
     const q = String(out.data_query || text).trim();
+    /* v28 SPEED: a specific venue's menu goes straight to the menu (the data router's extra model call is skipped) */
+    const mv = out.menu_venue && typeof out.menu_venue === "object" ? out.menu_venue : null;
+    const menuQ = mv && String(mv.venue || "").trim() ? { q: String(mv.venue).trim(), city: String(mv.city || "").trim(), state: String(mv.state || "").trim().toUpperCase().slice(0, 2) } : null;
+    /* phrased the way the app's menu finder (parseMenuLookup) reads it: "menu for NAME in CITY, ST" */
+    const menuSay = menuQ ? `menu for ${menuQ.q}` + (menuQ.city ? ` in ${menuQ.city}${menuQ.state ? ", " + menuQ.state : ""}` : menuQ.state ? ` in ${menuQ.state}` : "") : "";
+    let routed: any = null;
     try {
+      if (menuQ) { marks.menu_fast = 1; routed = { ok: true, dj: { source: "menu_lookup", params: menuQ } }; }
+      else {
       const dr = await fetch(`${url}/functions/v1/phg-harmony-data`, {
         method: "POST", headers: { "Content-Type": "application/json", apikey: anon, "x-phg-internal": service },
         /* v18: who is asking, so questions outside the fixed catalog go through the knowledge-map gateway */
         body: JSON.stringify({ prompt: q, user: userId, account: accountId, ask_fallback: true }),
       });
-      const dj = await dr.json().catch(() => ({}));
+      routed = { ok: dr.ok, dj: await dr.json().catch(() => ({})) };
+      }
+      const dr = { ok: routed.ok }, dj = routed.dj;
       marks.data = Date.now() - T0;
-      if (dr.ok && dj.source === "menu_lookup" && inApp) return reply("Opening that menu.", "listen", { menu_lookup: q });
+      if (dr.ok && dj.source === "menu_lookup" && inApp) return reply("Opening that menu.", "listen", { menu_lookup: menuSay || q });
       if (dr.ok && dj.source === "menu_lookup") {
         /* v20: phone locked (the Shortcut): read the venue's drinks out loud from PHG's menu data, then offer the screen */
         try {

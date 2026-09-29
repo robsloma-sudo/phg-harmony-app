@@ -2142,3 +2142,9 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   Note: a later record re-declared a few style keys (e.g. ds_margarita_skinny as 'batch'); insert-if-missing kept
   the first definition, which is the right one. Loader to warn on conflicting style re-declarations (small TODO).
 - Deployed phg-harmony-inbox v27 (byte-identical apart from the known regex escape; boot check 200).
+- Harmony speed, round 2 (Rob: "Deploy"):
+  * phg-harmony-inbox v28: the planner fills menu_venue {venue, city, state} when they ask for ONE venue's menu;
+    the menu then opens (app) or is read out (Shortcut) without the data router's extra model call (~3 s saved).
+    The app gets "menu for NAME in CITY, ST", which its menu finder (parseMenuLookup) was tested to read.
+  * phg-harmony-data v11: OpenAI priority processing on its three model calls (router, SQL writer, spoken
+    answer), with the same automatic fallback as the inbox.

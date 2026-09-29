@@ -524,12 +524,27 @@ function fastPlan(t: string): { source: string; params: P } | null {
 /* v6: ASK. Anything the fixed catalog can't answer is written as one read-only SELECT and run through
    public.phg_harmony_query (the knowledge-map gateway: select only, table allowlist, project-scoped RLS, logged).
    One repair round on a planner error. The gateway does not bound its own runtime, so the caller does (12 s). */
+/* v11 SPEED: OpenAI priority processing, like the inbox (OPENAI_SERVICE_TIER; "default" turns it off). If the account
+   refuses it, it is switched off for this instance and the request is sent again without it. */
+let TIER: string | null = (Deno.env.get("OPENAI_SERVICE_TIER") || "priority").trim();
+if (TIER === "default" || TIER === "auto" || !TIER) TIER = null;
+async function oaCall(oa: string, body: Record<string, unknown>): Promise<Response> {
+  const send = () => fetch("https://api.openai.com/v1/responses", {
+    method: "POST", headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
+    body: JSON.stringify(TIER ? { ...body, service_tier: TIER } : body),
+  });
+  let r = await send();
+  if (TIER && r.status === 400) {
+    const t = await r.clone().text().catch(() => "");
+    if (/service_tier|priority/i.test(t)) { console.log(JSON.stringify({ tier_off: t.slice(0, 200) })); TIER = null; r = await send(); }
+  }
+  return r;
+}
+
 async function askData(db: any, oa: string, question: string, user: string, account: string): Promise<Result> {
   const sqlModel = Deno.env.get("OPENAI_SQL_MODEL") || "gpt-4.1";
   const gen = async (extra: string) => {
-    const r = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST", headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const r = await oaCall(oa, ({
         model: sqlModel, max_output_tokens: 700,
         instructions: "Write ONE read-only PostgreSQL SELECT that answers the question from these tables only. Return JSON. title: a short screen title. display: table, bars (label + one number per row) or map (rows have lat and lng). label_col / value_col name the columns for bars. Prefer readable column aliases (venue, city, drink, price). Never select raw ids unless asked.\n" + SCHEMA_DOC,
         input: question + extra,
@@ -537,7 +552,7 @@ async function askData(db: any, oa: string, question: string, user: string, acco
           type: "object", additionalProperties: false, required: ["sql", "title", "display", "label_col", "value_col"],
           properties: { sql: { type: "string" }, title: { type: "string" }, display: { type: "string", enum: ["table", "bars", "map"] }, label_col: { type: "string" }, value_col: { type: "string" } } } } },
       }),
-    });
+    );
     const j = await r.json().catch(() => ({}));
     let t = typeof j.output_text === "string" ? j.output_text : "";
     if (!t && Array.isArray(j.output)) for (const o of j.output) for (const c of (o?.content || [])) if (c?.type === "output_text") t += c.text || "";
@@ -573,12 +588,10 @@ async function askData(db: any, oa: string, question: string, user: string, acco
   /* one or two spoken sentences from the real rows */
   let speak = "";
   try {
-    const r = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST", headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: Deno.env.get("OPENAI_DATA_MODEL") || "gpt-4o-mini", max_output_tokens: 160,
+    const r = await oaCall(oa, ({ model: Deno.env.get("OPENAI_DATA_MODEL") || "gpt-4o-mini", max_output_tokens: 160,
         instructions: "Answer the question out loud in one or two short sentences using ONLY these rows (they are on screen too). Say how many there are and the most useful numbers (prices with dollars). No lists, no markdown, never invent anything.",
         input: JSON.stringify({ question, total_rows: rows.length, rows: rows.slice(0, 25) }) }),
-    });
+    );
     const j = await r.json().catch(() => ({}));
     let t = typeof j.output_text === "string" ? j.output_text : "";
     if (!t && Array.isArray(j.output)) for (const o of j.output) for (const c of (o?.content || [])) if (c?.type === "output_text") t += c.text || "";
@@ -614,15 +627,13 @@ Deno.serve(async (req) => {
   let plan: { source: string; params: P } | null = b.source && SOURCES[b.source] ? { source: b.source, params: b.params || {} } : fastPlan(ask);
   if (!plan) {
     if (!oa) return json({ error: "planner unavailable" }, 500);
-    const r = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST", headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const r = await oaCall(oa, ({
         model: Deno.env.get("OPENAI_DATA_MODEL") || "gpt-4o-mini", max_output_tokens: 300,
         instructions: "Pick the one PHG data source that answers the request and fill its parameters (empty string when unused). state is a US two-letter code (we have IA, CO, NY). group_by is one of city, venue_type, venue, state_code, item, subfamily, serve_format. section is one of cocktails, beer, wine, liquor, non_alcoholic. family is one of tequila, mezcal, whiskey, vodka, gin, rum, brandy, liqueur, wine, beer, non_alcoholic. Use menu_lookup when they want to SEE a specific venue's menu document. Use ask for any other question about PHG's data that the sources above cannot answer as asked (a list with several filters such as all the margaritas at one venue in one city, a specific venue's drinks, comparisons, counts, rankings, or the business's own recipes, invoices, costs, sales, labor, budgets and notes). Use none only when it is not about data.\nSources:\n" + Object.entries(SOURCES).map(([k, v]) => `${k}: ${v.about}`).join("\n") + "\nmenu_lookup: open a specific venue's menu document (q=venue, city, state).",
         input: ask,
         text: { format: { type: "json_schema", name: "phg_data_plan", strict: true, schema: PLAN_SCHEMA } },
       }),
-    });
+    );
     const raw = await r.json().catch(() => ({}));
     let t = typeof raw.output_text === "string" ? raw.output_text : "";
     if (!t && Array.isArray(raw.output)) for (const o of raw.output) for (const c of (o?.content || [])) if (c?.type === "output_text") t += c.text || "";
