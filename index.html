@@ -41089,6 +41089,12 @@ function harmonyConverse(q){
       if(j.voice_first&&window.phgPrevoiceSet)phgPrevoiceSet(j.voice_first,j.speak);
       if(j.menu_lookup&&typeof harmonyFindMenu==='function'){harmonyFindMenu(j.menu_lookup);return;}
       if(j.view&&window.harmonyDataShow)window.harmonyDataShow(j.view);
+      /* 18.49.44: a reply may drive the screen: actions:[{action:'filter.set'|'filter.clear'|'sort.set'|'page.go'|'page.size'|'data.refine'|'map.fit'|any harmonyUI action,...}].
+         Each runs quietly (the reply's own speak says what happened); unknown actions are ignored. */
+      if(Array.isArray(j.actions)&&window.harmonyUI&&typeof window.harmonyUI.exec==='function')j.actions.slice(0,12).forEach(function(a){
+        if(!a||typeof a!=='object'||typeof a.action!=='string')return;
+        try{var b={};for(var k in a)b[k]=a[k];if(b.quiet==null)b.quiet=true;window.harmonyUI.exec(b);}catch(e){if(window.console)console.warn('harmony action',a&&a.action,e);}
+      });
       if(typeof agentSay==='function')agentSay(j.speak);
       if(j.next==='end')HCONV.ctx='';
     })
@@ -41453,11 +41459,17 @@ body.hvx-data.pms-open #hdPanel{display:none}
 .hdCatItem button{align-self:flex-start;text-align:left;border:0;cursor:pointer;font:500 12px/1.35 'Inter',system-ui,sans-serif;color:#cffafe;background:rgba(103,232,249,.08);border-radius:10px;padding:6px 9px}
 body.hvx-data-loading #hdPanel .hdBody{opacity:.45;transition:opacity .2s}
 @media (prefers-reduced-motion:reduce){#hdPanel,.hdBar .t i,.hdPin b,.hdDonut svg path{animation:none!important}}
+/* 18.49.44 voice filters: what is applied to the view, paging, Clear */
+.hdRefine{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px;padding:7px 10px;border-radius:12px;background:rgba(103,232,249,.06);box-shadow:inset 0 0 0 1px rgba(103,232,249,.18);font:500 12px/1.35 'Inter',system-ui,sans-serif;color:#cffafe}
+.hdRefine .t{flex:1;min-width:0}
+.hdRefine em{font-style:normal;color:#94a3b8;font-variant-numeric:tabular-nums}
+.hdRefine button{border:0;cursor:pointer;font:600 12px/1 'Inter',system-ui,sans-serif;color:#cffafe;background:rgba(103,232,249,.12);border-radius:8px;padding:6px 9px}
+.hdRefine button:disabled{opacity:.35;cursor:default}
 </style>
 <script id="phgDataCanvasV1">
 (function(){
 var DATA_URL='https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-harmony-data';
-var HD={map:null,last:null};
+var HD={map:null,last:null,base:null,orig:null,query:null,baseQuery:null};
 function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function svg(d){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+d+'</svg>';}
 var IC={
@@ -41521,9 +41533,13 @@ function close(){
   HD.pins=[];HD.groups={};HD.sel=null;
   document.body.classList.remove('hvx-data');
 }
-function show(view){
+function show(view,opt){
   var p=panel();if(!p||!view)return;
   if(HD.map){try{HD.map.remove();}catch(e){}HD.map=null;}
+  /* 18.49.44: a fresh view becomes the base that voice filters refine; a refined copy keeps the base
+     (opt.refine), and a server re-query swaps the unrefined rows (opt.orig) and its query (opt.query) */
+  if(!(opt&&opt.refine)){HD.base=view;HD.orig=view;HD.query=HD.baseQuery=(view.query&&view.query.source)?view.query:null;}
+  else{if(opt.orig)HD.orig=opt.orig;if(opt.query!==undefined)HD.query=opt.query;}
   HD.last=view;
   p.querySelector('.hdKind').textContent=KIND[view.type]||'';
   p.querySelector('.hdTitle').textContent=view.title||'';
@@ -41540,11 +41556,31 @@ function show(view){
   else if(t==='place')h='<div class="hdCard hdPlace" style="position:static;max-height:none">'+placeHTML(view)+'</div>';
   else if(t==='catalog')h=catalogHTML();
   else h='<div class="hdEmpty">'+esc(view.title||'Nothing to show')+'</div>';
+  if(view._refine)h=refineBarHTML(view._refine)+h;
   b.innerHTML=h;p.hidden=false;document.body.classList.add('hvx-data');
+  if(view._refine)wireRefineBar(b);
   if(t==='place')wirePlace(b,view);
   if(t==='catalog')b.querySelectorAll('[data-ask]').forEach(function(el){el.onclick=function(e){e.stopPropagation();ask(el.getAttribute('data-ask'));};});
 }
+/* 18.49.44: the voice-filter strip above a refined view: what is applied, paging, and Clear */
+function refineBarHTML(r){
+  return '<div class="hdRefine"><span class="t">'+esc(r.note||'')+'</span>'+(r.pages>1?'<button type="button" data-rf="prev" aria-label="Previous page"'+(r.page<=1?' disabled':'')+'>&#8249;</button><em>'+r.page+' / '+r.pages+'</em><button type="button" data-rf="next" aria-label="Next page"'+(r.page>=r.pages?' disabled':'')+'>&#8250;</button>':'')+(r.clear?'<button type="button" data-rf="clear">Clear</button>':'')+'</div>';
+}
+function wireRefineBar(root){
+  root.querySelectorAll('[data-rf]').forEach(function(el){el.onclick=function(e){e.stopPropagation();var a=el.getAttribute('data-rf'),V=window.phgVoiceData;if(!V)return;if(a==='clear')V.clear();else V.page(a==='next'?1:-1);};});
+}
 var REGION={MX:[[14.5,-117.5],[32.7,-86.7]],US:[[24.5,-125],[49.5,-66.9]]};
+function pinNum(){for(var i=0;i<arguments.length;i++){var v=arguments[i];if(v==null||v==='')continue;var n=typeof v==='number'?v:parseFloat(String(v).replace(/[$,\s]/g,''));if(isFinite(n))return n;}return null;}
+function pinAttrs(p){
+  var sub=String(p.sub||''),parts=sub.split('·').map(function(x){return x.trim();}),loc=(parts[0]||'').split(',');
+  var st=p.state||p.state_code||((loc[1]||'').trim().match(/^[A-Z]{2}$/)?(loc[1]||'').trim():'');
+  var vt=p.venue_type||(parts[1]&&/^[a-z_ ]+$/.test(parts[1])?parts[1]:'');
+  var avg=sub.match(/avg \$(\d+(?:\.\d+)?)/i),dr=sub.match(/(\d+) drinks?/i);
+  return {name:String(p.label||''),city:String(p.city||(loc.length>1?loc[0]:'')||'').trim(),state:String(st||'').toUpperCase(),venue_type:String(vt||''),
+    price:pinNum(p.price,p.avg_price,p.median_price,p.item_price,avg&&avg[1]),income:pinNum(p.income,p.median_income),age:pinNum(p.median_age,p.age),
+    rating:pinNum(p.rating),drinks:pinNum(p.items,p.drink_items,p.drinks,dr&&dr[1],p.weight),
+    text:(String(p.label||'')+' '+sub+' '+(p.brands||[]).join(' ')+' '+(p.items_text||'')).toLowerCase()};
+}
 function drawMap(el,view,body){
   if(typeof L==='undefined'){el.innerHTML='<div class="hdEmpty">The map library did not load.</div>';return;}
   var m=L.map(el,{zoomControl:false,attributionControl:true,preferCanvas:true,worldCopyJump:true});HD.map=m;
@@ -41561,7 +41597,9 @@ function drawMap(el,view,body){
       :L.circleMarker([p.lat,p.lng],{radius:p.weight?Math.min(9,4+Math.sqrt(p.weight)/3):5.5,weight:1.2,color:'#a5f3fc',fillColor:'#22d3ee',fillOpacity:.7});
     var kind=p.kind||(p.nom?'distillery':'venue');
     var g=HD.groups[kind]||(HD.groups[kind]=L.layerGroup().addTo(m));
-    var rec={p:p,mk:mk,kind:kind};HD.pins.push(rec);
+    /* 18.49.44: every original pin field stays on the marker (mk.phgPin) and a normalised copy of the
+       filterable ones (city, state, venue_type, price, income, age, rating, drinks) sits on rec.a */
+    var rec={p:p,mk:mk,kind:kind,g:g,a:pinAttrs(p),off:false};HD.pins.push(rec);mk.phgPin=p;
     mk.bindPopup(pop).addTo(g);
     mk.on('click',function(){HD.sel=rec;openPlace(rec);});
   });
@@ -41621,6 +41659,8 @@ function ask(q){
     window.PHG_PENDING=false;
     if(j.source==='menu_lookup'&&typeof window.harmonyFindMenu==='function')return window.harmonyFindMenu(q);
     if(j.source==='none'||!j.view){if(typeof window.harmonyChat==='function')return window.harmonyChat(q);return say('I do not have data for that yet.');}
+    /* 18.49.44: remember how this view was made, so a spoken filter can ask the server again */
+    if(!j.view.query&&j.source&&j.source!=='ask'&&j.source!=='none'&&j.source!=='menu_lookup')j.view.query={source:j.source,params:j.params||{}};
     show(j.view);
     say(j.speak||'Here it is.');
   })
@@ -41643,7 +41683,7 @@ function pinScore(rec,q){
   return hit/qt.length*.9;
 }
 function findPins(q){
-  return HD.pins.filter(function(r){return !HD.hidden[r.kind];}).map(function(r){return {r:r,s:pinScore(r,q)};})
+  return HD.pins.filter(function(r){return !HD.hidden[r.kind]&&!r.off;}).map(function(r){return {r:r,s:pinScore(r,q)};})
     .filter(function(x){return x.s>=.6;}).sort(function(a,b){return b.s-a.s;});
 }
 function selectPin(rec,zoom){
@@ -41653,7 +41693,13 @@ function selectPin(rec,zoom){
   m.flyTo([rec.p.lat,rec.p.lng],Math.max(m.getZoom(),zoom||12),{duration:1.4});
   setTimeout(function(){try{rec.mk.openPopup();}catch(e){}},1500);
 }
-function visible(){return HD.pins.filter(function(r){return !HD.hidden[r.kind];});}
+function visible(){return HD.pins.filter(function(r){return !HD.hidden[r.kind]&&!r.off;});}
+/* 18.49.44: voice filters hide single pins (rec.off) on top of the per-kind layers */
+function filterPins(pred){
+  var n=0;HD.pins.forEach(function(r){var on=!pred||!!pred(r);r.off=!on;try{if(on){if(!r.g.hasLayer(r.mk))r.mk.addTo(r.g);n++;}else if(r.g.hasLayer(r.mk))r.g.removeLayer(r.mk);}catch(e){}});
+  if(HD.sel&&HD.sel.off){HD.sel=null;if(HD.selMk&&HD.map){try{HD.map.removeLayer(HD.selMk);}catch(e){}}HD.selMk=null;}
+  return n;
+}
 function fitVisible(){var m=HD.map,b=visible().map(function(r){return [r.p.lat,r.p.lng];});if(m&&b.length)m.flyToBounds(b,{padding:[28,28],maxZoom:13,duration:1});}
 function setKind(kind,on){
   var m=HD.map,g=HD.groups[kind];if(!m||!g)return false;
@@ -41726,7 +41772,13 @@ window.harmonyMap={
   tall:function(on){var c=HD.place&&HD.place.card;if(!c)return false;c.classList.toggle('tall',on!==false);return true;},
   map:function(){return HD.map;},
   kinds:function(){return Object.keys(HD.groups);},
-  count:function(kind){return HD.pins.filter(function(r){return (!kind||r.kind===kind)&&!HD.hidden[r.kind];}).length;},
+  count:function(kind){return HD.pins.filter(function(r){return (!kind||r.kind===kind)&&!HD.hidden[r.kind]&&!r.off;}).length;},
+  /* 18.49.44: for voice filters */
+  pins:function(){return HD.pins.slice();},
+  visiblePins:function(){return visible();},
+  filterPins:filterPins,
+  fitVisible:function(){fitVisible();return visible().length;},
+  select:function(rec,open){if(!rec||!HD.map)return false;selectPin(rec,13);if(open)setTimeout(function(){openPlace(rec,true);},900);return true;},
   zoom:function(d){var m=HD.map;if(!m)return false;if(d==='max')m.setZoom(15);else m.setZoom(Math.max(2,Math.min(18,m.getZoom()+d)));return m.getZoom();},
   zoomTo:function(z){var m=HD.map;if(!m)return false;m.setZoom(Math.max(2,Math.min(18,z|0)));return m.getZoom();},
   pan:function(dir,big){var m=HD.map;if(!m)return false;var s=m.getSize(),f=big?.6:.33,d={left:[-s.x*f,0],west:[-s.x*f,0],right:[s.x*f,0],east:[s.x*f,0],up:[0,-s.y*f],north:[0,-s.y*f],down:[0,s.y*f],south:[0,s.y*f]}[dir];if(!d)return false;m.panBy(d);return true;},
@@ -41742,6 +41794,9 @@ window.harmonyMap={
   labels:function(){return visible().map(function(r){return String(r.p.label||'').replace(/^NOM\s*\d+\s*·\s*/,'');});}
 };
 window.harmonyShowData=ask;window.harmonyWantsData=wants;window.harmonyDataShow=show;window.harmonyDataClose=close;
+/* 18.49.44: what the voice filters (#phgVoiceFiltersV2) read: the view on screen, the unrefined rows under it and how to re-query */
+window.harmonyDataURL=DATA_URL;
+window.harmonyDataState=function(){var p=document.getElementById('hdPanel');return {open:!!(p&&!p.hidden),last:HD.last,orig:HD.orig,base:HD.base,query:HD.query,baseQuery:HD.baseQuery,isMap:!!(HD.map&&HD.last&&HD.last.type==='map')};};
 window.harmonyDataCatalog=function(){show({type:'catalog',title:'What Harmony can show you'});say('Here is everything I can put on screen. Tap an example, or just ask me in your own words.');};
 /* close the canvas with the view; "close the map / chart" by voice */
 new MutationObserver(function(){if(!document.getElementById('phgView')&&document.body.classList.contains('hvx-data'))close();}).observe(document.body,{childList:true});
@@ -41888,8 +41943,10 @@ add({g:'Harmony',ex:['what can I say','voice commands'],re:/^(what can i (say|do
 function showHelp(){
   var groups={};CMDS.forEach(function(c){if(!c.ex)return;(groups[c.g]=groups[c.g]||[]).push.apply(groups[c.g],c.ex);});
   var rows=[];Object.keys(groups).forEach(function(g){groups[g].forEach(function(x){rows.push([g,'“'+x+'”']);});});
+  /* 18.49.44: filters, sorting and paging by voice (#phgVoiceFiltersV2) */
+  try{if(typeof window.phgVoiceFilterHelp==='function')window.phgVoiceFilterHelp().forEach(function(r){rows.push([r[0],'“'+r[1]+'”']);});}catch(e){}
   if(typeof window.harmonyDataShow==='function'&&viewOpen())window.harmonyDataShow({type:'table',title:'Things you can say',table:{cols:['What','Say'],rows:rows}});
-  say('You can drive the map: zoom in or out, zoom in on a distillery by name, hide or show venues or distilleries, next one, tell me about that one. You can open any screen by name, like the dashboard, costing, the recipe database or voice settings. And you can ask me anything about PHG data.');
+  say('You can drive the map: zoom in or out, zoom in on a distillery by name, zoom to a city or state, hide or show venues or distilleries, next one, tell me about that one. On any list, map or chart you can filter, sort and page, like “only bars in Denver under $14”, “cheapest first”, “income over 100k”, “next page” or “show 50 per page”, and ask “how many” or “what’s the average price”. You can open any screen by name, like the dashboard, costing, the recipe database or voice settings. And you can ask me anything about PHG data.');
 }
 
 /* ---------- the bus ---------- */
