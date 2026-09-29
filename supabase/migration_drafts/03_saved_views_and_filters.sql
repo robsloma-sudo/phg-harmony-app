@@ -1,6 +1,7 @@
 -- DRAFT — NOT APPLIED. Needs Rob's approval. Spec: handoff/HARMONY_CONVERSATION_MODEL.md §4A.2 (time words), §4.1-4.3, §6.3-6.4 (as revised)
 -- Replaces the dropped 03_workspace_folders.sql. Rob, 2026-09-29: "NO folders. Everything built by talking to Harmony lives
 -- in normal tables; people organise it with saved VIEWS and FILTERS instead."
+-- Apply order: 02 -> 04 -> 03 -> 05 -> 06 (this file is THIRD: needs 02's settings/parties; reads 04's metric_definitions).
 --
 -- What this does (plain English)
 --   * phg.period_presets: the time windows a business talks in — this week, last week, last 2 / 4 weeks, month, quarter,
@@ -31,7 +32,8 @@
 --             | {"kind":"metrics", "metrics":[{"key","function_name","status","unit"}]},
 --     "period": {"preset":"last_4_weeks","start":"2026-08-31","end":"2026-09-27","label":"Last 4 weeks",
 --                "date_field":"expense_date","date_source":"expense_date"} | null,
---     "conditions": [{"field":"category","source":"category","data_type":"text","op":"eq","value":"dairy","from_filter":"<uuid>"}],
+--     "conditions": [{"field":"category","op":"eq","value":"dairy","source":"category","data_type":"text"}],
+--                   (rebuilt key by key: ONLY field/op/value/source/data_type; any other key stored in a condition is dropped)
 --     "group_by": [{"field","source"}], "columns": [{"field","source","label"}], "sort": [{"field","source","dir":"asc|desc"}],
 --     "limit": 500,
 --     "scope": {"account_id":"...","user_id":"..."},        -- the gateway re-checks membership and applies RLS anyway
@@ -45,18 +47,82 @@
 --   Sources that are not plain columns (joins through harmony_paths) are marked "path:<path_key>.<column>" and the v1
 --   compiler must refuse them with a clear error until paths are verified.
 --
--- Rollback
---   -- drop function if exists public.phg_harmony_views_db(text, jsonb);
---   -- drop function if exists phg.harmony_view_spec(uuid, uuid, uuid, date);
---   -- drop function if exists phg.resolve_period(uuid, text, date);
---   -- drop trigger if exists saved_views_validate on phg.saved_views; drop function if exists phg.saved_views_validate();
---   -- drop trigger if exists saved_filters_validate on phg.saved_filters; drop function if exists phg.saved_filters_validate();
---   -- drop function if exists phg.harmony_conditions_valid(jsonb);
---   -- delete from phg.harmony_entity_fields where entity_key in ('ingredient','party','expense','invoice','invoice_line','sales','house_menu_item','recipe');
---   -- delete from phg.harmony_entities where key = 'invoice_line';
---   -- drop table if exists phg.saved_views, phg.saved_filters, phg.period_presets;
+-- Time basis
+--   * "today" / as_of defaults to the date in the business's time zone (setting business.time_zone, validated against
+--     pg_timezone_names; UTC when unset or invalid), via phg.harmony_business_today(account).
+--   * calendar.fiscal_year_start accepts 'MM-DD' or 'YYYY-MM-DD' (year ignored); the day is clamped to the month's length
+--     in the year being resolved (02-29 -> 02-28 in non-leap years). Anything else returns
+--     {"error": ..., "missing_setting": "calendar.fiscal_year_start"} instead of guessing.
+--   * reporting-period presets filter phg.reporting_periods.period_type by the preset's period_type_filter, else by the
+--     business's EXPLICITLY SET calendar.period_type (the skeleton default is not used, because saved periods carry
+--     whatever type they were saved with, e.g. 'custom').
+--   * One date axis per entity is now enforced: unique index harmony_entity_fields_one_date_axis (live check 2026-09-29:
+--     no entity has two today).
+--
+-- purchase_invoice_lines (whitelisted here as project_read; RLS is OFF on it today, ACL postgres + service_role only)
+--   A pre-RLS check (copied from the knowledge map, narrowed to this one table) raises a NOTICE listing any non-owner,
+--   non-BYPASSRLS role that can SELECT it; any name other than '(none)' must be reviewed before approving.
+--   required_roles is copied from the live purchase_invoices row (today '{}' = any active member).
+--
+-- Rollback (scripted; run as postgres in ONE transaction, off-peak, AFTER rolling back 06 and 05)
+--   begin;
+--   set local lock_timeout = '3s';
+--   -- 1. backups of what people saved
+--   create table if not exists phg._rb03_saved_views   as select * from phg.saved_views;
+--   create table if not exists phg._rb03_saved_filters as select * from phg.saved_filters;
+--   create table if not exists phg._rb03_period_presets as select * from phg.period_presets where account_id is not null;
+--   revoke all on phg._rb03_saved_views, phg._rb03_saved_filters, phg._rb03_period_presets from public, anon, authenticated;
+--   -- 2. functions
+--   drop function if exists public.phg_harmony_views_db(text, jsonb);
+--   drop function if exists phg.harmony_view_spec(uuid, uuid, uuid, date);
+--   drop function if exists phg.resolve_period(uuid, text, date);
+--   drop function if exists phg.harmony_business_today(uuid);
+--   drop trigger if exists saved_views_validate on phg.saved_views; drop function if exists phg.saved_views_validate();
+--   drop trigger if exists saved_filters_validate on phg.saved_filters; drop function if exists phg.saved_filters_validate();
+--   -- 3. purchase_invoice_lines: policies, grant, whitelist row, RLS (only if THIS migration enabled it)
+--   do $rb$
+--   declare v_rls boolean;
+--   begin
+--     select rls_enabled_by_migration into v_rls from phg.harmony_table_access
+--      where schema_name = 'phg' and table_pattern = 'purchase_invoice_lines';
+--     drop policy if exists harmony_read on phg.purchase_invoice_lines;
+--     drop policy if exists harmony_scope on phg.purchase_invoice_lines;
+--     drop policy if exists menu_designer_read_h on phg.purchase_invoice_lines;
+--     revoke all on phg.purchase_invoice_lines from phg_harmony_reader;
+--     delete from phg.harmony_table_access where schema_name = 'phg' and table_pattern = 'purchase_invoice_lines';
+--     if coalesce(v_rls, false) then alter table phg.purchase_invoice_lines disable row level security; end if;
+--   end $rb$;
+--   -- 4. seeded knowledge-map rows: ONLY the (entity_key, field_key) pairs this file inserted
+--   delete from phg.harmony_entity_fields f using (values
+--     ('ingredient','name'),('ingredient','category'),('ingredient','ingredient_type'),
+--     ('party','name'),('party','kinds'),('party','delivery_days'),('party','gl_default_code'),
+--     ('expense','expense_date'),('expense','description'),('expense','amount'),('expense','revenue_center'),
+--     ('expense','location_key'),('expense','category'),
+--     ('invoice','invoice_date'),('invoice','invoice_number'),('invoice','total'),('invoice','status'),('invoice','vendor'),
+--     ('invoice_line','description'),('invoice_line','product_family'),('invoice_line','amount'),('invoice_line','invoice_date'),
+--     ('sales','business_date'),('sales','revenue_center'),('sales','net_sales'),('sales','comps'),('sales','discounts'),
+--     ('house_menu_item','name'),('house_menu_item','section'),('house_menu_item','status'),('house_menu_item','price'),
+--     ('recipe','name'),('recipe','status'),('recipe','created_at')) x(e, k)
+--    where f.entity_key = x.e and f.field_key = x.k;
+--   --    (a pair that existed BEFORE this migration was skipped by ON CONFLICT DO NOTHING; check the pre-apply snapshot
+--   --     select entity_key, field_key from phg.harmony_entity_fields and exclude those pairs from this list)
+--   delete from phg.harmony_entities where key = 'invoice_line';
+--   drop index if exists phg.harmony_entity_fields_one_date_axis;
+--   -- 5. tables
+--   drop table if exists phg.saved_views, phg.saved_filters, phg.period_presets;
+--   drop function if exists phg.harmony_conditions_valid(jsonb);
+--   -- 6. verify (expect: nulls, 0, 0, false, 0)
+--   select to_regclass('phg.saved_views') sv, to_regclass('phg.saved_filters') sf, to_regclass('phg.period_presets') pp,
+--          to_regprocedure('public.phg_harmony_views_db(text,jsonb)') fn, to_regclass('phg.harmony_entity_fields_one_date_axis') ix,
+--          (select count(*) from pg_policy where polrelid = 'phg.purchase_invoice_lines'::regclass) pil_policies,
+--          (select count(*) from phg.harmony_table_access where table_pattern = 'purchase_invoice_lines') pil_access,
+--          (select relrowsecurity from pg_class where oid = 'phg.purchase_invoice_lines'::regclass) pil_rls,
+--          (select count(*) from phg.harmony_entities where key = 'invoice_line') entity;
+--   commit;
 
 begin;
+
+set local lock_timeout = '3s';   -- enables RLS on phg.purchase_invoice_lines: off-peak; on 55P03 nothing applied, retry
 
 -- ---------------------------------------------------------------------------------------------------------------
 -- 1. Period presets
@@ -109,14 +175,30 @@ insert into phg.period_presets (account_id, key, label, aliases, kind, "offset",
   (null,'last_period',   'Last period',   '{last period,previous period}',   'reporting_period',-1, false,61)
 on conflict do nothing;
 
--- start/end for a preset. Reads calendar.week_start ('monday'..'sunday') and calendar.fiscal_year_start ('MM-DD') from
--- phg.account_settings (draft 02); falls back to the setting's default, then Monday / 01-01.
-create or replace function phg.resolve_period(p_account uuid, p_preset_key text, p_as_of date default current_date)
+-- "today" for a business: the date in its time zone (business.time_zone, business-wide row); UTC if unset/invalid
+create or replace function phg.harmony_business_today(p_account uuid)
+returns date language plpgsql stable security definer set search_path = phg, pg_temp as $$
+declare v_tz text;
+begin
+  select s.value #>> '{}' into v_tz from phg.account_settings s
+   where s.account_id = p_account and s.key = 'business.time_zone' and s.scope_key = '' and s.user_id is null;
+  if v_tz is null or not exists (select 1 from pg_catalog.pg_timezone_names where name = v_tz) then v_tz := 'UTC'; end if;
+  return (now() at time zone v_tz)::date;
+end $$;
+
+-- start/end for a preset. Reads calendar.week_start ('monday'..'sunday'), calendar.fiscal_year_start ('MM-DD' or
+-- 'YYYY-MM-DD') and calendar.period_type from phg.account_settings (draft 02, business-wide rows only); week start and
+-- fiscal year fall back to the setting's default, then Monday / 01-01. p_as_of NULL = today in the business's time zone.
+create or replace function phg.resolve_period(p_account uuid, p_preset_key text, p_as_of date default null)
 returns jsonb language plpgsql stable security definer set search_path = phg, pg_temp as $$
 declare
   v_p     phg.period_presets;
+  v_as_of date := coalesce(p_as_of, phg.harmony_business_today(p_account));
   v_ws    int;           -- ISO day of week the business's week starts on (1 = Monday)
-  v_fy    text;          -- 'MM-DD'
+  v_fy    text;          -- raw setting
+  v_fy_m  int; v_fy_d int;
+  v_fy_y  int;
+  v_ptype text;
   v_unit  interval;
   v_start date; v_end date; v_base date;
   v_rp    record;
@@ -130,24 +212,39 @@ begin
                         lower(coalesce(s.value, d.default_value) #>> '{}'))
     into v_ws
     from phg.setting_definitions d
-    left join phg.account_settings s on s.key = d.key and s.account_id = p_account and s.scope_key = ''
+    left join phg.account_settings s on s.key = d.key and s.account_id = p_account and s.scope_key = '' and s.user_id is null
    where d.key = 'calendar.week_start';
   v_ws := coalesce(v_ws, 1);
   select coalesce(s.value, d.default_value) #>> '{}' into v_fy
     from phg.setting_definitions d
-    left join phg.account_settings s on s.key = d.key and s.account_id = p_account and s.scope_key = ''
+    left join phg.account_settings s on s.key = d.key and s.account_id = p_account and s.scope_key = '' and s.user_id is null
    where d.key = 'calendar.fiscal_year_start';
-  v_fy := coalesce(nullif(v_fy, ''), '01-01');
+  v_fy := btrim(coalesce(nullif(v_fy, ''), '01-01'));
+  -- 'MM-DD' or 'YYYY-MM-DD' (year ignored); month 1-12, day 1-31, clamped to the month's length below
+  if v_fy ~ '^(\d{4}-)?\d{2}-\d{2}$' then
+    v_fy_m := split_part(right(v_fy, 5), '-', 1)::int;
+    v_fy_d := split_part(right(v_fy, 5), '-', 2)::int;
+  end if;
+  if v_fy_m is null or v_fy_m not between 1 and 12 or v_fy_d not between 1 and 31 then
+    return jsonb_build_object('error', format('fiscal year start %L is not a month and day (MM-DD)', v_fy),
+                              'missing_setting', 'calendar.fiscal_year_start');
+  end if;
 
   if v_p.kind = 'custom' then
     v_start := v_p.custom_start; v_end := v_p.custom_end;
 
   elsif v_p.kind = 'reporting_period' then
+    -- preset's own filter, else the business's EXPLICITLY SET calendar.period_type (not the skeleton default)
+    v_ptype := v_p.period_type_filter;
+    if v_ptype is null then
+      select s.value #>> '{}' into v_ptype from phg.account_settings s
+       where s.account_id = p_account and s.key = 'calendar.period_type' and s.scope_key = '' and s.user_id is null;
+    end if;
     select rp.start_date, rp.end_date, rp.name into v_rp from phg.reporting_periods rp
-     where rp.account_id = p_account and rp.active and rp.start_date <= p_as_of
-       and (v_p.period_type_filter is null or rp.period_type = v_p.period_type_filter)
+     where rp.account_id = p_account and rp.active and rp.start_date <= v_as_of
+       and (v_ptype is null or rp.period_type = v_ptype)
      order by rp.start_date desc offset (-v_p."offset") limit 1;
-    if v_rp is null then
+    if not found then
       return jsonb_build_object('error', 'no reporting periods set up for this business', 'missing_setting', 'calendar.period_type');
     end if;
     v_start := v_rp.start_date; v_end := v_rp.end_date;
@@ -156,28 +253,37 @@ begin
     v_unit := case v_p.unit when 'day' then interval '1 day' when 'week' then interval '7 days'
                             when 'month' then interval '1 month' when 'quarter' then interval '3 months' else interval '1 year' end;
     if v_p.kind = 'rolling' then
-      v_end := (p_as_of + v_p."offset" * v_unit)::date;
+      v_end := (v_as_of + v_p."offset" * v_unit)::date;
       v_start := (v_end - v_p.length * v_unit)::date + 1;
     else  -- calendar
-      v_base := case
-        when v_p.unit = 'day'     then p_as_of
-        when v_p.unit = 'week'    then p_as_of - ((extract(isodow from p_as_of)::int - v_ws + 7) % 7)
-        when v_p.unit = 'month'   then date_trunc('month', p_as_of)::date
-        when v_p.unit = 'quarter' then date_trunc('quarter', p_as_of)::date
-        when v_p.anchor = 'fiscal_year' then
-          case when make_date(extract(year from p_as_of)::int, split_part(v_fy, '-', 1)::int, split_part(v_fy, '-', 2)::int) <= p_as_of
-               then make_date(extract(year from p_as_of)::int, split_part(v_fy, '-', 1)::int, split_part(v_fy, '-', 2)::int)
-               else make_date(extract(year from p_as_of)::int - 1, split_part(v_fy, '-', 1)::int, split_part(v_fy, '-', 2)::int) end
-        else date_trunc('year', p_as_of)::date end;
+      if v_p.unit = 'year' and v_p.anchor = 'fiscal_year' then
+        -- fiscal year start in the as-of year (day clamped), else the year before
+        v_fy_y := extract(year from v_as_of)::int;
+        v_base := make_date(v_fy_y, v_fy_m, 1)
+                  + (least(v_fy_d, extract(day from make_date(v_fy_y, v_fy_m, 1) + interval '1 month - 1 day')::int) - 1);
+        if v_base > v_as_of then
+          v_fy_y := v_fy_y - 1;
+          v_base := make_date(v_fy_y, v_fy_m, 1)
+                    + (least(v_fy_d, extract(day from make_date(v_fy_y, v_fy_m, 1) + interval '1 month - 1 day')::int) - 1);
+        end if;
+      else
+        v_base := case
+          when v_p.unit = 'day'     then v_as_of
+          when v_p.unit = 'week'    then v_as_of - ((extract(isodow from v_as_of)::int - v_ws + 7) % 7)
+          when v_p.unit = 'month'   then date_trunc('month', v_as_of)::date
+          when v_p.unit = 'quarter' then date_trunc('quarter', v_as_of)::date
+          else date_trunc('year', v_as_of)::date end;
+      end if;
       v_start := (v_base + v_p."offset" * v_unit)::date;
       v_end := (v_start + v_p.length * v_unit)::date - 1;
     end if;
   end if;
 
-  if v_p.to_date and v_end > p_as_of then v_end := p_as_of; end if;
-  return jsonb_build_object('preset', v_p.key, 'label', v_p.label, 'start', v_start, 'end', v_end, 'as_of', p_as_of,
-                            'basis', jsonb_build_object('kind', v_p.kind, 'week_start_isodow', v_ws, 'fiscal_year_start', v_fy,
-                                                        'custom_preset', v_p.account_id is not null));
+  if v_p.to_date and v_end > v_as_of then v_end := v_as_of; end if;
+  return jsonb_build_object('preset', v_p.key, 'label', v_p.label, 'start', v_start, 'end', v_end, 'as_of', v_as_of,
+                            'basis', jsonb_build_object('kind', v_p.kind, 'week_start_isodow', v_ws,
+                                                        'fiscal_year_start', lpad(v_fy_m::text, 2, '0') || '-' || lpad(v_fy_d::text, 2, '0'),
+                                                        'period_type', v_ptype, 'custom_preset', v_p.account_id is not null));
 end $$;
 
 -- ---------------------------------------------------------------------------------------------------------------
@@ -287,11 +393,45 @@ revoke all on phg.period_presets, phg.saved_filters, phg.saved_views from public
 insert into phg.harmony_entities (key, label, entity_group, aliases, main_tables, scope, name_lookup) values
   ('invoice_line','invoice line','Buying and cost','{line item}','{phg.purchase_invoice_lines,phg.purchase_invoices}','project','{}')
 on conflict (key) do nothing;
-insert into phg.harmony_table_access (schema_name, table_pattern, access, scope_kind, scope_expr, notes) values
-  ('phg','purchase_invoice_lines','project_read','custom',
-   'invoice_id in (select i.id from phg.purchase_invoices i where i.location_key in (select phg.harmony_scope_location_keys()))', 'via purchase_invoices')
+-- required_roles copied from the live purchase_invoices row (today '{}' = any active member) so lines never show wider
+insert into phg.harmony_table_access (schema_name, table_pattern, access, scope_kind, scope_expr, required_roles, notes)
+select 'phg','purchase_invoice_lines','project_read','custom',
+       'invoice_id in (select i.id from phg.purchase_invoices i where i.location_key in (select phg.harmony_scope_location_keys()))',
+       coalesce((select a.required_roles from phg.harmony_table_access a
+                  where a.schema_name = 'phg' and a.table_pattern = 'purchase_invoices'), '{}'),
+       'via purchase_invoices'
 on conflict (schema_name, table_pattern) do nothing;
+
+-- Pre-RLS check (knowledge-map block, narrowed to purchase_invoice_lines): list every non-owner, non-BYPASSRLS role that
+-- can SELECT it today (table relacl + column attacl, PUBLIC included, plus pg_read_all_data members). Those roles see ZERO
+-- rows once RLS is on unless a policy covers them. Read-only check 2026-09-29: RLS off; ACL postgres + service_role only
+-- (both owner/BYPASSRLS) -> expected '(none)'. Any other name must be reviewed before approving.
+do $$
+declare v text; v_oid oid := to_regclass('phg.purchase_invoice_lines');
+begin
+  with g as (
+    select a.grantee, c.oid::regclass::text t from pg_class c, aclexplode(c.relacl) a
+     where c.oid = v_oid and a.privilege_type = 'SELECT' and a.grantee <> c.relowner
+    union
+    select a.grantee, c.oid::regclass::text || ' (columns)' from pg_attribute at join pg_class c on c.oid = at.attrelid,
+           aclexplode(at.attacl) a
+     where at.attrelid = v_oid and a.privilege_type = 'SELECT' and a.grantee <> c.relowner
+  )
+  select string_agg(x, ', ') into v from (
+    select distinct case when g.grantee = 0 then 'PUBLIC' else g.grantee::regrole::text end || ' -> ' || g.t x
+      from g left join pg_roles r on r.oid = g.grantee
+     where g.grantee = 0 or (not r.rolbypassrls and r.rolname <> 'phg_harmony_reader')
+    union
+    select rolname || ' -> ALL (pg_read_all_data)' from pg_roles
+     where pg_has_role(oid, 'pg_read_all_data', 'member') and not rolbypassrls and rolname <> 'pg_read_all_data'
+  ) s;
+  raise notice 'harmony pre-RLS check (purchase_invoice_lines): non-owner, non-BYPASSRLS roles with SELECT: %', coalesce(v, '(none)');
+end $$;
+
 select phg.harmony_apply_table_access();
+
+-- one date axis per entity (time presets need exactly one); live check 2026-09-29: no duplicates today
+create unique index if not exists harmony_entity_fields_one_date_axis on phg.harmony_entity_fields (entity_key) where is_date_axis;
 
 insert into phg.harmony_entity_fields (entity_key, field_key, label, aliases, source, data_type, is_date_axis, filterable) values
   ('ingredient','name','name','{}','name','text',false,true),
@@ -335,7 +475,7 @@ on conflict (entity_key, field_key) do nothing;
 -- ---------------------------------------------------------------------------------------------------------------
 -- 4. View -> query spec resolver (no SQL built, nothing executed against business data)
 -- ---------------------------------------------------------------------------------------------------------------
-create or replace function phg.harmony_view_spec(p_account uuid, p_user uuid, p_view_id uuid, p_as_of date default current_date)
+create or replace function phg.harmony_view_spec(p_account uuid, p_user uuid, p_view_id uuid, p_as_of date default null)
 returns jsonb language plpgsql stable security definer set search_path = phg, pg_temp as $$
 declare
   v        phg.saved_views;
@@ -371,10 +511,19 @@ begin
     v_source := jsonb_build_object('kind', 'metrics', 'metrics', coalesce(v_metrics, '[]'::jsonb));
   end if;
 
+  -- a filter that is gone, private to someone else, or for another kind of thing is an error, never silently skipped
+  if cardinality(v.filter_ids) > 0 and (select count(distinct x) from unnest(v.filter_ids) x) <> (
+       select count(*) from phg.saved_filters sf
+        where sf.id = any (v.filter_ids) and sf.account_id = p_account and sf.archived_at is null
+          and (sf.user_id is null or sf.user_id = p_user) and sf.entity_key = v.entity_key) then
+    v_errors := v_errors || 'view uses a filter that is missing, private or for another kind of thing'::text;
+  end if;
+
   -- conditions: every filter (in order) then the view's own
   for r in
     select sf.id fid, x.c from unnest(v.filter_ids) with ordinality u(fid_u, n)
       join phg.saved_filters sf on sf.id = u.fid_u and sf.account_id = p_account and sf.archived_at is null
+                               and (sf.user_id is null or sf.user_id = p_user) and sf.entity_key = v.entity_key
       cross join lateral jsonb_array_elements(sf.conditions) x(c)
     union all
     select null, x.c from jsonb_array_elements(v.extra_conditions) x(c)
@@ -384,8 +533,9 @@ begin
     if f.id is null then
       v_errors := v_errors || format('unknown field %L on %s', r.c->>'field', v.entity_key);
     else
-      v_conds := v_conds || jsonb_build_array(r.c || jsonb_build_object('source', f.source, 'data_type', f.data_type)
-                                              || case when r.fid is not null then jsonb_build_object('from_filter', r.fid) else '{}'::jsonb end);
+      -- rebuilt key by key: nothing else stored in a condition reaches the compiler
+      v_conds := v_conds || jsonb_build_array(jsonb_build_object('field', f.field_key, 'op', r.c->'op', 'value', r.c->'value',
+                                                                 'source', f.source, 'data_type', f.data_type));
     end if;
   end loop;
 
@@ -425,7 +575,8 @@ begin
     'errors', to_jsonb(v_errors));
 end $$;
 
-revoke all on function phg.resolve_period(uuid, text, date), phg.harmony_view_spec(uuid, uuid, uuid, date)
+revoke all on function phg.resolve_period(uuid, text, date), phg.harmony_view_spec(uuid, uuid, uuid, date),
+                       phg.harmony_business_today(uuid)
   from public, anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------------------------------------------------------
@@ -436,7 +587,7 @@ returns jsonb language plpgsql stable security definer set search_path = phg, pg
 declare
   v_user    uuid := nullif(p_args->>'user', '')::uuid;
   v_account uuid := nullif(p_args->>'account', '')::uuid;
-  v_as_of   date := coalesce(nullif(p_args->>'as_of', '')::date, current_date);
+  v_as_of   date := nullif(p_args->>'as_of', '')::date;     -- NULL = today in the business's time zone (resolve_period)
 begin
   if v_user is null or v_account is null then raise exception 'user and account required'; end if;
   if not exists (select 1 from phg.account_memberships where user_id = v_user and account_id = v_account and status = 'active') then

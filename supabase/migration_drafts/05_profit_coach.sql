@@ -1,4 +1,6 @@
 -- DRAFT — NOT APPLIED. Needs Rob's approval. Spec: handoff/HARMONY_CONVERSATION_MODEL.md §4D (4D.1-4D.4), §0, §10
+-- Apply order: 02 -> 04 -> 03 -> 05 -> 06 (this file is FOURTH). 04 MUST be applied before 05: coach_actions.metric_key
+--   has an FK to phg.metric_definitions (created in 04); applying 05 first fails with "relation does not exist".
 --
 -- What this does (plain English)
 --   The profit coach's storage. It does NOT compute anything yet (detectors run later as database functions).
@@ -22,12 +24,34 @@
 --   evidence, actions and learning. No alert data is copied or moved. Which of the two alert tables is canonical is an
 --   open question for Rob; this draft links only to management_alert_states (the populated one).
 --
--- Rollback
---   -- drop function if exists public.phg_harmony_coach_db(text, jsonb);
---   -- drop trigger if exists coach_actions_guard on phg.coach_actions; drop function if exists phg.coach_actions_guard();
---   -- drop table if exists phg.coach_actions, phg.coach_findings, phg.coach_detectors;
+-- Project guards (triggers, because the referenced tables are not keyed by account_id)
+--   coach_findings: location_id -> sales_locations.account_id, menu_project_id -> menu_projects.account_id,
+--     reporting_period_id -> reporting_periods.account_id, management_alert_state_id -> management_alert_states
+--     .menu_project_id -> menu_projects.account_id: each must equal the finding's account_id.
+--   coach_actions: finding and proposal_id (command_action_proposals -> command_sessions.menu_project_id ->
+--     menu_projects.account_id) must be in the action's project.
+-- finding_mark: status transitions are forward-only: new -> seen -> acted | dismissed | resolved; dismissed only from
+--   new/seen/acted; only owner/admin may dismiss. Through this door a person can set seen or dismissed only.
+--
+-- Rollback (scripted; run as postgres in ONE transaction, AFTER rolling back 06)
+--   begin;
+--   set local lock_timeout = '3s';
+--   create table if not exists phg._rb05_coach_findings as select * from phg.coach_findings;
+--   create table if not exists phg._rb05_coach_actions  as select * from phg.coach_actions;
+--   revoke all on phg._rb05_coach_findings, phg._rb05_coach_actions from public, anon, authenticated;
+--   drop function if exists public.phg_harmony_coach_db(text, jsonb);
+--   drop trigger if exists coach_actions_guard on phg.coach_actions; drop function if exists phg.coach_actions_guard();
+--   drop trigger if exists coach_findings_guard on phg.coach_findings; drop function if exists phg.coach_findings_guard();
+--   drop table if exists phg.coach_actions, phg.coach_findings, phg.coach_detectors;
+--   -- verify (expect: all nulls)
+--   select to_regclass('phg.coach_actions') ca, to_regclass('phg.coach_findings') cf, to_regclass('phg.coach_detectors') cd,
+--          to_regprocedure('public.phg_harmony_coach_db(text,jsonb)') fn, to_regprocedure('phg.coach_actions_guard()') g1,
+--          to_regprocedure('phg.coach_findings_guard()') g2;
+--   commit;
 
 begin;
+
+set local lock_timeout = '3s';   -- new tables only, but FKs lock referenced tables briefly; on 55P03 retry
 
 create table if not exists phg.coach_detectors (
   key             text primary key,
@@ -82,6 +106,11 @@ create table if not exists phg.coach_findings (
   unique (account_id, detector_key, fingerprint)
 );
 create index if not exists coach_findings_rank on phg.coach_findings (account_id, status, rank_score desc);
+-- FK columns (on delete set null on the parent must not scan the whole table)
+create index if not exists coach_findings_alert_state on phg.coach_findings (management_alert_state_id) where management_alert_state_id is not null;
+create index if not exists coach_findings_location    on phg.coach_findings (location_id) where location_id is not null;
+create index if not exists coach_findings_menu_project on phg.coach_findings (menu_project_id) where menu_project_id is not null;
+create index if not exists coach_findings_rperiod     on phg.coach_findings (reporting_period_id) where reporting_period_id is not null;
 
 create table if not exists phg.coach_actions (
   id             uuid primary key default gen_random_uuid(),
@@ -102,17 +131,53 @@ create table if not exists phg.coach_actions (
   updated_at     timestamptz not null default now()
 );
 create index if not exists coach_actions_finding on phg.coach_actions (finding_id);
+create index if not exists coach_actions_proposal on phg.coach_actions (proposal_id) where proposal_id is not null;
 
--- guard: a finding/action must stay in its project
-create or replace function phg.coach_actions_guard() returns trigger
-language plpgsql set search_path = phg, pg_temp as $$
+-- guards: a finding / action and everything it points at must stay in its project
+create or replace function phg.coach_findings_guard() returns trigger
+language plpgsql security definer set search_path = phg, pg_temp as $$
 begin
-  if not exists (select 1 from phg.coach_findings f where f.id = new.finding_id and f.account_id = new.account_id) then
-    raise exception 'finding belongs to another project';
+  if new.location_id is not null and not exists (
+       select 1 from phg.sales_locations l where l.id = new.location_id and l.account_id = new.account_id) then
+    raise exception 'location belongs to another project';
+  end if;
+  if new.menu_project_id is not null and not exists (
+       select 1 from phg.menu_projects mp where mp.id = new.menu_project_id and mp.account_id = new.account_id) then
+    raise exception 'menu project belongs to another project';
+  end if;
+  if new.reporting_period_id is not null and not exists (
+       select 1 from phg.reporting_periods rp where rp.id = new.reporting_period_id and rp.account_id = new.account_id) then
+    raise exception 'reporting period belongs to another project';
+  end if;
+  if new.management_alert_state_id is not null and not exists (
+       select 1 from phg.management_alert_states a join phg.menu_projects mp on mp.id = a.menu_project_id
+        where a.id = new.management_alert_state_id and mp.account_id = new.account_id) then
+    raise exception 'alert belongs to another project';
   end if;
   new.updated_at := now();
   return new;
 end $$;
+drop trigger if exists coach_findings_guard on phg.coach_findings;
+create trigger coach_findings_guard before insert or update on phg.coach_findings
+  for each row execute function phg.coach_findings_guard();
+
+create or replace function phg.coach_actions_guard() returns trigger
+language plpgsql security definer set search_path = phg, pg_temp as $$
+begin
+  if not exists (select 1 from phg.coach_findings f where f.id = new.finding_id and f.account_id = new.account_id) then
+    raise exception 'finding belongs to another project';
+  end if;
+  if new.proposal_id is not null and not exists (
+       select 1 from phg.command_action_proposals p
+         join phg.command_sessions s on s.id = p.session_id
+         join phg.menu_projects mp on mp.id = s.menu_project_id
+        where p.id = new.proposal_id and mp.account_id = new.account_id) then
+    raise exception 'proposal belongs to another project';
+  end if;
+  new.updated_at := now();
+  return new;
+end $$;
+revoke all on function phg.coach_findings_guard(), phg.coach_actions_guard() from public, anon, authenticated;
 drop trigger if exists coach_actions_guard on phg.coach_actions;
 create trigger coach_actions_guard before insert or update on phg.coach_actions
   for each row execute function phg.coach_actions_guard();
@@ -173,6 +238,9 @@ returns jsonb language plpgsql volatile security definer set search_path = phg, 
 declare
   v_user    uuid := nullif(p_args->>'user', '')::uuid;
   v_account uuid := nullif(p_args->>'account', '')::uuid;
+  v_limit   int := 10;
+  v_new     text;
+  v_cur     text;
 begin
   if v_user is null or v_account is null then raise exception 'user and account required'; end if;
   if not exists (select 1 from phg.account_memberships where user_id = v_user and account_id = v_account and status = 'active') then
@@ -180,6 +248,10 @@ begin
   end if;
 
   if p_op = 'findings_list' then
+    if nullif(p_args->>'limit', '') is not null then
+      if p_args->>'limit' !~ '^\d{1,4}$' then raise exception 'limit must be a whole number'; end if;
+      v_limit := (p_args->>'limit')::int;
+    end if;
     return coalesce((select jsonb_agg(jsonb_build_object('id', f.id, 'detector', f.detector_key, 'area', d.area, 'headline', f.headline,
                        'impact_usd', f.impact_usd, 'impact_basis', f.impact_basis, 'confidence', f.confidence, 'status', f.status,
                        'period_start', f.period_start, 'period_end', f.period_end, 'evidence', f.evidence,
@@ -188,22 +260,41 @@ begin
              where account_id = v_account
                and status = any (coalesce((select array_agg(value) from jsonb_array_elements_text(p_args->'status')), array['new','seen']))
              order by rank_score desc
-             limit least(50, greatest(1, coalesce((p_args->>'limit')::int, 10)))) f
+             limit least(50, greatest(1, v_limit))) f
       join phg.coach_detectors d on d.key = f.detector_key), '[]'::jsonb);
 
   elsif p_op = 'finding_mark' then
-    -- seen / dismissed only; 'acted' and 'resolved' are set by the action and detector runs
-    if p_args->>'status' not in ('seen','dismissed') then raise exception 'status must be seen or dismissed'; end if;
+    -- a person sets seen or dismissed only; 'acted' and 'resolved' are set by the action and detector runs.
+    -- forward-only: new -> seen -> acted | dismissed | resolved; dismissed only from new/seen/acted; dismiss = owner/admin
+    v_new := coalesce(p_args->>'status', '');
+    if v_new not in ('seen','dismissed') then raise exception 'status must be seen or dismissed'; end if;
+    if v_new = 'dismissed' and not exists (
+         select 1 from phg.account_memberships am where am.user_id = v_user and am.account_id = v_account
+            and am.status = 'active' and am.role in ('owner','admin')) then
+      raise exception 'only owners and admins can dismiss a finding';
+    end if;
+    select coalesce(f.status, 'new') into v_cur from phg.coach_findings f
+     where f.id = nullif(p_args->>'id', '')::uuid and f.account_id = v_account for update;
+    if not found then return jsonb_build_object('ok', false, 'reason', 'not found'); end if;
+    if v_new = 'seen' and v_cur <> 'new' then
+      -- already seen or further along: keep the status, only stamp seen_at
+      update phg.coach_findings set seen_at = coalesce(seen_at, now()), updated_at = now()
+       where id = nullif(p_args->>'id', '')::uuid and account_id = v_account;
+      return jsonb_build_object('ok', true, 'status', v_cur, 'changed', false);
+    end if;
+    if v_new = 'dismissed' and v_cur not in ('new','seen','acted') then
+      raise exception 'a % finding cannot be dismissed', v_cur;
+    end if;
     update phg.coach_findings set
-      status = p_args->>'status',
+      status = v_new,
       seen_at = coalesce(seen_at, now()),
-      dismissed_at = case when p_args->>'status' = 'dismissed' then now() else dismissed_at end,
-      dismissed_by = case when p_args->>'status' = 'dismissed' then v_user else dismissed_by end,
-      dismiss_reason = case when p_args->>'status' = 'dismissed' then left(p_args->>'reason', 500) else dismiss_reason end,
-      reopen_if_worse_than = case when p_args->>'status' = 'dismissed' then coalesce(impact_usd, 0) else reopen_if_worse_than end,
+      dismissed_at = case when v_new = 'dismissed' then now() else dismissed_at end,
+      dismissed_by = case when v_new = 'dismissed' then v_user else dismissed_by end,
+      dismiss_reason = case when v_new = 'dismissed' then left(p_args->>'reason', 500) else dismiss_reason end,
+      reopen_if_worse_than = case when v_new = 'dismissed' then coalesce(impact_usd, 0) else reopen_if_worse_than end,
       updated_at = now()
     where id = nullif(p_args->>'id', '')::uuid and account_id = v_account;
-    return jsonb_build_object('ok', found);
+    return jsonb_build_object('ok', true, 'status', v_new, 'changed', true);
   end if;
 
   raise exception 'unknown op %', p_op;

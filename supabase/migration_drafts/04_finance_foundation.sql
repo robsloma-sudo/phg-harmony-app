@@ -1,4 +1,6 @@
 -- DRAFT — NOT APPLIED. Needs Rob's approval. Spec: handoff/HARMONY_CONVERSATION_MODEL.md §4A.2, §4B.1, §4C.2 (PHG-FLV-006 gap)
+-- Apply order: 02 -> 04 -> 03 -> 05 -> 06 (this file is SECOND: 05 needs metric_definitions, 06 needs account_id columns
+--   and gl_accounts). Depends on the live knowledge map (harmony_table_access / harmony_apply_table_access).
 --
 -- What this does (plain English)
 --   * phg.gl_accounts: chart of accounts. Rows with account_id NULL are the shared "restaurant_usar" TEMPLATE (from the
@@ -23,7 +25,8 @@
 --   * public.phg_persist_recipe_candidate(p_payload) inserts recipe_projects WITHOUT an account: after this migration new
 --     projects from that path will have account_id NULL until that function is patched (follow-up, not in this draft,
 --     because the brief keeps existing actions unchanged). The version trigger below cannot fill it (project has none).
---   * phg.ingredients: 6 rows, ingredient_key globally UNIQUE; phg.prep_recipes: 0 rows, prep_key globally UNIQUE.
+--   * phg.ingredients: 6 rows, ingredient_key globally UNIQUE; phg.prep_recipes: 0 rows, prep_key globally UNIQUE
+--     (replaced below by per-project uniqueness, see "UNIQUE keys").
 --   * phg.expense_categories (19 rows, keys like rent_occupancy, marketing) is a different, older category list with no
 --     GL codes; gl_accounts.expense_category_key lets the two be mapped later (left NULL in the seed).
 --   * phg.sales_daily has gross_sales, discounts, comps, refunds, net_sales, guest_count, check_count — but NO voids column.
@@ -52,15 +55,68 @@
 --   5. ingredients / prep_recipes: leave NULL (= shared library) unless Rob decides the 6 existing ingredients are
 --      PHG Ops Test's own.
 --
--- Rollback
---   -- drop trigger if exists recipe_versions_inherit_account on phg.recipe_versions; drop function if exists phg.recipe_versions_inherit_account();
---   -- alter table phg.recipe_versions drop column if exists account_id;
---   -- alter table phg.recipe_projects drop column if exists account_id;
---   -- alter table phg.ingredients drop column if exists account_id;
---   -- alter table phg.prep_recipes drop column if exists account_id;
---   -- drop table if exists phg.metric_definitions, phg.gl_accounts;
+--   * UNIQUE keys (read-only check 2026-09-29): ingredients_ingredient_key_key UNIQUE (ingredient_key) and
+--     prep_recipes_prep_key_key UNIQUE (prep_key). No FK, dependency or ON CONFLICT clause uses either constraint.
+--     This draft REPLACES them with per-project uniqueness on (coalesce(account_id, zero-uuid), key): the shared library
+--     (NULL) keeps unique keys and each business gets its own key space.
+--     Live functions that look a key up WITHOUT an account (they always insert account_id NULL rows):
+--     phg_upsert_draft_ingredient, phg_resolve_invoice_line_new_ingredient (`where ingredient_key = ...`),
+--     phg_command_recipe_candidate_prepare (lower(ingredient_key) = ...), phg_persist_generated_menu_candidates (inserts
+--     prep_recipes). Once a business owns a key that also exists shared, `where ingredient_key = k` can match two rows.
+--     Follow-up (not in this draft): add `and account_id is null` (or the caller's account) to those lookups.
+--     06 builds project keys with an 'a<account8>_' prefix, so they do not collide with shared keys today.
+--   * ON DELETE for the new account_id columns is CASCADE (documented choice): deleting a phg.accounts row deletes that
+--     project's own recipe_projects / recipe_versions / ingredients / prep_recipes (shared NULL rows are never touched).
+--     Every inbound FK to those four tables is RESTRICT/NO ACTION (menu_items, recipe_components, purchase_invoice_lines,
+--     training_packages, inventory_counts ...), so an account delete FAILS while any of its recipes/ingredients are still
+--     referenced: nothing is silently orphaned. gl_accounts.account_id is also CASCADE.
+--   * Whitelist: gl_accounts = project_read (template rows + the project's own), metric_definitions = shared_read.
+--
+-- Rollback (scripted; run as postgres in ONE transaction, off-peak, AFTER rolling back 06, 05 and 03)
+--   begin;
+--   set local lock_timeout = '3s';
+--   -- 1. backups
+--   create table if not exists phg._rb04_gl_accounts as select * from phg.gl_accounts;
+--   create table if not exists phg._rb04_metric_definitions as select * from phg.metric_definitions;
+--   create table if not exists phg._rb04_owned_rows as
+--     select 'recipe_projects' t, id, account_id, null::text k from phg.recipe_projects where account_id is not null
+--     union all select 'recipe_versions', id, account_id, null from phg.recipe_versions where account_id is not null
+--     union all select 'ingredients', id, account_id, ingredient_key from phg.ingredients where account_id is not null
+--     union all select 'prep_recipes', id, account_id, prep_key from phg.prep_recipes where account_id is not null;
+--   revoke all on phg._rb04_gl_accounts, phg._rb04_metric_definitions, phg._rb04_owned_rows from public, anon, authenticated;
+--   -- 2. policies. Drop the reader policies on the two new tables explicitly (so step 5 can verify), then their
+--   --    whitelist rows. If a LATER migration switched recipe_projects / recipe_versions scope_expr to account_id, drop
+--   --    BOTH harmony_read and harmony_scope on those tables, put the menu_items-based scope_expr back in
+--   --    harmony_table_access and re-run select phg.harmony_apply_table_access() BEFORE step 4 (drop column fails while a
+--   --    policy references the column).
+--   drop policy if exists harmony_read on phg.gl_accounts; drop policy if exists harmony_scope on phg.gl_accounts;
+--   drop policy if exists harmony_read on phg.metric_definitions;
+--   delete from phg.harmony_table_access where schema_name = 'phg' and table_pattern in ('gl_accounts','metric_definitions');
+--   -- 3. trigger
+--   drop trigger if exists recipe_versions_inherit_account on phg.recipe_versions; drop function if exists phg.recipe_versions_inherit_account();
+--   -- 4. keys + columns. Restoring the global UNIQUE fails if two projects now share a key: check first with
+--   --    select ingredient_key, count(*) from phg.ingredients group by 1 having count(*) > 1 (same for prep_key); rename first.
+--   drop index if exists phg.ingredients_key_per_account_uq; drop index if exists phg.prep_recipes_key_per_account_uq;
+--   alter table phg.ingredients  add constraint ingredients_ingredient_key_key unique (ingredient_key);
+--   alter table phg.prep_recipes add constraint prep_recipes_prep_key_key unique (prep_key);
+--   alter table phg.recipe_versions drop column if exists account_id;
+--   alter table phg.recipe_projects drop column if exists account_id;
+--   alter table phg.ingredients drop column if exists account_id;
+--   alter table phg.prep_recipes drop column if exists account_id;
+--   drop table if exists phg.metric_definitions, phg.gl_accounts;
+--   -- 5. verify (expect: null, null, null, 0, 0, 2, 0)
+--   select to_regclass('phg.gl_accounts') gl, to_regclass('phg.metric_definitions') md,
+--          to_regprocedure('phg.recipe_versions_inherit_account()') trg_fn,
+--          (select count(*) from information_schema.columns where table_schema = 'phg' and column_name = 'account_id'
+--             and table_name in ('recipe_projects','recipe_versions','ingredients','prep_recipes')) acct_cols,
+--          (select count(*) from phg.harmony_table_access where table_pattern in ('gl_accounts','metric_definitions')) access_rows,
+--          (select count(*) from pg_constraint where conname in ('ingredients_ingredient_key_key','prep_recipes_prep_key_key')) global_uniques,
+--          (select count(*) from pg_class where relname in ('ingredients_key_per_account_uq','prep_recipes_key_per_account_uq')) per_acct_idx;
+--   commit;
 
 begin;
+
+set local lock_timeout = '3s';   -- ALTER TABLE on recipe_*/ingredients/prep_recipes: off-peak; on 55P03 nothing applied, retry
 
 -- ---------------------------------------------------------------------------------------------------------------
 -- Chart of accounts
@@ -181,18 +237,27 @@ on conflict (key) do nothing;
 -- ---------------------------------------------------------------------------------------------------------------
 -- account_id on recipe / ingredient / prep tables (nullable; no backfill here)
 -- ---------------------------------------------------------------------------------------------------------------
-alter table phg.recipe_projects add column if not exists account_id uuid references phg.accounts(id) on delete restrict;
-alter table phg.recipe_versions add column if not exists account_id uuid references phg.accounts(id) on delete restrict;
-alter table phg.ingredients     add column if not exists account_id uuid references phg.accounts(id) on delete restrict;  -- NULL = shared library
-alter table phg.prep_recipes    add column if not exists account_id uuid references phg.accounts(id) on delete restrict;  -- NULL = shared library
+alter table phg.recipe_projects add column if not exists account_id uuid references phg.accounts(id) on delete cascade;
+alter table phg.recipe_versions add column if not exists account_id uuid references phg.accounts(id) on delete cascade;
+alter table phg.ingredients     add column if not exists account_id uuid references phg.accounts(id) on delete cascade;  -- NULL = shared library
+alter table phg.prep_recipes    add column if not exists account_id uuid references phg.accounts(id) on delete cascade;  -- NULL = shared library
 create index if not exists recipe_projects_account on phg.recipe_projects (account_id);
 create index if not exists recipe_versions_account on phg.recipe_versions (account_id);
 create index if not exists ingredients_account     on phg.ingredients (account_id);
 create index if not exists prep_recipes_account    on phg.prep_recipes (account_id);
 -- same name twice in one project is allowed today; the create_ingredient action checks for a close match first.
 
+-- keys unique per project (shared library = the zero uuid), replacing the global UNIQUE constraints (names checked live)
+create unique index if not exists ingredients_key_per_account_uq
+  on phg.ingredients (coalesce(account_id, '00000000-0000-0000-0000-000000000000'::uuid), ingredient_key);
+create unique index if not exists prep_recipes_key_per_account_uq
+  on phg.prep_recipes (coalesce(account_id, '00000000-0000-0000-0000-000000000000'::uuid), prep_key);
+alter table phg.ingredients  drop constraint if exists ingredients_ingredient_key_key;
+alter table phg.prep_recipes drop constraint if exists prep_recipes_prep_key_key;
+
+-- runs as its owner so the project lookup does not depend on the writer's privileges/RLS
 create or replace function phg.recipe_versions_inherit_account() returns trigger
-language plpgsql set search_path = phg, pg_temp as $$
+language plpgsql security definer set search_path = phg, pg_temp as $$
 declare v_acct uuid;
 begin
   select account_id into v_acct from phg.recipe_projects where id = new.project_id;
@@ -203,8 +268,20 @@ begin
   end if;
   return new;
 end $$;
+revoke execute on function phg.recipe_versions_inherit_account() from public, anon, authenticated;
 drop trigger if exists recipe_versions_inherit_account on phg.recipe_versions;
 create trigger recipe_versions_inherit_account before insert or update of project_id, account_id on phg.recipe_versions
   for each row execute function phg.recipe_versions_inherit_account();
+
+-- ---------------------------------------------------------------------------------------------------------------
+-- Knowledge-map whitelist: register the two new tables, then (re)apply grants/policies for the reader role.
+-- Both tables are new and revoked from public/anon/authenticated above, so no pre-RLS check is needed here.
+-- ---------------------------------------------------------------------------------------------------------------
+insert into phg.harmony_table_access (schema_name, table_pattern, access, account_column, scope_kind, scope_expr, notes) values
+  ('phg','gl_accounts',       'project_read','account_id','custom','account_id is null or account_id = phg.harmony_scope_account()',
+   'template rows (NULL) + the project''s own chart'),
+  ('phg','metric_definitions','shared_read', null, null, null, 'admin-owned metric catalogue')
+on conflict (schema_name, table_pattern) do nothing;
+select phg.harmony_apply_table_access();
 
 commit;

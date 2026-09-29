@@ -2,6 +2,7 @@
 -- Revised 2026-09-29 (Rob: no folders): the folder actions (create_folder, rename_folder, move_link, link_to_folder, unlink)
 -- are replaced by save_filter, save_view, update_view, delete_view. Nothing is "filed" any more; built things live in their
 -- normal tables and people find them with saved views/filters (draft 03).
+-- Apply order: 02 -> 04 -> 03 -> 05 -> 06 (this file is LAST).
 --
 -- What this does (plain English)
 --   Adds new Command Center write actions. Writes still happen ONLY after a proposal is approved with its one-time token
@@ -16,9 +17,31 @@
 --         'executed' update and the workflow-step bookkeeping are byte-for-byte the live code.
 --   BEFORE APPLYING: re-run pg_get_functiondef on the live function and diff it against section 3 below. If the live
 --   function changed since 2026-09-28, re-copy it and re-insert the single marked branch.
---   Checked: section 3 with the marked branch removed (and the final ';' dropped) is byte-identical to the live definition:
---   md5 bc1b0d154a7a756c4ad1dfd0f3966648, 10,083 bytes =
---   select md5(pg_get_functiondef('public.phg_command_execute_approved_action(uuid,text,uuid,text)'::regprocedure));
+--   Checked 2026-09-29 (after the safety-review edits; section 3 itself was not touched): section 3 from the
+--   `CREATE OR REPLACE FUNCTION` line through `end $function$` with the marked HARMONY block removed and the final ';'
+--   dropped (trailing newline kept) = md5 bc1b0d154a7a756c4ad1dfd0f3966648, 10,083 bytes — still equal to the live value,
+--   read-only, 2026-09-29: select md5(pg_get_functiondef('public.phg_command_execute_approved_action(uuid,text,uuid,text)'::regprocedure));
+--   -> bc1b0d154a7a756c4ad1dfd0f3966648 (10,083 bytes). Re-check both immediately before applying.
+--
+-- Safety rules added in review (all in phg.harmony_execute_command_action; section 3 unchanged)
+--   * needs_user is HARD-CODED for set_account_setting, save_filter, save_view, update_view, delete_view, save_party,
+--     save_invoice_coding_rule (the registry flag can only ADD keys, never remove these).
+--   * New action keys cannot be workflow steps: the live bookkeeping in section 3 only completes steps for the 9 old keys,
+--     so a proposal for a new key that is attached to phg.command_workflow_steps is refused at execution.
+--   * Voice approval: this database layer cannot tell a spoken "yes" from a tapped Approve. The EDGE FUNCTION that calls
+--     phg_command_execute_approved_action MUST refuse a voice-channel approval for any key whose
+--     harmony_command_actions.voice_approval_ok = false (attach_recipe_to_menu_item, save_invoice_coding_rule) and MUST
+--     record the approval channel (voice | screen) with the proposal/turn. Not enforced here.
+--   * create_recipe_version locks the recipe project row (`for update`) before numbering; live has
+--     UNIQUE (project_id, version) = recipe_versions_project_id_version_key (read-only check 2026-09-29).
+--   * update_recipe_draft refuses a version that is any menu item's current_recipe_version_id.
+--   * NULL-account recipe projects are visible only when EVERY menu using them belongs to this account.
+--   * set_account_setting: value checked against value_type/options, scope_key must be '' for account-scope settings,
+--     source only asked|inferred; writes the business-wide row (user_id NULL).
+--   * save_invoice_coding_rule: patterns <= 200 chars; regex patterns compiled in a begin/exception block first.
+--   * JSON null in jsonb payload fields is treated as absent (nullif(p->'x', 'null'::jsonb)).
+--   * create_record: every files[].storage_path must start with '<account_id>/' and contain no '..'.
+--   * update_view refuses an archived view unless restore: true.
 --
 -- Added action keys
 --   From §7.3 (minus folders):  create_record, create_ingredient, create_prep_recipe, create_recipe_version,
@@ -62,16 +85,34 @@
 --   new_ingredients            [{ref:'n1', name, ...create_ingredient fields}] — created in the same approval (§7.2 step 7)
 --   Shared filters/views (shared = true) need role owner|admin|editor; personal ones any active member.
 --
--- Rollback
---   -- 1. restore the live phg_command_execute_approved_action: re-run section 3 WITHOUT the marked HARMONY branch
---   --    (or the definition saved from pg_get_functiondef before applying)
---   -- 2. drop function if exists phg.harmony_execute_command_action(uuid, text, uuid, text, text, jsonb);
---   -- 3. drop function if exists phg.harmony_session_user(uuid, text); drop function if exists phg.harmony_create_ingredient(uuid, uuid, jsonb);
---   --    drop function if exists phg.harmony_new_ingredients(uuid, uuid, jsonb); drop function if exists phg.harmony_check_ingredient(uuid, uuid);
---   --    drop function if exists phg.harmony_recipe_visible(uuid, uuid); drop function if exists phg.harmony_recipe_version_visible(uuid, uuid);
---   -- 4. drop table if exists phg.harmony_command_actions;
+-- Rollback (run as postgres, off-peak; FIRST 06, then 05, 03, 04, 02)
+--   0. BEFORE APPLYING this file, save the live definition to a file (read-only) and keep it with the change record:
+--        psql "$DB_URL" -At -c "select pg_get_functiondef('public.phg_command_execute_approved_action(uuid,text,uuid,text)'::regprocedure)" \
+--          > phg_command_execute_approved_action.live.sql
+--      and confirm (read-only) that select md5(pg_get_functiondef(...)) still returns bc1b0d154a7a756c4ad1dfd0f3966648,
+--      i.e. the saved file is the definition section 3 was built from.
+--   1. begin; set local lock_timeout = '5s';
+--   2. restore the gateway FIRST (so nothing can call the dispatcher): run the saved phg_command_execute_approved_action.live.sql
+--      (a CREATE OR REPLACE; grants are kept). Fallback: section 3 below WITHOUT the marked HARMONY block.
+--   3. drop function if exists phg.harmony_execute_command_action(uuid, text, uuid, text, text, jsonb);
+--   4. drop function if exists phg.harmony_new_ingredients(uuid, uuid, jsonb); drop function if exists phg.harmony_create_ingredient(uuid, uuid, jsonb);
+--      drop function if exists phg.harmony_check_ingredient(uuid, uuid); drop function if exists phg.harmony_recipe_version_visible(uuid, uuid);
+--      drop function if exists phg.harmony_recipe_visible(uuid, uuid); drop function if exists phg.harmony_session_user(uuid, text);
+--   5. create table if not exists phg._rb06_harmony_command_actions as select * from phg.harmony_command_actions;
+--      revoke all on phg._rb06_harmony_command_actions from public, anon, authenticated;
+--      drop table if exists phg.harmony_command_actions;
+--   6. verify (expect: bc1b0d154a7a756c4ad1dfd0f3966648, null, null, null):
+--      select md5(pg_get_functiondef('public.phg_command_execute_approved_action(uuid,text,uuid,text)'::regprocedure)) gateway_md5,
+--             to_regprocedure('phg.harmony_execute_command_action(uuid,text,uuid,text,text,jsonb)') dispatcher,
+--             to_regprocedure('phg.harmony_session_user(uuid,text)') session_user_fn,
+--             to_regclass('phg.harmony_command_actions') registry;
+--      commit;   -- only if gateway_md5 matches and dispatcher is null; otherwise rollback;
+--   Proposals for the new keys that are still 'proposed' will then fail with 'approved action is not executable'.
 
 begin;
+
+set local lock_timeout = '5s';        -- replaces a live function: off-peak; on 55P03 nothing applied, retry
+set local statement_timeout = '60s';
 
 -- ---------------------------------------------------------------------------------------------------------------
 -- 1. Registry of the new actions (for the app/brain: which need the on-screen Approve button)
@@ -117,15 +158,20 @@ language sql stable security definer set search_path = '' as $$
    where p.id = p_menu_project_id and p_sync_token is not null
      and encode(extensions.digest(p_sync_token, 'sha256'), 'hex') = s.token_hash
      and s.revoked_at is null and s.expires_at > now() and m.status = 'active'
+   order by s.last_seen_at desc, s.created_at desc, s.id   -- deterministic if a token hash ever matched twice
    limit 1
 $$;
 
--- recipe ownership: the project's own (04 account_id) or, until 04 is backfilled, reachable from this account's menus
+-- recipe ownership: the project's own (04 account_id) or, until 04 is backfilled, reachable from this account's menus —
+-- but a NULL-account project that is ALSO on another account's (or an account-less) menu is visible to nobody here
 create or replace function phg.harmony_recipe_visible(p_account uuid, p_project uuid)
 returns boolean language sql stable security definer set search_path = '' as $$
   select exists (select 1 from phg.recipe_projects r where r.id = p_project and (r.account_id = p_account
-           or (r.account_id is null and exists (select 1 from phg.menu_items mi join phg.menu_projects mp on mp.id = mi.menu_project_id
-                                                 where mi.recipe_project_id = r.id and mp.account_id = p_account))))
+           or (r.account_id is null
+               and exists (select 1 from phg.menu_items mi join phg.menu_projects mp on mp.id = mi.menu_project_id
+                            where mi.recipe_project_id = r.id and mp.account_id = p_account)
+               and not exists (select 1 from phg.menu_items mi2 left join phg.menu_projects mp2 on mp2.id = mi2.menu_project_id
+                                where mi2.recipe_project_id = r.id and mp2.account_id is distinct from p_account))))
 $$;
 create or replace function phg.harmony_recipe_version_visible(p_account uuid, p_version uuid)
 returns boolean language sql stable security definer set search_path = '' as $$
@@ -164,7 +210,7 @@ begin
                                aliases, verification_status, account_id, metadata)
   values (v_key, v_name, coalesce(nullif(p->>'ingredient_type', ''), 'other'), nullif(p->>'category', ''), nullif(p->>'default_unit', ''),
           nullif(p->>'density_g_per_ml', '')::numeric, nullif(p->>'abv', '')::numeric,
-          coalesce(array(select jsonb_array_elements_text(coalesce(p->'aliases', '[]'::jsonb))), '{}'),
+          coalesce(array(select jsonb_array_elements_text(coalesce(nullif(p->'aliases', 'null'::jsonb), '[]'::jsonb))), '{}'),
           'user_confirmed', p_account,
           jsonb_build_object('created_by', 'harmony_command_center', 'user_id', p_user))
   returning id into v_id;
@@ -191,21 +237,38 @@ declare
   v_account uuid; v_user uuid; v_role text; v_owner uuid;
   v_id uuid; v_id2 uuid; v_row jsonb; v_prev jsonb; v_new jsonb; v_refs jsonb := '{}'::jsonb;
   v_ver int; v_parent uuid; v_def phg.setting_definitions; c jsonb; v_ing uuid; v_ord int := 0; v_cost jsonb;
-  v_shared boolean;
+  v_shared boolean; v_val jsonb; v_scope text; v_src text;
 begin
   select account_id into v_account from phg.menu_projects where id = p_menu_project_id;
   if v_account is null then raise exception 'menu project has no account; cannot run Harmony actions'; end if;
   select su.user_id, su.role into v_user, v_role from phg.harmony_session_user(p_menu_project_id, p_sync_token) su;
 
-  if exists (select 1 from phg.harmony_command_actions where action_key = p_action_key and needs_user) and v_user is null then
+  -- needs_user is HARD-CODED (the registry row can be edited; this list cannot be widened by data)
+  if v_user is null and (p_action_key in ('set_account_setting','save_filter','save_view','update_view','delete_view',
+                                          'save_party','save_invoice_coding_rule')
+                         or exists (select 1 from phg.harmony_command_actions where action_key = p_action_key and needs_user)) then
     raise exception '% needs a signed-in person, not a menu editor token', p_action_key;
+  end if;
+
+  -- the live workflow bookkeeping (section 3) only knows the 9 existing keys: a new-key proposal attached to a workflow
+  -- step would never complete that step, so it is refused here instead
+  if exists (select 1 from phg.command_workflow_steps ws where ws.proposal_id = p_proposal_id) then
+    raise exception '% cannot be a workflow step yet (run it as a standalone proposal)', p_action_key;
   end if;
 
   -- ---------------------------------------------------------------- free-form records
   if p_action_key = 'create_record' then
+    -- files may only point inside this project's storage prefix '<account_id>/'
+    if jsonb_typeof(coalesce(nullif(p->'files', 'null'::jsonb), '[]'::jsonb)) <> 'array' then raise exception 'files must be a list'; end if;
+    if exists (select 1 from jsonb_array_elements(coalesce(nullif(p->'files', 'null'::jsonb), '[]'::jsonb)) fl
+                where jsonb_typeof(fl) <> 'object'
+                   or coalesce(fl->>'storage_path', '') not like v_account::text || '/%'
+                   or fl->>'storage_path' like '%..%') then
+      raise exception 'each file needs a storage_path inside this project (%/...)', v_account;
+    end if;
     insert into phg.workspace_records (account_id, record_type, title, fields, files, created_by)
     values (v_account, coalesce(nullif(p->>'record_type', ''), 'note'), coalesce(nullif(p->>'title', ''), 'Untitled'),
-            coalesce(p->'fields', '{}'::jsonb), coalesce(p->'files', '[]'::jsonb), v_user)
+            coalesce(nullif(p->'fields', 'null'::jsonb), '{}'::jsonb), coalesce(nullif(p->'files', 'null'::jsonb), '[]'::jsonb), v_user)
     returning id into v_id;
     return jsonb_build_object('record_id', v_id);
 
@@ -217,7 +280,7 @@ begin
     if nullif(p->>'batch_yield', '') is null or nullif(p->>'batch_yield_unit', '') is null then
       raise exception 'batch yield and unit required ("What does the batch make, roughly?")';
     end if;
-    v_new := phg.harmony_new_ingredients(v_account, v_user, p->'new_ingredients');
+    v_new := phg.harmony_new_ingredients(v_account, v_user, nullif(p->'new_ingredients', 'null'::jsonb));
     v_refs := v_new->'refs';
     insert into phg.prep_recipes (prep_key, name, description, prep_type, account_id)
     values ('a' || left(replace(v_account::text, '-', ''), 8) || '_' || left(replace(gen_random_uuid()::text, '-', ''), 12),
@@ -227,7 +290,7 @@ begin
     insert into phg.prep_recipe_versions (prep_recipe_id, version, batch_yield, batch_yield_unit, method, status)
     values (v_id, 1, (p->>'batch_yield')::numeric, p->>'batch_yield_unit', nullif(p->>'method', ''), 'draft')
     returning id into v_id2;
-    for c in select value from jsonb_array_elements(coalesce(p->'components', '[]'::jsonb)) loop
+    for c in select value from jsonb_array_elements(coalesce(nullif(p->'components', 'null'::jsonb), '[]'::jsonb)) loop
       v_ord := v_ord + 1;
       v_ing := coalesce(nullif(c->>'ingredient_id', '')::uuid, nullif(v_refs->>(c->>'ingredient_ref'), '')::uuid);
       if v_ing is not null then
@@ -247,7 +310,7 @@ begin
                               'new_ingredients', v_new->'created', 'cost', 'pending');
 
   elsif p_action_key = 'create_recipe_version' then
-    v_new := phg.harmony_new_ingredients(v_account, v_user, p->'new_ingredients');
+    v_new := phg.harmony_new_ingredients(v_account, v_user, nullif(p->'new_ingredients', 'null'::jsonb));
     v_refs := v_new->'refs';
     v_id := nullif(p->>'recipe_project_id', '')::uuid;
     if v_id is null then
@@ -258,10 +321,13 @@ begin
     elsif not phg.harmony_recipe_visible(v_account, v_id) then
       raise exception 'recipe not found in this project';
     end if;
+    -- serialize version numbering per project; the live UNIQUE (project_id, version) (recipe_versions_project_id_version_key)
+    -- would otherwise turn a concurrent approval into a unique-violation error
+    perform 1 from phg.recipe_projects where id = v_id for update;
     select id, version into v_parent, v_ver from phg.recipe_versions where project_id = v_id order by version desc limit 1;
     -- resolve components first so the jsonb snapshot and the rows agree
     v_row := '[]'::jsonb;
-    for c in select value from jsonb_array_elements(coalesce(p->'components', '[]'::jsonb)) loop
+    for c in select value from jsonb_array_elements(coalesce(nullif(p->'components', 'null'::jsonb), '[]'::jsonb)) loop
       v_ing := coalesce(nullif(c->>'ingredient_id', '')::uuid, nullif(v_refs->>(c->>'ingredient_ref'), '')::uuid);
       if v_ing is not null then perform phg.harmony_check_ingredient(v_account, v_ing);
       elsif nullif(c->>'prep_recipe_id', '') is null then raise exception 'each component needs an ingredient or a prep';
@@ -274,7 +340,7 @@ begin
                                      ingredients, targets, rationale, status, parent_version_id, account_id)
     values (v_id, coalesce(v_ver, 0) + 1, nullif(p->>'cocktail_name', ''), nullif(p->>'recipe_name', ''), nullif(p->>'concept', ''),
             nullif(p->>'build_family', ''), nullif(p->>'method', ''), nullif(p->>'glassware', ''), nullif(p->>'garnish', ''),
-            v_row, coalesce(p->'targets', '{}'::jsonb), jsonb_build_object('source', 'harmony_voice_build', 'proposal_id', p_proposal_id),
+            v_row, coalesce(nullif(p->'targets', 'null'::jsonb), '{}'::jsonb), jsonb_build_object('source', 'harmony_voice_build', 'proposal_id', p_proposal_id),
             case when p->>'status' = 'candidate' then 'candidate' else 'draft' end, v_parent,
             (select account_id from phg.recipe_projects where id = v_id))
     returning id into v_id2;
@@ -296,6 +362,9 @@ begin
   elsif p_action_key = 'update_recipe_draft' then
     v_id := coalesce(nullif(p_target_id, '')::uuid, nullif(p->>'recipe_version_id', '')::uuid);
     if not phg.harmony_recipe_version_visible(v_account, v_id) then raise exception 'recipe version not found in this project'; end if;
+    if exists (select 1 from phg.menu_items mi where mi.current_recipe_version_id = v_id) then
+      raise exception 'this version is on a menu item; make a new version instead of editing it';
+    end if;
     select to_jsonb(v) || jsonb_build_object('components', (select coalesce(jsonb_agg(to_jsonb(rc) order by rc.sort_order), '[]'::jsonb)
                                                            from phg.recipe_components rc where rc.recipe_version_id = v.id))
       into v_prev from phg.recipe_versions v where v.id = v_id and v.status in ('draft','candidate') for update;
@@ -308,14 +377,14 @@ begin
       method        = coalesce(p#>>'{fields,method}', method),
       glassware     = coalesce(p#>>'{fields,glassware}', glassware),
       garnish       = coalesce(p#>>'{fields,garnish}', garnish),
-      targets       = coalesce(p#>'{fields,targets}', targets)
+      targets       = coalesce(nullif(p#>'{fields,targets}', 'null'::jsonb), targets)
     where id = v_id;
     if p ? 'components' then
-      v_new := phg.harmony_new_ingredients(v_account, v_user, p->'new_ingredients');
+      v_new := phg.harmony_new_ingredients(v_account, v_user, nullif(p->'new_ingredients', 'null'::jsonb));
       v_refs := v_new->'refs';
       delete from phg.recipe_components where recipe_version_id = v_id;   -- draft only; previous rows are returned in 'undo'
       v_row := '[]'::jsonb;
-      for c in select value from jsonb_array_elements(p->'components') loop
+      for c in select value from jsonb_array_elements(nullif(p->'components', 'null'::jsonb)) loop
         v_ord := v_ord + 1;
         v_ing := coalesce(nullif(c->>'ingredient_id', '')::uuid, nullif(v_refs->>(c->>'ingredient_ref'), '')::uuid);
         if v_ing is not null then perform phg.harmony_check_ingredient(v_account, v_ing);
@@ -349,17 +418,42 @@ begin
     if not found then raise exception 'unknown setting %', p->>'key'; end if;
     if v_def.per_scope = 'person' then raise exception 'personal settings are stored as preferences (harmony_memory), not account settings'; end if;
     if v_role is null or v_role <> all (v_def.edit_roles) then raise exception 'your role cannot change %', v_def.label; end if;
-    if not (p ? 'value') then raise exception 'value required'; end if;
+    v_val := nullif(p->'value', 'null'::jsonb);
+    if v_val is null then raise exception 'value required'; end if;
+    v_scope := coalesce(p->>'scope_key', '');
+    if v_def.per_scope = 'account' and v_scope <> '' then raise exception '% is set for the whole business, not per %', v_def.label, v_scope; end if;
+    if length(v_scope) > 120 then raise exception 'scope too long'; end if;
+    v_src := coalesce(nullif(p->>'source', ''), 'asked');
+    if v_src not in ('asked','inferred') then raise exception 'setting source must be asked or inferred'; end if;
+    -- value must match the definition's value_type (and its fixed options, when options is a list)
+    if not (case v_def.value_type
+         when 'choice'  then jsonb_typeof(v_val) = 'string'
+                             and (jsonb_typeof(v_def.options) is distinct from 'array' or v_def.options @> jsonb_build_array(v_val))
+         when 'number'  then jsonb_typeof(v_val) = 'number'
+         when 'money'   then jsonb_typeof(v_val) = 'number' and (v_val #>> '{}')::numeric >= 0
+         when 'percent' then jsonb_typeof(v_val) = 'number' and (v_val #>> '{}')::numeric between 0 and 100
+         when 'bool'    then jsonb_typeof(v_val) = 'boolean'
+         when 'text'    then jsonb_typeof(v_val) = 'string' and length(v_val #>> '{}') between 1 and 500
+         when 'list'    then jsonb_typeof(v_val) = 'array'
+         when 'mapping' then jsonb_typeof(v_val) = 'object'
+                             and (jsonb_typeof(v_def.options->'keys') is distinct from 'array'
+                                  or not exists (select 1 from jsonb_object_keys(v_val) k where not (v_def.options->'keys') ? k))
+         when 'time'    then jsonb_typeof(v_val) = 'string' and (v_val #>> '{}') ~ '^([01]\d|2[0-3]):[0-5]\d$'
+         when 'date'    then jsonb_typeof(v_val) = 'string' and (v_val #>> '{}') ~ '^(\d{4}-)?(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
+         when 'connector' then jsonb_typeof(v_val) = 'string' and length(v_val #>> '{}') between 1 and 200
+         else false end) then
+      raise exception 'that is not a valid value for % (%)', v_def.label, v_def.value_type;
+    end if;
     select to_jsonb(s) - 'history' into v_prev from phg.account_settings s
-     where s.account_id = v_account and s.key = v_def.key and s.scope_key = coalesce(p->>'scope_key', '');
-    insert into phg.account_settings (account_id, key, scope_key, value, source, confidence, evidence, confirmed_by, confirmed_at)
-    values (v_account, v_def.key, coalesce(p->>'scope_key', ''), p->'value', coalesce(nullif(p->>'source', ''), 'asked'),
-            nullif(p->>'confidence', '')::numeric, coalesce(p->'evidence', '{}'::jsonb) || jsonb_build_object('proposal_id', p_proposal_id),
+     where s.account_id = v_account and s.key = v_def.key and s.scope_key = v_scope and s.user_id is null;
+    insert into phg.account_settings (account_id, key, user_id, scope_key, value, source, confidence, evidence, confirmed_by, confirmed_at)
+    values (v_account, v_def.key, null, v_scope, v_val, v_src,
+            nullif(p->>'confidence', '')::numeric, coalesce(nullif(p->'evidence', 'null'::jsonb), '{}'::jsonb) || jsonb_build_object('proposal_id', p_proposal_id),
             v_user, now())
-    on conflict (account_id, key, scope_key) do update set
+    on conflict (account_id, key, scope_key, user_id) do update set    -- 02: unique nulls not distinct
       value = excluded.value, source = excluded.source, confidence = excluded.confidence, evidence = excluded.evidence,
       confirmed_by = excluded.confirmed_by, confirmed_at = excluded.confirmed_at;
-    return jsonb_build_object('key', v_def.key, 'scope_key', coalesce(p->>'scope_key', ''), 'value', p->'value',
+    return jsonb_build_object('key', v_def.key, 'scope_key', v_scope, 'value', v_val,
                               'undo', jsonb_build_object('previous', v_prev));
 
   -- ---------------------------------------------------------------- saved filters and views (draft 03)
@@ -370,7 +464,7 @@ begin
     v_id := nullif(p->>'filter_id', '')::uuid;
     if v_id is null then
       insert into phg.saved_filters (account_id, user_id, name, entity_key, conditions, created_by, source)
-      values (v_account, v_owner, btrim(p->>'name'), p->>'entity', coalesce(p->'conditions', '[]'::jsonb), v_user,
+      values (v_account, v_owner, btrim(p->>'name'), p->>'entity', coalesce(nullif(p->'conditions', 'null'::jsonb), '[]'::jsonb), v_user,
               coalesce(nullif(p->>'source', ''), 'spoken'))
       returning id into v_id;
       return jsonb_build_object('filter_id', v_id, 'created', true);
@@ -380,7 +474,7 @@ begin
        and (f.user_id = v_user or (f.user_id is null and v_role in ('owner','admin','editor')));
     if v_prev is null then raise exception 'filter not found, or not yours to change'; end if;
     update phg.saved_filters set name = coalesce(nullif(btrim(p->>'name'), ''), name),
-                                 conditions = coalesce(p->'conditions', conditions)
+                                 conditions = coalesce(nullif(p->'conditions', 'null'::jsonb), conditions)
      where id = v_id;   -- entity and sharing are fixed once saved
     return jsonb_build_object('filter_id', v_id, 'created', false, 'undo', jsonb_build_object('previous', v_prev));
 
@@ -390,12 +484,12 @@ begin
     insert into phg.saved_views (account_id, user_id, name, entity_key, metric_keys, filter_ids, extra_conditions, period_preset_key,
                                  group_by, columns, sort, display, pinned, created_by, source)
     values (v_account, case when v_shared then null else v_user end, btrim(p->>'name'), nullif(p->>'entity', ''),
-            coalesce(array(select jsonb_array_elements_text(p->'metric_keys')), '{}'),
-            coalesce(array(select (jsonb_array_elements_text(p->'filter_ids'))::uuid), '{}'),
-            coalesce(p->'extra_conditions', '[]'::jsonb), nullif(p->>'period_preset_key', ''),
-            coalesce(array(select jsonb_array_elements_text(p->'group_by')), '{}'),
-            coalesce(array(select jsonb_array_elements_text(p->'columns')), '{}'),
-            coalesce(p->'sort', '[]'::jsonb), coalesce(nullif(p->>'display', ''), 'table'),
+            coalesce(array(select jsonb_array_elements_text(nullif(p->'metric_keys', 'null'::jsonb))), '{}'),
+            coalesce(array(select (jsonb_array_elements_text(nullif(p->'filter_ids', 'null'::jsonb)))::uuid), '{}'),
+            coalesce(nullif(p->'extra_conditions', 'null'::jsonb), '[]'::jsonb), nullif(p->>'period_preset_key', ''),
+            coalesce(array(select jsonb_array_elements_text(nullif(p->'group_by', 'null'::jsonb))), '{}'),
+            coalesce(array(select jsonb_array_elements_text(nullif(p->'columns', 'null'::jsonb))), '{}'),
+            coalesce(nullif(p->'sort', 'null'::jsonb), '[]'::jsonb), coalesce(nullif(p->>'display', ''), 'table'),
             coalesce((p->>'pinned')::boolean, false), v_user, coalesce(nullif(p->>'source', ''), 'spoken'))
     returning id into v_id;
     return jsonb_build_object('view_id', v_id, 'undo', jsonb_build_object('action', 'delete_view', 'view_id', v_id));
@@ -406,6 +500,10 @@ begin
      where v.id = v_id and v.account_id = v_account
        and (v.user_id = v_user or (v.user_id is null and v_role in ('owner','admin','editor')));
     if v_prev is null then raise exception 'view not found, or not yours to change'; end if;
+    if p_action_key = 'update_view' and (v_prev->>'archived_at') is not null
+       and not coalesce((p->>'restore')::boolean, false) then
+      raise exception 'that view was removed; restore it first (restore: true)';
+    end if;
     if p_action_key = 'delete_view' then
       update phg.saved_views set archived_at = now() where id = v_id and archived_at is null;
       return jsonb_build_object('view_id', v_id, 'archived', true,
@@ -415,13 +513,13 @@ begin
       archived_at       = case when coalesce((p->>'restore')::boolean, false) then null else archived_at end,
       name              = coalesce(nullif(btrim(p->>'name'), ''), name),
       entity_key        = case when p ? 'entity' then nullif(p->>'entity', '') else entity_key end,
-      metric_keys       = case when p ? 'metric_keys' then coalesce(array(select jsonb_array_elements_text(p->'metric_keys')), '{}') else metric_keys end,
-      filter_ids        = case when p ? 'filter_ids' then coalesce(array(select (jsonb_array_elements_text(p->'filter_ids'))::uuid), '{}') else filter_ids end,
-      extra_conditions  = coalesce(p->'extra_conditions', extra_conditions),
+      metric_keys       = case when p ? 'metric_keys' then coalesce(array(select jsonb_array_elements_text(nullif(p->'metric_keys', 'null'::jsonb))), '{}') else metric_keys end,
+      filter_ids        = case when p ? 'filter_ids' then coalesce(array(select (jsonb_array_elements_text(nullif(p->'filter_ids', 'null'::jsonb)))::uuid), '{}') else filter_ids end,
+      extra_conditions  = coalesce(nullif(p->'extra_conditions', 'null'::jsonb), extra_conditions),
       period_preset_key = case when p ? 'period_preset_key' then nullif(p->>'period_preset_key', '') else period_preset_key end,
-      group_by          = case when p ? 'group_by' then coalesce(array(select jsonb_array_elements_text(p->'group_by')), '{}') else group_by end,
-      columns           = case when p ? 'columns' then coalesce(array(select jsonb_array_elements_text(p->'columns')), '{}') else columns end,
-      sort              = coalesce(p->'sort', sort),
+      group_by          = case when p ? 'group_by' then coalesce(array(select jsonb_array_elements_text(nullif(p->'group_by', 'null'::jsonb))), '{}') else group_by end,
+      columns           = case when p ? 'columns' then coalesce(array(select jsonb_array_elements_text(nullif(p->'columns', 'null'::jsonb))), '{}') else columns end,
+      sort              = coalesce(nullif(p->'sort', 'null'::jsonb), sort),
       display           = coalesce(nullif(p->>'display', ''), display),
       pinned            = coalesce((p->>'pinned')::boolean, pinned)
     where id = v_id;
@@ -438,10 +536,10 @@ begin
       insert into phg.parties (account_id, name, kinds, aliases, contact_name, email, phone, address, website, account_number,
                                delivery_days, order_cutoff, payment_terms, gl_default_code, notes, source, created_by)
       values (v_account, btrim(p->>'name'),
-              coalesce(array(select jsonb_array_elements_text(p->'kinds')), '{supplier}'),
-              coalesce(array(select jsonb_array_elements_text(p->'aliases')), '{}'),
-              nullif(p->>'contact_name', ''), nullif(p->>'email', ''), nullif(p->>'phone', ''), p->'address', nullif(p->>'website', ''),
-              nullif(p->>'account_number', ''), coalesce(array(select jsonb_array_elements_text(p->'delivery_days')), '{}'),
+              coalesce(array(select jsonb_array_elements_text(nullif(p->'kinds', 'null'::jsonb))), '{supplier}'),
+              coalesce(array(select jsonb_array_elements_text(nullif(p->'aliases', 'null'::jsonb))), '{}'),
+              nullif(p->>'contact_name', ''), nullif(p->>'email', ''), nullif(p->>'phone', ''), nullif(p->'address', 'null'::jsonb), nullif(p->>'website', ''),
+              nullif(p->>'account_number', ''), coalesce(array(select jsonb_array_elements_text(nullif(p->'delivery_days', 'null'::jsonb))), '{}'),
               nullif(p->>'order_cutoff', ''), nullif(p->>'payment_terms', ''), nullif(p->>'gl_default_code', ''), nullif(p->>'notes', ''),
               coalesce(nullif(p->>'source', ''), 'asked'), v_user)
       returning id into v_id;
@@ -451,18 +549,28 @@ begin
     if v_prev is null then raise exception 'supplier not found'; end if;
     update phg.parties set
       name = coalesce(nullif(btrim(p->>'name'), ''), name),
-      kinds = case when p ? 'kinds' then coalesce(array(select jsonb_array_elements_text(p->'kinds')), kinds) else kinds end,
-      aliases = case when p ? 'aliases' then coalesce(array(select jsonb_array_elements_text(p->'aliases')), '{}') else aliases end,
+      kinds = case when p ? 'kinds' then coalesce(array(select jsonb_array_elements_text(nullif(p->'kinds', 'null'::jsonb))), kinds) else kinds end,
+      aliases = case when p ? 'aliases' then coalesce(array(select jsonb_array_elements_text(nullif(p->'aliases', 'null'::jsonb))), '{}') else aliases end,
       contact_name = coalesce(p->>'contact_name', contact_name), email = coalesce(p->>'email', email), phone = coalesce(p->>'phone', phone),
-      address = coalesce(p->'address', address), website = coalesce(p->>'website', website),
+      address = coalesce(nullif(p->'address', 'null'::jsonb), address), website = coalesce(p->>'website', website),
       account_number = coalesce(p->>'account_number', account_number),
-      delivery_days = case when p ? 'delivery_days' then coalesce(array(select jsonb_array_elements_text(p->'delivery_days')), '{}') else delivery_days end,
+      delivery_days = case when p ? 'delivery_days' then coalesce(array(select jsonb_array_elements_text(nullif(p->'delivery_days', 'null'::jsonb))), '{}') else delivery_days end,
       order_cutoff = coalesce(p->>'order_cutoff', order_cutoff), payment_terms = coalesce(p->>'payment_terms', payment_terms),
       gl_default_code = coalesce(p->>'gl_default_code', gl_default_code), notes = coalesce(p->>'notes', notes), updated_at = now()
     where id = v_id;
     return jsonb_build_object('party_id', v_id, 'created', false, 'undo', jsonb_build_object('previous', v_prev));
 
   elsif p_action_key = 'save_invoice_coding_rule' then
+    if length(coalesce(p->>'line_pattern', '')) > 200 or length(coalesce(p->>'party_pattern', '')) > 200 then
+      raise exception 'patterns are limited to 200 characters';
+    end if;
+    if coalesce(nullif(p->>'match_kind', ''), 'ilike') = 'regex' then
+      begin
+        perform '' ~ coalesce(nullif(p->>'line_pattern', ''), ''), '' ~ coalesce(nullif(p->>'party_pattern', ''), '');
+      exception when others then
+        raise exception 'that pattern is not a valid regular expression';
+      end;
+    end if;
     if to_regclass('phg.gl_accounts') is not null
        and not exists (select 1 from phg.gl_accounts g where g.code = p->>'gl_code' and (g.account_id = v_account or g.account_id is null)) then
       raise exception 'unknown GL account %', p->>'gl_code';

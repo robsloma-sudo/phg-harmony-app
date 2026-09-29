@@ -27,30 +27,83 @@
 --     reading settings/setup status/glossary/memory and for the person's own memory edits. Changing a SETTING goes
 --     through the Command Center proposal flow (set_account_setting, file 06), not through this function.
 --
--- Live-schema facts
---   * phg.sales_import_mappings(id, mapping_name, source_system, version, mapping_spec jsonb, active) has NO account_id:
---     one row today ('generic_sales_csv'). A business's own confirmed mapping stored there would be global. This draft
---     adds a NULLABLE account_id to it (null = shared template) — additive, existing row untouched. Open question for Rob.
+-- Apply order: 02 -> 04 -> 03 -> 05 -> 06 (this file is FIRST). Depends on the live knowledge map
+--   (20260929020000_harmony_knowledge_map.sql: harmony_table_access, harmony_apply_table_access, harmony_entities).
+--
+-- Name resolution order (read before approving)
+--   phg.harmony_aliases (live, from 20260929013000) is read FIRST: it holds what a person actually said -> what they meant
+--   (heard/kind/means/ref_id), learned from corrections. phg.account_glossary (this file) maps the business's own
+--   TERMS to ENTITIES ('the hall' -> revenue_center Hall). Glossary is consulted only when no alias matches.
+--
+-- Live-schema facts (read-only checks 2026-09-29)
+--   * phg.sales_import_mappings(id, mapping_name, source_system, version, mapping_spec jsonb, active, created_at) has NO
+--     account_id: one row today ('generic_sales_csv'). This draft adds a NULLABLE account_id (null = shared template) —
+--     additive, existing row untouched. Open question for Rob.
+--     Reader search (pg_proc.prosrc ILIKE '%import_mapping%', all non-system schemas; plus views and FKs on the table):
+--     NO live function, view or FK reads phg.sales_import_mappings today, and no code in this repo references it besides
+--     this draft. ACL: postgres + service_role only. RULE: any function/edge code written later that reads this table
+--     MUST filter `account_id is null or account_id = <caller's account>` BEFORE any project-owned mapping
+--     (account_id set) is written; otherwise one business's POS column mapping leaks to another. Re-run the pg_proc
+--     search immediately before the first project-owned mapping is inserted.
 --   * Membership roles in the live check constraint are owner|admin|editor|analyst|viewer (spec §4C.2 says
 --     owner/admin/manager/staff). Seeds below use the live names.
 --   * No credentials are stored in any table here. data_sources.connector_ref only NAMES a secret kept elsewhere.
+--     phg.data_sources is registered as 'never' in the query whitelist (connection details); read it via phg_harmony_setup_db.
 --   * phg.vendors (existing, global, no account_id, 0 project scoping) stays as the costing graph's vendor key;
 --     parties.vendor_id optionally points at it. gl_default_code / invoice_coding_rules.gl_code are text, not FKs, because
 --     phg.gl_accounts arrives in draft 04 (validated by the command action at write time).
---   * Depends on draft 01 (harmony_table_access, harmony_apply_table_access, harmony_entities).
+--   * The live 'vendor' entity already owns the alias 'vendor' (aliases {distributor,supplier}); the 'party' entity
+--     below does NOT use 'vendor' as an alias. 'distributor'/'supplier' still overlap with the vendor entity's aliases:
+--     harmony_aliases / a clarifying question decides between them.
+--   * account_settings.user_id: NULL = business-wide answer; set = that person's own answer (per_scope 'person').
+--     Readers (query gateway scope_expr, settings_get) show business-wide rows plus only the caller's own rows.
+--   * harmony_memory: personal memory any active member; project-wide memory (user_id NULL) only owner/admin/editor,
+--     and only with source 'conversation' or 'inferred'.
 --
--- Rollback
---   -- drop function if exists public.phg_harmony_setup_db(text, jsonb);
---   -- drop trigger if exists account_settings_history on phg.account_settings; drop function if exists phg.account_settings_keep_history();
---   -- drop policy if exists harmony_read on phg.parties; (same for invoice_coding_rules, workspace_records, account_settings,
---   --   account_glossary, harmony_memory, data_sources) ; delete from phg.harmony_table_access where table_pattern in
---   --   ('parties','invoice_coding_rules','workspace_records','account_settings','account_glossary','harmony_memory','data_sources','setting_definitions');
---   -- delete from phg.harmony_entities where key in ('party','record');
---   -- drop table if exists phg.invoice_coding_rules, phg.parties, phg.workspace_records;
---   -- drop table if exists phg.data_sources, phg.harmony_memory, phg.account_glossary, phg.account_settings, phg.setting_definitions;
---   -- alter table phg.sales_import_mappings drop column if exists account_id;
+-- Rollback (scripted; run as postgres in ONE transaction, off-peak, AFTER rolling back 06, 05, 03 and 04 in that order)
+--   begin;
+--   set local lock_timeout = '3s';
+--   -- 1. backups of everything a person may have entered (kept until Rob deletes them)
+--   create table if not exists phg._rb02_account_settings   as select * from phg.account_settings;
+--   create table if not exists phg._rb02_account_glossary   as select * from phg.account_glossary;
+--   create table if not exists phg._rb02_harmony_memory     as select * from phg.harmony_memory;
+--   create table if not exists phg._rb02_data_sources       as select * from phg.data_sources;
+--   create table if not exists phg._rb02_parties            as select * from phg.parties;
+--   create table if not exists phg._rb02_invoice_coding_rules as select * from phg.invoice_coding_rules;
+--   create table if not exists phg._rb02_workspace_records  as select * from phg.workspace_records;
+--   create table if not exists phg._rb02_sales_import_mappings_owned as
+--     select * from phg.sales_import_mappings where account_id is not null;
+--   revoke all on phg._rb02_account_settings, phg._rb02_account_glossary, phg._rb02_harmony_memory, phg._rb02_data_sources,
+--     phg._rb02_parties, phg._rb02_invoice_coding_rules, phg._rb02_workspace_records, phg._rb02_sales_import_mappings_owned
+--     from public, anon, authenticated;
+--   -- 2. functions and triggers
+--   drop function if exists public.phg_harmony_setup_db(text, jsonb);
+--   drop trigger if exists account_settings_history on phg.account_settings; drop function if exists phg.account_settings_keep_history();
+--   drop trigger if exists data_sources_same_account on phg.data_sources; drop function if exists phg.data_sources_same_account();
+--   -- 3. whitelist rows + entities (policies go with the tables in step 4)
+--   delete from phg.harmony_table_access where schema_name = 'phg' and table_pattern in
+--     ('parties','invoice_coding_rules','workspace_records','account_settings','account_glossary','harmony_memory',
+--      'data_sources','setting_definitions');
+--   delete from phg.harmony_entities where key in ('party','record','setting');
+--   -- 4. tables (children first)
+--   drop table if exists phg.invoice_coding_rules, phg.parties, phg.workspace_records;
+--   drop table if exists phg.data_sources, phg.harmony_memory, phg.account_glossary, phg.account_settings, phg.setting_definitions;
+--   -- only if _rb02_sales_import_mappings_owned is empty, or Rob accepts those rows becoming shared templates:
+--   delete from phg.sales_import_mappings where account_id is not null;   -- backed up in step 1
+--   alter table phg.sales_import_mappings drop column if exists account_id;
+--   -- 5. verify (expect: all nulls, 0, 0, false)
+--   select to_regclass('phg.account_settings') s, to_regclass('phg.parties') p, to_regclass('phg.data_sources') d,
+--          to_regprocedure('public.phg_harmony_setup_db(text,jsonb)') fn,
+--          (select count(*) from phg.harmony_entities where key in ('party','record','setting')) entities,
+--          (select count(*) from phg.harmony_table_access where table_pattern in ('parties','invoice_coding_rules',
+--             'workspace_records','account_settings','account_glossary','harmony_memory','data_sources','setting_definitions')) access_rows,
+--          exists (select 1 from information_schema.columns where table_schema = 'phg' and table_name = 'sales_import_mappings'
+--                   and column_name = 'account_id') sim_account_col;
+--   commit;
 
 begin;
+
+set local lock_timeout = '3s';   -- off-peak; on 55P03 (lock_not_available) nothing is applied, retry later
 
 create table if not exists phg.setting_definitions (
   key            text primary key,                                   -- 'calendar.week_start'
@@ -77,6 +130,7 @@ create table if not exists phg.account_settings (
   id             uuid primary key default gen_random_uuid(),
   account_id     uuid not null references phg.accounts(id) on delete cascade,
   key            text not null references phg.setting_definitions(key) on update cascade,
+  user_id        uuid,                                               -- NULL = whole business; set = this person's own answer
   scope_key      text not null default '',                           -- '' = whole business; else location / revenue center key
   value          jsonb not null,
   source         text not null check (source in ('asked','inferred','imported','default')),
@@ -87,7 +141,7 @@ create table if not exists phg.account_settings (
   history        jsonb not null default '[]'::jsonb,                 -- previous {value, source, confidence, confirmed_by, confirmed_at, replaced_at}
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now(),
-  unique (account_id, key, scope_key)
+  unique nulls not distinct (account_id, key, scope_key, user_id)    -- PG15+; live is PG17. 06 upserts on these columns
 );
 
 create or replace function phg.account_settings_keep_history() returns trigger
@@ -167,6 +221,26 @@ create table if not exists phg.data_sources (
 );
 create index if not exists data_sources_account on phg.data_sources (account_id, kind);
 
+-- a data source may only point at its own project's location and at a shared (NULL) or its own POS mapping
+create or replace function phg.data_sources_same_account() returns trigger
+language plpgsql security definer set search_path = phg, pg_temp as $$
+begin
+  if new.location_id is not null and not exists (
+       select 1 from phg.sales_locations l where l.id = new.location_id and l.account_id = new.account_id) then
+    raise exception 'location % does not belong to this project', new.location_id;
+  end if;
+  if new.sales_import_mapping_id is not null and not exists (
+       select 1 from phg.sales_import_mappings m
+        where m.id = new.sales_import_mapping_id and (m.account_id is null or m.account_id = new.account_id)) then
+    raise exception 'sales import mapping % belongs to another project', new.sales_import_mapping_id;
+  end if;
+  return new;
+end $$;
+revoke all on function phg.data_sources_same_account() from public, anon, authenticated;
+drop trigger if exists data_sources_same_account on phg.data_sources;
+create trigger data_sources_same_account before insert or update on phg.data_sources
+  for each row execute function phg.data_sources_same_account();
+
 -- ---------------------------------------------------------------------------------------------------------------
 -- Parties, invoice coding rules, free-form records
 -- ---------------------------------------------------------------------------------------------------------------
@@ -197,7 +271,8 @@ create table if not exists phg.parties (
   created_by       uuid,
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now(),
-  archived_at      timestamptz
+  archived_at      timestamptz,
+  unique (id, account_id)                                  -- target of the composite FK from invoice_coding_rules
 );
 create unique index if not exists parties_name_uq on phg.parties (account_id, lower(name)) where archived_at is null;
 comment on table phg.parties is 'Project-scoped suppliers/distributors/service providers/landlords. Never store logins or passwords here.';
@@ -205,7 +280,7 @@ comment on table phg.parties is 'Project-scoped suppliers/distributors/service p
 create table if not exists phg.invoice_coding_rules (
   id             uuid primary key default gen_random_uuid(),
   account_id     uuid not null references phg.accounts(id) on delete cascade,
-  party_id       uuid references phg.parties(id) on delete cascade,
+  party_id       uuid,                                     -- same-project party: composite FK below
   party_pattern  text,                                     -- when the party is not known yet: ILIKE on the invoice vendor name
   line_pattern   text,                                     -- on purchase_invoice_lines.raw_description
   match_kind     text not null default 'ilike' check (match_kind in ('ilike','regex','exact')),
@@ -220,6 +295,7 @@ create table if not exists phg.invoice_coding_rules (
   active         boolean not null default true,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now(),
+  foreign key (party_id, account_id) references phg.parties (id, account_id) on delete cascade,  -- MATCH SIMPLE: null party_id = no check
   check (party_id is not null or party_pattern is not null or line_pattern is not null)
 );
 create index if not exists invoice_coding_rules_lookup on phg.invoice_coding_rules (account_id, party_id, priority) where active;
@@ -297,14 +373,14 @@ on conflict (key) do nothing;
 -- Knowledge map (draft 01): new entities + whitelist entries, then (re)apply grants/policies for the reader role
 -- ---------------------------------------------------------------------------------------------------------------
 insert into phg.harmony_entities (key, label, entity_group, aliases, main_tables, scope, name_lookup) values
-  ('party','supplier','Buying and cost','{vendor,distributor,supplier,landlord,service provider}','{phg.parties}','project','{"table":"phg.parties","id":"id","name":"name","aliases":"aliases"}'),
+  ('party','supplier','Buying and cost','{distributor,supplier,landlord,service provider}','{phg.parties}','project','{"table":"phg.parties","id":"id","name":"name","aliases":"aliases"}'),
   ('record','record','Organising','{card,entry}','{phg.workspace_records}','project','{"table":"phg.workspace_records","id":"id","name":"title"}'),
   ('setting','business setting','Organising','{setting,setup}','{phg.account_settings,phg.setting_definitions}','project','{"table":"phg.setting_definitions","id":"key","name":"label"}')
 on conflict (key) do nothing;
 
 insert into phg.harmony_table_access (schema_name, table_pattern, access, account_column, scope_kind, scope_expr, notes) values
   ('phg','setting_definitions','shared_read', null, null, null, 'admin skeleton'),
-  ('phg','account_settings',   'project_read','account_id','account_id','account_id = phg.harmony_scope_account()', null),
+  ('phg','account_settings',   'project_read','account_id','custom','account_id = phg.harmony_scope_account() and (user_id is null or user_id = phg.harmony_scope_user())', 'person layer: business-wide + own answers only'),
   ('phg','account_glossary',   'project_read','account_id','custom','account_id = phg.harmony_scope_account() and deleted_at is null', null),
   ('phg','harmony_memory',     'project_read','account_id','custom','account_id = phg.harmony_scope_account() and deleted_at is null and (user_id is null or user_id = phg.harmony_scope_user())', 'person layer: own + project memory only'),
   ('phg','parties',            'project_read','account_id','account_id','account_id = phg.harmony_scope_account()', null),
@@ -312,6 +388,9 @@ insert into phg.harmony_table_access (schema_name, table_pattern, access, accoun
   ('phg','workspace_records',  'project_read','account_id','custom','account_id = phg.harmony_scope_account() and archived_at is null', null)
 on conflict (schema_name, table_pattern) do nothing;
 -- data_sources is deliberately NOT readable through the query gateway (connection details); use phg_harmony_setup_db.
+insert into phg.harmony_table_access (schema_name, table_pattern, access, notes) values
+  ('phg','data_sources','never','connection details; read through phg_harmony_setup_db only')
+on conflict (schema_name, table_pattern) do nothing;
 select phg.harmony_apply_table_access();
 
 -- ---------------------------------------------------------------------------------------------------------------
@@ -336,13 +415,17 @@ begin
   end if;
 
   if p_op = 'settings_get' then
-    -- one key, or all; always says where each value came from
+    -- one key, or all; always says where each value came from. Business-wide rows plus ONLY this person's own rows;
+    -- for the same (key, scope_key) the person's own answer wins over the business-wide one.
     return coalesce((select jsonb_agg(jsonb_build_object(
         'key', d.key, 'group', d.setting_group, 'label', d.label, 'scope_key', s.scope_key,
         'value', coalesce(s.value, d.default_value), 'source', coalesce(s.source, case when d.default_value is not null then 'default' end),
-        'confidence', s.confidence, 'confirmed_at', s.confirmed_at) order by d.sort)
+        'personal', s.user_id is not null, 'confidence', s.confidence, 'confirmed_at', s.confirmed_at) order by d.sort, s.scope_key)
       from phg.setting_definitions d
-      left join phg.account_settings s on s.key = d.key and s.account_id = v_account
+      left join lateral (
+        select distinct on (s0.scope_key) s0.* from phg.account_settings s0
+         where s0.key = d.key and s0.account_id = v_account and (s0.user_id is null or s0.user_id = v_user)
+         order by s0.scope_key, (s0.user_id is not null) desc) s on true
       where d.active and (p_args->>'key' is null or d.key = p_args->>'key')), '[]'::jsonb);
 
   elsif p_op = 'setup_status' then
@@ -351,7 +434,7 @@ begin
                                                           'unlocks', d.needed_by) order by d.sort)
       from phg.setting_definitions d
       where d.active and d.ask_when <> 'never' and d.per_scope <> 'person'
-        and not exists (select 1 from phg.account_settings s where s.account_id = v_account and s.key = d.key)), '[]'::jsonb);
+        and not exists (select 1 from phg.account_settings s where s.account_id = v_account and s.key = d.key and s.user_id is null)), '[]'::jsonb);
 
   elsif p_op = 'glossary_list' then
     return coalesce((select jsonb_agg(to_jsonb(g) - 'term_norm' order by g.term)
@@ -366,6 +449,17 @@ begin
       where m.account_id = v_account and m.deleted_at is null and (m.user_id is null or m.user_id = v_user)), '[]'::jsonb);
 
   elsif p_op = 'memory_add' then
+    -- personal memory: any active member. Project-wide memory (seen by everyone in the project): owner/admin/editor
+    -- only, and only from a conversation or an inference (never 'imported'/'admin' through this door).
+    if not coalesce((p_args->>'personal')::boolean, true) then
+      if not exists (select 1 from phg.account_memberships am where am.user_id = v_user and am.account_id = v_account
+                        and am.status = 'active' and am.role in ('owner','admin','editor')) then
+        raise exception 'only owners, admins and editors can save project-wide memory';
+      end if;
+      if coalesce(p_args->>'source', 'conversation') not in ('conversation','inferred') then
+        raise exception 'project-wide memory source must be conversation or inferred';
+      end if;
+    end if;
     insert into phg.harmony_memory (account_id, user_id, kind, text, data, source, source_ref, confirmed_at)
     values (v_account,
             case when coalesce((p_args->>'personal')::boolean, true) then v_user end,
