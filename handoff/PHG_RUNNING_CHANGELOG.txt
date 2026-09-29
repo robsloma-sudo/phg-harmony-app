@@ -2183,3 +2183,13 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
 - Steps 2-5 (staging dedupe batches incl. the 2026-09-29 09:40-13:16 extraction rows, analyze, candidate hash
   backfill, concurrent index): running.
 - Not part of this publish: 20260928030000 (design score gate) - separate change, not applied.
+
+2026-09-29 Cocktail library scale-up launched (Rob: "let's go big")
+- Library before: 138 recipes / 85 drinks / 130 styles (B 56, C 76, D 6). Real menus: 11,778 priced cocktails at
+  1,226 venues, only 18% matched to a known drink.
+- 8 mixology-researcher agents in parallel, ordered by what IA/CO/NY menus actually sell (margarita 364 listings,
+  mule 152, mojito 125, martini-style 122, old fashioned 105, bloody mary 73...). Target 60-100 recipes each, several
+  sources per style. Files: data/mixology/scale_{agave,highballs,martinis,whiskey,rum_tiki,brunch_sparkling,
+  party_call,sours_modern}.jsonl. Brief: scratchpad scale_common.txt (contract rules + dedupe + source records).
+- Next: validate, de-duplicate across files, load with scripts/mixology_load.py in <=12 KB chunks; then improve
+  menu-item -> drink/style matching.
