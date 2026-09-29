@@ -353,3 +353,8 @@ PHG-046 (P1, open) Deep product knowledge for distilleries and brands. Place car
   fermentation, still type, proof, aging and barrels, additive-free status), history/origin, bottle images, prices.
   Plan: products/brand_lines filled from label approvals (free, in PHG), then a sourced research pass (CRT, brand sites,
   public registries) stored with a source per fact. Needs Rob's OK for paid crawling and for the DB writes.
+
+PHG-047 (P1, open) PHG's own daily flash / finance system (replaces the idea of syncing Airtable). Blueprint:
+  handoff/DAILY_FLASH_REFERENCE.md. Needs drafts 02-05 applied (setup skeleton, finance foundation, period presets,
+  profit coach), then: daily entry by voice or POS connector, labor from shifts x rates, GL-coded invoices, weekly
+  inventory-method COGS, declining budget, prime cost; Harmony answers them by voice.
