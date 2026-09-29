@@ -2136,3 +2136,8 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
 - Pipeline (phg_pipeline_status): last hour 536 documents, 468 pages rendered, 155 venues got their first menu
   (was 230 / 81). Render queue 168 pages (keeping up). Jobs 16/20 all succeeding since the 05:31 fix; job 20
   ~1.0 s/run. Menus read: NY 3,353, CO 1,845, IA 916.
+- Loaded data/mixology/versions_batch1.jsonl (17 chunks, no errors): library now 138 recipes in 130 styles.
+  Margarita: 16 recipes in 12 styles (Classic, On the rocks, Tommy's, House, Cadillac, Skinny, Spicy, Mezcal,
+  Frozen, Strawberry, Mango, Batch). Martini 8 styles, Old Fashioned 6, Daiquiri 6, Mojito 4, Moscow Mule 4.
+  Note: a later record re-declared a few style keys (e.g. ds_margarita_skinny as 'batch'); insert-if-missing kept
+  the first definition, which is the right one. Loader to warn on conflicting style re-declarations (small TODO).
