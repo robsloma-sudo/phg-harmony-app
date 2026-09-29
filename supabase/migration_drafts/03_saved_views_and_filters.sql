@@ -1,0 +1,470 @@
+-- DRAFT — NOT APPLIED. Needs Rob's approval. Spec: handoff/HARMONY_CONVERSATION_MODEL.md §4A.2 (time words), §4.1-4.3, §6.3-6.4 (as revised)
+-- Replaces the dropped 03_workspace_folders.sql. Rob, 2026-09-29: "NO folders. Everything built by talking to Harmony lives
+-- in normal tables; people organise it with saved VIEWS and FILTERS instead."
+--
+-- What this does (plain English)
+--   * phg.period_presets: the time windows a business talks in — this week, last week, last 2 / 4 weeks, month, quarter,
+--     year to date, same week last year, rolling 7 / 28 days, this/last reporting period, custom. PHG ships defaults
+--     (account_id NULL); a business can add its own or override one by key. Calendar windows are anchored on the
+--     business's settings from draft 02: calendar.week_start and calendar.fiscal_year_start; "period" presets use the
+--     business's own phg.reporting_periods rows (which already exist and handle 4-4-5 etc.).
+--   * phg.resolve_period(account, preset_key, as_of): turns a preset + date into start/end dates. The only place date
+--     arithmetic for "last week" happens (spec §4D.3: numbers come from database functions).
+--   * phg.saved_filters: named, reusable conditions on one kind of thing (entity from draft 01), e.g.
+--     "Dairy" = ingredient.category = dairy; "Main distributors" = party.name in (...). Personal (user_id set) or shared
+--     in the project (user_id NULL). Conditions are data (field/op/value), never SQL.
+--   * phg.saved_views: a named way to look at something — an entity OR a set of metrics, filters, a time preset,
+--     group-by, columns, sort and a display (table | bars | tiles | map | dashboard), pinnable.
+--   * phg.harmony_view_spec(account, user, view_id, as_of): resolves a view into a read-only QUERY SPEC (jsonb) for the
+--     draft-01 gateway. It does not build or run SQL. Unknown fields are reported in spec.errors, never guessed.
+--   * public.phg_harmony_views_db(op, args): service_role reads (presets, period_resolve, filters, views, view_spec).
+--     Creating/changing filters and views goes through Command Center proposals (draft 06: save_filter, save_view,
+--     update_view, delete_view).
+--   * Seeds harmony_entity_fields for the entities people filter most (ingredient, party, expense, invoice, invoice line,
+--     sales day, house menu item, recipe) with the date axis each time preset applies to.
+--
+-- Query spec format (version 1) — what harmony_view_spec returns and what a spec compiler must accept
+--   {
+--     "spec_version": 1,
+--     "view": {"id","name","display","pinned"},
+--     "source": {"kind":"entity", "entity":"expense", "table":"phg.operating_expenses"}
+--             | {"kind":"metrics", "metrics":[{"key","function_name","status","unit"}]},
+--     "period": {"preset":"last_4_weeks","start":"2026-08-31","end":"2026-09-27","label":"Last 4 weeks",
+--                "date_field":"expense_date","date_source":"expense_date"} | null,
+--     "conditions": [{"field":"category","source":"category","data_type":"text","op":"eq","value":"dairy","from_filter":"<uuid>"}],
+--     "group_by": [{"field","source"}], "columns": [{"field","source","label"}], "sort": [{"field","source","dir":"asc|desc"}],
+--     "limit": 500,
+--     "scope": {"account_id":"...","user_id":"..."},        -- the gateway re-checks membership and applies RLS anyway
+--     "errors": ["unknown field 'gl_account' on expense"]   -- non-empty = do not run; ask the user or fix the view
+--   }
+--   Ops: eq, neq, in, not_in, gt, gte, lt, lte, between (value [a,b]), prefix (value text, e.g. '5100' for "5100%"),
+--        contains (case-insensitive substring), is_null, not_null.
+--   A compiler (next step, not drafted) turns this into SQL using ONLY: the table from harmony_entities.main_tables[1],
+--   sources that are plain column names on that table (validated against pg_attribute), format('%I') for identifiers and
+--   format('%L') for values, then sends it through public.phg_harmony_query (same whitelist, RLS, row cap, log).
+--   Sources that are not plain columns (joins through harmony_paths) are marked "path:<path_key>.<column>" and the v1
+--   compiler must refuse them with a clear error until paths are verified.
+--
+-- Rollback
+--   -- drop function if exists public.phg_harmony_views_db(text, jsonb);
+--   -- drop function if exists phg.harmony_view_spec(uuid, uuid, uuid, date);
+--   -- drop function if exists phg.resolve_period(uuid, text, date);
+--   -- drop trigger if exists saved_views_validate on phg.saved_views; drop function if exists phg.saved_views_validate();
+--   -- drop trigger if exists saved_filters_validate on phg.saved_filters; drop function if exists phg.saved_filters_validate();
+--   -- drop function if exists phg.harmony_conditions_valid(jsonb);
+--   -- delete from phg.harmony_entity_fields where entity_key in ('ingredient','party','expense','invoice','invoice_line','sales','house_menu_item','recipe');
+--   -- delete from phg.harmony_entities where key = 'invoice_line';
+--   -- drop table if exists phg.saved_views, phg.saved_filters, phg.period_presets;
+
+begin;
+
+-- ---------------------------------------------------------------------------------------------------------------
+-- 1. Period presets
+-- ---------------------------------------------------------------------------------------------------------------
+create table if not exists phg.period_presets (
+  id                   uuid primary key default gen_random_uuid(),
+  account_id           uuid references phg.accounts(id) on delete cascade,      -- NULL = PHG default for every business
+  key                  text not null,                                           -- 'last_week'
+  label                text not null,
+  aliases              text[] not null default '{}',                            -- 'last week', 'previous week'
+  kind                 text not null check (kind in ('calendar','rolling','reporting_period','custom')),
+  unit                 text check (unit in ('day','week','month','quarter','year')),
+  length               int not null default 1 check (length between 1 and 520),
+  "offset"             int not null default 0 check ("offset" between -520 and 0),   -- in units; 0 = current, -1 = previous
+  to_date              boolean not null default false,                          -- cut the window at the as-of date
+  anchor               text not null default 'calendar' check (anchor in ('calendar','week_start','fiscal_year')),
+  period_type_filter   text,                                                    -- kind='reporting_period': phg.reporting_periods.period_type
+  custom_start         date,
+  custom_end           date,
+  sort                 int not null default 100,
+  active               boolean not null default true,
+  created_by           uuid,
+  created_at           timestamptz not null default now(),
+  check (kind <> 'custom' or (custom_start is not null and custom_end is not null and custom_start <= custom_end)),
+  check (kind not in ('calendar','rolling') or unit is not null),
+  check (kind <> 'custom' or account_id is not null)
+);
+create unique index if not exists period_presets_key_uq
+  on phg.period_presets (coalesce(account_id, '00000000-0000-0000-0000-000000000000'::uuid), key);
+
+insert into phg.period_presets (account_id, key, label, aliases, kind, unit, length, "offset", to_date, anchor, sort) values
+  (null,'today',              'Today',               '{today}',                                  'rolling', 'day',   1,   0, false,'calendar',   10),
+  (null,'yesterday',          'Yesterday',           '{yesterday,last night}',                   'rolling', 'day',   1,  -1, false,'calendar',   11),
+  (null,'this_week',          'This week',           '{this week,week to date}',                 'calendar','week',  1,   0, true, 'week_start', 20),
+  (null,'last_week',          'Last week',           '{last week,previous week}',                'calendar','week',  1,  -1, false,'week_start', 21),
+  (null,'last_2_weeks',       'Last 2 weeks',        '{last two weeks,past two weeks}',          'calendar','week',  2,  -2, false,'week_start', 22),
+  (null,'last_4_weeks',       'Last 4 weeks',        '{last four weeks,past four weeks}',        'calendar','week',  4,  -4, false,'week_start', 23),
+  (null,'same_week_last_year','Same week last year', '{same week last year}',                    'calendar','week',  1, -52, false,'week_start', 24),
+  (null,'rolling_7_days',     'Last 7 days',         '{last 7 days,past week}',                  'rolling', 'day',   7,   0, false,'calendar',   25),
+  (null,'rolling_28_days',    'Last 28 days',        '{last 28 days}',                           'rolling', 'day',  28,   0, false,'calendar',   26),
+  (null,'this_month',         'This month',          '{this month,month to date,MTD}',           'calendar','month', 1,   0, true, 'calendar',   30),
+  (null,'last_month',         'Last month',          '{last month,previous month}',              'calendar','month', 1,  -1, false,'calendar',   31),
+  (null,'this_quarter',       'This quarter',        '{this quarter,quarter to date,QTD}',       'calendar','quarter',1,  0, true, 'calendar',   40),
+  (null,'last_quarter',       'Last quarter',        '{last quarter}',                           'calendar','quarter',1, -1, false,'calendar',   41),
+  (null,'year_to_date',       'Year to date',        '{year to date,YTD,this year}',             'calendar','year',  1,   0, true, 'fiscal_year',50),
+  (null,'last_year',          'Last year',           '{last year}',                              'calendar','year',  1,  -1, false,'fiscal_year',51)
+on conflict do nothing;
+insert into phg.period_presets (account_id, key, label, aliases, kind, "offset", to_date, sort) values
+  (null,'period_to_date','Period to date','{period to date,PTD,this period}','reporting_period', 0, true, 60),
+  (null,'last_period',   'Last period',   '{last period,previous period}',   'reporting_period',-1, false,61)
+on conflict do nothing;
+
+-- start/end for a preset. Reads calendar.week_start ('monday'..'sunday') and calendar.fiscal_year_start ('MM-DD') from
+-- phg.account_settings (draft 02); falls back to the setting's default, then Monday / 01-01.
+create or replace function phg.resolve_period(p_account uuid, p_preset_key text, p_as_of date default current_date)
+returns jsonb language plpgsql stable security definer set search_path = phg, pg_temp as $$
+declare
+  v_p     phg.period_presets;
+  v_ws    int;           -- ISO day of week the business's week starts on (1 = Monday)
+  v_fy    text;          -- 'MM-DD'
+  v_unit  interval;
+  v_start date; v_end date; v_base date;
+  v_rp    record;
+begin
+  select * into v_p from phg.period_presets
+   where key = p_preset_key and active and (account_id = p_account or account_id is null)
+   order by account_id nulls last limit 1;
+  if not found then return jsonb_build_object('error', format('unknown time window %s', p_preset_key)); end if;
+
+  select array_position(array['monday','tuesday','wednesday','thursday','friday','saturday','sunday'],
+                        lower(coalesce(s.value, d.default_value) #>> '{}'))
+    into v_ws
+    from phg.setting_definitions d
+    left join phg.account_settings s on s.key = d.key and s.account_id = p_account and s.scope_key = ''
+   where d.key = 'calendar.week_start';
+  v_ws := coalesce(v_ws, 1);
+  select coalesce(s.value, d.default_value) #>> '{}' into v_fy
+    from phg.setting_definitions d
+    left join phg.account_settings s on s.key = d.key and s.account_id = p_account and s.scope_key = ''
+   where d.key = 'calendar.fiscal_year_start';
+  v_fy := coalesce(nullif(v_fy, ''), '01-01');
+
+  if v_p.kind = 'custom' then
+    v_start := v_p.custom_start; v_end := v_p.custom_end;
+
+  elsif v_p.kind = 'reporting_period' then
+    select rp.start_date, rp.end_date, rp.name into v_rp from phg.reporting_periods rp
+     where rp.account_id = p_account and rp.active and rp.start_date <= p_as_of
+       and (v_p.period_type_filter is null or rp.period_type = v_p.period_type_filter)
+     order by rp.start_date desc offset (-v_p."offset") limit 1;
+    if v_rp is null then
+      return jsonb_build_object('error', 'no reporting periods set up for this business', 'missing_setting', 'calendar.period_type');
+    end if;
+    v_start := v_rp.start_date; v_end := v_rp.end_date;
+
+  else
+    v_unit := case v_p.unit when 'day' then interval '1 day' when 'week' then interval '7 days'
+                            when 'month' then interval '1 month' when 'quarter' then interval '3 months' else interval '1 year' end;
+    if v_p.kind = 'rolling' then
+      v_end := (p_as_of + v_p."offset" * v_unit)::date;
+      v_start := (v_end - v_p.length * v_unit)::date + 1;
+    else  -- calendar
+      v_base := case
+        when v_p.unit = 'day'     then p_as_of
+        when v_p.unit = 'week'    then p_as_of - ((extract(isodow from p_as_of)::int - v_ws + 7) % 7)
+        when v_p.unit = 'month'   then date_trunc('month', p_as_of)::date
+        when v_p.unit = 'quarter' then date_trunc('quarter', p_as_of)::date
+        when v_p.anchor = 'fiscal_year' then
+          case when make_date(extract(year from p_as_of)::int, split_part(v_fy, '-', 1)::int, split_part(v_fy, '-', 2)::int) <= p_as_of
+               then make_date(extract(year from p_as_of)::int, split_part(v_fy, '-', 1)::int, split_part(v_fy, '-', 2)::int)
+               else make_date(extract(year from p_as_of)::int - 1, split_part(v_fy, '-', 1)::int, split_part(v_fy, '-', 2)::int) end
+        else date_trunc('year', p_as_of)::date end;
+      v_start := (v_base + v_p."offset" * v_unit)::date;
+      v_end := (v_start + v_p.length * v_unit)::date - 1;
+    end if;
+  end if;
+
+  if v_p.to_date and v_end > p_as_of then v_end := p_as_of; end if;
+  return jsonb_build_object('preset', v_p.key, 'label', v_p.label, 'start', v_start, 'end', v_end, 'as_of', p_as_of,
+                            'basis', jsonb_build_object('kind', v_p.kind, 'week_start_isodow', v_ws, 'fiscal_year_start', v_fy,
+                                                        'custom_preset', v_p.account_id is not null));
+end $$;
+
+-- ---------------------------------------------------------------------------------------------------------------
+-- 2. Saved filters and views
+-- ---------------------------------------------------------------------------------------------------------------
+-- shape check for conditions: [{field, op, value}] — data only, never SQL
+create or replace function phg.harmony_conditions_valid(p jsonb) returns boolean
+language sql immutable set search_path = pg_catalog, pg_temp as $$
+  select jsonb_typeof(p) = 'array' and not exists (
+    select 1 from jsonb_array_elements(p) c
+     where jsonb_typeof(c) <> 'object'
+        or coalesce(c->>'field', '') !~ '^[a-z][a-z0-9_]{0,62}$'
+        or coalesce(c->>'op', '') not in ('eq','neq','in','not_in','gt','gte','lt','lte','between','prefix','contains','is_null','not_null')
+        or (c->>'op' in ('in','not_in') and jsonb_typeof(c->'value') <> 'array')
+        or (c->>'op' = 'between' and (jsonb_typeof(c->'value') <> 'array' or jsonb_array_length(c->'value') <> 2))
+        or (c->>'op' not in ('is_null','not_null') and not (c ? 'value')))
+$$;
+
+create table if not exists phg.saved_filters (
+  id           uuid primary key default gen_random_uuid(),
+  account_id   uuid not null references phg.accounts(id) on delete cascade,
+  user_id      uuid,                                                  -- NULL = shared in the project
+  name         text not null check (length(btrim(name)) between 1 and 120),
+  entity_key   text not null references phg.harmony_entities(key),
+  conditions   jsonb not null default '[]'::jsonb check (phg.harmony_conditions_valid(conditions)),
+  created_by   uuid,
+  source       text not null default 'spoken' check (source in ('spoken','ui')),
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  archived_at  timestamptz
+);
+create unique index if not exists saved_filters_name_uq
+  on phg.saved_filters (account_id, coalesce(user_id, '00000000-0000-0000-0000-000000000000'::uuid), lower(name)) where archived_at is null;
+
+create table if not exists phg.saved_views (
+  id                  uuid primary key default gen_random_uuid(),
+  account_id          uuid not null references phg.accounts(id) on delete cascade,
+  user_id             uuid,                                           -- NULL = shared in the project
+  name                text not null check (length(btrim(name)) between 1 and 120),
+  entity_key          text references phg.harmony_entities(key),     -- a view of things ...
+  metric_keys         text[] not null default '{}',                   -- ... or of metrics (phg.metric_definitions, draft 04)
+  filter_ids          uuid[] not null default '{}',                   -- saved_filters, ANDed
+  extra_conditions    jsonb not null default '[]'::jsonb check (phg.harmony_conditions_valid(extra_conditions)),
+  period_preset_key   text,                                           -- phg.period_presets.key
+  group_by            text[] not null default '{}',
+  columns             text[] not null default '{}',
+  sort                jsonb not null default '[]'::jsonb,             -- [{"field":"amount","dir":"desc"}]
+  display             text not null default 'table' check (display in ('table','bars','tiles','map','dashboard')),
+  pinned              boolean not null default false,
+  sort_order          int not null default 0,
+  created_by          uuid,
+  source              text not null default 'spoken' check (source in ('spoken','ui')),
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now(),
+  archived_at         timestamptz,                                    -- delete_view = archive
+  check (entity_key is not null or cardinality(metric_keys) > 0)
+);
+create unique index if not exists saved_views_name_uq
+  on phg.saved_views (account_id, coalesce(user_id, '00000000-0000-0000-0000-000000000000'::uuid), lower(name)) where archived_at is null;
+create index if not exists saved_views_pinned on phg.saved_views (account_id, user_id) where pinned and archived_at is null;
+
+create or replace function phg.saved_filters_validate() returns trigger
+language plpgsql set search_path = phg, pg_temp as $$
+begin
+  new.updated_at := now();
+  -- a shared filter used by a shared view cannot become personal
+  if tg_op = 'UPDATE' and old.user_id is null and new.user_id is not null
+     and exists (select 1 from phg.saved_views v where new.id = any (v.filter_ids) and v.user_id is null and v.archived_at is null) then
+    raise exception 'filter is used by a shared view';
+  end if;
+  return new;
+end $$;
+drop trigger if exists saved_filters_validate on phg.saved_filters;
+create trigger saved_filters_validate before update on phg.saved_filters for each row execute function phg.saved_filters_validate();
+
+create or replace function phg.saved_views_validate() returns trigger
+language plpgsql set search_path = phg, pg_temp as $$
+declare v_bad int;
+begin
+  new.updated_at := now();
+  -- every filter: same project, same entity, not archived, and visible to everyone who can see the view
+  select count(*) into v_bad from unnest(new.filter_ids) fid
+   where not exists (select 1 from phg.saved_filters f
+                      where f.id = fid and f.account_id = new.account_id and f.archived_at is null
+                        and (new.entity_key is null or f.entity_key = new.entity_key)
+                        and (f.user_id is null or f.user_id = new.user_id));
+  if v_bad > 0 then raise exception 'view uses % filter(s) that are missing, archived, for another kind of thing, or private', v_bad; end if;
+  if new.period_preset_key is not null and not exists (
+       select 1 from phg.period_presets p where p.key = new.period_preset_key and p.active
+          and (p.account_id is null or p.account_id = new.account_id)) then
+    raise exception 'unknown time window %', new.period_preset_key;
+  end if;
+  return new;
+end $$;
+drop trigger if exists saved_views_validate on phg.saved_views;
+create trigger saved_views_validate before insert or update on phg.saved_views for each row execute function phg.saved_views_validate();
+
+alter table phg.period_presets enable row level security;
+alter table phg.saved_filters  enable row level security;
+alter table phg.saved_views    enable row level security;
+revoke all on phg.period_presets, phg.saved_filters, phg.saved_views from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------------------------------------------------
+-- 3. Entity fields people filter by (sources are plain columns on the entity's first main table unless 'path:...')
+--    All columns below were checked on the live schema 2026-09-28/29.
+-- ---------------------------------------------------------------------------------------------------------------
+insert into phg.harmony_entities (key, label, entity_group, aliases, main_tables, scope, name_lookup) values
+  ('invoice_line','invoice line','Buying and cost','{line item}','{phg.purchase_invoice_lines,phg.purchase_invoices}','project','{}')
+on conflict (key) do nothing;
+insert into phg.harmony_table_access (schema_name, table_pattern, access, scope_kind, scope_expr, notes) values
+  ('phg','purchase_invoice_lines','project_read','custom',
+   'invoice_id in (select i.id from phg.purchase_invoices i where i.location_key in (select phg.harmony_scope_location_keys()))', 'via purchase_invoices')
+on conflict (schema_name, table_pattern) do nothing;
+select phg.harmony_apply_table_access();
+
+insert into phg.harmony_entity_fields (entity_key, field_key, label, aliases, source, data_type, is_date_axis, filterable) values
+  ('ingredient','name','name','{}','name','text',false,true),
+  ('ingredient','category','category','{type of ingredient}','category','text',false,true),
+  ('ingredient','ingredient_type','ingredient type','{}','ingredient_type','text',false,true),
+  ('party','name','name','{supplier,vendor}','name','text',false,true),
+  ('party','kinds','kind','{type}','kinds','list',false,true),
+  ('party','delivery_days','delivery days','{}','delivery_days','list',false,true),
+  ('party','gl_default_code','default GL account','{gl account}','gl_default_code','text',false,true),
+  ('expense','expense_date','date','{}','expense_date','date',true,true),
+  ('expense','description','description','{}','description','text',false,true),
+  ('expense','amount','amount','{spend}','signed_amount','money',false,true),
+  ('expense','revenue_center','revenue center','{}','revenue_center','text',false,true),
+  ('expense','location_key','location','{}','location_key','text',false,true),
+  ('expense','category','expense category','{}','path:expense_category.category_key','text',false,true),
+  ('invoice','invoice_date','invoice date','{date}','invoice_date','date',true,true),
+  ('invoice','invoice_number','invoice number','{}','invoice_number','text',false,true),
+  ('invoice','total','total','{amount}','total','money',false,true),
+  ('invoice','status','status','{}','status','text',false,true),
+  ('invoice','vendor','vendor','{supplier}','path:invoice_vendor.name','text',false,true),
+  ('invoice_line','description','description','{item}','raw_description','text',false,true),
+  ('invoice_line','product_family','product family','{category}','product_family_key','text',false,true),
+  ('invoice_line','amount','amount','{}','extended_amount','money',false,true),
+  ('invoice_line','invoice_date','invoice date','{date}','path:invoice_line_invoice.invoice_date','date',true,true),
+  ('sales','business_date','date','{day}','business_date','date',true,true),
+  ('sales','revenue_center','revenue center','{}','revenue_center','text',false,true),
+  ('sales','net_sales','net sales','{}','net_sales','money',false,true),
+  ('sales','comps','comps','{}','comps','money',false,true),
+  ('sales','discounts','discounts','{}','discounts','money',false,true),
+  ('house_menu_item','name','name','{drink}','name','text',false,true),
+  ('house_menu_item','section','section','{}','section_name','text',false,true),
+  ('house_menu_item','status','status','{}','status','text',false,true),
+  ('house_menu_item','price','price','{}','menu_price','money',false,true),
+  ('recipe','name','name','{}','name','text',false,true),
+  ('recipe','status','status','{}','status','text',false,true),
+  ('recipe','created_at','created','{}','created_at','date',true,true)
+on conflict (entity_key, field_key) do nothing;
+-- 'gl_account' is NOT a field anywhere yet: no expense or invoice-line column holds a GL code today. Where the result of
+-- phg.invoice_coding_rules is stored (a new gl_code column vs. metadata) is an open question for Rob.
+
+-- ---------------------------------------------------------------------------------------------------------------
+-- 4. View -> query spec resolver (no SQL built, nothing executed against business data)
+-- ---------------------------------------------------------------------------------------------------------------
+create or replace function phg.harmony_view_spec(p_account uuid, p_user uuid, p_view_id uuid, p_as_of date default current_date)
+returns jsonb language plpgsql stable security definer set search_path = phg, pg_temp as $$
+declare
+  v        phg.saved_views;
+  e        phg.harmony_entities;
+  v_conds  jsonb := '[]'::jsonb;
+  v_errors text[] := '{}';
+  v_period jsonb;
+  v_date   phg.harmony_entity_fields;
+  f        phg.harmony_entity_fields;
+  c        jsonb;
+  r        record;
+  v_gb     jsonb := '[]'::jsonb; v_cols jsonb := '[]'::jsonb; v_sort jsonb := '[]'::jsonb;
+  v_source jsonb;
+  v_metrics jsonb;
+begin
+  select * into v from phg.saved_views
+   where id = p_view_id and account_id = p_account and archived_at is null and (user_id is null or user_id = p_user);
+  if not found then return jsonb_build_object('errors', jsonb_build_array('view not found')); end if;
+
+  if v.entity_key is not null then
+    select * into e from phg.harmony_entities where key = v.entity_key;
+    v_source := jsonb_build_object('kind', 'entity', 'entity', e.key, 'table', e.main_tables[1]);
+    select * into v_date from phg.harmony_entity_fields where entity_key = e.key and is_date_axis limit 1;
+  else
+    -- metric views: metric_definitions arrives in draft 04; read it dynamically so this draft does not depend on 04
+    if to_regclass('phg.metric_definitions') is null then
+      v_errors := v_errors || 'metric definitions not installed (draft 04)'::text;
+    else
+      execute 'select coalesce(jsonb_agg(jsonb_build_object(''key'', key, ''function_name'', function_name, ''status'', status, ''unit'', unit)), ''[]''::jsonb)
+                 from phg.metric_definitions where key = any ($1)' into v_metrics using v.metric_keys;
+      if jsonb_array_length(v_metrics) < cardinality(v.metric_keys) then v_errors := v_errors || 'unknown metric in view'::text; end if;
+    end if;
+    v_source := jsonb_build_object('kind', 'metrics', 'metrics', coalesce(v_metrics, '[]'::jsonb));
+  end if;
+
+  -- conditions: every filter (in order) then the view's own
+  for r in
+    select sf.id fid, x.c from unnest(v.filter_ids) with ordinality u(fid_u, n)
+      join phg.saved_filters sf on sf.id = u.fid_u and sf.account_id = p_account and sf.archived_at is null
+      cross join lateral jsonb_array_elements(sf.conditions) x(c)
+    union all
+    select null, x.c from jsonb_array_elements(v.extra_conditions) x(c)
+  loop
+    if v.entity_key is null then v_errors := v_errors || 'filters need a view of things, not metrics'::text; exit; end if;
+    select * into f from phg.harmony_entity_fields where entity_key = v.entity_key and field_key = r.c->>'field' and filterable and not sensitive;
+    if f.id is null then
+      v_errors := v_errors || format('unknown field %L on %s', r.c->>'field', v.entity_key);
+    else
+      v_conds := v_conds || jsonb_build_array(r.c || jsonb_build_object('source', f.source, 'data_type', f.data_type)
+                                              || case when r.fid is not null then jsonb_build_object('from_filter', r.fid) else '{}'::jsonb end);
+    end if;
+  end loop;
+
+  if v.period_preset_key is not null then
+    v_period := phg.resolve_period(p_account, v.period_preset_key, p_as_of);
+    if v_period ? 'error' then v_errors := v_errors || (v_period->>'error');
+    elsif v.entity_key is not null and v_date.id is null then v_errors := v_errors || format('%s has no date to apply a time window to', v.entity_key);
+    elsif v.entity_key is not null then v_period := v_period || jsonb_build_object('date_field', v_date.field_key, 'date_source', v_date.source);
+    end if;
+  end if;
+
+  if v.entity_key is not null then
+    for r in select unnest(v.group_by) k loop
+      select * into f from phg.harmony_entity_fields where entity_key = v.entity_key and field_key = r.k and not sensitive;
+      if f.id is null then v_errors := v_errors || format('unknown group-by %L', r.k);
+      else v_gb := v_gb || jsonb_build_array(jsonb_build_object('field', f.field_key, 'source', f.source)); end if;
+    end loop;
+    for r in select unnest(v.columns) k loop
+      select * into f from phg.harmony_entity_fields where entity_key = v.entity_key and field_key = r.k and not sensitive;
+      if f.id is null then v_errors := v_errors || format('unknown column %L', r.k);
+      else v_cols := v_cols || jsonb_build_array(jsonb_build_object('field', f.field_key, 'source', f.source, 'label', f.label)); end if;
+    end loop;
+    for c in select value from jsonb_array_elements(v.sort) loop
+      select * into f from phg.harmony_entity_fields where entity_key = v.entity_key and field_key = c->>'field' and not sensitive;
+      if f.id is null then v_errors := v_errors || format('unknown sort field %L', c->>'field');
+      else v_sort := v_sort || jsonb_build_array(jsonb_build_object('field', f.field_key, 'source', f.source,
+                                                                     'dir', case when c->>'dir' = 'desc' then 'desc' else 'asc' end)); end if;
+    end loop;
+  end if;
+
+  return jsonb_build_object(
+    'spec_version', 1,
+    'view', jsonb_build_object('id', v.id, 'name', v.name, 'display', v.display, 'pinned', v.pinned),
+    'source', v_source, 'period', v_period, 'conditions', v_conds,
+    'group_by', v_gb, 'columns', v_cols, 'sort', v_sort, 'limit', 500,
+    'scope', jsonb_build_object('account_id', p_account, 'user_id', p_user),
+    'errors', to_jsonb(v_errors));
+end $$;
+
+revoke all on function phg.resolve_period(uuid, text, date), phg.harmony_view_spec(uuid, uuid, uuid, date)
+  from public, anon, authenticated, service_role;
+
+-- ---------------------------------------------------------------------------------------------------------------
+-- 5. Reads for Harmony (service_role only)
+-- ---------------------------------------------------------------------------------------------------------------
+create or replace function public.phg_harmony_views_db(p_op text, p_args jsonb)
+returns jsonb language plpgsql stable security definer set search_path = phg, pg_temp as $$
+declare
+  v_user    uuid := nullif(p_args->>'user', '')::uuid;
+  v_account uuid := nullif(p_args->>'account', '')::uuid;
+  v_as_of   date := coalesce(nullif(p_args->>'as_of', '')::date, current_date);
+begin
+  if v_user is null or v_account is null then raise exception 'user and account required'; end if;
+  if not exists (select 1 from phg.account_memberships where user_id = v_user and account_id = v_account and status = 'active') then
+    raise exception 'not a member of that account';
+  end if;
+
+  if p_op = 'presets_list' then
+    return coalesce((select jsonb_agg(jsonb_build_object('key', p.key, 'label', p.label, 'aliases', p.aliases, 'custom', p.account_id is not null) order by p.sort)
+      from (select distinct on (key) * from phg.period_presets
+             where active and (account_id is null or account_id = v_account) order by key, account_id nulls last) p), '[]'::jsonb);
+  elsif p_op = 'period_resolve' then
+    return phg.resolve_period(v_account, p_args->>'preset', v_as_of);
+  elsif p_op = 'filters_list' then
+    return coalesce((select jsonb_agg(jsonb_build_object('id', id, 'name', name, 'entity', entity_key, 'conditions', conditions,
+                                                          'shared', user_id is null) order by name)
+      from phg.saved_filters where account_id = v_account and archived_at is null and (user_id is null or user_id = v_user)
+        and (p_args->>'entity' is null or entity_key = p_args->>'entity')), '[]'::jsonb);
+  elsif p_op = 'views_list' then
+    return coalesce((select jsonb_agg(jsonb_build_object('id', id, 'name', name, 'entity', entity_key, 'metrics', metric_keys,
+                                                          'display', display, 'pinned', pinned, 'shared', user_id is null)
+                                      order by pinned desc, sort_order, name)
+      from phg.saved_views where account_id = v_account and archived_at is null and (user_id is null or user_id = v_user)), '[]'::jsonb);
+  elsif p_op = 'view_spec' then
+    return phg.harmony_view_spec(v_account, v_user, nullif(p_args->>'view_id', '')::uuid, v_as_of);
+  end if;
+  raise exception 'unknown op %', p_op;
+end $$;
+revoke all on function public.phg_harmony_views_db(text, jsonb) from public, anon, authenticated;
+grant execute on function public.phg_harmony_views_db(text, jsonb) to service_role;
+
+commit;
