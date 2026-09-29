@@ -13,6 +13,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
      IL  ilcc.illinois.gov daily CSV export (retail_type ON-PREMISES / COMBINATION = on-premise)
    v3: + CT (Socrata, no permit class published -> on_premise unknown), DC + KY/Louisville (ArcGIS), VA (xlsx);
    {probe:true} returns headers + sample rows without writing.
+   v5: CT and VA adapters removed (see notes), KY NQ4/caterer and DC 'Retail -' classes fixed.
    v4: + MI (master xlsx), WA (weekly On Premise xlsx), CA (daily zipped CSV), ME (FOAA xlsx); download links are
    discovered on each state's page because the file names change.
    Never calls a paid service. */
@@ -174,21 +175,15 @@ function sheetAdapter(state: string, url: string | (() => Promise<string>), sour
   };
 }
 
-const KY_ON = /retail drink|supplemental bar|hotel in-room|entertainment destination|golf course|authorized public consumption|qualified historic|microbrewery/i;
+const KY_ON = /retail drink|retail malt beverage drink|supplemental bar|hotel in-room|entertainment destination|golf course|authorized public consumption|qualified historic|microbrewery|caterer/i;
 const KY_SUPPLEMENTAL = /special sunday|extended hours/i;
 
 const ADAPTERS: Record<string, Adapter> = {
-  CT: socrata("data.ct.gov", "gwv2-eswx", "status = 'ACTIVE'", (r) => ({
-    /* the open file has no permit class, so on_premise stays unknown until the class list is joined */
-    state: "CT", license_no: t(r.credential), license_type: null, on_premise: null, status: "active",
-    business_name: t(r.dba), owner_name: t(r.backer) || t(r.permittee_name),
-    address: t(r.permit_address) || t(r.backer_address), city: t(r.permit_city) || t(r.backer_city), zip: zip5(r.permit_zip || r.backer_zip),
-    issued_on: isoDate(r.effective_date), expires_on: isoDate(r.expire_date), raw: r,
-  }), "ct_dcp_socrata"),
+  /* CT: data.ct.gov gwv2-eswx is mostly brand registrations (LBD.*), not premises -> removed 2026-09-29; manual source needed. */
   DC: arcgis("https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Business_Licensing_and_Grants_WebMercator/FeatureServer/5", "1=1", (a) => {
     const type = t([a.TYPE, a.CLASS].filter(Boolean).join(" · "));
-    const on = type ? (/retailer\s*(a|b)\b|wholesal|manufactur|off.?premise/i.test(type) ? false
-      : /retailer\s*(c|d)|restaurant|tavern|night\s*club|hotel|club|multipurpose|caterer|arena|stadium/i.test(type) ? true : null) : null;
+    const on = type ? (/wholesal|manufactur|retail\s*-|internet|third-party delivery|25 percent|off.?premise/i.test(type) ? false
+      : /restaurant|tavern|night\s*club|hotel|club|multipurpose|caterer|arena|stadium|marine vessel|railroad|bed and breakfast/i.test(type) ? true : null) : null;
     return {
       state: "DC", license_no: t(a.LICENSE), license_type: type, on_premise: on, status: t(a.STATUS),
       business_name: t(a.TRADE_NAME) || t(a.APPLICANT), owner_name: t(a.APPLICANT), address: t(a.ADDRESS), city: "Washington",
@@ -220,9 +215,7 @@ const ADAPTERS: Record<string, Adapter> = {
   ME: sheetAdapter("ME", () => discover("https://www.maine.gov/dafs/bablo/liquor-licensing/license-data", /FOAA_Report\.xlsx/i), "me_bablo_xlsx",
     (type) => /off[- ]premise|agency store|retail store|wholesal|manufactur/i.test(type) && !/on[- ]premise/i.test(type) ? false
       : /restaurant|lounge|tavern|hotel|club|bar|brew ?pub|on[- ]premise|class [a-i]\b|caterer|golf|bowling|vessel/i.test(type) ? true : null),
-  VA: sheetAdapter("VA", "https://abc.virginia.gov/library/licenses/other-documents/licensee-download.xlsx?la=en", "va_abc_xlsx",
-    (type) => /off[- ]premises?\b(?!.*on)/i.test(type) && !/on[- ]and[- ]off|on[- ]premises?/i.test(type) ? false
-      : /mixed beverage|on[- ]premises?|on[- ]and[- ]off|restaurant|club|caterer|hotel|brewery|winery/i.test(type) ? true : null),
+  /* VA: abc.virginia.gov serves a certificate chain Deno/curl do not trust (UnknownIssuer) -> needs another free route. */
 
   TX: socrata("data.texas.gov", "kguh-7q9z", "", (r) => {
     const type = t(r.aimslicensetype);
