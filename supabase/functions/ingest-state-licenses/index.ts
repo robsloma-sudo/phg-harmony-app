@@ -269,10 +269,11 @@ function sheetAdapter(state: string, url: string | (() => Promise<string>), sour
     source,
     async pages(offset, pages) {
       const { head, rows: win, done, pre } = await sheetRows(typeof url === "string" ? url : await url(), offset, pages * PAGE);
-      const iNo = col(head, /licen[cs]e\s*(no|num|#|id)/i, /permit\s*(no|num|#)/i, /^licen[cs]e$/i, /file\s*(no|num)/i, /lic(ense)?\s*#/i);
+      const iNo = col(head, /licen[cs]e\s*(no|num|#|id)/i, /permit\s*(no|num|#)/i, /^licen[cs]e$/i, /file\s*(no|num)/i, /lic(ense)?\s*#/i, /^(licen[cs]e\s*)?number$/i);
       const iType = col(head, /licen[cs]e\s*(type|class|desc|privilege)/i, /privilege/i, /^type$/i, /class/i);
       const iName = col(head, /trade|dba|doing business/i, /business\s*name/i, /premises?\s*name/i, /establishment/i, /primary\s*name/i, /^name$/i);
-      const iOwner = col(head, /licensee|owner|entity|applicant/i, /primary\s*name/i);
+      const iOwner = col(head, /licensee|owner|entity|applicant/i, /primary\s*name/i, /account\s*name/i);
+      const iGroup = col(head, /^group$/i); // MI: Retail - On Premises / Retail - Off Premises
       const iAddr = col(head, /(premise|physical|location|street)?\s*address(\s*1|\s*line\s*1)?$/i, /prem\w*\s*addr\w*\s*1?$/i, /street/i, /addr/i);
       const iCity = col(head, /city/i, /locality|town/i);
       const iZip = col(head, /zip|postal/i);
@@ -282,11 +283,14 @@ function sheetAdapter(state: string, url: string | (() => Promise<string>), sour
       const g = (r: string[], i: number) => (i >= 0 ? r[i] : "");
       const slice = win.filter((r) => g(r, iNo).trim());
       const rows = slice.map((r) => {
-        const type = t(g(r, iType)) || "";
+        const type = t([g(r, iGroup), g(r, iType)].filter((x) => String(x ?? "").trim()).join(" · ")) || "";
+        const addr = String(g(r, iAddr) ?? ""); // MI: "5160 N Hubbard Lake Rd, Spruce, MI 48762" (no city/zip columns)
+        const addrCity = iCity < 0 ? (addr.match(/,\s*([^,]+),\s*[A-Z]{2}\s*\d{5}/) || [])[1] : undefined;
         return {
           state, license_no: keyByType && type ? `${t(g(r, iNo))}-${type}` : t(g(r, iNo)), license_type: type || null, on_premise: type ? onPremise(type) : null,
           status: t(g(r, iStatus)) || "active", business_name: t(g(r, iName)) || t(g(r, iOwner)), owner_name: t(g(r, iOwner)),
-          address: t(g(r, iAddr)), city: t(g(r, iCity)), zip: zip5(g(r, iZip)), county: t(g(r, iCounty)), expires_on: isoDate(g(r, iExp)),
+          address: iCity < 0 ? t(addr.replace(/,\s*[^,]+,\s*[A-Z]{2}\s*[\d-]*\s*$/, "")) : t(addr), city: t(g(r, iCity)) || t(addrCity),
+          zip: zip5(iZip >= 0 ? g(r, iZip) : addr), county: t(g(r, iCounty)), expires_on: isoDate(g(r, iExp)),
           raw: Object.fromEntries(head.map((h, i) => [h || `col${i}`, r[i]])),
         } as Row;
       });
@@ -323,8 +327,8 @@ const ADAPTERS: Record<string, Adapter> = {
   }, "ky_abc_louisville_arcgis"),
   /* Michigan LCC master list (all licence types; SDM/SDD are package/off-premise) */
   MI: sheetAdapter("MI", () => discover("https://www.michigan.gov/lara/bureau-list/lcc/licensing-list", /Master-License-List\.xlsx/i), "mi_lcc_xlsx",
-    (type) => /\bSD[MD]\b|off[- ]premise|specially designated/i.test(type) && !/class c|tavern|hotel|club|on[- ]premise/i.test(type) ? false
-      : /class c|tavern|hotel|club|brewpub|micro ?brew|resort|on[- ]premise|winery|distill|small distiller/i.test(type) ? true : null),
+    (type) => /on[- ]premises?/i.test(type) ? true : /off[- ]premises?|wholesal|manufactur|supplier|vendor/i.test(type) ? false
+      : /class c|tavern|b-hotel|a-hotel|club|brewpub|micro ?brew|resort/i.test(type) ? true : /\bSD[MD]\b|specially designated/i.test(type) ? false : null),
   /* Washington LCB weekly "On Premise" list: every row is an on-premise licensee */
   WA: sheetAdapter("WA", () => discover("https://lcb.wa.gov/records/frequently-requested-lists", /On ?Premise ?\d+\.xlsx/i), "wa_lcb_onpremise_xlsx", () => true),
   /* California ABC daily export (zipped CSV); on-sale types 40-42, 47-49, 51-52, 57, 59-61, 67-68, 70, 75 */
