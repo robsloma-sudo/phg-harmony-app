@@ -77,7 +77,7 @@ function knowSections(list: any[]): any[] {
     count: (b.expressions || []).length,
     items: [
       ...((b.history || []).length ? [{ name: "Story", sub: (b.history || []).slice(0, 4).join(" · "), value: b.founded_year ? String(b.founded_year) : "" }] : []),
-      ...(b.expressions || []).map((e: any) => ({ name: e.name, value: e.price_usd_750 != null ? "$" + Number(e.price_usd_750).toFixed(0) : (STYLE_LABEL[e.style] || ""), sub: [knowLine(e), (e.tasting || []).length ? "Tastes of " + e.tasting.slice(0, 5).join(", ") : ""].filter(Boolean).join(" — ") })),
+      ...(b.expressions || []).map((e: any) => ({ name: e.name, value: e.price_usd_750 != null ? "$" + Number(e.price_usd_750).toFixed(0) : (STYLE_LABEL[e.style] || ""), sub: [knowLine(e), (e.tasting || []).length ? "Tastes of " + e.tasting.slice(0, 5).join(", ") : "", ...(e.notes || []).slice(0, 2)].filter(Boolean).join(" — ") })),
     ],
     empty: "No bottlings researched yet",
   }));
@@ -328,7 +328,7 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
       const exps = (b.expressions || []) as any[];
       const focus = st ? exps.filter((e) => e.style === st) : exps;
       const one = focus[0];
-      const speak = one ? `${one.name}: ${knowLine(one)}.` + (one.tasting?.length ? ` Tasting notes: ${one.tasting.slice(0, 4).join(", ")}.` : "") + (b.sources?.length ? ` Source: ${b.sources[0].title || "PHG research"}.` : "")
+      const speak = one ? `${one.name}: ${knowLine(one)}.` + (one.tasting?.length ? ` Tasting notes: ${one.tasting.slice(0, 4).join(", ")}.` : "") + (/additive/i.test(want) ? ((one.notes || []).find((n: string) => /additive/i.test(n)) ? " On additives: " + (one.notes || []).find((n: string) => /additive/i.test(n)) : one.additive_free == null ? " I have no current additive-free confirmation for it." : "") : "") + (b.sources?.length ? ` Source: ${b.sources[0].title || "PHG research"}.` : "")
         : `${b.name}${b.nom ? ", NOM " + b.nom : ""}${b.region ? ", " + b.region : ""}.` + (b.history?.length ? " " + b.history.slice(0, 2).join(". ") + "." : "");
       return { speak, view: { type: "place", kind: "brand", title: b.name, badge: b.nom ? `NOM ${b.nom}` : b.category, rows: knowRows(b), sections: knowSections(list), note: knowNote(list) } };
     },
