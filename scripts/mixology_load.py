@@ -203,6 +203,14 @@ def main():
                 f"serve = {q(r.get('serve') if r.get('serve') in SERVES else None)}",
                 f"price_tier = {q(r.get('price_tier') if r.get('price_tier') in PRICE_TIERS else None)}",
                 f"is_reference = {'true' if r.get('is_reference') else 'false'}"]) + f" where key = {q(r['key'])};")
+            # style: drink -> style (Cadillac) -> any number of recipes. Named explicitly ("style"), or the version
+            # label without its bracket ("Cadillac (Grand Marnier float)" -> "Cadillac"), or the version type.
+            st = (r.get("style") or (r.get("version_label") or "").split(" (")[0] or vt.replace("_", " ").title()).strip()
+            skey = "ds_" + r["drink_key"][3:] + "_" + re.sub(r"[^a-z0-9]+", "_", st.lower()).strip("_")
+            out.append(f"insert into phg_mix.drink_styles (key,drink_key,name,version_type,description) values ({q(skey)},{q(r['drink_key'])},{q(st)},{q(vt)},{q(r.get('style_description'))}) on conflict do nothing;")
+            out.append(f"update phg_mix.recipes set style_key = (select key from phg_mix.drink_styles where drink_key = {q(r['drink_key'])} and name = {q(st)}) where key = {q(r['key'])};")
+            if r.get("is_style_reference"):
+                out.append(f"update phg_mix.drink_styles set reference_recipe_key = {q(r['key'])} where drink_key = {q(r['drink_key'])} and name = {q(st)};")
         out.append(f"delete from phg_mix.recipe_lines where recipe_key = {q(r['key'])};")
         for i, l in enumerate(lines):
             out.append(f"insert into phg_mix.recipe_lines (recipe_key,position,ingredient,amount,unit,ml,prep_key,note) values ({q(r['key'])},{i + 1},{q(l.get('ingredient') or '?')},{q(num(l.get('amount')))},{q(l.get('unit'))},{q(num(l.get('ml')))},{q(l.get('prep_key'))},{q(l.get('note'))});")

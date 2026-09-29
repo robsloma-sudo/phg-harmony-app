@@ -63,6 +63,12 @@ flavored | spicy | skinny | batch | zero_proof | bartender_signature | brand | s
 `serve`: up | rocks | frozen | neat | highball | collins | hot | punch | other,
 `price_tier`: well | call | premium | top_shelf (only when the spec says what grade of spirit),
 `is_reference`: true for the one spec Harmony gives when no version is asked for (usually the classic).
+**Three levels: drink -> style -> recipes.** A style (Cadillac, Frozen, Tommy's, Happy hour...) can hold hundreds of
+recipes: every bar's, bartender's, book's and brand's version of that style is its own recipe record with its own
+sources. Give `style` (the style's name, e.g. "Cadillac") when the version label carries more than the style name,
+`style_description` (what makes it that style, own words) the first time a style appears, and `is_style_reference`
+true only for the one spec that should stand for the style. Two recipes for the same style from different sources are
+two records (keys like rx_margarita_cadillac_diffords, rx_margarita_cadillac_punch), never merged.
 Use `variants` only for one-line tweaks of a spec; any version with its own measurements is a separate recipe.
 A named riff that is its own drink (Black Manhattan, Oaxaca Old Fashioned, Paloma) gets its own drink with
 `parent_key` pointing to the drink it comes from. Existing drink keys: `dk_` + the recipe key without `rx_` (e.g.

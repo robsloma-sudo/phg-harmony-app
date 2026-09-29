@@ -23,6 +23,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
    v22 SPEED: planner and spoken answers are streamed; with the app's voice settings (tts) the first sentence is
    voiced while the rest is written and returned as voice_first; notes, library and reference lookups run in parallel;
    {warm:true} wakes the function.
+   v25: drink -> STYLE -> recipes (a style can hold hundreds of recipes; best-graded or the style's reference is given).
    v24: cocktail VERSIONS (one drink, many full recipes; the named version wins, others are offered).
    v23: OpenAI priority processing (OPENAI_SERVICE_TIER, falls back automatically); per-turn timings in the turn log. */
 
@@ -590,20 +591,26 @@ Deno.serve(async (req) => {
              The drink is found by name inside what they asked ("cadillac margarita" -> Margarita); the version they named
              wins, otherwise the drink's reference spec; the other versions are listed so Harmony can offer them. */
           const N = (x: string) => `regexp_replace(lower(${x}), '[^a-z0-9 ]', '', 'g')`;
+          /* v25 STYLES: drink -> style (Cadillac, Frozen, Tommy's...) -> any number of recipes. A named style picks that
+             style's reference spec, else its best-graded recipe; no style named -> the drink's reference spec. */
           const sql = `with w as (select ${N(`'${nm}'`)} as q),
 d as (select dr.key from phg_mix.drinks dr, w where w.q = ${N("dr.name")} or w.q like '%' || ${N("dr.name")} || '%'
   or exists (select 1 from unnest(dr.aka) a where w.q = ${N("a")}) order by length(dr.name) desc limit 1),
-c as (select r.*, case when ${N("r.name")} = w.q then 0
-    when r.version_label is not null and w.q like '%' || ${N("split_part(r.version_label, ' (', 1)")} || '%' then 1
-    when r.is_reference then 2 else 3 end as rnk
+s as (select st.key, st.reference_recipe_key from phg_mix.drink_styles st, w where st.drink_key = (select key from d)
+  and (w.q like '%' || ${N("st.name")} || '%' or exists (select 1 from unnest(st.aka) a where w.q like '%' || ${N("a")} || '%'))
+  order by length(st.name) desc limit 1),
+c as (select r.*, case when ${N("r.name")} = w.q then 0 when r.key = (select reference_recipe_key from s) then 1
+    when r.style_key = (select key from s) then 2 when r.is_reference then 3 else 4 end as rnk
   from phg_mix.recipes r, w
   where r.drink_key = (select key from d) or ${N("r.name")} = w.q or exists (select 1 from unnest(r.aka) x where ${N("x")} = w.q))
 select c.key, c.name, c.family, c.method, c.glass, c.garnish, c.quality_grade, c.quality_score, c.verification, c.version_label, c.version_type, c.serve,
+ (select st.name from phg_mix.drink_styles st where st.key = c.style_key) as style,
+ (select count(*) from phg_mix.recipes x where x.style_key = c.style_key) as style_recipes,
  (select json_agg(json_build_object('i', l.ingredient, 'a', l.amount, 'u', l.unit, 'n', l.note) order by l.position) from phg_mix.recipe_lines l where l.recipe_key = c.key) as lines,
  (select json_agg(json_build_object('n', v.name, 'c', v.change)) from (select * from phg_mix.recipe_variants v2 where v2.recipe_key = c.key limit 6) v) as variants,
- (select json_agg(distinct s.title) from phg_mix.attributions a join phg_mix.sources s on s.key = a.source_key where a.record_type = 'recipe' and a.record_key = c.key) as sources,
- (select json_agg(json_build_object('label', coalesce(o.version_label, o.name), 'type', o.version_type, 'grade', o.quality_grade) order by o.is_reference desc, o.quality_score desc nulls last)
-    from phg_mix.recipes o where o.drink_key = c.drink_key and o.key <> c.key) as versions
+ (select json_agg(distinct src.title) from phg_mix.attributions a join phg_mix.sources src on src.key = a.source_key where a.record_type = 'recipe' and a.record_key = c.key) as sources,
+ (select json_agg(json_build_object('label', st.name, 'type', st.version_type, 'recipes', (select count(*) from phg_mix.recipes x where x.style_key = st.key)) order by st.sort, st.name)
+    from phg_mix.drink_styles st where st.drink_key = c.drink_key and st.key is distinct from c.style_key) as versions
 from c order by c.rnk, c.quality_score desc nulls last limit 1`;
           const t0 = Date.now();
           const res: any = await Promise.race([admin.rpc("phg_harmony_query", { p_account: accountId, p_user: userId, p_sql: sql, p_max_rows: 5 }), new Promise((r) => setTimeout(() => r({ data: null }), 4000))]);
@@ -646,8 +653,8 @@ from c order by c.rnk, c.quality_score desc nulls last limit 1`;
     } else if (lib) {
       /* v21: the library spec, with where it comes from and its grade */
       const srcs = (lib.sources || []).slice(0, 3).join(", ");
-      const others = (lib.versions || []).slice(0, 6).map((v: any) => v.label).filter(Boolean);
-      speakText = (await speakLlm(model, RECIPE_VOICE + " Say it is PHG's library spec (and which version, if a version label is given) and name up to two of its sources. If other versions of this drink are listed, end by naming up to three of them in a few words and offering one (for example 'I also have Tommy's and a Cadillac version'); otherwise, if variations are given, offer one of them.", `Drink: ${lib.name}${lib.version_label ? ` (version: ${lib.version_label})` : ""}. What they said: ${text}. PHG library spec (grade ${lib.quality_grade}, sources: ${srcs}): ${JSON.stringify({ lines: lib.lines, method: lib.method, glass: lib.glass, garnish: lib.garnish })}. Other versions of this drink in PHG's library: ${others.length ? others.join(", ") : "none"}. Named variations: ${JSON.stringify((lib.variants || []).slice(0, 3))}`)).text;
+      const others = (lib.versions || []).slice(0, 6).map((v: any) => v.label + (v.recipes > 1 ? ` (${v.recipes} recipes)` : "")).filter(Boolean);
+      speakText = (await speakLlm(model, RECIPE_VOICE + " Say it is PHG's library spec (and which version, if a version label is given) and name up to two of its sources. If other versions of this drink are listed, end by naming up to three of them in a few words and offering one (for example 'I also have Tommy's and a Cadillac version'); otherwise, if variations are given, offer one of them.", `Drink: ${lib.name}${lib.style ? ` (style: ${lib.style}${lib.style_recipes > 1 ? `; PHG holds ${lib.style_recipes} recipes for this style and this is the best-graded one` : ""})` : lib.version_label ? ` (version: ${lib.version_label})` : ""}. What they said: ${text}. PHG library spec (grade ${lib.quality_grade}, sources: ${srcs}): ${JSON.stringify({ lines: lib.lines, method: lib.method, glass: lib.glass, garnish: lib.garnish })}. Other versions of this drink in PHG's library: ${others.length ? others.join(", ") : "none"}. Named variations: ${JSON.stringify((lib.variants || []).slice(0, 3))}`)).text;
     } else {
       speakText = (await speakLlm(model, RECIPE_VOICE, `Drink: ${ref?.cocktail_name || drink}. What they said: ${text}. ` + (ref ? `PHG classic reference spec: ${JSON.stringify(ref)}` : "No PHG reference; use the widely accepted classic spec for exactly this drink."))).text;
     }

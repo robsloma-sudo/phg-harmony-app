@@ -2083,3 +2083,18 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   preps + 2 recipes) loading in 12 KB chunks (a 33 KB chunk was cut off in transit and rejected whole; nothing
   partial was written).
 - Research running: agave batch 2 (18 mezcal brands + 12 more tequilas).
+
+[2026-09-29] COCKTAIL CATALOG: DRINK -> STYLE -> RECIPES; GEAR BESIDE SPEAK
+- Rob: many recipes per cocktail (classic, traditional, house, happy hour, Cadillac...), and each style (Cadillac)
+  can itself have 150+ recipes. Applied: phg_mix.drinks (identity, parent for named riffs), recipes.drink_key /
+  version_type / version_label / serve / price_tier / is_reference, phg_mix.drink_styles (drink -> style, style
+  reference, description), recipes.style_key; indexes for ranking inside a style. Backfill: 93 recipes -> 79 drinks
+  (26 riffs linked to a parent) -> 92 styles.
+- Loader: files recipes under drink and style automatically; cites any library source (fixed: batches loaded without
+  their sources had scored as if unbacked - Margarita 18/E -> 62/C; 85 records + 50 pairings rescored, 321
+  attributions added). Contract documents versions and styles.
+- Inbox v24 (versions) / v25 (styles): named style wins (reference, else best-graded recipe of that style), plain
+  name -> drink reference; other styles offered with recipe counts; list names library styles. Gateway test:
+  "classic daiquiri" -> Classic style (2 recipes) reference, others Hemingway, No. 3, Papa Doble.
+- App 18.49.43 (deployed to main): + | Speak | gear, symmetric (Speak centred, both 96 px from it on a 390 px
+  screen); gear menu opens on the right; sheets scroll instead of running off small screens.
