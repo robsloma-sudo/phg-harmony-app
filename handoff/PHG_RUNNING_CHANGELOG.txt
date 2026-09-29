@@ -2193,3 +2193,14 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   party_call,sours_modern}.jsonl. Brief: scratchpad scale_common.txt (contract rules + dedupe + source records).
 - Next: validate, de-duplicate across files, load with scripts/mixology_load.py in <=12 KB chunks; then improve
   menu-item -> drink/style matching.
+- Scale-up round 1 result: 120 recipes (+22 creators, 15 sources, 8 preps) across 8 files - far below target because
+  the session's shared WebSearch budget (200 calls) ran out after ~20 searches per agent; WebFetch/curl blocked. No
+  recipe written from memory; many bar specs carry null amounts (low confidence). By file: agave 16 (margarita),
+  highballs 13 (mules + new Gin-Gin Mule), martinis 25 (new Pornstar/French/Appletini/Chocolate/Lychee), whiskey 10
+  (old fashioned + Wisconsin), rum_tiki 8 (mojito), brunch 24 (bloody mary, new Caesar, michelada), party 18 (LIIT
+  riffs, White/Black Russian, Sex on the Beach, IBA classics), sours 6 (new Bramble, Gin Basil Smash, White Lady).
+  Fixed: rx_margarita_classic_serious_eats is_reference -> false (rx_margarita stays the one Margarita reference).
+  Loading in 49 chunks. Not covered: most of each agent's list (see agent reports) - needs Rob: Firecrawl (paid) or a
+  higher CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION, or a fresh session.
+- PHG-026 steps 2-5 (helper): step 3 done for 2,050 venues, 765,154 duplicate staging rows superseded (backed up in
+  phg_backup_staging_dupes_20260927); step 4 in progress.
