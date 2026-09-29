@@ -8,7 +8,8 @@ one-off build running as pg_cron job 25.
 | Round | Spec score | Safety score | Spec average | Safety average | Changes made after the round |
 |---|---|---|---|---|---|
 | 1 | - | 68 | - | 68 | draft rewritten, live gate facts gathered (round 2 submission) |
-| 2 | - | 75 | - | 75 | pending |
+| 2 | - | 75 | - | 75 | round 3: reviewer helpers, lock_timeout only, session lock in refresh, pg_proc check, classify_item LIMIT 1; applied live, rehearsal OK |
+| 3 | - | 83 | - | 83 | pending (swap approved; cron 8 re-enable gated on S-R3-1..S-R3-4 and the timed run) |
 
 ## Safety Reviewer - round 1 (2026-09-29, draft commit 1814d69)
 
@@ -377,3 +378,138 @@ drink_name, item_name, section, state_code, venue_key); mv_mdvp_key UNIQUE (venu
 
 Asks for round 3: approve the real swap (`set statement_timeout='3s'; select public.phg_explorer_swap_next();`), then one
 timed `CALL public.refresh_explorer_v2()` as a one-off cron job, then cron 8 switched per the table above, with the watchdog.
+
+## Safety Reviewer - round 3 (2026-09-29, commits 420a909 + 24765c9, migration 20260929170000 applied live)
+
+**Evidence.** Still no live DB access for the reviewer: no Supabase tools in this session, and the local throwaway
+cluster could not be started this round. So the live facts are the lead's (round 3 submission above). This round
+checked the applied migration file against the draft (git diff 2d53250..420a909), the repo callers (index.html,
+supabase/functions/*, the earlier grant migrations) and documented PostgreSQL 17 semantics. Nothing was changed
+live.
+
+### Round-2 findings: status
+| Item | Status | Evidence |
+|---|---|---|
+| R2-B1 unqualified index names | fixed | The helpers are verbatim from the round-2 test. The live rehearsal returned `REHEARSAL OK`. It checked the OIDs, anon/authenticated SELECT, `_old` closed, the unique index, and the OIDs restored after swap_back. |
+| R2-B2 gate facts | fixed | (a) The cron 8 baseline is recorded verbatim. (b) The rehearsal output and the post-state are recorded (0 log rows, only `*_next`, live OIDs unchanged). (c) The live relacl, owner and index names are recorded. The longest old index name is 21 characters. |
+| S-R2-1 SELECT-only ACL copy | fixed | copy_select is verbatim. It also carries `phg_menu_designer=r` and `phg_harmony_reader=r` on mv_drink_explorer and mv_menu_dev_venue_profile. Both were table-level grants (the harmony `denied_columns` path is not used for these two), so relacl covers them. |
+| S-R2-2 statement_timeout | fixed in code; the record is still missing | The SET clauses are gone. `pg_roles.rolconfig` for postgres and `pg_db_role_setting` are still not recorded (S-R3-3). |
+| S-R2-3 session lock | fixed for cron; new edge cases | See S-R3-1 and S-R3-2. |
+| S-R2-4 pg_proc dependents | fixed | The `classid = 'pg_proc'` branch has been added. |
+| S-R2-5 old refresh_explorer() EXECUTE | **not done** | The submission does not mention it. Carried over as S-R3-4. |
+| S-R2-6 timing / EXPLAIN | open (planned) | The plan is to time a one-off `CALL` before cron 8 is changed. That is the right gate. No numbers yet. |
+| S-R2-7 classify_item SETOF | fixed | `LATERAL (... LIMIT 1)`. See "View change and the _next builds" below. |
+| S-R2-8 parity / missing venues | half done | Index parity is confirmed from (c) against Part B: every old column set has an equivalent `_next` index (mv_dash_sections_idx (state_code, section) is covered by `_next_uk` on the same columns). Still missing: the count of old venues that are absent from `_next`, by reason. This is not safety-relevant, because every state grows. |
+
+### Specific questions from the lead
+**1. Session advisory lock when a refresh fails partway.**
+- Under pg_cron, the lock is safe. In libpq mode, each run opens its own connection and closes it when the command
+  ends, whether it succeeded or failed. So a failed or cancelled (watchdog) `CALL` releases the lock when the run
+  ends. The MVs committed before the failure stay fresh, and the next run starts again from mv_drink_explorer.
+- In any other session, the lock can leak. PostgreSQL documents that a session-level advisory lock taken inside a
+  transaction that is later rolled back is still held after the rollback. It stays until an explicit unlock or until
+  the backend exits. That happens if someone runs the `CALL` from the SQL editor, the MCP `execute_sql`, or through
+  the pooler (Supavisor transaction mode reuses server connections). Any wrapping transaction makes the first COMMIT
+  fail with `invalid transaction termination`, and the lock survives on that connection.
+- The consequences of a leak:
+  (a) Every later cron run hits `raise notice 'explorer busy; skipped'; return;` and pg_cron records it as
+  **succeeded**. The explorer goes stale silently, which is the original PHG-051 P0 again, with no failed runs to
+  show it.
+  (b) `phg_explorer_swap_back()` and `phg_explorer_build_next()` fail on their try-lock, which blocks the rollback
+  path until the holder is found. That is S-R3-1 and S-R3-2.
+
+**2. ACL narrowing (anon and authenticated go from arwdDxtm to SELECT only). This is safe, and it is an improvement.**
+- a/w/d/D (INSERT/UPDATE/DELETE/TRUNCATE): PostgreSQL rejects these on a materialized view whatever the privileges
+  ("cannot change materialized view").
+- x (REFERENCES): a foreign key cannot reference an MV.
+- t (TRIGGER): an MV cannot have triggers.
+- m (PG17 MAINTAIN): this is the only real loss. It covers REFRESH, VACUUM, ANALYZE, LOCK TABLE, CLUSTER and
+  REINDEX. anon and authenticated can only use it through a SECURITY INVOKER function exposed over /rpc.
+- The repo has no such caller:
+  - index.html only does GETs on mv_drink_explorer and mv_menu_dev_venue_profile.
+  - phg-harmony-data and phg-speech-transcribe only do `.select()` on mv_*. They use the service_role client.
+    service_role keeps its default full grant on the `_next` copies (round-2 fact: `{postgres, service_role}`), so
+    nothing changes for it.
+  - The only rpc refreshes in edge functions are refresh_state_stats, refresh_menu_staging_quality and
+    refresh_visual_page_placeholders. None of them is an explorer MV refresh (job 5 and the stats functions were
+    kept out of refresh_explorer_v2 in round 2).
+  - phg_designer_query and phg_harmony_q run as phg_menu_designer and phg_harmony_reader. Those roles are SELECT-only
+    and are carried over.
+- One unchecked exception: if the old `refresh_explorer()` is SECURITY INVOKER and executable by anon, today anon
+  can trigger a non-concurrent refresh through MAINTAIN. After the swap that call fails, which is better. If it is
+  SECURITY DEFINER, anon can still call it after the swap, and it takes an ACCESS EXCLUSIVE lock on the v2 MVs.
+  Either way, S-R3-4 closes it.
+
+**3. Does the view change (classify_item LIMIT 1) invalidate the existing _next builds? No.**
+- mv_drink_explorer_next selects from v_public_drink_explorer_v2 by OID. `create or replace view` keeps the OID and
+  had to keep the same output columns, or the applied migration would have failed. The stored rows are not touched.
+- The builds already hold the result that LIMIT 1 would give. mv_de_next_uk (UNIQUE staging_id) was built
+  successfully. So at build time no item matched more than one classify_item row: an item matching n > 1 rows would
+  have produced n rows with the same staging_id. With at most one row per item, LIMIT 1 changes nothing.
+- The first CONCURRENTLY refresh uses the new definition, so from then on a fan-out cannot break the unique index.
+- One residual point: a LIMIT 1 with no ORDER BY picks whichever row the function returns first. If classify_item
+  ever returns two rows, family and section could flip between refreshes (row churn only, no failure). This is a
+  minor item.
+
+### Scores
+| Area | Score | Main evidence |
+|---|---|---|
+| Data preservation | 88 | Nothing is dropped. `*_old` is kept, the swap is one transaction, and the log stores the OID and ACL of every live, `_old` and `_next` name. The drop-`_old` statement is written without CASCADE. The old relacl is on record. |
+| Correctness | 85 | The swap and swap_back are proven live by the rehearsal. The ACL copy is correct, including the two app roles. LIMIT 1 removes the staging_id fan-out, and the builds are unaffected. Minus: a busy skip returns success, and LIMIT 1 has no ORDER BY. |
+| Concurrency | 84 | lock_timeout 300 ms held in the live rehearsal. The session lock spans the whole CALL under cron and conflicts with the build and swap xact try-locks. The refresh takes ExclusiveLock only, so readers are not blocked. Minus: a lock leak in non-cron sessions, plus the silent skip (S-R3-1). |
+| Performance | 72 | Index parity is confirmed. No CONCURRENTLY timing and no EXPLAIN yet. The snapshot and xmin hold per run are unknown. This is correctly gated by the timed one-off run before cron 8 changes. |
+| Security | 86 | The DEFINER helpers set search_path, and EXECUTE is revoked from anon, authenticated and service_role. swap_log has RLS and service_role SELECT only. The ACL narrowing removes MAINTAIN from anon and authenticated, and no caller needs it. Open: S-R3-4 (refresh_explorer EXECUTE). |
+| Reversibility | 84 | swap and swap_back are rehearsed live with OID restoration. The cron 8 baseline and the per-state runbook are written. swap_back refuses to run after a rebuild. Minus: a leaked session lock blocks swap_back, and the runbook has no step to find and clear it (S-R3-2). |
+| **Round score** | **83** | |
+
+### Blockers
+None for the swap itself, or for the one-off timed CALL.
+
+### Should fix (S-R3-1 to S-R3-4 gate re-enabling cron 8; S-R3-4 should be done before the swap)
+- **S-R3-1 Make a busy skip visible.** In refresh_explorer_v2, replace
+  `raise notice 'explorer busy; skipped'; return;` with
+  `raise exception 'explorer busy (phg_explorer lock held); skipped';`.
+  A true overlap then appears as a failed cron run, which is harmless because nothing has changed yet, and a leaked
+  lock shows up at once instead of silently stopping every refresh. Only ever run the CALL as a one-off pg_cron job,
+  never from the SQL editor, the MCP or the pooler.
+- **S-R3-2 Add a runbook step to find the lock holder.** Add it before the swap_back step, and to "explorer busy"
+  triage (untested here, so check it on a read-only connection first):
+  ```sql
+  select l.pid, a.usename, a.application_name, a.backend_start, a.state, left(a.query, 80)
+    from pg_locks l join pg_stat_activity a using (pid)
+   where l.locktype = 'advisory' and l.objsubid = 1
+     and l.objid::text::bigint   = (hashtext('phg_explorer')::bigint & 4294967295)
+     and l.classid::text::bigint = ((hashtext('phg_explorer')::bigint >> 32) & 4294967295);
+  ```
+  Then run `select pg_terminate_backend(<pid>)` for the idle holder only.
+- **S-R3-3 Record the real bound on the CALL.** Record `select rolname, rolconfig from pg_roles where rolname = 'postgres'`
+  and `select * from pg_db_role_setting`. A pg_cron command cannot `SET statement_timeout` in front of the CALL (an
+  implicit transaction block breaks the COMMIT), so the role or database setting is the only statement bound. The
+  watchdog is the other bound. If postgres has a short role timeout, the timed run fails at mv_drink_explorer.
+- **S-R3-4 (carried from S-R2-5) Close the old refresh_explorer() to the app roles.** Before the swap, run
+  `select has_function_privilege('anon','public.refresh_explorer()','execute'), has_function_privilege('authenticated','public.refresh_explorer()','execute'), prosecdef from pg_proc where proname='refresh_explorer'`.
+  If either is true, run `revoke execute on function public.refresh_explorer() from public, anon, authenticated;`.
+  After the swap, this function refreshes the v2 MVs non-concurrently by name.
+- **Before the timed run (cheap):** confirm that `pg_class.relowner` is postgres for all six `*_next`. The cron job
+  runs as postgres, and REFRESH needs the owner or MAINTAIN. The rehearsal did not check the owner.
+
+### Minor
+- Add a deterministic order to the classify_item pick, either an ORDER BY inside classify_item or
+  `ORDER BY ci.family, ci.subfamily` in the lateral, so a future multi-match cannot flip family or section between
+  refreshes.
+- S-R2-8 remainder: record the count of old venues missing from `_next`, by reason.
+- Carried over: swap_back leaves SELECT for phg_menu_designer and phg_harmony_reader on the demoted `*_next`. This is
+  harmless because the data is the same kind.
+- Record the timed CALL's per-MV notices and `n_dead_tup` on accounts and staging_menu_extract before and after
+  (S-R2-6), and pick the cadence from those numbers.
+
+### Verdict
+**pass (83).** Approve the real swap:
+`set statement_timeout='3s'; select public.phg_explorer_swap_next();`
+Run it at a quiet time, and retry on 55P03 or 57014. Do S-R3-4 first. After the swap, run
+`NOTIFY`-dependent checks: anon has SELECT on all six live names, `*_old` is closed, and the swap_log row is
+present.
+Then run one timed `CALL public.refresh_explorer_v2()` as a one-off pg_cron job, unscheduled by hand once it has
+started.
+Re-enable cron 8 (`command := 'CALL public.refresh_explorer_v2()'`, with the watchdog) only after S-R3-1, S-R3-2 and
+S-R3-3 are done and the timing is recorded here.

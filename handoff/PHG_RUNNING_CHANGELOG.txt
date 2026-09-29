@@ -2303,3 +2303,15 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   for out-of-state premises (2,512 on-premise). WA/MI/CA hit the edge memory limit (whole file in memory) ->
   v6 (b001513): streamed zip/CSV window + dense xlsx up to the window; tested locally on a 50k-row zipped CSV
   (windows exact, quoted fields, early stop, done flag). Deploy + CA/WA/MI run in progress.
+- 2026-09-29 PHG-051 round 3: migration phg_explorer_v2_round3_swap_refresh applied (v2 view with classify_item
+  LATERAL LIMIT 1; swap log table; reviewer's rename/ACL helpers; swap_next/swap_back lock_timeout 300 ms only +
+  pg_proc dependents check; refresh_explorer_v2 procedure with session advisory lock). Live rehearsal (swap -> checks
+  -> swap_back -> RAISE) returned 'REHEARSAL OK'; afterwards 0 log rows, six *_next intact, no *_old. R2-B2 facts
+  (cron 8 verbatim, live ACLs/owners, index names) recorded in the review log; round 3 sent to the safety reviewer.
+- Licences v7 loaded CA (96,862 rows, 47,551 on-premise) and WA (9,839, all on-premise). Fixed in SQL: WA expiry
+  (YYYYMMDD) 9,839/9,839; CA expiry (DD-MON-YYYY) 81,658 + owner from 'Primary Name'. Found: CA File Number carries
+  several licence types -> ~33k rows lost to key collisions; MI header not detected (date banner first).
+- ingest-state-licenses v8 (f5cf429): CA keyed '<file no>-<type>', date parser for YYYYMMDD / DD-MON-YYYY / Excel
+  serial, owner from 'Primary Name', header rule for label rows without 'licence', probe returns first 12 rows.
+  v9 (0a1e815): Colorado adapter, data.colorado.gov ier5-5ms2 (20,281 rows, free Socrata), found through the free
+  Socrata catalog API (called via pg_net; the container proxy blocks it). Deploy, CA reload, MI and CO load running.
