@@ -13,6 +13,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
      IL  ilcc.illinois.gov daily CSV export (retail_type ON-PREMISES / COMBINATION = on-premise)
    v3: + CT (Socrata, no permit class published -> on_premise unknown), DC + KY/Louisville (ArcGIS), VA (xlsx);
    {probe:true} returns headers + sample rows without writing.
+   v7: streaming xlsx reader (sheet1 + sharedStrings via fflate), CSV preamble lines skipped (CA banner).
    v6: memory-safe readers (streamed zip/CSV window; xlsx dense + sheetRows), ZIP+4 with a dash.
    v5: CT and VA adapters removed (see notes), KY NQ4/caterer and DC 'Retail -' classes fixed.
    v4: + MI (master xlsx), WA (weekly On Premise xlsx), CA (daily zipped CSV), ME (FOAA xlsx); download links are
@@ -126,18 +127,80 @@ async function sheetRows(url: string, from: number, count: number): Promise<{ he
     const r = await fetch(url, { signal: ctl.signal, headers: { "User-Agent": "PHG-license-ingest/1.0" } });
     if (!r.ok || !r.body) throw new Error(`HTTP ${r.status} from ${new URL(url).host}`);
     if (/\.zip(\?|$)/i.test(url)) return await zipCsvWindow(r.body, from, count, ctl);
-    const buf = new Uint8Array(await r.arrayBuffer());
-    const XLSX = await import("npm:xlsx@0.18.5");
-    const wb = XLSX.read(buf, { type: "array", dense: true, cellHTML: false, cellNF: false, cellText: false, cellStyles: false,
-      bookVBA: false, sheetRows: from + count + 60 });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const all: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: "" });
-    let h = all.findIndex((row) => row.filter((c: any) => String(c).trim()).length >= 3 && row.some((c: any) => /licen|permit/i.test(String(c))));
-    if (h < 0) h = 0;
-    const body = all.slice(h + 1);
-    const rows = body.slice(from, from + count).map((row) => row.map((c: any) => String(c ?? "")));
-    return { head: all[h].map((c: any) => String(c).trim()), rows, done: body.length < from + count };
+    return await xlsxWindow(r.body, from, count);
   } finally { clearTimeout(tm); }
+}
+
+/* v7: streaming .xlsx reader (SheetJS keeps the whole workbook in memory; state lists are too big for the edge
+   runtime). An .xlsx is a zip of XML: the first worksheet is streamed row by row and only the header candidates and
+   the requested window are kept (as raw cell values); shared strings are resolved at the end. */
+async function xlsxWindow(stream: ReadableStream<Uint8Array>, from: number, count: number) {
+  const { Unzip, UnzipInflate } = await import("npm:fflate@0.8.2");
+  const dec = new TextDecoder();
+  const unesc = (x: string) => x.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, (_, d) => String.fromCharCode(+d)).replace(/&amp;/g, "&");
+  const colIdx = (ref: string) => { const m = ref.match(/^([A-Z]+)/); let n = 0; if (m) for (const ch of m[1]) n = n * 26 + ch.charCodeAt(0) - 64; return n - 1; };
+  type Cell = { t: string; v: string };
+  const pre: Cell[][] = []; let nRows = 0; let headAt = -1;
+  let sst: string[] = []; let sstText = ""; let sheetBuf = "";
+  const isHead = (cells: Cell[], strs: (c: Cell) => string) => cells.filter((c) => strs(c).trim()).length >= 3 && cells.some((c) => /licen|permit/i.test(strs(c)));
+  const takeRow = (xml: string) => {
+    const cells: Cell[] = [];
+    for (const m of xml.matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+      const attrs = m[1] || ""; const inner = m[2] || "";
+      const ref = (attrs.match(/\br="([A-Z]+\d+)"/) || [])[1] || ""; const t = (attrs.match(/\bt="(\w+)"/) || [])[1] || "n";
+      const v = t === "inlineStr" ? [...inner.matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((x) => x[1]).join("") : ((inner.match(/<v>([\s\S]*?)<\/v>/) || [])[1] || "");
+      cells[ref ? colIdx(ref) : cells.length] = { t, v: unesc(v) };
+    }
+    for (let i = 0; i < cells.length; i++) if (!cells[i]) cells[i] = { t: "n", v: "" };
+    if (nRows < 40) pre.push(cells);
+    nRows++;
+    return cells;
+  };
+  // the header row is found at the end (shared strings may arrive after the sheet), so keep every row whose sheet
+  // index could fall in the window for any header position in the first 40 rows
+  const keep: { si: number; cells: Cell[] }[] = [];
+  const feedSheet = (text: string, final: boolean) => {
+    sheetBuf += text;
+    let end: number;
+    while ((end = sheetBuf.indexOf("</row>")) >= 0) {
+      const start = sheetBuf.lastIndexOf("<row", end);
+      const si = nRows;
+      const cells = takeRow(sheetBuf.slice(start, end));
+      sheetBuf = sheetBuf.slice(end + 6);
+      if (si >= from && si < from + count + 41) keep.push({ si, cells });
+    }
+    if (final) sheetBuf = "";
+  };
+  await new Promise<void>((resolve, reject) => {
+    let open = 0; let ended = false;
+    const maybeDone = () => { if (ended && open === 0) resolve(); };
+    const uz = new Unzip((file: any) => {
+      const isSheet = /^xl\/worksheets\/sheet1\.xml$/i.test(file.name), isSst = /^xl\/sharedStrings\.xml$/i.test(file.name);
+      if (!isSheet && !isSst) return;
+      open++;
+      file.ondata = (err: any, chunk: Uint8Array, final: boolean) => {
+        if (err) return reject(err);
+        const text = dec.decode(chunk, { stream: !final });
+        if (isSst) sstText += text; else feedSheet(text, final);
+        if (final) { open--; maybeDone(); }
+      };
+      file.start();
+    });
+    uz.register(UnzipInflate);
+    (async () => {
+      const rd = stream.getReader();
+      try { for (;;) { const { value, done } = await rd.read(); if (done) { uz.push(new Uint8Array(0), true); break; } uz.push(value); } ended = true; maybeDone(); }
+      catch (e) { reject(e); }
+    })();
+  });
+  sst = [...sstText.matchAll(/<si>([\s\S]*?)<\/si>/g)].map((m) => unesc([...m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((x) => x[1]).join("")));
+  sstText = "";
+  const str = (c: Cell) => (c.t === "s" ? (sst[+c.v] ?? "") : c.v);
+  // header: first of the first 40 rows that looks like one; body index = sheet index - headAt - 1
+  headAt = pre.findIndex((r) => isHead(r, str));
+  if (headAt < 0) headAt = 0;
+  const rows = keep.filter((k) => k.si - headAt - 1 >= from && k.si - headAt - 1 < from + count).map((k) => k.cells.map(str));
+  return { head: (pre[headAt] || []).map(str).map((x) => x.trim()), rows, done: nRows - headAt - 1 <= from + count };
 }
 
 async function zipCsvWindow(stream: ReadableStream<Uint8Array>, from: number, count: number, ctl: AbortController) {
@@ -147,7 +210,7 @@ async function zipCsvWindow(stream: ReadableStream<Uint8Array>, from: number, co
   let row: string[] = []; let f = ""; let q = false; let sep: string | null = null; let prev = "";
   const emit = () => {
     row.push(f); f = "";
-    if (!head) head = row.map((x) => x.trim());
+    if (!head) { if (row.filter((x) => x.trim()).length >= 3 && row.some((x) => /licen|permit/i.test(x))) head = row.map((x) => x.trim()); }
     else if (row.length > 1) { if (idx >= from && idx < from + count) rows.push(row); idx++; if (idx >= from + count) stop = true; }
     row = [];
   };
@@ -197,11 +260,11 @@ function sheetAdapter(state: string, url: string | (() => Promise<string>), sour
     source,
     async pages(offset, pages) {
       const { head, rows: win, done } = await sheetRows(typeof url === "string" ? url : await url(), offset, pages * PAGE);
-      const iNo = col(head, /licen[cs]e\s*(no|num|#|id)/i, /permit\s*(no|num|#)/i, /^licen[cs]e$/i);
+      const iNo = col(head, /licen[cs]e\s*(no|num|#|id)/i, /permit\s*(no|num|#)/i, /^licen[cs]e$/i, /file\s*(no|num)/i, /lic(ense)?\s*#/i);
       const iType = col(head, /licen[cs]e\s*(type|class|desc|privilege)/i, /privilege/i, /^type$/i, /class/i);
-      const iName = col(head, /trade|dba|doing business/i, /business\s*name/i, /establishment/i, /^name$/i);
+      const iName = col(head, /trade|dba|doing business/i, /business\s*name/i, /premises?\s*name/i, /establishment/i, /primary\s*name/i, /^name$/i);
       const iOwner = col(head, /licensee|owner|entity|applicant/i);
-      const iAddr = col(head, /(premise|physical|location|street)?\s*address(\s*1|\s*line\s*1)?$/i, /street/i);
+      const iAddr = col(head, /(premise|physical|location|street)?\s*address(\s*1|\s*line\s*1)?$/i, /prem\w*\s*addr\w*\s*1?$/i, /street/i, /addr/i);
       const iCity = col(head, /city/i, /locality|town/i);
       const iZip = col(head, /zip|postal/i);
       const iCounty = col(head, /county/i);
