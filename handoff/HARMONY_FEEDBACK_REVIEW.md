@@ -40,3 +40,5 @@ select at, sql, error, row_count from phg.harmony_query_log where at > now() - i
 - #1-#2 (2026-09-29 17:00-17:02): "how many liquor licenses do we have" -> 1,284 then 4,341 (it counted menu venues in
   mv_drink_explorer); "the number is 28,855, do you see it?" -> Could not answer. Cause: the licenses source was not
   deployed yet. Fix: licenses source (phg-harmony-data v14) + lessons #1 (planner) and #2 (sql).
+- Round 1 closed 2026-09-29: #1 fixed (28,855 = "Venue universe" = v_public_stats venues NY 16,633 + CO 7,540 +
+  IA 4,682; lessons 3-4), #2 fixed (licences != menu venues; licenses source + lessons 1-2).
