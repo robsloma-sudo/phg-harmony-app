@@ -6301,7 +6301,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     <div id="err"></div>
     <div id="dataWarn"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.49 ORIGINAL FILES FIRST · SHARP MENU PAGES FROM THE REAL PDF · HARMONY LEARNS FROM MISSES · LIVE LICENCE COVERAGE · FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.50 PRICED VENUE PINS · SERVER PAGING · ORIGINAL FILES FIRST · SHARP MENU PAGES FROM THE REAL PDF · HARMONY LEARNS FROM MISSES · LIVE LICENCE COVERAGE · FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -43190,7 +43190,7 @@ function pinPred(it,pins){
   return it.neg?function(r){return !p(r);}:p;
 }
 /* what phg-harmony-data can re-query per source (it ignores params it does not know) */
-var SRV={drink_prices:'q state city venue_type price income age sort',drink_map:'q state city venue_type price income age sort',venues:'state city venue_type has_menu',distilleries:'state',menu_breakdown:'state'};
+var SRV={drink_prices:'q state city venue_type price income age sort',drink_map:'q state city venue_type price income age sort',venues:'q state city venue_type has_menu price income age sort',licenses:'state city q',distilleries:'state',menu_breakdown:'state'};
 function srvKeys(q){var o={};if(!q||!q.source)return o;(Array.isArray(q.keys)?q.keys:(SRV[q.source]||'').split(' ')).forEach(function(k){if(k)o[k]=1;});return o;}
 function canSrv(it,ok){return !!(ok[it.key]&&!it.neg&&!it.any&&it.mode!=='add'&&!(it.key==='city'&&it.guess&&false));}
 function itemParams(it,clear){
@@ -43342,10 +43342,16 @@ function hdApply(cmd,s){
     });
     return true;
   case 'page':
-    if(isMap){sp('A map has no pages. Say “next one” to step through the pins.');return true;}
+    /* 18.49.50: server paging - past the rows on screen, ask phg-harmony-data for the next batch (offset) when it has more */
+    var srvPg=isMap?orig.page:(orig.table&&orig.table.total!=null?{offset:orig.table.offset||0,limit:(orig.table.rows||[]).length,total:orig.table.total}:null);
+    var srvMove=function(dir){if(!st.query||!srvPg)return false;var off=(srvPg.offset||0)+dir*(srvPg.limit||0);
+      if(dir>0&&off>=srvPg.total)return false;if(dir<0&&(srvPg.offset||0)<=0)return false;off=Math.max(0,off);
+      R.page=1;hdRefine(sp,{offset:String(off)},'',function(r){var n2=hdState().orig,pg=n2&&(n2.page||(n2.table&&{offset:n2.table.offset||0,limit:(n2.table.rows||[]).length,total:n2.table.total}));
+        sp(pg&&pg.total?'Showing '+fmtN(pg.offset+1)+' to '+fmtN(Math.min(pg.total,pg.offset+pg.limit))+' of '+fmtN(pg.total)+'.':'Here are the next ones.');});return true;};
+    if(isMap){if(srvMove(cmd.delta<0?-1:1))return true;sp(srvPg&&srvPg.total>(srvPg.limit||0)?'That’s the last batch on the map.':'A map has no pages. Say “next one” to step through the pins.');return true;}
     var tot=Math.max(1,Math.ceil((R.order.length||model.rows.length)/R.size)),np=cmd.delta?R.page+cmd.delta:cmd.page==='last'?tot:(cmd.page|0);
-    if(np<1){sp('You’re on the first page.');return true;}
-    if(np>tot){sp(tot===1?'Everything fits on one page.':'There are only '+tot+' pages.');return true;}
+    if(np<1){if(cmd.delta&&srvMove(-1))return true;sp('You’re on the first page.');return true;}
+    if(np>tot){if(cmd.delta&&!items().length&&srvMove(1))return true;sp(tot===1?'Everything fits on one page.':'There are only '+tot+' pages.');return true;}
     R.page=np;var r2=hdRender();sp('Page '+r2.page+' of '+r2.pages+'.');return true;
   case 'pageSize':
     if(isMap){sp('A map has no pages.');return true;}

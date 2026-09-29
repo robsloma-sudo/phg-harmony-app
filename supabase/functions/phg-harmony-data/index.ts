@@ -220,20 +220,44 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
     },
   },
   venues: {
-    about: "Bars/restaurants we track in IA, CO, NY, filtered by city, state, venue type or name: map of pins.",
+    about: "Bars/restaurants we track in IA, CO, NY, filtered by city, state, venue type or name: map of pins with each venue's cocktail price (avg/median) and ZIP income/age; accepts price / income / age filters and sort.",
     async run(db, p) {
-      let q = db.from("mv_dash_pins").select("venue,city,state_code,venue_type,rating,lat,lng,drink_items").not("lat", "is", null).limit(800);
+      /* v16: pins carry prices + census (v_venue_pins); server paging with offset/limit and a total */
+      const lim = Math.min(800, Math.max(20, Math.floor(num(p.limit) || 800))), off = Math.max(0, Math.floor(num(p.offset) || 0));
+      let q = db.from("v_venue_pins").select("venue,city,state_code,venue_type,rating,lat,lng,drink_items,cocktail_avg_price,cocktail_median_price,income,median_age", { count: "exact" }).not("lat", "is", null);
       if (p.state) q = q.eq("state_code", String(p.state).toUpperCase().slice(0, 2));
       if (p.city) q = q.ilike("city", esc(p.city));
       if (p.venue_type) q = q.ilike("venue_type", `%${esc(p.venue_type)}%`);
       if (p.q) q = q.ilike("venue", `%${esc(p.q)}%`);
       if (truthy(p.with_menus)) q = q.gt("drink_items", 0);
-      const { data, error } = await q.order("drink_items", { ascending: false });
+      if (num(p.price_min) != null) q = q.gte("cocktail_avg_price", num(p.price_min));
+      if (num(p.price_max) != null) q = q.lte("cocktail_avg_price", num(p.price_max));
+      if (num(p.income_min) != null) q = q.gte("income", num(p.income_min));
+      if (num(p.income_max) != null) q = q.lte("income", num(p.income_max));
+      if (num(p.age_min) != null) q = q.gte("median_age", num(p.age_min));
+      if (num(p.age_max) != null) q = q.lte("median_age", num(p.age_max));
+      const sort = String(p.sort || "");
+      const ord: [string, boolean] = sort === "price_asc" ? ["cocktail_avg_price", true] : sort === "price_desc" ? ["cocktail_avg_price", false]
+        : sort === "income_desc" ? ["income", false] : sort === "income_asc" ? ["income", true] : sort === "rating_desc" ? ["rating", false] : ["drink_items", false];
+      const { data, error, count } = await q.order(ord[0], { ascending: ord[1], nullsFirst: false }).range(off, off + lim - 1);
       if (error) throw error;
-      const pins = (data || []).map((v: any) => ({ lat: +v.lat, lng: +v.lng, label: v.venue, sub: `${v.city}, ${v.state_code}${v.venue_type ? " · " + v.venue_type : ""}${v.drink_items ? " · " + v.drink_items + " drinks" : ""}`, weight: v.drink_items || 0,
-        city: v.city, state: v.state_code, venue_type: v.venue_type, rating: v.rating == null ? null : +v.rating, drinks: v.drink_items || 0 }));
+      const money2 = (x: any) => x == null ? null : Math.round(+x * 100) / 100;
+      const pins = (data || []).map((v: any) => {
+        const price = money2(v.cocktail_avg_price);
+        return { lat: +v.lat, lng: +v.lng, label: v.venue,
+          sub: `${v.city}, ${v.state_code}${v.venue_type ? " · " + v.venue_type : ""}${price != null ? " · avg $" + price.toFixed(2) : ""}${v.drink_items ? " · " + v.drink_items + " drinks" : ""}`,
+          weight: v.drink_items || 0, city: v.city, state: v.state_code, venue_type: v.venue_type, rating: v.rating == null ? null : +v.rating,
+          drinks: v.drink_items || 0, price, median_price: money2(v.cocktail_median_price), income: v.income == null ? null : +v.income, median_age: v.median_age == null ? null : +v.median_age };
+      });
+      const total = count ?? pins.length;
       const where = [p.q, p.venue_type, p.city, p.state && (STATE_NAMES[String(p.state).toUpperCase()] || p.state)].filter(Boolean).join(", ");
-      return { speak: pins.length ? `${pins.length}${pins.length >= 800 ? "+" : ""} venues${where ? " for " + where : ""} on the map.` : `No venues found${where ? " for " + where : ""}.`, view: { type: "map", title: `Venues${where ? " · " + where : ""}`, pins, region: "US" } };
+      const fw = filterWords(p);
+      const priced = pins.filter((x: any) => x.price != null).map((x: any) => x.price as number);
+      const avg = priced.length ? priced.reduce((a: number, b: number) => a + b, 0) / priced.length : null;
+      return {
+        speak: pins.length ? `${total.toLocaleString("en-US")} venues${where ? " for " + where : ""}${fw ? " (" + fw + ")" : ""}${total > pins.length ? `, showing ${off + 1}-${off + pins.length}` : ""} on the map${avg != null ? `; average cocktail $${avg.toFixed(2)}` : ""}.` : `No venues found${where ? " for " + where : ""}${fw ? " (" + fw + ")" : ""}.`,
+        view: { type: "map", title: `Venues${where ? " · " + where : ""}${fw ? " · " + fw : ""}`, pins, region: "US", page: { offset: off, limit: lim, total } },
+      };
     },
   },
   drink_prices: {
@@ -679,7 +703,8 @@ function fastPlan(t: string): { source: string; params: P } | null {
 /* v6: ASK. Anything the fixed catalog can't answer is written as one read-only SELECT and run through
    public.phg_harmony_query (the knowledge-map gateway: select only, table allowlist, project-scoped RLS, logged).
    One repair round on a planner error. The gateway does not bound its own runtime, so the caller does (12 s). */
-/* v15 (2026-09-29): failures logged to phg.harmony_feedback; lessons (phg.harmony_lessons) read by planner + SQL writer.
+/* v16 (2026-09-29): venues pins carry cocktail price + ZIP income/age (v_venue_pins), price/income/age filters, sort, server paging (offset/limit, total).
+   v15 (2026-09-29): failures logged to phg.harmony_feedback; lessons (phg.harmony_lessons) read by planner + SQL writer.
    v14 (2026-09-29): licenses source (active on-premise licence coverage, state breakdowns, licensed-venue lists/maps).
    v13 (2026-09-29): refinable views - price / income / age / sort params, drink_map source, view.query.
    v12 (Rob 2026-09-29: no extra payment): priority processing OFF by default (OPENAI_SERVICE_TIER=priority to re-enable).
