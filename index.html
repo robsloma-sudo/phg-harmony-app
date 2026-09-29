@@ -6299,8 +6299,9 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
       <div class="live" id="pill"><span class="dot"></span><span id="status">connecting</span></div>
     </div>
     <div id="err"></div>
+    <div id="dataWarn"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.44 VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.45 FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7825,17 +7826,53 @@ function get(p){return fetch(BASE+p,{headers:H}).then(function(r){
   if(!r.ok)throw new Error(p.split("?")[0]+" returned "+r.status);
   return r.json()}).then(function(j){return Array.isArray(j)?j:[j]})}
 
+/* 18.49.45 FULL MARKET EXPLORER (PHG-051)
+   mv_drink_explorer is being rebuilt and grows a lot (NY 9,110 -> 75,549 rows). getAll used to stop at
+   40 pages with no ORDER BY, so NY would have been cut off without a word, and offset pages could skip or
+   repeat rows while a CONCURRENT refresh committed. Now:
+   - the cap is explicit (GETALL_MAX_PAGES = 100 pages) and hitting it, or losing a page part-way, puts a
+     visible notice in #dataWarn instead of truncating quietly;
+   - explorer reads name their columns and are ordered. The rebuilt MV carries a unique staging_id, so it
+     is paged by keyset (order=staging_id, staging_id=gt.<last>) - no offsets, nothing skipped or doubled
+     across a refresh. The old MV has no staging_id; one cheap probe (?select=staging_id&limit=1) decides,
+     is cached, and the old MV is paged by Range with order=venue_key,item_name,item_price;
+   - the phone gets the five drink sections first (in parallel), renders, then pulls 'unclassified' in the
+     background and appends it to EXP; only pages that read unclassified rows re-render, and they say
+     "loading more..." until it lands. */
+var GETALL_MAX_PAGES = 100;
+var PHG_DATA_WARN = {};
+function phgDataWarn(key, msg){
+  if (msg){ PHG_DATA_WARN[key] = msg; if (window.console) console.warn('[data] ' + msg); }
+  else delete PHG_DATA_WARN[key];
+  var el = document.getElementById('dataWarn'); if (!el) return;
+  el.innerHTML = Object.keys(PHG_DATA_WARN).map(function(k){
+    return '<div class="err">' + esc(PHG_DATA_WARN[k]) + '</div>';
+  }).join('');
+}
+
 // PostgREST caps a response at 1,000 rows. The explorer holds far more than
 // that, so a single request returned only the first slice - which is why the
 // dashboard appeared to have one category. Page through with Range headers
-// until a short page comes back.
-function getAll(path,pageSize){
-  var size=pageSize||1000, out=[], page=0, tries=0;
+// (or, with opts.keyset, by key) until a short page comes back.
+// opts: {keyset:'col'  page by col=gt.<last> ordered by col (col must be unique and selected),
+//        maxPages:n    safety cap, default GETALL_MAX_PAGES,
+//        label, warnKey  how a truncation is named in #dataWarn}
+function getAll(path,pageSize,opts){
+  opts = opts || {};
+  var size=pageSize||1000, out=[], page=0, tries=0, last=null;
+  var cap=opts.maxPages||GETALL_MAX_PAGES, key=opts.keyset||null;
+  var label=opts.label||path.split("?")[0].replace(/^\//,"");
+  var warnKey=opts.warnKey||path;
   function next(){
-    var hdrs={apikey:KEY,Authorization:"Bearer "+KEY,
-              Range:(page*size)+"-"+((page+1)*size-1),
-              "Range-Unit":"items"};
-    return fetch(BASE+path,{headers:hdrs}).then(function(r){
+    var hdrs={apikey:KEY,Authorization:"Bearer "+KEY}, url=BASE+path;
+    if(key){
+      url+=(path.indexOf("?")<0?"?":"&")+"order="+key+".asc&limit="+size+
+           (last!=null?"&"+key+"=gt."+encodeURIComponent(last):"");
+    }else{
+      hdrs.Range=(page*size)+"-"+((page+1)*size-1);
+      hdrs["Range-Unit"]="items";
+    }
+    return fetch(url,{headers:hdrs}).then(function(r){
       if(!r.ok&&r.status!==206){
         /* The status alone says nothing actionable. PostgREST puts the real
            reason in the body, and on a device with no console the banner is
@@ -7863,18 +7900,75 @@ function getAll(path,pageSize){
          is how the whole-country map showed nothing and reported nothing. */
       if(j && j.__failed){
         if(page===0) throw j.__failed;       // nothing arrived: surface it
-        return out;                          // partial data: degrade quietly
+        out.partial=true;                    // partial data: keep it, but say so
+        phgDataWarn(warnKey, label+": stopped after "+n(out.length)+" rows ("+
+          String(j.__failed.message||j.__failed).slice(0,160)+"). What is shown is incomplete.");
+        return out;
       }
-      var rows=Array.isArray(j)?j:[j];
-      out=out.concat(rows);
+      if(j===out) return out;                // a 57014 retry already finished the run
+      var rows=Array.isArray(j)?j:[j], i;
+      for(i=0;i<rows.length;i++) out.push(rows[i]);
       page++;
-      // Stop on a short page, or at a hard ceiling so a runaway view cannot
-      // hang the dashboard.
-      if(rows.length===size && page<40) return next();
+      if(rows.length===size){
+        if(key){
+          last=rows[rows.length-1][key];
+          if(last==null){
+            out.truncated=true;
+            phgDataWarn(warnKey, label+": cannot page past "+n(out.length)+" rows ("+key+" missing on a row). There are more rows than shown.");
+            return out;
+          }
+        }
+        if(page<cap) return next();
+        /* The ceiling stops a runaway view from hanging the dashboard, but it
+           must never pass for the whole table. */
+        out.truncated=true;
+        phgDataWarn(warnKey, label+": hit the "+cap+"-page safety limit at "+n(out.length)+
+          " rows. There are more rows than shown, so totals and averages here are incomplete.");
+        return out;
+      }
+      phgDataWarn(warnKey, null);
       return out;
     });
   }
   return next();
+}
+
+/* The explorer MV: which ordering it supports is probed once and cached. true = the rebuilt MV with
+   staging_id (keyset paging); false = the old MV (ordered Range paging). A failed probe is not cached. */
+var EXPLORER_KEYSET = { staging:null, checked:0, pending:null };
+function explorerHasStagingId(){
+  var K=EXPLORER_KEYSET;
+  if(K.staging===true) return Promise.resolve(true);
+  if(K.staging===false && Date.now()-K.checked<600000) return Promise.resolve(false);  // re-ask after 10 min: the swap may land mid-session
+  if(K.pending) return K.pending;
+  K.pending=fetch(BASE+"/mv_drink_explorer?select=staging_id&limit=1",{headers:H}).then(function(r){
+    if(r.ok) return true;
+    return r.text().then(function(t){
+      if(r.status===400 && /staging_id|42703/.test(String(t))) return false;
+      throw new Error("probe returned "+r.status);
+    });
+  }).then(function(ok){ K.staging=ok; K.checked=Date.now(); K.pending=null; return ok; },
+          function(){ K.pending=null; return false; });   // unknown: use the ordering both MVs support
+  return K.pending;
+}
+/* getAll for mv_drink_explorer with a named column list and a stable order. filters starts with "&". */
+function explorerGetAll(cols, filters, label){
+  function ordered(){
+    return getAll("/mv_drink_explorer?select="+cols+filters+"&order=venue_key,item_name,item_price",1000,
+                  {label:label, warnKey:"exp|"+filters});
+  }
+  return explorerHasStagingId().then(function(st){
+    if(!st) return ordered();
+    return getAll("/mv_drink_explorer?select="+cols+",staging_id"+filters,1000,
+                  {keyset:"staging_id", label:label, warnKey:"exp|"+filters})
+      .catch(function(e){
+        /* the MV was swapped back under us: forget the answer and use the old ordering */
+        if(/staging_id|42703/.test(String(e&&e.message))){
+          EXPLORER_KEYSET.staging=false; EXPLORER_KEYSET.checked=Date.now(); return ordered();
+        }
+        throw e;
+      });
+  });
 }
 
 /* THE BIG TABLES ARE LOADED ONCE, NOT EVERY FIVE SECONDS.
@@ -7891,7 +7985,76 @@ var HEAVY = { state:null, sig:null, loading:false, ready:false };
 
 function heavyNeeded(){if(typeof APP==='undefined'||APP!=='dash')return false;if(page==='home'||STATE==='ALL')return false;return true;}
 
-function heavyLoad(sig,done){if(HEAVY.loading||STATE==='ALL')return;HEAVY.loading=true;Promise.all([getAll("/v_public_venues?select=state_code,batch_no,venue,city,address,venue_type,rating,reviews,lat,lng,match_status,menu_attempted&state_code=eq."+STATE),getAll("/mv_drink_explorer?select=*&state_code=eq."+STATE)]).then(function(h){VENUES=h[0]||[];EXP=h[1]||[];HEAVY.state=STATE;HEAVY.sig=sig;HEAVY.ready=true;HEAVY.loading=false;if(done)done()}).catch(function(){HEAVY.loading=false})}
+/* 18.49.45: EXP holds only the columns its readers use - sectionRows/categoryPage/fgroup/passes (section,
+   city, income_band, age_band, venue_type, item_name, subfamily, family, item_price, venue), competitorsPage
+   and mapCard/drawMap (venue, section, item_name, subfamily, family, item_price), the voice filters
+   (item_price, item_name, venue, city + the filter fields). venue_key rides along as the row's venue id.
+   Any new field read off an EXP row must be added here. */
+var EXP_COLS="section,venue_key,venue,city,venue_type,income_band,age_band,item_name,item_price,family,subfamily";
+var EXP_DRINK_SECTIONS=["cocktails","beer","wine","liquor","non_alcoholic"];
+/* pages that read unclassified rows out of EXP, so re-render when they land */
+var EXP_NEEDS_UNCL={unclassified:1,competitors:1,map:1,home:1};
+HEAVY.gen=0; HEAVY.uncl=null; HEAVY.primary=0;
+
+function heavyLoad(sig,done){
+  if(HEAVY.loading||STATE==='ALL')return;
+  HEAVY.loading=true;
+  var st=STATE, gen=++HEAVY.gen, base="&state_code=eq."+encodeURIComponent(st);
+  var venuesP=getAll("/v_public_venues?select=state_code,batch_no,venue,city,address,venue_type,rating,reviews,lat,lng,match_status,menu_attempted&state_code=eq."+st);
+  /* the drink sections first, one ordered stream each so the phone waits for the longest section rather
+     than for all of them in a row; the last stream catches any section outside the known six */
+  var parts=EXP_DRINK_SECTIONS.map(function(s){
+    return explorerGetAll(EXP_COLS, base+"&section=eq."+s, "Market explorer ("+s.replace("_","-")+")");
+  });
+  parts.push(explorerGetAll(EXP_COLS, base+"&section=not.in.("+EXP_DRINK_SECTIONS.join(",")+",unclassified)", "Market explorer (other)"));
+  Promise.all([venuesP,Promise.all(parts)]).then(function(h){
+    if(gen!==HEAVY.gen) return;
+    HEAVY.loading=false;
+    if(STATE!==st){ setTimeout(load,0); return; }   // the state changed mid-load: drop these rows and load the new state now
+    var rows=[];
+    h[1].forEach(function(a){ for(var i=0;i<(a||[]).length;i++) rows.push(a[i]); });
+    VENUES=h[0]||[]; EXP=rows; HEAVY.primary=rows.length;
+    /* a part that lost a page mid-way is kept (and flagged in #dataWarn) but not remembered as current,
+       so the next poll loads it again */
+    var partial=h[0]&&h[0].partial||h[1].some(function(a){return a&&a.partial;});
+    HEAVY.state=st; HEAVY.sig=partial?"partial":sig; HEAVY.ready=true; HEAVY.uncl=null;
+    phgDataWarn('exp-load',null);
+    expLoadUnclassified();               // starts the background fetch first, so the render below already says "loading more"
+    if(done)done();
+  }).catch(function(e){
+    if(gen!==HEAVY.gen) return;
+    HEAVY.loading=false;
+    phgDataWarn('exp-load',"Market explorer could not load ("+String(e&&e.message||e).slice(0,160)+"). Retrying on the next refresh.");
+  });
+}
+/* 'unclassified' (NY: 25,176 rows) in the background after the drink sections, appended in place so
+   window.EXP stays the same array. A failed or incomplete run appends nothing and is retried by load(). */
+function expLoadUnclassified(){
+  if(!HEAVY.ready||HEAVY.uncl==='loading'||HEAVY.uncl==='done') return;
+  var gen=HEAVY.gen, st=HEAVY.state;
+  HEAVY.uncl='loading';
+  explorerGetAll(EXP_COLS, "&state_code=eq."+encodeURIComponent(st)+"&or=(section.eq.unclassified,section.is.null)", "Market explorer (unclassified)")
+    .then(function(u){
+      if(gen!==HEAVY.gen||STATE!==st) return;
+      if(u&&u.partial){ HEAVY.uncl='failed'; expAfterBackground(); return; }   // getAll already put up the notice
+      for(var i=0;i<(u||[]).length;i++) EXP.push(u[i]);
+      HEAVY.uncl='done'; phgDataWarn('exp-uncl',null);
+      expAfterBackground();
+    })
+    .catch(function(e){
+      if(gen!==HEAVY.gen||STATE!==st) return;
+      HEAVY.uncl='failed';
+      phgDataWarn('exp-uncl',"Unclassified items could not load ("+String(e&&e.message||e).slice(0,160)+"). The drink categories are complete; unclassified items retry on the next refresh.");
+      expAfterBackground();
+    });
+}
+/* the background rows landed: the nav counts always move; the view is rebuilt only where it reads them */
+function expAfterBackground(){
+  if(typeof APP==='undefined'||APP!=='dash') return;
+  var nl=document.getElementById("navlist");
+  if(nl){ nl.innerHTML=navBar(); stateSelector(); }
+  if(EXP_NEEDS_UNCL[page]){ SIG=""; render(); }
+}
 
 function load(){
   phgPipelineStatsRefresh();
@@ -7922,7 +8085,8 @@ function load(){
     // seconds closed open dropdowns, reset scroll position and destroyed
     // the map mid-interaction.
     var ps=PIPESTATS||{};
-    var sig=[STATE,S.places_done,S.websites,S.drink_items,S.menus_auto,VENUES.length,EXP.length,STATES.length,ps.menu_candidates,ps.visual_documents,ps.visual_pages_ready,ps.visual_pages_pending,ps.updated_at].join("|");
+    /* 18.49.45: HEAVY.primary, not EXP.length - the background unclassified rows must not rebuild a page that does not read them */
+    var sig=[STATE,S.places_done,S.websites,S.drink_items,S.menus_auto,VENUES.length,HEAVY.primary,STATES.length,ps.menu_candidates,ps.visual_documents,ps.visual_pages_ready,ps.visual_pages_pending,ps.updated_at].join("|");
     /* The heavy tables reload only when the state changes or the counts
        behind them move - and only for a view that actually reads them. */
     var hsig = [STATE,S.drink_items,S.venues].join("|");
@@ -7932,6 +8096,8 @@ function load(){
     /* A page switch is not a data change, so the signature above will not
        fire on it - but the new page may need data the last one did not. */
     if (heavyNeeded() && !HEAVY.ready && !HEAVY.loading) heavyLoad(hsig, function(){ SIG=""; render(); });
+    /* 18.49.45: a background unclassified fetch that failed is asked again */
+    if (heavyNeeded() && HEAVY.ready && HEAVY.state===STATE && HEAVY.uncl==='failed' && !HEAVY.loading) expLoadUnclassified();
     if(sig!==SIG){SIG=sig;render()}
     document.getElementById("asof").textContent="Updated "+new Date().toLocaleTimeString();
   }).catch(function(e){
@@ -7979,7 +8145,7 @@ function navBar(){
               (x.k==="competitors"?VENUES.length:sectionRows(x.k).length);
         return '<button class="nav'+(page===x.k?" on":"")+'" onclick="nav(\''+x.k+'\')">'+
           '<span class="pipdot" style="background:'+x.color+'"></span>'+x.label+
-          (c!==null?'<span class="cnt">'+n(c)+'</span>':'')+'</button>';
+          (c!==null?'<span class="cnt">'+(x.k==="unclassified"&&HEAVY.uncl==="loading"?"&hellip;":n(c))+'</span>':'')+'</button>';
       }).join("")+'</div>';
     }
   });
@@ -8125,6 +8291,9 @@ function categoryPage(key,label,color){
   });
 
   return '<div class="sec" style="color:'+color+'">'+label+'</div>'+
+   /* 18.49.45: unclassified rows arrive after the drink sections - say so rather than show a short count as final */
+   (key==="unclassified"&&HEAVY.uncl==="loading"?'<div class="note" id="expMore">Loading more&hellip; unclassified items are still arriving, so these counts will grow.</div>':'')+
+   (key==="unclassified"&&HEAVY.uncl==="failed"?'<div class="note" id="expMore">Unclassified items could not be loaded this time; they retry on the next data refresh.</div>':'')+
    '<div class="secsub">'+n(st.count)+' items &middot; '+n(st.priced)+' priced &middot; '+
    n(Object.keys(byCity).length)+' cities &middot; average '+money(st.avg)+
    (active?' &middot; <span style="color:'+BLUE+'">'+active+' filter'+(active>1?'s':'')+' active</span>':'')+'</div>'+
@@ -8236,7 +8405,9 @@ function competitorsPage(){
     RADII.map(function(r){return '<option value="'+r+'"'+(RADIUS===r?" selected":"")+'>'+r+' miles</option>'}).join("")+'</select>';
 
   var head='<div class="sec" style="color:'+GREEN+'">Competitors</div>'+
-    '<div class="secsub">'+n(withSite.length)+' venues with a website &middot; '+n(VENUES.length)+' looked up</div>';
+    '<div class="secsub">'+n(withSite.length)+' venues with a website &middot; '+n(VENUES.length)+' looked up</div>'+
+    /* 18.49.45: the map and item counts read unclassified rows too, which arrive after the drink sections */
+    (HEAVY.uncl==="loading"?'<div class="note" id="expMore">Loading more&hellip; unclassified items are still arriving; item counts and menu pins will fill in.</div>':'');
 
   if(!anchor){
     var byType=groupBy(EXP.filter(passes),"venue_type");
@@ -8908,9 +9079,10 @@ function mdBandLabel(section){
 }
 
 function mdFetchVocab(cb){
-  getAll("/mv_drink_explorer?select=venue_key,drink_name"
-       + "&section=eq.cocktails&drink_name=not.is.null"
-       + "&item_price=gte." + MD.PRICE_LO + "&item_price=lte." + MD.PRICE_HI)
+  /* 18.49.45: ordered (staging_id keyset on the rebuilt MV), capped with a visible notice - NY cocktails alone are 23,768 rows */
+  explorerGetAll("venue_key,drink_name",
+         "&section=eq.cocktails&drink_name=not.is.null"
+       + "&item_price=gte." + MD.PRICE_LO + "&item_price=lte." + MD.PRICE_HI, "Menu Studio drink names")
     .then(function(rows){
       var map = {}, i, r;
       for (i=0;i<(rows||[]).length;i++){
@@ -9094,7 +9266,11 @@ function mdFetchProfile(cb){
     if (!done) { done = true; cb(null, new Error("request timed out after 20s")); }
   }, 20000);
   try {
-    getAll("/mv_menu_dev_venue_profile?select=*&cocktail_priced=gte.1&order=venue.asc")
+    /* 18.49.45: venue_key breaks ties between venues of the same name, so Range pages cannot skip or repeat.
+       select=* stays: the profile's readers are spread through Menu Studio and mdCityKey() probes for
+       whichever city column exists, and this MV's columns are not changing in the rebuild. */
+    getAll("/mv_menu_dev_venue_profile?select=*&cocktail_priced=gte.1&order=venue.asc,venue_key.asc", 1000,
+           {label:"Menu Studio venue profiles"})
       .then(function(rows){
         if (done) return; done = true; clearTimeout(timer);
         cb(rows, null);
@@ -9117,9 +9293,9 @@ function mdFetchDrinks(keys, cb){
      observed-heading chips. Both were absent here and read as empty
      everywhere downstream, silently. Any field read off a row must appear
      in this select. */
-  getAll("/mv_drink_explorer?select=venue_key,item_name,item_price,section,family"
-       + ",subfamily,menu_section,drink_name,identity_class,serve_format"
-       + "&venue_key=in.(" + encodeURIComponent(list) + ")")
+  explorerGetAll("venue_key,item_name,item_price,section,family"
+       + ",subfamily,menu_section,drink_name,identity_class,serve_format",
+         "&venue_key=in.(" + encodeURIComponent(list) + ")", "Menu Studio comparable-set drinks")
     .then(function(rows){ cb(rows, null); })
     .catch(function(e){ cb(null, e); });
 }
