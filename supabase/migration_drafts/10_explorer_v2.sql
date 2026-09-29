@@ -23,7 +23,7 @@
 --   PART B  phg_explorer_build_next(): builds mv_*_next copies of all six MVs with UNIQUE indexes (every future
 --           refresh CONCURRENT). [R2 B1] venue profile grouped by venue_key. [R2 S4] pins keyed by md5 of the row +
 --           row_number within equal rows. [R2 S5] _next MVs are not readable by anon/authenticated before the swap.
---           [R2 S10] advisory lock. Runs as a one-off pg_cron job that unschedules itself in its own transaction.
+--           [R2 S10] advisory lock. Runs as a one-off pg_cron job, unscheduled by hand once its run has started.
 --   PART C  phg_explorer_swap_next(): [R2 B2] lock_timeout 300 ms + statement_timeout 3 s (a busy reader makes the
 --           swap fail fast and change nothing; retry at a quiet time); [R2 S5] SELECT grants copied from the old ACL,
 --           old copies revoked from anon/authenticated; [R2 S8] index names moved with the MVs; [R2 S6] NOTIFY pgrst;
@@ -127,7 +127,7 @@ create or replace view public.v_public_drink_explorer_v2 as
         END AS section,
     b.staging_id
    FROM base b
-     LEFT JOIN LATERAL classify_item(b.item_name) c(family, subfamily, matched_term) ON true
+     LEFT JOIN LATERAL (SELECT ci.family, ci.subfamily, ci.matched_term FROM classify_item(b.item_name) ci(family, subfamily, matched_term) LIMIT 1) c ON true
      LEFT JOIN LATERAL (SELECT k.identity_class, k.spec_id FROM menu_item_cocktail_core k
                          WHERE k.staging_menu_extract_id = b.staging_id ORDER BY k.spec_id NULLS LAST LIMIT 1) core ON true
      LEFT JOIN cocktail_specs sp ON sp.id = core.spec_id;
@@ -248,17 +248,56 @@ revoke all on function public.phg_explorer_build_next() from public, anon, authe
 -- (unscheduling does not stop the running build; it only prevents a second run - the round-1 mistake was putting the
 -- unschedule inside the same failing transaction.)
 
--- ============================== PART C ==============================
+-- ============================== PART C (round 3) ==============================
+-- [R2-B1] helpers read pg_class.relname (regclass::text is unqualified under this search_path) and rename with
+-- regexp_replace; [S-R2-1] SELECT-only ACL copy (PUBLIC mapped, rolname quoted once). Tested by the reviewer over two
+-- build/swap cycles + swap_back on a throwaway PG16.
 create table if not exists public.phg_explorer_swap_log (
   id bigserial primary key, action text not null, at timestamptz not null default now(), detail jsonb);
 alter table public.phg_explorer_swap_log enable row level security;
 revoke all on public.phg_explorer_swap_log from public, anon, authenticated;
 grant select on public.phg_explorer_swap_log to service_role;
 
--- moves one MV name set: live -> *_old (and its indexes), *_next -> live (and its indexes), grants copied / revoked
+create or replace function public.phg_explorer_rename_indexes(rel text, pat text, rep text) returns void
+language plpgsql security definer set search_path = public, pg_temp as $$
+declare ix record; newname text;
+begin
+  for ix in select ic.relname from pg_index i join pg_class ic on ic.oid = i.indexrelid
+             where i.indrelid = format('public.%I', rel)::regclass order by ic.relname loop
+    newname := regexp_replace(ix.relname, pat, rep);
+    if newname <> ix.relname then
+      if length(newname) > 63 then raise exception 'index name too long: %', newname; end if;
+      execute format('alter index public.%I rename to %I', ix.relname, newname);
+    end if;
+  end loop;
+end $$;
+create or replace function public.phg_explorer_copy_select(src text, dst text) returns void
+language plpgsql security definer set search_path = public, pg_temp as $$
+declare g record;
+begin
+  for g in select distinct a.grantee from pg_class c, aclexplode(c.relacl) a
+            where c.oid = format('public.%I', src)::regclass and a.privilege_type = 'SELECT' and a.grantee <> c.relowner loop
+    if g.grantee = 0 then execute format('grant select on public.%I to public', dst);
+    else execute format('grant select on public.%I to %I', dst, (select rolname from pg_roles where oid = g.grantee)); end if;
+  end loop;
+end $$;
+revoke all on function public.phg_explorer_rename_indexes(text,text,text), public.phg_explorer_copy_select(text,text)
+  from public, anon, authenticated, service_role;
+
+-- state snapshot for the log: OID + ACL of every live / _old / _next name
+create or replace function public.phg_explorer_state() returns jsonb
+language sql stable security definer set search_path = public, pg_temp as $$
+  select coalesce(jsonb_object_agg(c.relname, jsonb_build_object('oid', c.oid, 'acl', c.relacl::text)), '{}'::jsonb)
+    from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'm'
+     and c.relname ~ '^mv_(drink_explorer|dash_pins|menu_dev_venue_profile|dash_sections|dash_breakdown|dash_filters)(_next|_old)?$'
+$$;
+revoke all on function public.phg_explorer_state() from public, anon, authenticated, service_role;
+
+-- [S-R2-2] lock_timeout only (statement_timeout cannot bound a running call); run as
+--   set statement_timeout = '3s'; select public.phg_explorer_swap_next();
 create or replace function public.phg_explorer_swap_next() returns text
-language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '300ms' set statement_timeout = '3s' as $$
-declare r text; ix record; g record; before jsonb; after jsonb;
+language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '300ms' as $$
+declare r text; before jsonb;
   names text[] := array['mv_dash_filters','mv_dash_breakdown','mv_dash_sections','mv_menu_dev_venue_profile','mv_dash_pins','mv_drink_explorer'];
 begin
   if not pg_try_advisory_xact_lock(hashtext('phg_explorer')) then raise exception 'explorer build/swap/refresh already running'; end if;
@@ -266,88 +305,77 @@ begin
   then raise exception 'swap: the six _next MVs are not all present'; end if;
   if exists (select 1 from pg_matviews where schemaname = 'public' and matviewname = any (select n || '_old' from unnest(names) n))
   then raise exception 'swap: *_old MVs still exist (drop or swap back first)'; end if;
-  -- [R2 B3] nothing outside the six-MV chain may depend on the live MVs (it would keep reading the old copies)
+  -- [R2-B3 / S-R2-4] nothing outside the six-MV chain (views, MVs, functions) may depend on the live MVs
   if exists (select 1 from pg_depend d join pg_rewrite rw on rw.oid = d.objid join pg_class dep on dep.oid = rw.ev_class
               join pg_class src on src.oid = d.refobjid
              where src.relnamespace = 'public'::regnamespace and src.relname = any (names) and dep.oid <> src.oid
                and not (dep.relname = any (names)))
+     or exists (select 1 from pg_depend d join pg_class src on src.oid = d.refobjid
+                 where d.classid = 'pg_proc'::regclass and src.relnamespace = 'public'::regnamespace and src.relname = any (names))
   then raise exception 'swap: an object outside the explorer chain depends on the live MVs'; end if;
-  select jsonb_object_agg(n, to_regclass('public.' || n)::oid) into before from unnest(names) n;
+  before := public.phg_explorer_state();
   foreach r in array names loop
-    for ix in select indexrelid::regclass::text as name from pg_index where indrelid = ('public.' || r)::regclass loop
-      execute format('alter index %s rename to %I', ix.name, split_part(ix.name, '.', 2) || '_old');
-    end loop;
+    perform public.phg_explorer_rename_indexes(r, '$', '_old');
     execute format('alter materialized view public.%I rename to %I', r, r || '_old');
     execute format('alter materialized view public.%I rename to %I', r || '_next', r);
-    for ix in select indexrelid::regclass::text as name from pg_index where indrelid = ('public.' || r)::regclass loop
-      execute format('alter index %s rename to %I', ix.name, replace(split_part(ix.name, '.', 2), '_next', '_v2'));
-    end loop;
-    -- [R2 S5] copy SELECT grantees from the old ACL, then close the old copy to the app
-    for g in select distinct (aclexplode(c.relacl)).grantee as grantee from pg_class c where c.oid = ('public.' || r || '_old')::regclass loop
-      if g.grantee <> 0 then execute format('grant select on public.%I to %I', r, g.grantee::regrole::text); end if;
-    end loop;
+    perform public.phg_explorer_rename_indexes(r, '_next', '_v2');
+    perform public.phg_explorer_copy_select(r || '_old', r);
     execute format('revoke all on public.%I from public, anon, authenticated', r || '_old');
   end loop;
-  select jsonb_object_agg(n, to_regclass('public.' || n)::oid) into after from unnest(names) n;
-  insert into public.phg_explorer_swap_log (action, detail) values ('swap', jsonb_build_object('before', before, 'after', after));
+  insert into public.phg_explorer_swap_log (action, detail) values ('swap', jsonb_build_object('before', before, 'after', public.phg_explorer_state()));
   notify pgrst, 'reload schema';
   return 'swapped: live MVs are the v2 builds; previous ones kept as *_old';
 end $$;
 revoke all on function public.phg_explorer_swap_next() from public, anon, authenticated, service_role;
 
 create or replace function public.phg_explorer_swap_back() returns text
-language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '300ms' set statement_timeout = '3s' as $$
-declare r text; ix record; g record; before jsonb; after jsonb;
+language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '300ms' as $$
+declare r text; before jsonb;
   names text[] := array['mv_dash_filters','mv_dash_breakdown','mv_dash_sections','mv_menu_dev_venue_profile','mv_dash_pins','mv_drink_explorer'];
 begin
   if not pg_try_advisory_xact_lock(hashtext('phg_explorer')) then raise exception 'explorer build/swap/refresh already running'; end if;
   foreach r in array names loop
     if to_regclass('public.' || r || '_old') is null then raise exception 'swap back: public.%_old is missing', r; end if;
+    if to_regclass('public.' || r || '_next') is not null then raise exception 'swap back: public.%_next exists (a rebuild ran after the swap)', r; end if;
   end loop;
-  select jsonb_object_agg(n, to_regclass('public.' || n)::oid) into before from unnest(names) n;
+  before := public.phg_explorer_state();
   foreach r in array names loop
-    for ix in select indexrelid::regclass::text as name from pg_index where indrelid = ('public.' || r)::regclass loop
-      execute format('alter index %s rename to %I', ix.name, replace(split_part(ix.name, '.', 2), '_v2', '_next'));
-    end loop;
+    perform public.phg_explorer_rename_indexes(r, '_v2', '_next');
     execute format('alter materialized view public.%I rename to %I', r, r || '_next');
     execute format('alter materialized view public.%I rename to %I', r || '_old', r);
-    for ix in select indexrelid::regclass::text as name from pg_index where indrelid = ('public.' || r)::regclass loop
-      execute format('alter index %s rename to %I', ix.name, regexp_replace(split_part(ix.name, '.', 2), '_old$', ''));
-    end loop;
-    for g in select distinct (aclexplode(c.relacl)).grantee as grantee from pg_class c where c.oid = ('public.' || r || '_next')::regclass loop
-      if g.grantee <> 0 then execute format('grant select on public.%I to %I', r, g.grantee::regrole::text); end if;
-    end loop;
+    perform public.phg_explorer_rename_indexes(r, '_old$', '');
+    perform public.phg_explorer_copy_select(r || '_next', r);
     execute format('revoke all on public.%I from public, anon, authenticated', r || '_next');
   end loop;
-  select jsonb_object_agg(n, to_regclass('public.' || n)::oid) into after from unnest(names) n;
-  insert into public.phg_explorer_swap_log (action, detail) values ('swap_back', jsonb_build_object('before', before, 'after', after));
+  insert into public.phg_explorer_swap_log (action, detail) values ('swap_back', jsonb_build_object('before', before, 'after', public.phg_explorer_state()));
   notify pgrst, 'reload schema';
   return 'swapped back: live MVs are the previous builds; v2 builds are *_next again';
 end $$;
 revoke all on function public.phg_explorer_swap_back() from public, anon, authenticated, service_role;
--- Rollback order (runbook): pause cron 8 (restore its old command if it was changed) -> select phg_explorer_swap_back()
--- -> check phg_explorer_swap_log 'after' OIDs equal the first 'swap' row's 'before' OIDs -> anon can select the live names.
--- [R2 B4] Rehearsal before the real swap (nothing is kept):
---   do $r$ begin perform public.phg_explorer_swap_next(); <checks: counts, grants, OIDs>;
---               perform public.phg_explorer_swap_back(); <checks: OIDs back to before>; raise exception 'rehearsal ok'; end $r$;
 
--- ============================== PART D (after the swap) ==============================
--- [R2 S1] one COMMIT per refresh (a failure in one leaves the others fresh), CONCURRENT so readers are never blocked,
--- advisory lock so it never overlaps a build or swap, no stats functions (job 5 does those).
--- (A procedure that COMMITs cannot be SECURITY DEFINER or carry SET clauses; it runs as its caller - cron runs as postgres -
---  with fully qualified names, and the timeouts are set per transaction with set_config.)
+-- Rehearsal (one statement, quiet time; nothing is kept): see handoff/reviews/PHG-051_REVIEW_LOG.md round 2.
+-- Rollback runbook and cron 8 per state: see the review log table "cron 8 in each state". Recorded baseline
+-- (2026-09-29): cron 8 = {jobid 8, schedule '*/10 * * * *', command 'select public.refresh_explorer()', active false}.
+
+-- ============================== PART D (round 3) ==============================
+-- [S-R2-3] session advisory lock for the whole CALL (xact locks are released at each COMMIT); [S-R2-2] no
+-- statement_timeout (it cannot bound the call; a watchdog does); one COMMIT per refresh; earlier MVs stay fresh if a
+-- later one fails. Not SECURITY DEFINER (a procedure that COMMITs cannot be); cron runs it as postgres. cron 8's command
+-- must be exactly: CALL public.refresh_explorer_v2()
 create or replace procedure public.refresh_explorer_v2()
 language plpgsql as $$
-declare r text;
+declare r text; t0 timestamptz;
 begin
+  if not pg_try_advisory_lock(hashtext('phg_explorer')) then raise notice 'explorer busy; skipped'; return; end if;
   foreach r in array array['mv_drink_explorer','mv_dash_pins','mv_menu_dev_venue_profile','mv_dash_sections','mv_dash_breakdown','mv_dash_filters'] loop
-    if not pg_try_advisory_xact_lock(hashtext('phg_explorer')) then raise notice 'explorer busy; skipped %', r; return; end if;
-    perform set_config('statement_timeout', '15min', true);
+    t0 := clock_timestamp();
     perform set_config('lock_timeout', '5s', true);
     execute format('refresh materialized view concurrently public.%I', r);
+    raise notice '% refreshed in % s', r, round(extract(epoch from clock_timestamp() - t0));
     commit;
   end loop;
+  perform pg_advisory_unlock(hashtext('phg_explorer'));
 end $$;
 revoke all on procedure public.refresh_explorer_v2() from public, anon, authenticated, service_role;
--- cron 8 (after one timed manual CALL; cadence hourly unless the run is short):
---   select cron.alter_job(8, schedule := '17 * * * *', command := $c$CALL public.refresh_explorer_v2();$c$, active := true);
+-- Watchdog (add to an existing frequent job after the switch):
+--   select pg_cancel_backend(pid) from pg_stat_activity where query ilike 'CALL public.refresh_explorer_v2%' and now() - query_start > interval '30 min';

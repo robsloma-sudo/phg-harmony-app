@@ -7,7 +7,8 @@ one-off build running as pg_cron job 25.
 
 | Round | Spec score | Safety score | Spec average | Safety average | Changes made after the round |
 |---|---|---|---|---|---|
-| 1 | - | 68 | - | 68 | pending |
+| 1 | - | 68 | - | 68 | draft rewritten, live gate facts gathered (round 2 submission) |
+| 2 | - | 75 | - | 75 | pending |
 
 ## Safety Reviewer - round 1 (2026-09-29, draft commit 1814d69)
 
@@ -148,3 +149,189 @@ Live facts gathered with DB access (the round-1 reviewer had none):
 Asks for round 2: review parts C (swap / swap_back with lock_timeout 300 ms, statement_timeout 3 s, ACL copy, index
 renames, OID log, NOTIFY pgrst) and D (procedure with per-refresh COMMIT; not SECURITY DEFINER because it commits), the
 rehearsal plan, and whether anything still blocks applying C and running the rehearsal.
+
+## Safety Reviewer - round 2 (2026-09-29, draft commit 2d53250, app 18.49.45)
+
+**Evidence.** Still no live DB access for the reviewer; the live facts are the lead's (round 2 submission above).
+New in this round: Part C and the procedure pattern were executed on a throwaway local PostgreSQL 16.13 cluster
+(mock six-MV chain with Supabase-style roles anon / authenticated / service_role and default grants). Live is PG 17.6;
+nothing tested here differs between 16 and 17. Results quoted below are from those runs.
+
+### Round-1 findings: status
+| Item | Status | Evidence |
+|---|---|---|
+| B1 venue_key duplicates | fixed | mdvp grouped by venue_key; job 26 build SUCCEEDED with mv_mdvp_next_key unique (571 s). |
+| B2 swap lock budget | partly | lock_timeout 300 ms works (local: swap against a reader holding AccessShare failed in 311 ms, nothing renamed). `SET statement_timeout = '3s'` on the function does nothing (local: a function with SET statement_timeout 1s ran pg_sleep(2) to completion). Only live-MV renames can wait (index renames take ShareUpdateExclusive, which readers do not conflict with), so the worst reader stall is about 6 x 300 ms. |
+| B3 dependents | fixed | Live pg_depend gate clean. The in-function check covers views/MVs only (pg_rewrite), not BEGIN ATOMIC functions (see S-R2-4). |
+| B4 rollback + rehearsal | partly | Runbook and swap_back written, but both swap functions fail on every run (R2-B1), so the rehearsal has not been run. cron 8's current command has not been recorded. |
+| S1 stats out, per-refresh COMMIT | fixed, with caveats | See S-R2-2 and S-R2-3 (timeouts, advisory lock across COMMITs). |
+| S2 venue tie-break | fixed | `ORDER BY norm_site, google_review_count DESC NULLS LAST, account_id`. |
+| S3 staging_id unique | fixed | LATERAL ... LIMIT 1, 0 duplicates live, unique index built. One open point: classify_item (S-R2-7). |
+| S4 stable pin key | fixed | md5(row) plus row_number within identical rows. |
+| S5 ACL copy | partly | Copies grantees of every privilege (not only SELECT), skips PUBLIC (grantee 0), and quotes `regrole::text` a second time with %I. Old live relacl has not been recorded. |
+| S6 NOTIFY pgrst | fixed | Transactional: sent on commit, dropped when the rehearsal rolls back. It is fine inside a SECURITY DEFINER function. |
+| S7 pre-swap gate | partly | Counts, per-state rows, income share and job success are recorded. Still missing: index parity old vs new, venues in the old MV missing from _next (with the reason), old relacl, old index names. |
+| S8 index names | not fixed (design right, code broken) | See R2-B1. With the fix, no name collides across build -> swap -> drop _old -> build -> swap -> swap_back (tested locally for two full cycles). |
+| S9 app ordering / columns | fixed | Keyset `order=staging_id.asc&staging_id=gt.<last>` backed by (state_code, section, staging_id). Old-MV fallback is ordered Range paging. There is a visible 100-page cap, and partial pages are flagged. |
+| S10 overlap | fixed (swap / build); partly (refresh) | See S-R2-3. |
+
+### Scores
+| Area | Score | Main evidence |
+|---|---|---|
+| Data preservation | 85 | Nothing is deleted. Old MVs are kept as *_old, and the swap is one transaction. Still no written drop-of-_old statement (it must not use CASCADE), and the old relacl is not logged. |
+| Correctness | 70 | Part B is correct and built. Part C cannot succeed as written (R2-B1). The ACL copy drops PUBLIC and over-grants. |
+| Concurrency | 80 | lock_timeout is effective, the refresh is CONCURRENT, and there are advisory locks. But statement_timeout is illusory in both the functions and the procedure, and the xact advisory lock is released at every COMMIT. |
+| Performance | 70 | Build time, sizes and the keyset index are measured. No timing yet for a CONCURRENTLY refresh of the v2 chain. Each hourly run holds a snapshot of about 8-10 min (xmin horizon; accounts churn). |
+| Security | 82 | DEFINER functions set search_path; EXECUTE is revoked from anon, authenticated and service_role; the _next MVs are closed until the swap. ACL-copy flaws are listed in S-R2-1. Nobody has checked who can EXECUTE the old refresh_explorer(). |
+| Reversibility | 62 | swap_back exists, but it is broken by R2-B1 and has not been rehearsed. The per-state cron 8 plan is not written down, and the current cron 8 command has not been saved. |
+| **Round score** | **75** | |
+
+### Blockers
+- **R2-B1 Both swap functions always fail: the index names come from `regclass::text`, which is unqualified.**
+  The functions run with `search_path = public, pg_temp`, so `indexrelid::regclass::text` prints `mv_de_next_uk`
+  without the schema, and `split_part(name, '.', 2)` returns ''. Local run of the draft:
+  `ERROR: zero-length delimited identifier ... alter index mv_dash_filters_next_uk rename to ""`. An old MV with two
+  or more indexes would also collide on the name `_old`. The failure is atomic, so no data is at risk, but Part C, the
+  rehearsal and the rollback cannot work. Fix (tested locally: rehearsal, swap, drop _old, rebuild, second swap,
+  swap_back, PUBLIC and a quoted role name). Add two helpers and use them in both swap functions:
+  ```sql
+  create or replace function public.phg_explorer_rename_indexes(rel text, pat text, rep text) returns void
+  language plpgsql security definer set search_path = public, pg_temp as $$
+  declare ix record; newname text;
+  begin
+    for ix in select ic.relname from pg_index i join pg_class ic on ic.oid = i.indexrelid
+               where i.indrelid = format('public.%I', rel)::regclass order by ic.relname loop
+      newname := regexp_replace(ix.relname, pat, rep);
+      if newname <> ix.relname then
+        if length(newname) > 63 then raise exception 'index name too long: %', newname; end if;
+        execute format('alter index public.%I rename to %I', ix.relname, newname);
+      end if;
+    end loop;
+  end $$;
+  create or replace function public.phg_explorer_copy_select(src text, dst text) returns void
+  language plpgsql security definer set search_path = public, pg_temp as $$
+  declare g record;
+  begin
+    for g in select distinct a.grantee from pg_class c, aclexplode(c.relacl) a
+              where c.oid = format('public.%I', src)::regclass and a.privilege_type = 'SELECT' and a.grantee <> c.relowner loop
+      if g.grantee = 0 then execute format('grant select on public.%I to public', dst);
+      else execute format('grant select on public.%I to %I', dst, (select rolname from pg_roles where oid = g.grantee)); end if;
+    end loop;
+  end $$;
+  revoke all on function public.phg_explorer_rename_indexes(text,text,text), public.phg_explorer_copy_select(text,text)
+    from public, anon, authenticated, service_role;
+  ```
+  swap_next loop body:
+  ```sql
+  perform public.phg_explorer_rename_indexes(r, '$', '_old');
+  execute format('alter materialized view public.%I rename to %I', r, r || '_old');
+  execute format('alter materialized view public.%I rename to %I', r || '_next', r);
+  perform public.phg_explorer_rename_indexes(r, '_next', '_v2');
+  perform public.phg_explorer_copy_select(r || '_old', r);
+  execute format('revoke all on public.%I from public, anon, authenticated', r || '_old');
+  ```
+  swap_back loop body: use `('_v2','_next')` before the renames, `('_old$','')` after them, and
+  `copy_select(r || '_next', r)`. In the precheck, also fail if any `r || '_next'` exists, i.e. a rebuild ran after the
+  swap (otherwise the rename collides with a less clear error).
+  Traced names: live v1 `X` -> `X_old`; v2 `mv_de_next_uk` -> `mv_de_v2_uk`; the next build makes `mv_de_next_uk`
+  again (free); the second swap makes `mv_de_v2_uk` -> `mv_de_v2_uk_old` and `mv_de_next_uk` -> `mv_de_v2_uk`;
+  swap_back reverses each step. Gate: every live old index name is 59 characters or less (the helper raises
+  otherwise).
+- **R2-B2 (gate, not code) The rehearsal and the cron 8 baseline must be on record before the real swap.** After
+  R2-B1, applying Part C creates only the log table and functions, so it is safe to apply for the rehearsal. The
+  real swap stays blocked until:
+  (a) `select jobid, schedule, command, active from cron.job where jobid = 8` is pasted here verbatim;
+  (b) the rehearsal below has been run live, with its output here;
+  (c) `select relname, relacl, relowner::regrole from pg_class where relname in (<6 live names>)` plus old index
+      names/definitions (pg_indexes) are pasted here.
+
+### Rehearsal (run as ONE statement, at a quiet time; catalog-only checks keep the ACCESS EXCLUSIVE hold under ~100 ms)
+```sql
+set statement_timeout = '5s';  -- same string as the DO: a SET before a DO/SELECT in one query string is honoured
+do $r$ declare o jsonb; n text; begin
+  select jsonb_object_agg(relname, oid) into o from pg_class where relnamespace='public'::regnamespace and relkind='m'
+     and relname ~ '^mv_(drink_explorer|dash_pins|menu_dev_venue_profile|dash_sections|dash_breakdown|dash_filters)(_next)?$';
+  perform public.phg_explorer_swap_next();
+  foreach n in array array['mv_drink_explorer','mv_dash_pins','mv_menu_dev_venue_profile','mv_dash_sections','mv_dash_breakdown','mv_dash_filters'] loop
+    if not has_table_privilege('anon', 'public.'||n, 'select') or not has_table_privilege('authenticated', 'public.'||n, 'select')
+      then raise exception 'FAIL app cannot read %', n; end if;
+    if has_table_privilege('anon', 'public.'||n||'_old', 'select') then raise exception 'FAIL %_old still open', n; end if;
+    if to_regclass('public.'||n)::oid <> (o->>(n||'_next'))::oid then raise exception 'FAIL % is not the v2 build', n; end if;
+    if not exists (select 1 from pg_index where indrelid = ('public.'||n)::regclass and indisunique) then raise exception 'FAIL % has no unique index', n; end if;
+  end loop;
+  perform public.phg_explorer_swap_back();
+  if (select jsonb_object_agg(relname, oid) from pg_class where relnamespace='public'::regnamespace and relkind='m'
+        and relname ~ '^mv_(drink_explorer|dash_pins|menu_dev_venue_profile|dash_sections|dash_breakdown|dash_filters)(_next)?$') <> o
+    then raise exception 'FAIL OIDs not restored'; end if;
+  raise exception 'REHEARSAL OK';
+end $r$;
+```
+The swap functions' try-lock is re-entrant inside one session, so swap_back inside the same DO works. The NOTIFY and the
+log rows roll back with the DO. A result of 55P03 (lock timeout) means a busy reader. Nothing changes in that case;
+retry.
+
+### cron 8 in each state (write this into the runbook)
+| State | cron 8 |
+|---|---|
+| Before the swap | paused, command = the old one (recorded per R2-B2a). Never re-enable it: it does non-concurrent refreshes (PHG-018). |
+| Swapped, not yet timed | still paused. Time one run as a one-off pg_cron job whose command is exactly `CALL public.refresh_explorer_v2()`. This proves the COMMIT path under pg_cron libpq mode (cron.use_background_workers=off). |
+| Swapped, timed | `select cron.alter_job(8, schedule := '<from timing>', command := 'CALL public.refresh_explorer_v2()', active := true)`. The command must be that single statement. Local test: `set statement_timeout='10min'; call p();` in one string gives `ERROR: invalid transaction termination` (an implicit transaction block). |
+| Rollback | 1) `cron.alter_job(8, active := false)`. 2) Wait until no `CALL public.refresh_explorer_v2` is running (swap_back's try-lock fails fast while it runs). 3) `set statement_timeout='3s'; select public.phg_explorer_swap_back();` 4) Set command := <recorded old command>, active := false. 5) Verify that the swap_log 'after' OIDs equal the first 'swap' row's 'before' OIDs, and that anon has SELECT on all six. Do not leave refresh_explorer_v2 active on the old MVs: mv_drink_explorer and mv_dash_pins have no unique index, so every run would fail at the first MV. |
+| Drop _old (later) | `drop materialized view public.mv_dash_filters_old, public.mv_dash_breakdown_old, public.mv_dash_sections_old, public.mv_menu_dev_venue_profile_old, public.mv_dash_pins_old, public.mv_drink_explorer_old;` Never use CASCADE. This drops only rollback capability. |
+
+### Should fix
+- **S-R2-1 ACL copy.** Use `phg_explorer_copy_select` above. It copies SELECT only, maps PUBLIC to `to public`, and
+  quotes rolname once. Store `relacl::text` for each name in the swap_log `before` / `after` JSON as well as the OIDs,
+  so a rollback can be compared exactly. swap_back grants SELECT only. If the old ACL was `anon=arwdDxtm`, the result
+  is not byte-identical, but it is equivalent for an MV.
+- **S-R2-2 statement_timeout does not bound a running call.** This project already knows it (changelog: "SET LOCAL
+  statement_timeout does not bound the running call"). Local tests confirm it for a function SET clause, for
+  `set_config(...,true)` in a procedure, and for set_config after a COMMIT inside a procedure. lock_timeout does work
+  via set_config (a local test failed in 201 ms).
+  Fix: drop `set statement_timeout = '3s'` from both swap functions (keep lock_timeout) and run them as
+  `set statement_timeout = '3s'; select public.phg_explorer_swap_next();` (one string is fine for a function). In the
+  procedure, delete the `statement_timeout` set_config line; it gives a false sense of a bound. Record the real bound
+  with `select rolname, rolconfig from pg_roles where rolname = 'postgres'` and
+  `select * from pg_db_role_setting`. If none applies, add a watchdog to an existing cron job:
+  `select pg_cancel_backend(pid) from pg_stat_activity where query ilike 'CALL public.refresh_explorer_v2%' and now() - query_start > interval '30 min';`
+- **S-R2-3 The advisory xact lock is released at every COMMIT** (a local test showed the lock was no longer held after
+  the COMMIT). A build or swap can slip in between two refreshes. Use a session lock for the whole CALL:
+  `if not pg_try_advisory_lock(hashtext('phg_explorer')) then raise notice 'explorer busy; skipped'; return; end if;`
+  before the loop and `perform pg_advisory_unlock(hashtext('phg_explorer'));` after it. Session locks conflict with
+  the xact try-locks on the same key held by other sessions. An error before the unlock leaks the lock only until the
+  cron connection closes, and pg_cron libpq mode opens a new connection each run. Do not use an EXCEPTION block around
+  the COMMITs, because COMMIT is not allowed inside one.
+- **S-R2-4** The B3 check in swap_next should also refuse pg_proc dependents: add
+  `or exists (select 1 from pg_depend d join pg_class src on src.oid = d.refobjid where d.classid = 'pg_proc'::regclass and src.relnamespace = 'public'::regnamespace and src.relname = any (names))`.
+- **S-R2-5 Old refresh_explorer().** Before the swap, check
+  `select has_function_privilege('anon','public.refresh_explorer()','execute'), has_function_privilege('authenticated','public.refresh_explorer()','execute')`.
+  After the swap the function refreshes the v2 MVs non-concurrently by name, so any caller locks readers again. Revoke
+  EXECUTE from public, anon and authenticated (no repo caller other than cron 8 was found).
+- **S-R2-6 Performance.** Record the timed CALL with the time per MV (add `raise notice '% % s', r, ...` per step), and
+  EXPLAIN (ANALYZE, BUFFERS) of `select count(*) from v_public_drink_explorer_v2`. Choose the cadence from that: hourly
+  only if a run takes 3 min or less, otherwise every 3 h or off-peak. While a run is going, watch
+  `n_dead_tup` on accounts and staging_menu_extract, because each run holds one snapshot for the length of the
+  mv_drink_explorer refresh.
+- **S-R2-7** Confirm `select proretset, prorows from pg_proc where proname = 'classify_item'`. If it returns a set, a
+  second match for one name duplicates staging_id, and every later CONCURRENTLY refresh fails. In that case wrap it as
+  `left join lateral (select * from classify_item(b.item_name) limit 1) c on true`.
+- **S-R2-8 Finish S7:** index parity (every old live index column set has an equivalent on _next), and old venues
+  missing from _next with the reason (a count by reason is enough).
+
+### Minor
+- swap_back revokes only public, anon and authenticated from the demoted v2 copy. Any other grantee copied at the
+  swap keeps SELECT on *_next.
+- The app's old-MV fallback order `venue_key,item_name,item_price` is not unique (the old MV has duplicate rows), so a
+  Range page can still repeat or skip tied rows. The old MV is frozen, so the plan is stable in practice. This goes
+  away after the swap.
+- The comment in Part B still says the build job "unschedules itself in its own transaction". The actual method is a
+  manual unschedule. Fix the comment.
+- The procedure returns after a failed refresh without refreshing the dependents. That is intended, but the header
+  comment ("a failure in one leaves the others fresh") overstates it: only the earlier ones are fresh.
+
+### Verdict
+**fix_and_resubmit** (75; the gate needs more than 80). What remains is small and specific. Apply the R2-B1 code
+(tested), S-R2-1, S-R2-2 and S-R2-3 in the draft. Record the R2-B2 baseline. Then applying the corrected Part C and
+running the rehearsal is safe (it creates only a table and functions; the DO block keeps nothing). Resubmit with the
+rehearsal output. If that is green and the S-R2 items are done, the expected scores are about Correctness 85,
+Reversibility 85 and Concurrency 85, for a round score in the mid-80s.
