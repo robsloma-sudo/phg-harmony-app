@@ -281,13 +281,20 @@ Deno.serve(async (req) => {
   let ctx: any = { turns: [], last: null };
   try { const c = typeof b.context === "string" ? JSON.parse(b.context) : b.context; if (c && typeof c === "object") ctx = { turns: Array.isArray(c.turns) ? c.turns.slice(-6) : [], last: c.last || null, offered: !!c.offered }; } catch { /* fresh conversation */ }
   console.log(JSON.stringify({ inbox: via, fields: Object.keys(b).filter((k) => k !== "key"), text_len: text.length, turns: ctx.turns.length }));
+  const inAppSurface = via === "app" || b.surface === "app";
   const home = `${appUrl}/?harmony=1`;
   const withQ = (q: string) => `${appUrl}/?harmony=1&q=${encodeURIComponent(q)}`;
   /* v12: "url" is filled ONLY when Harmony is actually opening the app (next = "open"), so an
      older Shortcut that opens any non-empty url never opens on its own. The link is kept in
      app_url for display. Opening happens only after Harmony asked "Want me to open it in the
      Harmony app?" (offered = true in context) and they said yes. */
+  /* v18: every turn is logged (phg.harmony_turns) so corrections can be traced back and reviewed; never blocks the reply */
+  let turnAction = "", turnUnderstood: any = {}, turnCorrection = false;
   const reply = (speak: string, next: "listen" | "open" | "end", extra: Record<string, unknown> = {}, last: any = ctx.last, offered = false) => {
+    try {
+      const p = dbx("turn_log", { user: userId, account: accountId, surface: inAppSurface ? "app" : via, text: text.slice(0, 1000), action: turnAction || next, understood: turnUnderstood, reply: speak.slice(0, 1500), is_correction: turnCorrection }).catch(() => null);
+      (globalThis as any).EdgeRuntime?.waitUntil?.(p);
+    } catch { /* logging is optional */ }
     const turns = [...ctx.turns, { u: text.slice(0, 300), h: speak.slice(0, 400) }].slice(-6);
     const link = String(extra.url || last?.url || home);
     return json({ ok: true, speak, next, ...extra, url: next === "open" ? link : "", app_url: link, context: JSON.stringify({ turns, last, offered }) });
@@ -343,6 +350,8 @@ Deno.serve(async (req) => {
     return reply(n ? "I couldn't think that through just now, so I logged it as a note." : "Something went wrong. Try again.", "end", { error: plan.error });
   }
   const say = String(out.say || "").trim();
+  turnAction = String(out.action || "");
+  turnUnderstood = { recipe_drink: out.recipe_drink, recipe_source: out.recipe_source, data_query: out.data_query, heard_fix: out.heard_fix, hear: hear ? { fixes: (hear.fixes || []).length, unsure: (hear.unsure || []).length } : null };
   /* v17: learn from a corrected name, so it is heard right next time (phg.harmony_aliases, read by the speech service) */
   const hf = out.heard_fix || {};
   const wrong = String(hf.wrong || "").trim(), right = String(hf.right || "").trim();
@@ -353,6 +362,7 @@ Deno.serve(async (req) => {
   const COMMON = new Set(["the", "and", "that", "this", "one", "menu", "drink", "recipe", "price", "bar", "yes", "no", "not", "what", "with"]);
   const safeFix = wrong.length >= 3 && right.length >= 2 && wrong.length <= 120 && right.length <= 200 && nz(wrong).trim() !== nz(right).trim() &&
     !nz(right).includes(nz(wrong)) && !nz(wrong).includes(nz(right)) && heardBefore.includes(nz(wrong)) && !COMMON.has(nz(wrong).trim());
+  turnCorrection = !!(wrong && right);
   if (safeFix) {
     try {
       if (accountId) await dbx("alias_upsert", { user: userId, account: accountId, heard: wrong, means: right, kind: hf.kind || "term", source: "correction" });
@@ -385,7 +395,8 @@ Deno.serve(async (req) => {
     try {
       const dr = await fetch(`${url}/functions/v1/phg-harmony-data`, {
         method: "POST", headers: { "Content-Type": "application/json", apikey: anon, "x-phg-internal": service },
-        body: JSON.stringify({ prompt: q }),
+        /* v18: who is asking, so questions outside the fixed catalog go through the knowledge-map gateway */
+        body: JSON.stringify({ prompt: q, user: userId, account: accountId, ask_fallback: true }),
       });
       const dj = await dr.json().catch(() => ({}));
       if (dr.ok && dj.source === "menu_lookup" && inApp) return reply("Opening that menu.", "listen", { menu_lookup: q });

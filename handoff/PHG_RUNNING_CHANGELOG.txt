@@ -1961,3 +1961,15 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   * without the model, a single word is swapped only in a brand slot next to the same spirit (score >= 0.9, clear lead).
 - Offline tests: 23 context cases all resolved or correctly left alone ("I'm going to the store with Nick" untouched);
   original 45 cases: only "Brook laddie" still missed.
+
+[2026-09-29] ASK-ANYTHING + TURN-LOG (data v6, inbox v18 live)
+- phg-harmony-data v6: new "ask" route. Questions the fixed catalog can't answer as asked (several filters, one venue's
+  drinks, rankings, counts, the business's own recipes/invoices/costs/sales/labor/budgets/notes) are written as one
+  read-only SELECT (gpt-4.1, schema_doc.ts = the knowledge-map tables and joins) and run through
+  public.phg_harmony_query (select-only, table allowlist, project-scoped RLS, logged in phg.harmony_query_log +
+  phg_harmony_query_finish). 12 s cap on the caller side, one repair round on an error, results shown as table / bars /
+  map and spoken in 1-2 sentences from the real rows. Needs a signed-in user + project (the gateway checks membership).
+- Gateway verified by hand as Rob's project: margaritas by venue in Des Moines (5 rows, 32 ms); project menu items
+  (only this project's rows). Note: drink_name is mostly empty outside Iowa, so drinks are matched on item_name too.
+- phg-harmony-inbox v18: passes user + project to the data service (ask_fallback) and logs every turn to
+  phg.harmony_turns (action, what was understood, reply, correction flag) without delaying the reply.
