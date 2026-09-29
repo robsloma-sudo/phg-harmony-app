@@ -1938,3 +1938,10 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   not a common word, neither side contains the other). Shortcut text is repaired through the speech service too.
 - index.html 18.49.40: sends x-account (so project-learned names apply), shows "Heard X as Y" briefly, passes hear{} to Harmony.
 - Follow-up: COLA brand names (14,300) not in the lexicon yet; needs a read-only distinct-names view (DB change) to load cheaply.
+
+[2026-09-29] DEPLOY-4940 + ALL-BRAND-NAMES (Rob: "deploy all brand names")
+- Migration 20260929040000_harmony_brand_names_view applied: read-only view public.v_harmony_brand_names
+  (14,159 distinct TTB label-approval brand names), service_role only (anon/authenticated: no select). Verified.
+- phg-speech-transcribe v5 live: lexicon now also loads all label-approval brand names; ordered paging; "did you mean"
+  only for multi-word near-matches or when the checking model is unsure.
+- App 18.49.40 deployed: main e7b94c8, Netlify deploy 6abb1fafcae2520008a265ea ready.
