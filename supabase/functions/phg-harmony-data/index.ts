@@ -50,7 +50,22 @@ const STATE_CENTRE: Record<string, [number, number]> = {
   "MICHOACAN DE OCAMPO": [19.57, -101.71], "TAMAULIPAS": [24.27, -98.84], "CIUDAD DE MÉXICO": [19.43, -99.13],
   "AGUASCALIENTES": [21.88, -102.29], "QUERETARO DE ARTEAGA": [20.59, -100.39], "MEXICO": [19.35, -99.63],
 };
-const STATE_NAMES: Record<string, string> = { IA: "Iowa", CO: "Colorado", NY: "New York" };
+const STATE_NAMES: Record<string, string> = {
+  AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware",
+  DC: "Washington DC", FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas",
+  KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland", MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi",
+  MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York",
+  NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island",
+  SC: "South Carolina", SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont", VA: "Virginia", WA: "Washington",
+  WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming",
+};
+/* "California" / "new jersey" / "NJ" -> "NJ" */
+function stateCode(x: unknown): string {
+  const v = String(x || "").trim(); if (!v) return "";
+  if (/^[A-Za-z]{2}$/.test(v)) return v.toUpperCase();
+  const hit = Object.entries(STATE_NAMES).find(([, n]) => n.toLowerCase() === v.toLowerCase());
+  return hit ? hit[0] : v.slice(0, 2).toUpperCase();
+}
 
 function addressOf(notes: string | null) {
   const n = String(notes || "");
@@ -393,6 +408,47 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
       };
     },
   },
+  licenses: {
+    about: "Liquor licences (active, on-premise, not expired, one per venue) from state licence lists: coverage per state (states, licences, venues, live loading), one state's breakdown by city / licence type / county, or a list + map of licensed venues filtered by state, city, licence type or name.",
+    async run(db, p) {
+      const st = stateCode(p.state);
+      if (st && (p.city || p.q || p.venue_type)) {
+        const { data, error } = await db.rpc("phg_license_venues", { p_state: st, p_city: p.city || null, p_q: p.q || null, p_type: p.venue_type || null, p_limit: 800 });
+        if (error) throw error;
+        const rows = (data || []) as any[];
+        const where = [p.city, STATE_NAMES[st] || st].filter(Boolean).join(", ");
+        if (!rows.length) return { speak: `No active on-premise licences match${p.q ? " " + p.q : ""}${p.venue_type ? " (" + p.venue_type + ")" : ""} in ${where}.`, view: { type: "empty", title: "No licences" } };
+        const pins = rows.filter((r) => r.lat != null && r.lng != null).map((r) => ({ lat: +r.lat, lng: +r.lng, label: r.business_name, sub: `${r.license_type || ""} · ${r.address || ""}, ${r.city || ""}` }));
+        const table = { cols: ["Venue", "Licence type", "Address", "City", "ZIP", "Expires"], rows: rows.map((r) => [r.business_name, r.license_type, r.address, r.city, r.zip, r.expires_on || "—"]) };
+        return {
+          speak: `${rows.length}${rows.length >= 800 ? "+" : ""} active on-premise licensed venues${p.q ? " matching " + p.q : ""}${p.venue_type ? " with " + p.venue_type + " licences" : ""} in ${where}.`,
+          view: pins.length > 20 ? { type: "map", title: `Licensed venues · ${where}`, pins, region: "US", table } : { type: "table", title: `Licensed venues · ${where}`, table },
+        };
+      }
+      if (st) {
+        const by = /type|class|kind/i.test(String(p.group_by || "")) ? "type" : /county/i.test(String(p.group_by || "")) ? "county" : "city";
+        const [{ data: cov }, { data: br, error }] = await Promise.all([db.rpc("phg_license_coverage"), db.rpc("phg_license_breakdown", { p_state: st, p_by: by })]);
+        if (error) throw error;
+        const one = ((cov?.per_state || []) as any[]).find((r) => r.state === st);
+        if (!one) return { speak: `We have no licence list for ${STATE_NAMES[st] || st} yet.`, view: { type: "empty", title: "Not loaded" } };
+        const rows = (br || []) as any[];
+        return {
+          speak: `${STATE_NAMES[st] || st}: ${(+one.venues).toLocaleString("en-US")} active on-premise licensed venues${one.cities ? " in " + one.cities + " cities" : ""}${rows[0] ? "; the most are in " + rows[0].label + " (" + rows[0].venues + ")" : ""}.`,
+          view: { type: "bars", title: `${STATE_NAMES[st] || st} · licensed venues by ${by}`, bars: rows.slice(0, 25).map((r) => ({ label: r.label, value: +r.venues })) },
+        };
+      }
+      const { data: cov, error } = await db.rpc("phg_license_coverage");
+      if (error) throw error;
+      const per = (cov?.per_state || []) as any[];
+      const loading = per.filter((r) => r.loading).map((r) => STATE_NAMES[r.state] || r.state);
+      return {
+        speak: `We have active on-premise liquor licences for ${cov.states} states: ${(+cov.venues).toLocaleString("en-US")} venues${loading.length ? "; loading now: " + loading.join(", ") : ""}. The most are in ${per.slice(0, 3).map((r) => STATE_NAMES[r.state] || r.state).join(", ")}.`,
+        view: { type: "dashboard", title: "Liquor licence coverage (active, on-premise)",
+          tiles: [{ label: "States", value: String(cov.states) }, { label: "Venues", value: (+cov.venues).toLocaleString("en-US") }, { label: "Licences", value: (+cov.licences).toLocaleString("en-US") }, { label: "Loading now", value: loading.length ? loading.join(", ") : "none" }],
+          bars: { title: "Venues by state", bars: per.map((r) => ({ label: STATE_NAMES[r.state] || r.state, value: +r.venues, sub: r.kind === "accounts" ? "accounts" : `${r.cities || 0} cities` })) } },
+      };
+    },
+  },
   venue_profile: {
     about: "One venue's drinks profile: counts of cocktails/beer/wine/spirits, cocktail median price, neighbourhood income and age band, spirit mix: profile card + donut.",
     async run(db, p) {
@@ -597,6 +653,7 @@ function fastPlan(t: string): { source: string; params: P } | null {
     return { source: "distilleries", params: { town: m ? m[1].replace(/\b(mexico|jalisco state)\b/, "").trim() : "" } };
   }
   if (/\b(pipeline|menus? (uploading|coming in|being (rendered|downloaded|scraped))|render(ing)? (queue|backlog)|(upload|download|render|scrap)(ing)? (rate|speed|status)|is (it|the scraper|the pipeline) (running|stuck|working))\b/.test(s)) return { source: "pipeline", params: {} };
+  if (/\b(liquor|alcohol|on[- ]premise)?\s*licen[cs]es?\b/.test(s) && /\b(how many|coverage|total|states?|count|loaded|loading)\b/.test(s) && !/\b(in|for) [a-z]/.test(s)) return { source: "licenses", params: {} };
   if (/\b(how much data|coverage|how many (venues|menus)|data do we have)\b/.test(s)) return { source: "coverage", params: {} };
   return null;
 }
@@ -604,7 +661,8 @@ function fastPlan(t: string): { source: string; params: P } | null {
 /* v6: ASK. Anything the fixed catalog can't answer is written as one read-only SELECT and run through
    public.phg_harmony_query (the knowledge-map gateway: select only, table allowlist, project-scoped RLS, logged).
    One repair round on a planner error. The gateway does not bound its own runtime, so the caller does (12 s). */
-/* v13 (2026-09-29): refinable views - price / income / age / sort params, drink_map source, view.query.
+/* v14 (2026-09-29): licenses source (active on-premise licence coverage, state breakdowns, licensed-venue lists/maps).
+   v13 (2026-09-29): refinable views - price / income / age / sort params, drink_map source, view.query.
    v12 (Rob 2026-09-29: no extra payment): priority processing OFF by default (OPENAI_SERVICE_TIER=priority to re-enable).
    v11 SPEED: OpenAI priority processing, like the inbox (OPENAI_SERVICE_TIER; "default" turns it off). If the account
    refuses it, it is switched off for this instance and the request is sent again without it. */
@@ -711,7 +769,7 @@ Deno.serve(async (req) => {
     if (!oa) return json({ error: "planner unavailable" }, 500);
     const r = await oaCall(oa, ({
         model: Deno.env.get("OPENAI_DATA_MODEL") || "gpt-4o-mini", max_output_tokens: 300,
-        instructions: "Pick the one PHG data source that answers the request and fill its parameters (empty string when unused). state is a US two-letter code (we have IA, CO, NY). group_by is one of city, venue_type, venue, state_code, item, subfamily, serve_format. section is one of cocktails, beer, wine, liquor, non_alcoholic. family is one of tequila, mezcal, whiskey, vodka, gin, rum, brandy, liqueur, wine, beer, non_alcoholic. price_min / price_max are dollars ('under $14' -> price_max 14). income_min / income_max are the median household income of the venue ZIP in dollars ('income over 100k' -> income_min 100000; 'affluent' -> 100000). age_min / age_max are the ZIP median age ('younger areas' -> age_max 35). sort is one of price_asc, price_desc, income_desc, income_asc, rating_desc, name, city. with_menus is 'true' to keep only venues with menu data. Use drink_map when they want to SEE where a drink is served (a map), drink_prices for prices and averages. Use menu_lookup when they want to SEE a specific venue's menu document. Use ask for any other question about PHG's data that the sources above cannot answer as asked (a list with several filters such as all the margaritas at one venue in one city, a specific venue's drinks, comparisons, counts, rankings, or the business's own recipes, invoices, costs, sales, labor, budgets and notes). Use none only when it is not about data.\nSources:\n" + Object.entries(SOURCES).map(([k, v]) => `${k}: ${v.about}`).join("\n") + "\nmenu_lookup: open a specific venue's menu document (q=venue, city, state).",
+        instructions: "Pick the one PHG data source that answers the request and fill its parameters (empty string when unused). state is a US two-letter code (menus: IA, CO, NY; liquor licences: see the licenses source). group_by is one of city, venue_type, venue, state_code, item, subfamily, serve_format. section is one of cocktails, beer, wine, liquor, non_alcoholic. family is one of tequila, mezcal, whiskey, vodka, gin, rum, brandy, liqueur, wine, beer, non_alcoholic. price_min / price_max are dollars ('under $14' -> price_max 14). income_min / income_max are the median household income of the venue ZIP in dollars ('income over 100k' -> income_min 100000; 'affluent' -> 100000). age_min / age_max are the ZIP median age ('younger areas' -> age_max 35). sort is one of price_asc, price_desc, income_desc, income_asc, rating_desc, name, city. with_menus is 'true' to keep only venues with menu data. Use licenses for anything about liquor licences or licensed venues (group_by city/type/county for one state; venue_type = licence type text). Use drink_map when they want to SEE where a drink is served (a map), drink_prices for prices and averages. Use menu_lookup when they want to SEE a specific venue's menu document. Use ask for any other question about PHG's data that the sources above cannot answer as asked (a list with several filters such as all the margaritas at one venue in one city, a specific venue's drinks, comparisons, counts, rankings, or the business's own recipes, invoices, costs, sales, labor, budgets and notes). Use none only when it is not about data.\nSources:\n" + Object.entries(SOURCES).map(([k, v]) => `${k}: ${v.about}`).join("\n") + "\nmenu_lookup: open a specific venue's menu document (q=venue, city, state).",
         input: ask,
         text: { format: { type: "json_schema", name: "phg_data_plan", strict: true, schema: PLAN_SCHEMA } },
       }),

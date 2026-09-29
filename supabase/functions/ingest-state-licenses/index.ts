@@ -20,6 +20,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
    discovered on each state's page because the file names change.
    v11: + CT (DCP permits, LBD excluded), RI (DOH ArcGIS), ID (ISP CSV), NE, GA, NJ (xlsx; GA/NJ need a browser UA), OK
    (ABLE HTML-table lists). v10: MI Number/Group/combined address. v9: CO. v8: CA key file-no + type, more date formats.
+   v12: rules enforced in the DB (active on-premise only); NJ inactivity -> inactive; NE class codes; GA ID/name; CT prefixes.
    Never calls a paid service. */
 
 const PAGE = 1000;
@@ -275,32 +276,37 @@ async function zipCsvWindow(stream: ReadableStream<Uint8Array>, from: number, co
   return { head: head || [], rows, done: finished };
 }
 function col(head: string[], ...res: RegExp[]) { for (const re of res) { const i = head.findIndex((h) => re.test(h)); if (i >= 0) return i; } return -1; }
-function sheetAdapter(state: string, url: string | (() => Promise<string>), source: string, onPremise: (type: string, row: string) => boolean | null, keyByType = false, ua?: string): Adapter {
+function sheetAdapter(state: string, url: string | (() => Promise<string>), source: string, onPremise: (type: string, row: string) => boolean | null, keyByType = false, o: { ua?: string; type?: RegExp[] } = {}): Adapter {
   return {
     source,
     async pages(offset, pages) {
-      const { head, rows: win, done, pre } = await sheetRows(typeof url === "string" ? url : await url(), offset, pages * PAGE, ua);
-      const iNo = col(head, /licen[cs]e\s*(no|num|#|id)/i, /permit\s*(no|num|#)/i, /^licen[cs]e$/i, /file\s*(no|num)/i, /lic(ense)?\s*#/i, /^(licen[cs]e\s*)?number$/i);
-      const iType = col(head, /licen[cs]e\s*(type|class|desc|privilege)/i, /privilege/i, /^type$/i, /class/i);
-      const iName = col(head, /trade|dba|doing business/i, /business\s*name/i, /premises?\s*name/i, /establishment/i, /primary\s*name/i, /^name$/i);
+      const { head, rows: win, done, pre } = await sheetRows(typeof url === "string" ? url : await url(), offset, pages * PAGE, o.ua);
+      const iNo = col(head, /licen[cs]e\s*(no|num|#|id)/i, /permit\s*(no|num|#)/i, /^licen[cs]e$/i, /file\s*(no|num)/i, /lic(ense)?\s*#/i, /^(licen[cs]e\s*)?number$/i, /^id$/i);
+      const iType = col(head, ...(o.type || []), /licen[cs]e\s*(type|class|desc|privilege)/i, /privilege/i, /^type$/i, /class/i);
+      const iType2 = col(head, /secondary\s*licen[cs]e\s*type/i); // NE: "Catering (Secondary License)"
+      const iInact = col(head, /inactiv/i); // NJ: pocket licences carry an "Inactivity Start Date"
+      const iName = col(head, /trade|dba|doing business/i, /business\s*name/i, /premises?\s*name/i, /establishment/i, /primary\s*name/i, /^name$/i, /format\s*name/i, /name$/i);
       const iOwner = col(head, /licensee|^owner|owner\s*name|entity|applicant/i, /primary\s*name/i, /account\s*name/i); // not MI "Statute: Ownership Transferable\"
       const iGroup = col(head, /^group$/i); // MI: Retail - On Premises / Retail - Off Premises
       const iAddr = col(head, /(premise|physical|location|street)?\s*address(\s*1|\s*line\s*1)?$/i, /prem\w*\s*addr\w*\s*1?$/i, /street/i, /addr/i);
       const iCity = col(head, /city/i, /locality|town/i);
       const iZip = col(head, /zip|postal/i);
       const iCounty = col(head, /county/i);
-      const iStatus = col(head, /status/i);
+      const iStatus = col(head, /status/i, /^licen[cs]e\s*state$/i);
       const iExp = col(head, /expir/i);
       const g = (r: string[], i: number) => (i >= 0 ? r[i] : "");
       const slice = win.filter((r) => g(r, iNo).trim());
       const rows = slice.map((r) => {
-        const type = t([g(r, iGroup), g(r, iType)].filter((x) => String(x ?? "").trim()).join(" · ")) || "";
-        const addr = String(g(r, iAddr) ?? ""); // MI: "5160 N Hubbard Lake Rd, Spruce, MI 48762" (no city/zip columns)
+        const type = t([g(r, iGroup), g(r, iType), g(r, iType2)].filter((x) => String(x ?? "").trim()).join(" · ")) || "";
+        const addr = String(g(r, iAddr) ?? "").replace(/_x000D_/g, " ").replace(/\s+/g, " ").trim();
+        const cityCol = t(g(r, iCity));
+        // "1620 Dodge St Ste 2200 Omaha, NE 68102" / "560 NEW JERSEY AVENUE ABSECON, NJ 08201 USA" -> street only
+        const street = cityCol ? addr.replace(new RegExp(`\\s*,?\\s*${cityCol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*,\\s*${state}\\b[\\s\\d-]*(USA|United States)?\\s*$`, "i"), "") : addr; // MI: "5160 N Hubbard Lake Rd, Spruce, MI 48762" (no city/zip columns)
         const addrCity = iCity < 0 ? (addr.match(/,\s*([^,]+),\s*[A-Z]{2}\s*\d{5}/) || [])[1] : undefined;
         return {
           state, license_no: keyByType && type ? `${t(g(r, iNo))}-${type}` : t(g(r, iNo)), license_type: type || null, on_premise: type ? onPremise(type, r.join(" | ")) : null,
-          status: t(g(r, iStatus)) || "active", business_name: t(g(r, iName)) || t(g(r, iOwner)), owner_name: t(g(r, iOwner)),
-          address: iCity < 0 ? t(addr.replace(/,\s*[^,]+,\s*[A-Z]{2}\s*[\d-]*\s*(United States)?\s*$/i, "")) : t(addr), city: t(g(r, iCity)) || t(addrCity),
+          status: String(g(r, iInact) ?? "").trim() ? "inactive" : t(g(r, iStatus)) || "active", business_name: t(g(r, iName)) || t(g(r, iOwner)), owner_name: t(g(r, iOwner)),
+          address: iCity < 0 ? t(addr.replace(/,\s*[^,]+,\s*[A-Z]{2}\s*[\d-]*\s*(United States)?\s*$/i, "")) : t(street), city: cityCol || t(addrCity),
           zip: zip5(iZip >= 0 ? g(r, iZip) : addr), county: t(g(r, iCounty)), expires_on: isoDate(g(r, iExp)),
           raw: Object.fromEntries(head.map((h, i) => [h || `col${i}`, r[i]])),
         } as Row;
@@ -388,8 +394,8 @@ const ADAPTERS: Record<string, Adapter> = {
   /* CT DCP liquor permits: credential prefix = permit class; LBD.* = brand registrations (excluded) */
   CT: socrata("data.ct.gov", "gwv2-eswx", "status = 'ACTIVE' AND NOT starts_with(credential, 'LBD') AND permit_state = 'CT'", (r) => {
     const cred = t(r.credential) || ""; const pfx = cred.split(".")[0].toUpperCase();
-    const on = /^(LIR|LRW|LRB|LIC|LIT|LIH|LCL|LSC|LBP|LCT|LCE|LIU|LIN|LIB|LIA|LBW|LRE|LHW|LIV|LIS)$/.test(pfx) ? true
-      : /^(LIP|LIG|LIW|LIM|LIO|LIF|LOS|LSH|LBR|LWS|LDS|LMF)$/.test(pfx) ? false : null;
+    const on = /^(LIR|LRW|LRB|LIC|LIT|LIH|LSC|LBP|LCT|LCE|LIU|LIN|LIB|LIA|LBW|LRE|LHW|LIV|LIS|LCA|LPC|LRC|LTH|LCM|LCS|LPA|LCW|LSE|LCN|LRS|LMI)$/.test(pfx) ? true
+      : /^(LIP|LIG|LIW|LIM|LIO|LIF|LOS|LSH|LBR|LWS|LDS|LMF|LCL|LGB|LMB|LCR|LFW|LMW|LMS|LWG|LFM|LWB|LTR|LID|LAU|LWH|LFO|LTN|LFP)$/.test(pfx) ? false : null;
     return {
       state: "CT", license_no: cred || null, license_type: pfx || null, on_premise: on, status: t(r.status),
       business_name: t(r.dba) || t(r.backer), owner_name: t(r.backer) || t(r.permittee_name), address: t(r.permit_address),
@@ -402,7 +408,7 @@ const ADAPTERS: Record<string, Adapter> = {
     return {
       state: "RI", license_no: a.ObjectID != null ? `RI-${a.ObjectID}` : null, license_type: t([a.USER_License_Class, a.USER_Location_Type].filter(Boolean).join(" · ")),
       on_premise: /^\s*on/i.test(oo) ? true : /^\s*off/i.test(oo) ? false : null, status: "active",
-      business_name: t(a.USER_Name), address: t(a.USER_Address), city: t(a.USER_City) || t(a.City), zip: zip5(a.USER_Zip_Code ?? a.ZIP), county: t(a.County),
+      business_name: t(a.USER_Name), address: t(a.USER_Address), city: t(a.USER_City) || t(a.City), zip: zip5(a.USER_Zip_Code || a.ZIP || a.Match_addr), county: t(a.County),
       raw: a,
     };
   }, "ri_doh_arcgis"),
@@ -411,22 +417,22 @@ const ADAPTERS: Record<string, Adapter> = {
     (_type, row) => /on[- ]premises?\s*consumption|by the drink/i.test(row) ? true : false),
   /* Nebraska LCC active licence roster (date-stamped xlsx) */
   NE: sheetAdapter("NE", () => discover("https://lcc.nebraska.gov/licensing-sdl/active-license-roster", /Active.*Roster.*\.xlsx/i), "ne_lcc_xlsx",
-    (type) => /off[- ]?sale only|wholesal|manufactur|distribut|shipper|farm winery|craft brewery|micro ?distill/i.test(type) ? false
-      : /on[- ]?sale|on and off|restaurant|club|hotel|bar|tavern/i.test(type) ? true : null),
+    (type) => { const code = (type.match(/^\s*([A-Z]{1,3})\b/) || [])[1] || "";
+      return /shipper|wholesal/i.test(type) ? false : /[ACI]/.test(code) ? true : code ? false : null; }, false, { type: [/^class$/i] }),
   /* Georgia DOR active alcohol accounts (xlsx; browser UA) */
   GA: sheetAdapter("GA", () => discover("https://dor.georgia.gov/active-alcohol-licenses", /alcohol-accounts-active[^"]*xlsx/i, BROWSER_UA), "ga_dor_xlsx",
     (type) => /consumption|on[- ]?premise|pouring|by the drink/i.test(type) ? true
-      : /package|wholesal|manufactur|distribut|broker|shipper|importer|retail/i.test(type) ? false : null, false, BROWSER_UA),
+      : /package|wholesal|manufactur|distribut|broker|shipper|importer|retail|brewery|winery|distill/i.test(type) ? false : null, false, { ua: BROWSER_UA }),
   /* New Jersey ABC retail licence report (xlsx; browser UA): 31 club, 32 seasonal, 33 plenary consumption, 36 hotel */
   NJ: sheetAdapter("NJ", () => discover("https://www.njoag.gov/about/divisions-and-offices/division-of-alcoholic-beverage-control-home/licensing-bureau-applications-and-information/licensing-reports/", /RETAIL-LICENSE-REPORT[^"]*\.xlsx/i, BROWSER_UA), "nj_abc_xlsx",
-    (type) => /consumption|club|hotel|motel|seasonal|theat|stadium|\b3[1236]\b/i.test(type) ? true : /distribution|limited retail|\b44\b|\b34\b/i.test(type) ? false : null, false, BROWSER_UA),
+    (type) => /consumption|club|hotel|motel|seasonal|theat|stadium|\b3[1236]\b/i.test(type) ? true : /distribution|limited retail|\b44\b|\b34\b/i.test(type) ? false : null, false, { ua: BROWSER_UA }),
   /* Oklahoma ABLE licensee lists by type (HTML tables served as .xls); every listed type is on-premise */
   OK: {
     source: "ok_able_xls",
     async pages(_offset, _pages) {
       const idx = "https://oklahoma.gov/able-commission/brand-registration/brand-registration-reports/listing-of-licensees-by-license-type.html";
       const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 120000);
-      const rows: Row[] = [];
+      const rows: Row[] = []; let okHead: string[] = [];
       try {
         const html = await (await fetch(idx, { signal: ctl.signal, headers: { "User-Agent": BROWSER_UA } })).text();
         const want = /(Mixed_Beverage_Licensee|Mixed_Beverage_Fraternal|Beer_and_Wine|Hotel_Beverage|Brew_Pub)[^"\/]*\.xls/i;
@@ -439,8 +445,8 @@ const ADAPTERS: Record<string, Adapter> = {
           const trs = [...text.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map((m) => [...m[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((c) => cellText(c[1])));
           const hi = trs.findIndex((r) => r.some((c) => /licen[cs]e\s*(#|no|num)/i.test(c)));
           if (hi < 0) continue;
-          const head = trs[hi]; const ix = (re: RegExp) => head.findIndex((h) => re.test(h));
-          const iNo = ix(/licen[cs]e\s*(#|no|num)/i), iDba = ix(/dba|trade|business/i), iAddr = ix(/address/i), iCity = ix(/city/i), iZip = ix(/zip/i), iCounty = ix(/county/i), iExp = ix(/expir/i), iName = ix(/licensee|owner|name/i);
+          const head = trs[hi]; if (!okHead.length) okHead = head; const ix = (re: RegExp) => head.findIndex((h) => re.test(h));
+          const iNo = ix(/licen[cs]e\s*(#|no|num)/i), iDba = ix(/dba|trade|business/i), iAddr = ix(/addr|street|location/i), iCity = ix(/city/i), iZip = ix(/zip/i), iCounty = ix(/county/i), iExp = ix(/expir/i), iName = ix(/licensee|owner|name/i);
           const kind = (link.match(want) || [])[1]?.replace(/_/g, " ") || "licensee";
           for (const r of trs.slice(hi + 1)) {
             const g = (i: number) => (i >= 0 ? r[i] : "");
@@ -451,7 +457,7 @@ const ADAPTERS: Record<string, Adapter> = {
           }
         }
       } finally { clearTimeout(tm); }
-      return { rows, done: true };
+      return { rows, done: true, head: okHead } as any;
     },
   },
   OR: socrata("data.oregon.gov", "srxe-qkm2", "license_expired = 'No'", (r) => {
