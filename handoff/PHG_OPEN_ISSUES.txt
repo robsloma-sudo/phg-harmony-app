@@ -398,9 +398,15 @@ PHG-051 (P0, open) Market explorer is 4 days stale and missing most menus. mv_dr
   fallback (coalesce city demo, phg_census_zcta by left(postal_code,5)) + staging_id appended; build *_next MVs
   alongside (no reader locks), unique indexes so future refreshes are CONCURRENT, recreate the 4 dependents on the
   new MV, then swap names in one short transaction (lock_timeout 3 s); re-enable refresh as a concurrent job.
+PHG-051 update 2026-09-29: SWAPPED LIVE after safety round 3 (pass). Remaining: timed refresh (job 29) -> switch cron 8
+  to the multi-statement refresh command + watchdog; drop *_old after a week of clean refreshes.
 PHG-051 update: v2 *_next MVs built and checked (see changelog). Swap waits on app 18.49.45 (no truncation for NY
   75,549 rows) + safety review round 2 + rehearsal. Data-quality follow-up: NY 'unclassified' rows avg $239 (food items,
   bottle prices, misparsed prices) - exclude from price stats or classify.
+PHG-052 update 2026-09-29: CT has a real permit dataset (gwv2-eswx minus LBD brand registrations); GA and NJ files load
+  with a browser UA -> all three in loader v11. Still blocked: FL (Cloudflare challenge), VA (TLS), AZ (Cloudflare),
+  MA (interactive Accela export). Excluded: IN and DE (paid), KS (non-commercial-use terms). Needs scraping/PDF: PA,
+  NC, OH, UT, MN, MS, VT, TN, LA, NM, SC. County/municipal only: WI, NV, MD, ND, WY, SD, HI, MT, AL, AR.
 PHG-052 (open) Licence sources needing another free route: CT (open data = brand registrations), VA (TLS chain not
   trusted), FL + NJ (403 to automated requests), GA (no direct file link). Options: records requests, or a browser-
   based download by Rob.

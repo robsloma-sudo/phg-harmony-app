@@ -2315,3 +2315,26 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   serial, owner from 'Primary Name', header rule for label rows without 'licence', probe returns first 12 rows.
   v9 (0a1e815): Colorado adapter, data.colorado.gov ier5-5ms2 (20,281 rows, free Socrata), found through the free
   Socrata catalog API (called via pg_net; the container proxy blocks it). Deploy, CA reload, MI and CO load running.
+- 2026-09-29 PHG-051 SWAPPED LIVE (after safety round 3 pass, 83): phg_explorer_swap_next() at ~16:44 UTC. The app now
+  reads the v2 explorer: CO 37,325 rows / 1,641 venues, IA 15,144 / 770, NY 75,549 / 3,218; venue profiles CO 380->840,
+  IA 248->282, NY 210->1,837; pins 28,286. anon SELECT on all six; *_old kept (closed) for swap_back.
+  S-R3-1 applied (busy lock raises). S-R3-4 checked (old refresh_explorer not callable by anon/authenticated).
+  Timed refresh #1 (job 27) was cancelled by unscheduling (pg_cron cancels a running job when unscheduled).
+  #2 (job 28, CALL form) failed at exactly 2 min: the server's statement_timeout bounds the whole CALL.
+  So the refresh is now a multi-statement cron command (the project's SET-first convention):
+  lock helper phg_explorer_refresh_lock(); SET statement_timeout='30min'; per-MV REFRESH CONCURRENTLY + COMMIT; unlock.
+  #3 (job 29) is running; cron 8 is not switched yet.
+- Licences:
+  - CA reloaded with v8 keys: 118,690 (54,602 on-premise, 99,581 with expiry).
+  - v10 deployed (platform v8; MI Number/Group/combined address): MI 35,726 (10,468 on-premise); owner/address fixed in
+    SQL from raw.
+  - v9 CO adapter loaded: 14,116 (8,681 on-premise).
+  - Free-source sweep found:
+    - loadable: RI (DOH ArcGIS), ID (ISP CSV), OK (ABLE HTML-table lists), NE (roster xlsx), CT (real permit dataset,
+      gwv2-eswx, LBD = brand registrations only), GA and NJ (xlsx served to browser UAs).
+    - still blocked: FL (Cloudflare), VA (TLS), AZ (Cloudflare), MA (interactive).
+    - paid: IN ($150), DE ($25).
+    - KS: non-commercial terms, so excluded.
+    - needs scraping or PDF: PA, NC, OH, UT, MN, MS, VT, TN, LA, NM, SC.
+    - local/county only: WI, NV, MD, ND, WY, SD, HI, MT, AL, AR.
+  - v11 (d21dae7) adds CT/RI/ID/NE/GA/NJ/OK adapters; deploy + probes + loads running.
