@@ -378,3 +378,7 @@ PHG-049 (P0, in progress) Every IA/CO/NY venue's menu. 2026-09-29: acquisition s
 PHG-050 (P1, planned) Roll out the remaining 47 states + DC. Plan: handoff/PHG_50_STATE_ROLLOUT.html; research
   data/expansion/states_1..4.jsonl. Blocked on Rob for: Census API key, Google Places budget, paid lists (IN, NE,
   DE), records requests for the 15 manual states. Waves by population (wave 1 ~145M people).
+
+PHG-048 follow-up (open): Shortcut menu questions ("show me Eatery A's menu in Des Moines") spend ~4.8 s in
+  phg-harmony-data routing, then a second place_venue call, before replying; target: route menu asks directly from
+  the planner and read the venue's drinks in one call.
