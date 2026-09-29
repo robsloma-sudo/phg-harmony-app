@@ -18,9 +18,13 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
    v5: CT and VA adapters removed (see notes), KY NQ4/caterer and DC 'Retail -' classes fixed.
    v4: + MI (master xlsx), WA (weekly On Premise xlsx), CA (daily zipped CSV), ME (FOAA xlsx); download links are
    discovered on each state's page because the file names change.
+   v11: + CT (DCP permits, LBD excluded), RI (DOH ArcGIS), ID (ISP CSV), NE, GA, NJ (xlsx; GA/NJ need a browser UA), OK
+   (ABLE HTML-table lists). v10: MI Number/Group/combined address. v9: CO. v8: CA key file-no + type, more date formats.
    Never calls a paid service. */
 
 const PAGE = 1000;
+/* GA/NJ serve their public files only to browser user agents (no challenge, no login) */
+const BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 PHG-license-ingest";
 type Row = Record<string, unknown>;
 
 function json(b: unknown, s = 200) { return new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } }); }
@@ -112,10 +116,10 @@ const epochDate = (v: unknown) => (typeof v === "number" ? new Date(v).toISOStri
 
 /* generic spreadsheet adapter: finds columns by header words (licence no., name, address, city, zip, type) */
 /* find the current download link on a state's page (file names carry dates) */
-async function discover(page: string, re: RegExp): Promise<string> {
+async function discover(page: string, re: RegExp, ua = "PHG-license-ingest/1.0"): Promise<string> {
   const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 30000);
   try {
-    const r = await fetch(page, { signal: ctl.signal, headers: { "User-Agent": "PHG-license-ingest/1.0" } });
+    const r = await fetch(page, { signal: ctl.signal, headers: { "User-Agent": ua } });
     if (!r.ok) throw new Error(`HTTP ${r.status} from ${new URL(page).host}`);
     const html = await r.text();
     const links = [...html.matchAll(/href="([^"]+)"/gi)].map((m) => m[1].replace(/&amp;/g, "&")).filter((h) => re.test(decodeURIComponent(h)));
@@ -125,12 +129,19 @@ async function discover(page: string, re: RegExp): Promise<string> {
 }
 /* v6: memory-safe readers (the edge runtime has ~250 MB). Returns the header and only the rows in [from, from+count);
    done = the file has no rows after the window. Zipped CSV is streamed and parsing stops after the window. */
-async function sheetRows(url: string, from: number, count: number): Promise<{ head: string[]; rows: string[][]; done: boolean; pre?: string[][] }> {
-  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 120000);
+async function sheetRows(url: string, from: number, count: number, ua = "PHG-license-ingest/1.0"): Promise<{ head: string[]; rows: string[][]; done: boolean; pre?: string[][] }> {
+  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 140000);
   try {
-    const r = await fetch(url, { signal: ctl.signal, headers: { "User-Agent": "PHG-license-ingest/1.0" } });
+    const r = await fetch(url, { signal: ctl.signal, headers: { "User-Agent": ua } });
     if (!r.ok || !r.body) throw new Error(`HTTP ${r.status} from ${new URL(url).host}`);
     if (/\.zip(\?|$)/i.test(url)) return await zipCsvWindow(r.body, from, count, ctl);
+    if (/\/csv(\?|$)|\.csv(\?|$)/i.test(url) || /text\/csv/i.test(r.headers.get("content-type") || "")) {
+      // v11: plain CSV (ID); small files, parsed whole; header = first row naming a licence/permit
+      const all = parseCsv(await r.text());
+      const hi = Math.max(0, all.findIndex((row) => row.filter((x) => x.trim()).length >= 3 && row.some((x) => /licen|permit/i.test(x))));
+      const body = all.slice(hi + 1).filter((row) => row.length > 1);
+      return { head: (all[hi] || []).map((x) => x.trim()), rows: body.slice(from, from + count), done: from + count >= body.length };
+    }
     return await xlsxWindow(r.body, from, count);
   } finally { clearTimeout(tm); }
 }
@@ -264,15 +275,15 @@ async function zipCsvWindow(stream: ReadableStream<Uint8Array>, from: number, co
   return { head: head || [], rows, done: finished };
 }
 function col(head: string[], ...res: RegExp[]) { for (const re of res) { const i = head.findIndex((h) => re.test(h)); if (i >= 0) return i; } return -1; }
-function sheetAdapter(state: string, url: string | (() => Promise<string>), source: string, onPremise: (type: string) => boolean | null, keyByType = false): Adapter {
+function sheetAdapter(state: string, url: string | (() => Promise<string>), source: string, onPremise: (type: string, row: string) => boolean | null, keyByType = false, ua?: string): Adapter {
   return {
     source,
     async pages(offset, pages) {
-      const { head, rows: win, done, pre } = await sheetRows(typeof url === "string" ? url : await url(), offset, pages * PAGE);
+      const { head, rows: win, done, pre } = await sheetRows(typeof url === "string" ? url : await url(), offset, pages * PAGE, ua);
       const iNo = col(head, /licen[cs]e\s*(no|num|#|id)/i, /permit\s*(no|num|#)/i, /^licen[cs]e$/i, /file\s*(no|num)/i, /lic(ense)?\s*#/i, /^(licen[cs]e\s*)?number$/i);
       const iType = col(head, /licen[cs]e\s*(type|class|desc|privilege)/i, /privilege/i, /^type$/i, /class/i);
       const iName = col(head, /trade|dba|doing business/i, /business\s*name/i, /premises?\s*name/i, /establishment/i, /primary\s*name/i, /^name$/i);
-      const iOwner = col(head, /licensee|owner|entity|applicant/i, /primary\s*name/i, /account\s*name/i);
+      const iOwner = col(head, /licensee|^owner|owner\s*name|entity|applicant/i, /primary\s*name/i, /account\s*name/i); // not MI "Statute: Ownership Transferable\"
       const iGroup = col(head, /^group$/i); // MI: Retail - On Premises / Retail - Off Premises
       const iAddr = col(head, /(premise|physical|location|street)?\s*address(\s*1|\s*line\s*1)?$/i, /prem\w*\s*addr\w*\s*1?$/i, /street/i, /addr/i);
       const iCity = col(head, /city/i, /locality|town/i);
@@ -287,9 +298,9 @@ function sheetAdapter(state: string, url: string | (() => Promise<string>), sour
         const addr = String(g(r, iAddr) ?? ""); // MI: "5160 N Hubbard Lake Rd, Spruce, MI 48762" (no city/zip columns)
         const addrCity = iCity < 0 ? (addr.match(/,\s*([^,]+),\s*[A-Z]{2}\s*\d{5}/) || [])[1] : undefined;
         return {
-          state, license_no: keyByType && type ? `${t(g(r, iNo))}-${type}` : t(g(r, iNo)), license_type: type || null, on_premise: type ? onPremise(type) : null,
+          state, license_no: keyByType && type ? `${t(g(r, iNo))}-${type}` : t(g(r, iNo)), license_type: type || null, on_premise: type ? onPremise(type, r.join(" | ")) : null,
           status: t(g(r, iStatus)) || "active", business_name: t(g(r, iName)) || t(g(r, iOwner)), owner_name: t(g(r, iOwner)),
-          address: iCity < 0 ? t(addr.replace(/,\s*[^,]+,\s*[A-Z]{2}\s*[\d-]*\s*$/, "")) : t(addr), city: t(g(r, iCity)) || t(addrCity),
+          address: iCity < 0 ? t(addr.replace(/,\s*[^,]+,\s*[A-Z]{2}\s*[\d-]*\s*(United States)?\s*$/i, "")) : t(addr), city: t(g(r, iCity)) || t(addrCity),
           zip: zip5(iZip >= 0 ? g(r, iZip) : addr), county: t(g(r, iCounty)), expires_on: isoDate(g(r, iExp)),
           raw: Object.fromEntries(head.map((h, i) => [h || `col${i}`, r[i]])),
         } as Row;
@@ -373,6 +384,76 @@ const ADAPTERS: Record<string, Adapter> = {
       address: t(r.street_address), city: t(r.city), zip: zip5(r.zip), expires_on: isoDate(r.expiration), raw: r,
     };
   }, "co_led_socrata"),
+  /* v11 (2026-09-29) sources found by the free-source sweep (Socrata/ArcGIS catalogues + state pages) */
+  /* CT DCP liquor permits: credential prefix = permit class; LBD.* = brand registrations (excluded) */
+  CT: socrata("data.ct.gov", "gwv2-eswx", "status = 'ACTIVE' AND NOT starts_with(credential, 'LBD') AND permit_state = 'CT'", (r) => {
+    const cred = t(r.credential) || ""; const pfx = cred.split(".")[0].toUpperCase();
+    const on = /^(LIR|LRW|LRB|LIC|LIT|LIH|LCL|LSC|LBP|LCT|LCE|LIU|LIN|LIB|LIA|LBW|LRE|LHW|LIV|LIS)$/.test(pfx) ? true
+      : /^(LIP|LIG|LIW|LIM|LIO|LIF|LOS|LSH|LBR|LWS|LDS|LMF)$/.test(pfx) ? false : null;
+    return {
+      state: "CT", license_no: cred || null, license_type: pfx || null, on_premise: on, status: t(r.status),
+      business_name: t(r.dba) || t(r.backer), owner_name: t(r.backer) || t(r.permittee_name), address: t(r.permit_address),
+      city: t(r.permit_city), zip: zip5(r.permit_zip), issued_on: isoDate(r.effective_date), expires_on: isoDate(r.expire_date), raw: r,
+    };
+  }, "ct_dcp_socrata"),
+  /* RI Health Dept verified alcohol outlets (geocoded, Mar 2025; no licence number -> ObjectID key) */
+  RI: arcgis("https://services1.arcgis.com/dkWT1XL4nglP5MLP/arcgis/rest/services/Verified_Alcohol_Outlets_in_Rhode_Island/FeatureServer/0", "1=1", (a) => {
+    const oo = String(a.USER_On_Off_premesis ?? "");
+    return {
+      state: "RI", license_no: a.ObjectID != null ? `RI-${a.ObjectID}` : null, license_type: t([a.USER_License_Class, a.USER_Location_Type].filter(Boolean).join(" · ")),
+      on_premise: /^\s*on/i.test(oo) ? true : /^\s*off/i.test(oo) ? false : null, status: "active",
+      business_name: t(a.USER_Name), address: t(a.USER_Address), city: t(a.USER_City) || t(a.City), zip: zip5(a.USER_Zip_Code ?? a.ZIP), county: t(a.County),
+      raw: a,
+    };
+  }, "ri_doh_arcgis"),
+  /* Idaho State Police ABC: issued licences CSV (slow endpoint) */
+  ID: sheetAdapter("ID", "https://apps.isp.idaho.gov/AbcReporting/license/search/csv?status=ISSUED", "id_isp_abc_csv",
+    (_type, row) => /on[- ]premises?\s*consumption|by the drink/i.test(row) ? true : false),
+  /* Nebraska LCC active licence roster (date-stamped xlsx) */
+  NE: sheetAdapter("NE", () => discover("https://lcc.nebraska.gov/licensing-sdl/active-license-roster", /Active.*Roster.*\.xlsx/i), "ne_lcc_xlsx",
+    (type) => /off[- ]?sale only|wholesal|manufactur|distribut|shipper|farm winery|craft brewery|micro ?distill/i.test(type) ? false
+      : /on[- ]?sale|on and off|restaurant|club|hotel|bar|tavern/i.test(type) ? true : null),
+  /* Georgia DOR active alcohol accounts (xlsx; browser UA) */
+  GA: sheetAdapter("GA", () => discover("https://dor.georgia.gov/active-alcohol-licenses", /alcohol-accounts-active[^"]*xlsx/i, BROWSER_UA), "ga_dor_xlsx",
+    (type) => /consumption|on[- ]?premise|pouring|by the drink/i.test(type) ? true
+      : /package|wholesal|manufactur|distribut|broker|shipper|importer|retail/i.test(type) ? false : null, false, BROWSER_UA),
+  /* New Jersey ABC retail licence report (xlsx; browser UA): 31 club, 32 seasonal, 33 plenary consumption, 36 hotel */
+  NJ: sheetAdapter("NJ", () => discover("https://www.njoag.gov/about/divisions-and-offices/division-of-alcoholic-beverage-control-home/licensing-bureau-applications-and-information/licensing-reports/", /RETAIL-LICENSE-REPORT[^"]*\.xlsx/i, BROWSER_UA), "nj_abc_xlsx",
+    (type) => /consumption|club|hotel|motel|seasonal|theat|stadium|\b3[1236]\b/i.test(type) ? true : /distribution|limited retail|\b44\b|\b34\b/i.test(type) ? false : null, false, BROWSER_UA),
+  /* Oklahoma ABLE licensee lists by type (HTML tables served as .xls); every listed type is on-premise */
+  OK: {
+    source: "ok_able_xls",
+    async pages(_offset, _pages) {
+      const idx = "https://oklahoma.gov/able-commission/brand-registration/brand-registration-reports/listing-of-licensees-by-license-type.html";
+      const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 120000);
+      const rows: Row[] = [];
+      try {
+        const html = await (await fetch(idx, { signal: ctl.signal, headers: { "User-Agent": BROWSER_UA } })).text();
+        const want = /(Mixed_Beverage_Licensee|Mixed_Beverage_Fraternal|Beer_and_Wine|Hotel_Beverage|Brew_Pub)[^"\/]*\.xls/i;
+        const links = [...new Set([...html.matchAll(/href="([^"]+\.xls)"/gi)].map((m) => new URL(m[1], idx).href).filter((h) => want.test(h)))];
+        if (!links.length) throw new Error("no OK licensee lists on the index page");
+        for (const link of links) {
+          let text = await (await fetch(link, { signal: ctl.signal, headers: { "User-Agent": BROWSER_UA } })).text();
+          if (/quoted-printable/i.test(text)) text = text.replace(/=\r?\n/g, "").replace(/=([0-9A-F]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+          const cellText = (x: string) => t(x.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&#39;/g, "'")) || "";
+          const trs = [...text.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map((m) => [...m[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((c) => cellText(c[1])));
+          const hi = trs.findIndex((r) => r.some((c) => /licen[cs]e\s*(#|no|num)/i.test(c)));
+          if (hi < 0) continue;
+          const head = trs[hi]; const ix = (re: RegExp) => head.findIndex((h) => re.test(h));
+          const iNo = ix(/licen[cs]e\s*(#|no|num)/i), iDba = ix(/dba|trade|business/i), iAddr = ix(/address/i), iCity = ix(/city/i), iZip = ix(/zip/i), iCounty = ix(/county/i), iExp = ix(/expir/i), iName = ix(/licensee|owner|name/i);
+          const kind = (link.match(want) || [])[1]?.replace(/_/g, " ") || "licensee";
+          for (const r of trs.slice(hi + 1)) {
+            const g = (i: number) => (i >= 0 ? r[i] : "");
+            if (!g(iNo)) continue;
+            rows.push({ state: "OK", license_no: t(g(iNo)), license_type: kind, on_premise: true, status: "active",
+              business_name: t(g(iDba)) || t(g(iName)), owner_name: iName !== iDba ? t(g(iName)) : null, address: t(g(iAddr)), city: t(g(iCity)),
+              zip: zip5(g(iZip)), county: t(g(iCounty)), expires_on: isoDate(g(iExp)), raw: Object.fromEntries(head.map((h, i) => [h || `col${i}`, r[i]])) });
+          }
+        }
+      } finally { clearTimeout(tm); }
+      return { rows, done: true };
+    },
+  },
   OR: socrata("data.oregon.gov", "srxe-qkm2", "license_expired = 'No'", (r) => {
     const type = t(r.license_type);
     const addr = String(r.physical_address ?? "");
