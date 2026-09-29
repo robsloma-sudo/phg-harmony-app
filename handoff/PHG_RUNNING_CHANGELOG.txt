@@ -1905,3 +1905,12 @@ Rob: "Is there a way to speed up Harmony's processing time? It's taking a while 
 ------------------------------------------------------------------------------
 PHG-20260929-DEPLOY-4939 | USER_PROMPT + DEPLOY | 2026-09-29
 Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in context + 18.49.39 faster replies).
+
+[2026-09-29] DEPLOY-SERVER-FIX
+- Found live phg-harmony-inbox still v15 and phg-harmony-data still v4 (the earlier deploy agent never finished),
+  while app 18.49.37+ already sends surface:'app' and expects view / menu_lookup replies.
+- Deployed from the repo sources, verify_jwt=false on both (each authenticates itself):
+  phg-harmony-data v5 (Manhattan ranking: exact > prefix > shortest; variants excluded from price stats; "I also have ...")
+    repo sha256 3554b8be26eba5b5...
+  phg-harmony-inbox v16 (in-app surface: no open-the-app offers, returns view + menu_lookup, ranked classic lookup)
+    repo sha256 826f7bd9f8b625c0...
