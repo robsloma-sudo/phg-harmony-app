@@ -2269,3 +2269,17 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   Totals: TX 78,806 / IL 33,240 / OR 17,884 / MO 13,745 = 143,675 licences, 67,891 on-premise.
 - Cocktail library reload complete: 255 recipes, 104 drinks, 198 styles, 73 creators, 105 sources (B 58, C 177, D 18,
   E 2); one reference per drink.
+
+2026-09-29 18.49.44 VOICE FILTERS FOR DATA (Rob: control map/list filters by voice, pull up specific info)
+- New <script id="phgVoiceFiltersV2">: pure parser phgParseDataCommand (filters: state, city, not/also city, venue
+  type, price under/over/between, income, age, spirit with/without, menu type, with menus, rating, radius; clear;
+  sort; paging; page size; zoom to city/state; show all; open Nth / by name; average/median/count) + applier routed to
+  the surface on screen: Menu Library (corpus setters), Market drinks pages (setState/FILT/SORT/CHART), Competitors map
+  (MCITY/VCITY/VTYPE/MENUONLY/RADIUS + fit), Menu Studio build (MD.f incl. price lo/hi), Harmony data panel (client
+  filter/sort/page of tables + Map B pin attribute filtering; server re-query with view.query for source params).
+- harmonyConverse runs reply.actions via harmonyUI.exec (filter.set/clear, sort.set, page.go/size, data.refine,
+  map.fit); window.harmonyDataRefine(changes); filter strip with page n/m and Clear; help table updated.
+- Tests: parser 107/107 (16 must-not-match), 15/15 inline scripts pass node --check, headless Chromium drive of
+  panel/map/library/market with no new console or page errors.
+- Limits: live `venues` pins carry no price (price filters work on drink_map pins); Menu Library has no price/rating;
+  panel paging is client-side over the rows the server returned.

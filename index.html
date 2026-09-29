@@ -42494,6 +42494,7 @@ function describe(items,sort,noun,count,extra){
   var n=q?plural(q.value):vt?vt.label:mk&&/menus|lists|pages|listings/.test(mk.label)?mk.label:(noun||'results');
   if(q&&vt)rest.unshift({label:'at '+vt.label});
   if(mk&&n!==mk.label)rest.unshift({label:'on '+mk.label});
+  if(count===1){var nw=n.split(' ');nw[nw.length-1]=stem(nw[nw.length-1]).join(' ');n=nw.join(' ');}
   var body=n+(rest.length?' '+rest.map(function(x){return x.label;}).join(' '):'');
   var s=count===0?'No '+body+'.':(count!=null?'Showing '+fmtN(count)+' '+body:'Showing '+body)+(sort?', '+sortLabel(sort):'')+'.';
   if(count===0)s+=' Say “clear filters” to start over.';
@@ -42997,9 +42998,14 @@ function hdApply(cmd,s){
     /* a different question (a place, venue type or drink this view can't be narrowed by): Harmony answers it afresh */
     if(skip.length&&looksNew&&typeof G.harmonyConverse==='function'&&cmd.raw){G.harmonyConverse(String(cmd.raw).trim());return true;}
     if(!use.length){sp(skipNote(skip,isMap?'This map':'This view')+' Ask me for it directly, like “'+(skip[0].key==='price'?'margaritas under $14 in Denver':'bars in Denver')+'”.');return true;}
+    var before={};for(var bk in R.f)before[bk]=R.f[bk];var beforeSort=R.sort,bare=!cmd.verb&&!Object.keys(srv).length&&typeof G.harmonyConverse==='function'&&cmd.raw;
     use.forEach(mergeItem);R.page=1;R.fitNext=isMap;
     if(cmd.sort){R.sort=cmd.sort;var sp1=ok.sort&&sortParam(cmd.sort);if(sp1)srv.sort=sp1;}
-    hdRefine(sp,srv,skip.length?skipNote(skip,isMap?'This map':'This view'):'');
+    hdRefine(sp,srv,skip.length?skipNote(skip,isMap?'This map':'This view'):'',function(r){
+      /* a bare phrase ("tequila", "Boulder") that would empty the view is more likely a new question: undo, ask Harmony */
+      if(bare&&r&&r.count===0){R.f=before;R.sort=beforeSort;R.fitNext=false;hdRender();G.harmonyConverse(String(cmd.raw).trim());return;}
+      hdSay(sp,r,skip.length?skipNote(skip,isMap?'This map':'This view'):'');
+    });
     return true;
   case 'clear':case 'map.all':
     var all=!cmd.key||cmd.type==='map.all',had=false,cleared=[];
