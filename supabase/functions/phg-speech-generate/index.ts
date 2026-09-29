@@ -23,12 +23,15 @@ Deno.serve(async(req)=>{
 
   const auth=req.headers.get("Authorization")||"";
   if(!auth.toLowerCase().startsWith("bearer "))return json({error:"login required"},401);
+  const b=await req.json().catch(()=>({}));
+  /* v3 SPEED: the app wakes this function when the mic opens, so the first reply does not pay the start-up time */
+  if(b.warm)return json({ok:true,warm:true});
+  /* v3 SPEED: the login is checked while the voice is being generated (the gateway already verified the JWT's
+     signature, verify_jwt=true); no audio is returned unless the check passes. */
   const jwt=auth.slice(7).trim();
   const sb=createClient(url,anon,{auth:{persistSession:false},global:{headers:{Authorization:auth}}});
-  const {data:ud,error:ue}=await sb.auth.getUser(jwt);
-  if(ue||!ud?.user)return json({error:"invalid or expired login"},401);
+  const authP=sb.auth.getUser(jwt).then(({data,error})=>!error&&!!data?.user).catch(()=>false);
 
-  const b=await req.json().catch(()=>({}));
   const input=String(b.text||b.input||"").trim();
   if(!input)return json({error:"text required"},400);
   if(input.length>4096)return json({error:"text too long","max_chars":4096},400);
@@ -43,7 +46,7 @@ Deno.serve(async(req)=>{
   let instructions=String(b.instructions||"").trim();
   if(instructions.length>3500)instructions=instructions.slice(0,3500);
 
-  const rr=await fetch("https://api.openai.com/v1/audio/speech",{
+  const rrP=fetch("https://api.openai.com/v1/audio/speech",{
     method:"POST",
     headers:{
       Authorization:`Bearer ${oa}`,
@@ -59,14 +62,16 @@ Deno.serve(async(req)=>{
       stream_format:"audio"
     })
   });
+  const [authed,rr]=await Promise.all([authP,rrP]);
+  if(!authed){try{await rr.body?.cancel();}catch{}return json({error:"invalid or expired login"},401);}
 
   if(!rr.ok){
     const raw=await rr.json().catch(async()=>({message:await rr.text().catch(()=>(""))}));
     return json({error:"speech generation failed",detail:raw?.error?.message||raw?.message||raw},502);
   }
 
-  const bytes=await rr.arrayBuffer();
-  return new Response(bytes,{
+  /* v3 SPEED: stream the audio through instead of holding it until the last byte */
+  return new Response(rr.body,{
     status:200,
     headers:{
       ...cors,

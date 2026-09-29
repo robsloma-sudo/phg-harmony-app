@@ -19,7 +19,10 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
      list_keys / revoke_key {id}     (app only)
 
    Tables: phg.harmony_notes, phg.harmony_device_keys (RLS on, service_role only).
-   Model: OPENAI_API_KEY + gpt-4.1 (override OPENAI_INBOX_MODEL). */
+   Model: OPENAI_API_KEY + gpt-4.1 (override OPENAI_INBOX_MODEL).
+   v22 SPEED: planner and spoken answers are streamed; with the app's voice settings (tts) the first sentence is
+   voiced while the rest is written and returned as voice_first; notes, library and reference lookups run in parallel;
+   {warm:true} wakes the function. */
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -114,6 +117,99 @@ async function llm(oa: string, model: string, instructions: string, input: strin
   return { ok: r.ok, text: t.trim(), error: j?.error?.message };
 }
 
+/* v22 SPEED: the same call, streamed. onText gets the text so far on every delta, so Harmony can start voicing the
+   first sentence while the rest is still being written. Falls back to the plain call if streaming fails to start. */
+async function llmStream(oa: string, model: string, instructions: string, input: string, opts: Record<string, unknown> = {}, onText?: (t: string) => void) {
+  if (!onText) return llm(oa, model, instructions, input, opts);
+  let r: Response;
+  try {
+    r = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST", headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model, instructions, input, max_output_tokens: 600, ...opts, stream: true }),
+    });
+  } catch { return llm(oa, model, instructions, input, opts); }
+  if (!r.ok || !r.body) {
+    const j = await r.json().catch(() => ({}));
+    return { ok: false, text: "", error: j?.error?.message || `HTTP ${r.status}` };
+  }
+  const rd = r.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buf = "", t = "", done = "", err: string | undefined;
+  for (;;) {
+    const { value, done: end } = await rd.read();
+    if (end) break;
+    buf += value;
+    let i: number;
+    while ((i = buf.indexOf("\n\n")) >= 0) {
+      const ev = buf.slice(0, i); buf = buf.slice(i + 2);
+      const line = ev.split("\n").find((l) => l.startsWith("data:"));
+      if (!line) continue;
+      let d: any; try { d = JSON.parse(line.slice(5).trim()); } catch { continue; }
+      if (d.type === "response.output_text.delta" && typeof d.delta === "string") { t += d.delta; try { onText(t); } catch { /* voice is optional */ } }
+      else if (d.type === "response.output_text.done" && typeof d.text === "string") done = d.text;
+      else if (d.type === "response.failed" || d.type === "error") err = d.response?.error?.message || d.message || "stream failed";
+    }
+  }
+  const text = (done || t).trim();
+  if (!text && !err) return llm(oa, model, instructions, input, opts);   // never let a quiet stream cost the turn
+  return { ok: !err && !!text, text, error: err };
+}
+
+/* v22 SPEED: early voice. When the app sends its voice settings (b.tts), the first sentence of what Harmony will say
+   is voiced here as soon as it has been written, in parallel with the rest of the thinking, and returned with the
+   reply (voice_first). The app plays it at once and voices the rest itself; if anything differs it ignores it. */
+const TTS_VOICES = new Set(["alloy", "ash", "ballad", "coral", "echo", "fable", "onyx", "nova", "sage", "shimmer", "verse", "marin", "cedar"]);
+function firstSpoken(t: string, final: boolean): string {
+  const x = t.replace(/\s+/g, " ").trimStart();
+  let end = 0;
+  const re = /[.!?]+["”’)]*\s/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(x + (final ? " " : "")))) {
+    end = m.index + m[0].length;
+    if (x.slice(0, end).trim().length >= 30) return x.slice(0, end).trim();
+  }
+  return final ? x.trim() : "";
+}
+function earlyVoice(oa: string | undefined, tts: any) {
+  const ok = !!oa && tts && typeof tts === "object";
+  const voice = ok ? String(tts.voice || "marin").toLowerCase() : "";
+  let started: { text: string; p: Promise<string | null> } | null = null;
+  const start = (text: string) => {
+    if (started || !ok || !TTS_VOICES.has(voice) || text.length < 2 || text.length > 600) return;
+    let speed = Number(tts.speed == null ? 1 : tts.speed); if (!Number.isFinite(speed)) speed = 1; speed = Math.max(.25, Math.min(4, speed));
+    const instructions = String(tts.instructions || "").trim().slice(0, 3500) || undefined;
+    const p = fetch("https://api.openai.com/v1/audio/speech", {
+      method: "POST", headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: Deno.env.get("OPENAI_TTS_MODEL") || "gpt-4o-mini-tts", voice, input: text, instructions, speed, response_format: "mp3" }),
+    }).then(async (r) => {
+      if (!r.ok) return null;
+      const u8 = new Uint8Array(await r.arrayBuffer());
+      let bin = ""; for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode(...u8.subarray(i, i + 0x8000));
+      return btoa(bin);
+    }).catch(() => null);
+    started = { text, p };
+  };
+  return {
+    feed(soFar: string) { if (!started) { const f = firstSpoken(soFar, false); if (f) start(f); } },
+    finish(full: string) { if (!started) start(firstSpoken(full, true)); },
+    async result(speak: string, capMs = 3000) {
+      if (!started) return null;
+      const norm = (x: string) => x.replace(/\s+/g, " ").trim();
+      if (!norm(speak).startsWith(norm(started.text))) return null;
+      const b64 = await Promise.race([started.p, new Promise<null>((r) => setTimeout(() => r(null), capMs))]);
+      return b64 ? { text: started.text, format: "mp3", audio_b64: b64 } : null;
+    },
+  };
+}
+/* the planner writes JSON; this reads the "say" value written so far */
+function partialSay(j: string): { action: string; say: string } {
+  const a = /"action"\s*:\s*"([a-z_]+)"/.exec(j)?.[1] || "";
+  const k = j.indexOf('"say"'); if (k < 0) return { action: a, say: "" };
+  const q = j.indexOf('"', j.indexOf(":", k) + 1); if (q < 0) return { action: a, say: "" };
+  let i = q + 1, raw = "";
+  while (i < j.length) { const c = j[i]; if (c === "\\") { if (i + 1 >= j.length) break; if (j[i + 1] === "u" && i + 5 >= j.length) break; raw += c + j[i + 1]; i += 2; continue; } if (c === '"') break; raw += c; i++; }
+  try { return { action: a, say: JSON.parse('"' + raw + '"') }; } catch { return { action: a, say: "" }; }
+}
+
 /* a compact spoken-friendly summary of a data view, kept in context for "read it to me" */
 function viewDetail(v: any): string {
   if (!v) return "";
@@ -180,6 +276,8 @@ Deno.serve(async (req) => {
   /* v5: Shortcuts can send the Request Body as JSON, Form (urlencoded or multipart) or plain
      text, and people name the field "text", "Text", etc. Read all of them, case-insensitively. */
   const b: Record<string, any> = await readBody(req);
+  /* v22: the app wakes this function when the mic opens, so the first real turn does not pay the start-up time */
+  if (b.warm) return json({ ok: true, warm: true });
   const action = String(b.action || "inbox");
 
   // ---- who is calling
@@ -268,7 +366,7 @@ Deno.serve(async (req) => {
   // ---- inbox: one turn of the conversation (the Shortcut loops; the app calls it once)
   if (action !== "inbox") return json({ ok: false, error: "unknown action" }, 400);
   /* v6: take the words from whatever field the Shortcut used */
-  const RESERVED = new Set(["key", "action", "tz", "account_id", "kind", "tags", "due_iso", "limit", "open_only", "id", "done", "name", "context", "surface", "hear"]);
+  const RESERVED = new Set(["key", "action", "tz", "account_id", "kind", "tags", "due_iso", "limit", "open_only", "id", "done", "name", "context", "surface", "hear", "tts", "warm"]);
   const others = Object.entries(b).filter(([k]) => !RESERVED.has(k));
   const pick = () => {
     for (const k of ["text", "input", "query", "prompt", "message", "dictated text", "dictated_text", "words", "q"]) {
@@ -292,14 +390,16 @@ Deno.serve(async (req) => {
      Harmony app?" (offered = true in context) and they said yes. */
   /* v18: every turn is logged (phg.harmony_turns) so corrections can be traced back and reviewed; never blocks the reply */
   let turnAction = "", turnUnderstood: any = {}, turnCorrection = false;
-  const reply = (speak: string, next: "listen" | "open" | "end", extra: Record<string, unknown> = {}, last: any = ctx.last, offered = false) => {
+  const ev = earlyVoice(oa, inAppSurface ? b.tts : null);
+  const reply = async (speak: string, next: "listen" | "open" | "end", extra: Record<string, unknown> = {}, last: any = ctx.last, offered = false) => {
     try {
       const p = dbx("turn_log", { user: userId, account: accountId, surface: inAppSurface ? "app" : via, text: text.slice(0, 1000), action: turnAction || next, understood: turnUnderstood, reply: speak.slice(0, 1500), is_correction: turnCorrection }).catch(() => null);
       (globalThis as any).EdgeRuntime?.waitUntil?.(p);
     } catch { /* logging is optional */ }
     const turns = [...ctx.turns, { u: text.slice(0, 300), h: speak.slice(0, 400) }].slice(-6);
     const link = String(extra.url || last?.url || home);
-    return json({ ok: true, speak, next, ...extra, url: next === "open" ? link : "", app_url: link, context: JSON.stringify({ turns, last, offered }) });
+    const voice_first = await ev.result(speak).catch(() => null);
+    return json({ ok: true, speak, next, ...extra, ...(voice_first ? { voice_first } : {}), url: next === "open" ? link : "", app_url: link, context: JSON.stringify({ turns, last, offered }) });
   };
   if (!text) {
     return reply(ctx.turns.length ? "I didn't catch that. Say it again, or say that's all." : "I'm listening. Ask me anything, or tell me what to log.", "listen");
@@ -312,6 +412,7 @@ Deno.serve(async (req) => {
   /* v17: NAMES IN ANY LANGUAGE. The app's speech service already checked names against PHG's brands, producers,
      cocktails and venues and sends what it heard (b.hear). The Shortcut's dictated text is checked here the same
      way, through phg-speech-transcribe's text-only mode (3 s cap; on failure the words are used as heard). */
+  const recentP = listNotes(10, false);   // v22: fetched while the rest of the turn is prepared
   let hear: any = b.hear && typeof b.hear === "object" ? b.hear : null;
   if (!hear && via === "shortcut" && text.length > 3) {
     try {
@@ -334,7 +435,7 @@ Deno.serve(async (req) => {
      straight to a one-shot data lookup with no questions and no memory). In the app, results are shown on screen,
      so Harmony never offers to open the app there, and replies carry a "view" for the screen. */
   const inApp = via === "app" || b.surface === "app";
-  const recent = await listNotes(10, false);
+  const recent = await recentP;
   const plannerInput = [
     `Current time: ${new Date().toISOString()} (user's time zone ${tz}).`,
     recent.length ? "Their recent notes: " + recent.map((n: any) => `[${n.kind}${n.done ? ", done" : ""}] ${n.body}`).join(" | ") : "",
@@ -344,7 +445,9 @@ Deno.serve(async (req) => {
     hearNote,
     "They now said: " + text,
   ].filter(Boolean).join("\n\n");
-  const plan = await llm(oa, model, CONVERSE, plannerInput, { max_output_tokens: 500, text: { format: { type: "json_schema", name: "harmony_turn", strict: true, schema: SCHEMA } } });
+  const SAYS = new Set(["clarify", "answer", "read_back", "end", "note"]);
+  const plan = await llmStream(oa, model, CONVERSE, plannerInput, { max_output_tokens: 500, text: { format: { type: "json_schema", name: "harmony_turn", strict: true, schema: SCHEMA } } },
+    b.tts && inAppSurface ? (t) => { const p = partialSay(t); if (SAYS.has(p.action)) ev.feed(p.say); } : undefined);
   let out: any = null;
   try { out = JSON.parse(plan.text); } catch { out = null; }
   if (!out) {
@@ -352,6 +455,7 @@ Deno.serve(async (req) => {
     return reply(n ? "I couldn't think that through just now, so I logged it as a note." : "Something went wrong. Try again.", "end", { error: plan.error });
   }
   const say = String(out.say || "").trim();
+  if (SAYS.has(String(out.action)) && say) ev.finish(say);
   turnAction = String(out.action || "");
   turnUnderstood = { recipe_drink: out.recipe_drink, recipe_source: out.recipe_source, data_query: out.data_query, heard_fix: out.heard_fix, hear: hear ? { fixes: (hear.fixes || []).length, unsure: (hear.unsure || []).length } : null };
   /* v17: learn from a corrected name, so it is heard right next time (phg.harmony_aliases, read by the speech service) */
@@ -454,6 +558,7 @@ Deno.serve(async (req) => {
     /* v21: PHG's graded cocktail library (phg_mix, loaded from the mixology research) through the read-only gateway:
        the best-graded spec for exactly this drink, with its sources and named variations. The name is reduced to
        letters, digits, spaces, apostrophes and hyphens before it goes into the query. */
+    const libP = (async () => {
     if (drink && src !== "internet" && src !== "house" && userId && accountId) {
       const nm = drink.normalize("NFC").replace(/[^\p{L}\p{N} '\-]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 60).replace(/'/g, "''");
       if (nm) {
@@ -473,6 +578,8 @@ order by r.quality_score desc nulls last limit 1`;
         } catch { lib = null; }
       }
     }
+    })();
+    /* v22: the library and the classic reference are looked up at the same time */
     if (drink && src !== "internet") {
       /* v16: exact name first, then names starting with it, then the shortest ("Manhattan" is not "Black Manhattan") */
       const { data } = await admin.from("cocktail_reference").select("cocktail_name,base_spirit,consensus_spec,method,glassware,garnish,profile").ilike("cocktail_name", `%${drink}%`).limit(25);
@@ -482,29 +589,33 @@ order by r.quality_score desc nulls last limit 1`;
       ref = cands[0] && (rk(cands[0].cocktail_name) < 2 || cands.length === 1) ? cands[0] : null;
       variantsKnown = cands.map((x: any) => x.cocktail_name).filter((n: string) => n !== ref?.cocktail_name);
     }
+    await libP;
     const cardUrl = withQ(`How do you make a ${drink}?`);
+    const speakLlm = (m: string, ins: string, inp: string, o: Record<string, unknown> = {}) =>
+      llmStream(oa, m, ins, inp, o, b.tts && inAppSurface ? (t) => ev.feed(t) : undefined);
     let speakText = "";
     if (src === "house") {
       if (!house.length) return reply(`I don't see a ${drink || "drink like that"} on your house menu yet. Want the classic spec instead, or one from the internet?`, "listen");
       const h = house[0];
-      speakText = (await llm(oa, model, RECIPE_VOICE, `They asked for their HOUSE recipe. Drink: ${h.name}. House recipe (use exactly): ${JSON.stringify({ ingredients: h.ingredients, method: h.method, glassware: h.glassware, garnish: h.garnish, menu_price: h.menu_price, description: h.menu_description })}`)).text;
+      speakText = (await speakLlm(model, RECIPE_VOICE, `They asked for their HOUSE recipe. Drink: ${h.name}. House recipe (use exactly): ${JSON.stringify({ ingredients: h.ingredients, method: h.method, glassware: h.glassware, garnish: h.garnish, menu_price: h.menu_price, description: h.menu_description })}`)).text;
     } else if (src === "internet") {
-      const w = await llm(oa, Deno.env.get("OPENAI_WEB_MODEL") || "gpt-4.1", RECIPE_VOICE + " Search the web for a well-regarded recipe for EXACTLY the drink asked for (keep every modifier, e.g. a chocolate Manhattan uses chocolate bitters or crème de cacao, not a plain Manhattan) from a reputable cocktail source (for example Difford's Guide, PUNCH, Liquor.com, Imbibe), follow its measurements, and name the source.", `Find and speak a recipe for: ${drink}. What they said: ${text}`, { tools: [{ type: "web_search_preview" }] });
-      speakText = w.text || (await llm(oa, model, RECIPE_VOICE, `Drink: ${drink}. The web search failed; use the classic spec and say it's the classic.` + (ref ? ` PHG reference: ${JSON.stringify(ref)}` : ""))).text;
+      const w = await speakLlm(Deno.env.get("OPENAI_WEB_MODEL") || "gpt-4.1", RECIPE_VOICE + " Search the web for a well-regarded recipe for EXACTLY the drink asked for (keep every modifier, e.g. a chocolate Manhattan uses chocolate bitters or crème de cacao, not a plain Manhattan) from a reputable cocktail source (for example Difford's Guide, PUNCH, Liquor.com, Imbibe), follow its measurements, and name the source.", `Find and speak a recipe for: ${drink}. What they said: ${text}`, { tools: [{ type: "web_search_preview" }] });
+      speakText = w.text || (await speakLlm(model, RECIPE_VOICE, `Drink: ${drink}. The web search failed; use the classic spec and say it's the classic.` + (ref ? ` PHG reference: ${JSON.stringify(ref)}` : ""))).text;
     } else if (src === "list") {
-      speakText = (await llm(oa, model, LIST_VOICE, `Drink: ${drink}.` + (house.length ? ` Their house version: ${JSON.stringify(house[0])}` : " They have no house version.") + (ref ? ` Classic reference: ${JSON.stringify(ref)}` : "") + (variantsKnown.length ? ` Variations in PHG's reference: ${variantsKnown.join(", ")}.` : ""))).text;
+      speakText = (await speakLlm(model, LIST_VOICE, `Drink: ${drink}.` + (house.length ? ` Their house version: ${JSON.stringify(house[0])}` : " They have no house version.") + (ref ? ` Classic reference: ${JSON.stringify(ref)}` : "") + (variantsKnown.length ? ` Variations in PHG's reference: ${variantsKnown.join(", ")}.` : ""))).text;
       return reply(speakText || `I couldn't list ${drink} variations just now.`, "listen", inApp ? { view: { type: "recipe", title: `${drink} variations`, spec: speakText, rows: [] } } : {}, { title: `${drink} variations`, detail: speakText, url: cardUrl });
     } else if (src === "create") {
       const convo = ctx.turns.map((t: any) => `User: ${t.u}\nHarmony: ${t.h}`).join("\n");
-      speakText = (await llm(oa, model, CREATE_VOICE, `Conversation so far:\n${convo}\nThey now said: ${text}\nStarting point: ${drink || "(not set)"}`)).text;
+      speakText = (await speakLlm(model, CREATE_VOICE, `Conversation so far:\n${convo}\nThey now said: ${text}\nStarting point: ${drink || "(not set)"}`)).text;
       return reply(speakText || "Tell me the base spirit you want to build around.", "listen", inApp ? { view: { type: "recipe", title: `New ${drink || "cocktail"}`, spec: speakText, rows: [] } } : {}, { title: `New ${drink || "cocktail"}`, detail: speakText, url: home });
     } else if (lib) {
       /* v21: the library spec, with where it comes from and its grade */
       const srcs = (lib.sources || []).slice(0, 3).join(", ");
-      speakText = (await llm(oa, model, RECIPE_VOICE + " Say it is PHG's library spec and name up to two of its sources. If variations are given, end by offering one of them in a few words (for example 'Jeremy Oertel's version uses more rye').", `Drink: ${lib.name}. What they said: ${text}. PHG library spec (grade ${lib.quality_grade}, sources: ${srcs}): ${JSON.stringify({ lines: lib.lines, method: lib.method, glass: lib.glass, garnish: lib.garnish })}. Named variations: ${JSON.stringify((lib.variants || []).slice(0, 3))}`)).text;
+      speakText = (await speakLlm(model, RECIPE_VOICE + " Say it is PHG's library spec and name up to two of its sources. If variations are given, end by offering one of them in a few words (for example 'Jeremy Oertel's version uses more rye').", `Drink: ${lib.name}. What they said: ${text}. PHG library spec (grade ${lib.quality_grade}, sources: ${srcs}): ${JSON.stringify({ lines: lib.lines, method: lib.method, glass: lib.glass, garnish: lib.garnish })}. Named variations: ${JSON.stringify((lib.variants || []).slice(0, 3))}`)).text;
     } else {
-      speakText = (await llm(oa, model, RECIPE_VOICE, `Drink: ${ref?.cocktail_name || drink}. What they said: ${text}. ` + (ref ? `PHG classic reference spec: ${JSON.stringify(ref)}` : "No PHG reference; use the widely accepted classic spec for exactly this drink."))).text;
+      speakText = (await speakLlm(model, RECIPE_VOICE, `Drink: ${ref?.cocktail_name || drink}. What they said: ${text}. ` + (ref ? `PHG classic reference spec: ${JSON.stringify(ref)}` : "No PHG reference; use the widely accepted classic spec for exactly this drink."))).text;
     }
+    if (speakText) ev.finish(speakText);
     const last = { title: `${drink} recipe`, detail: speakText, url: cardUrl };
     const useLib = !!lib && src !== "internet" && src !== "house" && src !== "list" && src !== "create";
     const src2 = src === "house" ? "Your house recipe" : src === "internet" ? "From the web" : useLib ? `PHG library · grade ${lib.quality_grade} (${lib.quality_score})` : ref ? "PHG classic reference" : "Classic spec";

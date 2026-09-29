@@ -177,6 +177,7 @@ async function repairNames(heard:string,hint:string,oa:string,user:string,accoun
   if(!svc)return {text:heard,fixes:[],unsure:[]};
   const db=createClient(url,svc,{auth:{persistSession:false}});
   let text=heard;const fixes:any[]=[];
+  const lexP=lexiconReady(db,1500);   // v7: the name list is readied while the learned aliases are read
   /* 1. what this user already taught Harmony ("no, I said ...") */
   try{
     const {data}=await db.rpc("phg_harmony_inbox_db",{p_op:"aliases_list",p_args:{user,account}});
@@ -187,7 +188,7 @@ async function repairNames(heard:string,hint:string,oa:string,user:string,accoun
     }
   }catch{/* aliases are optional */}
   /* 2. sound-alike names, read in context */
-  if(!(await lexiconReady(db,1500)))return {text,fixes,unsure:[]};
+  if(!(await lexP))return {text,fixes,unsure:[]};
   CTX_HINT=hint.slice(-400);
   const {words,spans}=candidates(text);
   if(!spans.length)return {text,fixes,unsure:[]};
@@ -251,8 +252,15 @@ Deno.serve(async(req)=>{
   if(!auth.toLowerCase().startsWith("bearer "))return out({error:"login required"},401);
   const jwt=auth.slice(7).trim();
   const sb=createClient(url,anon,{auth:{persistSession:false},global:{headers:{Authorization:auth}}});
-  const {data:userData,error:userErr}=await sb.auth.getUser(jwt);
-  if(userErr||!userData?.user)return out({error:"invalid or expired login"},401);
+  /* v7 SPEED: the login is checked while the audio is transcribed (the gateway already verified the JWT signature,
+     verify_jwt=true); nothing is returned unless the check passes. {warm} (JSON) wakes the function and loads the
+     name lexicon before the first real turn. */
+  if((req.headers.get("Content-Type")||"").includes("application/json")){
+    const w=await req.json().catch(()=>({}));
+    if(w.warm){const {data:wu}=await sb.auth.getUser(jwt).catch(()=>({data:null}) as any);if(wu?.user)lexiconReady(createClient(url,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||anon,{auth:{persistSession:false}}),1).catch(()=>{});return out({ok:true,warm:true});}
+    return out({error:"audio content required"},415);
+  }
+  const userP=sb.auth.getUser(jwt).then(({data,error})=>error?null:data?.user||null).catch(()=>null);
 
   const mime=(req.headers.get("Content-Type")||"application/octet-stream").split(";")[0].trim();
   if(!/^(audio|video)\//i.test(mime))return out({error:"audio content required"},415);
@@ -283,6 +291,8 @@ Deno.serve(async(req)=>{
   /* safety net: if the hint is ever refused, transcribe without it */
   if(!rr.ok){form.delete("prompt");rr=await fetch("https://api.openai.com/v1/audio/transcriptions",{method:"POST",headers:{Authorization:`Bearer ${oa}`},body:form});}
   const raw=await rr.json().catch(()=>({}));
+  const user=await userP;
+  if(!user)return out({error:"invalid or expired login"},401);
   if(!rr.ok)return out({error:"transcription failed",detail:raw?.error?.message||raw},502);
 
   const heardRaw=String(raw?.text||"").trim();
@@ -296,7 +306,7 @@ Deno.serve(async(req)=>{
   let text=heardRaw,fixes:any[]=[],unsure:any[]=[];
   try{
     const acct=(req.headers.get("x-account")||"").trim();
-    const r=await repairNames(heardRaw,hint,oa,userData.user.id,/^[0-9a-f-]{36}$/i.test(acct)?acct:null);
+    const r=await repairNames(heardRaw,hint,oa,user.id,/^[0-9a-f-]{36}$/i.test(acct)?acct:null);
     text=r.text;fixes=r.fixes;unsure=r.unsure;
   }catch(e){console.log(JSON.stringify({repair_error:String(e)}));}
   return out({status:"ok",text,heard:heardRaw,fixes,unsure,model,bytes:bytes.byteLength,transcribed_at:new Date().toISOString()});

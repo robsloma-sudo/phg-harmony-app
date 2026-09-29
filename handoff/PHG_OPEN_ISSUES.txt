@@ -360,3 +360,10 @@ PHG-047 (P1, open) PHG's own daily flash / finance system (replaces the idea of 
   inventory-method COGS, declining budget, prime cost; Harmony answers them by voice.
   2026-09-29: GL / invoice-coding template built (handoff/GL_TEMPLATE.md, draft 04a, not applied): 135-account
   'bar_restaurant_standard' chart + 36 vendor profiles; applies after draft 04.
+
+PHG-048 (P1, open) Harmony response time. Server side live (inbox v22, speech-generate v3, speech-transcribe v7):
+  streaming + early first-sentence voice + parallel lookups + warm-up. App 18.49.42 (plays voice_first) waits for
+  Rob's "deploy". After deploy: compare edge-log timings and time-to-first-sound against the 5.5 s baseline. If not
+  yet half: options are OpenAI priority processing for the planner (faster, costs more) and a smaller model only for
+  the short voice rewrites (recipe/list), each only with Rob's OK.
+

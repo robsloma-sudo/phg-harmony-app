@@ -2040,3 +2040,22 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   after draft 04): template rows, phg.gl_templates, phg.gl_coding_profiles, parties.coding_profile, explicit reader
   grants (no global apply). Tested locally on PG16: idempotent, rollback clean, anon denied, codes validated.
 - scripts/gl_template_backtest.py; handoff/GL_TEMPLATE.md (chart, profiles, setup walkthrough).
+
+[2026-09-29] HARMONY SPEED (target: half the wait, same voice and answers)
+- Measured (edge logs, 24 h): one spoken turn = transcribe p50 1.2 s + brain (phg-harmony-inbox) p50 2.1 s + voice
+  (phg-speech-generate) p50 2.2 s, strictly one after another (~5.5 s to first sound).
+- phg-harmony-inbox v22 (live): planner and spoken recipe answers are STREAMED; when the app sends its voice settings
+  (tts) the first sentence is voiced on the server as soon as it is written, in parallel with the rest of the
+  thinking, and returned with the reply as voice_first (mp3). Recent notes load in parallel with the turn; library
+  and classic reference lookups run at the same time; {warm:true} wakes the function. Same model (gpt-4.1), same
+  prompts, same answers. Falls back to the plain call if streaming yields nothing. Shortcut path unchanged except the
+  parallel notes fetch. Verified live via pg_net: warm 200, no-login 401.
+- phg-speech-generate v3 (live): login check runs while the voice is generated (gateway already verifies the JWT);
+  audio is streamed through instead of buffered; {warm:true}.
+- phg-speech-transcribe v7 (live): login check runs while the audio is transcribed; learned aliases and the name
+  list load in parallel; {warm:true} also pre-loads the name lexicon.
+- index.html 18.49.42 (committed, NOT deployed): sends the voice settings with each turn, plays voice_first at once
+  and voices only the rest; wakes the three services when the mic opens (at most every 4 min).
+- Tests: deno check on all three functions; mocked OpenAI stream (split SSE chunks) -> first-sentence voice starts
+  ~40% into the planner stream, JSON parses, mismatch returns nothing, empty stream falls back; all 13 inline scripts
+  in index.html pass node --check.

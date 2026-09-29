@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.41 TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.42 HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -27480,6 +27480,45 @@ function phgLocalVoiceDrawStatus(){
 window.addEventListener('phg-local-voice-status',function(e){var d=e.detail||{};PHG_LOCAL_VOICE_PREF.status=d.state||PHG_LOCAL_VOICE_PREF.status;PHG_LOCAL_VOICE_PREF.message=d.message||PHG_LOCAL_VOICE_PREF.message;if(d.state==='ready'){PHG_LOCAL_VOICE_PREF.installed=true;phgLocalVoiceSave();}phgLocalVoiceDrawStatus();});
 window.addEventListener('phg-local-voice-progress',function(e){var d=e.detail||{},v=Number(d.progress);if(!isFinite(v)&&d.loaded!=null&&d.total)v=Number(d.loaded)/Number(d.total)*100;if(isFinite(v)){if(v<=1)v*=100;PHG_LOCAL_VOICE_PREF.progress=Math.round(v);phgLocalVoiceDrawStatus();}});
 var PHG_OPENAI_HARMONY_SPEAK=null;
+/* 18.49.42 SPEED: Harmony's first sentence arrives already voiced with the reply (voice_first from
+   phg-harmony-inbox v22, generated while she was still thinking). It is used once, within 20 s, and only when the
+   text being spoken starts with exactly that sentence; otherwise the normal voice path runs. */
+var PHG_PREVOICE=null;
+function phgPrevoiceSet(v,speak){
+  try{
+    if(!v||!v.audio_b64||!v.text)return;
+    var bin=atob(v.audio_b64),u8=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+    PHG_PREVOICE={text:String(v.text),blob:new Blob([u8],{type:'audio/mpeg'}),at:Date.now()};
+  }catch(e){PHG_PREVOICE=null;}
+}
+function phgPrevoiceTake(text){
+  var p=PHG_PREVOICE;PHG_PREVOICE=null;
+  if(!p||Date.now()-p.at>20000)return null;
+  var n=function(x){return String(x||'').replace(/\s+/g,' ').trim();};
+  var t=n(text).slice(0,4096),f=n(p.text);
+  if(!f||t.indexOf(f)!==0)return null;
+  return {text:f,blob:p.blob,rest:n(t.slice(f.length))};
+}
+/* the voice settings the server voice uses, or null when this reply will not use the server voice */
+function phgServerVoiceSettings(){
+  try{
+    if(typeof VOICE==='undefined'||!VOICE.on||VOICE.muted)return null;
+    if(PHG_LOCAL_VOICE_PREF.engine==='device')return null;
+    if(PHG_LOCAL_VOICE_PREF.engine==='local'&&!PHG_LOCAL_VOICE_BROKEN&&!phgIsIOS()&&window.PHG_LOCAL_VOICE)return null;
+    return {voice:AI_VOICE.voice||'marin',instructions:aiVoiceInstructions(),speed:aiVoiceSpeed()};
+  }catch(e){return null;}
+}
+/* wake the speech, conversation and voice services when the mic opens (at most every 4 minutes), so the first
+   turn does not pay their start-up time */
+var PHG_WARM_AT=0;
+function phgHarmonyWarm(){
+  if(Date.now()-PHG_WARM_AT<240000)return;PHG_WARM_AT=Date.now();
+  var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;if(!tok)return;
+  var h={'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body=JSON.stringify({warm:true});
+  [typeof MDC_SPEECH_URL!=='undefined'?MDC_SPEECH_URL:null,typeof INBOX_URL!=='undefined'?INBOX_URL:'https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-harmony-inbox',MDC_SPEECH_GEN_URL]
+    .forEach(function(u){if(u)fetch(u,{method:'POST',headers:h,body:body}).catch(function(){});});
+}
+window.phgPrevoiceSet=phgPrevoiceSet;window.phgServerVoiceSettings=phgServerVoiceSettings;window.phgHarmonyWarm=phgHarmonyWarm;
 /* 18.49.39: speak sooner. The reply is split into sentences; all parts are voiced at once, in parallel, and the
    first (short) part starts playing as soon as it is ready while the rest queue behind it. Harmony used to wait
    for the whole reply to be voiced (about 2-4 s) before saying a word. busy/playing stay true until the last part
@@ -27503,8 +27542,10 @@ function harmonyAISpeakOpenAI(text,opts){
   harmonyAIStop();PHG_AI_AUDIO.request=request;PHG_AI_AUDIO.busy=true;
   AI_VOICE.busy=true;AI_VOICE.lastError='';
   if(typeof harmonyComposerStatus==='function'&&!opts.preview)harmonyComposerStatus('Harmony · preparing voice…');
-  var parts=speechParts(String(text||'').slice(0,4096),!!opts.preview);
-  var jobs=parts.map(function(t){
+  var pre=opts.preview?null:phgPrevoiceTake(text);
+  var parts=pre?[pre.text].concat(pre.rest?speechParts(pre.rest,false):[]):speechParts(String(text||'').slice(0,4096),!!opts.preview);
+  var jobs=parts.map(function(t,k){
+    if(pre&&k===0){var jb=Promise.resolve(pre.blob);return jb;}
     var j=fetch(MDC_SPEECH_GEN_URL,{method:'POST',
       headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+tok},
       body:JSON.stringify({text:t,voice:AI_VOICE.voice||'marin',instructions:aiVoiceInstructions(),speed:aiVoiceSpeed()})
@@ -40210,6 +40251,7 @@ function startTalk(){
   if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder)){say('This browser cannot record audio. Type to me below instead.');return;}
   if(typeof phgAuthAccessToken!=='function'||!phgAuthAccessToken()){say('Sign in to PHG so I can hear you.');return;}
   PMS.talk=true;
+  if(window.phgHarmonyWarm)phgHarmonyWarm();
   try{if(typeof VOICE!=='undefined'){VOICE.on=true;VOICE.muted=false;}}catch(e){}
   /* in talk mode she answers everything out loud; the user's setting comes back when talk stops */
   try{if(typeof HARMONY_PREFS!=='undefined'&&T.prevOutput==null){T.prevOutput=HARMONY_PREFS.output;HARMONY_PREFS.output='all';}}catch(e){}
@@ -41038,10 +41080,11 @@ function harmonyConverse(q){
   if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('Harmony · thinking…');
   var tz='America/Chicago';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||tz;}catch(e){}
   fetch(INBOX_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
-    body:JSON.stringify({text:q,context:HCONV.ctx||'',surface:'app',account_id:acct,tz:tz,hear:(window.phgHeardFor?phgHeardFor(q):null)})})
+    body:JSON.stringify({text:q,context:HCONV.ctx||'',surface:'app',account_id:acct,tz:tz,hear:(window.phgHeardFor?phgHeardFor(q):null),tts:(window.phgServerVoiceSettings?phgServerVoiceSettings():null)})})
     .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.speak)throw new Error(j.error||('HTTP '+r.status));return j;});})
     .then(function(j){
       HCONV.ctx=j.context||'';HCONV.at=Date.now();
+      if(j.voice_first&&window.phgPrevoiceSet)phgPrevoiceSet(j.voice_first,j.speak);
       if(j.menu_lookup&&typeof harmonyFindMenu==='function'){harmonyFindMenu(j.menu_lookup);return;}
       if(j.view&&window.harmonyDataShow)window.harmonyDataShow(j.view);
       if(typeof agentSay==='function')agentSay(j.speak);
