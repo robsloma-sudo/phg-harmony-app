@@ -1,0 +1,4 @@
+-- APPLIED 2026-09-29 as phg_pipeline_status_fn (+ _v2: volatile, 15-minute job window). Menu pipeline status in one
+-- read-only call for Harmony (phg-harmony-data source "pipeline"). service_role only. See live definition for body:
+-- totals (live stats cache), per-state coverage (cached_state_stats), last hour (documents, venues with a new menu,
+-- pages rendered), last_document_at, queue (links / pages waiting), job health (12, 16, 20, 24; ok/failed, 15 min).

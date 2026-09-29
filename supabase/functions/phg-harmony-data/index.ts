@@ -269,6 +269,39 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
       };
     },
   },
+  /* v10: the menu pipeline, live (public.phg_pipeline_status): is it moving, how fast, what's waiting, any job failing */
+  pipeline: {
+    about: "The menu pipeline right now: are menus uploading, how many menus and venues came in the last hour, pages rendered, links and pages waiting, whether any pipeline job is failing, and per-state progress (venues, websites, menus read, still queued).",
+    async run(db) {
+      const { data, error } = await db.rpc("phg_pipeline_status");
+      if (error) throw error;
+      const p: any = data || {};
+      const n = (x: any) => Number(x || 0).toLocaleString("en-US");
+      const lh = p.last_hour || {}, q = p.queue || {}, t = p.totals || {};
+      const mins = p.last_document_at ? Math.round((Date.now() - Date.parse(p.last_document_at)) / 60000) : null;
+      const failing = (p.jobs || []).filter((j: any) => j.active && j.failed > 0 && j.failed >= j.ok);
+      const moving = mins != null && mins <= 15;
+      const states = (p.states || []) as any[];
+      const speak = (moving ? `Menus are coming in. In the last hour ${n(lh.documents)} menu documents arrived for ${n(lh.venues_with_new_menu)} venues, and ${n(lh.pages_rendered)} pages were rendered.`
+          : `The pipeline looks stalled: the last menu arrived ${mins == null ? "a long time" : mins + " minutes"} ago.`)
+        + ` ${n(q.links_waiting)} links are waiting to be downloaded and ${n(q.pages_waiting)} pages are waiting to render.`
+        + (failing.length ? ` Heads up: ${failing.map((j: any) => j.job.replace(/^gtt-|^phg-/, "").replace(/-/g, " ")).join(" and ")} ${failing.length === 1 ? "is" : "are"} failing.` : " All pipeline jobs are healthy.")
+        + (states.length ? " " + states.map((r: any) => `${STATE_NAMES[r.state] || r.state}: ${n(r.menus_read)} menus read of ${n(r.websites)} venues with websites`).join("; ") + "." : "");
+      return {
+        speak,
+        view: {
+          type: "dashboard", title: "Menu pipeline · live",
+          tiles: [
+            { label: "Menus last hour", value: n(lh.documents) }, { label: "New venues last hour", value: n(lh.venues_with_new_menu) },
+            { label: "Pages rendered last hour", value: n(lh.pages_rendered) }, { label: "Links waiting", value: n(q.links_waiting) },
+            { label: "Pages waiting", value: n(q.pages_waiting) }, { label: "Menu documents", value: n(t.visual_documents) },
+          ],
+          bars: { title: "Menus read by state", bars: states.map((r: any) => ({ label: STATE_NAMES[r.state] || r.state, value: +r.menus_read, sub: `${n(r.websites)} with websites · ${n(r.menus_queue)} queued` })) },
+          rows: (p.jobs || []).map((j: any) => [j.job, `${j.active ? "on" : "paused"} · ${j.ok} ok / ${j.failed} failed (15 min)`]),
+        },
+      };
+    },
+  },
   coverage: {
     about: "How much data PHG has: venues, websites, menus read, drink items, brands per state (IA, CO, NY): tiles + bars.",
     async run(db) {
@@ -483,6 +516,7 @@ function fastPlan(t: string): { source: string; params: P } | null {
     const m = s.match(/\bin ([a-zà-ÿ ]+?)(?:\?|$|,)/);
     return { source: "distilleries", params: { town: m ? m[1].replace(/\b(mexico|jalisco state)\b/, "").trim() : "" } };
   }
+  if (/\b(pipeline|menus? (uploading|coming in|being (rendered|downloaded|scraped))|render(ing)? (queue|backlog)|(upload|download|render|scrap)(ing)? (rate|speed|status)|is (it|the scraper|the pipeline) (running|stuck|working))\b/.test(s)) return { source: "pipeline", params: {} };
   if (/\b(how much data|coverage|how many (venues|menus)|data do we have)\b/.test(s)) return { source: "coverage", params: {} };
   return null;
 }
