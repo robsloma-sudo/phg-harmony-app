@@ -6301,7 +6301,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     <div id="err"></div>
     <div id="dataWarn"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.45 FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.46 LIVE LICENCE COVERAGE · FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -8670,10 +8670,78 @@ function countryHome(){
    competitorsPage();
 }
 
+/* 18.49.46 LIVE LICENCE COVERAGE: active, on-premise, not expired, one row per venue (the database enforces the rule).
+   Read from rpc phg_license_coverage(); refreshed every 30 s while the Coverage page is open, so loads show as they land.
+   Tap a state for its cities / licence types (rpc phg_license_breakdown). CO/NY/IA come from accounts. */
+var LIC={data:null,at:0,busy:false,err:"",open:null,by:"city",detail:{},timer:null};
+function licRpc(fn,args){
+  return fetch(BASE+"/rpc/"+fn,{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"},body:JSON.stringify(args||{})})
+    .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();});
+}
+function licLoad(force){
+  if(LIC.busy||(!force&&Date.now()-LIC.at<25000))return;
+  LIC.busy=true;
+  licRpc("phg_license_coverage").then(function(d){LIC.data=d;LIC.err="";})
+    .catch(function(e){LIC.err="Licence coverage unavailable ("+e.message+")";})
+    .then(function(){LIC.busy=false;LIC.at=Date.now();licPaint();});
+}
+function licPaint(){var el=document.getElementById("licCard");if(el)el.innerHTML=licCardInner();}
+function licTick(){
+  if(page!=="coverage"||document.hidden){if(page!=="coverage"&&LIC.timer){clearInterval(LIC.timer);LIC.timer=null;}return;}
+  licLoad(false);
+}
+function licStart(){licLoad(true);if(!LIC.timer)LIC.timer=setInterval(licTick,30000);}
+function licToggle(st){
+  LIC.open=(LIC.open===st)?null:st;
+  if(LIC.open&&!LIC.detail[st+"|"+LIC.by])licDetail(st,LIC.by);
+  licPaint();
+}
+function licBy(by){LIC.by=by;if(LIC.open&&!LIC.detail[LIC.open+"|"+by])licDetail(LIC.open,by);licPaint();}
+function licDetail(st,by){
+  LIC.detail[st+"|"+by]="loading";
+  licRpc("phg_license_breakdown",{p_state:st,p_by:by}).then(function(d){LIC.detail[st+"|"+by]=d||[];})
+    .catch(function(){LIC.detail[st+"|"+by]=[];}).then(licPaint);
+}
+function licCardInner(){
+  var d=LIC.data;
+  if(!d)return '<div class="ttl">Liquor licences</div><div class="sub">'+(LIC.err?esc(LIC.err):"Loading&hellip;")+'</div>';
+  var per=(d.per_state||[]).slice();
+  var loading=per.filter(function(r){return r.loading}).map(function(r){return r.state});
+  var ago=d.generated_at?Math.max(0,Math.round((Date.now()-Date.parse(d.generated_at))/1000)):null;
+  var out='<div class="ttl"><span style="color:'+GREEN+'">&#9673;</span><span class="ttltxt">Liquor licences &mdash; active, on-premise</span>'+
+    '<span class="pct" style="color:'+GREEN+'">'+n(+d.venues)+' venues</span></div>'+
+    '<div class="pdesc">'+n(+d.states)+' states &middot; '+n(+d.licences)+' licences &middot; one row per venue &middot; no off-premise, inactive or expired'+
+      (loading.length?' &middot; <b style="color:'+ORANGE+'">loading now: '+esc(loading.join(", "))+'</b>':'')+
+      ' &middot; updated '+(ago==null?"":(ago<5?"just now":ago+" s ago"))+'</div>'+
+    '<div class="scroll"><table><thead><tr><th>State</th><th>Venues</th><th>Licences</th><th>Cities</th><th>Source</th><th>Last loaded</th></tr></thead><tbody>'+
+    per.map(function(r){
+      var open=LIC.open===r.state, det=LIC.detail[r.state+"|"+LIC.by];
+      var row='<tr class="clik" onclick="licToggle(\''+r.state+'\')"><td style="color:'+GREEN+'">'+esc(r.state)+(open?' &#9662;':' &rsaquo;')+
+        (r.loading?' <span class="tag" style="color:'+ORANGE+'">loading</span>':'')+'</td>'+
+        '<td><b>'+n(+r.venues)+'</b></td><td>'+n(+r.licences)+'</td><td>'+(r.cities==null?"&mdash;":n(+r.cities))+'</td>'+
+        '<td style="color:#8b9198">'+esc(r.kind==="accounts"?"accounts (loaded earlier)":String(r.source||"").replace(/_/g," "))+'</td>'+
+        '<td style="color:#8b9198">'+(r.updated_at?esc(String(r.updated_at).slice(0,16).replace("T"," ")):"&mdash;")+'</td></tr>';
+      if(open){
+        row+='<tr><td colspan="6"><div style="display:flex;gap:6px;margin:4px 0 8px">'+["city","type","county"].map(function(b){
+          return '<button class="nav'+(LIC.by===b?" on":"")+'" style="width:auto" onclick="event.stopPropagation();licBy(\''+b+'\')">By '+b+'</button>';}).join("")+'</div>'+
+          (r.kind==="accounts"?'<div class="sub">Loaded earlier into accounts; see the state dashboard.</div>':
+           det==="loading"||!det?'<div class="sub">Loading&hellip;</div>':
+           det.slice(0,25).map(function(x){var w=det[0]&&det[0].venues?(x.venues/det[0].venues*100):0;
+             return '<div class="row"><span>'+esc(x.label)+'</span><b>'+n(x.venues)+'</b></div><div class="bar" style="margin:2px 0 6px"><div class="fill" style="width:'+w+'%;background:'+GREEN+'"></div></div>';}).join(""))+
+          '</td></tr>';
+      }
+      return row;
+    }).join("")+'</tbody></table></div>'+
+    '<div class="note">Ask Harmony: &ldquo;how many liquor licences do we have&rdquo;, &ldquo;licensed venues in Providence, Rhode Island&rdquo;, &ldquo;New Jersey licences by type&rdquo;.</div>';
+  return out;
+}
+
 function coveragePage(){
   var rows=STATES.slice().sort(function(a,b){return (b.venues||0)-(a.venues||0)});
+  setTimeout(licStart,0);
   return '<div class="sec" style="color:'+BLUE+'">Coverage</div>'+
    '<div class="secsub">What is loaded, what is not, and why</div>'+
+   '<div class="card" id="licCard" style="margin-bottom:16px">'+licCardInner()+'</div>'+
    '<div class="card"><div class="ttl">States</div><div class="scroll"><table>'+
    '<thead><tr><th>State</th><th>Status</th><th>Venues</th><th>Websites</th><th>Items</th></tr></thead><tbody>'+
    rows.map(function(r){
