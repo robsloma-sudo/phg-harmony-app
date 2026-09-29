@@ -128,7 +128,8 @@ const ADAPTERS: Record<string, Adapter> = {
         const addr = String(g("dba_address"));
         return {
           state: "IL", license_no: t(g("license_number")), license_type: t([g("license_class"), g("business_type")].filter(Boolean).join(" · ")),
-          on_premise: retail ? /ON-PREMISES|COMBINATION/i.test(retail) && !/^OFF-PREMISES/i.test(retail) : null,
+          /* COMBINATION = on- and off-premise sales: a bar/restaurant with carry-out counts, a store with a tasting bar does not */
+          on_premise: retail ? (/^ON-PREMISES/i.test(retail) ? true : /COMBINATION/i.test(retail) ? !/store|station|supermarket|grocery|pharmacy|liquor|package|drug|gas|convenience/i.test(String(g("business_type"))) : false) : null,
           status: "active", business_name: t(g("acct_name")), owner_name: t(g("cust_name")),
           address: t(addr.split(/\s{2,}/)[0]), city: t(g("acct_city")), zip: zip5(addr.replace(/[^0-9]+$/, "")),
           county: t(g("county")), issued_on: isoDate(g("current_effective_date")), expires_on: isoDate(g("current_expiration_date")),
