@@ -1994,3 +1994,21 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   reposados", "close the card". Card checked at 390 px in headless Chromium.
 - Not in PHG yet (needs a research/ingest job, see PHG-046): tasting notes, production process (cooking, milling,
   stills, water, barrels), history/origin stories, bottle images, prices per expression.
+
+[2026-09-29] MIXOLOGY LIBRARY (schema phg_mix live; loading batches)
+- Rob: catalog every recipe, syrup/infusion, advanced/molecular technique and flavor pairing in Supabase, graded by
+  the credibility of who stands behind it (credentials, known or not, influencer vs legitimate writer).
+- Agent: .claude/agents/mixology-researcher.md; format: handoff/agents/MIXOLOGY_DATA_CONTRACT.md; scoring:
+  handoff/agents/MIXOLOGY_CREDIBILITY_SCORING.md (source/creator credibility 0-100 from credentials 30, standing 20,
+  recognition 15, method rigor 15, editorial & independence 10, track record 10; reach recorded, never scored;
+  recipe quality 0-100 from best backer 50%, agreement 25, completeness 15, verification 10; grades A-E).
+- Migration 20260929050000_phg_mix_mixology_knowledge applied after safety review round 1 (76) fixes: no global
+  harmony_apply_table_access call, storage -> storage_note, guarded create schema, full transactional rollback,
+  restrict FKs on attributions, nulls-not-distinct uniques, category checks, indexes, narrower entity aliases.
+  Full dry run (rolled back) showed 12 tables/12 policies and no change to any other table's ACL or policies. Live
+  verified: 12 tables, anon no select, phg_harmony_reader select.
+- Loader scripts/mixology_load.py: idempotent upserts, lines replaced per parent, scores recomputed each run;
+  credibility PROVISIONAL (from tier) until an evidenced scoring batch runs. Tested on local PG16 incl. reload.
+- Research is limited: this environment's network policy blocks recipe sites and the shared WebSearch budget ran
+  out; batches are excerpt-level (verification = excerpt). One researcher spent ~100 Firecrawl credits without
+  approval; all researchers told not to use Firecrawl.
