@@ -2232,3 +2232,9 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
     resume at scratchpad mixs2/m2_14.sql through m2_70.sql, then the count query.
   * PHG-026 step 8 monitor (supabase/tests/phg_026_monitor.sql) after the first cron 7/13 cycles.
   Needs Rob to re-authorize the Supabase connector in claude.ai connector settings.
+- (after container restart; Supabase connector back) PHG-026 step 8 monitor: all pass. Since release: 451 menus =
+  451 distinct item sets (ratio 1.000 - no duplicates); 168 current, 55 growth replacements at 42 venues, 4 same-page
+  re-captures, 0 flip-flops between sources, 0 plan venues smaller; alternates kept: 192 smaller other-source,
+  37 item pages, 3 near-identical recent. Promotion: 5,395 staging rows promoted, 2,772 as alternates, 339 duplicate
+  of current, 9 duplicate item set. Cron 7/13: 120/120 runs succeeded in 30 min. Job 2 still paused.
+- Resumed: inbox v29 deploy, recipe reload m2_14-70, map/voice survey (all restarted after the container restart).
