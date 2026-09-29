@@ -2248,3 +2248,13 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
 - Next: compare _next vs live (rows, CO/NY income coverage, prices), write + review the swap (part C), then point
   cron 8 at a concurrent refresh (part D).
 - phg-harmony-data v13 committed (c1e0b7d): price/income/age/sort params, drink_map, view.query; deploy running.
+
+2026-09-29 PHG-050 first states loaded (free public data only)
+- New schema phg_license (licenses, ingest_runs) + service-role RPCs phg_license_upsert / phg_license_run (migrations
+  phg_license_state_licenses, phg_license_upsert_fn, phg_license_upsert_dedupe).
+- Edge function ingest-state-licenses (x-ingest-token auth, never paid): TX/MO/OR Socrata, IL daily CSV.
+- Loaded: TX 78,806 licences (33,113 on-premise: MB 20,905, BG 10,539, BE 712, N 635, NE 289; NT 10,041 left
+  unclassified), IL 33,240 (20,459 on-premise before the fix). MO + OR failed (duplicate licence numbers per batch) ->
+  upsert now de-duplicates; IL 'COMBINATION' at stores/stations/groceries no longer counts as on-premise (v2). Reruns
+  in progress. CT timed out on TLS (retry later), DC ArcGIS layer URL moved (find the new layer).
+- Next: geocode (free: Census geocoder batch API) and match to existing venues; add CA/FL/MI/VA/KY (file downloads).

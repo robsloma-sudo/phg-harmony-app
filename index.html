@@ -16882,6 +16882,10 @@ function drawMap(anchor, near, byVenue){
   if(Object.keys(MCITY).some(function(k){return MCITY[k]})){
     pts=pts.filter(function(p){return MCITY[(p.city||"").trim()]});
   }
+  /* 18.49.44: the venue-type filter (set from the venue table or by voice, "only bars") thins the map too */
+  if(typeof VTYPE!=="undefined"&&Object.keys(VTYPE).some(function(k){return VTYPE[k]})){
+    pts=pts.filter(function(p){return VTYPE[p.venue_type]});
+  }
   if(anchor){
     pts.push({venue:anchor.venue,lat:anchor.lat,lng:anchor.lng,isAnchor:true,
               venue_type:anchor.venue_type,city:anchor.city,rating:anchor.rating,dist:0});
