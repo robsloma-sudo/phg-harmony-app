@@ -216,9 +216,66 @@ begin
 end $$;
 revoke all on function public.phg_explorer_build_next() from public, anon, authenticated, service_role;
 
--- ============================== PART C (only after the _next checks pass; review first) ==============================
--- create or replace function public.phg_explorer_swap_next() ... renames in one transaction, lock_timeout 3s, copies
--- grants (select to anon, authenticated, service_role; + phg_menu_designer, phg_harmony_reader on mv_drink_explorer and
--- mv_menu_dev_venue_profile); swap_back reverses it. Written after the build is measured.
--- ============================== PART D ==============================
--- refresh_explorer_v2(): refresh materialized view CONCURRENTLY for all six; cron 8 command switched to it.
+-- ============================== PART C (apply only after the _next checks pass and review) ==============================
+-- One short transaction: every rename needs ACCESS EXCLUSIVE on its MV; lock_timeout 3 s makes a busy reader cancel the
+-- swap (nothing changes) instead of queueing everyone behind it. PostgREST resolves relations by name per request, so
+-- the app reads the new MVs on its next request. Grants are SELECT only (the old ACL listed write privileges that do not
+-- apply to materialized views). Dependent MVs were built on the _next explorer, so the chain stays consistent.
+create or replace function public.phg_explorer_swap_next() returns text
+language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '3s' as $$
+declare r text;
+begin
+  if (select count(*) from pg_matviews where schemaname = 'public' and matviewname in
+      ('mv_drink_explorer_next','mv_dash_pins_next','mv_menu_dev_venue_profile_next','mv_dash_sections_next','mv_dash_breakdown_next','mv_dash_filters_next')) <> 6
+  then raise exception 'swap: the six _next MVs are not all present'; end if;
+  if exists (select 1 from pg_matviews where schemaname = 'public' and matviewname in ('mv_drink_explorer_old','mv_dash_pins_old','mv_menu_dev_venue_profile_old','mv_dash_sections_old','mv_dash_breakdown_old','mv_dash_filters_old'))
+  then raise exception 'swap: *_old MVs still exist (drop or swap back first)'; end if;
+  foreach r in array array['mv_dash_filters','mv_dash_breakdown','mv_dash_sections','mv_menu_dev_venue_profile','mv_dash_pins','mv_drink_explorer'] loop
+    execute format('alter materialized view public.%I rename to %I', r, r || '_old');
+    execute format('alter materialized view public.%I rename to %I', r || '_next', r);
+    execute format('grant select on public.%I to anon, authenticated, service_role', r);
+  end loop;
+  grant select on public.mv_drink_explorer, public.mv_menu_dev_venue_profile to phg_menu_designer, phg_harmony_reader;
+  return 'swapped: live MVs are the v2 builds; previous ones kept as *_old';
+end $$;
+revoke all on function public.phg_explorer_swap_next() from public, anon, authenticated, service_role;
+
+create or replace function public.phg_explorer_swap_back() returns text
+language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '3s' as $$
+declare r text;
+begin
+  foreach r in array array['mv_dash_filters','mv_dash_breakdown','mv_dash_sections','mv_menu_dev_venue_profile','mv_dash_pins','mv_drink_explorer'] loop
+    if not exists (select 1 from pg_matviews where schemaname = 'public' and matviewname = r || '_old') then
+      raise exception 'swap back: public.%_old is missing', r; end if;
+    execute format('alter materialized view public.%I rename to %I', r, r || '_next');
+    execute format('alter materialized view public.%I rename to %I', r || '_old', r);
+  end loop;
+  return 'swapped back: live MVs are the previous builds; v2 builds are *_next again';
+end $$;
+revoke all on function public.phg_explorer_swap_back() from public, anon, authenticated, service_role;
+
+-- ============================== PART D (after the swap) ==============================
+-- Every refresh CONCURRENT (unique indexes on all six), so readers are never blocked; the explorer first, then the
+-- MVs built on it. Cron 8 is switched to this and re-enabled (every 30 min, statement_timeout 20 min) once one manual
+-- run has been timed. The old refresh_explorer() stays as it is for the swap-back case.
+create or replace function public.refresh_explorer_v2() returns text
+language plpgsql security definer set search_path = public, pg_temp as $$
+declare t0 timestamptz := clock_timestamp();
+begin
+  refresh materialized view concurrently public.mv_drink_explorer;
+  refresh materialized view concurrently public.mv_dash_pins;
+  refresh materialized view concurrently public.mv_menu_dev_venue_profile;
+  refresh materialized view concurrently public.mv_dash_sections;
+  refresh materialized view concurrently public.mv_dash_breakdown;
+  refresh materialized view concurrently public.mv_dash_filters;
+  insert into public.corpus_counts (id, observations, brands, products)
+  values (true, (select count(*) from public.observations), (select count(*) from public.brands where merged_into_brand_id is null), (select count(*) from public.products))
+  on conflict (id) do update set observations = excluded.observations, brands = excluded.brands, products = excluded.products, refreshed_at = now();
+  perform public.refresh_state_stats();
+  perform public.refresh_corpus_scale();
+  return 'refreshed in ' || round(extract(epoch from clock_timestamp() - t0)) || ' s';
+end $$;
+revoke all on function public.refresh_explorer_v2() from public, anon, authenticated, service_role;
+-- cron 8 (after one timed manual run):
+--   select cron.alter_job(8, schedule := '*/30 * * * *',
+--     command := $c$SET statement_timeout='20min'; SET lock_timeout='5s'; SELECT public.refresh_explorer_v2();$c$, active := true);
