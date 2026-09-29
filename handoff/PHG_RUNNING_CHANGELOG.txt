@@ -2148,3 +2148,12 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
     The app gets "menu for NAME in CITY, ST", which its menu finder (parseMenuLookup) was tested to read.
   * phg-harmony-data v11: OpenAI priority processing on its three model calls (router, SQL writer, spoken
     answer), with the same automatic fallback as the inbox.
+- Deployed phg-harmony-data v11 (byte-identical) and phg-harmony-inbox v28 (known regex-escape diff only); both boot.
+- Re-enabled paused job 13 gtt-extract-menu-candidates (PHG-018: one job at a time), every 1 min (was 20 s).
+  extract-menu-candidates v4 reads HTML menus with regex/heuristics only: no AI model calls; paid Firecrawl
+  fallback stays off (dispatcher sends allow_paid:false). Lease-guarded, <=4 attempts per link, 1 h retry.
+  Added to the job command: reset HTML candidates stuck in 'processing' >15 min to 'retry' (24 were orphaned
+  since 2026-09-26/27; nothing reaped them). Backlog: 309,090 queued + 86,428 scope_check + 10,070 retry.
+  Storage: menu_extraction_sources 98 MB / 31,648 rows (~3 KB each); full backlog ~ +1.2 GB (DB now 2.7 GB).
+  Items land in staging_menu_extract; promotion (job 7) and explorer refresh (job 8) are still paused.
+- Job 9 (website discovery) NOT enabled: it uses Firecrawl (paid) -> needs Rob's OK.
