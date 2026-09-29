@@ -2373,3 +2373,12 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   - Licence coverage: 20 states, 191,504 venues, 194,687 licences.
   - The venue universe (v_public_stats) recomputes via job 5 within 5 min.
   - Daily expiry sweep cron (07:13 UTC).
+- 2026-09-29 Rob: licences that expired within the last 3 months count (renewals lag); older ones don't.
+  - phg_license.qualifies: expires_on >= today - 3 months; status 'EXPIRED' is accepted inside the window.
+  - Constraint and daily sweep updated; the sweep also restores accounts whose expiry is back inside the window.
+  - Accounts now: CO 8,318, IA 5,403, NY 21,384.
+  - Licence states are being reloaded (agent) to recover licences removed earlier as just-expired.
+- 2026-09-29 Routine trig_01PxuJUMGfNZPzT55D8Qor8B "Harmony failure-log review (every 2h)": fresh session every 2 h
+  (next 18:50 UTC), following handoff/HARMONY_FEEDBACK_REVIEW.md.
+  WARNING: it stores NO connectors. Rob must add the Supabase connector to it in the claude.ai Routines page, or the
+  runs cannot read the log.
