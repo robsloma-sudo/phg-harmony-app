@@ -2212,3 +2212,16 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   Step 7: cron 13 re-enabled (every 1 min, with the stuck-claim reset), one manual promotion batch
   (created 1, alternate 4, failed 0, 3,440 pages waiting), then cron 7 re-enabled (every 20 s, max 5 pages/call).
   Next: step 8 - supabase/tests/phg_026_monitor.sql after the first cycles and daily for a week.
+
+2026-09-29 NO-PAYMENT MODE (Rob: "Don't use any form of payment right now.")
+- Paused cron job 2 gtt-enrich-places (calls places.googleapis.com, paid; was running every 2 min, 720 runs/24 h).
+- Audit of every function behind active jobs (1 ingest-iowa, 12 discover-beverage-menus, 13 extract-menu-candidates,
+  16 acquire-menu-visual-assets, 20 deep-menu-discovery): no paid API calls. The only paid path is Firecrawl in
+  extract-menu-candidates, and only when a request sends allow_paid:true (job 13 sends false).
+- OpenAI priority processing (a surcharge I enabled earlier today) is now OFF by default: inbox v29 / data v12
+  (set OPENAI_SERVICE_TIER=priority to restore). Deploy running.
+- Still standing by: Firecrawl, Google Places, paid state lists, any new paid service. Harmony's ordinary OpenAI
+  usage (speech, planning, voice) continues - it is how Harmony works; Rob to say if that should stop too.
+- Scale-up load: first 8 of 49 chunks applied (library 144 recipes / 104 drinks); chunk 9 was stopped by a content
+  filter mid-send. Regenerated without its 3 recipes (rx_margarita_mezcal_employees_only, rx_margarita_session_punch,
+  rx_margarita_frozen_punch_magro; kept in the data file, not loaded) as 70 smaller chunks; reload running.
