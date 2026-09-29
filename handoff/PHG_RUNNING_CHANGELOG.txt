@@ -2299,3 +2299,7 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   -> NY would be silently truncated. App change (explicit columns, stable order with staging_id fallback, higher cap
   with warning, unclassified loaded in the background) being built as 18.49.45; then safety review round 2 +
   swap rehearsal before the real swap.
+- ME loaded 7,286 licences; fixed in SQL: ZIPs from raw 'Premises Zip Code' (no-zip 6,593 -> 610), on_premise nulled
+  for out-of-state premises (2,512 on-premise). WA/MI/CA hit the edge memory limit (whole file in memory) ->
+  v6 (b001513): streamed zip/CSV window + dense xlsx up to the window; tested locally on a 50k-row zipped CSV
+  (windows exact, quoted fields, early stop, done flag). Deploy + CA/WA/MI run in progress.
