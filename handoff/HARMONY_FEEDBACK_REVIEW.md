@@ -42,3 +42,9 @@ select at, sql, error, row_count from phg.harmony_query_log where at > now() - i
   deployed yet. Fix: licenses source (phg-harmony-data v14) + lessons #1 (planner) and #2 (sql).
 - Round 1 closed 2026-09-29: #1 fixed (28,855 = "Venue universe" = v_public_stats venues NY 16,633 + CO 7,540 +
   IA 4,682; lessons 3-4), #2 fixed (licences != menu venues; licenses source + lessons 1-2).
+- Round 2 (2026-09-29 18:0x, lead developer): #4/#6 "active on-premise licences in Dallas / Houston" -> "No licences",
+  #5 = Rob's "Not right?" tap on it (duplicate). Cause: the planner passed "on-premise" as the licence type, which
+  filters to 0 rows. Fix: phg_license_venues ignores generic words (active/on-premise/liquor/licence/venue);
+  planner lesson #5. Houston now returns 2,000+ venues and Dallas 1,820.
+  NOTE: the first routine run (17:55) had no Supabase tools in its session, so it could not read the log. The routine
+  needs the Supabase connector attached.
