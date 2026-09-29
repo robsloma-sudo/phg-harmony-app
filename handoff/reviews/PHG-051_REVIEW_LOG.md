@@ -335,3 +335,45 @@ retry.
 running the rehearsal is safe (it creates only a table and functions; the DO block keeps nothing). Resubmit with the
 rehearsal output. If that is green and the S-R2 items are done, the expected scores are about Correctness 85,
 Reversibility 85 and Concurrency 85, for a round score in the mid-80s.
+
+## Round 3 submission (2026-09-29, lead developer)
+
+Applied live as migration `phg_explorer_v2_round3_swap_refresh` (file supabase/migrations/20260929170000_...):
+Part A (view; classify_item via LATERAL (...) LIMIT 1), Part C (swap log table, reviewer's rename/ACL helpers verbatim,
+phg_explorer_state, swap_next/swap_back with lock_timeout 300 ms only and the pg_proc dependents check), Part D
+(refresh_explorer_v2 with a session advisory lock, lock_timeout 5 s per refresh, no statement_timeout). Part B unchanged.
+
+| Round-2 item | Status |
+|---|---|
+| R2-B1 swap always failed (unqualified regclass::text) | fixed: helpers read pg_class.relname; rehearsal passes live |
+| R2-B2 gate facts | (a)(b)(c) below |
+| S-R2-1 SELECT-only ACL copy | reviewer's copy_select verbatim (anon/authenticated get SELECT only after swap, down from arwdDxtm) |
+| S-R2-2 statement_timeout illusory | removed from both functions and the procedure; operator runs `set statement_timeout='3s'; select ...` |
+| S-R2-3 xact lock released at COMMIT | refresh uses pg_try_advisory_lock / pg_advisory_unlock (session). A failed run leaves the lock until its backend exits; pg_cron uses one backend per run, so it clears when the run ends |
+| S-R2-4 functions depending on live MVs | pg_depend classid = pg_proc check added |
+| classify_item is SETOF (1000 rows est.) | LATERAL LIMIT 1; today's MVs have 0 duplicate staging_ids, so the _next builds are unaffected |
+
+(a) cron 8, verbatim: `{"jobid":8,"schedule":"*/10 * * * *","command":"select public.refresh_explorer()","active":false}`
+
+(b) Rehearsal, run live 2026-09-29 as one statement with `set statement_timeout = '5s'`:
+```
+ERROR:  P0001: REHEARSAL OK
+CONTEXT:  PL/pgSQL function inline_code_block line 16 at RAISE
+```
+After it: phg_explorer_swap_log rows = 0; side MVs = the six *_next only (no *_old); live OIDs unchanged.
+
+(c) Live ACL / owner (all owner postgres):
+- mv_dash_breakdown, mv_dash_filters, mv_dash_pins, mv_dash_sections:
+  `{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}`
+- mv_drink_explorer, mv_menu_dev_venue_profile: the same plus `phg_menu_designer=r/postgres,phg_harmony_reader=r/postgres`
+
+Live indexes (old names, all <= 21 chars, so "_old" suffix fits):
+mv_dash_breakdown_idx (state_code, section, dimension); mv_dash_breakdown_uk UNIQUE (state_code, section, dimension, label);
+mv_dash_filters_idx (state_code, dimension); mv_dash_filters_uk UNIQUE (state_code, dimension, value);
+mv_dash_pins_items (drink_items DESC); mv_dash_pins_state (state_code);
+mv_dash_sections_idx (state_code, section); mv_dash_sections_uk UNIQUE (state_code, section);
+mv_de_city_idx, mv_de_drink_idx, mv_de_name_idx, mv_de_section_idx, mv_de_state_idx, mv_de_vkey_idx (single columns city,
+drink_name, item_name, section, state_code, venue_key); mv_mdvp_key UNIQUE (venue_key); mv_mdvp_state; mv_mdvp_type.
+
+Asks for round 3: approve the real swap (`set statement_timeout='3s'; select public.phg_explorer_swap_next();`), then one
+timed `CALL public.refresh_explorer_v2()` as a one-off cron job, then cron 8 switched per the table above, with the watchdog.
