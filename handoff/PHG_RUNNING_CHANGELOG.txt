@@ -2387,3 +2387,16 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   - Now: 20 states, 198,056 venues, 201,270 licences (+6,147 venues).
   - Gains: IL 8,122 -> 12,846, CA +646, ME +514, OK +214, WA +38.
   - Expired-but-inside-window licences: 5,973 (IL 4,746, CA 650, ME 328, OK 216, WA 28, OR 4, CT 1).
+- 2026-09-29 Rob: "you expand them to fit the screen... keep them in the right format size and put them back in the
+  PDF... expanded and pixeled out."
+  - Cause: the menu viewer stretched every page picture to the screen width (up to 1,000 px) and allowed a 2.5x zoom
+    past its pixels. PDF menus (3,511 docs, 12,180 pages) were 1,400 px JPEG snapshots.
+  - Fix, app 18.49.48 (deployed to main):
+    - PDF menus are drawn from the stored original PDF with pdf.js 3.11.174 (cdnjs, lazy-loaded), at the menu's own
+      page size and the screen's pixel density, and redrawn sharper after every zoom (capped at 16 MP per page for
+      mobile). Snapshots are only a fallback.
+    - Pictures (screenshots, image menus) are never shown wider than their own pixels, and zoom stops at 1:1.
+    - A "PDF" / "Original" button opens the stored original file.
+  - phg-menu-corpus-browser v9 returns a signed URL for the original file (pdf/image).
+  - Headless test: iPhone 3x and desktop 2x draw at 1.0 device px per page px, Letter aspect kept, page 2 and the
+    PDF button work.
