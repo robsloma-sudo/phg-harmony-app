@@ -295,13 +295,17 @@ Deno.serve(async (req) => {
     return reply(n ? "Logged." : "I couldn't save that.", "end");
   }
   const tz = String(b.tz || "America/Chicago");
+  /* v16: the Harmony view in the app uses this same conversation brain (was: recipe questions in the app went
+     straight to a one-shot data lookup with no questions and no memory). In the app, results are shown on screen,
+     so Harmony never offers to open the app there, and replies carry a "view" for the screen. */
+  const inApp = via === "app" || b.surface === "app";
   const recent = await listNotes(10, false);
   const plannerInput = [
     `Current time: ${new Date().toISOString()} (user's time zone ${tz}).`,
     recent.length ? "Their recent notes: " + recent.map((n: any) => `[${n.kind}${n.done ? ", done" : ""}] ${n.body}`).join(" | ") : "",
     ctx.turns.length ? "Conversation so far:\n" + ctx.turns.map((t: any) => `User: ${t.u}\nHarmony: ${t.h}`).join("\n") : "This is the start of the conversation.",
     ctx.last ? `Last result (context.last): ${ctx.last.title || ""}\n${ctx.last.detail || ""}` : "",
-    ctx.offered ? "Your previous turn asked whether to open the Harmony app." : "You have NOT offered to open the app in your previous turn, so open_screen is not allowed now.",
+    inApp ? "They are IN the Harmony app looking at the screen: whatever you find is shown to them there. Never use offer_open or open_screen; use data to show things." : ctx.offered ? "Your previous turn asked whether to open the Harmony app." : "You have NOT offered to open the app in your previous turn, so open_screen is not allowed now.",
     "They now said: " + text,
   ].filter(Boolean).join("\n\n");
   const plan = await llm(oa, model, CONVERSE, plannerInput, { max_output_tokens: 500, text: { format: { type: "json_schema", name: "harmony_turn", strict: true, schema: SCHEMA } } });
@@ -315,6 +319,10 @@ Deno.serve(async (req) => {
 
   if (out.action === "end") return reply(say || "Okay. Talk soon.", "end");
   if (out.action === "clarify" || out.action === "answer" || out.action === "read_back") return reply(say || "Say that again?", "listen");
+  if (inApp && (out.action === "offer_open" || out.action === "open_screen")) {
+    const q2 = String(out.open_query || text).trim();
+    out.action = "data"; out.data_query = q2;
+  }
   if (out.action === "offer_open" || (out.action === "open_screen" && !ctx.offered)) {
     const last = out.open_query ? { ...(ctx.last || {}), url: withQ(String(out.open_query)) } : ctx.last;
     return reply(say && /open/i.test(say) ? say : "Want me to open it in the Harmony app?", "listen", {}, last, true);
@@ -337,15 +345,16 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ prompt: q }),
       });
       const dj = await dr.json().catch(() => ({}));
+      if (dr.ok && dj.source === "menu_lookup" && inApp) return reply("Opening that menu.", "listen", { menu_lookup: q });
       if (dr.ok && dj.source === "menu_lookup") {
         return reply("That menu is a document, so it needs the screen. Want me to open it in the Harmony app?", "listen", {}, { title: q, detail: "", url: withQ(q) }, true);
       }
       if (dr.ok && dj.speak && dj.source !== "none") {
         const last = { title: dj.view?.title || q, detail: viewDetail(dj.view), url: withQ(q) };
         /* v14: visual results (map, chart) are spoken first, then the app is offered; a yes opens it */
-        const visual = /^(map|bars|donut|dashboard)$/.test(String(dj.view?.type || ""));
-        const more = visual ? " Want me to open it in the Harmony app?" : dj.view && dj.view.type !== "empty" ? " Want me to read you the details?" : " Anything else?";
-        return reply(String(dj.speak) + more, "listen", {}, last, visual);
+        const visual = !inApp && /^(map|bars|donut|dashboard)$/.test(String(dj.view?.type || ""));
+        const more = inApp ? " Anything else?" : visual ? " Want me to open it in the Harmony app?" : dj.view && dj.view.type !== "empty" ? " Want me to read you the details?" : " Anything else?";
+        return reply(String(dj.speak) + more, "listen", inApp && dj.view ? { view: dj.view } : {}, last, visual);
       }
     } catch (e) { console.log(JSON.stringify({ data_error: String(e) })); }
     return reply("I couldn't find that in PHG's data. Try asking it another way.", "listen");
@@ -364,10 +373,15 @@ Deno.serve(async (req) => {
         if (house.length) break;
       }
     }
-    let ref: any = null;
+    let ref: any = null, variantsKnown: string[] = [];
     if (drink && src !== "internet") {
-      const { data } = await admin.from("cocktail_reference").select("cocktail_name,base_spirit,consensus_spec,method,glassware,garnish,profile").ilike("cocktail_name", drink).limit(1);
-      ref = data?.[0] || null;
+      /* v16: exact name first, then names starting with it, then the shortest ("Manhattan" is not "Black Manhattan") */
+      const { data } = await admin.from("cocktail_reference").select("cocktail_name,base_spirit,consensus_spec,method,glassware,garnish,profile").ilike("cocktail_name", `%${drink}%`).limit(25);
+      const low = drink.toLowerCase();
+      const rk = (n: string) => { const x = n.toLowerCase(); return x === low ? 0 : x.startsWith(low) ? 1 : 2; };
+      const cands = (data || []).slice().sort((a: any, b: any) => rk(a.cocktail_name) - rk(b.cocktail_name) || a.cocktail_name.length - b.cocktail_name.length);
+      ref = cands[0] && (rk(cands[0].cocktail_name) < 2 || cands.length === 1) ? cands[0] : null;
+      variantsKnown = cands.map((x: any) => x.cocktail_name).filter((n: string) => n !== ref?.cocktail_name);
     }
     const cardUrl = withQ(`How do you make a ${drink}?`);
     let speakText = "";
@@ -379,17 +393,20 @@ Deno.serve(async (req) => {
       const w = await llm(oa, Deno.env.get("OPENAI_WEB_MODEL") || "gpt-4.1", RECIPE_VOICE + " Search the web for a well-regarded recipe for EXACTLY the drink asked for (keep every modifier, e.g. a chocolate Manhattan uses chocolate bitters or crème de cacao, not a plain Manhattan) from a reputable cocktail source (for example Difford's Guide, PUNCH, Liquor.com, Imbibe), follow its measurements, and name the source.", `Find and speak a recipe for: ${drink}. What they said: ${text}`, { tools: [{ type: "web_search_preview" }] });
       speakText = w.text || (await llm(oa, model, RECIPE_VOICE, `Drink: ${drink}. The web search failed; use the classic spec and say it's the classic.` + (ref ? ` PHG reference: ${JSON.stringify(ref)}` : ""))).text;
     } else if (src === "list") {
-      speakText = (await llm(oa, model, LIST_VOICE, `Drink: ${drink}.` + (house.length ? ` Their house version: ${JSON.stringify(house[0])}` : " They have no house version.") + (ref ? ` Classic reference: ${JSON.stringify(ref)}` : ""))).text;
-      return reply(speakText || `I couldn't list ${drink} variations just now.`, "listen", {}, { title: `${drink} variations`, detail: speakText, url: cardUrl });
+      speakText = (await llm(oa, model, LIST_VOICE, `Drink: ${drink}.` + (house.length ? ` Their house version: ${JSON.stringify(house[0])}` : " They have no house version.") + (ref ? ` Classic reference: ${JSON.stringify(ref)}` : "") + (variantsKnown.length ? ` Variations in PHG's reference: ${variantsKnown.join(", ")}.` : ""))).text;
+      return reply(speakText || `I couldn't list ${drink} variations just now.`, "listen", inApp ? { view: { type: "recipe", title: `${drink} variations`, spec: speakText, rows: [] } } : {}, { title: `${drink} variations`, detail: speakText, url: cardUrl });
     } else if (src === "create") {
       const convo = ctx.turns.map((t: any) => `User: ${t.u}\nHarmony: ${t.h}`).join("\n");
       speakText = (await llm(oa, model, CREATE_VOICE, `Conversation so far:\n${convo}\nThey now said: ${text}\nStarting point: ${drink || "(not set)"}`)).text;
-      return reply(speakText || "Tell me the base spirit you want to build around.", "listen", {}, { title: `New ${drink || "cocktail"}`, detail: speakText, url: home });
+      return reply(speakText || "Tell me the base spirit you want to build around.", "listen", inApp ? { view: { type: "recipe", title: `New ${drink || "cocktail"}`, spec: speakText, rows: [] } } : {}, { title: `New ${drink || "cocktail"}`, detail: speakText, url: home });
     } else {
       speakText = (await llm(oa, model, RECIPE_VOICE, `Drink: ${ref?.cocktail_name || drink}. What they said: ${text}. ` + (ref ? `PHG classic reference spec: ${JSON.stringify(ref)}` : "No PHG reference; use the widely accepted classic spec for exactly this drink."))).text;
     }
     const last = { title: `${drink} recipe`, detail: speakText, url: cardUrl };
-    return reply((speakText || `I couldn't pull that recipe just now.`) + " Want another version, or anything else?", "listen", {}, last);
+    const src2 = src === "house" ? "Your house recipe" : src === "internet" ? "From the web" : ref ? "PHG classic reference" : "Classic spec";
+    const rv = ref && src !== "internet" && src !== "house" ? [["Glass", ref.glassware], ["Garnish", ref.garnish], ["Method", ref.method]].filter((x) => x[1]) : [];
+    const view = { type: "recipe", title: src === "house" && house[0] ? house[0].name : ref?.cocktail_name && src !== "internet" ? ref.cocktail_name : drink, spec: speakText, rows: [["Source", src2], ...rv, ...(variantsKnown.length ? [["Also", variantsKnown.slice(0, 5).join(", ")]] : [])] };
+    return reply((speakText || `I couldn't pull that recipe just now.`) + " Want another version, or anything else?", "listen", inApp ? { view } : {}, last);
   }
   return reply(say || "Say that again?", "listen");
 });

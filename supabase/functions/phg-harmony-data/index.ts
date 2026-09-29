@@ -207,15 +207,24 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
     async run(db, p) {
       const name = esc(String(p.q || ""));
       if (!name) throw new Error("which cocktail?");
-      const { data } = await db.from("cocktail_reference").select("cocktail_name,base_spirit,profile,consensus_spec,method,glassware,garnish,harmony_build_family").ilike("cocktail_name", `%${name}%`).limit(1);
-      const r = data?.[0];
-      const { data: seen } = await db.from("mv_drink_explorer").select("item_price").ilike("drink_name", `%${name}%`).not("item_price", "is", null).limit(3000);
-      const pr = (seen || []).map((x: any) => +x.item_price).filter((x: number) => x > 0 && x < 200);
+      /* v5: pick the right spec. "manhattan" used to return whichever row came first ("Black Manhattan").
+         Exact name wins, then names starting with it, then the shortest name containing it. */
+      const { data } = await db.from("cocktail_reference").select("cocktail_name,base_spirit,profile,consensus_spec,method,glassware,garnish,harmony_build_family").ilike("cocktail_name", `%${name}%`).limit(25);
+      const low = name.toLowerCase().trim();
+      const rank = (n: string) => { const x = n.toLowerCase(); return x === low ? 0 : x.startsWith(low + " ") || x.startsWith(low) ? 1 : 2; };
+      const cands = (data || []).slice().sort((a: any, b: any) => rank(a.cocktail_name) - rank(b.cocktail_name) || a.cocktail_name.length - b.cocktail_name.length);
+      const r = cands[0];
+      const variants = cands.slice(1).map((x: any) => x.cocktail_name);
+      const { data: seen } = await db.from("mv_drink_explorer").select("drink_name,item_price").ilike("drink_name", `%${name}%`).not("item_price", "is", null).limit(3000);
+      /* keep other named variants (e.g. Black Manhattan) out of this drink's price stats */
+      const other = variants.map((v: string) => v.toLowerCase()).filter((v: string) => v !== low);
+      const pr = (seen || []).filter((x: any) => !other.some((v: string) => String(x.drink_name || "").toLowerCase().includes(v)))
+        .map((x: any) => +x.item_price).filter((x: number) => x > 0 && x < 200);
       const avg = pr.length ? pr.reduce((a: number, b: number) => a + b, 0) / pr.length : null;
       if (!r && !pr.length) return { speak: `I do not have a reference spec for ${p.q}.`, view: { type: "empty", title: "No spec" } };
       return {
-        speak: (r ? `${r.cocktail_name}: ${r.consensus_spec || r.profile || ""}`.trim() : title(name)) + (pr.length ? ` It is on ${pr.length} menu listings we have read, averaging $${avg!.toFixed(2)}.` : ""),
-        view: { type: "recipe", title: r?.cocktail_name || title(name), spec: r?.consensus_spec || "", rows: r ? [["Base", r.base_spirit], ["Family", r.harmony_build_family], ["Method", r.method], ["Glass", r.glassware], ["Garnish", r.garnish], ["Profile", r.profile]].filter((x) => x[1]) : [], tiles: pr.length ? [{ label: "On menus", value: String(pr.length) }, { label: "Average", value: "$" + avg!.toFixed(2) }] : [] },
+        speak: (r ? `${r.cocktail_name}: ${r.consensus_spec || r.profile || ""}`.trim() : title(name)) + (pr.length ? ` It is on ${pr.length} menu listings we have read, averaging $${avg!.toFixed(2)}.` : "") + (variants.length ? ` I also have ${variants.slice(0, 4).join(", ")}.` : ""),
+        view: { type: "recipe", title: r?.cocktail_name || title(name), spec: r?.consensus_spec || "", rows: r ? [["Base", r.base_spirit], ["Family", r.harmony_build_family], ["Method", r.method], ["Glass", r.glassware], ["Garnish", r.garnish], ["Profile", r.profile], ["Also", variants.slice(0, 6).join(", ")]].filter((x) => x[1]) : [], tiles: pr.length ? [{ label: "On menus", value: String(pr.length) }, { label: "Average", value: "$" + avg!.toFixed(2) }] : [] },
       };
     },
   },

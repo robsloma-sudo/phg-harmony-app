@@ -1826,3 +1826,28 @@ gets automated and built automatically as conversations are had."
   sales and labor sources, targets, review; then automatic coding and updating); all folder references removed.
 - Migration-drafting agent redirected: 03 = saved views and filters; parties + invoice_coding_rules in 02; folder
   actions replaced by view/filter actions in 06.
+
+------------------------------------------------------------------------------
+PHG-20260929-CONTEXT | USER_PROMPT + FIX (app 18.49.37 NOT deployed; data v5 + inbox v16 deploying) | 2026-09-29
+Rob: "still having trouble navigating through different cocktails and conversations with Harmony ... when I'm asking
+for a lot of Manhattan recipes, just gives me a black Manhattan recipe" + screenshot: "No, I want East and Co's menu,
+beverage menu in Boulder." -> "I still couldn't find Easton Co's beverage menu from Boulder ..." ("It's just not
+understanding the context of questions.")
+- Cause 1 (Black Manhattan): phg-harmony-data cocktail_recipe matched ilike '%manhattan%' LIMIT 1 -> "Black
+  Manhattan" (cocktail_reference has both). Fix data v5: exact name > starts-with > shortest; variants listed ("I
+  also have Black Manhattan"); variant prices excluded from the drink's price stats. Inbox classic lookup: same rule.
+- Cause 2 (no conversation in the app): in the Harmony view, recipe/data questions went straight to one-shot data
+  lookups and everything else to a chat model with no PHG data, so no narrowing questions and no memory; the chat
+  model then invented "couldn't find" answers. Fix: app 18.49.37 sends everything said in the view (except screen
+  commands, notes, venue-menu lookups and business reports) to the same conversation brain as the Action button
+  (phg-harmony-inbox) with the running context; inbox v16 knows it is in the app (surface=app): never offers to
+  open the app, returns a "view" to show on screen (data results, recipe cards, variation lists), hands venue-menu
+  requests back to the app's menu finder, uses the signed-in account for house recipes.
+- Cause 3 (East & Co): "I want ... menu" was not recognised as a menu request (only show/find/pull up...), and
+  name matching was word-only ("Easton Co" vs "East & Co" = 0.33). Fix: more phrasings ("I want/need X's menu",
+  "X's beverage menu", "No, ..."), letter-level matching (Easton Co -> East & Co 0.60), broader search of the city
+  when nothing is close, and when unsure Harmony offers up to 3 closest venues ("Which one?") and "number one" /
+  "the second one" / a name / "yes" opens it. Verified: East & Co exists (Boulder, 2100 Central Ave, 2 captured
+  documents).
+- Tests: Rob's exact sentence opens East & Co; "Easton Co" opens East & Co; "Fresca" offers Frasca Food and Wine and
+  "number one" opens it; unknown names say so; voice-control and menu-look suites still pass; zero page errors.

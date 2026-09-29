@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.36 DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.37 ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -40901,12 +40901,12 @@ function loadKeys(){
    city/state, rank candidates by normalised-name similarity ("Eatery A's" ==
    "EATERY / A"), and open the best match in the library's full-screen viewer
    over the Harmony view. Closing the viewer returns to Harmony. */
-var HVX_LOOKUP=/\b(show|pull up|open|find|get|bring up|see|look up|view|display|load)\b[^?.!]*\bmenus?\b/i;
+var HVX_LOOKUP=/\b(show|pull up|pull|open|find|get|bring up|see|look up|view|display|load|want|need|give me|looking for|where('s| is))\b[^?.!]*\bmenus?\b|[\w&.'’ -]+['’]s\s+(?:(?:drinks?|beverage|cocktail|food|bar|wine|happy hour|dinner|lunch|brunch)\s+)*menus?\b/i;
 var HVX_LOOKUP_NOT=/\b(my|our|this|that|the) (own |current |new )?menus?\b(?!\s+(for|from|at|of)\b)|\bmenus? (you('| a)re|we('| a)re|i('| a)m) (working|making|building|designing)|\bmenu studio\b|\b(make|build|create|design|draft)\b/i;
 var US_STATES={alabama:'AL',alaska:'AK',arizona:'AZ',arkansas:'AR',california:'CA',colorado:'CO',connecticut:'CT',delaware:'DE',florida:'FL',georgia:'GA',hawaii:'HI',idaho:'ID',illinois:'IL',indiana:'IN',iowa:'IA',kansas:'KS',kentucky:'KY',louisiana:'LA',maine:'ME',maryland:'MD',massachusetts:'MA',michigan:'MI',minnesota:'MN',mississippi:'MS',missouri:'MO',montana:'MT',nebraska:'NE',nevada:'NV','new hampshire':'NH','new jersey':'NJ','new mexico':'NM','new york':'NY','north carolina':'NC','north dakota':'ND',ohio:'OH',oklahoma:'OK',oregon:'OR',pennsylvania:'PA','rhode island':'RI','south carolina':'SC','south dakota':'SD',tennessee:'TN',texas:'TX',utah:'UT',vermont:'VT',virginia:'VA',washington:'WA','west virginia':'WV',wisconsin:'WI',wyoming:'WY'};
 function normName(t){return String(t||'').toLowerCase().replace(/[’']s\b/g,'').replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').replace(/\b(the|restaurant|bar|grill|and)\b/g,' ').replace(/\s+/g,' ').trim();}
 function parseMenuLookup(q){
-  var t=String(q||'').replace(/^(?:(?:hey|ok|okay)[, ]+)?harmony[,.]?\s*/i,'').replace(/[?.!]+\s*$/,'').trim();
+  var t=String(q||'').replace(/^(?:(?:hey|ok|okay)[, ]+)?harmony[,.]?\s*/i,'').replace(/[?.!]+\s*$/,'').replace(/^(?:no|nope|nah|actually|sorry|wait)[,.!]?\s+/i,'').replace(/\bmenu,\s*(?:the\s+)?(?:drinks?|beverage|cocktail|food|bar|wine)\s+menu\b/i,'menu').trim();
   var city=null,state=null,m=t.match(/\s+(?:in|near|over in|out in)\s+([A-Za-z .'-]+?)(?:,\s*([A-Za-z .]+))?$/i);
   if(m&&!/\bmenu\b/i.test(m[1])){
     var a=m[1].trim(),b2=(m[2]||'').trim();
@@ -40917,19 +40917,39 @@ function parseMenuLookup(q){
   }
   var name=null,n1=t.match(/\bmenus?\s+(?:for|from|at|of)\s+(.+)$/i);
   if(n1)name=n1[1];
-  else{var n2=t.match(/\b(?:show|pull up|open|find|get|bring up|see|look up|view|display|load)(?:\s+(?:me|us|up))?(?:\s+(?:the|a))?\s+(.+?)(?:[’']s|s[’'])?\s+(?:drinks?\s+|beverage\s+|cocktail\s+|food\s+|bar\s+|wine\s+|happy hour\s+)?menus?\b/i);if(n2)name=n2[1];}
+  else{var n2=t.match(/\b(?:show|pull up|pull|open|find|get|bring up|see|look up|view|display|load|want|need|give me|looking for)(?:\s+(?:me|us|up|to see))?(?:\s+(?:the|a))?\s+(.+?)(?:[’']s|s[’'])?\s+(?:(?:drinks?|beverage|cocktail|food|bar|wine|happy hour|dinner|lunch|brunch)\s+)*menus?\b/i);if(n2)name=n2[1];
+    else{var n3=t.match(/^(.+?)[’']s\s+(?:(?:drinks?|beverage|cocktail|food|bar|wine|happy hour|dinner|lunch|brunch)\s+)*menus?\b/i);if(n3)name=n3[1];}}
   if(name)name=name.replace(/^(?:the|a)\s+/i,'').trim();
   return {name:name,city:city,state:state};
 }
+/* 18.49.37: spoken names are often misheard ("Easton Co" for "East & Co"), so compare letters too, not just words */
+function dice(a,b){a=a.replace(/ /g,'');b=b.replace(/ /g,'');if(a.length<2||b.length<2)return a===b?1:0;var m={},n=0,i;for(i=0;i<a.length-1;i++){var g=a.substr(i,2);m[g]=(m[g]||0)+1;}for(i=0;i<b.length-1;i++){var h=b.substr(i,2);if(m[h]){m[h]--;n++;}}return 2*n/(a.length+b.length-2);}
 function nameScore(want,got){
   var a=normName(want),b=normName(got);if(!a||!b)return 0;if(a===b)return 1;
+  var d=dice(a,b);
   var A=a.split(' '),B=b.split(' '),hit=0;A.forEach(function(w){if(B.indexOf(w)>=0)hit++;});
   var j=hit/(A.length+B.length-hit);
   if(b.indexOf(a)===0||a.indexOf(b)===0)j=Math.max(j,.8);
-  return j;
+  return Math.max(j,d*.9);
+}
+var HVX_PICK=null;
+/* "the first one", "number two", "East & Co", "yes" after Harmony offered close matches */
+function harmonyPickMenu(q){
+  if(!HVX_PICK||Date.now()-HVX_PICK.at>3*60*1000)return false;
+  var t=String(q||'').toLowerCase(),rows=HVX_PICK.rows,i=-1;
+  var ord={first:0,one:0,'1':0,second:1,two:1,'2':1,third:2,three:2,'3':2,last:rows.length-1};
+  var m=t.match(/\b(first|second|third|last|one|two|three|1|2|3)\b/);if(m&&ord[m[1]]!=null&&ord[m[1]]<rows.length)i=ord[m[1]];
+  if(i<0&&/^(yes|yeah|yep|that one|sure|correct|right|that'?s it)\b/.test(t)&&rows.length)i=0;
+  if(i<0){var bs=0;rows.forEach(function(x,k){var sc=nameScore(t.replace(/\b(the|one|menu|please|i mean|it'?s)\b/g,' '),x.name);if(sc>bs){bs=sc;i=sc>=.45?k:i;}});}
+  if(i<0)return false;
+  var x=rows[i];HVX_PICK=null;
+  if(typeof corpusView==='function')corpusView(x.r.id);
+  var pg=x.r.ready_page_count||x.r.page_count||0;
+  if(typeof agentSay==='function')agentSay('Here’s '+corpusTitle(x.name)+(x.r.city?' in '+corpusTitle(x.r.city):'')+(pg?', '+pg+' page'+(pg>1?'s':''):'')+'.');
+  return true;
 }
 function harmonyFindMenu(q){
-  var ask=parseMenuLookup(q);
+  HVX_PICK=null;var ask=parseMenuLookup(q);
   if(!ask.name){if(typeof agentSay==='function')agentSay('Which venue should I pull up? Say something like: show me Eatery A’s menu in Des Moines.');return;}
   if(typeof corpusPost!=='function'){if(typeof agentSay==='function')agentSay('The menu library isn’t loaded yet.');return;}
   var words=normName(ask.name).split(' ').filter(function(w){return w.length>=3;}).sort(function(x,y){return y.length-x.length;});
@@ -40937,12 +40957,24 @@ function harmonyFindMenu(q){
   var body={action:'list',kind:'rendered',q:term,limit:50,sign:'none',sort:'name'};
   if(ask.city)body.city=[ask.city];if(ask.state)body.state=[ask.state];
   window.PHG_PENDING=true;
-  corpusPost(body).then(function(j){
-    var rows=(j.rows||[]).map(function(r){return {r:r,name:(r.accounts&&r.accounts.account_name)||'',score:nameScore(ask.name,(r.accounts&&r.accounts.account_name)||'')};})
-      .filter(function(x){return x.score>=.5;})
-      .sort(function(x,y){return (y.score-x.score)||((y.r.ready_page_count||0)-(x.r.ready_page_count||0))||(String(y.r.updated_at||'')>String(x.r.updated_at||'')?1:-1);});
+  var score=function(j){return (j.rows||[]).map(function(r){return {r:r,name:(r.accounts&&r.accounts.account_name)||'',score:nameScore(ask.name,(r.accounts&&r.accounts.account_name)||'')};})
+      .sort(function(x,y){return (y.score-x.score)||((y.r.ready_page_count||0)-(x.r.ready_page_count||0))||(String(y.r.updated_at||'')>String(x.r.updated_at||'')?1:-1);});};
+  var first=corpusPost(body).then(score);
+  /* nothing close by the longest word: look at every captured venue in that city (or the first 3 letters) */
+  first.then(function(all){
+    if(all.length&&all[0].score>=.5)return all;
+    var b2={action:'list',kind:'rendered',limit:200,sign:'none',sort:'name'};if(ask.city)b2.city=[ask.city];if(ask.state)b2.state=[ask.state];
+    if(!ask.city&&!ask.state)b2.q=term.slice(0,3);
+    return corpusPost(b2).then(score).then(function(more){return all.concat(more).sort(function(x,y){return y.score-x.score;});});
+  }).then(function(all){
     var where=(ask.city?corpusTitle(ask.city):'')+(ask.state?(ask.city?', ':'')+ask.state:'');
-    if(!rows.length){if(typeof agentSay==='function')agentSay('I couldn’t find '+ask.name+(where?' in '+where:'')+' in the menu library. The library covers Iowa, Colorado and New York venues we have captured so far.');return;}
+    var rows=all.filter(function(x){return x.score>=.5;});
+    if(!rows.length){
+      var seen={},near=all.filter(function(x){var k=normName(x.name);if(x.score<.28||seen[k])return false;seen[k]=1;return true;}).slice(0,3);
+      if(near.length){HVX_PICK={at:Date.now(),rows:near};
+        agentSay('I don’t have '+ask.name+(where?' in '+where:'')+' by that name. Closest I have: '+near.map(function(x,i){return (i+1)+', '+corpusTitle(x.name)+(x.r.city?' in '+corpusTitle(x.r.city):'');}).join('; ')+'. Which one?');return;}
+      if(typeof agentSay==='function')agentSay('I couldn’t find '+ask.name+(where?' in '+where:'')+' in the menu library. The library covers Iowa, Colorado and New York venues we have captured so far.');return;}
+    HVX_PICK=null;
     var best=rows[0],same=rows.filter(function(x){return normName(x.name)===normName(best.name)&&(x.r.city||'')===(best.r.city||'');}).length;
     if(typeof corpusView==='function')corpusView(best.r.id);
     var nm=corpusTitle(best.name),pg=best.r.ready_page_count||best.r.page_count||0;
@@ -40958,6 +40990,33 @@ function harmonyFindMenu(q){
    router - which used to receive EVERYTHING and answered any unclassified
    question with "Management dashboard completed. Evidence: computed_dashboard." */
 var HVX_FIN=/\b(sales|revenue|cogs|cost of goods|food cost|pour cost|labou?r|payroll|wages|expenses?|p\s*&\s*l|p and l|profit|losses?|budgets?|forecasts?|variance|margins?|inventory|invoices?|purchas\w*|vendors?|close (the )?(period|month|books)|month[- ]end|dashboard|kpis?|reconcil\w*|costing|period review|daily brief|management brief)\b/i;
+/* 18.49.37: one conversation brain for the app and the Action button. Everything said in the Harmony view that is
+   not a screen command, a note, a venue-menu lookup or a business report goes to phg-harmony-inbox with the running
+   conversation (context), so Harmony asks narrowing questions, remembers what was just said ("the second one",
+   "my house one", "from the internet") and shows the result on screen. */
+var HCONV={ctx:'',at:0};
+function harmonyConverse(q){
+  var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
+  if(!tok){if(typeof agentSay==='function')agentSay('Sign in to PHG so I can talk with you.');return;}
+  if(Date.now()-HCONV.at>20*60*1000)HCONV.ctx='';
+  var acct=null;try{acct=PHGAUTH.workspace&&PHGAUTH.workspace.account&&PHGAUTH.workspace.account.id||null;}catch(e){}
+  window.PHG_PENDING=true;
+  if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('Harmony · thinking…');
+  var tz='America/Chicago';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||tz;}catch(e){}
+  fetch(INBOX_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
+    body:JSON.stringify({text:q,context:HCONV.ctx||'',surface:'app',account_id:acct,tz:tz})})
+    .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.speak)throw new Error(j.error||('HTTP '+r.status));return j;});})
+    .then(function(j){
+      HCONV.ctx=j.context||'';HCONV.at=Date.now();
+      if(j.menu_lookup&&typeof harmonyFindMenu==='function'){harmonyFindMenu(j.menu_lookup);return;}
+      if(j.view&&window.harmonyDataShow)window.harmonyDataShow(j.view);
+      if(typeof agentSay==='function')agentSay(j.speak);
+      if(j.next==='end')HCONV.ctx='';
+    })
+    .catch(function(e){if(window.console)console.warn('harmonyConverse',e);harmonyChat(q);})
+    .then(function(){window.PHG_PENDING=false;if(typeof AGENT!=='undefined')AGENT.thinking=false;if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('');});
+}
+window.harmonyConverse=harmonyConverse;
 function harmonyChat(q){
   var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
   if(!tok){if(typeof agentSay==='function')agentSay('Sign in to PHG so I can talk with you.');return;}
@@ -40974,14 +41033,14 @@ if(typeof agentAnswer==='function'){
   var _answer=agentAnswer;
   agentAnswer=function(q){
     var inView=document.body.classList.contains('phg-view-open');
+    if(inView&&harmonyPickMenu(q))return;
     if(inView&&HVX_NOTE.test(String(q||'')))return harmonyInboxSay(String(q||'').trim());
     if(inView&&HVX_LOOKUP.test(String(q||''))&&!HVX_LOOKUP_NOT.test(String(q||''))&&parseMenuLookup(q).name)return harmonyFindMenu(String(q||'').trim());
     if(inView&&/^(close|hide|dismiss) (the |that )?(map|chart|graph|table|data|card|catalog|panel)\b/i.test(String(q||'').trim())&&window.harmonyDataClose){harmonyDataClose();if(typeof agentSay==='function')agentSay('Closed.');return;}
     if(inView&&/\b(what can you show|what data (do you|can you)|show me the catalog|data catalog)\b/i.test(String(q||''))&&window.harmonyDataCatalog)return harmonyDataCatalog();
-    if(inView&&window.harmonyWantsData&&harmonyWantsData(q)&&!HVX_FIN.test(String(q||'')))return harmonyShowData(String(q||'').trim());
     if(inView&&!HVX_FIN.test(String(q||''))){
       if(typeof harmonyCoreControl==='function'&&harmonyCoreControl(q))return;
-      return harmonyChat(String(q||'').trim());
+      return harmonyConverse(String(q||'').trim());
     }
     return _answer.apply(this,arguments);
   };
