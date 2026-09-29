@@ -38,6 +38,10 @@ const isoDate = (v: unknown) => {
   const s = String(v ?? "").trim(); if (!s) return null;
   let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
   m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (m) return `${m[3]}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`;
+  m = s.match(/^(\d{4})(\d{2})(\d{2})$/); if (m && +m[2] >= 1 && +m[2] <= 12) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/);
+  if (m) { const mo = "JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC".indexOf(m[2].toUpperCase()) / 3 + 1; if (mo >= 1) return `${m[3]}-${String(mo).padStart(2, "0")}-${m[1].padStart(2, "0")}`; }
+  if (/^\d{5}(\.\d+)?$/.test(s) && +s > 20000 && +s < 80000) return new Date(Math.round((+s - 25569) * 86400000)).toISOString().slice(0, 10); // Excel serial
   return null;
 };
 
@@ -121,7 +125,7 @@ async function discover(page: string, re: RegExp): Promise<string> {
 }
 /* v6: memory-safe readers (the edge runtime has ~250 MB). Returns the header and only the rows in [from, from+count);
    done = the file has no rows after the window. Zipped CSV is streamed and parsing stops after the window. */
-async function sheetRows(url: string, from: number, count: number): Promise<{ head: string[]; rows: string[][]; done: boolean }> {
+async function sheetRows(url: string, from: number, count: number): Promise<{ head: string[]; rows: string[][]; done: boolean; pre?: string[][] }> {
   const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 120000);
   try {
     const r = await fetch(url, { signal: ctl.signal, headers: { "User-Agent": "PHG-license-ingest/1.0" } });
@@ -142,7 +146,11 @@ async function xlsxWindow(stream: ReadableStream<Uint8Array>, from: number, coun
   type Cell = { t: string; v: string };
   const pre: Cell[][] = []; let nRows = 0; let headAt = -1;
   let sst: string[] = []; let sstText = ""; let sheetBuf = "";
-  const isHead = (cells: Cell[], strs: (c: Cell) => string) => cells.filter((c) => strs(c).trim()).length >= 3 && cells.some((c) => /licen|permit/i.test(strs(c)));
+  const isHead = (cells: Cell[], strs: (c: Cell) => string) => {
+    const vals = cells.map((c) => strs(c).trim()).filter(Boolean);
+    return (vals.length >= 3 && vals.some((v) => /licen|permit|\blic\b/i.test(v)))
+      || (vals.length >= 5 && vals.every((v) => v.length <= 40 && /[A-Za-z]/.test(v) && !/^\d[\d\s\/.-]*$/.test(v)) && vals.some((v) => /name|address|city|type|number|no\.?$/i.test(v)));
+  };
   const takeRow = (xml: string) => {
     const cells: Cell[] = [];
     for (const m of xml.matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
@@ -200,7 +208,8 @@ async function xlsxWindow(stream: ReadableStream<Uint8Array>, from: number, coun
   headAt = pre.findIndex((r) => isHead(r, str));
   if (headAt < 0) headAt = 0;
   const rows = keep.filter((k) => k.si - headAt - 1 >= from && k.si - headAt - 1 < from + count).map((k) => k.cells.map(str));
-  return { head: (pre[headAt] || []).map(str).map((x) => x.trim()), rows, done: nRows - headAt - 1 <= from + count };
+  return { head: (pre[headAt] || []).map(str).map((x) => x.trim()), rows, done: nRows - headAt - 1 <= from + count,
+    pre: pre.slice(0, 12).map((r) => r.slice(0, 10).map(str).map((x) => x.slice(0, 40))) };
 }
 
 async function zipCsvWindow(stream: ReadableStream<Uint8Array>, from: number, count: number, ctl: AbortController) {
@@ -255,15 +264,15 @@ async function zipCsvWindow(stream: ReadableStream<Uint8Array>, from: number, co
   return { head: head || [], rows, done: finished };
 }
 function col(head: string[], ...res: RegExp[]) { for (const re of res) { const i = head.findIndex((h) => re.test(h)); if (i >= 0) return i; } return -1; }
-function sheetAdapter(state: string, url: string | (() => Promise<string>), source: string, onPremise: (type: string) => boolean | null): Adapter {
+function sheetAdapter(state: string, url: string | (() => Promise<string>), source: string, onPremise: (type: string) => boolean | null, keyByType = false): Adapter {
   return {
     source,
     async pages(offset, pages) {
-      const { head, rows: win, done } = await sheetRows(typeof url === "string" ? url : await url(), offset, pages * PAGE);
+      const { head, rows: win, done, pre } = await sheetRows(typeof url === "string" ? url : await url(), offset, pages * PAGE);
       const iNo = col(head, /licen[cs]e\s*(no|num|#|id)/i, /permit\s*(no|num|#)/i, /^licen[cs]e$/i, /file\s*(no|num)/i, /lic(ense)?\s*#/i);
       const iType = col(head, /licen[cs]e\s*(type|class|desc|privilege)/i, /privilege/i, /^type$/i, /class/i);
       const iName = col(head, /trade|dba|doing business/i, /business\s*name/i, /premises?\s*name/i, /establishment/i, /primary\s*name/i, /^name$/i);
-      const iOwner = col(head, /licensee|owner|entity|applicant/i);
+      const iOwner = col(head, /licensee|owner|entity|applicant/i, /primary\s*name/i);
       const iAddr = col(head, /(premise|physical|location|street)?\s*address(\s*1|\s*line\s*1)?$/i, /prem\w*\s*addr\w*\s*1?$/i, /street/i, /addr/i);
       const iCity = col(head, /city/i, /locality|town/i);
       const iZip = col(head, /zip|postal/i);
@@ -275,13 +284,13 @@ function sheetAdapter(state: string, url: string | (() => Promise<string>), sour
       const rows = slice.map((r) => {
         const type = t(g(r, iType)) || "";
         return {
-          state, license_no: t(g(r, iNo)), license_type: type || null, on_premise: type ? onPremise(type) : null,
+          state, license_no: keyByType && type ? `${t(g(r, iNo))}-${type}` : t(g(r, iNo)), license_type: type || null, on_premise: type ? onPremise(type) : null,
           status: t(g(r, iStatus)) || "active", business_name: t(g(r, iName)) || t(g(r, iOwner)), owner_name: t(g(r, iOwner)),
           address: t(g(r, iAddr)), city: t(g(r, iCity)), zip: zip5(g(r, iZip)), county: t(g(r, iCounty)), expires_on: isoDate(g(r, iExp)),
           raw: Object.fromEntries(head.map((h, i) => [h || `col${i}`, r[i]])),
         } as Row;
       });
-      return { rows, done, head } as any;
+      return { rows, done, head, pre } as any;
     },
   };
 }
@@ -321,7 +330,7 @@ const ADAPTERS: Record<string, Adapter> = {
   /* California ABC daily export (zipped CSV); on-sale types 40-42, 47-49, 51-52, 57, 59-61, 67-68, 70, 75 */
   CA: sheetAdapter("CA", () => discover("https://www.abc.ca.gov/licensing/licensing-reports/", /DailyExport-CSV\.zip/i), "ca_abc_daily_csv",
     (type) => { const m = type.match(/\b(\d{2})\b/); if (!m) return null; const c = +m[1];
-      return [40, 41, 42, 47, 48, 49, 51, 52, 57, 59, 60, 61, 67, 68, 70, 75].includes(c) ? true : [20, 21, 17, 9, 1, 2, 3, 4, 13, 14, 22, 23, 12].includes(c) ? false : null; }),
+      return [40, 41, 42, 47, 48, 49, 51, 52, 57, 59, 60, 61, 67, 68, 70, 75].includes(c) ? true : [20, 21, 17, 9, 1, 2, 3, 4, 13, 14, 22, 23, 12].includes(c) ? false : null; }, true),
   /* Maine BABLO licence report */
   ME: sheetAdapter("ME", () => discover("https://www.maine.gov/dafs/bablo/liquor-licensing/license-data", /FOAA_Report\.xlsx/i), "me_bablo_xlsx",
     (type) => /off[- ]premise|agency store|retail store|wholesal|manufactur/i.test(type) && !/on[- ]premise/i.test(type) ? false
@@ -405,7 +414,7 @@ Deno.serve(async (req) => {
 
   if (b.probe) {
     const res: any = await ad.pages(offset, 1);
-    return json({ ok: true, probe: true, state, source: ad.source, head: res.head || null, rows: res.rows.length, sample: res.rows.slice(0, 3).map((r: Row) => ({ ...r, raw: undefined })), types: [...new Set(res.rows.map((r: Row) => `${r.license_type} => ${r.on_premise}`))].slice(0, 40) });
+    return json({ ok: true, probe: true, state, source: ad.source, head: res.head || null, pre: res.pre || null, rows: res.rows.length, sample: res.rows.slice(0, 3).map((r: Row) => ({ ...r, raw: undefined })), types: [...new Set(res.rows.map((r: Row) => `${r.license_type} => ${r.on_premise}`))].slice(0, 40) });
   }
   const { data: run } = await sb.rpc("phg_license_run", { p_action: "start", p_state: state, p_source: ad.source, p_cursor: String(offset) });
   try {
