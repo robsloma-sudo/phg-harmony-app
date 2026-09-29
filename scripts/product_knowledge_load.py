@@ -62,6 +62,10 @@ def main():
         if st not in STYLES: st = 'other'
         abv = e.get('abv'); abv = abv if isinstance(abv, (int, float)) and 0 < abv <= 100 else None
         af = e.get('additive_free') if isinstance(e.get('additive_free'), bool) else None
+        notes = [str(x) for x in ([e.get('aging_note')] + (e.get('notes') if isinstance(e.get('notes'), list) else [e.get('notes')])) if x]
+        if e.get('additive_free_note'):
+            # a past confirmation (e.g. a program that has since ended) is a dated note, never a current yes
+            notes.append(str(e['additive_free_note'])); af = None
         cols = dict(key=q(k), brand_key=q(e['brand_key']), name=q(e.get('name')), style=q(st), abv=num(abv),
                     aging_months_min=num(e.get('aging_months_min')), aging_months_max=num(e.get('aging_months_max')),
                     barrels=q(e.get('barrels')), agave=q(e.get('agave')), agave_species=q(e.get('agave_species')),
@@ -71,6 +75,7 @@ def main():
                     tasting=arr(e.get('tasting')), price_usd_750=num(e.get('price_usd_750')), awards=arr(e.get('awards')),
                     mezcal_category=q(e.get('mezcal_category') or (e.get('category') if e.get('category') != 'tequila' else None)),
                     maestro=q(e.get('maestro')), village=q(e.get('village')),
+                    notes=arr(notes),
                     verification=q(e.get('verification') if e.get('verification') in ('page','excerpt','unverified') else 'unverified'),
                     source_keys=arr(e['_src']))
         names = ','.join(cols); vals = ','.join(cols.values())
