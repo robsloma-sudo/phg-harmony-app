@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.42 HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.43 GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -40506,8 +40506,8 @@ body.hvx-reading #phgView .phgNodeStage{opacity:.38}
    speaking = aurora teal/lime */
 #hvxDock{gap:22px;align-items:flex-end;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 34px)}
 #hvxDock .hvxRound{margin-bottom:18px}
-/* an invisible twin of + on the right keeps the star dead centre */
-#hvxDock::after{content:'';flex:0 0 56px;height:1px}
+/* 18.49.43: + on the left, the gear on the right, Speak big in the middle (the gear replaced the invisible
+   spacer that used to balance +) */
 #hvxDock #hvTalk{--lvl:0;--c1:#67e8f9;--c2:#a78bfa;--c3:#f0abfc;--glow:rgba(34,211,238,.55);
   position:relative;left:auto;right:auto;top:auto;bottom:auto;transform:none;width:92px;height:92px;flex:0 0 auto;min-width:0;
   padding:0;border:0;border-radius:50%;background:transparent;box-shadow:none;display:block;cursor:pointer;
@@ -40566,8 +40566,8 @@ body.hvx-reading #phgView .phgNodeStage{opacity:.38}
 @keyframes hvxBreath{50%{opacity:.95}}
 @keyframes hvxWave{0%{transform:scale(1);opacity:.75}100%{transform:scale(2.6);opacity:0}}
 @media (prefers-reduced-motion:reduce){#hvTalk *,#hvTalk *::before,#hvTalk *::after{animation:none!important}}
-#hvxGear{position:absolute;left:16px;bottom:calc(var(--hvx-dock,0px) + env(safe-area-inset-bottom,0px) + 30px);z-index:6;width:42px;height:42px;opacity:.85}
-#hvxGear svg{width:19px;height:19px;stroke:#94a3b8;stroke-width:1.6;fill:none;transition:transform .5s ease}
+#hvxDock #hvxGear{flex:0 0 auto}
+#hvxGear svg{width:24px;height:24px;stroke:#a5f3fc;stroke-width:1.6;fill:none;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(103,232,249,.6));transition:transform .5s ease}
 #hvxGear[aria-expanded="true"] svg{transform:rotate(60deg);stroke:#a5f3fc}
 .hvxSheet{position:absolute;z-index:7;bottom:calc(var(--hvx-dock,0px) + env(safe-area-inset-bottom,0px) + 150px);width:min(330px,calc(100vw - 28px));padding:10px 8px 8px;border-radius:24px;
   background:radial-gradient(140% 90% at 0% 0%,rgba(103,232,249,.11),transparent 52%),radial-gradient(140% 90% at 100% 100%,rgba(240,171,252,.10),transparent 55%),rgba(5,7,16,.96);
@@ -40580,7 +40580,9 @@ body.hvx-reading #phgView .phgNodeStage{opacity:.38}
 #hvxPlusMenu{animation-name:hvxSheetInC}
 @keyframes hvxSheetInC{from{opacity:0;transform:translate(-50%,8px) scale(.98)}}
 .hvxSheet[hidden]{display:none!important}
-#hvxGearMenu{left:14px}
+#hvxGearMenu{right:14px;left:auto}
+/* 18.49.43: sheets never run off the top of a phone screen; they scroll inside instead */
+.hvxSheet{max-height:calc(100dvh - var(--hvx-dock,0px) - env(safe-area-inset-bottom,0px) - env(safe-area-inset-top,0px) - 170px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 #hvxPlusMenu{left:50%;transform:translateX(-50%)}
 .hvxSheet button{display:flex!important;align-items:center;gap:13px;width:100%;padding:9px 10px;border:0;border-radius:16px;background:none;color:#f1f5f9;cursor:pointer;text-align:left!important;justify-content:flex-start!important}
 .hvxSheet button>span{display:flex;flex-direction:column;gap:3px;min-width:0;align-self:center!important;text-align:left!important}
@@ -41153,7 +41155,7 @@ function build(){
       +'<em class="hvxDisk front" aria-hidden="true"><em class="hvxRing"></em></em>'
       +'<u class="hvxWave" aria-hidden="true"></u><u class="hvxWave w2" aria-hidden="true"></u><u class="hvxWave w3" aria-hidden="true"></u>'
       +'<b class="hvxCore" aria-hidden="true"></b><span>Speak</span></button>';
-  var gear=document.createElement('button');gear.id='hvxGear';gear.type='button';gear.setAttribute('aria-label','Settings and tools');gear.setAttribute('aria-expanded','false');gear.innerHTML=ICON.gear;
+  var gear=document.createElement('button');gear.id='hvxGear';gear.className='hvxRound';gear.type='button';gear.setAttribute('aria-label','Settings and tools');gear.setAttribute('aria-expanded','false');gear.innerHTML=ICON.gear;
   var gm=document.createElement('div');gm.id='hvxGearMenu';gm.className='hvxSheet';gm.hidden=true;
   gm.innerHTML='<div class="hvxSheetHead">Harmony · Control</div>'
     +row('studio','spark','Menu Studio','Design menus with Harmony','warm')+row('catalog','tools','What Harmony can show','Maps, charts, cards and tables of PHG data')+'<hr>'
@@ -41180,7 +41182,8 @@ function build(){
   var any=document.createElement('input');any.type='file';any.multiple=true;any.hidden=true;any.id='hvxAny';
   any.accept='image/*,video/*,application/pdf,.pdf,text/plain,.txt,text/csv,.csv,.md,.json';
   var tray=document.createElement('div');tray.id='hvxAttach';tray.setAttribute('aria-label','Attachments');
-  [fl,dock,gear,gm,pm,ty,file,any,tray].forEach(function(el){stop(el);view.appendChild(el);});
+  dock.appendChild(gear);   /* 18.49.43: + | Speak | gear */
+  [fl,dock,gm,pm,ty,file,any,tray].forEach(function(el){stop(el);view.appendChild(el);});
   ty.querySelector('.hvxClip').onmousedown=function(e){e.preventDefault();};
   ty.querySelector('.hvxClip').onclick=function(e){e.stopPropagation();any.click();};
   any.onchange=function(){if(any.files&&any.files.length)addAttachments(any.files);any.value='';};
