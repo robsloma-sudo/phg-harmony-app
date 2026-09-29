@@ -2365,3 +2365,11 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   - RI zip.
   - GA has no city (combined address).
   - Harmony end-to-end licence test needs a signed-in user: the server test returned 401 as designed.
+- 2026-09-29 Rob: "exclude all expired and all inactive liquor licences" (and off-premise) - applied to the CO/NY/IA
+  accounts too.
+  - accounts.account_status 'excluded' + exclusion_reason; no deletes.
+  - Excluded: CO 1,328 off-premise + 325 expired; IA 3,274 off-premise + 2,165 inactive + 81 expired.
+  - Active on-premise accounts now: NY 21,384, CO 7,993, IA 5,323.
+  - Licence coverage: 20 states, 191,504 venues, 194,687 licences.
+  - The venue universe (v_public_stats) recomputes via job 5 within 5 min.
+  - Daily expiry sweep cron (07:13 UTC).
