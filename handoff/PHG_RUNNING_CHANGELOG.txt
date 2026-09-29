@@ -1756,3 +1756,23 @@ and files ... and any recipes created need to not be carried over. There needs t
 two files where we can export data from one project to another ... just table it for now as an open issues log."
 - Spec 4C: carry-over rule written (functions/templates/skeleton/shared knowledge shared; created content isolated).
 - PHG-043 logged (tabled): cross-project export/link.
+
+------------------------------------------------------------------------------
+PHG-20260929-VOICECTL | USER_PROMPT + CHANGE (frontend, build 18.49.34, NOT deployed) | 2026-09-29
+Rob: "start working on the app only work, voice control for the map, moving live only server code, and draft
+database changes for me, and just general control by voice of functions for the whole app."
+- New <script id="phgVoiceControlV1">: one command bus (window.harmonyUI.run / exec / help / targets) checked first
+  on every path words take into Harmony (agentAnswer wrapper; PMS.hear wrapper while a menu is on the stage).
+  Map: zoom in/out (a lot / all the way), zoom to level N, pan left/right/up/down/north..., zoom in on / focus on /
+  fly to / select <name or NOM> (not on the map -> asks the data service "Where is X made?"), hide / show / only
+  distilleries or venues, show everything / reset, next / previous one, "tell me about that one", how many pins.
+  Screens: open / go to / take me to <any screen by name> built from the app's own registries (SECTIONS, MDR_BOOKS,
+  FIN_SECTIONS, SET_SECTIONS, Menu Studio views, Harmony, Administrative dashboard, menu library) = 95 targets;
+  go back; scroll; open notes; Action button setup; voice settings; "what can I say" (table of examples).
+- Data canvas map keeps its pins grouped by kind and exports window.harmonyMap (open, zoom, zoomTo, pan, find,
+  focus, selected, step, show, only, showAll, reset, count). Notes and Shortcut openers exported.
+- Tests (Playwright, stubbed services): 30+ commands behave as expected on a 5-pin Jalisco map and across screens;
+  30 ordinary questions ("show me cocktail bars in Denver", "what's my comp percent last week", "open Spring 2028",
+  "show me Don Julio" with no map ...) are NOT captured and flow to normal routing; zero page errors.
+- Known limits: navigating away from the Harmony view ends talk mode (existing behaviour); commands are an English
+  phrase grammar (the server dialogue manager, spec phase 3, will add free-form control through harmonyUI.exec).

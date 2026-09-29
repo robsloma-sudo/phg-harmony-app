@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-28.18.49.33 HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.34 VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -41165,7 +41165,7 @@ if(typeof phgViewport==='function'){
    attribute even when the class is absent, which would re-fire this observer */
 new MutationObserver(function(){var c=document.body.classList;if(!c.contains('phg-view-open')){if(window.PMS&&PMS.open&&!document.getElementById('phgView'))PMS.close();if(c.contains('hvx-chat'))c.remove('hvx-chat');if(c.contains('hvx-typing'))c.remove('hvx-typing');if(c.contains('hvx-reading'))c.remove('hvx-reading');}})
   .observe(document.body,{attributes:true,attributeFilter:['class']});
-window.harmonyChat=harmonyChat;window.harmonyFindMenu=harmonyFindMenu;
+window.harmonyChat=harmonyChat;window.harmonyFindMenu=harmonyFindMenu;window.harmonyOpenNotes=openNotes;window.harmonyOpenShortcut=openShortcut;
 })();
 </script>
 <style id="phgDataCanvasCSS">
@@ -41313,6 +41313,7 @@ function panel(){
 function close(){
   var p=document.getElementById('hdPanel');if(p)p.hidden=true;
   if(HD.map){try{HD.map.remove();}catch(e){}HD.map=null;}
+  HD.pins=[];HD.groups={};HD.sel=null;
   document.body.classList.remove('hvx-data');
 }
 function show(view){
@@ -41344,14 +41345,20 @@ function drawMap(el,view,body){
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:16,maxZoom:18,attribution:'&copy; Esri, HERE, Garmin, &copy; OpenStreetMap'}).addTo(m);
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:16,maxZoom:18,opacity:.9}).addTo(m);
   var pins=view.pins||[],bounds=[],focus=view.focus;
+  /* 18.49.34: pins are kept, grouped by kind, so Harmony can zoom, focus, filter and select by voice */
+  HD.pins=[];HD.groups={};HD.hidden={};HD.sel=null;HD.selMk=null;
   pins.forEach(function(p){
     if(!isFinite(p.lat)||!isFinite(p.lng))return;bounds.push([p.lat,p.lng]);
     var pop='<b>'+esc(p.label)+'</b>'+(p.sub?'<small>'+esc(p.sub)+'</small>':'')+(p.approx?'<br><small>Approximate: '+(p.approx==='state'?'state':'town')+' centre of registered address</small>':'');
     var mk=focus&&pins.length===1?L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',html:'<div class="hdPin"><b></b><b></b><i></i></div>',iconSize:[22,22],iconAnchor:[11,11]})})
       :L.circleMarker([p.lat,p.lng],{radius:p.weight?Math.min(9,4+Math.sqrt(p.weight)/3):5.5,weight:1.2,color:'#a5f3fc',fillColor:'#22d3ee',fillOpacity:.7});
-    mk.bindPopup(pop).addTo(m);
-    if(p.nom)mk.on('click',function(){ask('Where is NOM '+p.nom+'?');});
+    var kind=p.kind||(p.nom?'distillery':'venue');
+    var g=HD.groups[kind]||(HD.groups[kind]=L.layerGroup().addTo(m));
+    var rec={p:p,mk:mk,kind:kind};HD.pins.push(rec);
+    mk.bindPopup(pop).addTo(g);
+    mk.on('click',function(){HD.sel=rec;if(p.nom)ask('Where is NOM '+p.nom+'?');});
   });
+  if(focus&&HD.pins.length===1)HD.sel=HD.pins[0];
   var region=REGION[view.region]||null;
   requestAnimationFrame(function(){
     m.invalidateSize();
@@ -41416,10 +41423,238 @@ function ask(q){
 /* what counts as a data request (business-finance words stay with the report router) */
 var WANT=/\b(where(?:'s| is| are)\b.*\b(nom|distiller\w*|made|produced|located|bar|venue|restaurant)|\bnom\s*#?\s*\d{3,4}|map\b|on a map|chart|graph|plot|breakdown|how many|average|avg|median|price (of|for)|prices\b|how much (is|are|does|do) (a|an|the)?\s*\w+ (cost|sell|go)|top \d*\s*\w+|most (popular|common|listed)|which (spirit|brand|categor|cocktail|drink)|compare|coverage|how much data|demographic|census|zip\b|\b\d{5}\b.*(income|age|population)|label approvals?|\bcola\b|brands? (on|at|in)|drinks? profile|profile (of|for)|recipe|spec (for|of)|how do (you|i) make|distiller(y|ies)|show (me )?(the )?(data|numbers|stats|catalog))/i;
 function wants(q){return WANT.test(String(q||''));}
+/* ---------- map control (18.49.34): what voice commands call ---------- */
+function mapOpen(){var p=document.getElementById('hdPanel');return !!(HD.map&&p&&!p.hidden);}
+function nrm(s){return String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]+/g,' ').replace(/\b(s a|sa|de|c v|cv|s de r l|the|y|and|of|la|el)\b/g,' ').replace(/\s+/g,' ').trim();}
+function pinScore(rec,q){
+  var p=rec.p,qn=nrm(q);if(!qn)return 0;
+  var nm=q.match(/\bnom\s*#?\s*(\d{3,4})\b/i)||q.match(/^\s*(\d{3,4})\s*$/);
+  if(nm)return String(p.nom||'')===nm[1]?1:0;
+  var hay=nrm(p.label+' '+(p.sub||'')+' '+(p.brands||[]).join(' '));
+  if((' '+hay+' ').indexOf(' '+qn+' ')>=0)return .95;
+  var qt=qn.split(' '),hit=qt.filter(function(t){return t.length>1&&(' '+hay).indexOf(' '+t)>=0;}).length;
+  return hit/qt.length*.9;
+}
+function findPins(q){
+  return HD.pins.filter(function(r){return !HD.hidden[r.kind];}).map(function(r){return {r:r,s:pinScore(r,q)};})
+    .filter(function(x){return x.s>=.6;}).sort(function(a,b){return b.s-a.s;});
+}
+function selectPin(rec,zoom){
+  var m=HD.map;if(!m||!rec)return;HD.sel=rec;
+  if(HD.selMk){try{m.removeLayer(HD.selMk);}catch(e){}}
+  HD.selMk=L.marker([rec.p.lat,rec.p.lng],{interactive:false,icon:L.divIcon({className:'',html:'<div class="hdPin"><b></b><b></b><i></i></div>',iconSize:[22,22],iconAnchor:[11,11]})}).addTo(m);
+  m.flyTo([rec.p.lat,rec.p.lng],Math.max(m.getZoom(),zoom||12),{duration:1.4});
+  setTimeout(function(){try{rec.mk.openPopup();}catch(e){}},1500);
+}
+function visible(){return HD.pins.filter(function(r){return !HD.hidden[r.kind];});}
+function fitVisible(){var m=HD.map,b=visible().map(function(r){return [r.p.lat,r.p.lng];});if(m&&b.length)m.flyToBounds(b,{padding:[28,28],maxZoom:13,duration:1});}
+function setKind(kind,on){
+  var m=HD.map,g=HD.groups[kind];if(!m||!g)return false;
+  if(on){HD.hidden[kind]=false;if(!m.hasLayer(g))g.addTo(m);}else{HD.hidden[kind]=true;if(m.hasLayer(g))m.removeLayer(g);}
+  return true;
+}
+var KIND_WORD={distillery:'distilleries',venue:'venues'};
+window.harmonyMap={
+  open:mapOpen,
+  map:function(){return HD.map;},
+  kinds:function(){return Object.keys(HD.groups);},
+  count:function(kind){return HD.pins.filter(function(r){return (!kind||r.kind===kind)&&!HD.hidden[r.kind];}).length;},
+  zoom:function(d){var m=HD.map;if(!m)return false;if(d==='max')m.setZoom(15);else m.setZoom(Math.max(2,Math.min(18,m.getZoom()+d)));return m.getZoom();},
+  zoomTo:function(z){var m=HD.map;if(!m)return false;m.setZoom(Math.max(2,Math.min(18,z|0)));return m.getZoom();},
+  pan:function(dir,big){var m=HD.map;if(!m)return false;var s=m.getSize(),f=big?.6:.33,d={left:[-s.x*f,0],west:[-s.x*f,0],right:[s.x*f,0],east:[s.x*f,0],up:[0,-s.y*f],north:[0,-s.y*f],down:[0,s.y*f],south:[0,s.y*f]}[dir];if(!d)return false;m.panBy(d);return true;},
+  find:function(q){return findPins(q).map(function(x){return x.r.p;});},
+  focus:function(q){var f=findPins(q);if(!f.length)return null;selectPin(f[0].r,13);return {pin:f[0].r.p,others:f.length-1};},
+  selected:function(){return HD.sel?HD.sel.p:null;},
+  step:function(dir){var v=visible();if(!v.length)return null;v.sort(function(a,b){return a.p.lng-b.p.lng;});var i=HD.sel?v.indexOf(HD.sel):-1;i=(i+(dir<0?-1:1)+v.length)%v.length;selectPin(v[i],12);return v[i].p;},
+  show:function(kind,on){return setKind(kind,on);},
+  only:function(kind){if(!HD.groups[kind])return false;Object.keys(HD.groups).forEach(function(k){setKind(k,k===kind);});fitVisible();return true;},
+  showAll:function(){Object.keys(HD.groups).forEach(function(k){setKind(k,true);});fitVisible();return true;},
+  reset:function(){fitVisible();return true;},
+  kindWord:function(k){return KIND_WORD[k]||k+'s';}
+};
 window.harmonyShowData=ask;window.harmonyWantsData=wants;window.harmonyDataShow=show;window.harmonyDataClose=close;
 window.harmonyDataCatalog=function(){show({type:'catalog',title:'What Harmony can show you'});say('Here is everything I can put on screen. Tap an example, or just ask me in your own words.');};
 /* close the canvas with the view; "close the map / chart" by voice */
 new MutationObserver(function(){if(!document.getElementById('phgView')&&document.body.classList.contains('hvx-data'))close();}).observe(document.body,{childList:true});
+})();
+</script>
+
+
+<script id="phgVoiceControlV1">
+/* 18.49.34 VOICE CONTROL OF THE APP
+   One command bus for everything Harmony can do on screen. Spoken or typed words are checked here first
+   (instant, no server): map control (zoom, pan, focus on a distillery or venue by name, show/hide/only a kind of
+   pin, next/previous, "tell me about that one"), navigation to any screen by its name, scroll, back, notes,
+   Action button setup, voice settings, and "what can I say". Anything that is not a clear command falls through
+   to the normal Harmony routing unchanged. window.harmonyUI.exec({action,...}) runs the same commands from
+   structured actions (for the server-side dialogue manager later). */
+(function(){
+var CMDS=[];
+function say(t){if(typeof agentSay==='function')agentSay(t);}
+function clean(q){
+  return String(q||'').toLowerCase().replace(/&/g,' and ').replace(/[’']/g,"'").replace(/[.,!?;:]+/g,' ')
+    .replace(/^\s*(hey\s+|ok(ay)?\s+)?harmony\b\s*/,'').replace(/^\s*(please|can you|could you|would you|will you|i want you to|i'd like you to|let's|lets)\s+/,'')
+    .replace(/^\s*(please)\s+/,'').replace(/\s+(please|for me|now|real quick|thanks|thank you)\s*$/,'').replace(/\s+/g,' ').trim();
+}
+function add(c){CMDS.push(c);}
+function viewOpen(){return document.body.classList.contains('phg-view-open');}
+function HM(){return window.harmonyMap;}
+function anyMap(){
+  var h=HM();if(h&&h.open())return h.map();
+  if(typeof MAP!=='undefined'&&MAP&&MAP._loaded)return MAP;
+  if(typeof HVIEW!=='undefined'&&HVIEW&&HVIEW.map&&HVIEW.map._loaded)return HVIEW.map;
+  return null;
+}
+var KINDS={distillery:/^(distiller(y|ies)|producers?|noms?|tequila (makers|producers)|factories)$/,venue:/^(venues?|bars?|restaurants?|places|spots)$/};
+function kindOf(w){w=String(w||'').replace(/^(the|all|all the) /,'').replace(/ (again|back|too|as well)$/,'');if(/\d/.test(w))return null;var c=[w,w.split(' ')[0],w.split(' ').slice(-1)[0]];for(var i=0;i<c.length;i++)for(var k in KINDS)if(KINDS[k].test(c[i]))return k;return null;}
+var NUM={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16};
+function num(w){return /^\d+$/.test(w)?+w:NUM[w];}
+
+/* ---------- map ---------- */
+function noMap(){say('There’s no map open. Ask me for one, like “map the tequila distilleries in Jalisco.”');return true;}
+add({g:'Map',ex:['zoom in','zoom out','zoom in a lot','zoom out all the way'],re:/^(zoom ?(in|out|closer|back out|further out)|(go|get|move) (closer|further out))( (a lot|a bunch|way in|way out|more|a little|a bit|all the way))?$/,run:function(m){
+  m=[m[0],m[1],m[2]||m[4],null,m[6]];
+  var inward=/in|closer/.test(m[2])&&!/out/.test(m[2]),big=/lot|bunch|way/.test(m[4]||''),all=/all the way/.test(m[4]||'');
+  var h=HM();
+  if(h&&h.open()){if(all&&!inward){h.reset();say('Showing everything.');return true;}h.zoom(all?(inward?'max':-12):(inward?1:-1)*(big?3:1));say(inward?'Zoomed in.':'Zoomed out.');return true;}
+  var mp=anyMap();if(!mp)return noMap();mp.setZoom(mp.getZoom()+(inward?1:-1)*(all?8:big?3:1));say(inward?'Zoomed in.':'Zoomed out.');return true;}});
+add({g:'Map',ex:['zoom to level 8'],re:/^zoom (in |out )?to (level )?(\w+)$/,run:function(m){var z=num(m[3]);if(!z)return false;var mp=anyMap();if(!mp)return noMap();mp.setZoom(z);say('Zoom level '+z+'.');return true;}});
+add({g:'Map',ex:['move left','pan north a lot'],re:/^(pan|move|go|scroll|slide|shift)( the map)? (left|right|up|down|north|south|east|west)( (a lot|a little|a bit))?$/,when:function(){return !!anyMap();},run:function(m){
+  var h=HM(),dir=m[3],big=/lot/.test(m[5]||'');
+  if(h&&h.open())h.pan(dir,big);else{var mp=anyMap(),s=mp.getSize(),f=big?.6:.33;mp.panBy({left:[-s.x*f,0],west:[-s.x*f,0],right:[s.x*f,0],east:[s.x*f,0],up:[0,-s.y*f],north:[0,-s.y*f],down:[0,s.y*f],south:[0,s.y*f]}[dir]);}
+  say('Moved '+dir+'.');return true;}});
+function focusName(name,verb){
+  var h=HM();name=String(name||'').replace(/^(the|a|an) /,'').replace(/ (on|in) (the|this) map$/,'').trim();if(!name)return false;
+  if(h&&h.open()){
+    var r=h.focus(name);
+    if(r){say(r.pin.label+(r.pin.sub?', '+r.pin.sub:'')+'.'+(r.others?' '+r.others+' other match'+(r.others>1?'es':'')+'; say “next one” to see '+(r.others>1?'them':'it')+'.':''));return true;}
+  }
+  if(!/^(zoom|focus|fly|center|centre|take|select|find)/.test(verb))return false;
+  if(typeof window.harmonyShowData!=='function')return false;
+  window.harmonyShowData(/^(nom\s*#?\s*)?\d{3,4}$/.test(name)?'Where is NOM '+name.replace(/\D/g,'')+'?':'Where is '+name+' made?');
+  return true;
+}
+add({g:'Map',ex:['zoom in on Don Julio','focus on NOM 1610','take me to Casa Sauza','select Patrón'],re:/^(zoom (in )?on|zoom (in )?to|focus on|fly to|fly over to|center on|centre on|take me to|select|find|show me|go to|pull up) (.+)$/,run:function(m){
+  var verb=m[1],name=m[4];
+  var onMap=!!(HM()&&HM().open());
+  if(!onMap&&(/^(show me|go to|pull up|take me to|select|find)/.test(verb)||matchTarget(name)))return false;
+  if(kindOf(name))return false;
+  return focusName(name,verb);}});
+add({g:'Map',ex:['hide the venues','filter out distilleries'],re:/^(hide|remove|filter out|take (off|away)|turn off|get rid of|no more|drop|clear) (all )?(the )?(\w+( \w+)?)( from the map| off the map)?$/,run:function(m){
+  var k=kindOf(m[5]);if(!k)return false;var h=HM();if(!(h&&h.open()))return noMap();
+  if(h.kinds().indexOf(k)<0){say('There are no '+h.kindWord(k)+' on this map.');return true;}
+  h.show(k,false);var left=h.count();say('Hid the '+h.kindWord(k)+'.'+(left?' '+left+' pins left.':' Nothing else is on this map; say “show the '+h.kindWord(k)+'” to bring them back.'));return true;}});
+add({g:'Map',ex:['only distilleries','show only venues'],re:/^((show )?(only|just) (the )?(\w+( \w+)?)|show (the )?(\w+( \w+)?) only)$/,run:function(m){
+  var k=kindOf(m[5]||m[8]);if(!k)return false;var h=HM();if(!(h&&h.open()))return noMap();
+  if(!h.only(k)){say('There are no '+h.kindWord(k)+' on this map.');return true;}
+  say('Showing only '+h.kindWord(k)+': '+h.count(k)+'.');return true;}});
+add({g:'Map',ex:['show the venues again'],re:/^(show|bring back|turn on|add|put back) (all )?(the )?(\w+( \w+)?)( back| again)?$/,run:function(m){
+  var k=kindOf(m[4]);if(!k)return false;var h=HM();if(!(h&&h.open()))return false;
+  if(h.kinds().indexOf(k)<0){say('This map has no '+h.kindWord(k)+'. Ask me to map them, like “show cocktail bars in Denver on a map.”');return true;}
+  h.show(k,true);say('Showing the '+h.kindWord(k)+' again.');return true;}});
+add({g:'Map',ex:['show everything','reset the map'],re:/^(show (all|everything)( on the map)?|show all( the)? pins|reset( the)? map|fit (all|everything)|zoom to fit|see everything)$/,run:function(){var h=HM();if(!(h&&h.open()))return noMap();h.showAll();say('Showing all '+h.count()+' pins.');return true;}});
+add({g:'Map',ex:['next one','previous one'],re:/^(next|previous|last|back)( one| pin| distillery| venue| place)?$/,when:function(){var h=HM();return !!(h&&h.open()&&h.count()>1);},run:function(m){var p=HM().step(/prev|last|back/.test(m[1])?-1:1);if(p)say(p.label+(p.sub?', '+p.sub:'')+'.');return true;}});
+add({g:'Map',ex:['tell me about that one','what is that'],re:/^(what('s| is) (that|this)( one| place| pin)?|tell me (more )?about (that|this|it)( one| place)?|more (info|details|detail) (on|about) (that|this|it)( one)?|open (that|this)( one| pin)|who makes (that|this)|what do they make)$/,when:function(){var h=HM();return !!(h&&h.open());},run:function(){
+  var p=HM().selected();if(!p){say('Tap a pin or say its name first, like “zoom in on Casa Sauza.”');return true;}
+  if(p.nom)window.harmonyShowData('Where is NOM '+p.nom+'?');else window.harmonyShowData('Drinks profile for '+p.label+(p.sub?' in '+String(p.sub).split('·').pop().trim():''));return true;}});
+add({g:'Map',ex:['how many pins are there'],re:/^how many (\w+)( are there| are on (the|this) map| on (the|this) map| showing)?$/,when:function(){var h=HM();return !!(h&&h.open());},run:function(m){var h=HM(),k=kindOf(m[1]);if(!k&&!/^(pins|places|points)$/.test(m[1]))return false;say((k?h.count(k)+' '+h.kindWord(k):h.count()+' pins')+' on this map.');return true;}});
+
+/* ---------- navigation to any screen, by its name ---------- */
+function leaveView(){if(document.getElementById('phgView')&&typeof window.phgViewportClose==='function')window.phgViewportClose();}
+function goApp(a,then){leaveView();if(typeof setApp==='function')setApp(a);if(then)setTimeout(then,30);}
+var TARGETS=null;
+function targets(){
+  if(TARGETS)return TARGETS;var T=[];
+  function t(label,alias,go){T.push({label:label,keys:[label].concat(alias||[]).map(function(x){return clean(x);}),go:go});}
+  t('Harmony',['harmony view','the harmony screen','talk view','home screen'],function(){if(typeof phgPrimaryView==='function')phgPrimaryView('viewport');});
+  t('Administrative dashboard',['admin','administrative','admin dashboard','dashboard','the dashboard','management dashboard','back office'],function(){if(typeof phgPrimaryView==='function')phgPrimaryView('administrative');else goApp('fin');});
+  t('Market intelligence',['market','market dashboard','intelligence','market data'],function(){goApp('dash');});
+  t('Menu Studio',['menu studio','menu workspace','studio','my menus','menu builder'],function(){goApp('menu',function(){if(typeof mdView==='function')mdView('own');});});
+  t('Menu templates',['templates','menu templates'],function(){goApp('menu',function(){mdView('template');});});
+  t('Training',['staff training','training materials'],function(){goApp('menu',function(){mdView('training');});});
+  t('Costing',['costing','cogs','cost of goods','recipe costing','costing and cogs'],function(){goApp('menu',function(){mdView('costing');});});
+  t('Inventory',['inventory','stock','inventory counts'],function(){goApp('menu',function(){mdView('inventory');});});
+  t('Settings',['settings','preferences','options'],function(){goApp('set');});
+  t('Menu library',['menu library','library','menus library','the menus','all menus','menu gallery','gallery','corpus'],function(){goApp('dash',function(){if(typeof corpusOpen==='function')corpusOpen('rendered');});});
+  try{MDR_BOOKS.forEach(function(b){t(b.label,[b.label.replace(/s$/,''),b.k==='library'?'recipes':null,b.k==='library'?'recipe book':null,b.k==='drinks'?'menu recipes':null].filter(Boolean),function(){goApp('menu',function(){mdrGo(b.k);});});});}catch(e){}
+  try{SECTIONS.forEach(function(s){if(s.k==='home')return;t(s.label,[s.label+' page',s.k==='map'?'market map':null].filter(Boolean),function(){goApp('dash',function(){nav(s.k);});});});}catch(e){}
+  try{FIN_SECTIONS.forEach(function(g){(g.sub||[]).forEach(function(x){t(x.label,[g.label+' '+x.label],function(){if(typeof phgPrimaryView==='function')phgPrimaryView('administrative');setTimeout(function(){finGo(x.k);},60);});});});}catch(e){}
+  try{SET_SECTIONS.forEach(function(g){(g.sub||[]).forEach(function(x){t(x.label+' settings',[x.label,g.label+' '+x.label],function(){goApp('set',function(){setGo(x.k);});});});});}catch(e){}
+  TARGETS=T;return T;
+}
+function matchTarget(phrase){
+  var p=clean(phrase).replace(/^(the|my|our) /,'').replace(/ (page|screen|tab|view|section)$/,'').trim();if(!p)return null;
+  var best=null,bs=0;
+  targets().forEach(function(t){t.keys.forEach(function(k){
+    var s=0;if(k===p)s=1;else if(k.replace(/^the /,'')===p)s=.98;
+    else{var pt=p.split(' '),kt=k.split(' '),hit=pt.filter(function(w){return kt.indexOf(w)>=0||kt.indexOf(w.replace(/s$/,''))>=0;}).length;
+      if(hit===pt.length&&kt.length<=pt.length+1)s=.85*hit/Math.max(pt.length,kt.length)+.1;}
+    if(s>bs){bs=s;best=t;}
+  });});
+  return bs>=.8?best:null;
+}
+add({g:'Go to any screen',ex:['go to the dashboard','open costing','take me to the recipe database','open voice settings','show me the menu library'],re:/^(go to|go back to|open( up)?|take me to|switch to|show( me)?|pull up|bring up|navigate to|jump to|head to) (.+)$/,run:function(m){
+  var t=matchTarget(m[4]);if(!t)return false;say('Opening '+t.label+'.');setTimeout(t.go,250);return true;}});
+add({g:'Go to any screen',ex:['go back'],re:/^(go )?back( a page)?$|^previous (page|screen)$/,when:function(){return !(HM()&&HM().open());},run:function(){history.back();say('Back.');return true;}});
+add({g:'Go to any screen',ex:['scroll down','scroll to the top'],re:/^scroll (up|down|to the top|to the bottom|all the way (up|down))( a (lot|bit|little))?$/,run:function(m){
+  var el=null,p=document.getElementById('hdPanel');if(p&&!p.hidden)el=p.querySelector('.hdBody');
+  var d=m[1],top=/top|all the way up/.test(d),bot=/bottom|all the way down/.test(d),amt=(m[4]&&/lot/.test(m[4])?.9:.5)*window.innerHeight*(d==='up'?-1:1);
+  if(el){el.scrollTo({top:top?0:bot?el.scrollHeight:el.scrollTop+amt,behavior:'smooth'});}
+  else window.scrollTo({top:top?0:bot?document.body.scrollHeight:window.scrollY+amt,behavior:'smooth'});
+  return true;}});
+add({g:'Harmony',ex:['open my notes','show my notes'],re:/^(open|show( me)?|read|pull up|go to) (my |the )?(notes|reminders|to ?dos?|tasks|inbox)$/,when:function(){return viewOpen()&&typeof window.harmonyOpenNotes==='function';},run:function(){window.harmonyOpenNotes();say('Here are your notes.');return true;}});
+add({g:'Harmony',ex:['set up the action button'],re:/^(set ?up|open|show( me)?) (the )?(action button|shortcut|iphone shortcut|action button setup)( setup)?$/,when:function(){return viewOpen()&&typeof window.harmonyOpenShortcut==='function';},run:function(){window.harmonyOpenShortcut();say('Here’s the Action button setup.');return true;}});
+add({g:'Harmony',ex:['change your voice'],re:/^(change|open|adjust) (your |the )?voice( settings)?$/,when:function(){return typeof aiVoiceOpenSettings==='function';},run:function(){aiVoiceOpenSettings();say('Here are my voice settings.');return true;}});
+add({g:'Harmony',ex:['what can I say','voice commands'],re:/^(what can i (say|do|ask)( you)?|what can you do( on (the|this) screen)?|voice commands|list (the |your )?commands|help( me)?( with (voice|commands))?|what are (the|your) commands)$/,run:function(){showHelp();return true;}});
+
+function showHelp(){
+  var groups={};CMDS.forEach(function(c){if(!c.ex)return;(groups[c.g]=groups[c.g]||[]).push.apply(groups[c.g],c.ex);});
+  var rows=[];Object.keys(groups).forEach(function(g){groups[g].forEach(function(x){rows.push([g,'“'+x+'”']);});});
+  if(typeof window.harmonyDataShow==='function'&&viewOpen())window.harmonyDataShow({type:'table',title:'Things you can say',table:{cols:['What','Say'],rows:rows}});
+  say('You can drive the map: zoom in or out, zoom in on a distillery by name, hide or show venues or distilleries, next one, tell me about that one. You can open any screen by name, like the dashboard, costing, the recipe database or voice settings. And you can ask me anything about PHG data.');
+}
+
+/* ---------- the bus ---------- */
+function run(q){
+  var c=clean(q);if(!c||c.length>90)return false;
+  for(var i=0;i<CMDS.length;i++){
+    var cmd=CMDS[i],m=c.match(cmd.re);if(!m)continue;
+    if(cmd.when&&!cmd.when())continue;
+    try{if(cmd.run(m,c)){window.PHG_LAST_UI_COMMAND={q:c,g:cmd.g,at:Date.now()};return true;}}catch(e){if(window.console)console.warn('harmonyUI',e);}
+  }
+  return false;
+}
+function exec(a){
+  a=a||{};var h=HM();
+  switch(a.action){
+    case 'map.zoom':return h&&h.open()?h.zoom(a.delta||1):false;
+    case 'map.zoomTo':return h&&h.open()?h.zoomTo(a.level):false;
+    case 'map.pan':return h&&h.open()?h.pan(a.dir,a.big):false;
+    case 'map.focus':return focusName(a.target,'focus');
+    case 'map.show':return h&&h.open()?h.show(a.kind,a.on!==false):false;
+    case 'map.only':return h&&h.open()?h.only(a.kind):false;
+    case 'map.reset':return h&&h.open()?h.showAll():false;
+    case 'nav.go':var t=matchTarget(a.target);if(t){t.go();return true;}return false;
+    case 'say':return run(a.text);
+  }
+  return false;
+}
+window.harmonyUI={run:run,exec:exec,help:showHelp,targets:function(){return targets().map(function(t){return t.label;});},commands:function(){return CMDS.map(function(c){return {group:c.g,examples:c.ex};});}};
+
+/* Commands are checked first on every path words take into Harmony. */
+if(typeof agentAnswer==='function'){
+  var _ans=agentAnswer;
+  agentAnswer=function(q){if(run(q)){if(typeof AGENT!=='undefined')AGENT.thinking=false;return;}return _ans.apply(this,arguments);};
+  window.agentAnswer=agentAnswer;
+}
+/* While a menu is open on the stage, words go to the stage; screen and map commands still win. */
+if(window.PMS&&typeof PMS.hear==='function'){
+  var _hear=PMS.hear;
+  PMS.hear=function(t){
+    if(PMS.open&&run(t)){try{if(typeof AGENT!=='undefined'&&AGENT.chat){AGENT.chat.push({who:'you',text:String(t||'').trim()});if(typeof agentDraw==='function')agentDraw();}}catch(e){}return;}
+    return _hear.apply(this,arguments);
+  };
+}
 })();
 </script>
 
