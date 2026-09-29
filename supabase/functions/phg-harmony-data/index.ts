@@ -62,6 +62,31 @@ function addressOf(notes: string | null) {
   const c = MUNI[muni] || STATE_CENTRE[state] || null;
   return { addr, muni, state, coord: c, approx: MUNI[muni] ? "municipality" : c ? "state" : null };
 }
+/* v8: product knowledge helpers (phg_know rows from public.phg_know_lookup) */
+const STYLE_LABEL: Record<string, string> = { blanco: "Blanco", joven: "Joven", reposado: "Reposado", anejo: "Añejo", extra_anejo: "Extra Añejo", cristalino: "Cristalino", other: "Other" };
+function knowLine(e: any): string {
+  const aged = e.aging_months_min != null ? `aged ${e.aging_months_min}${e.aging_months_max != null && e.aging_months_max !== e.aging_months_min ? "–" + e.aging_months_max : ""} months${e.barrels ? " in " + e.barrels : ""}` : e.barrels ? `rested in ${e.barrels}` : "";
+  return [e.agave_species || e.agave, e.cooking, e.milling, e.fermentation, e.distillation, aged, e.abv != null ? `${e.abv}% ABV` : "", e.additive_free === true ? "confirmed additive-free" : ""].filter(Boolean).join(", ");
+}
+function knowRows(b: any): string[][] {
+  return [["Producer", b.producer], ["Owner", b.owner], ["Region", b.region], ["Founded", b.founded_year ? String(b.founded_year) : ""], ["History", (b.history || []).slice(0, 3).join(" · ")]].filter((r) => r[1]) as string[][];
+}
+function knowSections(list: any[]): any[] {
+  return list.map((b: any) => ({
+    title: `${b.name} · how it's made`,
+    count: (b.expressions || []).length,
+    items: [
+      ...((b.history || []).length ? [{ name: "Story", sub: (b.history || []).slice(0, 4).join(" · "), value: b.founded_year ? String(b.founded_year) : "" }] : []),
+      ...(b.expressions || []).map((e: any) => ({ name: e.name, value: e.price_usd_750 != null ? "$" + Number(e.price_usd_750).toFixed(0) : (STYLE_LABEL[e.style] || ""), sub: [knowLine(e), (e.tasting || []).length ? "Tastes of " + e.tasting.slice(0, 5).join(", ") : ""].filter(Boolean).join(" — ") })),
+    ],
+    empty: "No bottlings researched yet",
+  }));
+}
+function knowNote(list: any[]): string {
+  const src = new Map<string, any>(); list.forEach((b: any) => (b.sources || []).forEach((x: any) => { if (x?.title) src.set(x.title, x); }));
+  const v = list.some((b: any) => b.verification === "page") ? "checked on the source pages" : "from source excerpts, not yet checked page by page";
+  return `Production and tasting facts ${v}. Sources: ${[...src.keys()].slice(0, 5).join(", ") || "PHG research"}.`;
+}
 const title = (s: string) => s.toLowerCase().replace(/(^|[\s(\-/])([a-zà-ÿ])/g, (_a, p, ch) => p + ch.toUpperCase());
 const money = (n: unknown) => (n == null || !isFinite(Number(n)) ? null : Math.round(Number(n) * 100) / 100);
 /* legal-form suffix only: ", S.A. DE C.V.", "SAPI DE CV", "S. DE R.L. DE C.V." - never "CASA" or "SAN" */
@@ -287,6 +312,27 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
       };
     },
   },
+  /* v8: PRODUCT KNOWLEDGE (phg_know, draft 09): how each brand and bottling is made, aging, proof, tasting notes and
+     history, each fact from a named source. Used by the place card and by brand_knowledge below. */
+  brand_knowledge: {
+    about: "How a tequila or mezcal brand and its bottlings are made and taste: production (agave, cooking, milling, fermentation, stills), aging and barrels, proof, additive-free status, tasting notes, history, for a brand name or NOM (e.g. 'how is Fortaleza reposado made', 'is Siete Leguas additive free', 'tell me about G4').",
+    async run(db, p) {
+      if (!p.q && !p.nom) throw new Error("which brand?");
+      const names = p.q ? [String(p.q).replace(/\b(tequila|mezcal|blanco|plata|reposado|a[nñ]ejo|extra|cristalino|the)\b/gi, " ").replace(/\s+/g, " ").trim(), String(p.q).trim()].filter(Boolean) : null;
+      const { data } = await db.rpc("phg_know_lookup", { p_nom: p.nom ? String(p.nom) : null, p_names: names });
+      const list: any[] = Array.isArray(data) ? data : [];
+      if (!list.length) return { speak: `I don't have production or tasting notes for ${p.q || "NOM " + p.nom} yet.`, view: { type: "empty", title: "Not in PHG yet" } };
+      const b = list[0];
+      const want = String(p.q || "").toLowerCase();
+      const st = /extra\s*a[nñ]ejo/.test(want) ? "extra_anejo" : /a[nñ]ejo/.test(want) ? "anejo" : /reposado/.test(want) ? "reposado" : /blanco|plata|silver/.test(want) ? "blanco" : /cristalino/.test(want) ? "cristalino" : "";
+      const exps = (b.expressions || []) as any[];
+      const focus = st ? exps.filter((e) => e.style === st) : exps;
+      const one = focus[0];
+      const speak = one ? `${one.name}: ${knowLine(one)}.` + (one.tasting?.length ? ` Tasting notes: ${one.tasting.slice(0, 4).join(", ")}.` : "") + (b.sources?.length ? ` Source: ${b.sources[0].title || "PHG research"}.` : "")
+        : `${b.name}${b.nom ? ", NOM " + b.nom : ""}${b.region ? ", " + b.region : ""}.` + (b.history?.length ? " " + b.history.slice(0, 2).join(". ") + "." : "");
+      return { speak, view: { type: "place", kind: "brand", title: b.name, badge: b.nom ? `NOM ${b.nom}` : b.category, rows: knowRows(b), sections: knowSections(list), note: knowNote(list) } };
+    },
+  },
   /* v7: PLACE CARDS. Tapping a pin on the map (or "tell me about ...", "pull up ...") opens everything PHG holds on
      that place, in expandable sections. The same data is spoken as a short summary for the locked-phone Shortcut. */
   place_distillery: {
@@ -325,15 +371,18 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
         return { title: b.brand_name, count: items.length, items: items.slice(0, 40), empty: items.length ? "" : "No US label approvals on file" };
       }).sort((x: any, y: any) => y.count - x.count);
       const lineup = ORDER.filter((k) => styleCount[k]).map((k) => `${k} ${styleCount[k]}`).join(" · ");
+      let know: any[] = [];
+      try { const { data: kd } = await db.rpc("phg_know_lookup", { p_nom: nom, p_names: (brands || []).map((b: any) => b.brand_name) }); know = Array.isArray(kd) ? kd : []; } catch { know = []; }
       const top = sections.filter((x: any) => x.count).slice(0, 3).map((x: any) => x.title);
       return {
-        speak: `NOM ${nom} is ${name}${a.muni ? `, in ${title(a.muni)}, ${title(a.state)}` : ""}. It makes ${sections.length} brand${sections.length === 1 ? "" : "s"}` + (top.length ? `, including ${top.join(", ")}` : "") + "." + (lineup ? ` Their US-approved lineup covers ${ORDER.filter((k) => styleCount[k] && k !== "Other").join(", ")}.` : ""),
+        speak: `NOM ${nom} is ${name}${a.muni ? `, in ${title(a.muni)}, ${title(a.state)}` : ""}. It makes ${sections.length} brand${sections.length === 1 ? "" : "s"}` + (top.length ? `, including ${top.join(", ")}` : "") + "." + (lineup ? ` Their US-approved lineup covers ${ORDER.filter((k) => styleCount[k] && k !== "Other").join(", ")}.` : "") +
+          (know.length ? ` I also have how ${know.slice(0, 3).map((k: any) => k.name).join(", ")} ${know.length === 1 ? "is" : "are"} made and tasting notes; ask about any bottle.` : ""),
         view: {
           type: "place", kind: "distillery", title: name, badge: `NOM ${nom}`,
           pin: a.coord ? { lat: a.coord[0], lng: a.coord[1] } : null,
           rows: [["Producer", o.organization_name], ["Town", a.muni ? title(a.muni) + ", " + title(a.state) : "—"], ["Registered address", a.addr || "—"], ["Brands", String(sections.length)], ["Lineup", lineup || "—"]],
-          sections,
-          note: "Lineups come from US label approvals (TTB COLA) and the CRT register. Tasting notes, production process (cooking, milling, stills, barrels) and history are not in PHG yet.",
+          sections: [...knowSections(know), ...sections],
+          note: know.length ? knowNote(know) + " Lineups come from US label approvals (TTB COLA) and the CRT register." : "Lineups come from US label approvals (TTB COLA) and the CRT register. Tasting notes, production process (cooking, milling, stills, barrels) and history are not in PHG for these brands yet.",
         },
       };
     },

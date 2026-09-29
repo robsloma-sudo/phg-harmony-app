@@ -36,6 +36,13 @@ public.cola_label_approvals -- US label approvals: ttb_id, completed_date, brand
   class_type_desc, origin_desc
 public.cocktail_reference -- classic specs: cocktail_name, base_spirit, consensus_spec, method, glassware, garnish, profile
 public.spirit_lexicon -- term, family, subfamily
+phg_know.brand_profiles -- researched brand facts: key, name, aka, category, nom, producer, owner, region,
+  founded_year, history (text[]), verification (page|excerpt|unverified)
+phg_know.expressions -- each bottling: brand_key (= brand_profiles.key), name, style (blanco|joven|reposado|anejo|
+  extra_anejo|cristalino|other), abv, aging_months_min, aging_months_max, barrels, agave, agave_species, cooking,
+  milling, fermentation, distillation, additive_free (true only when confirmed), tasting (text[]), price_usd_750
+phg_mix.recipes / phg_mix.recipe_lines / phg_mix.preps / phg_mix.techniques / phg_mix.pairings -- graded cocktail
+  library (quality_grade A-E); recipe_lines: recipe_key, ingredient, amount, unit
 
 THE BUSINESS'S OWN DATA (project; the gateway returns only the caller's project)
 phg.menu_projects (id, name, season, status, target_cogs_pct) -> phg.menu_items (menu_project_id, name, section_name,
