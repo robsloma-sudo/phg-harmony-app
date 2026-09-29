@@ -121,3 +121,30 @@ as a pre-swap gate query. Those queries must be run, and their output recorded, 
 
 ### Verdict
 fix_and_resubmit. Blockers B1-B4 must be fixed, and the S7 gate output recorded, before round 2.
+
+## Round 2 submission (2026-09-29 ~16:30 UTC) - lead developer
+Draft rewritten for round-1 findings (see [R2 Bn/Sn] markers in supabase/migration_drafts/10_explorer_v2.sql).
+Live facts gathered with DB access (the round-1 reviewer had none):
+- B1 confirmed live: round-1 build (cron job 25) failed after ~8 min exactly on the mdvp venue_key unique index
+  (ilili|new york|NY). Also: job 25 put cron.unschedule in the same transaction as the build, so the failure rolled the
+  unschedule back and it re-ran (3 runs); all cancelled; job 25 removed. Round 2 job 26 was unscheduled by hand after
+  its first run started; it ran 15:56:00 -> 16:05:31 UTC (571 s) and SUCCEEDED.
+- B3 gate (pg_depend): no dependents of the six live MVs outside the chain; no functions bound to them.
+- S3: menu_item_cocktail_core.staging_menu_extract_id, city demographics per (upper(name), state) and zcta: 0 duplicates
+  today; v2 view uses LATERAL ... LIMIT 1 anyway.
+- S5: all six *_next ACLs are {postgres, service_role} only (not app-readable before the swap).
+- Unique indexes: every *_next has one (mv_de_next_uk staging_id, mv_dash_pins_next_uk pin_key, mv_mdvp_next_key,
+  sections/breakdown/filters _uk). Live mv_drink_explorer and mv_dash_pins have none (so swap_back + concurrent refresh
+  would fail on the old copies - swap_back runbook must restore the OLD cron 8 command, not refresh_explorer_v2).
+- Added index mv_de_next_st_sec_sid (state_code, section, staging_id) for the app's keyset paging.
+- Sizes: explorer 13 MB -> 50 MB; pins 5.6 -> 8.3 MB; others < 3 MB.
+- Gate counts live -> next: CO 16,920 -> 37,325 rows (773 -> 1,641 venues, income 0% -> 100%); IA 11,627 -> 15,144
+  (522 -> 770, 99.6% -> 100%); NY 9,110 -> 75,549 (383 -> 3,218, 0% -> 99.1%). NY unclassified 25,176 rows avg $239.
+- S7/S9 app: 18.49.45 deployed to main (Netlify ready): explicit 11 columns, keyset order=staging_id when the column
+  exists (probe cached; re-checked every 10 min so the swap is picked up mid-session), fallback ordered offset paging on
+  the old MV, 100-page cap with a visible warning, drink sections first and unclassified in the background, fix for a
+  57014-retry duplicate-rows bug. Playwright test: 75,549 NY rows arrive exactly, both MV shapes.
+- phg-harmony-data selects named columns from mv_dash_pins / mv_drink_explorer (no select=*).
+Asks for round 2: review parts C (swap / swap_back with lock_timeout 300 ms, statement_timeout 3 s, ACL copy, index
+renames, OID log, NOTIFY pgrst) and D (procedure with per-refresh COMMIT; not SECURITY DEFINER because it commits), the
+rehearsal plan, and whether anything still blocks applying C and running the rehearsal.
