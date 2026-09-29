@@ -384,3 +384,17 @@ PHG-050 (P1, planned) Roll out the remaining 47 states + DC. Plan: handoff/PHG_5
 PHG-048 follow-up (open): Shortcut menu questions ("show me Eatery A's menu in Des Moines") spend ~4.8 s in
   phg-harmony-data routing, then a second place_venue call, before replying; target: route menu asks directly from
   the planner and read the venue's drinks in one call.
+
+PHG-051 (P0, open) Market explorer is 4 days stale and missing most menus. mv_drink_explorer (and mv_dash_pins, plus
+  4 MVs built on them: mv_menu_dev_venue_profile, mv_dash_sections, mv_dash_breakdown, mv_dash_filters) were last
+  refreshed by cron 8 (refresh_explorer) on 2026-09-25 21:10 UTC (that run failed; job paused since, PHG-018: the two
+  non-concurrent refreshes lock readers and fed the iPhone-login 504s). Facts 2026-09-29: MV 37,657 rows; staging
+  1,114,366 rows of which 309,294 live (not superseded) and 176,696 live rows loaded after the last refresh. The base
+  view v_public_drink_explorer takes > 55 s, reads superseded staging rows too (PHG-026 duplicates / old prices), and
+  gets income/median age only from city-level geography_demographics, which exists for Iowa only (IA 99.6% of rows
+  have income, CO 0%, NY 0%), although ZIP-level phg_census_zcta covers 99.6% of CO/NY venues by postal code.
+  Everything that reads these MVs is stale: market pages, Menu Studio build, Harmony drink_prices / drink_map / venues.
+  Plan (draft, needs review before live): v2 view = live staging rows only (superseded_at is null) + ZIP census
+  fallback (coalesce city demo, phg_census_zcta by left(postal_code,5)) + staging_id appended; build *_next MVs
+  alongside (no reader locks), unique indexes so future refreshes are CONCURRENT, recreate the 4 dependents on the
+  new MV, then swap names in one short transaction (lock_timeout 3 s); re-enable refresh as a concurrent job.
