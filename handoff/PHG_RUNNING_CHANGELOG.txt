@@ -2356,3 +2356,12 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
     (per state, loading flag, city/type/county drill-down, 30 s refresh).
   - Harmony data v14: licenses source (coverage, state breakdown, venue list/map). Loader v12: NE class codes, GA/OK
     columns, CT prefix map, RI zip, NJ inactivity. Deploy + reloads of NE/GA/OK/CT/RI in progress (agent).
+- 2026-09-29 17:32 Deployed: ingest-state-licenses (platform v10 = loader v12), phg-harmony-data (platform v14 = code
+  v15: licenses source + feedback logging + lessons). Both diff-identical to the repo.
+  Loaded under the enforced rule: GA 7,947 (Consumption), CT 4,494, NE 3,546 (class codes), OK 3,321.
+  RI: zip still null (not reloaded).
+  Coverage: 20 states, 201,873 licences, 198,690 venues (17 licence-list states + CO/NY/IA accounts).
+  Open:
+  - RI zip.
+  - GA has no city (combined address).
+  - Harmony end-to-end licence test needs a signed-in user: the server test returned 401 as designed.
