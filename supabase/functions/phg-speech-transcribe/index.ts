@@ -47,19 +47,22 @@ async function loadLexicon(db:any){
   const pages=async(table:string,col:string,total:number,filter?:(q:any)=>any)=>{
     const out:string[]=[];const n=Math.ceil(total/1000);
     for(let i=0;i<n;i+=8){
-      const batch=await Promise.all(Array.from({length:Math.min(8,n-i)},(_,j)=>{let q=db.from(table).select(col).range((i+j)*1000,(i+j)*1000+999);if(filter)q=filter(q);return q;}));
+      const batch=await Promise.all(Array.from({length:Math.min(8,n-i)},(_,j)=>{let q=db.from(table).select(col).order(col).range((i+j)*1000,(i+j)*1000+999);if(filter)q=filter(q);return q;}));
       let got=0;for(const r of batch){(r.data||[]).forEach((x:any)=>{if(x[col])out.push(String(x[col]));});got+=(r.data||[]).length;}
       if(got<Math.min(8,n-i)*1000)break;
     }
     return out;
   };
-  const [brands,menuBrands,cocktails,terms,orgs,venues]=await Promise.all([
+  /* v5: + every brand name in US label approvals (view v_harmony_brand_names, service_role only). Pages are ordered
+     so paging is stable. */
+  const [brands,menuBrands,cocktails,terms,orgs,venues,labelBrands]=await Promise.all([
     pages("brands","brand_name",3000),
     pages("menu_item_brands","raw_brand_text",60000,(q:any)=>q.not("raw_brand_text","is",null)),
     pages("cocktail_reference","cocktail_name",1000),
     pages("spirit_lexicon","term",1000),
     pages("organizations","organization_name",2000,(q:any)=>q.not("nom","is",null)),
     pages("mv_dash_pins","venue",40000),
+    pages("v_harmony_brand_names","name",20000),
   ]);
   const entries:Entry[]=[];const seen=new Set<string>();
   const add=(name:string,kind:string)=>{name=name.replace(LEGAL,"").replace(/\s+/g," ").trim();const nn=norm(name);if(nn.length<3||seen.has(kind+"|"+nn)||/^\d+$/.test(nn))return;seen.add(kind+"|"+nn);const k=soundKey(name);if(k.length<3)return;entries.push({name:/^[A-Z0-9 .,'&-]+$/.test(name)&&name.length>4?name.toLowerCase().replace(/(^|[\s'-])([a-z])/g,(_a,p,c)=>p+c.toUpperCase()):name,kind,k,sk:skel(k)});};
@@ -67,11 +70,12 @@ async function loadLexicon(db:any){
   const mc=new Map<string,number>();menuBrands.forEach((x)=>{const n=norm(x);mc.set(n,(mc.get(n)||0)+1);});
   const firstSpelling=new Map<string,string>();menuBrands.forEach((x)=>{const n=norm(x);if(!firstSpelling.has(n))firstSpelling.set(n,x);});
   mc.forEach((c,n)=>{if(c>=2)add(firstSpelling.get(n)||n,"brand");});
+  labelBrands.forEach((x)=>add(x,"brand"));
   orgs.forEach((x)=>add(x,"producer"));terms.forEach((x)=>add(x,"term"));venues.forEach((x)=>add(x,"venue"));
   const grams=new Map<string,number[]>(),exact=new Map<string,number>();
   entries.forEach((e,i)=>{exact.set(norm(e.name),i);trigrams(e.k).forEach((g)=>{let a=grams.get(g);if(!a){a=[];grams.set(g,a);}a.push(i);});});
   LEX.entries=entries;LEX.grams=grams;LEX.exact=exact;LEX.at=Date.now();
-  console.log(JSON.stringify({lexicon:entries.length,brands:brands.length,menu_brands:menuBrands.length,venues:venues.length}));
+  console.log(JSON.stringify({lexicon:entries.length,brands:brands.length,menu_brands:menuBrands.length,label_brands:labelBrands.length,venues:venues.length}));
 }
 function lexiconReady(db:any,waitMs:number){
   if(LEX.entries.length&&Date.now()-LEX.at<6*3600e3)return Promise.resolve(true);
@@ -166,7 +170,7 @@ async function repairNames(heard:string,hint:string,oa:string,user:string,accoun
     /* without the model's check, only swap clear multi-word sound-alikes (never a single ordinary word) */
     const opt=d?s.options.find((o)=>o.name.toLowerCase()===pk):(s.to-s.from>=2&&s.score>=0.92&&(s.options.length===1||s.options[0].score-s.options[1].score>=0.08)?s.options[0]:null);
     if(opt&&(!d||d.sure)){repl.set(s.from,{to:s.to,name:opt.name});fixes.push({heard:s.heard,meant:opt.name,kind:opt.kind,why:"sounds like"});}
-    else if(opt||s.score>=0.8)unsure.push({heard:s.heard,options:s.options.map((o)=>o.name)});
+    else if(opt||(s.to-s.from>=2&&s.score>=0.85))unsure.push({heard:s.heard,options:s.options.map((o)=>o.name)});
   });
   if(repl.size){
     const outw:string[]=[];
