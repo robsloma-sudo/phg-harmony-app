@@ -19,6 +19,10 @@ TECH_CATS = {"classic", "dilution", "clarification", "infusion", "carbonation", 
 METHODS = {"shake", "stir", "build", "throw", "swizzle", "blend", "dry_shake", "whip", "clarified", "carbonated", "layer", "other"}
 ERAS = {"pre-prohibition", "prohibition", "tiki", "post-war", "disco", "modern_classic", "contemporary"}
 FAMILIES = {"old_fashioned", "martini", "daiquiri", "sidecar", "highball", "flip", "other"}
+VERSION_TYPES = {"original", "classic", "modern_standard", "traditional", "regional", "house", "happy_hour", "premium", "frozen",
+                 "flavored", "spicy", "skinny", "batch", "zero_proof", "bartender_signature", "brand", "style", "spirit_swap", "other"}
+SERVES = {"up", "rocks", "frozen", "neat", "highball", "collins", "hot", "punch", "other"}
+PRICE_TIERS = {"well", "call", "premium", "top_shelf"}
 
 
 def q(v):
@@ -154,6 +158,21 @@ def main():
         for r in p.get("used_in") or []:
             out.append(f"insert into phg_mix.uses values ('recipe',{q(r)},'prep',{q(p['key'])}) on conflict do nothing;")
 
+    # drinks (one identity, many versions): explicit drink records first, then any a recipe names inline
+    drinks = {}
+    for d in by("drink"):
+        drinks[d["key"]] = d
+    for r in by("recipe"):
+        d = r.get("drink")
+        if isinstance(d, dict) and d.get("key"):
+            drinks.setdefault(d["key"], d)
+            r["drink_key"] = d["key"]
+    for d in sorted(drinks.values(), key=lambda x: 1 if x.get("parent_key") else 0):
+        out.append("insert into phg_mix.drinks (key,name,aka,family,parent_key,description) values ("
+                   + ",".join([q(d["key"]), q(d.get("name") or d["key"]), q(d.get("aka") or []), q(d.get("family") if d.get("family") in FAMILIES else None),
+                               q(d.get("parent_key")), q(d.get("description"))])
+                   + ") on conflict (key) do update set name=excluded.name, aka=excluded.aka, family=coalesce(excluded.family, phg_mix.drinks.family), parent_key=coalesce(excluded.parent_key, phg_mix.drinks.parent_key), description=coalesce(excluded.description, phg_mix.drinks.description), updated_at=now();")
+
     for r in by("recipe"):
         rows, backers = attrib("recipe", r)
         lines = r.get("lines") or []
@@ -170,6 +189,15 @@ def main():
                         q(num(r.get("abv_est"))), q(r.get("notes")), q(r.get("confidence") if r.get("confidence") in ("high", "medium", "low") else "low"),
                         q(ver), str(score), q(grade(score)), qj(parts)])
             + ") on conflict (key) do update set name=excluded.name, aka=excluded.aka, family=excluded.family, subfamily=excluded.subfamily, style_tags=excluded.style_tags, base_spirits=excluded.base_spirits, era=excluded.era, year_created=excluded.year_created, creator_key=excluded.creator_key, origin_bar=excluded.origin_bar, origin_city=excluded.origin_city, method=excluded.method, steps=excluded.steps, dilution_target_pct=excluded.dilution_target_pct, glass=excluded.glass, ice=excluded.ice, garnish=excluded.garnish, abv_est=excluded.abv_est, notes=excluded.notes, confidence=excluded.confidence, verification=excluded.verification, quality_score=excluded.quality_score, quality_grade=excluded.quality_grade, quality_parts=excluded.quality_parts, updated_at=now();")
+        if r.get("drink_key"):
+            vt = r.get("version_type") if r.get("version_type") in VERSION_TYPES else "other"
+            if r.get("is_reference"):
+                out.append(f"update phg_mix.recipes set is_reference = false where drink_key = {q(r['drink_key'])} and key <> {q(r['key'])};")
+            out.append("update phg_mix.recipes set " + ", ".join([
+                f"drink_key = {q(r['drink_key'])}", f"version_type = {q(vt)}", f"version_label = {q(r.get('version_label'))}",
+                f"serve = {q(r.get('serve') if r.get('serve') in SERVES else None)}",
+                f"price_tier = {q(r.get('price_tier') if r.get('price_tier') in PRICE_TIERS else None)}",
+                f"is_reference = {'true' if r.get('is_reference') else 'false'}"]) + f" where key = {q(r['key'])};")
         out.append(f"delete from phg_mix.recipe_lines where recipe_key = {q(r['key'])};")
         for i, l in enumerate(lines):
             out.append(f"insert into phg_mix.recipe_lines (recipe_key,position,ingredient,amount,unit,ml,prep_key,note) values ({q(r['key'])},{i + 1},{q(l.get('ingredient') or '?')},{q(num(l.get('amount')))},{q(l.get('unit'))},{q(num(l.get('ml')))},{q(l.get('prep_key'))},{q(l.get('note'))});")

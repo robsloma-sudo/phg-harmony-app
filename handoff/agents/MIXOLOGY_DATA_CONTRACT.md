@@ -53,6 +53,21 @@ method:"shake|stir|build|throw|swizzle|blend|dry_shake|whip|clarified|carbonated
 steps:[own words], dilution_target_pct|null, glass, ice, garnish, abv_est|null,
 variants:[{name, change, source_key}], sources:[{source_key, url, locator, tier}], confidence}`
 
+#### Versions: one drink, many full recipes (Rob 2026-09-29)
+A drink (Margarita) has many complete recipes: classic, traditional, Tommy's, Cadillac, frozen, skinny, spicy, happy hour,
+house... Each version is its own `recipe` record (own lines, method, sources) that names its drink:
+`drink:{key:"dk_margarita", name:"Margarita", aka:[..], family, parent_key|null}` (or `drink_key` when the drink exists),
+`version_type`: original | classic | modern_standard | traditional | regional | house | happy_hour | premium | frozen |
+flavored | spicy | skinny | batch | zero_proof | bartender_signature | brand | style | spirit_swap | other,
+`version_label` (short: "Cadillac", "Tommy's", "Frozen", "Happy hour (well tequila, sour mix)", "Perfect"),
+`serve`: up | rocks | frozen | neat | highball | collins | hot | punch | other,
+`price_tier`: well | call | premium | top_shelf (only when the spec says what grade of spirit),
+`is_reference`: true for the one spec Harmony gives when no version is asked for (usually the classic).
+Use `variants` only for one-line tweaks of a spec; any version with its own measurements is a separate recipe.
+A named riff that is its own drink (Black Manhattan, Oaxaca Old Fashioned, Paloma) gets its own drink with
+`parent_key` pointing to the drink it comes from. Existing drink keys: `dk_` + the recipe key without `rx_` (e.g.
+dk_margarita, dk_daiquiri, dk_old_fashioned, dk_manhattan, dk_martini, dk_whiskey_sour, dk_negroni, dk_mojito).
+
 ### `prep` (syrups, cordials, infusions, shrubs, tinctures, oleo saccharum, fat-washes, clarified juices, foams, gels)
 `{type:"prep", key:"pr_rich_simple_syrup", name, category:"syrup|rich_syrup|flavored_syrup|cordial|infusion|shrub|oleo|tincture|bitters|fat_wash|milk_punch|clarified_juice|acid_blend|super_juice|foam|gel|air|caviar|brine|salt_solution|other",
 yield:{amount,unit}, lines:[{ingredient, amount, unit, note}], ratio_note, process:[own words],
