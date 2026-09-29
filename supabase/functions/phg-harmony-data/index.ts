@@ -92,6 +92,41 @@ const money = (n: unknown) => (n == null || !isFinite(Number(n)) ? null : Math.r
 /* legal-form suffix only: ", S.A. DE C.V.", "SAPI DE CV", "S. DE R.L. DE C.V." - never "CASA" or "SAN" */
 const LEGAL = /,?\s+(S\.?\s?A\.?(\s?P\.?\s?I\.?)?|S\.?\s?DE\s+R\.?\s?L\.?|S\.?\s?C\.?)(\s+DE\s+C\.?\s?V\.?)?\.?\s*$/i;
 const esc = (s: string) => s.replace(/[%_,()]/g, " ").trim();
+/* v13: refinable views. Numeric filters arrive as strings from the planner ("" = unused). */
+const num = (v: unknown): number | null => { const t = String(v ?? "").trim().toLowerCase().replace(/[$,\s]/g, ""); const m = t.match(/^(-?\d+(?:\.\d+)?)(k)?$/); if (!m) return null; const n = parseFloat(m[1]) * (m[2] ? 1000 : 1); return isFinite(n) ? n : null; };
+const truthy = (v: unknown) => /^(1|true|yes|y|on)$/i.test(String(v ?? "").trim());
+/* shared price / census filters for mv_drink_explorer queries */
+function drinkFilters(q: any, p: P) {
+  const lo = num(p.price_min), hi = num(p.price_max), inc = num(p.income_min), incHi = num(p.income_max), ageLo = num(p.age_min), ageHi = num(p.age_max);
+  if (lo != null) q = q.gte("item_price", lo);
+  if (hi != null) q = q.lte("item_price", hi);
+  if (inc != null) q = q.gte("income", inc);
+  if (incHi != null) q = q.lte("income", incHi);
+  if (ageLo != null) q = q.gte("median_age", ageLo);
+  if (ageHi != null) q = q.lte("median_age", ageHi);
+  if (p.venue_type) q = q.ilike("venue_type", `%${esc(p.venue_type)}%`);
+  return q;
+}
+function filterWords(p: P) {
+  const w: string[] = [];
+  const lo = num(p.price_min), hi = num(p.price_max), inc = num(p.income_min), incHi = num(p.income_max), ageHi = num(p.age_max), ageLo = num(p.age_min);
+  if (lo != null && hi != null) w.push(`$${lo}–$${hi}`); else if (hi != null) w.push(`under $${hi}`); else if (lo != null) w.push(`over $${lo}`);
+  if (inc != null) w.push(`income over $${Math.round(inc / 1000)}k`);
+  if (incHi != null) w.push(`income under $${Math.round(incHi / 1000)}k`);
+  if (ageHi != null) w.push(`median age under ${ageHi}`);
+  if (ageLo != null) w.push(`median age over ${ageLo}`);
+  if (p.venue_type) w.push(String(p.venue_type));
+  return w.join(", ");
+}
+function sortRows(rows: any[], sort: string) {
+  const by: Record<string, (a: any, b: any) => number> = {
+    price_asc: (a, b) => a.item_price - b.item_price, price_desc: (a, b) => b.item_price - a.item_price,
+    income_desc: (a, b) => (b.income || 0) - (a.income || 0), income_asc: (a, b) => (a.income || 9e9) - (b.income || 9e9),
+    rating_desc: (a, b) => (b.rating || 0) - (a.rating || 0), name: (a, b) => String(a.venue).localeCompare(String(b.venue)),
+    city: (a, b) => String(a.city).localeCompare(String(b.city)),
+  };
+  return by[sort] ? [...rows].sort(by[sort]) : rows;
+}
 
 /* ---------------- the catalog ---------------- */
 type P = Record<string, any>;
@@ -159,10 +194,11 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
       if (p.city) q = q.ilike("city", esc(p.city));
       if (p.venue_type) q = q.ilike("venue_type", `%${esc(p.venue_type)}%`);
       if (p.q) q = q.ilike("venue", `%${esc(p.q)}%`);
-      if (p.with_menus) q = q.gt("drink_items", 0);
+      if (truthy(p.with_menus)) q = q.gt("drink_items", 0);
       const { data, error } = await q.order("drink_items", { ascending: false });
       if (error) throw error;
-      const pins = (data || []).map((v: any) => ({ lat: +v.lat, lng: +v.lng, label: v.venue, sub: `${v.city}, ${v.state_code}${v.venue_type ? " · " + v.venue_type : ""}${v.drink_items ? " · " + v.drink_items + " drinks" : ""}`, weight: v.drink_items || 0 }));
+      const pins = (data || []).map((v: any) => ({ lat: +v.lat, lng: +v.lng, label: v.venue, sub: `${v.city}, ${v.state_code}${v.venue_type ? " · " + v.venue_type : ""}${v.drink_items ? " · " + v.drink_items + " drinks" : ""}`, weight: v.drink_items || 0,
+        city: v.city, state: v.state_code, venue_type: v.venue_type, rating: v.rating == null ? null : +v.rating, drinks: v.drink_items || 0 }));
       const where = [p.q, p.venue_type, p.city, p.state && (STATE_NAMES[String(p.state).toUpperCase()] || p.state)].filter(Boolean).join(", ");
       return { speak: pins.length ? `${pins.length}${pins.length >= 800 ? "+" : ""} venues${where ? " for " + where : ""} on the map.` : `No venues found${where ? " for " + where : ""}.`, view: { type: "map", title: `Venues${where ? " · " + where : ""}`, pins, region: "US" } };
     },
@@ -170,7 +206,8 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
   drink_prices: {
     about: "Prices of a drink or drink family (e.g. margarita, espresso martini, IPA, tequila) across menus, optionally in a city/state; group_by city, venue_type or venue: stat tiles + bars + sample table.",
     async run(db, p) {
-      let q = db.from("mv_drink_explorer").select("item_name,item_price,venue,city,state_code,venue_type,family,drink_name").not("item_price", "is", null).gt("item_price", 0).limit(4000);
+      let q = db.from("mv_drink_explorer").select("item_name,item_price,venue,city,state_code,venue_type,family,drink_name,income,median_age,rating").not("item_price", "is", null).gt("item_price", 0).limit(4000);
+      q = drinkFilters(q, p);
       if (p.q) q = q.or(`item_name.ilike."%${esc(p.q)}%",drink_name.ilike."%${esc(p.q)}%"`);
       if (p.family) q = q.eq("family", String(p.family).toLowerCase());
       if (p.state) q = q.eq("state_code", String(p.state).toUpperCase().slice(0, 2));
@@ -190,14 +227,55 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
       rows.forEach((r: any) => { const k = r[g] || "—"; (agg[k] = agg[k] || []).push(+r.item_price); });
       const bars = Object.entries(agg).filter(([, v]) => v.length >= (g === "venue" ? 1 : 3)).map(([label, v]) => ({ label, value: money(v.reduce((a, b) => a + b, 0) / v.length), n: v.length })).sort((a: any, b: any) => b.n - a.n).slice(0, 12).sort((a: any, b: any) => b.value - a.value);
       const what = p.q || p.family || "drinks";
+      const fw = filterWords(p);
+      const sorted = sortRows(rows, String(p.sort || ""));
+      const off = Math.max(0, Math.floor(num(p.offset) || 0));
       return {
-        speak: `Across ${countSay} ${what} listings with prices on our menus${p.city ? " in " + p.city : p.state ? " in " + (STATE_NAMES[String(p.state).toUpperCase()] || p.state) : ""}, the average is $${avg.toFixed(2)} and the median $${med.toFixed(2)}; most are between $${p10} and $${p90}.`,
+        speak: `Across ${countSay} ${what} listings with prices on our menus${p.city ? " in " + p.city : p.state ? " in " + (STATE_NAMES[String(p.state).toUpperCase()] || p.state) : ""}${fw ? " (" + fw + ")" : ""}, the average is $${avg.toFixed(2)} and the median $${med.toFixed(2)}; most are between $${p10} and $${p90}.`,
         view: {
-          type: "dashboard", title: `${title(String(what))} prices${p.city ? " · " + p.city : p.state ? " · " + p.state : ""}`,
+          type: "dashboard", title: `${title(String(what))} prices${p.city ? " · " + p.city : p.state ? " · " + p.state : ""}${fw ? " · " + fw : ""}`,
           tiles: [{ label: "Average", value: "$" + avg.toFixed(2) }, { label: "Median", value: "$" + med.toFixed(2) }, { label: "Typical range", value: `$${p10}–$${p90}` }, { label: "Menu items", value: String(rows.length) }],
           bars: { title: `Average by ${g.replace("_code", "").replace("_", " ")}`, unit: "$", bars },
-          table: { cols: ["Drink", "Price", "Venue", "City"], rows: rows.slice(0, 40).map((r: any) => [r.item_name, "$" + r.item_price, r.venue, r.city]) },
+          table: { cols: ["Drink", "Price", "Venue", "City"], total: sorted.length, offset: off, rows: sorted.slice(off, off + 40).map((r: any) => [r.item_name, "$" + r.item_price, r.venue, r.city]) },
         },
+      };
+    },
+  },
+  drink_map: {
+    about: "Map of the venues that serve a drink or drink family (e.g. margaritas, espresso martini, tequila), each pin with that venue's average price; accepts city/state/venue type and price / income / age filters.",
+    async run(db, p) {
+      let q = db.from("mv_drink_explorer").select("item_name,item_price,venue,venue_key,city,state_code,venue_type,lat,lng,income,median_age,rating,drink_name").not("lat", "is", null).not("item_price", "is", null).gt("item_price", 0).limit(5000);
+      q = drinkFilters(q, p);
+      if (p.q) q = q.or(`item_name.ilike."%${esc(p.q)}%",drink_name.ilike."%${esc(p.q)}%"`);
+      if (p.family) q = q.eq("family", String(p.family).toLowerCase());
+      if (p.state) q = q.eq("state_code", String(p.state).toUpperCase().slice(0, 2));
+      if (p.city) q = q.ilike("city", esc(p.city));
+      const { data, error } = await q;
+      if (error) throw error;
+      const byV: Record<string, any> = {};
+      for (const r of (data || []) as any[]) {
+        if (!(r.item_price < 500)) continue;
+        const k = r.venue_key || r.venue;
+        const v = byV[k] || (byV[k] = { lat: +r.lat, lng: +r.lng, label: r.venue, city: r.city, state: r.state_code, venue_type: r.venue_type, income: r.income == null ? null : +r.income, median_age: r.median_age == null ? null : +r.median_age, rating: r.rating == null ? null : +r.rating, prices: [] as number[], items: [] as string[] });
+        v.prices.push(+r.item_price); if (v.items.length < 4) v.items.push(`${r.item_name} $${r.item_price}`);
+      }
+      let pins: any[] = Object.values(byV).map((v: any) => {
+        const avg = money(v.prices.reduce((a: number, b: number) => a + b, 0) / v.prices.length)!;
+        return { lat: v.lat, lng: v.lng, label: v.label, sub: `${v.city}, ${v.state} · avg $${avg.toFixed(2)} · ${v.items.join("; ")}`, weight: v.prices.length,
+          city: v.city, state: v.state, venue_type: v.venue_type, price: avg, min_price: Math.min(...v.prices), items: v.prices.length, income: v.income, median_age: v.median_age, rating: v.rating };
+      });
+      const sort = String(p.sort || "");
+      if (sort === "price_asc") pins.sort((a, b) => a.price - b.price); else if (sort === "price_desc") pins.sort((a, b) => b.price - a.price);
+      else if (sort === "income_desc") pins.sort((a, b) => (b.income || 0) - (a.income || 0)); else pins.sort((a, b) => b.weight - a.weight);
+      pins = pins.slice(0, 800);
+      const what = p.q || p.family || "drinks", fw = filterWords(p);
+      const where = p.city || (p.state && (STATE_NAMES[String(p.state).toUpperCase()] || p.state)) || "";
+      if (!pins.length) return { speak: `No venues with ${what}${where ? " in " + where : ""}${fw ? " (" + fw + ")" : ""} on the menus we have.`, view: { type: "empty", title: "No venues" } };
+      const prices = pins.map((x) => x.price).sort((a: number, b: number) => a - b);
+      const avg = prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
+      return {
+        speak: `${pins.length} venues serve ${what}${where ? " in " + where : ""}${fw ? " (" + fw + ")" : ""}; their average is $${avg.toFixed(2)}, from $${prices[0].toFixed(2)} to $${prices[prices.length - 1].toFixed(2)}.`,
+        view: { type: "map", title: `${title(String(what))}${where ? " · " + where : ""}${fw ? " · " + fw : ""}`, pins, region: "US" },
       };
     },
   },
@@ -497,10 +575,12 @@ const PLAN_SCHEMA = {
     source: { type: "string", enum: [...Object.keys(SOURCES), "ask", "menu_lookup", "none"] },
     params: {
       type: "object", additionalProperties: false,
-      required: ["q", "nom", "city", "state", "town", "zip", "family", "venue_type", "section", "group_by"],
+      required: ["q", "nom", "city", "state", "town", "zip", "family", "venue_type", "section", "group_by", "price_min", "price_max", "income_min", "income_max", "age_min", "age_max", "sort", "with_menus"],
       properties: {
         q: { type: "string" }, nom: { type: "string" }, city: { type: "string" }, state: { type: "string" }, town: { type: "string" },
         zip: { type: "string" }, family: { type: "string" }, venue_type: { type: "string" }, section: { type: "string" }, group_by: { type: "string" },
+        price_min: { type: "string" }, price_max: { type: "string" }, income_min: { type: "string" }, income_max: { type: "string" },
+        age_min: { type: "string" }, age_max: { type: "string" }, sort: { type: "string" }, with_menus: { type: "string" },
       },
     },
   },
@@ -524,7 +604,8 @@ function fastPlan(t: string): { source: string; params: P } | null {
 /* v6: ASK. Anything the fixed catalog can't answer is written as one read-only SELECT and run through
    public.phg_harmony_query (the knowledge-map gateway: select only, table allowlist, project-scoped RLS, logged).
    One repair round on a planner error. The gateway does not bound its own runtime, so the caller does (12 s). */
-/* v12 (Rob 2026-09-29: no extra payment): priority processing OFF by default (OPENAI_SERVICE_TIER=priority to re-enable).
+/* v13 (2026-09-29): refinable views - price / income / age / sort params, drink_map source, view.query.
+   v12 (Rob 2026-09-29: no extra payment): priority processing OFF by default (OPENAI_SERVICE_TIER=priority to re-enable).
    v11 SPEED: OpenAI priority processing, like the inbox (OPENAI_SERVICE_TIER; "default" turns it off). If the account
    refuses it, it is switched off for this instance and the request is sent again without it. */
 let TIER: string | null = (Deno.env.get("OPENAI_SERVICE_TIER") || "default").trim();
@@ -630,7 +711,7 @@ Deno.serve(async (req) => {
     if (!oa) return json({ error: "planner unavailable" }, 500);
     const r = await oaCall(oa, ({
         model: Deno.env.get("OPENAI_DATA_MODEL") || "gpt-4o-mini", max_output_tokens: 300,
-        instructions: "Pick the one PHG data source that answers the request and fill its parameters (empty string when unused). state is a US two-letter code (we have IA, CO, NY). group_by is one of city, venue_type, venue, state_code, item, subfamily, serve_format. section is one of cocktails, beer, wine, liquor, non_alcoholic. family is one of tequila, mezcal, whiskey, vodka, gin, rum, brandy, liqueur, wine, beer, non_alcoholic. Use menu_lookup when they want to SEE a specific venue's menu document. Use ask for any other question about PHG's data that the sources above cannot answer as asked (a list with several filters such as all the margaritas at one venue in one city, a specific venue's drinks, comparisons, counts, rankings, or the business's own recipes, invoices, costs, sales, labor, budgets and notes). Use none only when it is not about data.\nSources:\n" + Object.entries(SOURCES).map(([k, v]) => `${k}: ${v.about}`).join("\n") + "\nmenu_lookup: open a specific venue's menu document (q=venue, city, state).",
+        instructions: "Pick the one PHG data source that answers the request and fill its parameters (empty string when unused). state is a US two-letter code (we have IA, CO, NY). group_by is one of city, venue_type, venue, state_code, item, subfamily, serve_format. section is one of cocktails, beer, wine, liquor, non_alcoholic. family is one of tequila, mezcal, whiskey, vodka, gin, rum, brandy, liqueur, wine, beer, non_alcoholic. price_min / price_max are dollars ('under $14' -> price_max 14). income_min / income_max are the median household income of the venue ZIP in dollars ('income over 100k' -> income_min 100000; 'affluent' -> 100000). age_min / age_max are the ZIP median age ('younger areas' -> age_max 35). sort is one of price_asc, price_desc, income_desc, income_asc, rating_desc, name, city. with_menus is 'true' to keep only venues with menu data. Use drink_map when they want to SEE where a drink is served (a map), drink_prices for prices and averages. Use menu_lookup when they want to SEE a specific venue's menu document. Use ask for any other question about PHG's data that the sources above cannot answer as asked (a list with several filters such as all the margaritas at one venue in one city, a specific venue's drinks, comparisons, counts, rankings, or the business's own recipes, invoices, costs, sales, labor, budgets and notes). Use none only when it is not about data.\nSources:\n" + Object.entries(SOURCES).map(([k, v]) => `${k}: ${v.about}`).join("\n") + "\nmenu_lookup: open a specific venue's menu document (q=venue, city, state).",
         input: ask,
         text: { format: { type: "json_schema", name: "phg_data_plan", strict: true, schema: PLAN_SCHEMA } },
       }),
@@ -656,6 +737,8 @@ Deno.serve(async (req) => {
   if (!src) return json({ status: "ok", source: "none", params });
   try {
     const out = await src.run(db, params);
+    /* v13: every view carries the query that made it, so the app can refine it ("only under $14", "sort by price") */
+    if (out.view && typeof out.view === "object") (out.view as any).query = { source: plan!.source, params };
     return json({ status: "ok", source: plan!.source, params, ...out });
   } catch (e) {
     return json({ status: "ok", source: plan!.source, params, speak: "I could not pull that: " + String((e as Error)?.message || e), view: { type: "empty", title: "Could not load" } });
