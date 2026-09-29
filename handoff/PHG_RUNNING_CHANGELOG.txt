@@ -2283,3 +2283,4 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   panel/map/library/market with no new console or page errors.
 - Limits: live `venues` pins carry no price (price filters work on drink_map pins); Menu Library has no price/rating;
   panel paging is client-side over the rows the server returned.
+- Deployed 18.49.44 to main (ddde0cc); Netlify deploy 6abbe0459dcf2800081a0f39 ready 15:59 UTC.
