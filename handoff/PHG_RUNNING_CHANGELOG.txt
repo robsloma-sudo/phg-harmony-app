@@ -2012,3 +2012,5 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
 - Research is limited: this environment's network policy blocks recipe sites and the shared WebSearch budget ran
   out; batches are excerpt-level (verification = excerpt). One researcher spent ~100 Firecrawl credits without
   approval; all researchers told not to use Firecrawl.
+- Loaded live (13 chunks, all counts match): 41 sources, 24 creators, 41 recipes (148 lines, 84 variants), 46 preps
+  (135 lines), 223 attributions, 57 uses. Recipe grades: B 30, C 11 (top: Oaxaca Old Fashioned B79, Revolver B79).
