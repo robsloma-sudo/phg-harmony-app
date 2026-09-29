@@ -1776,3 +1776,27 @@ database changes for me, and just general control by voice of functions for the 
   "show me Don Julio" with no map ...) are NOT captured and flow to normal routing; zero page errors.
 - Known limits: navigating away from the Harmony view ends talk mode (existing behaviour); commands are an English
   phrase grammar (the server dialogue manager, spec phase 3, will add free-form control through harmonyUI.exec).
+
+------------------------------------------------------------------------------
+PHG-20260929-MENULOOKS | USER_PROMPT + FIX (frontend 18.49.35 NOT deployed; phg-harmony-attach v4 LIVE) | 2026-09-29
+Rob: "All menu design still keeps going to the same five sample menus called Solstice, and it won't create any new
+menus. Something is wrong with the app. The menu editor is not working."
+- Diagnosis: the menu service was answering (all POSTs 200). The Menu Studio only had five hard-coded looks
+  (Solstice, Glass Garden, Noche, Rejilla, Grabado); every drafted menu was poured into one of them (Solstice by
+  default) and "next" just cycled the same five. Also "make a new menu with more tequila drinks" was read as an EDIT
+  of the current menu (the drinks-words check ran before the new-menu check), so no new menu was created.
+- phg-harmony-attach v4 (deployed, verify_jwt on; live copy verified identical to repo): every drafted menu returns
+  its own design {name, layout (one of the 5 page layouts), palette 8 colours, display font (20 choices), body font
+  (10), art style}; new mode "design" invents another look, told which looks were already used. Safety net: if the
+  design-bearing schema is refused, it drafts with the old v3 schema. Old app builds ignore the new field.
+- App 18.49.35: new menus open in their own look; "next" designs a brand-new look when you're at the newest one,
+  "back"/"next" move through earlier looks; "different look / more modern / redesign" asks for a new look with that
+  direction; "show the classic designs" returns to the five built-ins (also the fallback when signed out or the
+  service fails). Painted art is cached per look. Fonts load on demand from Google Fonts.
+- "New / another / brand new ... menu" is now checked first and always drafts a fresh menu (unless it's clearly an
+  edit: add/remove/swap ... to/on/from the menu).
+- Voice-control bus (18.49.34) no longer steals stage words while a menu is open (back, show me the cocktails, scroll);
+  only explicit "go to / open <screen>" passes through.
+- Tests (stubbed service): tiki menu -> "Lava Lounge"; next -> "Lagoon"; next -> "Neon Reef"; back/back/next through
+  looks; "make a new menu with more tequila drinks" -> fresh draft "Agave House"; "add another rum drink to the menu"
+  -> edit; "give it a different look, more modern" -> design call; classic designs; zero page errors.

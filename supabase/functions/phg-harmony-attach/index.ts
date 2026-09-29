@@ -2,6 +2,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 /* PHG HARMONY ATTACH — Harmony's conversation brain in the Harmony view.
+   v5: every drafted menu carries its own design (palette, fonts, layout, art style); mode "design" invents a
+       new look for the current menu.
    v3: mode "menu" drafts/revises a whole menu as strict JSON (see MENU_INSTRUCTIONS).
    v2: also answers plain conversation with no attachments (mode "chat"), so
    everyday questions no longer fall through to the finance command router
@@ -48,6 +50,33 @@ const CHAT_INSTRUCTIONS = [
 /* v3: MENU mode - Harmony drafts or revises a whole drinks menu from the
    conversation, so the Menu Studio shows what was discussed instead of a
    built-in sample. Output is strict JSON the app renders as live text. */
+/* v5: every menu gets its OWN look (was: one of five fixed designs, so every menu looked the same).
+   The app renders it on one of five page layouts, with the palette, fonts and art style invented here. */
+const DISPLAY_FONTS = ["DM Serif Display", "Playfair Display", "Cormorant Garamond", "Bebas Neue", "Space Grotesk", "Abril Fatface", "Fraunces", "Syne", "Unbounded", "Marcellus", "Rozha One", "Yeseva One", "Righteous", "Monoton", "Big Shoulders Display", "Italiana", "Limelight", "Chivo", "Archivo Black", "Libre Caslon Display"];
+const BODY_FONTS = ["Inter", "EB Garamond", "Work Sans", "DM Sans", "Lora", "IBM Plex Sans", "Source Serif 4", "Karla", "Manrope", "Crimson Pro"];
+const DESIGN_RULES = "design = a visual identity made for THIS concept, different from any look listed as already used: name (one or two evocative words, not a generic label), layout (solstice = painted field above, reading field below, a sun or focal disc; garden = airy panes and arches; noche = dark cinematic field; swiss = geometric grid with bold shapes; letterpress = classic engraved frame), palette (bg, paper, ink, muted, accent, art1, art2, art3 as #rrggbb; ink must read clearly on paper and bg, contrast at least 7:1; dark palettes are fine), display_font and body_font from the lists, art_style = one sentence describing the painted artwork style (medium, texture, light, mood; no text in the art).";
+const DESIGN_PROPS = {
+  type: "object", additionalProperties: false,
+  required: ["name", "layout", "palette", "display_font", "body_font", "art_style"],
+  properties: {
+    name: { type: "string" },
+    layout: { type: "string", enum: ["solstice", "garden", "noche", "swiss", "letterpress"] },
+    palette: { type: "object", additionalProperties: false, required: ["bg", "paper", "ink", "muted", "accent", "art1", "art2", "art3"],
+      properties: { bg: { type: "string" }, paper: { type: "string" }, ink: { type: "string" }, muted: { type: "string" }, accent: { type: "string" }, art1: { type: "string" }, art2: { type: "string" }, art3: { type: "string" } } },
+    display_font: { type: "string", enum: DISPLAY_FONTS },
+    body_font: { type: "string", enum: BODY_FONTS },
+    art_style: { type: "string" },
+  },
+};
+const DESIGN_INSTRUCTIONS = [
+  "You are Harmony, the menu designer inside PHG. Invent ONE new visual design for the drinks menu described.",
+  "It must be clearly different from every look listed as already used (different palette family, layout or type pairing), unless they asked to tweak the current one.",
+  "Follow any direction they gave (e.g. more modern, darker, beachy, luxurious, 70s).",
+  DESIGN_RULES,
+  "reply = one short spoken sentence naming the new look and what makes it different.",
+].join(" ");
+const DESIGN_SCHEMA = { type: "object", additionalProperties: false, required: ["reply", "design"], properties: { reply: { type: "string" }, design: DESIGN_PROPS } };
+
 const MENU_INSTRUCTIONS = [
   "You are Harmony, the menu designer inside PHG, working with a bar or restaurant owner.",
   "Write or revise a complete drinks menu as JSON for the concept in the conversation. If a current menu is given and the request is an edit (add, remove, rename, reprice, more of, fewer, swap), change only what was asked and keep everything else exactly; set changed=true. If they ask for a brand new or different menu, write a new one; changed=true. If they only asked a question or gave feedback that needs no change, answer in reply, set changed=false and return the current menu unchanged (or an empty menu if none).",
@@ -56,18 +85,20 @@ const MENU_INSTRUCTIONS = [
   "Price realistically for the concept and city (US bar pricing). Use real, widely available brands only when the user asked for them or they are generic category names; otherwise use generic names (e.g. 'reposado tequila', 'house amaro').",
   "No slogans, no taglines, no filler lines anywhere. style_hint picks the visual direction that suits the concept: solstice (sunny, Mexican, coastal, citrus), garden (brunch, botanical, wine, daytime), noche (night, cocktail lounge, speakeasy, tiki, neon), swiss (modern, brewery, minimal), letterpress (classic, supper club, steakhouse, whiskey). concept = a short visual subject for painted art (no text).",
   "reply = one or two warm spoken sentences saying what you made or changed. Plain text.",
+  DESIGN_RULES,
 ].join(" ");
-const MENU_SCHEMA = {
+const menuSchema = (withDesign: boolean) => ({
   type: "object", additionalProperties: false, required: ["reply", "changed", "menu"],
   properties: {
     reply: { type: "string" },
     changed: { type: "boolean" },
     menu: {
       type: "object", additionalProperties: false,
-      required: ["title", "subtitle", "concept", "style_hint", "sections"],
+      required: withDesign ? ["title", "subtitle", "concept", "style_hint", "design", "sections"] : ["title", "subtitle", "concept", "style_hint", "sections"],
       properties: {
         title: { type: "string" }, subtitle: { type: "string" }, concept: { type: "string" },
         style_hint: { type: "string", enum: ["solstice", "garden", "noche", "swiss", "letterpress"] },
+        ...(withDesign ? { design: DESIGN_PROPS } : {}),
         sections: { type: "array", items: {
           type: "object", additionalProperties: false, required: ["name", "kind", "items"],
           properties: {
@@ -82,7 +113,8 @@ const MENU_SCHEMA = {
       },
     },
   },
-};
+});
+const MENU_SCHEMA = menuSchema(true), MENU_SCHEMA_LEGACY = menuSchema(false);
 
 const isImg = (x: unknown) => typeof x === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(x);
 
@@ -104,11 +136,37 @@ Deno.serve(async (req) => {
 
   const b = await req.json().catch(() => ({}));
 
+  const used = (Array.isArray(b.used_looks) ? b.used_looks : []).slice(-12).map((x: any) => String(x).slice(0, 160));
+  if (b.mode === "design") {
+    const recentD = Array.isArray(b.recent) ? b.recent.slice(-8) : [];
+    const cur = b.current && typeof b.current === "object" ? JSON.stringify(b.current).slice(0, 6000) : "";
+    const rd = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: Deno.env.get("OPENAI_MENU_MODEL") || model, instructions: DESIGN_INSTRUCTIONS, max_output_tokens: 900,
+        input: [{ role: "user", content: [
+          { type: "input_text", text: "Menu: " + (cur || "(none)") },
+          { type: "input_text", text: "Looks already used: " + (used.join(" | ") || "(none)") },
+          { type: "input_text", text: "Conversation: " + (recentD.map((m: any) => `${m.role === "user" ? "Owner" : "Harmony"}: ${String(m.text || "").slice(0, 300)}`).join("\n") || "(none)") },
+          { type: "input_text", text: "Request: " + (String(b.prompt || "").trim().slice(0, 600) || "A new look.") },
+        ] }],
+        text: { format: { type: "json_schema", name: "harmony_design", strict: true, schema: DESIGN_SCHEMA } },
+      }),
+    });
+    const rawD = await rd.json().catch(() => ({}));
+    if (!rd.ok) return json({ error: "design failed", detail: rawD?.error?.message || rawD }, 502);
+    let td = typeof rawD.output_text === "string" ? rawD.output_text : "";
+    if (!td && Array.isArray(rawD.output)) for (const o of rawD.output) for (const c of (o?.content || [])) if (c?.type === "output_text") td += c.text || "";
+    try { return json({ status: "ok", mode: "design", model, ...JSON.parse(td) }); }
+    catch { return json({ error: "design returned nothing" }, 502); }
+  }
+
   if (b.mode === "menu") {
     const recentM = Array.isArray(b.recent) ? b.recent.slice(-12) : [];
     const cur = b.current && typeof b.current === "object" ? JSON.stringify(b.current).slice(0, 20000) : "";
     const ask = String(b.prompt || "").trim().slice(0, 2000) || "Draft the menu we discussed.";
-    const rm = await fetch("https://api.openai.com/v1/responses", {
+    const callMenu = (schema: unknown) => fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -116,11 +174,15 @@ Deno.serve(async (req) => {
         input: [{ role: "user", content: [
           { type: "input_text", text: "Conversation so far:\n" + (recentM.map((m: any) => `${m.role === "user" ? "Owner" : "Harmony"}: ${String(m.text || "").slice(0, 600)}`).join("\n") || "(none)") },
           { type: "input_text", text: cur ? "Current menu JSON:\n" + cur : "There is no current menu yet." },
+          { type: "input_text", text: "Looks already used: " + (used.join(" | ") || "(none)") },
           { type: "input_text", text: "Request: " + ask },
         ] }],
-        text: { format: { type: "json_schema", name: "harmony_menu", strict: true, schema: MENU_SCHEMA } },
+        text: { format: { type: "json_schema", name: "harmony_menu", strict: true, schema } },
       }),
     });
+    /* v5 safety net: if the design-bearing schema is refused, draft with the v3 schema (no design) */
+    let rm = await callMenu(MENU_SCHEMA);
+    if (rm.status === 400) { console.log(JSON.stringify({ menu_schema_fallback: true })); rm = await callMenu(MENU_SCHEMA_LEGACY); }
     const rawM = await rm.json().catch(() => ({}));
     if (!rm.ok) return json({ error: "menu drafting failed", detail: rawM?.error?.message || rawM }, 502);
     let t = typeof rawM.output_text === "string" ? rawM.output_text : "";
