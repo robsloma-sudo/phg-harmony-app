@@ -23,6 +23,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
    v22 SPEED: planner and spoken answers are streamed; with the app's voice settings (tts) the first sentence is
    voiced while the rest is written and returned as voice_first; notes, library and reference lookups run in parallel;
    {warm:true} wakes the function.
+   v27: Shortcut turns plan while the name check runs (saves ~2 s when no name is corrected).
    v25: drink -> STYLE -> recipes (a style can hold hundreds of recipes; best-graded or the style's reference is given).
    v24: cocktail VERSIONS (one drink, many full recipes; the named version wins, others are offered).
    v23: OpenAI priority processing (OPENAI_SERVICE_TIER, falls back automatically); per-turn timings in the turn log. */
@@ -435,7 +436,23 @@ Deno.serve(async (req) => {
      way, through phg-speech-transcribe's text-only mode (3 s cap; on failure the words are used as heard). */
   const recentP = listNotes(10, false);   // v22: fetched while the rest of the turn is prepared
   let hear: any = b.hear && typeof b.hear === "object" ? b.hear : null;
+  /* v27 SPEED: the Shortcut's name check (~2 s) used to run before planning. Now the planner starts on the words as
+     heard at the same time; its answer is used when the check changes nothing (most turns), else it is re-planned. */
+  const inApp = via === "app" || b.surface === "app";
+  const SCHEMA_OPTS = { max_output_tokens: 500, text: { format: { type: "json_schema", name: "harmony_turn", strict: true, schema: SCHEMA } } };
+  const buildInput = (words: string, recent: any[], hn: string) => [
+    `Current time: ${new Date().toISOString()} (user's time zone ${tz}).`,
+    recent.length ? "Their recent notes: " + recent.map((n: any) => `[${n.kind}${n.done ? ", done" : ""}] ${n.body}`).join(" | ") : "",
+    ctx.turns.length ? "Conversation so far:\n" + ctx.turns.map((t: any) => `User: ${t.u}\nHarmony: ${t.h}`).join("\n") : "This is the start of the conversation.",
+    ctx.last ? `Last result (context.last): ${ctx.last.title || ""}\n${ctx.last.detail || ""}` : "",
+    inApp ? "They are IN the Harmony app looking at the screen: whatever you find is shown to them there. Never use offer_open or open_screen; use data to show things." : ctx.offered ? "Your previous turn asked whether to open the Harmony app." : "You have NOT offered to open the app in your previous turn, so open_screen is not allowed now.",
+    hn,
+    "They now said: " + words,
+  ].filter(Boolean).join("\n\n");
+  let specP: Promise<any> | null = null;
+  const asHeard = text;
   if (!hear && via === "shortcut" && text.length > 3) {
+    specP = recentP.then((rc: any[]) => llmStream(oa, model, CONVERSE, buildInput(asHeard, rc, ""), SCHEMA_OPTS)).catch(() => null);
     try {
       const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 3000);
       const hr = await fetch(`${url}/functions/v1/phg-speech-transcribe`, {
@@ -455,20 +472,14 @@ Deno.serve(async (req) => {
   /* v16: the Harmony view in the app uses this same conversation brain (was: recipe questions in the app went
      straight to a one-shot data lookup with no questions and no memory). In the app, results are shown on screen,
      so Harmony never offers to open the app there, and replies carry a "view" for the screen. */
-  const inApp = via === "app" || b.surface === "app";
   const recent = await recentP;
   marks.prep = Date.now() - T0;
-  const plannerInput = [
-    `Current time: ${new Date().toISOString()} (user's time zone ${tz}).`,
-    recent.length ? "Their recent notes: " + recent.map((n: any) => `[${n.kind}${n.done ? ", done" : ""}] ${n.body}`).join(" | ") : "",
-    ctx.turns.length ? "Conversation so far:\n" + ctx.turns.map((t: any) => `User: ${t.u}\nHarmony: ${t.h}`).join("\n") : "This is the start of the conversation.",
-    ctx.last ? `Last result (context.last): ${ctx.last.title || ""}\n${ctx.last.detail || ""}` : "",
-    inApp ? "They are IN the Harmony app looking at the screen: whatever you find is shown to them there. Never use offer_open or open_screen; use data to show things." : ctx.offered ? "Your previous turn asked whether to open the Harmony app." : "You have NOT offered to open the app in your previous turn, so open_screen is not allowed now.",
-    hearNote,
-    "They now said: " + text,
-  ].filter(Boolean).join("\n\n");
+  const plannerInput = buildInput(text, recent, hearNote);
   const SAYS = new Set(["clarify", "answer", "read_back", "end", "note"]);
-  const plan = await llmStream(oa, model, CONVERSE, plannerInput, { max_output_tokens: 500, text: { format: { type: "json_schema", name: "harmony_turn", strict: true, schema: SCHEMA } } },
+  const unchanged = !!specP && text === asHeard && !(hear && ((hear.fixes || []).length || (hear.unsure || []).length));
+  const spec = unchanged ? await specP : null;
+  if (specP) marks.spec = spec?.ok ? 1 : 0;
+  const plan = spec?.ok ? spec : await llmStream(oa, model, CONVERSE, plannerInput, SCHEMA_OPTS,
     b.tts && inAppSurface ? (t) => { const p = partialSay(t); if (SAYS.has(p.action)) ev.feed(p.say); } : undefined);
   marks.plan = Date.now() - T0;
   let out: any = null;
