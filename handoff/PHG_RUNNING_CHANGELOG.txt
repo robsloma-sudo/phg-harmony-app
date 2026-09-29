@@ -2168,3 +2168,18 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
 - Paused again 13:15 UTC (cron.alter_job(13, active:=false)); job command still has the stuck-claim reset.
 - For the PHG-026 repair: include staging rows with loaded_at in [2026-09-29 09:40, 13:16) UTC. Do NOT enable
   job 7 until the PHG-026 fix is applied.
+
+2026-09-29 PHG-026 PUBLISHED (Rob: "Deploy"), following the runbook in 20260927191000
+- Pre-checks: submit-menu Edge idle (0 calls in the last hour); menus 12,229 / 6,162 current (= rehearsal state);
+  no PHG-026 objects; cron 7 and 13 paused.
+- Step 0: phg-expanded-data v5 deployed (verify_jwt true; only change: restaurant_menu_map reads is_current menus).
+- Step 1: applied 20260927190000 (functions) then 20260927191000 (repair), each one transaction via apply_migration
+  (header/runbook comments omitted, code verbatim). Live md5(prosrc) of submit_menu / promote_clean_menu_batch /
+  phg_save_menu_candidate_extraction == the file bodies; 4 original definitions saved in
+  phg_backup_function_defs_20260927.
+  Step 2 result (phg_repair_run_20260927): current_changed 348, damaged 119 / not restored 0, multi_current 0,
+  no_current 0, smaller 0, chosen item pages 42 (4 changed), pre-incident replaced newer same source 22 -
+  identical to the rehearsal. menus_one_current_per_account unique index created.
+- Steps 2-5 (staging dedupe batches incl. the 2026-09-29 09:40-13:16 extraction rows, analyze, candidate hash
+  backfill, concurrent index): running.
+- Not part of this publish: 20260928030000 (design score gate) - separate change, not applied.
