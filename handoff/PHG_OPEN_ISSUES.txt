@@ -410,3 +410,10 @@ PHG-052 update 2026-09-29: CT has a real permit dataset (gwv2-eswx minus LBD bra
 PHG-052 (open) Licence sources needing another free route: CT (open data = brand registrations), VA (TLS chain not
   trusted), FL + NJ (403 to automated requests), GA (no direct file link). Options: records requests, or a browser-
   based download by Rob.
+
+PHG-053 (open, needs Rob's OK) Existing accounts that break the licence rule (active on-premise only):
+  - IA: 2,162 accounts are "Iowa Class E licensee" = retail liquor stores (off-premise).
+  - CO: 1,326 accounts are "Fermented Malt Beverage and Wine" = grocery/convenience (off-premise since 2023); 364 CO
+    accounts have an expiry date in the past.
+  These are CRM accounts (may be linked to menus/pipeline rows), so they were NOT deleted. Proposal: mark them
+  inactive / exclude them from coverage counts, after checking links.

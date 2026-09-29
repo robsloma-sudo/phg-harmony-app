@@ -2341,3 +2341,18 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
 - PHG-051 refresh live: the one-off multi-statement refresh (job 29) succeeded in 12m57s, so cron 8 was switched to
   hourly at :17 with that command, plus watchdog job 30 (cancels a refresh after 40 min). The market explorer now
   stays fresh on its own. Next: EXPLAIN the v2 view to cut the ~12 min drink_explorer refresh; drop *_old in a week.
+- 2026-09-29 Rob: licences must be ONLY active, on-premise, not expired, no duplicates; CO was already loaded (accounts).
+  - Enforced in the DB: rule phg_license.qualifies(); upsert drops non-qualifying rows and deletes licences that stop
+    qualifying; check constraint licenses_active_on_premise_only; CO/NY/IA excluded (already in accounts).
+  - Purged the non-qualifying rows: off-premise, unknown type, CA PEND/SUREND/REVPEN/SUSPEN/R64B, MI Escrow/Conditional,
+    WA Expired/Closed, DC Retired, expired dates (IL 18k, CO 5.4k, ME 723, CA 1.1k), and NJ inactive pocket licences
+    (1,202). All CO licence rows went (duplicates of the CO accounts).
+  - One row per venue: view phg_license.v_venues (state + address + zip/city + name).
+  - Now: 14 licence-list states, 144,059 licences = 141,167 venues; plus CO 9,646 / NY 21,384 / IA 10,856 accounts.
+    17 states, 183,053 venues in total.
+  - Read layer: rpc phg_license_coverage / phg_license_breakdown / phg_license_venues, backed by a cache
+    (phg_license.state_stats) refreshed on every loader call; coverage 4 ms.
+  - App 18.49.46 deployed (Netlify 6abbf313): Market > Coverage has a live "Liquor licences - active, on-premise" card
+    (per state, loading flag, city/type/county drill-down, 30 s refresh).
+  - Harmony data v14: licenses source (coverage, state breakdown, venue list/map). Loader v12: NE class codes, GA/OK
+    columns, CT prefix map, RI zip, NJ inactivity. Deploy + reloads of NE/GA/OK/CT/RI in progress (agent).
