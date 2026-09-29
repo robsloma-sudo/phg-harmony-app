@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.40 NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.42 HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -27480,6 +27480,45 @@ function phgLocalVoiceDrawStatus(){
 window.addEventListener('phg-local-voice-status',function(e){var d=e.detail||{};PHG_LOCAL_VOICE_PREF.status=d.state||PHG_LOCAL_VOICE_PREF.status;PHG_LOCAL_VOICE_PREF.message=d.message||PHG_LOCAL_VOICE_PREF.message;if(d.state==='ready'){PHG_LOCAL_VOICE_PREF.installed=true;phgLocalVoiceSave();}phgLocalVoiceDrawStatus();});
 window.addEventListener('phg-local-voice-progress',function(e){var d=e.detail||{},v=Number(d.progress);if(!isFinite(v)&&d.loaded!=null&&d.total)v=Number(d.loaded)/Number(d.total)*100;if(isFinite(v)){if(v<=1)v*=100;PHG_LOCAL_VOICE_PREF.progress=Math.round(v);phgLocalVoiceDrawStatus();}});
 var PHG_OPENAI_HARMONY_SPEAK=null;
+/* 18.49.42 SPEED: Harmony's first sentence arrives already voiced with the reply (voice_first from
+   phg-harmony-inbox v22, generated while she was still thinking). It is used once, within 20 s, and only when the
+   text being spoken starts with exactly that sentence; otherwise the normal voice path runs. */
+var PHG_PREVOICE=null;
+function phgPrevoiceSet(v,speak){
+  try{
+    if(!v||!v.audio_b64||!v.text)return;
+    var bin=atob(v.audio_b64),u8=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+    PHG_PREVOICE={text:String(v.text),blob:new Blob([u8],{type:'audio/mpeg'}),at:Date.now()};
+  }catch(e){PHG_PREVOICE=null;}
+}
+function phgPrevoiceTake(text){
+  var p=PHG_PREVOICE;PHG_PREVOICE=null;
+  if(!p||Date.now()-p.at>20000)return null;
+  var n=function(x){return String(x||'').replace(/\s+/g,' ').trim();};
+  var t=n(text).slice(0,4096),f=n(p.text);
+  if(!f||t.indexOf(f)!==0)return null;
+  return {text:f,blob:p.blob,rest:n(t.slice(f.length))};
+}
+/* the voice settings the server voice uses, or null when this reply will not use the server voice */
+function phgServerVoiceSettings(){
+  try{
+    if(typeof VOICE==='undefined'||!VOICE.on||VOICE.muted)return null;
+    if(PHG_LOCAL_VOICE_PREF.engine==='device')return null;
+    if(PHG_LOCAL_VOICE_PREF.engine==='local'&&!PHG_LOCAL_VOICE_BROKEN&&!phgIsIOS()&&window.PHG_LOCAL_VOICE)return null;
+    return {voice:AI_VOICE.voice||'marin',instructions:aiVoiceInstructions(),speed:aiVoiceSpeed()};
+  }catch(e){return null;}
+}
+/* wake the speech, conversation and voice services when the mic opens (at most every 4 minutes), so the first
+   turn does not pay their start-up time */
+var PHG_WARM_AT=0;
+function phgHarmonyWarm(){
+  if(Date.now()-PHG_WARM_AT<240000)return;PHG_WARM_AT=Date.now();
+  var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;if(!tok)return;
+  var h={'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body=JSON.stringify({warm:true});
+  [typeof MDC_SPEECH_URL!=='undefined'?MDC_SPEECH_URL:null,typeof INBOX_URL!=='undefined'?INBOX_URL:'https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-harmony-inbox',MDC_SPEECH_GEN_URL]
+    .forEach(function(u){if(u)fetch(u,{method:'POST',headers:h,body:body}).catch(function(){});});
+}
+window.phgPrevoiceSet=phgPrevoiceSet;window.phgServerVoiceSettings=phgServerVoiceSettings;window.phgHarmonyWarm=phgHarmonyWarm;
 /* 18.49.39: speak sooner. The reply is split into sentences; all parts are voiced at once, in parallel, and the
    first (short) part starts playing as soon as it is ready while the rest queue behind it. Harmony used to wait
    for the whole reply to be voiced (about 2-4 s) before saying a word. busy/playing stay true until the last part
@@ -27503,8 +27542,10 @@ function harmonyAISpeakOpenAI(text,opts){
   harmonyAIStop();PHG_AI_AUDIO.request=request;PHG_AI_AUDIO.busy=true;
   AI_VOICE.busy=true;AI_VOICE.lastError='';
   if(typeof harmonyComposerStatus==='function'&&!opts.preview)harmonyComposerStatus('Harmony · preparing voice…');
-  var parts=speechParts(String(text||'').slice(0,4096),!!opts.preview);
-  var jobs=parts.map(function(t){
+  var pre=opts.preview?null:phgPrevoiceTake(text);
+  var parts=pre?[pre.text].concat(pre.rest?speechParts(pre.rest,false):[]):speechParts(String(text||'').slice(0,4096),!!opts.preview);
+  var jobs=parts.map(function(t,k){
+    if(pre&&k===0){var jb=Promise.resolve(pre.blob);return jb;}
     var j=fetch(MDC_SPEECH_GEN_URL,{method:'POST',
       headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+tok},
       body:JSON.stringify({text:t,voice:AI_VOICE.voice||'marin',instructions:aiVoiceInstructions(),speed:aiVoiceSpeed()})
@@ -40210,6 +40251,7 @@ function startTalk(){
   if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder)){say('This browser cannot record audio. Type to me below instead.');return;}
   if(typeof phgAuthAccessToken!=='function'||!phgAuthAccessToken()){say('Sign in to PHG so I can hear you.');return;}
   PMS.talk=true;
+  if(window.phgHarmonyWarm)phgHarmonyWarm();
   try{if(typeof VOICE!=='undefined'){VOICE.on=true;VOICE.muted=false;}}catch(e){}
   /* in talk mode she answers everything out loud; the user's setting comes back when talk stops */
   try{if(typeof HARMONY_PREFS!=='undefined'&&T.prevOutput==null){T.prevOutput=HARMONY_PREFS.output;HARMONY_PREFS.output='all';}}catch(e){}
@@ -41038,10 +41080,11 @@ function harmonyConverse(q){
   if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('Harmony · thinking…');
   var tz='America/Chicago';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||tz;}catch(e){}
   fetch(INBOX_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
-    body:JSON.stringify({text:q,context:HCONV.ctx||'',surface:'app',account_id:acct,tz:tz,hear:(window.phgHeardFor?phgHeardFor(q):null)})})
+    body:JSON.stringify({text:q,context:HCONV.ctx||'',surface:'app',account_id:acct,tz:tz,hear:(window.phgHeardFor?phgHeardFor(q):null),tts:(window.phgServerVoiceSettings?phgServerVoiceSettings():null)})})
     .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.speak)throw new Error(j.error||('HTTP '+r.status));return j;});})
     .then(function(j){
       HCONV.ctx=j.context||'';HCONV.at=Date.now();
+      if(j.voice_first&&window.phgPrevoiceSet)phgPrevoiceSet(j.voice_first,j.speak);
       if(j.menu_lookup&&typeof harmonyFindMenu==='function'){harmonyFindMenu(j.menu_lookup);return;}
       if(j.view&&window.harmonyDataShow)window.harmonyDataShow(j.view);
       if(typeof agentSay==='function')agentSay(j.speak);
@@ -41347,6 +41390,23 @@ body.hvx-data.pms-open #hdPanel{display:none}
 .hdCard{position:absolute;left:10px;right:10px;bottom:10px;z-index:500;max-height:36%;overflow-y:auto;border-radius:16px;padding:12px 14px;
   background:rgba(5,7,16,.93);box-shadow:inset 0 0 0 1px rgba(103,232,249,.24),0 14px 40px rgba(0,0,0,.6)}
 .hdCard.min{max-height:48px;overflow:hidden}
+/* 18.49.41 place cards: tap a pin (or say "tell me about that one") and everything PHG holds on it opens here */
+.hdCard.hdPlace{max-height:58%}
+.hdCard.hdPlace.tall{max-height:88%}
+.hdPlaceBody{margin-top:4px}
+.hdPlaceBody details{margin-top:8px;border-radius:12px;background:rgba(103,232,249,.04);box-shadow:inset 0 0 0 1px rgba(103,232,249,.14)}
+.hdPlaceBody summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:9px 12px;font:600 12.5px/1.3 'Inter',system-ui,sans-serif;color:#e2e8f0}
+.hdPlaceBody summary::-webkit-details-marker{display:none}
+.hdPlaceBody summary::after{content:'+';margin-left:auto;color:#67e8f9;font:600 14px/1 'JetBrains Mono',ui-monospace,monospace}
+.hdPlaceBody details[open] summary::after{content:'–'}
+.hdPlaceBody summary em{font-style:normal;color:#94a3b8;font-weight:500;font-size:11px}
+.hdPlaceBody ul{list-style:none;margin:0;padding:0 12px 10px;display:flex;flex-direction:column;gap:5px}
+.hdPlaceBody li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;font-size:12.5px;line-height:1.35;color:#e2e8f0}
+.hdPlaceBody li small{grid-column:1;color:#94a3b8;font-size:11px}
+.hdPlaceBody li b{grid-row:1;grid-column:2;font-weight:600;color:#a5f3fc;font-variant-numeric:tabular-nums}
+.hdPlaceActs{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.hdPlaceActs button{font:600 11.5px/1 'Inter',system-ui,sans-serif;color:#05070d;background:#67e8f9;border:0;border-radius:999px;padding:8px 12px;cursor:pointer}
+.hdPlaceActs button.ghost{background:transparent;color:#a5f3fc;box-shadow:inset 0 0 0 1px rgba(103,232,249,.35)}
 .hdCardTop{display:flex;align-items:center;gap:8px;cursor:pointer}
 .hdCardTop .hdTitle{font-size:14px}
 .hdBadge{flex:none;font:600 10.5px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;color:#05070d;background:#67e8f9;border-radius:999px;padding:5px 8px}
@@ -41408,7 +41468,7 @@ var IC={
   menu:svg('<path d="M7 3.5h10v17H7z"/><path d="M9.5 8h5M9.5 11.5h5M9.5 15h3"/>'),
   x:svg('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>')
 };
-var KIND={map:'Map',bars:'Ranking',donut:'Share',table:'Table',tiles:'Numbers',dashboard:'Dashboard',profile:'Profile',recipe:'Recipe',empty:'',catalog:'Catalog'};
+var KIND={place:'Place',map:'Map',bars:'Ranking',donut:'Share',table:'Table',tiles:'Numbers',dashboard:'Dashboard',profile:'Profile',recipe:'Recipe',empty:'',catalog:'Catalog'};
 var PAL=['#22d3ee','#a78bfa','#f0abfc','#fbbf24','#34d399','#60a5fa','#fb7185','#f59e0b','#94a3b8'];
 
 /* ---------- containers ---------- */
@@ -41474,9 +41534,11 @@ function show(view){
   else if(t==='dashboard')h=tilesHTML(view.tiles)+sec(view.bars&&view.bars.title,view.bars?barsHTML(view.bars):'')+sec('Examples',tableHTML(view.table));
   else if(t==='profile')h=(view.badge?'<div><span class="hdBadge">'+esc(view.badge)+'</span></div>':'')+rowsHTML(view.rows)+tilesHTML(view.tiles)+(view.donut?sec(view.donut.title,donutHTML(view.donut)):'');
   else if(t==='recipe')h=(view.spec?'<div class="hdRecipe">'+esc(view.spec)+'</div>':'')+rowsHTML(view.rows)+tilesHTML(view.tiles);
+  else if(t==='place')h='<div class="hdCard hdPlace" style="position:static;max-height:none">'+placeHTML(view)+'</div>';
   else if(t==='catalog')h=catalogHTML();
   else h='<div class="hdEmpty">'+esc(view.title||'Nothing to show')+'</div>';
   b.innerHTML=h;p.hidden=false;document.body.classList.add('hvx-data');
+  if(t==='place')wirePlace(b,view);
   if(t==='catalog')b.querySelectorAll('[data-ask]').forEach(function(el){el.onclick=function(e){e.stopPropagation();ask(el.getAttribute('data-ask'));};});
 }
 var REGION={MX:[[14.5,-117.5],[32.7,-86.7]],US:[[24.5,-125],[49.5,-66.9]]};
@@ -41498,7 +41560,7 @@ function drawMap(el,view,body){
     var g=HD.groups[kind]||(HD.groups[kind]=L.layerGroup().addTo(m));
     var rec={p:p,mk:mk,kind:kind};HD.pins.push(rec);
     mk.bindPopup(pop).addTo(g);
-    mk.on('click',function(){HD.sel=rec;if(p.nom)ask('Where is NOM '+p.nom+'?');});
+    mk.on('click',function(){HD.sel=rec;openPlace(rec);});
   });
   if(focus&&HD.pins.length===1)HD.sel=HD.pins[0];
   var region=REGION[view.region]||null;
@@ -41596,8 +41658,69 @@ function setKind(kind,on){
   return true;
 }
 var KIND_WORD={distillery:'distilleries',venue:'venues'};
+/* ---------- place cards (18.49.41) ---------- */
+function placeHTML(v){
+  var h='<div class="hdCardTop"><span class="hdBadge">'+esc(v.badge||'')+'</span><span class="hdTitle">'+esc(v.title||'')+'</span></div>'+rowsHTML(v.rows);
+  h+='<div class="hdPlaceBody">'+(v.sections||[]).map(function(sc,i){
+    var items=(sc.items||[]).map(function(it){return '<li><span>'+esc(it.name)+'</span>'+(it.value?'<b>'+esc(it.value)+'</b>':'')+(it.sub?'<small>'+esc(it.sub)+'</small>':'')+'</li>';}).join('');
+    return '<details data-sec="'+esc(String(sc.title||'').toLowerCase())+'"'+(i===0&&(v.sections||[]).length<=6?' open':'')+'><summary>'+esc(sc.title)+' <em>'+(sc.count||0)+'</em></summary>'+(items?'<ul>'+items+'</ul>':'<ul><li><small>'+esc(sc.empty||'Nothing on file yet')+'</small></li></ul>')+'</details>';
+  }).join('')+'</div>';
+  h+='<div class="hdPlaceActs">'+(v.actions||[]).map(function(a){return '<button type="button" data-say="'+esc(a.say)+'">'+esc(a.label)+'</button>';}).join('')+'<button type="button" class="ghost" data-act="tall">Expand</button></div>';
+  if(v.note)h+='<div class="hdNote">'+esc(v.note)+'</div>';
+  return h;
+}
+function wirePlace(root,v){
+  root.querySelectorAll('[data-say]').forEach(function(el){el.onclick=function(e){e.stopPropagation();var q=el.getAttribute('data-say');if(/menu/i.test(q)&&typeof window.harmonyFindMenu==='function')window.harmonyFindMenu(q);else ask(q);};});
+  root.querySelectorAll('[data-act="tall"]').forEach(function(el){el.onclick=function(e){e.stopPropagation();var c=el.closest('.hdPlace');if(c){c.classList.toggle('tall');el.textContent=c.classList.contains('tall')?'Shrink':'Expand';}};});
+}
+function placeReq(p){
+  if(p.nom)return {source:'place_distillery',params:{nom:String(p.nom)}};
+  var parts=String(p.sub||'').split('·')[0].split(','),city=(parts[0]||'').trim(),st=(parts[1]||'').trim().slice(0,2);
+  return {source:'place_venue',params:{q:String(p.label||''),city:city,state:/^[A-Z]{2}$/.test(st)?st:''}};
+}
+function closePlace(){var m=document.querySelector('.hdMap')&&document.querySelector('.hdMap').parentNode;var c=m&&m.querySelector('.hdPlace');if(c)c.remove();HD.place=null;return !!c;}
+function openPlace(rec,thenSay){
+  if(!rec)return false;
+  var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;if(!tok){say('Sign in to PHG and I can open that.');return true;}
+  var body=document.querySelector('#hdPanel .hdBody');if(!body)return false;
+  closePlace();
+  var card=document.createElement('div');card.className='hdCard hdPlace';card.innerHTML='<div class="hdCardTop"><span class="hdTitle">'+esc(rec.p.label||'')+'</span></div><div class="hdNote">Opening…</div>';
+  ['pointerdown','touchstart','wheel'].forEach(function(ev){card.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
+  body.appendChild(card);HD.place={rec:rec,card:card};
+  var acct=null;try{acct=PHGAUTH.workspace&&PHGAUTH.workspace.account&&PHGAUTH.workspace.account.id||null;}catch(e){}
+  var req=placeReq(rec.p);req.account_id=acct;
+  fetch(DATA_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify(req)})
+  .then(function(r){return r.json().catch(function(){return {};});})
+  .then(function(j){
+    if(!HD.place||HD.place.card!==card)return;
+    var v=j&&j.view;
+    if(!v||v.type!=='place'){card.innerHTML='<div class="hdCardTop"><span class="hdTitle">'+esc(rec.p.label||'')+'</span></div><div class="hdNote">'+esc(j&&j.speak||'Nothing more on file for this place yet.')+'</div>';return;}
+    card.innerHTML=placeHTML(v);wirePlace(card,v);HD.place.view=v;
+    if(thenSay&&j.speak)say(j.speak);
+  })
+  .catch(function(){if(HD.place&&HD.place.card===card)card.querySelector('.hdNote').textContent='Could not open this place just now.';});
+  return true;
+}
+/* open a section of the open place card by name ("show the cocktails", "open Fortaleza", "the reposados") */
+function placeSection(name){
+  var c=HD.place&&HD.place.card;if(!c)return null;name=String(name||'').toLowerCase().replace(/^(the|their|its) /,'').trim();if(!name)return null;
+  var best=null,bs=0;
+  c.querySelectorAll('details').forEach(function(d){var t=d.getAttribute('data-sec')||'';var sc=t===name?1:t.indexOf(name)>=0||name.indexOf(t)>=0?.8:(function(){var w=name.split(' ');return w.filter(function(x){return x.length>2&&t.indexOf(x)>=0;}).length/w.length*.7;})();if(sc>bs){bs=sc;best=d;}});
+  if(!best||bs<.5){
+    /* a style (reposado, añejo...) or a drink: open every section holding it */
+    var hit=0,n=name.replace(/s$/,'');c.querySelectorAll('details').forEach(function(d){if(d.textContent.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').indexOf(n.normalize('NFD').replace(/[\u0300-\u036f]/g,''))>=0){d.open=true;hit++;}});
+    return hit?{label:name,count:hit}:null;
+  }
+  best.open=true;try{best.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}
+  return {label:best.querySelector('summary').firstChild.textContent.trim(),count:1};
+}
 window.harmonyMap={
   open:mapOpen,
+  expand:function(){if(!HD.sel)return false;return openPlace(HD.sel,true);},
+  closePlace:closePlace,
+  placeOpen:function(){return !!(HD.place&&HD.place.card&&HD.place.card.isConnected);},
+  section:placeSection,
+  tall:function(on){var c=HD.place&&HD.place.card;if(!c)return false;c.classList.toggle('tall',on!==false);return true;},
   map:function(){return HD.map;},
   kinds:function(){return Object.keys(HD.groups);},
   count:function(kind){return HD.pins.filter(function(r){return (!kind||r.kind===kind)&&!HD.hidden[r.kind];}).length;},
@@ -41699,7 +41822,15 @@ add({g:'Map',ex:['show everything','reset the map'],re:/^(show (all|everything)(
 add({g:'Map',ex:['next one','previous one'],re:/^(next|previous|last|back)( one| pin| distillery| venue| place)?$/,when:function(){var h=HM();return !!(h&&h.open()&&h.count()>1);},run:function(m){var p=HM().step(/prev|last|back/.test(m[1])?-1:1);if(p)say(p.label+(p.sub?', '+p.sub:'')+'.');return true;}});
 add({g:'Map',ex:['tell me about that one','what is that'],re:/^(what('s| is) (that|this)( one| place| pin)?|tell me (more )?about (that|this|it)( one| place)?|more (info|details|detail) (on|about) (that|this|it)( one)?|open (that|this)( one| pin)|who makes (that|this)|what do they make)$/,when:function(){var h=HM();return !!(h&&h.open());},run:function(){
   var p=HM().selected();if(!p){say('Tap a pin or say its name first, like “zoom in on Casa Sauza.”');return true;}
+  if(HM().expand&&HM().expand())return true;
   if(p.nom)window.harmonyShowData('Where is NOM '+p.nom+'?');else window.harmonyShowData('Drinks profile for '+p.label+(p.sub?' in '+String(p.sub).split('·').pop().trim():''));return true;}});
+/* 18.49.41: inside an open place card */
+add({g:'Map',ex:['expand it','show everything about it','make it bigger'],re:/^(expand( it| that| this| the card)?|open (it|the card) (up|fully)|make (it|the card) (bigger|full screen)|full screen|show (me )?everything (about|on) (it|that|this)( one| place)?)$/,when:function(){var h=HM();return !!(h&&h.open());},run:function(){
+  var h=HM();if(h.placeOpen()){h.tall(true);say('Expanded.');return true;}if(!h.selected()){say('Tap a pin or say its name first.');return true;}h.expand();return true;}});
+add({g:'Map',ex:['close the card','collapse it'],re:/^(close|hide|collapse|shrink|dismiss)( the)?( card| details| place| it| that)?$/,when:function(){var h=HM();return !!(h&&h.open()&&h.placeOpen());},run:function(m){
+  var h=HM();if(/shrink|collapse/.test(m[1])){h.tall(false);say('Collapsed.');}else{h.closePlace();say('Closed.');}return true;}});
+add({g:'Map',ex:['show the cocktails','open Fortaleza','show me the reposados'],re:/^(show( me)?|open|expand|go to|what about|read)( the| their| its)? (.+?)( section| list| lineup)?$/,when:function(){var h=HM();return !!(h&&h.open()&&h.placeOpen());},run:function(m){
+  var r=HM().section(m[4]);if(!r)return false;say(r.count>1?'Opened '+r.count+' sections with '+r.label+'.':'Here are the '+r.label+'.');return true;}});
 add({g:'Map',ex:['how many pins are there'],re:/^how many (\w+)( are there| are on (the|this) map| on (the|this) map| showing)?$/,when:function(){var h=HM();return !!(h&&h.open());},run:function(m){var h=HM(),k=kindOf(m[1]);if(!k&&!/^(pins|places|points)$/.test(m[1]))return false;say((k?h.count(k)+' '+h.kindWord(k):h.count()+' pins')+' on this map.');return true;}});
 
 /* ---------- navigation to any screen, by its name ---------- */
