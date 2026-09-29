@@ -2025,3 +2025,18 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   builds its own system. The Airtable load is cancelled (load files unused). What the example teaches is captured in
   handoff/DAILY_FLASH_REFERENCE.md (daily sales vs labor, GL-coded invoices, weekly inventory-method COGS by
   category, declining budget, prime cost, variance, net income) and maps onto drafts 02-05.
+
+[2026-09-29] GL / INVOICE-CODING TEMPLATE (from the Airtable example, generalized)
+- Rob: the Airtable invoices and GLs are one business's example of categorizing invoices; build a template from it.
+- data/finance/gl_template_bar_restaurant.csv: generic chart 'bar_restaurant_standard', 135 accounts (sales 4xxx,
+  COGS 5xxx by liquor/beer/wine/bar mix/N/A/food, labor 61xx, supplies 62xx, facility 63xx, G&A 64xx, marketing
+  65xx, occupancy 70xx, below the line 80xx, deposits/capital), each with budget group and expense_category key.
+  Numbering follows the example; its "food hall" group became operating_supplies.
+- data/finance/invoice_coding_template.json: 10 general coding rules, 22 line patterns, 36 vendor profiles (wine &
+  spirits distributor, beer distributor, broadline foodservice, grocery/club, marketplace/big box, linen, dish
+  chemical, CO2, entertainment, utilities, POS/software, landlord, insurance ...), each with default GL, when to ask
+  and ordered line rules. Backtest on the example's 469 invoices: 98% of coded lines / 99% of dollars reachable.
+- scripts/gl_template_sql.py -> supabase/migration_drafts/04a_gl_template_bar_restaurant.sql (DRAFT, not applied;
+  after draft 04): template rows, phg.gl_templates, phg.gl_coding_profiles, parties.coding_profile, explicit reader
+  grants (no global apply). Tested locally on PG16: idempotent, rollback clean, anon denied, codes validated.
+- scripts/gl_template_backtest.py; handoff/GL_TEMPLATE.md (chart, profiles, setup walkthrough).

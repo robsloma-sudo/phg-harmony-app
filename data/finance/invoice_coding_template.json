@@ -1,0 +1,1172 @@
+{
+ "template_key": "bar_restaurant_standard",
+ "about": "Vendor profiles for coding invoice lines to the bar_restaurant_standard chart. Built from the pattern of a real bar's coded invoices (used as an example only). A business's own vendors are matched to a profile once ('Who is Eagle Rock - a beer distributor?'), then the profile's rules are copied into phg.invoice_coding_rules for that vendor as source 'inferred' and confirmed in conversation. Patterns are case-insensitive regular expressions on the line description.",
+ "general_rules": [
+  {
+   "key": "split_by_line",
+   "rule": "Code each invoice line, not the invoice: one delivery can hold liquor, wine, mixers and supplies. In the example about 1 invoice in 9 was split across two or more GL codes."
+  },
+  {
+   "key": "credits_same_gl",
+   "rule": "Credits, returns and breakage credits go to the same GL code as the item, as a negative amount."
+  },
+  {
+   "key": "deposits",
+   "rule": "Keg, bottle and tank deposits go to 1200 Deposits; deposit refunds reverse them. Never COGS."
+  },
+  {
+   "key": "freight",
+   "rule": "Delivery charges and fuel surcharges go to 6270-10 / 6270-20 unless the business asks to fold them into the item's cost (setting finance.freight_into_cogs)."
+  },
+  {
+   "key": "tax_on_invoice",
+   "rule": "Sales tax paid on an invoice follows the lines it applies to, in proportion."
+  },
+  {
+   "key": "capital_threshold",
+   "rule": "A single item at or above the business's capitalization threshold (setting finance.capitalization_threshold, typically 2,500 USD) goes to 1500 Furniture & equipment, not an expense account. Ask when close."
+  },
+  {
+   "key": "bar_only_food_lines",
+   "rule": "In a bar with no kitchen, produce and grocery lines default to bar mix (5200-20 / 5200-10) instead of food (5300). Ask once which the business is."
+  },
+  {
+   "key": "payment_method_is_not_gl",
+   "rule": "How it was paid (vendor account, card, cash payout) is recorded separately; it never decides the GL code."
+  },
+  {
+   "key": "brand_lexicon",
+   "rule": "Before asking, check the line against PHG's brand lexicon (label-approval brand names with their spirit class): 'Casamigos' is tequila -> liquor, 'Josh' is wine. Bottle sizes alone never decide liquor vs wine."
+  },
+  {
+   "key": "ask_when_unsure",
+   "rule": "When no rule matches or two disagree, Harmony asks and saves the answer as a rule for that vendor and pattern."
+  }
+ ],
+ "line_patterns": {
+  "liquor": "tequila|mezcal|raicilla|sotol|vodka|\\bgin\\b|\\brum\\b|rhum|cacha[cç]a|whisk(e)?y|bourbon|\\brye\\b|scotch|cognac|armagnac|brandy|pisco|grappa|liqueur|amaro|aperitivo|absinthe|schnapps|triple sec|curacao|vermouth|blanco|reposado|a[nñ]ejo|\\bvsop\\b|\\bxo\\b|single malt|\\b\\d{1,2}\\s?(yr|year)",
+  "beer": "\\bbeer\\b|\\bipa\\b|lager|\\bale\\b|stout|porter|pilsner|sour|hazy|cider|seltzer|\\bkeg\\b|1/2\\s?bbl|1/4\\s?bbl|1/6\\s?bbl|sixtel|\\b(12|16|19\\.2)\\s?oz\\b.*(can|btl)",
+  "wine": "\\bwine\\b|cabernet|merlot|pinot|chardonnay|sauvignon|riesling|malbec|zinfandel|syrah|shiraz|tempranillo|ros[eé]\\b|prosecco|champagne|cava|cr[eé]mant|lambrusco|\\bsake\\b|port\\b|sherry",
+  "mixers": "tonic|club soda|soda water|ginger beer|ginger ale|bitters|syrup|grenadine|puree|pur[eé]e|\\bjuice\\b|cream of coconut|orgeat|falernum|sour mix|bloody mary mix",
+  "bar_produce": "lime|lemon|orange|grapefruit|mint|basil|cucumber|jalape[nñ]o|berries|pineapple|garnish|cherr(y|ies)|olive",
+  "na_bev": "red bull|energy drink|bottled water|sparkling water|la croix|topo chico|coke|pepsi|sprite|n/a beer|non-?alcoholic|kombucha",
+  "fountain": "bag.in.box|\\bbib\\b|fountain|post.?mix",
+  "coffee_tea": "coffee|espresso|\\btea\\b|cold brew",
+  "paper": "napkin|straw|to.?go|container|clamshell|\\bcup(s)?\\b|\\blid(s)?\\b|foil|film|paper towel|toilet|tissue|bag(s)?\\b|portion cup",
+  "chemicals": "sanitizer|detergent|rinse aid|degreaser|bleach|chemical|cleaner|soap|glass wash",
+  "bar_tools": "shaker|jigger|strainer|bar spoon|pour spout|speed rail|bar mat|muddler|pick(s)?\\b|ice scoop",
+  "glassware": "glass(es|ware)?\\b|coupe|rocks glass|collins|pint glass|snifter|nick and nora",
+  "smallwares": "pan(s)?\\b|sheet tray|cutting board|knife|tongs|ladle|whisk\\b|cambro|lexan|hotel pan|thermometer",
+  "office": "printer|toner|ink|paper ream|pens?\\b|stapler|folder|label maker|office",
+  "decor": "decor|flowers?|plant(s)?\\b|candle|string lights",
+  "marketing_items": "flyer|poster|banner|sign(s)?\\b|sticker|promo|giveaway|swag|t-?shirt",
+  "deposit": "deposit|keg dep|btl dep|tank dep|crv\\b",
+  "freight": "delivery charge|freight|shipping",
+  "fuel": "fuel surcharge|fuel adj",
+  "music_gear": "speaker|karaoke|microphone|\\bmic\\b|projector|dj\\b|audio|amp(lifier)?\\b|hdmi|aux cable",
+  "grounds": "lawn|garden|mulch|soil|snow|ice melt|rock salt|planter",
+  "supplies_generic": "suppl(y|ies)|batter(y|ies)|light bulb|extension cord|trash bag|mop|broom"
+ },
+ "profiles": [
+  {
+   "key": "beverage_distributor",
+   "label": "Wine & spirits distributor",
+   "party_kinds": [
+    "distributor"
+   ],
+   "name_hints": [
+    "Southern Glazer's",
+    "Breakthru Beverage",
+    "Republic National (RNDC)",
+    "Johnson Brothers",
+    "Young's Market",
+    "Empire Distributors"
+   ],
+   "default_gl": null,
+   "ask": "per_line",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "deposit",
+     "1200"
+    ],
+    [
+     "wine",
+     "5100-03"
+    ],
+    [
+     "liquor",
+     "5100-01"
+    ],
+    [
+     "beer",
+     "5100-02"
+    ],
+    [
+     "mixers",
+     "5200-10"
+    ],
+    [
+     "na_bev",
+     "5420-10"
+    ],
+    [
+     "glassware",
+     "6240-10"
+    ],
+    [
+     "marketing_items",
+     "6515"
+    ],
+    [
+     "fuel",
+     "6270-20"
+    ],
+    [
+     "freight",
+     "6270-10"
+    ]
+   ],
+   "notes": "Most lines are liquor or wine; beer and mixers show up too. Point-of-sale materials and branded glassware from a distributor are usually free; code any charged ones as shown."
+  },
+  {
+   "key": "beer_distributor",
+   "label": "Beer distributor",
+   "party_kinds": [
+    "distributor"
+   ],
+   "name_hints": [
+    "Anheuser-Busch wholesaler",
+    "Molson Coors wholesaler",
+    "Reyes Beverage",
+    "Silver Eagle",
+    "Hensley"
+   ],
+   "default_gl": "5100-02",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "deposit",
+     "1200"
+    ],
+    [
+     "na_bev",
+     "5420-10"
+    ],
+    [
+     "mixers",
+     "5200-10"
+    ],
+    [
+     "liquor",
+     "5100-01"
+    ],
+    [
+     "wine",
+     "5100-03"
+    ],
+    [
+     "fuel",
+     "6270-20"
+    ]
+   ],
+   "notes": "Beer by default; N/A beer, seltzers and energy drinks are the usual exceptions (seltzer with alcohol stays beer)."
+  },
+  {
+   "key": "brewery_winery_direct",
+   "label": "Brewery, winery or distillery selling direct",
+   "party_kinds": [
+    "supplier"
+   ],
+   "name_hints": [],
+   "default_gl": null,
+   "ask": "once",
+   "split_lines": false,
+   "line_rules": [
+    [
+     "deposit",
+     "1200"
+    ],
+    [
+     "beer",
+     "5100-02"
+    ],
+    [
+     "wine",
+     "5100-03"
+    ],
+    [
+     "liquor",
+     "5100-01"
+    ]
+   ],
+   "notes": "Ask once what they make, then default everything to that code."
+  },
+  {
+   "key": "broadline_foodservice",
+   "label": "Broadline foodservice distributor",
+   "party_kinds": [
+    "distributor"
+   ],
+   "name_hints": [
+    "Sysco",
+    "US Foods",
+    "Gordon Food Service",
+    "Performance Foodservice",
+    "Shamrock Foods",
+    "Ben E. Keith"
+   ],
+   "default_gl": "5300",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "fountain",
+     "5420-20"
+    ],
+    [
+     "na_bev",
+     "5420-10"
+    ],
+    [
+     "coffee_tea",
+     "5420-30"
+    ],
+    [
+     "paper",
+     "6210"
+    ],
+    [
+     "chemicals",
+     "6240-17"
+    ],
+    [
+     "smallwares",
+     "6240-25"
+    ],
+    [
+     "mixers",
+     "5200-10"
+    ],
+    [
+     "bar_produce",
+     "5200-20"
+    ],
+    [
+     "fuel",
+     "6270-20"
+    ]
+   ],
+   "notes": "In the example this vendor type carried fountain syrup, bar mix and paper goods in about equal counts; food defaults to 5300 only where there is a kitchen (see bar_only_food_lines)."
+  },
+  {
+   "key": "grocery_club_store",
+   "label": "Grocery or club store",
+   "party_kinds": [
+    "supplier"
+   ],
+   "name_hints": [
+    "Costco",
+    "Sam's Club",
+    "Restaurant Depot",
+    "Safeway",
+    "Kroger",
+    "King Soopers",
+    "Hy-Vee",
+    "Whole Foods",
+    "Trader Joe's"
+   ],
+   "default_gl": "5200",
+   "ask": "mixed_receipt",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "bar_produce",
+     "5200-20"
+    ],
+    [
+     "mixers",
+     "5200-10"
+    ],
+    [
+     "na_bev",
+     "5420-10"
+    ],
+    [
+     "coffee_tea",
+     "5420-30"
+    ],
+    [
+     "paper",
+     "6210"
+    ],
+    [
+     "chemicals",
+     "6240-17"
+    ],
+    [
+     "office",
+     "6410-05"
+    ],
+    [
+     "decor",
+     "6260"
+    ],
+    [
+     "wine",
+     "5100-03"
+    ],
+    [
+     "liquor",
+     "5100-01"
+    ],
+    [
+     "beer",
+     "5100-02"
+    ]
+   ],
+   "notes": "Emergency runs. In a bar most of it is bar mix and garnish; receipts are often mixed, so read every line. Where state law lets a business buy alcohol at retail, those lines code to 5100 as usual."
+  },
+  {
+   "key": "produce_supplier",
+   "label": "Produce supplier",
+   "party_kinds": [
+    "supplier"
+   ],
+   "name_hints": [],
+   "default_gl": "5200-20",
+   "ask": "once",
+   "split_lines": false,
+   "line_rules": [
+    [
+     "mixers",
+     "5200-10"
+    ]
+   ],
+   "notes": "5200-20 for a bar; 5300-20 where the kitchen is the main buyer (ask once, or split by who ordered)."
+  },
+  {
+   "key": "coffee_roaster",
+   "label": "Coffee or tea supplier",
+   "party_kinds": [
+    "supplier"
+   ],
+   "name_hints": [],
+   "default_gl": "5420-30",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "mixers",
+     "5200-10"
+    ],
+    [
+     "paper",
+     "6210"
+    ],
+    [
+     "smallwares",
+     "6240-25"
+    ],
+    [
+     "na_bev",
+     "5420-10"
+    ]
+   ],
+   "notes": "Coffee used mainly in cocktails can be coded to bar mix instead; ask once."
+  },
+  {
+   "key": "online_marketplace_big_box",
+   "label": "Online marketplace or big-box store",
+   "party_kinds": [
+    "supplier"
+   ],
+   "name_hints": [
+    "Amazon",
+    "Walmart",
+    "Target",
+    "Home Depot",
+    "Lowe's",
+    "Best Buy",
+    "Staples",
+    "Office Depot"
+   ],
+   "default_gl": null,
+   "ask": "per_line",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "bar_tools",
+     "6240-05"
+    ],
+    [
+     "glassware",
+     "6240-10"
+    ],
+    [
+     "chemicals",
+     "6240-17"
+    ],
+    [
+     "smallwares",
+     "6240-25"
+    ],
+    [
+     "paper",
+     "6210"
+    ],
+    [
+     "office",
+     "6410-05"
+    ],
+    [
+     "decor",
+     "6260"
+    ],
+    [
+     "marketing_items",
+     "6515"
+    ],
+    [
+     "mixers",
+     "5200-10"
+    ],
+    [
+     "na_bev",
+     "5420-10"
+    ],
+    [
+     "music_gear",
+     "6315"
+    ],
+    [
+     "grounds",
+     "6350-15"
+    ],
+    [
+     "supplies_generic",
+     "6240-20"
+    ]
+   ],
+   "notes": "The hardest vendor type: in the example one marketplace was coded to 9 different accounts. Never default; code by line and ask when no pattern matches."
+  },
+  {
+   "key": "restaurant_supply",
+   "label": "Restaurant & bar supply",
+   "party_kinds": [
+    "supplier"
+   ],
+   "name_hints": [
+    "WebstaurantStore",
+    "KaTom",
+    "Bargreen Ellingson",
+    "Edward Don",
+    "TriMark"
+   ],
+   "default_gl": "6240-20",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "bar_tools",
+     "6240-05"
+    ],
+    [
+     "glassware",
+     "6240-10"
+    ],
+    [
+     "smallwares",
+     "6240-25"
+    ],
+    [
+     "chemicals",
+     "6240-17"
+    ],
+    [
+     "paper",
+     "6210"
+    ],
+    [
+     "marketing_items",
+     "6530"
+    ],
+    [
+     "catering|chafing|sterno|disposable tray",
+     "6240-30"
+    ]
+   ],
+   "notes": "Large equipment (ice machine, reach-in) goes to 1500 above the capitalization threshold."
+  },
+  {
+   "key": "linen_uniform_service",
+   "label": "Linen & uniform service",
+   "party_kinds": [
+    "service_provider"
+   ],
+   "name_hints": [
+    "Cintas",
+    "Aramark Uniform",
+    "UniFirst",
+    "Alsco",
+    "Prudential Overall Supply"
+   ],
+   "default_gl": "6230-05",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "\\buniform|apron|chef coat|shirt",
+     "6230-10"
+    ],
+    [
+     "paper",
+     "6210"
+    ],
+    [
+     "chemicals",
+     "6240-17"
+    ]
+   ],
+   "notes": "Weekly route service; towels, bar mats and floor mats are laundry service."
+  },
+  {
+   "key": "dish_chemical_service",
+   "label": "Dish machine & chemical service",
+   "party_kinds": [
+    "service_provider"
+   ],
+   "name_hints": [
+    "Ecolab",
+    "Auto-Chlor",
+    "Hydro Systems"
+   ],
+   "default_gl": "6240-17",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "repair|service call|labor|part(s)?\\b",
+     "6350-10"
+    ],
+    [
+     "lease|rental",
+     "6340"
+    ]
+   ],
+   "notes": ""
+  },
+  {
+   "key": "co2_gas_supplier",
+   "label": "CO2 & beverage gas supplier",
+   "party_kinds": [
+    "supplier"
+   ],
+   "name_hints": [
+    "NuCO2",
+    "Airgas",
+    "Linde",
+    "local welding supply"
+   ],
+   "default_gl": "6335-15",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "deposit",
+     "1200"
+    ],
+    [
+     "tank (lease|rental)|lease|rental|bulk tank",
+     "6335-10"
+    ],
+    [
+     "propane",
+     "6345-15"
+    ],
+    [
+     "bag.in.box|syrup",
+     "5420-20"
+    ]
+   ],
+   "notes": "Fountain CO2 billed with bag-in-box syrup stays with 5420-20."
+  },
+  {
+   "key": "entertainment",
+   "label": "DJ, band or entertainer",
+   "party_kinds": [
+    "entertainment"
+   ],
+   "name_hints": [],
+   "default_gl": "6315",
+   "ask": "no_match",
+   "split_lines": false,
+   "line_rules": [],
+   "notes": "Often paid by cash payout; still coded 6315."
+  },
+  {
+   "key": "music_licensing",
+   "label": "Music licensing or streaming",
+   "party_kinds": [
+    "service_provider"
+   ],
+   "name_hints": [
+    "BMI",
+    "ASCAP",
+    "SESAC",
+    "GMR",
+    "Soundtrack Your Brand",
+    "Rockbot",
+    "TouchTunes"
+   ],
+   "default_gl": "6315",
+   "ask": "no_match",
+   "split_lines": false,
+   "line_rules": [],
+   "notes": ""
+  },
+  {
+   "key": "pest_control",
+   "label": "Pest control",
+   "party_kinds": [
+    "service_provider"
+   ],
+   "name_hints": [
+    "Orkin",
+    "Terminix",
+    "Rentokil",
+    "Ecolab Pest"
+   ],
+   "default_gl": "6330",
+   "ask": "no_match",
+   "split_lines": false,
+   "line_rules": [],
+   "notes": ""
+  },
+  {
+   "key": "grease_hood",
+   "label": "Grease trap & hood cleaning",
+   "party_kinds": [
+    "service_provider"
+   ],
+   "name_hints": [],
+   "default_gl": "6325",
+   "ask": "no_match",
+   "split_lines": false,
+   "line_rules": [],
+   "notes": ""
+  },
+  {
+   "key": "waste_hauler",
+   "label": "Trash & recycling hauler",
+   "party_kinds": [
+    "service_provider",
+    "utility"
+   ],
+   "name_hints": [
+    "Waste Management",
+    "Republic Services",
+    "Waste Connections"
+   ],
+   "default_gl": "6350-20",
+   "ask": "no_match",
+   "split_lines": false,
+   "line_rules": [],
+   "notes": ""
+  },
+  {
+   "key": "utility",
+   "label": "Utility company",
+   "party_kinds": [
+    "utility"
+   ],
+   "name_hints": [
+    "Xcel Energy",
+    "MidAmerican Energy",
+    "Con Edison",
+    "Black Hills Energy",
+    "city water department"
+   ],
+   "default_gl": null,
+   "ask": "once",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "electric|kwh",
+     "6345-10"
+    ],
+    [
+     "\\bgas\\b|therm",
+     "6345-15"
+    ],
+    [
+     "water|sewer|storm",
+     "6345-05"
+    ],
+    [
+     "trash|refuse",
+     "6350-20"
+    ],
+    [
+     "deposit",
+     "1200"
+    ]
+   ],
+   "notes": "Combined bills split by service."
+  },
+  {
+   "key": "alarm_security",
+   "label": "Alarm monitoring or security",
+   "party_kinds": [
+    "service_provider"
+   ],
+   "name_hints": [
+    "ADT",
+    "Brinks Home",
+    "Vivint"
+   ],
+   "default_gl": "6345-20",
+   "ask": "no_match",
+   "split_lines": false,
+   "line_rules": [
+    [
+     "guard|door staff|security staff|camera install",
+     "6355"
+    ]
+   ],
+   "notes": ""
+  },
+  {
+   "key": "telecom_internet",
+   "label": "Phone, internet or TV",
+   "party_kinds": [
+    "utility",
+    "service_provider"
+   ],
+   "name_hints": [
+    "Comcast Business",
+    "Spectrum Business",
+    "AT&T",
+    "Verizon",
+    "T-Mobile",
+    "DirecTV",
+    "Dish"
+   ],
+   "default_gl": null,
+   "ask": "once",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "phone|voice|mobile|wireless|line",
+     "6310"
+    ],
+    [
+     "internet|broadband|wifi|\\btv\\b|cable|sports package",
+     "6320"
+    ],
+    [
+     "subscription|software|app\\b",
+     "6415"
+    ]
+   ],
+   "notes": "Sports packages for the bar TVs are 6320 (some businesses put them in 6315; ask)."
+  },
+  {
+   "key": "pos_software",
+   "label": "POS & software",
+   "party_kinds": [
+    "service_provider"
+   ],
+   "name_hints": [
+    "Toast",
+    "Square",
+    "Clover",
+    "Lightspeed",
+    "SpotOn",
+    "7shifts",
+    "OpenTable",
+    "Resy",
+    "BevSpot",
+    "MarginEdge",
+    "QuickBooks"
+   ],
+   "default_gl": "6415-10",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "processing|card fee|transaction fee",
+     "6430"
+    ],
+    [
+     "hardware|terminal|printer|tablet",
+     "6350-05"
+    ],
+    [
+     "marketing|email|loyalty",
+     "6520"
+    ],
+    [
+     "gift card",
+     "6515"
+    ],
+    [
+     "music|playlist|jukebox",
+     "6315"
+    ]
+   ],
+   "notes": "In the example a POS vendor's charges landed in entertainment, marketing and G&A: split by what the charge is for."
+  },
+  {
+   "key": "shipping",
+   "label": "Shipping & postage",
+   "party_kinds": [
+    "service_provider"
+   ],
+   "name_hints": [
+    "FedEx",
+    "UPS",
+    "USPS",
+    "DHL"
+   ],
+   "default_gl": "6410-10",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "print|copies|flyer|poster|banner|sign",
+     "6530"
+    ],
+    [
+     "supplies|box(es)?\\b|tape",
+     "6410-05"
+    ]
+   ],
+   "notes": "Shipping stores also print: print jobs are marketing."
+  },
+  {
+   "key": "print_sign_shop",
+   "label": "Print & sign shop",
+   "party_kinds": [
+    "marketing",
+    "service_provider"
+   ],
+   "name_hints": [
+    "FASTSIGNS",
+    "Vistaprint",
+    "local print shop"
+   ],
+   "default_gl": "6530",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "menu",
+     "6250"
+    ]
+   ],
+   "notes": ""
+  },
+  {
+   "key": "digital_marketing",
+   "label": "Email, social & ads",
+   "party_kinds": [
+    "marketing"
+   ],
+   "name_hints": [
+    "Mailchimp",
+    "Meta Ads",
+    "Google Ads",
+    "Yelp",
+    "Canva"
+   ],
+   "default_gl": "6520",
+   "ask": "no_match",
+   "split_lines": false,
+   "line_rules": [
+    [
+     "promo|giveaway|contest",
+     "6515"
+    ]
+   ],
+   "notes": ""
+  },
+  {
+   "key": "repair_contractor",
+   "label": "Repair tradesperson",
+   "party_kinds": [
+    "contractor"
+   ],
+   "name_hints": [
+    "locksmith",
+    "plumber",
+    "electrician",
+    "refrigeration tech",
+    "draft line service"
+   ],
+   "default_gl": "6350-25",
+   "ask": "once",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "refrigerat|cooler|freezer|ice machine|draft|keg line|line clean|compressor|fryer|oven|dish machine",
+     "6350-10"
+    ],
+    [
+     "computer|pos|network|printer",
+     "6350-05"
+    ],
+    [
+     "lawn|landscap|snow",
+     "6350-15"
+    ]
+   ],
+   "notes": "New installs above the capitalization threshold go to 1500 / 1510."
+  },
+  {
+   "key": "landscaping",
+   "label": "Landscaping & snow",
+   "party_kinds": [
+    "contractor"
+   ],
+   "name_hints": [],
+   "default_gl": "6350-15",
+   "ask": "no_match",
+   "split_lines": false,
+   "line_rules": [],
+   "notes": ""
+  },
+  {
+   "key": "equipment_lease",
+   "label": "Equipment leasing & rental",
+   "party_kinds": [
+    "service_provider"
+   ],
+   "name_hints": [],
+   "default_gl": "6340",
+   "ask": "no_match",
+   "split_lines": false,
+   "line_rules": [],
+   "notes": "Ice machines, dish machines, event rentals (tents, tables)."
+  },
+  {
+   "key": "florist",
+   "label": "Florist",
+   "party_kinds": [
+    "supplier"
+   ],
+   "name_hints": [],
+   "default_gl": "6260",
+   "ask": "no_match",
+   "split_lines": false,
+   "line_rules": [
+    [
+     "garnish|edible",
+     "5200-20"
+    ]
+   ],
+   "notes": ""
+  },
+  {
+   "key": "landlord",
+   "label": "Landlord",
+   "party_kinds": [
+    "landlord"
+   ],
+   "name_hints": [],
+   "default_gl": "7010",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "\\bcam\\b|common area",
+     "7020"
+    ],
+    [
+     "property tax",
+     "7030"
+    ],
+    [
+     "percentage rent|overage",
+     "7040"
+    ],
+    [
+     "utilit|electric|water",
+     "6345"
+    ],
+    [
+     "deposit",
+     "1200"
+    ]
+   ],
+   "notes": ""
+  },
+  {
+   "key": "insurance_carrier",
+   "label": "Insurance",
+   "party_kinds": [
+    "insurance"
+   ],
+   "name_hints": [],
+   "default_gl": "6440",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "liquor liab",
+     "6440-20"
+    ],
+    [
+     "general liab",
+     "6440-10"
+    ],
+    [
+     "property",
+     "6440-30"
+    ],
+    [
+     "workers.? comp",
+     "6170"
+    ]
+   ],
+   "notes": ""
+  },
+  {
+   "key": "professional_services",
+   "label": "Accountant, lawyer or consultant",
+   "party_kinds": [
+    "service_provider"
+   ],
+   "name_hints": [],
+   "default_gl": "6420",
+   "ask": "once",
+   "split_lines": false,
+   "line_rules": [
+    [
+     "bookkeep|account|cpa|tax prep",
+     "6420-10"
+    ],
+    [
+     "legal|attorney|law",
+     "6420-20"
+    ],
+    [
+     "consult",
+     "6420-30"
+    ]
+   ],
+   "notes": ""
+  },
+  {
+   "key": "payroll_provider",
+   "label": "Payroll provider",
+   "party_kinds": [
+    "payroll"
+   ],
+   "name_hints": [
+    "ADP",
+    "Paychex",
+    "Gusto",
+    "Toast Payroll"
+   ],
+   "default_gl": "6435",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "workers.? comp",
+     "6170"
+    ],
+    [
+     "tax",
+     "6150"
+    ]
+   ],
+   "notes": "Only the service fee is 6435; wages and taxes come from payroll, not invoices."
+  },
+  {
+   "key": "bank_processor",
+   "label": "Bank or card processor",
+   "party_kinds": [
+    "bank"
+   ],
+   "name_hints": [],
+   "default_gl": "6425",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "processing|interchange|merchant",
+     "6430"
+    ],
+    [
+     "interest",
+     "8030"
+    ]
+   ],
+   "notes": ""
+  },
+  {
+   "key": "government",
+   "label": "City, county or state agency",
+   "party_kinds": [
+    "government"
+   ],
+   "name_hints": [],
+   "default_gl": "6445",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "liquor|alcohol",
+     "6445-10"
+    ],
+    [
+     "property tax",
+     "7030"
+    ]
+   ],
+   "notes": ""
+  },
+  {
+   "key": "staffing_agency",
+   "label": "Staffing agency",
+   "party_kinds": [
+    "service_provider"
+   ],
+   "name_hints": [
+    "Instawork",
+    "Qwick",
+    "Shiftsmart"
+   ],
+   "default_gl": "6140",
+   "ask": "no_match",
+   "split_lines": false,
+   "line_rules": [],
+   "notes": ""
+  },
+  {
+   "key": "delivery_platform",
+   "label": "Delivery platform",
+   "party_kinds": [
+    "service_provider"
+   ],
+   "name_hints": [
+    "DoorDash",
+    "Uber Eats",
+    "Grubhub"
+   ],
+   "default_gl": "6460",
+   "ask": "no_match",
+   "split_lines": true,
+   "line_rules": [
+    [
+     "marketing|promo|ads",
+     "6520"
+    ]
+   ],
+   "notes": ""
+  }
+ ]
+}

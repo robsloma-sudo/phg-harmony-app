@@ -358,3 +358,5 @@ PHG-047 (P1, open) PHG's own daily flash / finance system (replaces the idea of 
   handoff/DAILY_FLASH_REFERENCE.md. Needs drafts 02-05 applied (setup skeleton, finance foundation, period presets,
   profit coach), then: daily entry by voice or POS connector, labor from shifts x rates, GL-coded invoices, weekly
   inventory-method COGS, declining budget, prime cost; Harmony answers them by voice.
+  2026-09-29: GL / invoice-coding template built (handoff/GL_TEMPLATE.md, draft 04a, not applied): 135-account
+  'bar_restaurant_standard' chart + 36 vendor profiles; applies after draft 04.

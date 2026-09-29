@@ -163,8 +163,8 @@ insert into phg.gl_accounts (account_id, template_key, code, name, parent_code, 
   (null,'restaurant_usar','6500',   'Marketing',        null,   'operating_expense',null,      null,        'marketing',  6500),
   (null,'restaurant_usar','6540',   'Rewards',          '6500', 'operating_expense',null,      null,        'marketing',  6540)
 on conflict do nothing;
--- The Airtable "Invoices" table splits amounts by more GL codes between 5100-01 and 6540; import them from Parkway FH
--- as account-level rows (source = 'imported') rather than guessing names here.
+-- The full generic chart (135 accounts, template 'bar_restaurant_standard') and the vendor coding profiles are in
+-- draft 04a (handoff/GL_TEMPLATE.md), built from the Airtable example's GL codes as a pattern, not loaded as anyone's data.
 
 -- ---------------------------------------------------------------------------------------------------------------
 -- Metric definitions
