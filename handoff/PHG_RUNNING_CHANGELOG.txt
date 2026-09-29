@@ -1901,3 +1901,7 @@ Rob: "Is there a way to speed up Harmony's processing time? It's taking a while 
   harmony_scope on 25, menu_designer_read_h on 10, RLS newly on 24 phg tables (only phg_menu_designer was affected
   and keeps its access: sees phg.menu_projects). Gateway: public.phg_harmony_query(account, user, sql) counted
   public.accounts = 41,886 in 40 ms (log id 1, finished). Callers must enforce their own timeout.
+
+------------------------------------------------------------------------------
+PHG-20260929-DEPLOY-4939 | USER_PROMPT + DEPLOY | 2026-09-29
+Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in context + 18.49.39 faster replies).
