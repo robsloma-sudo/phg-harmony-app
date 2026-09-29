@@ -6301,7 +6301,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     <div id="err"></div>
     <div id="dataWarn"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.46 LIVE LICENCE COVERAGE · FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.47 HARMONY LEARNS FROM MISSES · LIVE LICENCE COVERAGE · FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -41665,6 +41665,7 @@ body.hvx-data.pms-open #hdPanel{display:none}
 .hdPlaceActs button{font:600 11.5px/1 'Inter',system-ui,sans-serif;color:#05070d;background:#67e8f9;border:0;border-radius:999px;padding:8px 12px;cursor:pointer}
 .hdPlaceActs button.ghost{background:transparent;color:#a5f3fc;box-shadow:inset 0 0 0 1px rgba(103,232,249,.35)}
 .hdCardTop{display:flex;align-items:center;gap:8px;cursor:pointer}
+.hdFb{display:flex;justify-content:flex-end;margin-top:10px}.hdFb button{font:inherit;font-size:12px;opacity:.7;background:transparent;border:1px solid rgba(255,255,255,.18);color:inherit;border-radius:999px;padding:4px 12px;cursor:pointer}.hdFb button:disabled{opacity:.5;cursor:default}
 .hdCardTop .hdTitle{font-size:14px}
 .hdBadge{flex:none;font:600 10.5px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;color:#05070d;background:#67e8f9;border-radius:999px;padding:5px 8px}
 .hdRows{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 12px;margin-top:10px;font-size:12.5px;line-height:1.4}
@@ -41805,7 +41806,10 @@ function show(view,opt){
   else if(t==='catalog')h=catalogHTML();
   else h='<div class="hdEmpty">'+esc(view.title||'Nothing to show')+'</div>';
   if(view._refine)h=refineBarHTML(view._refine)+h;
-  b.innerHTML=h;p.hidden=false;document.body.classList.add('hvx-data');
+  b.innerHTML=h+(t!=='catalog'?'<div class="hdFb"><button type="button" data-fb>Not right?</button></div>':'');p.hidden=false;document.body.classList.add('hvx-data');
+  var fbb=b.querySelector('[data-fb]');
+  if(fbb)fbb.onclick=function(e){e.stopPropagation();fbb.disabled=true;fbb.textContent='Logged - thank you';
+    fbLog({kind:'user_flagged',user_text:HD.lastQ||'',view_title:view.title||'',source:view.query&&view.query.source||t,params:view.query&&view.query.params||null,reply_text:(b.innerText||'').slice(0,600)});};
   if(view._refine)wireRefineBar(b);
   if(t==='place')wirePlace(b,view);
   if(t==='catalog')b.querySelectorAll('[data-ask]').forEach(function(el){el.onclick=function(e){e.stopPropagation();ask(el.getAttribute('data-ask'));};});
@@ -41893,6 +41897,19 @@ function catalogHTML(){
   }).join('')+'</div>';
 }
 
+/* 18.49.47 FEEDBACK LOG: failures and "Not right" taps go to phg.harmony_feedback (rpc harmony_log_feedback), next to
+   what the server and the conversation log capture on their own; reviewed with the lead developer, fixes become lessons. */
+function fbLog(entry){
+  try{
+    var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
+    var acct=null;try{acct=PHGAUTH.workspace&&PHGAUTH.workspace.account&&PHGAUTH.workspace.account.id||null;}catch(e){}
+    var body=Object.assign({surface:'app',app_version:'18.49.47',account_id:acct||''},entry||{});
+    return fetch((typeof BASE!=='undefined'?BASE:'https://lqjtwabzmgjcufftuqvu.supabase.co/rest/v1')+'/rpc/harmony_log_feedback',{method:'POST',
+      headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+(tok||(typeof KEY!=='undefined'?KEY:''))},
+      body:JSON.stringify({p:body})}).catch(function(){});
+  }catch(e){}
+}
+window.harmonyLogFeedback=fbLog;
 /* ---------- asking ---------- */
 function say(t){if(typeof agentSay==='function')agentSay(t);}
 function ask(q){
@@ -41900,7 +41917,7 @@ function ask(q){
   try{if(typeof AGENT!=='undefined'&&AGENT.chat&&!(AGENT.chat.length&&AGENT.chat[AGENT.chat.length-1].who==='you'&&AGENT.chat[AGENT.chat.length-1].text===q)){AGENT.chat.push({who:'you',text:q});if(typeof agentDraw==='function')agentDraw();}}catch(e){}
   var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
   if(!tok){say('Sign in to PHG and I can pull that up.');return;}
-  window.PHG_PENDING=true;document.body.classList.add('hvx-data-loading');
+  window.PHG_PENDING=true;document.body.classList.add('hvx-data-loading');HD.lastQ=q;
   fetch(DATA_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify({prompt:q})})
   .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok)throw new Error(j.detail||j.error||('HTTP '+r.status));return j;});})
   .then(function(j){
@@ -41912,7 +41929,7 @@ function ask(q){
     show(j.view);
     say(j.speak||'Here it is.');
   })
-  .catch(function(e){window.PHG_PENDING=false;say('I could not pull that data just now: '+(e&&e.message||e));})
+  .catch(function(e){window.PHG_PENDING=false;fbLog({kind:'client_error',source:'data',user_text:q,error:String(e&&e.message||e)});say('I could not pull that data just now: '+(e&&e.message||e));})
   .then(function(){document.body.classList.remove('hvx-data-loading');});
 }
 /* what counts as a data request (business-finance words stay with the report router) */

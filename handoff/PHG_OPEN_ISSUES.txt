@@ -417,3 +417,6 @@ PHG-053 (open, needs Rob's OK) Existing accounts that break the licence rule (ac
     accounts have an expiry date in the past.
   These are CRM accounts (may be linked to menus/pipeline rows), so they were NOT deleted. Proposal: mark them
   inactive / exclude them from coverage counts, after checking links.
+
+PHG-054 (standing) Review Harmony's failure log at the start of every session with Rob: handoff/HARMONY_FEEDBACK_REVIEW.md
+  (phg.v_harmony_feedback_open). Fixes become phg.harmony_lessons (live without deploy) or code/data changes.

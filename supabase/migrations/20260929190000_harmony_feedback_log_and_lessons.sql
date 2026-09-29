@@ -1,0 +1,7 @@
+-- Applied live 2026-09-29 as migration harmony_feedback_log_and_lessons. Summary:
+--   phg.harmony_feedback (kind, question, wrong answer, what the user said back, source/params/sql/error, status)
+--   phg.harmony_lessons (scope planner|sql|conversation, lesson, active) + public.harmony_lessons_for(scope) (service_role)
+--   trigger harmony_turn_feedback on phg.harmony_turns: no_answer replies + user_disagreed follow-ups
+--   public.harmony_log_feedback(jsonb) for the app and edge functions (anon/authenticated/service_role; 120/h per user)
+--   phg.v_harmony_feedback_open (review list); backfill of existing turns; lessons #1-#2 (licences != menu venues)
+-- Full SQL: Supabase migration history.

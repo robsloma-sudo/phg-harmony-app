@@ -23,6 +23,24 @@ const cors = {
 const json = (x: unknown, s = 200) =>
   new Response(JSON.stringify(x), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 
+/* v15 (Rob 2026-09-29): every failure is logged to phg.harmony_feedback (reviewed with the lead developer; fixes become
+   phg.harmony_lessons, which the planner and the SQL writer read on every request - learning without a redeploy). */
+function background(p: Promise<unknown>) {
+  try { const er = (globalThis as any).EdgeRuntime; if (er?.waitUntil) { er.waitUntil(p); return; } } catch { /* fall through */ }
+  p.catch(() => null);
+}
+function logFeedback(db: any, entry: Record<string, unknown>) {
+  background(Promise.resolve(db.rpc("harmony_log_feedback", { p: { surface: "harmony-data", ...entry } })).catch(() => null));
+}
+const LESSONS: Record<string, { at: number; text: string }> = {};
+async function lessons(db: any, scope: string): Promise<string> {
+  const c = LESSONS[scope];
+  if (c && Date.now() - c.at < 120000) return c.text;
+  try { const { data } = await db.rpc("harmony_lessons_for", { p_scope: scope }); LESSONS[scope] = { at: Date.now(), text: String(data || "") }; }
+  catch { LESSONS[scope] = { at: Date.now(), text: c?.text || "" }; }
+  return LESSONS[scope].text;
+}
+
 /* municipality seat coordinates (lat, lng) for every town in the CRT addresses */
 const MUNI: Record<string, [number, number]> = {
   "GUADALAJARA": [20.6767, -103.3475], "TEQUILA": [20.882, -103.8363], "AMATITAN": [20.834, -103.724],
@@ -661,7 +679,8 @@ function fastPlan(t: string): { source: string; params: P } | null {
 /* v6: ASK. Anything the fixed catalog can't answer is written as one read-only SELECT and run through
    public.phg_harmony_query (the knowledge-map gateway: select only, table allowlist, project-scoped RLS, logged).
    One repair round on a planner error. The gateway does not bound its own runtime, so the caller does (12 s). */
-/* v14 (2026-09-29): licenses source (active on-premise licence coverage, state breakdowns, licensed-venue lists/maps).
+/* v15 (2026-09-29): failures logged to phg.harmony_feedback; lessons (phg.harmony_lessons) read by planner + SQL writer.
+   v14 (2026-09-29): licenses source (active on-premise licence coverage, state breakdowns, licensed-venue lists/maps).
    v13 (2026-09-29): refinable views - price / income / age / sort params, drink_map source, view.query.
    v12 (Rob 2026-09-29: no extra payment): priority processing OFF by default (OPENAI_SERVICE_TIER=priority to re-enable).
    v11 SPEED: OpenAI priority processing, like the inbox (OPENAI_SERVICE_TIER; "default" turns it off). If the account
@@ -683,10 +702,11 @@ async function oaCall(oa: string, body: Record<string, unknown>): Promise<Respon
 
 async function askData(db: any, oa: string, question: string, user: string, account: string): Promise<Result> {
   const sqlModel = Deno.env.get("OPENAI_SQL_MODEL") || "gpt-4.1";
+  const sqlLessons = await lessons(db, "sql");
   const gen = async (extra: string) => {
     const r = await oaCall(oa, ({
         model: sqlModel, max_output_tokens: 700,
-        instructions: "Write ONE read-only PostgreSQL SELECT that answers the question from these tables only. Return JSON. title: a short screen title. display: table, bars (label + one number per row) or map (rows have lat and lng). label_col / value_col name the columns for bars. Prefer readable column aliases (venue, city, drink, price). Never select raw ids unless asked.\n" + SCHEMA_DOC,
+        instructions: "Write ONE read-only PostgreSQL SELECT that answers the question from these tables only. Return JSON. title: a short screen title. display: table, bars (label + one number per row) or map (rows have lat and lng). label_col / value_col name the columns for bars. Prefer readable column aliases (venue, city, drink, price). Never select raw ids unless asked.\n" + SCHEMA_DOC + (sqlLessons ? "\nLessons from past mistakes (follow them):\n" + sqlLessons : ""),
         input: question + extra,
         text: { format: { type: "json_schema", name: "phg_sql", strict: true, schema: {
           type: "object", additionalProperties: false, required: ["sql", "title", "display", "label_col", "value_col"],
@@ -709,9 +729,15 @@ async function askData(db: any, oa: string, question: string, user: string, acco
   let plan = await gen("");
   let out = await run(String(plan.sql || ""));
   if (out.err) { plan = await gen(`\n\nYour previous SQL failed.\nSQL: ${plan.sql}\nError: ${out.err}\nFix it.`); out = await run(String(plan.sql || "")); }
-  if (out.err) return { speak: "I couldn't work that one out from the data. Try asking it another way.", view: { type: "empty", title: "Could not answer", note: String(out.err).slice(0, 200) } };
+  if (out.err) {
+    logFeedback(db, { kind: "no_answer", source: "ask", user_text: question, reply_text: "Could not answer", view_title: "Could not answer", sql: String(plan.sql || ""), error: String(out.err), user_id: user, account_id: account });
+    return { speak: "I couldn't work that one out from the data. Try asking it another way.", view: { type: "empty", title: "Could not answer", note: String(out.err).slice(0, 200) } };
+  }
   const rows = out.rows;
-  if (!rows.length) return { speak: `I didn't find anything for that in PHG's data.`, view: { type: "empty", title: plan.title || "No results" } };
+  if (!rows.length) {
+    logFeedback(db, { kind: "empty_result", source: "ask", user_text: question, view_title: plan.title || "No results", sql: String(plan.sql || ""), user_id: user, account_id: account });
+    return { speak: `I didn't find anything for that in PHG's data.`, view: { type: "empty", title: plan.title || "No results" } };
+  }
   const cols = Object.keys(rows[0]);
   const cell = (v: any) => v == null ? "" : typeof v === "number" ? (Number.isInteger(v) ? v : Math.round(v * 100) / 100) : typeof v === "object" ? JSON.stringify(v).slice(0, 80) : String(v).slice(0, 120);
   const view: View = { type: "table", title: plan.title || "Results", table: { cols, rows: rows.slice(0, 60).map((r) => cols.map((c) => cell(r[c]))) } };
@@ -767,9 +793,10 @@ Deno.serve(async (req) => {
   let plan: { source: string; params: P } | null = b.source && SOURCES[b.source] ? { source: b.source, params: b.params || {} } : fastPlan(ask);
   if (!plan) {
     if (!oa) return json({ error: "planner unavailable" }, 500);
+    const plannerLessons = await lessons(db, "planner");
     const r = await oaCall(oa, ({
         model: Deno.env.get("OPENAI_DATA_MODEL") || "gpt-4o-mini", max_output_tokens: 300,
-        instructions: "Pick the one PHG data source that answers the request and fill its parameters (empty string when unused). state is a US two-letter code (menus: IA, CO, NY; liquor licences: see the licenses source). group_by is one of city, venue_type, venue, state_code, item, subfamily, serve_format. section is one of cocktails, beer, wine, liquor, non_alcoholic. family is one of tequila, mezcal, whiskey, vodka, gin, rum, brandy, liqueur, wine, beer, non_alcoholic. price_min / price_max are dollars ('under $14' -> price_max 14). income_min / income_max are the median household income of the venue ZIP in dollars ('income over 100k' -> income_min 100000; 'affluent' -> 100000). age_min / age_max are the ZIP median age ('younger areas' -> age_max 35). sort is one of price_asc, price_desc, income_desc, income_asc, rating_desc, name, city. with_menus is 'true' to keep only venues with menu data. Use licenses for anything about liquor licences or licensed venues (group_by city/type/county for one state; venue_type = licence type text). Use drink_map when they want to SEE where a drink is served (a map), drink_prices for prices and averages. Use menu_lookup when they want to SEE a specific venue's menu document. Use ask for any other question about PHG's data that the sources above cannot answer as asked (a list with several filters such as all the margaritas at one venue in one city, a specific venue's drinks, comparisons, counts, rankings, or the business's own recipes, invoices, costs, sales, labor, budgets and notes). Use none only when it is not about data.\nSources:\n" + Object.entries(SOURCES).map(([k, v]) => `${k}: ${v.about}`).join("\n") + "\nmenu_lookup: open a specific venue's menu document (q=venue, city, state).",
+        instructions: "Pick the one PHG data source that answers the request and fill its parameters (empty string when unused). state is a US two-letter code (menus: IA, CO, NY; liquor licences: see the licenses source). group_by is one of city, venue_type, venue, state_code, item, subfamily, serve_format. section is one of cocktails, beer, wine, liquor, non_alcoholic. family is one of tequila, mezcal, whiskey, vodka, gin, rum, brandy, liqueur, wine, beer, non_alcoholic. price_min / price_max are dollars ('under $14' -> price_max 14). income_min / income_max are the median household income of the venue ZIP in dollars ('income over 100k' -> income_min 100000; 'affluent' -> 100000). age_min / age_max are the ZIP median age ('younger areas' -> age_max 35). sort is one of price_asc, price_desc, income_desc, income_asc, rating_desc, name, city. with_menus is 'true' to keep only venues with menu data. Use licenses for anything about liquor licences or licensed venues (group_by city/type/county for one state; venue_type = licence type text). Use drink_map when they want to SEE where a drink is served (a map), drink_prices for prices and averages. Use menu_lookup when they want to SEE a specific venue's menu document. Use ask for any other question about PHG's data that the sources above cannot answer as asked (a list with several filters such as all the margaritas at one venue in one city, a specific venue's drinks, comparisons, counts, rankings, or the business's own recipes, invoices, costs, sales, labor, budgets and notes). Use none only when it is not about data.\nSources:\n" + Object.entries(SOURCES).map(([k, v]) => `${k}: ${v.about}`).join("\n") + "\nmenu_lookup: open a specific venue's menu document (q=venue, city, state)." + (plannerLessons ? "\nLessons from past mistakes (follow them):\n" + plannerLessons : ""),
         input: ask,
         text: { format: { type: "json_schema", name: "phg_data_plan", strict: true, schema: PLAN_SCHEMA } },
       }),
@@ -777,7 +804,10 @@ Deno.serve(async (req) => {
     const raw = await r.json().catch(() => ({}));
     let t = typeof raw.output_text === "string" ? raw.output_text : "";
     if (!t && Array.isArray(raw.output)) for (const o of raw.output) for (const c of (o?.content || [])) if (c?.type === "output_text") t += c.text || "";
-    try { plan = JSON.parse(t); } catch { return json({ error: "could not plan that request", detail: raw?.error?.message }, 502); }
+    try { plan = JSON.parse(t); } catch {
+      logFeedback(db, { kind: "error", source: "planner", user_text: ask, error: "could not plan: " + String(raw?.error?.message || t || "empty").slice(0, 500) });
+      return json({ error: "could not plan that request", detail: raw?.error?.message }, 502);
+    }
   }
   /* who is asking (for the gateway: it checks the membership itself) */
   const askUser = internal ? String(b.user || "") : callerUser;
@@ -786,7 +816,10 @@ Deno.serve(async (req) => {
   if (plan!.source === "ask" || (plan!.source === "none" && b.ask_fallback)) {
     if (!canAsk) return json({ status: "ok", source: "none", params: {} });
     try { return json({ status: "ok", source: "ask", params: {}, ...(await askData(db, oa!, ask, askUser, askAccount)) }); }
-    catch (e) { return json({ status: "ok", source: "ask", params: {}, speak: "I couldn't work that one out just now.", view: { type: "empty", title: "Could not answer" }, error: String((e as Error)?.message || e) }); }
+    catch (e) {
+      logFeedback(db, { kind: "error", source: "ask", user_text: ask, view_title: "Could not answer", error: String((e as Error)?.message || e), user_id: askUser, account_id: askAccount });
+      return json({ status: "ok", source: "ask", params: {}, speak: "I couldn't work that one out just now.", view: { type: "empty", title: "Could not answer" }, error: String((e as Error)?.message || e) });
+    }
   }
   const params: P = {};
   for (const [k, v] of Object.entries(plan!.params || {})) if (v != null && String(v).trim() !== "") params[k] = String(v).trim().slice(0, 80);
@@ -797,8 +830,10 @@ Deno.serve(async (req) => {
     const out = await src.run(db, params);
     /* v13: every view carries the query that made it, so the app can refine it ("only under $14", "sort by price") */
     if (out.view && typeof out.view === "object") (out.view as any).query = { source: plan!.source, params };
+    if ((out.view as any)?.type === "empty") logFeedback(db, { kind: "empty_result", source: plan!.source, params, user_text: ask, reply_text: out.speak, view_title: (out.view as any)?.title });
     return json({ status: "ok", source: plan!.source, params, ...out });
   } catch (e) {
+    logFeedback(db, { kind: "error", source: plan!.source, params, user_text: ask, view_title: "Could not load", error: String((e as Error)?.message || e) });
     return json({ status: "ok", source: plan!.source, params, speak: "I could not pull that: " + String((e as Error)?.message || e), view: { type: "empty", title: "Could not load" } });
   }
 });
