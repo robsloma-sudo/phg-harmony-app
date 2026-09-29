@@ -2127,3 +2127,5 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
 - Census: ingest-census-acs covers every ZCTA (~33,800) once a free Census API key is set; fully automated.
 - Rob's manual items: Census API key, Google Places budget (~$6k-$11k est.), Railway capacity, paid lists
   (IN $150 + $10/1,000, NE $40, DE $25), records requests in the manual states.
+- Deployed phg-harmony-data v10 (pipeline source; byte-identical) and phg-harmony-inbox v26 (CONVERSE knows the
+  menu pipeline; boot check 200). "How's the pipeline?" now answers by voice with a spoken summary and a dashboard.
