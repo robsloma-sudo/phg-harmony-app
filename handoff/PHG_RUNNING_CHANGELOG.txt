@@ -1851,3 +1851,20 @@ understanding the context of questions.")
   documents).
 - Tests: Rob's exact sentence opens East & Co; "Easton Co" opens East & Co; "Fresca" offers Frasca Food and Wine and
   "number one" opens it; unknown names say so; voice-control and menu-look suites still pass; zero page errors.
+
+------------------------------------------------------------------------------
+PHG-20260929-MIGRATIONS-1 | USER_PROMPT + DEPLOY + MIGRATION (approved) | 2026-09-29
+Rob: "deploy and yes to the two database changes." (the corrections log and the knowledge map / read-only gateway)
+- DEPLOY 18.49.37 -> main dd84247, Netlify 6abb05ead0ebe00008ea732c ready.
+- Both migrations dry-run on live inside begin ... rollback: clean, nothing persisted (knowledge map: 34 entities,
+  106 access rules, 7 paths, RLS on 24 tables inside the transaction; gateway counted public.accounts = 41,886 and
+  refused public.internal_secrets).
+- Safety review round 1: 07 corrections = 86 APPLY (4 small fixes); 01 knowledge map = 66 APPLY WITH FIXES with 5
+  blockers (permissive-policy OR leak across projects, no lock_timeout on ~60 live tables, schema denylist instead
+  of allowlist, SET LOCAL statement_timeout does not bound the running call, unsafe rollback order).
+- APPLIED migration 20260929013000_harmony_turns_and_corrections (after fixes: account parsed only for new ops,
+  alias_upsert limited to owner/admin/editor with input checks, 'understood' capped at 8 KB, rollback keeps backups):
+  phg.harmony_turns, phg.harmony_corrections, phg.harmony_aliases (RLS on, no grants) + phg_harmony_inbox_db ops
+  turn_log, correction_add, aliases_list, alias_upsert, turns_recent. Verified: existing key_lookup unchanged, tables
+  present, new ops present.
+- 01 knowledge map NOT applied: blockers being fixed, then dry-run and re-review before applying.

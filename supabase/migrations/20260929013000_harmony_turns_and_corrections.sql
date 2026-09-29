@@ -1,4 +1,4 @@
--- Harmony learns from corrections. Approved by Rob 2026-09-29 ("yes to the two database changes").
+-- Harmony learns from corrections (applied 2026-09-29 after safety review round 1 fixes and a rolled-back dry run). Approved by Rob 2026-09-29 ("yes to the two database changes").
 -- Spec: handoff/HARMONY_CONVERSATION_MODEL.md §5 (jobs, question rules), §4C (project and person layers).
 --
 -- What this does (plain English)
@@ -21,7 +21,6 @@
 --   -- drop table if exists phg.harmony_aliases, phg.harmony_corrections, phg.harmony_turns;
 --   -- verify: select pg_get_functiondef('public.phg_harmony_inbox_db(text,jsonb)'::regprocedure) not like '%turn_log%';
 
-begin;
 
 create table if not exists phg.harmony_turns (
   id           bigint generated always as identity primary key,
@@ -240,5 +239,3 @@ $$;
 
 revoke all on function public.phg_harmony_inbox_db(text, jsonb) from public, anon, authenticated;
 grant execute on function public.phg_harmony_inbox_db(text, jsonb) to service_role;
-
-commit;
