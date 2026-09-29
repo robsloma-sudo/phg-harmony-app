@@ -2382,3 +2382,8 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   (next 18:50 UTC), following handoff/HARMONY_FEEDBACK_REVIEW.md.
   WARNING: it stores NO connectors. Rob must add the Supabase connector to it in the claude.ai Routines page, or the
   runs cannot read the log.
+- 2026-09-29 18:xx Reload of all 17 licence-list states under the 3-month expiry window: 54 calls, 425,168 rows read.
+  - Only error: one MI WORKER_RESOURCE_LIMIT, retried OK.
+  - Now: 20 states, 198,056 venues, 201,270 licences (+6,147 venues).
+  - Gains: IL 8,122 -> 12,846, CA +646, ME +514, OK +214, WA +38.
+  - Expired-but-inside-window licences: 5,973 (IL 4,746, CA 650, ME 328, OK 216, WA 28, OR 4, CT 1).
