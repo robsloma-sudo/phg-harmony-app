@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.37 ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.38 HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -22163,7 +22163,8 @@ function harmonyVoiceUpload(blob,targetId,nonce){
       apikey:KEY,
       Authorization:'Bearer '+tok,
       'Content-Type':mime,
-      'x-audio-filename':'harmony.'+ext
+      'x-audio-filename':'harmony.'+ext,
+      'x-context':(window.harmonyHearingContext?harmonyHearingContext():'')
     },
     body:blob
   }).then(function(r){
@@ -40239,7 +40240,7 @@ function transcribe(blob){
   var tok=phgAuthAccessToken(),mime=blob.type||'audio/webm';
   var ext=mime.indexOf('mp4')>=0?'m4a':mime.indexOf('ogg')>=0?'ogg':'webm';
   fetch(typeof MDC_SPEECH_URL!=='undefined'?MDC_SPEECH_URL:FN+'phg-speech-transcribe',{method:'POST',
-    headers:{apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok,'Content-Type':mime,'x-audio-filename':'harmony.'+ext},body:blob})
+    headers:{apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok,'Content-Type':mime,'x-audio-filename':'harmony.'+ext,'x-context':(window.harmonyHearingContext?harmonyHearingContext():'')},body:blob})
   .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok)throw new Error(j.detail||j.error||('HTTP '+r.status));return j;});})
   .then(function(j){var t=String(j.text||'').trim();if(!t){afterReply(false);return;}PMS.hear(t);afterReply(true);})
   .catch(function(e){if(!PMS.talk)return;say('I did not catch that.');afterReply(true);});
@@ -40971,7 +40972,7 @@ function harmonyFindMenu(q){
     var rows=all.filter(function(x){return x.score>=.5;});
     if(!rows.length){
       var seen={},near=all.filter(function(x){var k=normName(x.name);if(x.score<.28||seen[k])return false;seen[k]=1;return true;}).slice(0,3);
-      if(near.length){HVX_PICK={at:Date.now(),rows:near};
+      if(near.length){HVX_PICK={at:Date.now(),rows:near};window.PHG_HEAR_NAMES=near.map(function(x){return x.name;});
         agentSay('I don’t have '+ask.name+(where?' in '+where:'')+' by that name. Closest I have: '+near.map(function(x,i){return (i+1)+', '+corpusTitle(x.name)+(x.r.city?' in '+corpusTitle(x.r.city):'');}).join('; ')+'. Which one?');return;}
       if(typeof agentSay==='function')agentSay('I couldn’t find '+ask.name+(where?' in '+where:'')+' in the menu library. The library covers Iowa, Colorado and New York venues we have captured so far.');return;}
     HVX_PICK=null;
@@ -41578,7 +41579,8 @@ window.harmonyMap={
   only:function(kind){if(!HD.groups[kind])return false;Object.keys(HD.groups).forEach(function(k){setKind(k,k===kind);});fitVisible();return true;},
   showAll:function(){Object.keys(HD.groups).forEach(function(k){setKind(k,true);});fitVisible();return true;},
   reset:function(){fitVisible();return true;},
-  kindWord:function(k){return KIND_WORD[k]||k+'s';}
+  kindWord:function(k){return KIND_WORD[k]||k+'s';},
+  labels:function(){return visible().map(function(r){return String(r.p.label||'').replace(/^NOM\s*\d+\s*·\s*/,'');});}
 };
 window.harmonyShowData=ask;window.harmonyWantsData=wants;window.harmonyDataShow=show;window.harmonyDataClose=close;
 window.harmonyDataCatalog=function(){show({type:'catalog',title:'What Harmony can show you'});say('Here is everything I can put on screen. Tap an example, or just ask me in your own words.');};
@@ -41748,6 +41750,21 @@ function exec(a){
   }
   return false;
 }
+/* 18.49.38: hearing in context. Speech-to-text gets a short hint of what is being talked about, so names and
+   bar terms are heard right: the last lines of the conversation, what is on screen (map pins, the menu on the
+   stage, venues just offered), and the words this business uses. URL-encoded, about 800 characters. */
+var HEAR_VOCAB='Harmony, PHG, Manhattan, Black Manhattan, Negroni, Boulevardier, Old Fashioned, Margarita, Paloma, Mai Tai, Daiquiri, Espresso Martini, Aperol Spritz, mezcal, tequila, blanco, reposado, añejo, NOM, rye, bourbon, amaro, vermouth, bitters, orgeat, falernum, coupe, Nick and Nora, rocks glass, COGS, comp percent, labor percent, declining budget, prime cost, P&L, Toast, Breakthru, Southern Glazer\u2019s, Des Moines, Iowa City, Cedar Rapids, Ankeny, Denver, Boulder, Fort Collins, Colorado Springs, Jalisco, Arandas';
+function hearingContext(){
+  var parts=[],names=[];
+  try{var ch=(typeof AGENT!=='undefined'&&AGENT.chat)?AGENT.chat.slice(-4):[];ch.forEach(function(m){var t=String(m.text||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();if(t)parts.push(t.slice(0,160));});}catch(e){}
+  try{if(window.harmonyMap&&harmonyMap.open())harmonyMap.labels().slice(0,25).forEach(function(n){names.push(n);});}catch(e){}
+  try{(window.PHG_HEAR_NAMES||[]).forEach(function(n){names.push(n);});}catch(e){}
+  try{if(window.PMS&&PMS.content&&PMS.content.sections)PMS.content.sections.forEach(function(sec){(sec.items||[]).forEach(function(it){if(it.n)names.push(it.n);});});}catch(e){}
+  var seen={};names=names.filter(function(n){n=String(n||'').trim();if(!n||seen[n.toLowerCase()])return false;seen[n.toLowerCase()]=1;return true;}).slice(0,40);
+  var txt=(parts.length?'Conversation: '+parts.join(' / ')+'. ':'')+(names.length?'On screen: '+names.join(', ')+'. ':'')+'Words: '+HEAR_VOCAB+'.';
+  return encodeURIComponent(txt.slice(0,850));
+}
+window.harmonyHearingContext=hearingContext;
 window.harmonyUI={run:run,exec:exec,help:showHelp,targets:function(){return targets().map(function(t){return t.label;});},commands:function(){return CMDS.map(function(c){return {group:c.g,examples:c.ex};});}};
 
 /* Commands are checked first on every path words take into Harmony. */

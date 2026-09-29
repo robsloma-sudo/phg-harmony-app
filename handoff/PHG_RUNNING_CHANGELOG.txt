@@ -1868,3 +1868,17 @@ Rob: "deploy and yes to the two database changes." (the corrections log and the 
   turn_log, correction_add, aliases_list, alias_upsert, turns_recent. Verified: existing key_lookup unchanged, tables
   present, new ops present.
 - 01 knowledge map NOT applied: blockers being fixed, then dry-run and re-review before applying.
+
+------------------------------------------------------------------------------
+PHG-20260929-HEARING | USER_PROMPT + FIX (phg-speech-transcribe v3 LIVE; app 18.49.38 NOT deployed) | 2026-09-29
+Rob: "Harmony is not recognizing words properly based on context. Still, it's bad. It's hard to use."
+- Cause: speech-to-text (phg-speech-transcribe) sent audio to the transcription model with no context at all, so
+  names and bar terms were guessed from sound alone ("East & Co" -> "Easton Co"), before Harmony's brain ever saw
+  them.
+- phg-speech-transcribe v3 (live, verify_jwt on, source now in repo): accepts an x-context header (URL-encoded,
+  <= 900 chars) and passes it to the model as the transcription prompt; if the hint is ever refused it retries
+  without it. Backward compatible.
+- App 18.49.38: talk mode and composer dictation send the hint: last 4 conversation lines, names on screen (map pins,
+  venues Harmony just offered, items on the menu stage) and bar/place vocabulary (cocktails, spirits terms, glass
+  types, COGS/comp/labor terms, IA/CO cities). Tested: hint built correctly, zero page errors.
+- Next: add each project's learned aliases (phg.harmony_aliases) and venue/menu names to the hint.
