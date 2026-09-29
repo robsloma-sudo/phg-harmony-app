@@ -1979,3 +1979,18 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   intent, amount, time), carries on right away if the correction is already in their words, otherwise asks ONE pointed
   question with the likely alternatives (never repeats the old answer, never "start over"). Logged to
   phg.harmony_corrections with wrong_part, and the turn is flagged is_correction in phg.harmony_turns.
+
+[2026-09-29] PLACE CARDS (data v7 + inbox v20 live; app 18.49.41 committed, NOT deployed)
+- Rob: tap a distillery or venue on the map (Mexico, IA, CO, NY) and expand all its data; talk to Harmony about it,
+  including with the phone locked ("pull up a venue in Des Moines and show me its menu").
+- phg-harmony-data v7: place_distillery (NOM / producer / brand -> producer, town, address, every brand and each
+  brand's lineup by style Blanco/Joven/Reposado/Anejo/Extra Anejo/Cristalino from TTB label approvals via brand_id;
+  13,921 tequila/mezcal labels are linked) and place_venue (address, type, rating, neighbourhood income/age, typical
+  cocktail price, the drinks menu by section with prices from mv_drink_explorer; falls back to v_public_venues).
+- phg-harmony-inbox v20: locked phone (Shortcut) + "show me X's menu" now reads the venue's drinks aloud from PHG's
+  menu data, then offers a section ("the cocktails") or the full menu document in the app.
+- index.html 18.49.41: tapping any pin opens a place card over the map (expandable sections, Expand/Shrink, "Open the
+  menu document"); voice: "tell me about that one", "expand it", "show the cocktails", "open Fortaleza", "the
+  reposados", "close the card". Card checked at 390 px in headless Chromium.
+- Not in PHG yet (needs a research/ingest job, see PHG-046): tasting notes, production process (cooking, milling,
+  stills, water, barrels), history/origin stories, bottle images, prices per expression.

@@ -410,6 +410,20 @@ Deno.serve(async (req) => {
       const dj = await dr.json().catch(() => ({}));
       if (dr.ok && dj.source === "menu_lookup" && inApp) return reply("Opening that menu.", "listen", { menu_lookup: q });
       if (dr.ok && dj.source === "menu_lookup") {
+        /* v20: phone locked (the Shortcut): read the venue's drinks out loud from PHG's menu data, then offer the screen */
+        try {
+          const pv = dj.params || {};
+          if (pv.q) {
+            const pr = await fetch(`${url}/functions/v1/phg-harmony-data`, {
+              method: "POST", headers: { "Content-Type": "application/json", apikey: anon, "x-phg-internal": service },
+              body: JSON.stringify({ source: "place_venue", params: { q: pv.q, city: pv.city || "", state: pv.state || "" } }),
+            });
+            const pj = await pr.json().catch(() => ({}));
+            if (pr.ok && pj.view?.type === "place" && pj.speak) {
+              return reply(String(pj.speak) + " Want me to read a section, like the cocktails, or open the full menu in the Harmony app?", "listen", {}, { title: pj.view.title, detail: viewDetail({ title: pj.view.title, rows: pj.view.rows, table: { rows: (pj.view.sections || []).flatMap((x: any) => (x.items || []).slice(0, 12).map((it: any) => [x.title, it.name, it.value])) } }), url: withQ(q) }, true);
+            }
+          }
+        } catch { /* fall back to offering the screen */ }
         return reply("That menu is a document, so it needs the screen. Want me to open it in the Harmony app?", "listen", {}, { title: q, detail: "", url: withQ(q) }, true);
       }
       if (dr.ok && dj.speak && dj.source !== "none") {

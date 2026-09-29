@@ -287,6 +287,110 @@ const SOURCES: Record<string, { about: string; run: (db: any, p: P) => Promise<R
       };
     },
   },
+  /* v7: PLACE CARDS. Tapping a pin on the map (or "tell me about ...", "pull up ...") opens everything PHG holds on
+     that place, in expandable sections. The same data is spoken as a short summary for the locked-phone Shortcut. */
+  place_distillery: {
+    about: "Everything on one tequila distillery (NOM number, producer or one of its brands): where it is, every brand it makes and each brand's lineup (Blanco, Reposado, Anejo, Extra Anejo, Cristalino...) from US label approvals: expandable place card.",
+    async run(db, p) {
+      let nom = String(p.nom || "").replace(/\D/g, "");
+      if (!nom && p.q) {
+        const { data: o } = await db.from("organizations").select("nom").not("nom", "is", null).ilike("organization_name", `%${esc(p.q)}%`).limit(1);
+        nom = o?.[0]?.nom || "";
+        if (!nom) { const { data: br } = await db.from("brands").select("primary_nom").ilike("brand_name", `%${esc(p.q)}%`).not("primary_nom", "is", null).limit(1); nom = br?.[0]?.primary_nom || ""; }
+      }
+      if (!nom) return { speak: `I couldn't find that distillery. Try its NOM number or one of its brands.`, view: { type: "empty", title: "Not found" } };
+      const { data: orgs } = await db.from("organizations").select("organization_name,nom,notes,verified_at").eq("nom", nom).limit(1);
+      const o = orgs?.[0];
+      if (!o) return { speak: `I don't have NOM ${nom} in the register.`, view: { type: "empty", title: "Not found" } };
+      const a = addressOf(o.notes), name = title(String(o.organization_name).replace(LEGAL, ""));
+      const { data: brands } = await db.from("brands").select("id,brand_name,brand_status").eq("primary_nom", nom).order("brand_name").limit(80);
+      const ids = (brands || []).map((b: any) => b.id);
+      const labels: any[] = [];
+      for (let i = 0; i < ids.length; i += 40) {
+        const { data } = await db.from("cola_label_approvals").select("brand_id,fanciful_name,class_type_desc,completed_date").in("brand_id", ids.slice(i, i + 40)).order("completed_date", { ascending: false }).limit(2000);
+        labels.push(...(data || []));
+      }
+      const style = (t: string) => { const x = t.toLowerCase(); return /extra\s*a[nñ]ejo/.test(x) ? "Extra Añejo" : /cristalino/.test(x) ? "Cristalino" : /a[nñ]ejo/.test(x) ? "Añejo" : /reposado/.test(x) ? "Reposado" : /blanco|plata|silver|platinum|white/.test(x) ? "Blanco" : /joven|gold|oro/.test(x) ? "Joven" : "Other"; };
+      const ORDER = ["Blanco", "Joven", "Reposado", "Añejo", "Extra Añejo", "Cristalino", "Other"];
+      const byBrand: Record<string, any[]> = {}; const styleCount: Record<string, number> = {};
+      labels.forEach((l) => { (byBrand[l.brand_id] = byBrand[l.brand_id] || []).push(l); });
+      const sections = (brands || []).map((b: any) => {
+        const seen = new Set<string>(); const items: any[] = [];
+        (byBrand[b.id] || []).forEach((l) => {
+          const fn = String(l.fanciful_name || "").trim() || b.brand_name; const k = fn.toLowerCase(); if (seen.has(k)) return; seen.add(k);
+          const st = style(fn + " " + (l.class_type_desc || "")); styleCount[st] = (styleCount[st] || 0) + 1;
+          items.push({ name: fn, sub: st, value: l.completed_date ? String(l.completed_date).slice(0, 4) : "" });
+        });
+        items.sort((x, y) => ORDER.indexOf(x.sub) - ORDER.indexOf(y.sub) || x.name.localeCompare(y.name));
+        return { title: b.brand_name, count: items.length, items: items.slice(0, 40), empty: items.length ? "" : "No US label approvals on file" };
+      }).sort((x: any, y: any) => y.count - x.count);
+      const lineup = ORDER.filter((k) => styleCount[k]).map((k) => `${k} ${styleCount[k]}`).join(" · ");
+      const top = sections.filter((x: any) => x.count).slice(0, 3).map((x: any) => x.title);
+      return {
+        speak: `NOM ${nom} is ${name}${a.muni ? `, in ${title(a.muni)}, ${title(a.state)}` : ""}. It makes ${sections.length} brand${sections.length === 1 ? "" : "s"}` + (top.length ? `, including ${top.join(", ")}` : "") + "." + (lineup ? ` Their US-approved lineup covers ${ORDER.filter((k) => styleCount[k] && k !== "Other").join(", ")}.` : ""),
+        view: {
+          type: "place", kind: "distillery", title: name, badge: `NOM ${nom}`,
+          pin: a.coord ? { lat: a.coord[0], lng: a.coord[1] } : null,
+          rows: [["Producer", o.organization_name], ["Town", a.muni ? title(a.muni) + ", " + title(a.state) : "—"], ["Registered address", a.addr || "—"], ["Brands", String(sections.length)], ["Lineup", lineup || "—"]],
+          sections,
+          note: "Lineups come from US label approvals (TTB COLA) and the CRT register. Tasting notes, production process (cooking, milling, stills, barrels) and history are not in PHG yet.",
+        },
+      };
+    },
+  },
+  place_venue: {
+    about: "Everything on one bar or restaurant (by name, optionally city/state): address, type, rating, neighbourhood, and its drinks menu by section with prices: expandable place card. Use this to show or read out a venue's menu.",
+    async run(db, p) {
+      if (!p.q) throw new Error("which venue?");
+      let q = db.from("mv_drink_explorer").select("venue,venue_key,city,state_code,address,venue_type,rating,lat,lng,income,median_age,income_band,age_band,section,menu_section,item_name,item_price,family").ilike("venue", `%${esc(p.q)}%`).limit(600);
+      if (p.city) q = q.ilike("city", esc(p.city));
+      if (p.state) q = q.eq("state_code", String(p.state).toUpperCase().slice(0, 2));
+      const { data } = await q;
+      let rows = data || [];
+      if (rows.length) {
+        /* several venues can match: keep the best (exact name first, then the one with the most drinks) */
+        const low = String(p.q).toLowerCase(); const count: Record<string, number> = {};
+        rows.forEach((r: any) => { count[r.venue_key] = (count[r.venue_key] || 0) + 1; });
+        const keys = Object.keys(count).sort((x, y) => {
+          const ex = (k: string) => rows.find((r: any) => r.venue_key === k)?.venue.toLowerCase() === low ? 0 : 1;
+          return ex(x) - ex(y) || count[y] - count[x];
+        });
+        rows = rows.filter((r: any) => r.venue_key === keys[0]);
+      }
+      if (!rows.length) {
+        let vq = db.from("v_public_venues").select("venue,city,state_code,address,venue_type,rating,reviews,website,lat,lng").ilike("venue", `%${esc(p.q)}%`).limit(1);
+        if (p.city) vq = vq.ilike("city", esc(p.city));
+        const { data: vv } = await vq; const v = vv?.[0];
+        if (!v) return { speak: `I couldn't find ${p.q}${p.city ? " in " + p.city : ""}.`, view: { type: "empty", title: "Not found" } };
+        return { speak: `${v.venue} is a ${v.venue_type || "venue"} in ${v.city}. I haven't read its drinks menu yet.`, view: { type: "place", kind: "venue", title: v.venue, badge: `${v.city}, ${v.state_code}`, pin: v.lat ? { lat: +v.lat, lng: +v.lng } : null, rows: [["Address", v.address], ["Type", v.venue_type], ["Rating", v.rating ? `${v.rating} (${v.reviews || 0} reviews)` : ""], ["Website", v.website]].filter((r) => r[1]), sections: [], note: "No drinks menu read for this venue yet." } };
+      }
+      const f = rows[0];
+      const SEC: Record<string, string> = { cocktails: "Cocktails", beer: "Beer", wine: "Wine", liquor: "Spirits", non_alcoholic: "Zero proof" };
+      const bySec: Record<string, any[]> = {};
+      rows.forEach((r: any) => { const k = SEC[r.section] || "Other"; (bySec[k] = bySec[k] || []).push(r); });
+      const sections = ["Cocktails", "Spirits", "Beer", "Wine", "Zero proof", "Other"].filter((k) => bySec[k]).map((k) => {
+        const seen = new Set<string>();
+        const items = bySec[k].filter((r) => { const n = String(r.item_name || "").toLowerCase(); if (seen.has(n)) return false; seen.add(n); return true; })
+          .sort((x, y) => String(x.menu_section || "").localeCompare(String(y.menu_section || "")) || String(x.item_name).localeCompare(String(y.item_name)))
+          .map((r) => ({ name: r.item_name, sub: r.menu_section || r.family || "", value: r.item_price != null ? "$" + (+r.item_price).toFixed(2) : "" }));
+        return { title: k, count: items.length, items: items.slice(0, 80) };
+      });
+      const ck = (bySec["Cocktails"] || []).filter((r) => r.item_price != null).map((r) => +r.item_price).sort((a, b) => a - b);
+      const med = ck.length ? ck[Math.floor(ck.length / 2)] : null;
+      const say = (bySec["Cocktails"] || []).slice(0, 4).map((r) => `${r.item_name}${r.item_price != null ? " at $" + (+r.item_price).toFixed(0) : ""}`);
+      return {
+        speak: `${f.venue} in ${f.city} lists ${rows.length} drinks: ` + sections.map((x) => `${x.count} ${x.title.toLowerCase()}`).join(", ") + "." + (say.length ? ` Cocktails include ${say.join(", ")}.` : "") + (med ? ` The typical cocktail is $${med.toFixed(0)}.` : ""),
+        view: {
+          type: "place", kind: "venue", title: f.venue, badge: `${f.city}, ${f.state_code}`,
+          pin: f.lat ? { lat: +f.lat, lng: +f.lng } : null,
+          rows: [["Address", f.address], ["Type", f.venue_type], ["Rating", f.rating], ["Typical cocktail", med ? "$" + med.toFixed(2) : ""], ["Neighbourhood income", f.income ? "$" + (+f.income).toLocaleString("en-US") + (f.income_band ? " · " + f.income_band : "") : f.income_band], ["Neighbourhood age", f.median_age ? f.median_age + (f.age_band ? " · " + f.age_band : "") : f.age_band]].filter((r) => r[1] != null && r[1] !== ""),
+          sections,
+          actions: [{ label: "Open the menu document", say: `show me the menu for ${f.venue} in ${f.city}` }],
+          note: "Drinks and prices as read from the venue's current menu.",
+        },
+      };
+    },
+  },
   menu_breakdown: {
     about: "Breakdown of one menu section (cocktails, beer, wine, liquor, non_alcoholic) by dimension (item, subfamily, city, venue_type, serve_format) in a state: bars with average prices.",
     async run(db, p) {
