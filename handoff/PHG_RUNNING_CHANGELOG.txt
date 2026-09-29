@@ -1882,3 +1882,16 @@ Rob: "Harmony is not recognizing words properly based on context. Still, it's ba
   venues Harmony just offered, items on the menu stage) and bar/place vocabulary (cocktails, spirits terms, glass
   types, COGS/comp/labor terms, IA/CO cities). Tested: hint built correctly, zero page errors.
 - Next: add each project's learned aliases (phg.harmony_aliases) and venue/menu names to the hint.
+
+------------------------------------------------------------------------------
+PHG-20260929-SPEED | USER_PROMPT + CHANGE (app 18.49.39 NOT deployed) | 2026-09-29
+Rob: "Is there a way to speed up Harmony's processing time? It's taking a while for Harmony to reply to my prompts."
+- Measured (edge logs, median / p90): end-of-speech wait ~1.1 s; phg-speech-transcribe 1.15 / 1.8 s;
+  phg-harmony-inbox 2.0 / 3.7 s; phg-harmony-data 1.6 / 2.3 s; phg-harmony-attach 1.9 / 5.7 s;
+  phg-speech-generate 2.2 / 3.9 s. Total ~6-8 s per spoken turn; the voice step waited for the whole reply.
+- 18.49.39: Harmony's voice is split into sentences, all voiced in parallel; the first short sentence plays as soon
+  as it is ready and the rest queue behind it (busy/playing stay true until the last part ends, so talk mode does
+  not re-open the mic between sentences). Test with simulated audio: first sound at ~0.3 s instead of ~0.9 s;
+  speaking flag continuous; zero page errors. Expected real saving ~1.5-2.5 s on longer replies.
+- Next candidates: trim the planner input (recent notes every turn), shorter end-of-speech wait (0.8-0.9 s),
+  a spoken "one moment" for slow paths (web recipes), faster planner model if accuracy holds.

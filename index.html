@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.38 HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.39 FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -27478,6 +27478,21 @@ function phgLocalVoiceDrawStatus(){
 window.addEventListener('phg-local-voice-status',function(e){var d=e.detail||{};PHG_LOCAL_VOICE_PREF.status=d.state||PHG_LOCAL_VOICE_PREF.status;PHG_LOCAL_VOICE_PREF.message=d.message||PHG_LOCAL_VOICE_PREF.message;if(d.state==='ready'){PHG_LOCAL_VOICE_PREF.installed=true;phgLocalVoiceSave();}phgLocalVoiceDrawStatus();});
 window.addEventListener('phg-local-voice-progress',function(e){var d=e.detail||{},v=Number(d.progress);if(!isFinite(v)&&d.loaded!=null&&d.total)v=Number(d.loaded)/Number(d.total)*100;if(isFinite(v)){if(v<=1)v*=100;PHG_LOCAL_VOICE_PREF.progress=Math.round(v);phgLocalVoiceDrawStatus();}});
 var PHG_OPENAI_HARMONY_SPEAK=null;
+/* 18.49.39: speak sooner. The reply is split into sentences; all parts are voiced at once, in parallel, and the
+   first (short) part starts playing as soon as it is ready while the rest queue behind it. Harmony used to wait
+   for the whole reply to be voiced (about 2-4 s) before saying a word. busy/playing stay true until the last part
+   ends, so talk mode never re-opens the mic between sentences. */
+function speechParts(text,single){
+  text=String(text||'').replace(/\s+/g,' ').trim();
+  if(single||text.length<140)return [text];
+  var sents=text.match(/[^.!?]+[.!?]+["”’)]*\s*|[^.!?]+$/g)||[text],parts=[],cur='';
+  sents.forEach(function(x){x=x.trim();if(!x)return;
+    if(!parts.length){cur=cur?cur+' '+x:x;if(cur.length>=30){parts.push(cur);cur='';}return;}
+    if((cur+' '+x).length>420&&cur){parts.push(cur);cur=x;}else cur=cur?cur+' '+x:x;});
+  if(cur)parts.push(cur);
+  while(parts.length>4){var t=parts.pop();parts[parts.length-1]+=' '+t;}
+  return parts;
+}
 function harmonyAISpeakOpenAI(text,opts){
   opts=opts||{};
   var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
@@ -27486,22 +27501,38 @@ function harmonyAISpeakOpenAI(text,opts){
   harmonyAIStop();PHG_AI_AUDIO.request=request;PHG_AI_AUDIO.busy=true;
   AI_VOICE.busy=true;AI_VOICE.lastError='';
   if(typeof harmonyComposerStatus==='function'&&!opts.preview)harmonyComposerStatus('Harmony · preparing voice…');
-  return fetch(MDC_SPEECH_GEN_URL,{method:'POST',
-    headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+tok},
-    body:JSON.stringify({text:String(text||'').slice(0,4096),voice:AI_VOICE.voice||'marin',instructions:aiVoiceInstructions(),speed:aiVoiceSpeed()})
-  }).then(function(r){
-    if(!r.ok)return r.json().catch(function(){return {};}).then(function(j){throw new Error(j&&j.detail?j.detail:(j&&j.error?j.error:'HTTP '+r.status));});
-    return r.blob();
-  }).then(function(blob){
-    if(request!==PHG_AI_AUDIO.request)return;
-    var url=URL.createObjectURL(blob),audio=phgAudioEl();audio.src=url;
-    PHG_AI_AUDIO.audio=audio;PHG_AI_AUDIO.url=url;PHG_AI_AUDIO.busy=false;AI_VOICE.busy=false;
-    audio.preload='auto';
-    audio.onplay=function(){if(request!==PHG_AI_AUDIO.request)return;PHG_AI_AUDIO.playing=true;PHG_AI_AUDIO.level=.06;harmonyAIVisualize(audio);if(typeof harmonyComposerStatus==='function'&&!opts.preview)harmonyComposerStatus('Harmony · speaking…');};
-    audio.onended=function(){if(request!==PHG_AI_AUDIO.request)return;PHG_AI_AUDIO.playing=false;PHG_AI_AUDIO.level=0;if(PHG_AI_AUDIO.url){try{URL.revokeObjectURL(PHG_AI_AUDIO.url);}catch(e){}PHG_AI_AUDIO.url=null;}if(typeof harmonyComposerStatus==='function'&&!opts.preview)harmonyComposerStatus('');};
-    audio.onerror=function(){PHG_AI_AUDIO.playing=false;PHG_AI_AUDIO.level=0;if(typeof harmonyComposerStatus==='function'&&!opts.preview)harmonyComposerStatus('');};
-    var pp=audio.play();if(pp&&pp.catch)return pp.catch(function(e){throw e;});
-  }).catch(function(e){
+  var parts=speechParts(String(text||'').slice(0,4096),!!opts.preview);
+  var jobs=parts.map(function(t){
+    var j=fetch(MDC_SPEECH_GEN_URL,{method:'POST',
+      headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+tok},
+      body:JSON.stringify({text:t,voice:AI_VOICE.voice||'marin',instructions:aiVoiceInstructions(),speed:aiVoiceSpeed()})
+    }).then(function(r){
+      if(!r.ok)return r.json().catch(function(){return {};}).then(function(j){throw new Error(j&&j.detail?j.detail:(j&&j.error?j.error:'HTTP '+r.status));});
+      return r.blob();
+    });
+    j.catch(function(){});return j;
+  });
+  function done(){
+    PHG_AI_AUDIO.playing=false;PHG_AI_AUDIO.busy=false;AI_VOICE.busy=false;PHG_AI_AUDIO.level=0;
+    if(PHG_AI_AUDIO.url){try{URL.revokeObjectURL(PHG_AI_AUDIO.url);}catch(e){}PHG_AI_AUDIO.url=null;}
+    if(typeof harmonyComposerStatus==='function'&&!opts.preview)harmonyComposerStatus('');
+  }
+  function playPart(i){
+    return jobs[i].then(function(blob){
+      if(request!==PHG_AI_AUDIO.request)return;
+      var last=i===jobs.length-1,audio=phgAudioEl();
+      if(PHG_AI_AUDIO.url){try{URL.revokeObjectURL(PHG_AI_AUDIO.url);}catch(e){}}
+      var url=URL.createObjectURL(blob);audio.src=url;
+      PHG_AI_AUDIO.audio=audio;PHG_AI_AUDIO.url=url;
+      if(last){PHG_AI_AUDIO.busy=false;AI_VOICE.busy=false;}
+      audio.preload='auto';
+      audio.onplay=function(){if(request!==PHG_AI_AUDIO.request)return;var first=!PHG_AI_AUDIO.playing;PHG_AI_AUDIO.playing=true;if(first){PHG_AI_AUDIO.level=.06;harmonyAIVisualize(audio);}if(typeof harmonyComposerStatus==='function'&&!opts.preview)harmonyComposerStatus('Harmony · speaking…');};
+      audio.onended=function(){if(request!==PHG_AI_AUDIO.request)return;if(!last){playPart(i+1).catch(function(e){if(request===PHG_AI_AUDIO.request){AI_VOICE.lastError=String(e&&e.message||e);done();}});return;}done();};
+      audio.onerror=function(){if(request!==PHG_AI_AUDIO.request)return;if(!last){playPart(i+1).catch(function(){done();});return;}done();};
+      var pp=audio.play();if(pp&&pp.catch)return pp.catch(function(e){throw e;});
+    });
+  }
+  return playPart(0).catch(function(e){
     if(request===PHG_AI_AUDIO.request){PHG_AI_AUDIO.busy=false;PHG_AI_AUDIO.playing=false;AI_VOICE.busy=false;AI_VOICE.lastError=String(e&&e.message||e);if(typeof harmonyComposerStatus==='function'&&!opts.preview)harmonyComposerStatus('');}
     throw e;
   });
