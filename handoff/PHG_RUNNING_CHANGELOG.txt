@@ -2067,3 +2067,19 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   account refuses it, it switches itself off and resends - tested with a mocked refusal); every turn now logs its
   timings (prep, plan, data, spoken, voice, total), whether voice_first was sent, and the tier, in
   phg.harmony_turns.understood. Live check via pg_net: warm 200.
+
+[2026-09-29] PRODUCT KNOWLEDGE LIVE (PHG-046) + LIBRARY GROWTH (Rob: "Deploy most recent and keep working")
+- Applied: phg_know schema (sources, brand_profiles, expressions; shared read for Harmony's gateway, service_role
+  writes, anon/authenticated nothing), public.phg_know_lookup(nom, names) (service_role only), expressions.notes.
+- Loaded tequila batch 1: 25 brands, 87 bottlings, 152 sources (excerpt-verified). Row-by-row check against the
+  source file: 87/87 identical. 17 brands linked to public.brands, 24 to the NOM register.
+- Additive-free: Tequila Matchmaker removed all additive-free designations in Oct 2024, so past listings are stored
+  as dated notes, never as a current yes (additive_free true = 0).
+- phg-harmony-data v8 (deployed, byte-identical): brand_knowledge source ("how is Fortaleza reposado made",
+  "is Siete Leguas additive free"); distillery place cards get a "how it's made" section per brand (story,
+  each bottling's process, aging, ABV, tasting, notes, sources); schema doc lists phg_know and phg_mix for askData.
+  v9 (deploying): notes on cards and in additive answers.
+- Cocktail library: pairings loaded (50 pairings, 165 members). Sours (32), highball/tiki (18), techniques (26 + 7
+  preps + 2 recipes) loading in 12 KB chunks (a 33 KB chunk was cut off in transit and rejected whole; nothing
+  partial was written).
+- Research running: agave batch 2 (18 mezcal brands + 12 more tequilas).

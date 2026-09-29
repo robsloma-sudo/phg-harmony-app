@@ -348,11 +348,13 @@ PHG-045 (P1, open) Per-project ingredient/prep keys: once draft 04 swaps the glo
   phg_persist_generated_menu_candidates. Patch them (add account scoping) together with, or right after, applying 04.
   Also: the 'party' entity still shares the aliases 'distributor'/'supplier' with the live 'vendor' entity.
 
-PHG-046 (P1, open) Deep product knowledge for distilleries and brands. Place cards show what PHG holds (CRT register,
+PHG-046 (P1, in progress) Deep product knowledge for distilleries and brands. Place cards show what PHG holds (CRT register,
   TTB label lineups, menus). Missing: per-expression tasting notes, production (agave source, cooking, milling,
   fermentation, still type, proof, aging and barrels, additive-free status), history/origin, bottle images, prices.
   Plan: products/brand_lines filled from label approvals (free, in PHG), then a sourced research pass (CRT, brand sites,
   public registries) stored with a source per fact. Needs Rob's OK for paid crawling and for the DB writes.
+  2026-09-29: phg_know live (draft 09 applied); 25 tequila brands / 87 bottlings loaded; data v8/v9 shows them on
+  distillery cards and answers bottle questions. Next: mezcal + more tequila (batch 2 running), page-level checks.
 
 PHG-047 (P1, open) PHG's own daily flash / finance system (replaces the idea of syncing Airtable). Blueprint:
   handoff/DAILY_FLASH_REFERENCE.md. Needs drafts 02-05 applied (setup skeleton, finance foundation, period presets,
