@@ -13,6 +13,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
      IL  ilcc.illinois.gov daily CSV export (retail_type ON-PREMISES / COMBINATION = on-premise)
    v3: + CT (Socrata, no permit class published -> on_premise unknown), DC + KY/Louisville (ArcGIS), VA (xlsx);
    {probe:true} returns headers + sample rows without writing.
+   v6: memory-safe readers (streamed zip/CSV window; xlsx dense + sheetRows), ZIP+4 with a dash.
    v5: CT and VA adapters removed (see notes), KY NQ4/caterer and DC 'Retail -' classes fixed.
    v4: + MI (master xlsx), WA (weekly On Premise xlsx), CA (daily zipped CSV), ME (FOAA xlsx); download links are
    discovered on each state's page because the file names change.
@@ -30,7 +31,8 @@ function eq(a: string | null, b: string) {
   return d === 0;
 }
 const t = (v: unknown) => { const s = String(v ?? "").replace(/\s+/g, " ").trim(); return s || null; };
-const zip5 = (v: unknown) => { const m = String(v ?? "").match(/(\d{5})\d{0,4}\s*$/); return m ? m[1] : null; };
+/* last 5-digit ZIP in the text: "97203-3731", "601882117", "OR 97203" -> 5 digits (v6: dash ZIP+4 accepted) */
+const zip5 = (v: unknown) => { const all = [...String(v ?? "").matchAll(/(?:^|\D)(\d{5})(?:-?\d{4})?(?=\D|$)/g)]; return all.length ? all[all.length - 1][1] : null; };
 const isoDate = (v: unknown) => {
   const s = String(v ?? "").trim(); if (!s) return null;
   let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
@@ -116,39 +118,85 @@ async function discover(page: string, re: RegExp): Promise<string> {
     return new URL(links[links.length - 1], page).href;
   } finally { clearTimeout(tm); }
 }
-async function sheetRows(url: string): Promise<{ head: string[]; rows: string[][] }> {
-  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 90000);
-  let buf: ArrayBuffer;
+/* v6: memory-safe readers (the edge runtime has ~250 MB). Returns the header and only the rows in [from, from+count);
+   done = the file has no rows after the window. Zipped CSV is streamed and parsing stops after the window. */
+async function sheetRows(url: string, from: number, count: number): Promise<{ head: string[]; rows: string[][]; done: boolean }> {
+  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 120000);
   try {
     const r = await fetch(url, { signal: ctl.signal, headers: { "User-Agent": "PHG-license-ingest/1.0" } });
-    if (!r.ok) throw new Error(`HTTP ${r.status} from ${new URL(url).host}`);
-    buf = await r.arrayBuffer();
+    if (!r.ok || !r.body) throw new Error(`HTTP ${r.status} from ${new URL(url).host}`);
+    if (/\.zip(\?|$)/i.test(url)) return await zipCsvWindow(r.body, from, count, ctl);
+    const buf = new Uint8Array(await r.arrayBuffer());
+    const XLSX = await import("npm:xlsx@0.18.5");
+    const wb = XLSX.read(buf, { type: "array", dense: true, cellHTML: false, cellNF: false, cellText: false, cellStyles: false,
+      bookVBA: false, sheetRows: from + count + 60 });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const all: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: "" });
+    let h = all.findIndex((row) => row.filter((c: any) => String(c).trim()).length >= 3 && row.some((c: any) => /licen|permit/i.test(String(c))));
+    if (h < 0) h = 0;
+    const body = all.slice(h + 1);
+    const rows = body.slice(from, from + count).map((row) => row.map((c: any) => String(c ?? "")));
+    return { head: all[h].map((c: any) => String(c).trim()), rows, done: body.length < from + count };
   } finally { clearTimeout(tm); }
-  if (/\.zip(\?|$)/i.test(url)) {
-    const { unzipSync, strFromU8 } = await import("npm:fflate@0.8.2");
-    const files = unzipSync(new Uint8Array(buf));
-    const name = Object.keys(files).find((k) => /\.(csv|txt)$/i.test(k));
-    if (!name) throw new Error("zip has no csv");
-    const text = strFromU8(files[name]);
-    const tab = text.split("\n", 2)[0].includes("\t");
-    const all = tab ? text.split(/\r?\n/).map((l) => l.split("\t")) : parseCsv(text);
-    return { head: (all.shift() || []).map((h) => h.trim()), rows: all.filter((r) => r.length > 1) };
-  }
-  const XLSX = await import("npm:xlsx@0.18.5");
-  const wb = XLSX.read(new Uint8Array(buf), { type: "array", cellDates: true });
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const all: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: "" });
-  // header = first row with at least 3 non-empty cells that mentions licen/permit
-  let h = all.findIndex((r) => r.filter((c: any) => String(c).trim()).length >= 3 && r.some((c: any) => /licen|permit/i.test(String(c))));
-  if (h < 0) h = 0;
-  return { head: all[h].map((c: any) => String(c).trim()), rows: all.slice(h + 1).map((r) => r.map((c: any) => String(c ?? ""))) };
+}
+
+async function zipCsvWindow(stream: ReadableStream<Uint8Array>, from: number, count: number, ctl: AbortController) {
+  const { Unzip, UnzipInflate } = await import("npm:fflate@0.8.2");
+  const dec = new TextDecoder();
+  let head: string[] | null = null; const rows: string[][] = []; let idx = 0; let stop = false; let finished = false;
+  let row: string[] = []; let f = ""; let q = false; let sep: string | null = null; let prev = "";
+  const emit = () => {
+    row.push(f); f = "";
+    if (!head) head = row.map((x) => x.trim());
+    else if (row.length > 1) { if (idx >= from && idx < from + count) rows.push(row); idx++; if (idx >= from + count) stop = true; }
+    row = [];
+  };
+  const feed = (text: string) => {
+    if (sep === null) { const nl = (prev + text).indexOf("\n"); if (nl < 0) { prev += text; return; } const first = (prev + text).slice(0, nl); sep = first.includes("\t") && !first.includes(",") ? "\t" : ","; text = prev + text; prev = ""; }
+    for (let i = 0; i < text.length && !stop; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"' && sep === ",") q = true;
+      else if (c === sep) { row.push(f); f = ""; }
+      else if (c === "\n") emit();
+      else if (c !== "\r") f += c;
+    }
+  };
+  await new Promise<void>((resolve, reject) => {
+    let picked = false;
+    const uz = new Unzip((file: any) => {
+      if (picked || !/\.(csv|txt)$/i.test(file.name)) return;
+      picked = true;
+      file.ondata = (err: any, chunk: Uint8Array, final: boolean) => {
+        if (err) return reject(err);
+        if (!stop) feed(dec.decode(chunk, { stream: !final }));
+        if (final) { if (!stop && (f || row.length)) emit(); finished = !stop; resolve(); }
+        else if (stop) resolve();
+      };
+      file.start();
+    });
+    uz.register(UnzipInflate);
+    (async () => {
+      const rd = stream.getReader();
+      try {
+        for (;;) {
+          if (stop) { try { ctl.abort(); } catch { /* done */ } break; }
+          const { value, done } = await rd.read();
+          if (done) { uz.push(new Uint8Array(0), true); break; }
+          uz.push(value);
+        }
+        if (!picked) reject(new Error("zip has no csv"));
+      } catch (e) { if (!stop) reject(e); }
+    })();
+  });
+  return { head: head || [], rows, done: finished };
 }
 function col(head: string[], ...res: RegExp[]) { for (const re of res) { const i = head.findIndex((h) => re.test(h)); if (i >= 0) return i; } return -1; }
 function sheetAdapter(state: string, url: string | (() => Promise<string>), source: string, onPremise: (type: string) => boolean | null): Adapter {
   return {
     source,
     async pages(offset, pages) {
-      const { head, rows: all } = await sheetRows(typeof url === "string" ? url : await url());
+      const { head, rows: win, done } = await sheetRows(typeof url === "string" ? url : await url(), offset, pages * PAGE);
       const iNo = col(head, /licen[cs]e\s*(no|num|#|id)/i, /permit\s*(no|num|#)/i, /^licen[cs]e$/i);
       const iType = col(head, /licen[cs]e\s*(type|class|desc|privilege)/i, /privilege/i, /^type$/i, /class/i);
       const iName = col(head, /trade|dba|doing business/i, /business\s*name/i, /establishment/i, /^name$/i);
@@ -160,7 +208,7 @@ function sheetAdapter(state: string, url: string | (() => Promise<string>), sour
       const iStatus = col(head, /status/i);
       const iExp = col(head, /expir/i);
       const g = (r: string[], i: number) => (i >= 0 ? r[i] : "");
-      const slice = all.slice(offset, offset + pages * PAGE).filter((r) => g(r, iNo).trim());
+      const slice = win.filter((r) => g(r, iNo).trim());
       const rows = slice.map((r) => {
         const type = t(g(r, iType)) || "";
         return {
@@ -170,7 +218,7 @@ function sheetAdapter(state: string, url: string | (() => Promise<string>), sour
           raw: Object.fromEntries(head.map((h, i) => [h || `col${i}`, r[i]])),
         } as Row;
       });
-      return { rows, done: offset + pages * PAGE >= all.length, head } as any;
+      return { rows, done, head } as any;
     },
   };
 }
