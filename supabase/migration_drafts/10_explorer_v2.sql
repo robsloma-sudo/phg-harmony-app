@@ -1,4 +1,5 @@
 -- PHG-051 (2026-09-29): market explorer v2 - fresh data, live rows only, ZIP census, non-blocking refreshes.
+-- ROUND 2 (after safety review round 1 = 68, handoff/reviews/PHG-051_REVIEW_LOG.md). Changes are marked [R2 Bn/Sn].
 --
 -- Problem: mv_drink_explorer (+ mv_dash_pins and the 4 MVs built on them) were last refreshed 2026-09-25 21:10 UTC;
 -- cron 8 (refresh_explorer) is paused because its two NON-concurrent refreshes lock every reader for minutes
@@ -6,18 +7,35 @@
 -- old prices, PHG-026) and joins income / median age only at city level (geography_demographics = Iowa only), so CO and
 -- NY have 0% census coverage although phg_census_zcta covers 99.6% of their venues by postal code.
 --
--- Design (additive until PART C):
---   PART A  v_public_drink_explorer_v2: same 23 columns in the same order + staging_id (unique per row), live staging
---           rows only (superseded_at is null), census = city demographics, else the venue's ZIP (phg_census_zcta).
---   PART B  phg_explorer_build_next(): builds mv_*_next copies of all six MVs from v2, with UNIQUE indexes so every
---           future refresh can be CONCURRENT (readers never blocked). Readers keep using the old MVs meanwhile.
---           Runs as a one-off pg_cron job (it takes minutes; no client timeout).
---   PART C  phg_explorer_swap_next(): one short transaction (lock_timeout 3 s): old -> *_old, *_next -> live names,
---           grants copied. Rollback: phg_explorer_swap_back() renames them back (the *_old MVs are kept until dropped
---           by hand after verification).
---   PART D  refresh_explorer_v2(): concurrent refreshes; replaces cron 8's command (re-enabled only after C + checks).
--- mv_dash_pins has exact duplicate rows (v_public_venues duplicates), so its _next adds a row number column at the END
--- (pin_row) to make it unique; existing readers select named columns, so an extra trailing column is harmless.
+-- Live facts gathered for round 2 (2026-09-29 ~16:00 UTC):
+--   * Round-1 build (cron job 25) failed after ~8 min exactly on review blocker B1: unique index mv_mdvp_next_key,
+--     duplicate venue_key (ilili|new york|NY). A re-run started (the failed transaction had rolled back the
+--     unschedule) and was cancelled (pg_cancel_backend); job 25 no longer exists; no *_next MV exists.
+--   * B3 gate: pg_depend shows NO dependents of the six MVs outside the chain itself (only mv_drink_explorer ->
+--     mv_dash_breakdown/filters/pins/sections/menu_dev_venue_profile) and no functions bound to them.
+--   * S3: today menu_item_cocktail_core.staging_menu_extract_id, (upper(city), state) demographics and zcta are all
+--     unique (0 duplicates each); v2 still enforces one row per staging row by construction (LATERAL ... LIMIT 1).
+--
+-- Design:
+--   PART A  v_public_drink_explorer_v2: the 23 live columns in the same order + staging_id (unique by construction),
+--           live staging rows only (superseded_at is null), census = city demographics, else the venue ZIP
+--           (phg_census_zcta). [R2 S2] venue tie-break by account_id. [R2 S3] lateral LIMIT 1 joins.
+--   PART B  phg_explorer_build_next(): builds mv_*_next copies of all six MVs with UNIQUE indexes (every future
+--           refresh CONCURRENT). [R2 B1] venue profile grouped by venue_key. [R2 S4] pins keyed by md5 of the row +
+--           row_number within equal rows. [R2 S5] _next MVs are not readable by anon/authenticated before the swap.
+--           [R2 S10] advisory lock. Runs as a one-off pg_cron job that unschedules itself in its own transaction.
+--   PART C  phg_explorer_swap_next(): [R2 B2] lock_timeout 300 ms + statement_timeout 3 s (a busy reader makes the
+--           swap fail fast and change nothing; retry at a quiet time); [R2 S5] SELECT grants copied from the old ACL,
+--           old copies revoked from anon/authenticated; [R2 S8] index names moved with the MVs; [R2 S6] NOTIFY pgrst;
+--           [R2] OIDs logged in phg_explorer_swap_log. phg_explorer_swap_back() reverses all of it. [R2 B4] rehearsal:
+--           swap -> checks -> swap_back inside a DO block that ends in RAISE EXCEPTION (nothing kept).
+--   PART D  [R2 S1] procedure refresh_explorer_v2(): one COMMIT per concurrent refresh, no stats functions inside
+--           (refresh_state_stats stays on job 5). Cron 8 switched only after one timed manual CALL.
+--   ROLLBACK of A/B: drop the six *_next MVs, the v2 view and the two functions (nothing live depends on them).
+-- Known limit to fix in the app before the swap (S7/S9): index.html getAll() stops at 40 pages x 1,000 rows per state
+-- and pages without ORDER BY; the v2 explorer may exceed 40,000 rows in a state. The pre-swap gate reports per-state
+-- counts; if any state is over the cap, the app change (explicit columns, order=staging_id, higher cap or aggregated
+-- reads) ships first.
 
 -- ============================== PART A ==============================
 create or replace view public.v_public_drink_explorer_v2 as
@@ -35,15 +53,7 @@ create or replace view public.v_public_drink_explorer_v2 as
             left(a.postal_code, 5) AS zip5
            FROM accounts a
           WHERE a.website_url IS NOT NULL AND account_state(a.account_id) IS NOT NULL
-          ORDER BY (norm_site(a.website_url)), a.google_review_count DESC NULLS LAST
-        ), demo AS (
-         SELECT upper(g.geography_name) AS city_up,
-            g.subdivision_code AS st,
-            d.median_household_income AS income,
-            d.median_age
-           FROM geographies g
-             JOIN geography_demographics d ON d.geography_id = g.id
-          WHERE g.geo_type = 'city'::text
+          ORDER BY (norm_site(a.website_url)), a.google_review_count DESC NULLS LAST, a.account_id
         ), items AS (
          SELECT DISTINCT ON ((norm_site(s.site_url)), (lower(s.item_name)), s.item_price) s.id AS staging_id,
             s.item_type,
@@ -61,8 +71,12 @@ create or replace view public.v_public_drink_explorer_v2 as
                 COALESCE(dm.median_age, z.median_age) AS median_age
            FROM items i
              JOIN venue v ON v.site_key = i.site_key
-             LEFT JOIN demo dm ON dm.city_up = v.city_up AND dm.st = v.state_code
-             LEFT JOIN phg_census_zcta z ON z.zcta = v.zip5
+             LEFT JOIN LATERAL (SELECT d.median_household_income AS income, d.median_age
+                                  FROM geographies g JOIN geography_demographics d ON d.geography_id = g.id
+                                 WHERE g.geo_type = 'city'::text AND upper(g.geography_name) = v.city_up AND g.subdivision_code = v.state_code
+                                 ORDER BY g.id LIMIT 1) dm ON true
+             LEFT JOIN LATERAL (SELECT zc.median_household_income, zc.median_age FROM phg_census_zcta zc
+                                 WHERE zc.zcta = v.zip5 LIMIT 1) z ON true
         )
  SELECT b.state_code,
     b.item_type AS reported_type,
@@ -114,16 +128,18 @@ create or replace view public.v_public_drink_explorer_v2 as
     b.staging_id
    FROM base b
      LEFT JOIN LATERAL classify_item(b.item_name) c(family, subfamily, matched_term) ON true
-     LEFT JOIN menu_item_cocktail_core core ON core.staging_menu_extract_id = b.staging_id
+     LEFT JOIN LATERAL (SELECT k.identity_class, k.spec_id FROM menu_item_cocktail_core k
+                         WHERE k.staging_menu_extract_id = b.staging_id ORDER BY k.spec_id NULLS LAST LIMIT 1) core ON true
      LEFT JOIN cocktail_specs sp ON sp.id = core.spec_id;
-revoke all on public.v_public_drink_explorer_v2 from anon, authenticated;
+revoke all on public.v_public_drink_explorer_v2 from public, anon, authenticated;
 grant select on public.v_public_drink_explorer_v2 to service_role;
 
 -- ============================== PART B ==============================
 create or replace function public.phg_explorer_build_next() returns text
 language plpgsql security definer set search_path = public, pg_temp as $$
-declare t0 timestamptz := clock_timestamp();
+declare t0 timestamptz := clock_timestamp(); r text;
 begin
+  if not pg_try_advisory_xact_lock(hashtext('phg_explorer')) then raise exception 'explorer build/swap/refresh already running'; end if;
   drop materialized view if exists public.mv_dash_filters_next, public.mv_dash_breakdown_next, public.mv_dash_sections_next,
     public.mv_menu_dev_venue_profile_next, public.mv_dash_pins_next, public.mv_drink_explorer_next;
 
@@ -141,22 +157,26 @@ begin
   create index mv_de_next_vkey on public.mv_drink_explorer_next (venue_key);
   create index mv_de_next_drink on public.mv_drink_explorer_next (drink_name);
 
+  -- [R2 S4] a stable key: md5 of the whole row, numbered only within identical rows (v_public_venues has exact duplicates)
   create materialized view public.mv_dash_pins_next as
-   SELECT v.state_code, v.venue, v.city, v.venue_type, v.rating, v.reviews, v.website, v.lat, v.lng, v.menu_attempted,
-    (((lower(v.venue) || '|'::text) || lower(COALESCE(v.city, ''::text))) || '|'::text) || COALESCE(v.state_code, ''::text) AS venue_key,
-    COALESCE(d.items, 0::bigint) AS drink_items,
-    row_number() over (order by v.state_code, v.venue, v.city, v.lat, v.lng, v.website) AS pin_row
-   FROM public.v_public_venues v
-     LEFT JOIN ( SELECT venue_key, count(*) AS items FROM public.mv_drink_explorer_next GROUP BY venue_key) d
-       ON d.venue_key = ((((lower(v.venue) || '|'::text) || lower(COALESCE(v.city, ''::text))) || '|'::text) || COALESCE(v.state_code, ''::text))
-  WHERE v.lat IS NOT NULL;
-  create unique index mv_dash_pins_next_uk on public.mv_dash_pins_next (pin_row);
+   WITH p AS (
+    SELECT v.state_code, v.venue, v.city, v.venue_type, v.rating, v.reviews, v.website, v.lat, v.lng, v.menu_attempted,
+     (((lower(v.venue) || '|'::text) || lower(COALESCE(v.city, ''::text))) || '|'::text) || COALESCE(v.state_code, ''::text) AS venue_key,
+     COALESCE(d.items, 0::bigint) AS drink_items
+    FROM public.v_public_venues v
+      LEFT JOIN ( SELECT venue_key, count(*) AS items FROM public.mv_drink_explorer_next GROUP BY venue_key) d
+        ON d.venue_key = ((((lower(v.venue) || '|'::text) || lower(COALESCE(v.city, ''::text))) || '|'::text) || COALESCE(v.state_code, ''::text))
+    WHERE v.lat IS NOT NULL)
+   SELECT p.*, md5(row(p.state_code, p.venue, p.city, p.venue_type, p.rating, p.reviews, p.website, p.lat, p.lng, p.menu_attempted)::text)
+            || ':' || row_number() over (partition by md5(row(p.state_code, p.venue, p.city, p.venue_type, p.rating, p.reviews, p.website, p.lat, p.lng, p.menu_attempted)::text) order by p.drink_items) AS pin_key
+   FROM p;
+  create unique index mv_dash_pins_next_uk on public.mv_dash_pins_next (pin_key);
   create index mv_dash_pins_next_state on public.mv_dash_pins_next (state_code);
   create index mv_dash_pins_next_items on public.mv_dash_pins_next (drink_items desc);
 
+  -- [R2 B1] grouped by venue_key (the unique key), so name/city case or NULL-vs-'' differences cannot duplicate it
   create materialized view public.mv_menu_dev_venue_profile_next as
-   SELECT venue, city, state_code,
-    (((lower(venue) || '|'::text) || lower(COALESCE(city, ''::text))) || '|'::text) || COALESCE(state_code, ''::text) AS venue_key,
+   SELECT min(venue) AS venue, min(city) AS city, min(state_code) AS state_code, venue_key,
     min(venue_type) AS venue_type, min(income) AS income, min(median_age) AS median_age, min(income_band) AS income_band,
     min(age_band) AS age_band, max(rating) AS rating,
     count(*) FILTER (WHERE section = 'cocktails'::text) AS cocktail_items,
@@ -169,7 +189,7 @@ begin
     count(*) FILTER (WHERE section = 'non_alcoholic'::text) AS na_items,
     count(*) FILTER (WHERE section = 'unclassified'::text) AS unclassified_items
    FROM public.mv_drink_explorer_next
-  GROUP BY venue, city, state_code
+  GROUP BY venue_key
  HAVING count(*) FILTER (WHERE section = 'cocktails'::text AND item_price >= 4::numeric AND item_price <= 30::numeric) >= 1;
   create unique index mv_mdvp_next_key on public.mv_menu_dev_venue_profile_next (venue_key);
   create index mv_mdvp_next_type on public.mv_menu_dev_venue_profile_next (venue_type);
@@ -210,72 +230,122 @@ begin
   create unique index mv_dash_filters_next_uk on public.mv_dash_filters_next (state_code, dimension, value);
   create index mv_dash_filters_next_idx on public.mv_dash_filters_next (state_code, dimension);
 
+  -- [R2 S5] not readable by the app until the swap (default privileges would otherwise expose them)
+  foreach r in array array['mv_drink_explorer_next','mv_dash_pins_next','mv_menu_dev_venue_profile_next','mv_dash_sections_next','mv_dash_breakdown_next','mv_dash_filters_next'] loop
+    execute format('revoke all on public.%I from public, anon, authenticated', r);
+    execute format('grant select on public.%I to service_role', r);
+  end loop;
+
   return 'built in ' || round(extract(epoch from clock_timestamp() - t0)) || ' s: explorer ' ||
     (select count(*) from public.mv_drink_explorer_next) || ' rows, pins ' || (select count(*) from public.mv_dash_pins_next) ||
     ', venue profiles ' || (select count(*) from public.mv_menu_dev_venue_profile_next);
 end $$;
 revoke all on function public.phg_explorer_build_next() from public, anon, authenticated, service_role;
+-- Run (one-off): select cron.schedule('phg-explorer-build-next', '* * * * *', $c$SET statement_timeout='30min'; SELECT public.phg_explorer_build_next();$c$);
+-- then, as soon as cron.job_run_details shows the first run started, select cron.unschedule('phg-explorer-build-next');
+-- (unscheduling does not stop the running build; it only prevents a second run - the round-1 mistake was putting the
+-- unschedule inside the same failing transaction.)
 
--- ============================== PART C (apply only after the _next checks pass and review) ==============================
--- One short transaction: every rename needs ACCESS EXCLUSIVE on its MV; lock_timeout 3 s makes a busy reader cancel the
--- swap (nothing changes) instead of queueing everyone behind it. PostgREST resolves relations by name per request, so
--- the app reads the new MVs on its next request. Grants are SELECT only (the old ACL listed write privileges that do not
--- apply to materialized views). Dependent MVs were built on the _next explorer, so the chain stays consistent.
+-- ============================== PART C ==============================
+create table if not exists public.phg_explorer_swap_log (
+  id bigserial primary key, action text not null, at timestamptz not null default now(), detail jsonb);
+alter table public.phg_explorer_swap_log enable row level security;
+revoke all on public.phg_explorer_swap_log from public, anon, authenticated;
+grant select on public.phg_explorer_swap_log to service_role;
+
+-- moves one MV name set: live -> *_old (and its indexes), *_next -> live (and its indexes), grants copied / revoked
 create or replace function public.phg_explorer_swap_next() returns text
-language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '3s' as $$
-declare r text;
+language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '300ms' set statement_timeout = '3s' as $$
+declare r text; ix record; g record; before jsonb; after jsonb;
+  names text[] := array['mv_dash_filters','mv_dash_breakdown','mv_dash_sections','mv_menu_dev_venue_profile','mv_dash_pins','mv_drink_explorer'];
 begin
-  if (select count(*) from pg_matviews where schemaname = 'public' and matviewname in
-      ('mv_drink_explorer_next','mv_dash_pins_next','mv_menu_dev_venue_profile_next','mv_dash_sections_next','mv_dash_breakdown_next','mv_dash_filters_next')) <> 6
+  if not pg_try_advisory_xact_lock(hashtext('phg_explorer')) then raise exception 'explorer build/swap/refresh already running'; end if;
+  if (select count(*) from pg_matviews where schemaname = 'public' and matviewname = any (select n || '_next' from unnest(names) n)) <> 6
   then raise exception 'swap: the six _next MVs are not all present'; end if;
-  if exists (select 1 from pg_matviews where schemaname = 'public' and matviewname in ('mv_drink_explorer_old','mv_dash_pins_old','mv_menu_dev_venue_profile_old','mv_dash_sections_old','mv_dash_breakdown_old','mv_dash_filters_old'))
+  if exists (select 1 from pg_matviews where schemaname = 'public' and matviewname = any (select n || '_old' from unnest(names) n))
   then raise exception 'swap: *_old MVs still exist (drop or swap back first)'; end if;
-  foreach r in array array['mv_dash_filters','mv_dash_breakdown','mv_dash_sections','mv_menu_dev_venue_profile','mv_dash_pins','mv_drink_explorer'] loop
+  -- [R2 B3] nothing outside the six-MV chain may depend on the live MVs (it would keep reading the old copies)
+  if exists (select 1 from pg_depend d join pg_rewrite rw on rw.oid = d.objid join pg_class dep on dep.oid = rw.ev_class
+              join pg_class src on src.oid = d.refobjid
+             where src.relnamespace = 'public'::regnamespace and src.relname = any (names) and dep.oid <> src.oid
+               and not (dep.relname = any (names)))
+  then raise exception 'swap: an object outside the explorer chain depends on the live MVs'; end if;
+  select jsonb_object_agg(n, to_regclass('public.' || n)::oid) into before from unnest(names) n;
+  foreach r in array names loop
+    for ix in select indexrelid::regclass::text as name from pg_index where indrelid = ('public.' || r)::regclass loop
+      execute format('alter index %s rename to %I', ix.name, split_part(ix.name, '.', 2) || '_old');
+    end loop;
     execute format('alter materialized view public.%I rename to %I', r, r || '_old');
     execute format('alter materialized view public.%I rename to %I', r || '_next', r);
-    execute format('grant select on public.%I to anon, authenticated, service_role', r);
+    for ix in select indexrelid::regclass::text as name from pg_index where indrelid = ('public.' || r)::regclass loop
+      execute format('alter index %s rename to %I', ix.name, replace(split_part(ix.name, '.', 2), '_next', '_v2'));
+    end loop;
+    -- [R2 S5] copy SELECT grantees from the old ACL, then close the old copy to the app
+    for g in select distinct (aclexplode(c.relacl)).grantee as grantee from pg_class c where c.oid = ('public.' || r || '_old')::regclass loop
+      if g.grantee <> 0 then execute format('grant select on public.%I to %I', r, g.grantee::regrole::text); end if;
+    end loop;
+    execute format('revoke all on public.%I from public, anon, authenticated', r || '_old');
   end loop;
-  grant select on public.mv_drink_explorer, public.mv_menu_dev_venue_profile to phg_menu_designer, phg_harmony_reader;
+  select jsonb_object_agg(n, to_regclass('public.' || n)::oid) into after from unnest(names) n;
+  insert into public.phg_explorer_swap_log (action, detail) values ('swap', jsonb_build_object('before', before, 'after', after));
+  notify pgrst, 'reload schema';
   return 'swapped: live MVs are the v2 builds; previous ones kept as *_old';
 end $$;
 revoke all on function public.phg_explorer_swap_next() from public, anon, authenticated, service_role;
 
 create or replace function public.phg_explorer_swap_back() returns text
-language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '3s' as $$
-declare r text;
+language plpgsql security definer set search_path = public, pg_temp set lock_timeout = '300ms' set statement_timeout = '3s' as $$
+declare r text; ix record; g record; before jsonb; after jsonb;
+  names text[] := array['mv_dash_filters','mv_dash_breakdown','mv_dash_sections','mv_menu_dev_venue_profile','mv_dash_pins','mv_drink_explorer'];
 begin
-  foreach r in array array['mv_dash_filters','mv_dash_breakdown','mv_dash_sections','mv_menu_dev_venue_profile','mv_dash_pins','mv_drink_explorer'] loop
-    if not exists (select 1 from pg_matviews where schemaname = 'public' and matviewname = r || '_old') then
-      raise exception 'swap back: public.%_old is missing', r; end if;
+  if not pg_try_advisory_xact_lock(hashtext('phg_explorer')) then raise exception 'explorer build/swap/refresh already running'; end if;
+  foreach r in array names loop
+    if to_regclass('public.' || r || '_old') is null then raise exception 'swap back: public.%_old is missing', r; end if;
+  end loop;
+  select jsonb_object_agg(n, to_regclass('public.' || n)::oid) into before from unnest(names) n;
+  foreach r in array names loop
+    for ix in select indexrelid::regclass::text as name from pg_index where indrelid = ('public.' || r)::regclass loop
+      execute format('alter index %s rename to %I', ix.name, replace(split_part(ix.name, '.', 2), '_v2', '_next'));
+    end loop;
     execute format('alter materialized view public.%I rename to %I', r, r || '_next');
     execute format('alter materialized view public.%I rename to %I', r || '_old', r);
+    for ix in select indexrelid::regclass::text as name from pg_index where indrelid = ('public.' || r)::regclass loop
+      execute format('alter index %s rename to %I', ix.name, regexp_replace(split_part(ix.name, '.', 2), '_old$', ''));
+    end loop;
+    for g in select distinct (aclexplode(c.relacl)).grantee as grantee from pg_class c where c.oid = ('public.' || r || '_next')::regclass loop
+      if g.grantee <> 0 then execute format('grant select on public.%I to %I', r, g.grantee::regrole::text); end if;
+    end loop;
+    execute format('revoke all on public.%I from public, anon, authenticated', r || '_next');
   end loop;
+  select jsonb_object_agg(n, to_regclass('public.' || n)::oid) into after from unnest(names) n;
+  insert into public.phg_explorer_swap_log (action, detail) values ('swap_back', jsonb_build_object('before', before, 'after', after));
+  notify pgrst, 'reload schema';
   return 'swapped back: live MVs are the previous builds; v2 builds are *_next again';
 end $$;
 revoke all on function public.phg_explorer_swap_back() from public, anon, authenticated, service_role;
+-- Rollback order (runbook): pause cron 8 (restore its old command if it was changed) -> select phg_explorer_swap_back()
+-- -> check phg_explorer_swap_log 'after' OIDs equal the first 'swap' row's 'before' OIDs -> anon can select the live names.
+-- [R2 B4] Rehearsal before the real swap (nothing is kept):
+--   do $r$ begin perform public.phg_explorer_swap_next(); <checks: counts, grants, OIDs>;
+--               perform public.phg_explorer_swap_back(); <checks: OIDs back to before>; raise exception 'rehearsal ok'; end $r$;
 
 -- ============================== PART D (after the swap) ==============================
--- Every refresh CONCURRENT (unique indexes on all six), so readers are never blocked; the explorer first, then the
--- MVs built on it. Cron 8 is switched to this and re-enabled (every 30 min, statement_timeout 20 min) once one manual
--- run has been timed. The old refresh_explorer() stays as it is for the swap-back case.
-create or replace function public.refresh_explorer_v2() returns text
-language plpgsql security definer set search_path = public, pg_temp as $$
-declare t0 timestamptz := clock_timestamp();
+-- [R2 S1] one COMMIT per refresh (a failure in one leaves the others fresh), CONCURRENT so readers are never blocked,
+-- advisory lock so it never overlaps a build or swap, no stats functions (job 5 does those).
+-- (A procedure that COMMITs cannot be SECURITY DEFINER or carry SET clauses; it runs as its caller - cron runs as postgres -
+--  with fully qualified names, and the timeouts are set per transaction with set_config.)
+create or replace procedure public.refresh_explorer_v2()
+language plpgsql as $$
+declare r text;
 begin
-  refresh materialized view concurrently public.mv_drink_explorer;
-  refresh materialized view concurrently public.mv_dash_pins;
-  refresh materialized view concurrently public.mv_menu_dev_venue_profile;
-  refresh materialized view concurrently public.mv_dash_sections;
-  refresh materialized view concurrently public.mv_dash_breakdown;
-  refresh materialized view concurrently public.mv_dash_filters;
-  insert into public.corpus_counts (id, observations, brands, products)
-  values (true, (select count(*) from public.observations), (select count(*) from public.brands where merged_into_brand_id is null), (select count(*) from public.products))
-  on conflict (id) do update set observations = excluded.observations, brands = excluded.brands, products = excluded.products, refreshed_at = now();
-  perform public.refresh_state_stats();
-  perform public.refresh_corpus_scale();
-  return 'refreshed in ' || round(extract(epoch from clock_timestamp() - t0)) || ' s';
+  foreach r in array array['mv_drink_explorer','mv_dash_pins','mv_menu_dev_venue_profile','mv_dash_sections','mv_dash_breakdown','mv_dash_filters'] loop
+    if not pg_try_advisory_xact_lock(hashtext('phg_explorer')) then raise notice 'explorer busy; skipped %', r; return; end if;
+    perform set_config('statement_timeout', '15min', true);
+    perform set_config('lock_timeout', '5s', true);
+    execute format('refresh materialized view concurrently public.%I', r);
+    commit;
+  end loop;
 end $$;
-revoke all on function public.refresh_explorer_v2() from public, anon, authenticated, service_role;
--- cron 8 (after one timed manual run):
---   select cron.alter_job(8, schedule := '*/30 * * * *',
---     command := $c$SET statement_timeout='20min'; SET lock_timeout='5s'; SELECT public.refresh_explorer_v2();$c$, active := true);
+revoke all on procedure public.refresh_explorer_v2() from public, anon, authenticated, service_role;
+-- cron 8 (after one timed manual CALL; cadence hourly unless the run is short):
+--   select cron.alter_job(8, schedule := '17 * * * *', command := $c$CALL public.refresh_explorer_v2();$c$, active := true);
