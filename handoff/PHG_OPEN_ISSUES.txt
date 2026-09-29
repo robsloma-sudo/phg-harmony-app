@@ -261,7 +261,7 @@ Next: (1) parser v5 that keeps unpriced items in drink sections and re-run it ov
   PHG-011 text capture); (3) when PHG-006 billing is restored, re-queue blocked + still-empty rows
   with allow_paid=true under a credit cap.
 
-PHG-026 | OPEN | P0 | Duplicate menus from online-ordering item pages; promotion regressed 180 venues (2026-09-27)
+PHG-026 | FIXED 2026-09-29 (monitoring) | P0 | Duplicate menus from online-ordering item pages; promotion regressed 180 venues (2026-09-27)
 Evidence: staging 846,844 rows loaded today, 105,127 distinct (account,item,price); 7,344 menus created
   today, 1,507 current; 180 pre-existing current menus superseded by smaller ones (items 5,894 -> 3,061,
   cocktails 1,538 -> 1,066). Cause: item/detail URLs discovered as separate candidates, each returning

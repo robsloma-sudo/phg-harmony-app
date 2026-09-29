@@ -2204,3 +2204,11 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   higher CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION, or a fresh session.
 - PHG-026 steps 2-5 (helper): step 3 done for 2,050 venues, 765,154 duplicate staging rows superseded (backed up in
   phg_backup_staging_dupes_20260927); step 4 in progress.
+- PHG-026 steps 2-7 DONE. Step 3: 16 batches, 2,050 venues, 765,154 duplicate staging rows superseded (backup
+  phg_backup_staging_dupes_20260927); VACUUM (ANALYZE) staging_menu_extract; step 4: 39 batches, 19,272 venues'
+  candidates hashed; menu_source_candidates_item_set_idx built CONCURRENTLY (valid).
+  Step 6 release gate (supabase/tests/phg_026_release_gate.sql): 13/13 pass (0 multi-current, 0 without current,
+  0 smaller, 0 of 119 damaged not restored, map v5 3/3 ok, cron 7/13 paused).
+  Step 7: cron 13 re-enabled (every 1 min, with the stuck-claim reset), one manual promotion batch
+  (created 1, alternate 4, failed 0, 3,440 pages waiting), then cron 7 re-enabled (every 20 s, max 5 pages/call).
+  Next: step 8 - supabase/tests/phg_026_monitor.sql after the first cycles and daily for a week.
