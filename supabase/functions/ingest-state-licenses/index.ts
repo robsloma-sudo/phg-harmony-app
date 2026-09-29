@@ -355,6 +355,20 @@ const ADAPTERS: Record<string, Adapter> = {
       county: t(String(r.county ?? "").replace(/^\d+\s*-\s*/, "")), raw: r,
     };
   }, "mo_ata_socrata"),
+  /* Colorado LED "Liquor Licenses in Colorado" (data.colorado.gov ier5-5ms2, ~20k rows). FMB-and-Wine = grocery/off-premise;
+     Takeout & Delivery permits ride on an on-premise licence (same venue) -> null so venues are not double counted. */
+  CO: socrata("data.colorado.gov", "ier5-5ms2", "state = 'CO'", (r) => {
+    const type = t(r.license_type) || "";
+    const on = !type ? null
+      : /retail liquor store|drug store|malt beverage and wine|wholesal|importer|manufacturer|direct shipper|^delivery permit|warehouse|master file|manager permit|limited winery/i.test(type) ? false
+      : /hotel & restaurant|tavern|beer & wine|brew ?pub|club license|entertainment facility|lodging facility|arts license|malt beverage on|vintner|distillery pub|resort complex|campus liquor|racetrack|gaming tavern|public transportation|bed & breakfast|optional premises/i.test(type) ? true
+      : null;
+    return {
+      state: "CO", license_no: t(r.license_number), license_type: type || null, on_premise: on, status: "active",
+      business_name: t(r.doing_business_as) || t(r.licensee_name), owner_name: t(r.licensee_name),
+      address: t(r.street_address), city: t(r.city), zip: zip5(r.zip), expires_on: isoDate(r.expiration), raw: r,
+    };
+  }, "co_led_socrata"),
   OR: socrata("data.oregon.gov", "srxe-qkm2", "license_expired = 'No'", (r) => {
     const type = t(r.license_type);
     const addr = String(r.physical_address ?? "");
