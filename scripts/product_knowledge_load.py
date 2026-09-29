@@ -62,7 +62,7 @@ def main():
         if st not in STYLES: st = 'other'
         abv = e.get('abv'); abv = abv if isinstance(abv, (int, float)) and 0 < abv <= 100 else None
         af = e.get('additive_free') if isinstance(e.get('additive_free'), bool) else None
-        notes = [str(x) for x in ([e.get('aging_note')] + (e.get('notes') if isinstance(e.get('notes'), list) else [e.get('notes')])) if x]
+        notes = [str(x) for x in ([e.get('aging_note'), e.get('abv_note')] + (e.get('notes') if isinstance(e.get('notes'), list) else [e.get('notes')])) if x]
         if e.get('additive_free_note'):
             # a past confirmation (e.g. a program that has since ended) is a dated note, never a current yes
             notes.append(str(e['additive_free_note'])); af = None
