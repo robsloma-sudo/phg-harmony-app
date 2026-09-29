@@ -369,3 +369,8 @@ PHG-048 (P1, open) Harmony response time. DEPLOYED 18.49.42 + inbox v23 (priorit
   yet half: options are OpenAI priority processing for the planner (faster, costs more) and a smaller model only for
   the short voice rewrites (recipe/list), each only with Rob's OK.
 
+PHG-049 (P0, in progress) Every IA/CO/NY venue's menu. 2026-09-29: acquisition stall fixed (dispatcher 16 s -> 0.15 s),
+  downloader v9 parallel, coverage-first ordering, 8,495 generic menu links released for 5,329 venues with no menu,
+  deep discovery (job 20) re-enabled every 2 min. Watch: job 16/20 run status, auth latency, render backlog. Next:
+  venues with no website (~7,500) need website discovery (job 9, paused); HTML capture v2 worker still needs Railway.
+

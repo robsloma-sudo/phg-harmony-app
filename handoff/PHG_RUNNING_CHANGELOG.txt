@@ -2098,3 +2098,22 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   "classic daiquiri" -> Classic style (2 recipes) reference, others Hemingway, No. 3, Papa Doble.
 - App 18.49.43 (deployed to main): + | Speak | gear, symmetric (Speak centred, both 96 px from it on a 390 px
   screen); gear menu opens on the right; sheets scroll instead of running off small screens.
+
+[2026-09-29] MENU PIPELINE UNSTUCK + FASTER (Rob: get every IA/CO/NY venue's menu on as soon as possible)
+- Found: no menu document had been acquired since 2026-09-27 22:08 UTC. Cron job 16 (visual acquisition dispatcher)
+  failed EVERY run (1,079 failures in 6 h) on its 5 s statement timeout: the PHG-034 "other drinks pages of venues
+  that already have a drinks menu" pick took 14-16 s (nested loop over ~550k candidates). Rendering was idle, not
+  broken (27,665 / 27,734 pages ready).
+- Fixed (applied): partial index phg_visual_acq_account_idx + per-venue lookup -> 0.15 s; first successful run
+  05:31:48 UTC. Dispatcher now fills batches of 24: 4 newest links, 2 sibling drinks pages, then venues with NO menu
+  yet (coverage first; index menu_visual_documents_account_idx; 31 ms), then anything else. Job runs 0.16 s avg.
+- acquire-menu-visual-assets v9 (deployed, byte-identical): 6 candidates in parallel, batches up to 24, same checks
+  and 55 s deadline. Throughput ~36 links/min processed, ~13.5 menus/min stored or queued for rendering (was 0 for
+  31 h; ~4/min before the stall). ~40% of old links fail (mostly HTTP 404, retried hourly up to 4 times).
+- Capture gate (PHG-033): released the 2 best "generic menu" links for each venue with no menu at all (8,495 links,
+  5,329 venues), marked visual_asset_last_error='released_generic_menu_for_coverage_2026-09-29' so they can be
+  found or re-held. Venues that already have a menu keep the gate.
+- Re-enabled ONE paused job (PHG-018 plan): 20 gtt-deep-menu-discovery, every 2 min (was every minute), with
+  statement_timeout 10 s / lock_timeout 500 ms; 2,225 venues with a website but <=3 menu links are its queue.
+- Coverage before (venues with websites 21,366): 7,925 with a menu document, 11,320 with links but no document,
+  2,121 with no links.
