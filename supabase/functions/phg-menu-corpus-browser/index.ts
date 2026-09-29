@@ -117,7 +117,7 @@ Deno.serve(async (req: Request) => {
     const id = Number(b.document_id);
     if (!Number.isFinite(id) || id <= 0) return json({ error: "document_id required" }, 400);
     const { data: doc, error: de } = await sb.from("menu_visual_documents")
-      .select("id,account_id,original_menu_url,discovered_asset_url,asset_kind,acquisition_method,acquisition_status,page_count,menu_scope,page_render_status,page_rendered_at,updated_at,accounts!inner(account_name,street_address,postal_code,google_types,website_url)")
+      .select("id,account_id,original_menu_url,discovered_asset_url,asset_kind,acquisition_method,acquisition_status,page_count,menu_scope,page_render_status,page_rendered_at,updated_at,storage_bucket,storage_path,mime_type,byte_size,accounts!inner(account_name,street_address,postal_code,google_types,website_url)")
       .eq("id", id).maybeSingle();
     if (de) return json({ error: de.message }, 500);
     if (!doc) return json({ error: "not found" }, 404);
@@ -139,7 +139,16 @@ Deno.serve(async (req: Request) => {
         .eq("zcta", zip).maybeSingle();
       census = cz || null;
     }
-    return json({ status: "ok", action, document: doc, pages, census, signed_expires_in: SIGN_TTL });
+    /* v9 (Rob 2026-09-29: pages were stretched and pixelated): the stored original file, so the viewer can draw the real
+       PDF (vector, the menu's own page size) or the full-resolution image instead of the 1,400 px page snapshots. */
+    let original: unknown = null;
+    const d: any = doc;
+    if (d.storage_bucket && d.storage_path && (d.asset_kind === "pdf" || d.asset_kind === "image") && (+d.byte_size || 0) <= 60_000_000) {
+      const { data: su } = await sb.storage.from(d.storage_bucket).createSignedUrl(d.storage_path, SIGN_TTL);
+      if (su?.signedUrl) original = { kind: d.asset_kind, mime_type: d.mime_type, byte_size: d.byte_size, signed_url: su.signedUrl };
+    }
+    delete d.storage_bucket; delete d.storage_path;
+    return json({ status: "ok", action, document: doc, pages, census, original, signed_expires_in: SIGN_TTL });
   }
 
   // ---- action: list ----

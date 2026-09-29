@@ -6301,7 +6301,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     <div id="err"></div>
     <div id="dataWarn"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.47 HARMONY LEARNS FROM MISSES · LIVE LICENCE COVERAGE · FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.48 SHARP MENU PAGES FROM THE REAL PDF · HARMONY LEARNS FROM MISSES · LIVE LICENCE COVERAGE · FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7670,20 +7670,20 @@ function corpusDraw(){
 var MLV=null;
 function corpusView(id,keepIdx){
  var b=CORPUS_BROWSER,idx=(keepIdx&&b.view&&b.view.id===id)?b.view.idx:null;corpusPanelClose();
- b.view={id:id,busy:true,error:'',doc:null,pages:[],idx:0,census:null};mlvMount();mlvRender();
+ b.view={id:id,busy:true,error:'',doc:null,pages:[],idx:0,census:null};mlvMount();if(MLV){MLV.pdfFailed=false;MLV.pdf=null;}mlvRender();
  corpusPost({action:'document',document_id:id}).then(function(j){
    if(!b.view||b.view.id!==id)return;var pg=j.pages||[],first=0;for(var i=0;i<pg.length;i++)if(pg[i].signed_url){first=i;break;}
    if(idx!==null&&idx<pg.length)first=idx;
-   b.view={id:id,busy:false,error:'',doc:j.document||{},pages:pg,idx:first,census:j.census||null};mlvRender();})
+   b.view={id:id,busy:false,error:'',doc:j.document||{},pages:pg,idx:first,census:j.census||null,original:j.original||null};mlvRender();})
  .catch(function(e){if(!b.view||b.view.id!==id)return;b.view.busy=false;b.view.error=(e&&e.message)||'Could not open this menu';mlvRender();});
 }
-function corpusViewClose(){CORPUS_BROWSER.view=null;if(MLV&&MLV.el&&MLV.el.parentNode)MLV.el.parentNode.removeChild(MLV.el);MLV=null;document.body.classList.remove('cview-open');}
+function corpusViewClose(){if(MLV&&MLV.pdfUrl){try{URL.revokeObjectURL(MLV.pdfUrl);}catch(e){}}CORPUS_BROWSER.view=null;if(MLV&&MLV.el&&MLV.el.parentNode)MLV.el.parentNode.removeChild(MLV.el);MLV=null;document.body.classList.remove('cview-open');}
 function corpusViewStep(d){var v=CORPUS_BROWSER.view;if(!v||!v.pages.length)return;var i=Math.max(0,Math.min(v.pages.length-1,v.idx+d));if(i===v.idx)return;v.idx=i;mlvRender();}
 function corpusViewerHtml(){return '';}
 function mlvMount(){
  if(MLV&&MLV.el&&MLV.el.parentNode)return;
  var el=document.createElement('div');el.id='mlViewer';el.className='mlview';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Menu viewer');
- el.innerHTML='<div class="mlvbar"><button type="button" class="mlvb" data-a="close" aria-label="Close">&#10005;</button><div class="mlvtt"><div class="mlvname"></div><div class="mlvsub"></div></div><a class="mlvb mlvsrc" target="_blank" rel="noopener" aria-label="Open the original menu" hidden>&#8599;</a></div>'
+ el.innerHTML='<div class="mlvbar"><button type="button" class="mlvb" data-a="close" aria-label="Close">&#10005;</button><div class="mlvtt"><div class="mlvname"></div><div class="mlvsub"></div></div><a class="mlvb mlvpdf" target="_blank" rel="noopener" aria-label="Open the original menu file" hidden style="width:auto;padding:0 10px;font-size:13px">PDF</a><a class="mlvb mlvsrc" target="_blank" rel="noopener" aria-label="Open the original menu" hidden>&#8599;</a></div>'
   +'<div class="mlvscroll" tabindex="0"><div class="mlvstage"><div class="mlvmsg"></div><img class="mlvimg" alt="" draggable="false" hidden></div></div>'
   +'<div class="mlvbar mlvbot"><button type="button" class="mlvb" data-a="prev" aria-label="Previous page">&#8249;</button><span class="mlvpg"></span><button type="button" class="mlvb" data-a="next" aria-label="Next page">&#8250;</button><span class="mlvsp"></span>'
   +'<button type="button" class="mlvb" data-a="out" aria-label="Zoom out">&minus;</button><button type="button" class="mlvb mlvz" data-a="fit" aria-label="Fit width or whole page">Fit</button><button type="button" class="mlvb" data-a="in" aria-label="Zoom in">+</button></div>';
@@ -7694,7 +7694,7 @@ function mlvMount(){
   else if(a==='in')mlvZoomAt(MLV.s*1.4,r.left+r.width/2,r.top+r.height/2);else if(a==='out')mlvZoomAt(MLV.s/1.4,r.left+r.width/2,r.top+r.height/2);
   else if(a==='fit')mlvFitToggle();else if(a==='reload'){var v=CORPUS_BROWSER.view;if(v)corpusView(v.id,true);}});
  var sc=MLV.scroll,img=MLV.img;
- img.addEventListener('load',function(){if(!MLV||MLV.img!==img)return;MLV.nw=img.naturalWidth||MLV.nw;MLV.nh=img.naturalHeight||MLV.nh;MLV.s=1;img.hidden=false;MLV.msg.textContent='';mlvApply();sc.scrollTop=0;sc.scrollLeft=0;mlvPreload();});
+ img.addEventListener('load',function(){if(!MLV||MLV.img!==img)return;if(MLV.swap){MLV.swap=false;return;}if(!MLV.pdf){MLV.nw=img.naturalWidth||MLV.nw;MLV.nh=img.naturalHeight||MLV.nh;}MLV.s=1;img.hidden=false;MLV.msg.textContent='';mlvApply();sc.scrollTop=0;sc.scrollLeft=0;mlvPreload();});
  img.addEventListener('error',function(){if(!MLV||MLV.img!==img||!MLV.src)return;img.hidden=true;MLV.msg.innerHTML='This page link expired or could not load. <button type="button" class="mlvb" data-a="reload">Reload</button>';});
  function dist(a,b){var x=a.clientX-b.clientX,y=a.clientY-b.clientY;return Math.sqrt(x*x+y*y)||1;}
  sc.addEventListener('touchstart',function(e){
@@ -7718,12 +7718,14 @@ function mlvMount(){
 }
 function mlvDragMove(e){if(!MLV||!MLV.drag)return;MLV.scroll.scrollLeft=MLV.drag.l-(e.clientX-MLV.drag.x);MLV.scroll.scrollTop=MLV.drag.t-(e.clientY-MLV.drag.y);}
 function mlvDragEnd(){if(!MLV||!MLV.drag)return;MLV.drag=null;MLV.scroll.classList.remove('mlvgrab');}
-function mlvBase(){var w=MLV.scroll.clientWidth-12;return Math.max(120,window.innerWidth>700?Math.min(w,1000):w);}
+function mlvBase(){var w=MLV.scroll.clientWidth-12,b=Math.max(120,window.innerWidth>700?Math.min(w,1000):w);
+ /* 18.49.48: a picture page is never shown wider than its own pixels (no stretching); a PDF page is drawn to size */
+ if(!MLV.pdf&&MLV.nw)b=Math.min(b,Math.max(120,MLV.nw));return b;}
 function mlvFitPage(){if(!MLV.nw||!MLV.nh)return 1;var h=MLV.scroll.clientHeight-12;return Math.min(1,(h*MLV.nw/MLV.nh)/mlvBase());}
-function mlvMax(){return Math.max(4,MLV.nw?MLV.nw*2.5/mlvBase():4);}
+function mlvMax(){if(MLV.pdf)return 6;return Math.max(1,MLV.nw?MLV.nw/mlvBase():1);}
 function mlvSetScale(s){var lo=Math.min(1,mlvFitPage());MLV.s=Math.max(lo,Math.min(mlvMax(),s));mlvApply();}
 function mlvApply(){
- if(!MLV)return;var w=mlvBase()*MLV.s,img=MLV.img;img.style.width=Math.round(w)+'px';
+ if(!MLV)return;var w=mlvBase()*MLV.s,img=MLV.img;img.style.width=Math.round(w)+'px';if(MLV.pdf)mlvPdfSoon();
  img.style.height=MLV.nw&&MLV.nh?Math.round(w*MLV.nh/MLV.nw)+'px':'auto';
  var z=MLV.el.querySelector('.mlvz');if(z)z.textContent=Math.abs(MLV.s-1)<0.02?'Fit':Math.round(MLV.s*100)+'%';
 }
@@ -7732,6 +7734,51 @@ function mlvZoomAt(ns,cx,cy){if(!MLV||MLV.img.hidden)return;var img=MLV.img,sc=M
 function mlvFitToggle(){if(!MLV||MLV.img.hidden)return;var fp=mlvFitPage();
  if(Math.abs(MLV.s-1)<0.02&&fp<0.98){mlvSetScale(fp);MLV.scroll.scrollTop=0;MLV.scroll.scrollLeft=0;}
  else{var sc=MLV.scroll,r=MLV.scroll.getBoundingClientRect();mlvZoomAt(1,r.left+r.width/2,r.top+Math.min(r.height/2,40));sc.scrollLeft=0;}}
+/* 18.49.48 REAL PDF PAGES: Rob - "they're expanded and pixeled out; keep them the right format size and put them back
+   in the PDF". PDF menus are drawn from the stored original PDF with pdf.js at the menu's own page size and the screen's
+   pixel density, and redrawn sharper after every zoom; the 1,400 px snapshots are only a fallback. */
+var PDFJS_V='3.11.174',PDFJS=null,PDFDOCS={};
+function mlvPdfLib(){
+ if(PDFJS)return PDFJS;
+ PDFJS=new Promise(function(res,rej){if(window.pdfjsLib)return res(window.pdfjsLib);var sc=document.createElement('script');
+  sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/'+PDFJS_V+'/pdf.min.js';sc.onload=function(){try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/'+PDFJS_V+'/pdf.worker.min.js';res(window.pdfjsLib);}catch(e){rej(e);}};
+  sc.onerror=function(){PDFJS=null;rej(new Error('PDF viewer did not load'));};document.head.appendChild(sc);});
+ return PDFJS;
+}
+function mlvPdfDoc(v){
+ var k=v.id;if(PDFDOCS[k])return PDFDOCS[k];
+ PDFDOCS[k]=mlvPdfLib().then(function(lib){return lib.getDocument({url:v.original.signed_url,disableAutoFetch:false}).promise;});
+ PDFDOCS[k].catch(function(){delete PDFDOCS[k];});
+ return PDFDOCS[k];
+}
+function mlvPdfShow(v,p){
+ var img=MLV.img,msg=MLV.msg,num=p&&p.page_number?p.page_number:(v.idx+1),key=v.id+'#'+num;
+ if(MLV.pdf&&MLV.pdf.key===key)return;
+ MLV.pdf={key:key,page:null,w:0,drawnW:0,busy:false};MLV.src='';img.hidden=true;msg.textContent='Opening the menu PDF…';
+ var mine=MLV.pdf;
+ mlvPdfDoc(v).then(function(doc){return doc.getPage(Math.min(num,doc.numPages));}).then(function(page){
+  if(!MLV||MLV.pdf!==mine)return;var vp=page.getViewport({scale:1});mine.page=page;MLV.nw=vp.width;MLV.nh=vp.height;MLV.s=1;
+  img.alt=((v.doc&&v.doc.accounts&&v.doc.accounts.account_name)||'Menu')+' page '+num;
+  mlvPdfDraw(true);
+ }).catch(function(){if(!MLV)return;MLV.pdfFailed=true;MLV.pdf=null;mlvRender();});
+}
+function mlvPdfSoon(){if(!MLV||!MLV.pdf||!MLV.pdf.page)return;clearTimeout(MLV.pdfT);MLV.pdfT=setTimeout(function(){mlvPdfDraw(false);},220);}
+function mlvPdfDraw(first){
+ var st=MLV&&MLV.pdf;if(!st||!st.page||st.busy)return;
+ var dpr=Math.min(3,window.devicePixelRatio||1),cssW=mlvBase()*MLV.s,want=cssW*dpr;
+ /* stay under mobile canvas limits (about 16.7 million pixels) */
+ var maxPx=16000000,aspect=MLV.nh/MLV.nw;if(want*want*aspect>maxPx)want=Math.sqrt(maxPx/aspect);want=Math.min(want,8192);
+ if(!first&&st.drawnW&&Math.abs(want-st.drawnW)/st.drawnW<0.12)return;
+ st.busy=true;var scale=want/MLV.nw,vp=st.page.getViewport({scale:scale}),cv=document.createElement('canvas');
+ cv.width=Math.floor(vp.width);cv.height=Math.floor(vp.height);var cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);
+ st.page.render({canvasContext:cx,viewport:vp}).promise.then(function(){
+  cv.toBlob(function(b){if(!MLV||MLV.pdf!==st||!b){st.busy=false;return;}
+   var old=MLV.pdfUrl;MLV.pdfUrl=URL.createObjectURL(b);st.drawnW=want;st.busy=false;
+   if(!first)MLV.swap=true;MLV.img.src=MLV.pdfUrl;if(first){MLV.img.hidden=false;MLV.msg.textContent='';mlvApply();MLV.scroll.scrollTop=0;MLV.scroll.scrollLeft=0;}
+   if(old)setTimeout(function(){URL.revokeObjectURL(old);},1500);
+   if(Math.abs(mlvBase()*MLV.s*dpr-want)/want>0.12)mlvPdfSoon();},'image/png');
+ }).catch(function(){st.busy=false;});
+}
 function mlvPreload(){var v=CORPUS_BROWSER.view;if(!v)return;[v.idx-1,v.idx+1].forEach(function(i){var p=v.pages[i];if(p&&p.signed_url){var im=new Image();im.decoding='async';im.src=p.signed_url;}});}
 function mlvRender(){
  if(!MLV)return;var v=CORPUS_BROWSER.view;if(!v){corpusViewClose();return;}
@@ -7747,8 +7794,10 @@ function mlvRender(){
  var img=MLV.img,msg=MLV.msg;
  if(v.busy){img.hidden=true;MLV.src='';img.removeAttribute('src');msg.textContent='Loading menu…';return;}
  if(v.error){img.hidden=true;MLV.src='';img.removeAttribute('src');msg.innerHTML=esc(v.error)+' <button type="button" class="mlvb" data-a="reload">Retry</button>';return;}
+ var orig=v.original,pdfBtn=el.querySelector('.mlvpdf');if(pdfBtn){if(orig&&orig.signed_url){pdfBtn.href=orig.signed_url;pdfBtn.hidden=false;pdfBtn.textContent=orig.kind==='pdf'?'PDF':'Original';}else pdfBtn.hidden=true;}
+ if(orig&&orig.kind==='pdf'&&orig.signed_url&&!MLV.pdfFailed){mlvPdfShow(v,p);return;}
  if(!p||!p.signed_url){img.hidden=true;MLV.src='';img.removeAttribute('src');msg.textContent=p?'Page '+(p.page_number||v.idx+1)+' is '+(p.render_status||'pending')+' and not rendered yet.':'No rendered pages yet.';return;}
- if(MLV.src!==p.signed_url){MLV.src=p.signed_url;MLV.nw=p.width||0;MLV.nh=p.height||0;MLV.s=1;img.hidden=true;img.alt=(a.account_name||'Menu')+' page '+(p.page_number||v.idx+1);
+ MLV.pdf=null;if(MLV.src!==p.signed_url){MLV.src=p.signed_url;MLV.nw=p.width||0;MLV.nh=p.height||0;MLV.s=1;img.hidden=true;img.alt=(a.account_name||'Menu')+' page '+(p.page_number||v.idx+1);
   msg.textContent='Loading full-resolution page…';img.src=p.signed_url;}
 }
 document.addEventListener('gesturestart',function(e){if(MLV)e.preventDefault();},{passive:false});
