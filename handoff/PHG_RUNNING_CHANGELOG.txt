@@ -1945,3 +1945,19 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
 - phg-speech-transcribe v5 live: lexicon now also loads all label-approval brand names; ordered paging; "did you mean"
   only for multi-word near-matches or when the checking model is unsure.
 - App 18.49.40 deployed: main e7b94c8, Netlify deploy 6abb1fafcae2520008a265ea ready.
+
+[2026-09-29] CONTEXT-SOUND-MATCH (speech v6 live; Rob: if a brand isn't heard letter for letter, match by sound when the context fits)
+- Migration 20260929041000_harmony_brand_names_category: v_harmony_brand_names gains category (spirit from the TTB class):
+  tequila 5,091, whiskey 2,252, liqueur 947, gin 936, rum 825, brandy 751, vodka 705, mezcal 672, cocktail 370, none 1,610.
+  Still service_role only (verified anon/authenticated have no select).
+- phg-speech-transcribe v6: context-aware matching.
+  * spirit cues around the phrase (reposado, anejo, blanco, mezcal, espadin, 12 year, scotch, bourbon, gin, rum, cognac,
+    amaro, vermouth...) and brand-slot cues ("a bottle of ___", "pour ___", "carry ___") lower the match bar (0.64 vs 0.72)
+    and prefer brands of that spirit (+0.08; other spirits -0.05; tequila/mezcal +0.03); last conversation lines count too.
+  * exact short names or brands of another spirit no longer block a longer misheard name ("Nick a 12 year" -> Nikka).
+  * spoken numbers -> digits ("Monkey forty seven" -> Monkey 47); vowels folded e~i, o~u ("Hebe key" -> Hibiki);
+    Italian cch ("Cocchi"); spans made only of filler/slot words skipped ("order a" no longer matches Herradura).
+  * the checking model gets each option's spirit, the context spirit and whether the phrase is in a brand slot.
+  * without the model, a single word is swapped only in a brand slot next to the same spirit (score >= 0.9, clear lead).
+- Offline tests: 23 context cases all resolved or correctly left alone ("I'm going to the store with Nick" untouched);
+  original 45 cases: only "Brook laddie" still missed.
