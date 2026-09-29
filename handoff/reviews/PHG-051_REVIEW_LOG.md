@@ -506,10 +506,31 @@ None for the swap itself, or for the one-off timed CALL.
 ### Verdict
 **pass (83).** Approve the real swap:
 `set statement_timeout='3s'; select public.phg_explorer_swap_next();`
-Run it at a quiet time, and retry on 55P03 or 57014. Do S-R3-4 first. After the swap, run
-`NOTIFY`-dependent checks: anon has SELECT on all six live names, `*_old` is closed, and the swap_log row is
+Run it at a quiet time, and retry on 55P03 or 57014. Do S-R3-4 first. After the swap, check that
+anon has SELECT on all six live names, `*_old` is closed, and the swap_log row is
 present.
 Then run one timed `CALL public.refresh_explorer_v2()` as a one-off pg_cron job, unscheduled by hand once it has
 started.
 Re-enable cron 8 (`command := 'CALL public.refresh_explorer_v2()'`, with the watchdog) only after S-R3-1, S-R3-2 and
 S-R3-3 are done and the timing is recorded here.
+
+## Round 3 follow-up and swap (2026-09-29, lead developer)
+- S-R3-4: refresh_explorer() acl `{postgres=X/postgres,service_role=X/postgres}`, anon false, authenticated false,
+  prosecdef false. Nothing to revoke.
+- Owners of all six *_next: postgres.
+- S-R3-3: pg_roles.rolconfig(postgres) = `search_path="\$user", public, extensions` (no statement_timeout).
+  pg_db_role_setting: anon statement_timeout=3s; authenticated 8s; authenticator 8s + lock_timeout 8s; postgres has none.
+  So the cron CALL has no statement bound, and the watchdog is required before cron 8 is switched.
+- S-R3-1 applied (migration phg_explorer_refresh_v2_busy_raises): a busy lock now raises 'explorer busy (phg_explorer
+  lock held); skipped', so the cron run fails visibly.
+- S-R3-2 lock-holder query, run read-only live (0 rows = no holder):
+  `select pid, granted, mode from pg_locks where locktype='advisory' and objsubid=1 and objid = (hashtext('phg_explorer')::bigint & 4294967295)::oid and classid = ((hashtext('phg_explorer')::bigint >> 32) & 4294967295)::oid;`
+  Runbook: if a 'busy' failure appears and this shows an idle holder, `select pg_terminate_backend(<pid>)`.
+- Minor, deferred: ORDER BY on the classify_item pick (the unique staging_id index shows no multi-match today).
+- **Swap done** 16:4x UTC: `set statement_timeout='3s'; select public.phg_explorer_swap_next();` returned 'swapped: live
+  MVs are the v2 builds; previous ones kept as *_old'. swap_log rows = 1.
+  After: anon SELECT true on all six; anon SELECT false on the _old copies.
+  mv_drink_explorer rows: CO 37,325 / IA 15,144 / NY 75,549. Venues (distinct venue_key): CO 773 -> 1,641, IA 522 -> 770, NY 383 -> 3,218.
+  mv_menu_dev_venue_profile: CO 380 -> 840, IA 248 -> 282, NY 210 -> 1,837. mv_dash_pins 28,286.
+- Timed refresh: one-off pg_cron job 27 `CALL public.refresh_explorer_v2()` started 16:45:00 UTC and was unscheduled
+  after start. Result below when it finishes.
