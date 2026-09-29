@@ -7,3 +7,6 @@
 --   phg_license.v_venues                                               -> one row per venue (state + address + zip/city + name)
 --   public.phg_license_coverage() / phg_license_venues(...) / phg_license_breakdown(state, by)  -> app + Harmony read layer
 -- Full SQL: see the Supabase migration history (names above).
+-- + phg_license_state_stats_cache: phg_license.state_stats (per-state licences, venues, cities, top-50 by city/type/county),
+--   refreshed by phg_license.refresh_state_stats(state) on every loader progress call (live dashboard); coverage 9.3 s -> 4 ms.
+-- + phg_license_venues_filter_first: filter before de-duplicating; index (state, upper(city)).
