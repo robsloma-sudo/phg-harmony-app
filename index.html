@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.39 FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.40 NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -22164,7 +22164,8 @@ function harmonyVoiceUpload(blob,targetId,nonce){
       Authorization:'Bearer '+tok,
       'Content-Type':mime,
       'x-audio-filename':'harmony.'+ext,
-      'x-context':(window.harmonyHearingContext?harmonyHearingContext():'')
+      'x-context':(window.harmonyHearingContext?harmonyHearingContext():''),
+      'x-account':(window.phgHearAccount?phgHearAccount():'')
     },
     body:blob
   }).then(function(r){
@@ -22176,6 +22177,7 @@ function harmonyVoiceUpload(blob,targetId,nonce){
     if(nonce!==HARMONY_DICTATION.nonce)return;
     var raw=String(j&&j.text||'').trim();
     if(!raw)throw new Error('No speech detected.');
+    if(window.phgHeard)phgHeard(j);
     harmonyVoiceNormalize(targetId,raw,nonce);
   }).catch(function(e){
     if(nonce!==HARMONY_DICTATION.nonce)return;
@@ -40271,9 +40273,9 @@ function transcribe(blob){
   var tok=phgAuthAccessToken(),mime=blob.type||'audio/webm';
   var ext=mime.indexOf('mp4')>=0?'m4a':mime.indexOf('ogg')>=0?'ogg':'webm';
   fetch(typeof MDC_SPEECH_URL!=='undefined'?MDC_SPEECH_URL:FN+'phg-speech-transcribe',{method:'POST',
-    headers:{apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok,'Content-Type':mime,'x-audio-filename':'harmony.'+ext,'x-context':(window.harmonyHearingContext?harmonyHearingContext():'')},body:blob})
+    headers:{apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok,'Content-Type':mime,'x-audio-filename':'harmony.'+ext,'x-context':(window.harmonyHearingContext?harmonyHearingContext():''),'x-account':(window.phgHearAccount?phgHearAccount():'')},body:blob})
   .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok)throw new Error(j.detail||j.error||('HTTP '+r.status));return j;});})
-  .then(function(j){var t=String(j.text||'').trim();if(!t){afterReply(false);return;}PMS.hear(t);afterReply(true);})
+  .then(function(j){var t=String(j.text||'').trim();if(!t){afterReply(false);return;}if(window.phgHeard)phgHeard(j);PMS.hear(t);afterReply(true);})
   .catch(function(e){if(!PMS.talk)return;say('I did not catch that.');afterReply(true);});
 }
 /* Wait until she has finished talking, then listen again. */
@@ -41036,7 +41038,7 @@ function harmonyConverse(q){
   if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('Harmony · thinking…');
   var tz='America/Chicago';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||tz;}catch(e){}
   fetch(INBOX_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
-    body:JSON.stringify({text:q,context:HCONV.ctx||'',surface:'app',account_id:acct,tz:tz})})
+    body:JSON.stringify({text:q,context:HCONV.ctx||'',surface:'app',account_id:acct,tz:tz,hear:(window.phgHeardFor?phgHeardFor(q):null)})})
     .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.speak)throw new Error(j.error||('HTTP '+r.status));return j;});})
     .then(function(j){
       HCONV.ctx=j.context||'';HCONV.at=Date.now();
@@ -41796,6 +41798,24 @@ function hearingContext(){
   return encodeURIComponent(txt.slice(0,850));
 }
 window.harmonyHearingContext=hearingContext;
+/* 18.49.40: names in any language. The speech service now checks what it heard against PHG's own brand,
+   producer, cocktail and venue names (sound-alikes such as "CT leg was" -> Siete Leguas) and against what
+   this project taught Harmony before. What it changed is shown briefly, and anything it was unsure about
+   goes to Harmony with the words, so she can ask "Did you mean ...?" instead of guessing. */
+function phgHearAccount(){try{return PHGAUTH.workspace&&PHGAUTH.workspace.account&&PHGAUTH.workspace.account.id||'';}catch(e){return '';}}
+function phgHeard(j){
+  window.PHG_HEARD={at:Date.now(),text:String(j&&j.text||''),heard:String(j&&j.heard||''),fixes:(j&&j.fixes)||[],unsure:(j&&j.unsure)||[]};
+  try{var f=window.PHG_HEARD.fixes.filter(function(x){return x&&x.meant;});
+    if(f.length&&typeof harmonyComposerStatus==='function'){harmonyComposerStatus('Heard '+f.map(function(x){return '\u201c'+x.heard+'\u201d as '+x.meant;}).join(', '));setTimeout(function(){try{harmonyComposerStatus('');}catch(e){}},4000);}
+  }catch(e){}
+}
+function phgHeardFor(q){
+  var h=window.PHG_HEARD;if(!h||Date.now()-h.at>90000)return null;
+  if(String(q||'').indexOf(h.text.slice(0,20))<0&&h.text.indexOf(String(q||'').slice(0,20))<0)return null;
+  window.PHG_HEARD=null;
+  return {heard:h.heard.slice(0,400),fixes:h.fixes.slice(0,6),unsure:h.unsure.slice(0,4)};
+}
+window.phgHearAccount=phgHearAccount;window.phgHeard=phgHeard;window.phgHeardFor=phgHeardFor;
 window.harmonyUI={run:run,exec:exec,help:showHelp,targets:function(){return targets().map(function(t){return t.label;});},commands:function(){return CMDS.map(function(c){return {group:c.g,examples:c.ex};});}};
 
 /* Commands are checked first on every path words take into Harmony. */

@@ -1920,3 +1920,21 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   All parse; 06 section 3 md5 still matches live (bc1b0d15...). Follow-ups logged as PHG-045.
 - Live-only edge function sources copied into supabase/functions/ (secret scan clean).
 - Waiting on Rob's explicit permission to apply 02-06 to the live database.
+
+[2026-09-29] NAMES-ANY-LANGUAGE (speech v4 + inbox v17 LIVE; app 18.49.40 committed, NOT deployed)
+- Problem (Rob): brand names from other languages/nationalities heard as English sound-alikes, out of context.
+- phg-speech-transcribe v4 (verify_jwt true, live):
+  * transcription prompt says names come in Spanish/French/Italian/Japanese/Portuguese/German/Gaelic, keep original spelling;
+  * NAME REPAIR after transcription: learned aliases first (phg.harmony_aliases), then a cross-language sound key
+    (soundKey + consonant skeleton, trigram index) over ~PHG lexicon loaded at cold start with the service role:
+    brands, menu_item_brands (seen 2+ times), cocktail_reference, spirit_lexicon, NOM producers, mv_dash_pins venues;
+    names already heard right are protected; spelled letters ("CT" -> "see tee") handled;
+    gpt-4.1-mini confirms each swap in context (2.5 s cap); without it only clear multi-word swaps are made.
+  * returns text (repaired), heard (raw), fixes[], unsure[]; text-only internal mode for other functions.
+  * offline test: 40 of 45 sample mishearings resolved (CT leg was->Siete Leguas, quantro->Cointreau, Hera Dura->Herradura,
+    Chee nar->Cynar, Pa Tron->Patron...); misses: Brook laddie, He car ooh (Xicaru).
+- phg-harmony-inbox v17 (live): Speech notes go to the planner; unsure names -> "Did you mean X or Y?";
+  corrections ("no, I said Fortaleza") set heard_fix -> alias_upsert + correction_add, with guards (words really heard,
+  not a common word, neither side contains the other). Shortcut text is repaired through the speech service too.
+- index.html 18.49.40: sends x-account (so project-learned names apply), shows "Heard X as Y" briefly, passes hear{} to Harmony.
+- Follow-up: COLA brand names (14,300) not in the lexicon yet; needs a read-only distinct-names view (DB change) to load cheaply.

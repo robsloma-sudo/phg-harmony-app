@@ -60,6 +60,7 @@ const CONVERSE = [
   "end: they're finished ('that's all', 'no thanks', 'nope', 'bye', 'stop', 'I'm good').",
   "say: what you say now for clarify, answer, read_back, note (brief confirmation), open_screen ('Opening it now.') and end (a short goodbye). Leave say empty for recipe and data; those are spoken by the next step. Warm, natural, plain text, no markdown, no filler.",
   "Never invent business figures or prices.",
+  "HEARING: names of brands, producers, cocktails and places come from many languages (Spanish, French, Italian, Japanese...) and the speech engine can mishear them. When 'Speech notes' say a name was unsure and it matters for the answer, ask ONE short question: 'Did you mean Siete Leguas or Siete Misterios?' (clarify). If they correct a name ('no, I said Fortaleza', 'it's Cynar, not Chee nar', 'I meant East and Co'), or confirm your 'Did you mean' question, fill heard_fix: wrong = the words that were heard or that you used, right = the name they meant, kind = brand | venue | cocktail | ingredient | place | term; then carry on with their request using the right name, without making them repeat it. Otherwise leave heard_fix wrong and right empty.",
 ].join(" ");
 
 const RECIPE_VOICE = [
@@ -81,7 +82,7 @@ const CREATE_VOICE = [
 const KIND_ENUM = KINDS;
 const SCHEMA = {
   type: "object", additionalProperties: false,
-  required: ["action", "say", "recipe_drink", "recipe_source", "data_query", "open_query", "note_text", "kind", "tags", "due_iso"],
+  required: ["action", "say", "recipe_drink", "recipe_source", "data_query", "open_query", "note_text", "kind", "tags", "due_iso", "heard_fix"],
   properties: {
     action: { type: "string", enum: ["clarify", "recipe", "data", "note", "read_back", "offer_open", "open_screen", "answer", "end"] },
     say: { type: "string" },
@@ -93,6 +94,10 @@ const SCHEMA = {
     kind: { type: "string", enum: KIND_ENUM },
     tags: { type: "array", items: { type: "string" } },
     due_iso: { type: ["string", "null"] },
+    heard_fix: {
+      type: "object", additionalProperties: false, required: ["wrong", "right", "kind"],
+      properties: { wrong: { type: "string" }, right: { type: "string" }, kind: { type: "string", enum: ["brand", "venue", "cocktail", "ingredient", "place", "term"] } },
+    },
   },
 };
 
@@ -261,7 +266,7 @@ Deno.serve(async (req) => {
   // ---- inbox: one turn of the conversation (the Shortcut loops; the app calls it once)
   if (action !== "inbox") return json({ ok: false, error: "unknown action" }, 400);
   /* v6: take the words from whatever field the Shortcut used */
-  const RESERVED = new Set(["key", "action", "tz", "account_id", "kind", "tags", "due_iso", "limit", "open_only", "id", "done", "name", "context"]);
+  const RESERVED = new Set(["key", "action", "tz", "account_id", "kind", "tags", "due_iso", "limit", "open_only", "id", "done", "name", "context", "surface", "hear"]);
   const others = Object.entries(b).filter(([k]) => !RESERVED.has(k));
   const pick = () => {
     for (const k of ["text", "input", "query", "prompt", "message", "dictated text", "dictated_text", "words", "q"]) {
@@ -272,7 +277,7 @@ Deno.serve(async (req) => {
     const named = others.map(([k]) => k).filter((k) => /\s/.test(k)).sort((x, y) => y.length - x.length);
     return named[0] || "";
   };
-  const text = String(pick()).trim().slice(0, 2000);
+  let text = String(pick()).trim().slice(0, 2000);
   let ctx: any = { turns: [], last: null };
   try { const c = typeof b.context === "string" ? JSON.parse(b.context) : b.context; if (c && typeof c === "object") ctx = { turns: Array.isArray(c.turns) ? c.turns.slice(-6) : [], last: c.last || null, offered: !!c.offered }; } catch { /* fresh conversation */ }
   console.log(JSON.stringify({ inbox: via, fields: Object.keys(b).filter((k) => k !== "key"), text_len: text.length, turns: ctx.turns.length }));
@@ -295,6 +300,27 @@ Deno.serve(async (req) => {
     return reply(n ? "Logged." : "I couldn't save that.", "end");
   }
   const tz = String(b.tz || "America/Chicago");
+  /* v17: NAMES IN ANY LANGUAGE. The app's speech service already checked names against PHG's brands, producers,
+     cocktails and venues and sends what it heard (b.hear). The Shortcut's dictated text is checked here the same
+     way, through phg-speech-transcribe's text-only mode (3 s cap; on failure the words are used as heard). */
+  let hear: any = b.hear && typeof b.hear === "object" ? b.hear : null;
+  if (!hear && via === "shortcut" && text.length > 3) {
+    try {
+      const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 3000);
+      const hr = await fetch(`${url}/functions/v1/phg-speech-transcribe`, {
+        method: "POST", signal: ctl.signal, headers: { "Content-Type": "application/json", apikey: anon, Authorization: `Bearer ${anon}`, "x-phg-internal": service },
+        body: JSON.stringify({ text, user: userId, account: accountId, hint: ctx.turns.map((t: any) => t.u + " / " + t.h).join(" / ").slice(-600) }),
+      });
+      clearTimeout(tm);
+      const hj = await hr.json().catch(() => ({}));
+      if (hr.ok && hj.text) { hear = { heard: text, fixes: hj.fixes || [], unsure: hj.unsure || [] }; text = String(hj.text).slice(0, 2000); }
+    } catch { /* use the words as heard */ }
+  }
+  const hearNote = hear ? [
+    hear.heard && hear.heard !== text ? `Speech notes: the speech engine first heard "${String(hear.heard).slice(0, 300)}".` : "",
+    Array.isArray(hear.fixes) && hear.fixes.length ? "Names it corrected: " + hear.fixes.slice(0, 6).map((f: any) => `"${f.heard}" -> ${f.meant}`).join("; ") + "." : "",
+    Array.isArray(hear.unsure) && hear.unsure.length ? "Names it was unsure about: " + hear.unsure.slice(0, 4).map((u: any) => `"${u.heard}" could be ${(u.options || []).slice(0, 3).join(" or ")}`).join("; ") + "." : "",
+  ].filter(Boolean).join(" ") : "";
   /* v16: the Harmony view in the app uses this same conversation brain (was: recipe questions in the app went
      straight to a one-shot data lookup with no questions and no memory). In the app, results are shown on screen,
      so Harmony never offers to open the app there, and replies carry a "view" for the screen. */
@@ -306,6 +332,7 @@ Deno.serve(async (req) => {
     ctx.turns.length ? "Conversation so far:\n" + ctx.turns.map((t: any) => `User: ${t.u}\nHarmony: ${t.h}`).join("\n") : "This is the start of the conversation.",
     ctx.last ? `Last result (context.last): ${ctx.last.title || ""}\n${ctx.last.detail || ""}` : "",
     inApp ? "They are IN the Harmony app looking at the screen: whatever you find is shown to them there. Never use offer_open or open_screen; use data to show things." : ctx.offered ? "Your previous turn asked whether to open the Harmony app." : "You have NOT offered to open the app in your previous turn, so open_screen is not allowed now.",
+    hearNote,
     "They now said: " + text,
   ].filter(Boolean).join("\n\n");
   const plan = await llm(oa, model, CONVERSE, plannerInput, { max_output_tokens: 500, text: { format: { type: "json_schema", name: "harmony_turn", strict: true, schema: SCHEMA } } });
@@ -316,6 +343,22 @@ Deno.serve(async (req) => {
     return reply(n ? "I couldn't think that through just now, so I logged it as a note." : "Something went wrong. Try again.", "end", { error: plan.error });
   }
   const say = String(out.say || "").trim();
+  /* v17: learn from a corrected name, so it is heard right next time (phg.harmony_aliases, read by the speech service) */
+  const hf = out.heard_fix || {};
+  const wrong = String(hf.wrong || "").trim(), right = String(hf.right || "").trim();
+  /* guards: the wrong words must really have been heard (a past or current turn), be more than a common word, and
+     neither side may contain the other ("Manhattan" must never be learned as "Black Manhattan") */
+  const nz = (x: string) => " " + x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim() + " ";
+  const heardBefore = nz([text, hear?.heard || "", ...ctx.turns.map((t: any) => t.u || "")].join(" "));
+  const COMMON = new Set(["the", "and", "that", "this", "one", "menu", "drink", "recipe", "price", "bar", "yes", "no", "not", "what", "with"]);
+  const safeFix = wrong.length >= 3 && right.length >= 2 && wrong.length <= 120 && right.length <= 200 && nz(wrong).trim() !== nz(right).trim() &&
+    !nz(right).includes(nz(wrong)) && !nz(wrong).includes(nz(right)) && heardBefore.includes(nz(wrong)) && !COMMON.has(nz(wrong).trim());
+  if (safeFix) {
+    try {
+      if (accountId) await dbx("alias_upsert", { user: userId, account: accountId, heard: wrong, means: right, kind: hf.kind || "term", source: "correction" });
+      await dbx("correction_add", { user: userId, account: accountId, heard: wrong, meant: right, wrong_part: "item" });
+    } catch (e) { console.log(JSON.stringify({ learn_error: String((e as Error)?.message || e) })); }
+  }
 
   if (out.action === "end") return reply(say || "Okay. Talk soon.", "end");
   if (out.action === "clarify" || out.action === "answer" || out.action === "read_back") return reply(say || "Say that again?", "listen");
