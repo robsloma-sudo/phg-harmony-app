@@ -13,6 +13,8 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
      IL  ilcc.illinois.gov daily CSV export (retail_type ON-PREMISES / COMBINATION = on-premise)
    v3: + CT (Socrata, no permit class published -> on_premise unknown), DC + KY/Louisville (ArcGIS), VA (xlsx);
    {probe:true} returns headers + sample rows without writing.
+   v4: + MI (master xlsx), WA (weekly On Premise xlsx), CA (daily zipped CSV), ME (FOAA xlsx); download links are
+   discovered on each state's page because the file names change.
    Never calls a paid service. */
 
 const PAGE = 1000;
@@ -101,14 +103,36 @@ function arcgis(layer: string, where: string, map: (a: any) => Row | null, sourc
 const epochDate = (v: unknown) => (typeof v === "number" ? new Date(v).toISOString().slice(0, 10) : isoDate(v));
 
 /* generic spreadsheet adapter: finds columns by header words (licence no., name, address, city, zip, type) */
+/* find the current download link on a state's page (file names carry dates) */
+async function discover(page: string, re: RegExp): Promise<string> {
+  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 30000);
+  try {
+    const r = await fetch(page, { signal: ctl.signal, headers: { "User-Agent": "PHG-license-ingest/1.0" } });
+    if (!r.ok) throw new Error(`HTTP ${r.status} from ${new URL(page).host}`);
+    const html = await r.text();
+    const links = [...html.matchAll(/href="([^"]+)"/gi)].map((m) => m[1].replace(/&amp;/g, "&")).filter((h) => re.test(decodeURIComponent(h)));
+    if (!links.length) throw new Error(`no download link matching ${re} on ${page}`);
+    return new URL(links[links.length - 1], page).href;
+  } finally { clearTimeout(tm); }
+}
 async function sheetRows(url: string): Promise<{ head: string[]; rows: string[][] }> {
-  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 60000);
+  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 90000);
   let buf: ArrayBuffer;
   try {
     const r = await fetch(url, { signal: ctl.signal, headers: { "User-Agent": "PHG-license-ingest/1.0" } });
     if (!r.ok) throw new Error(`HTTP ${r.status} from ${new URL(url).host}`);
     buf = await r.arrayBuffer();
   } finally { clearTimeout(tm); }
+  if (/\.zip(\?|$)/i.test(url)) {
+    const { unzipSync, strFromU8 } = await import("npm:fflate@0.8.2");
+    const files = unzipSync(new Uint8Array(buf));
+    const name = Object.keys(files).find((k) => /\.(csv|txt)$/i.test(k));
+    if (!name) throw new Error("zip has no csv");
+    const text = strFromU8(files[name]);
+    const tab = text.split("\n", 2)[0].includes("\t");
+    const all = tab ? text.split(/\r?\n/).map((l) => l.split("\t")) : parseCsv(text);
+    return { head: (all.shift() || []).map((h) => h.trim()), rows: all.filter((r) => r.length > 1) };
+  }
   const XLSX = await import("npm:xlsx@0.18.5");
   const wb = XLSX.read(new Uint8Array(buf), { type: "array", cellDates: true });
   const ws = wb.Sheets[wb.SheetNames[0]];
@@ -119,11 +143,11 @@ async function sheetRows(url: string): Promise<{ head: string[]; rows: string[][
   return { head: all[h].map((c: any) => String(c).trim()), rows: all.slice(h + 1).map((r) => r.map((c: any) => String(c ?? ""))) };
 }
 function col(head: string[], ...res: RegExp[]) { for (const re of res) { const i = head.findIndex((h) => re.test(h)); if (i >= 0) return i; } return -1; }
-function sheetAdapter(state: string, url: string, source: string, onPremise: (type: string) => boolean | null): Adapter {
+function sheetAdapter(state: string, url: string | (() => Promise<string>), source: string, onPremise: (type: string) => boolean | null): Adapter {
   return {
     source,
     async pages(offset, pages) {
-      const { head, rows: all } = await sheetRows(url);
+      const { head, rows: all } = await sheetRows(typeof url === "string" ? url : await url());
       const iNo = col(head, /licen[cs]e\s*(no|num|#|id)/i, /permit\s*(no|num|#)/i, /^licen[cs]e$/i);
       const iType = col(head, /licen[cs]e\s*(type|class|desc|privilege)/i, /privilege/i, /^type$/i, /class/i);
       const iName = col(head, /trade|dba|doing business/i, /business\s*name/i, /establishment/i, /^name$/i);
@@ -182,6 +206,20 @@ const ADAPTERS: Record<string, Adapter> = {
       lat: a.Latitude ?? null, lng: a.Longitude ?? null, issued_on: epochDate(a.IssueDate), expires_on: epochDate(a.ExpiryDate), raw: a,
     };
   }, "ky_abc_louisville_arcgis"),
+  /* Michigan LCC master list (all licence types; SDM/SDD are package/off-premise) */
+  MI: sheetAdapter("MI", () => discover("https://www.michigan.gov/lara/bureau-list/lcc/licensing-list", /Master-License-List\.xlsx/i), "mi_lcc_xlsx",
+    (type) => /\bSD[MD]\b|off[- ]premise|specially designated/i.test(type) && !/class c|tavern|hotel|club|on[- ]premise/i.test(type) ? false
+      : /class c|tavern|hotel|club|brewpub|micro ?brew|resort|on[- ]premise|winery|distill|small distiller/i.test(type) ? true : null),
+  /* Washington LCB weekly "On Premise" list: every row is an on-premise licensee */
+  WA: sheetAdapter("WA", () => discover("https://lcb.wa.gov/records/frequently-requested-lists", /On ?Premise ?\d+\.xlsx/i), "wa_lcb_onpremise_xlsx", () => true),
+  /* California ABC daily export (zipped CSV); on-sale types 40-42, 47-49, 51-52, 57, 59-61, 67-68, 70, 75 */
+  CA: sheetAdapter("CA", () => discover("https://www.abc.ca.gov/licensing/licensing-reports/", /DailyExport-CSV\.zip/i), "ca_abc_daily_csv",
+    (type) => { const m = type.match(/\b(\d{2})\b/); if (!m) return null; const c = +m[1];
+      return [40, 41, 42, 47, 48, 49, 51, 52, 57, 59, 60, 61, 67, 68, 70, 75].includes(c) ? true : [20, 21, 17, 9, 1, 2, 3, 4, 13, 14, 22, 23, 12].includes(c) ? false : null; }),
+  /* Maine BABLO licence report */
+  ME: sheetAdapter("ME", () => discover("https://www.maine.gov/dafs/bablo/liquor-licensing/license-data", /FOAA_Report\.xlsx/i), "me_bablo_xlsx",
+    (type) => /off[- ]premise|agency store|retail store|wholesal|manufactur/i.test(type) && !/on[- ]premise/i.test(type) ? false
+      : /restaurant|lounge|tavern|hotel|club|bar|brew ?pub|on[- ]premise|class [a-i]\b|caterer|golf|bowling|vessel/i.test(type) ? true : null),
   VA: sheetAdapter("VA", "https://abc.virginia.gov/library/licenses/other-documents/licensee-download.xlsx?la=en", "va_abc_xlsx",
     (type) => /off[- ]premises?\b(?!.*on)/i.test(type) && !/on[- ]and[- ]off|on[- ]premises?/i.test(type) ? false
       : /mixed beverage|on[- ]premises?|on[- ]and[- ]off|restaurant|club|caterer|hotel|brewery|winery/i.test(type) ? true : null),
