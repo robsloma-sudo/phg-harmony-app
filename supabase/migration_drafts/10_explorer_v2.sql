@@ -156,6 +156,8 @@ begin
   create index mv_de_next_name on public.mv_drink_explorer_next (item_name);
   create index mv_de_next_vkey on public.mv_drink_explorer_next (venue_key);
   create index mv_de_next_drink on public.mv_drink_explorer_next (drink_name);
+  -- app 18.49.45 pages each state/section by staging_id (keyset): one index serves every page
+  create index mv_de_next_st_sec_sid on public.mv_drink_explorer_next (state_code, section, staging_id);
 
   -- [R2 S4] a stable key: md5 of the whole row, numbered only within identical rows (v_public_venues has exact duplicates)
   create materialized view public.mv_dash_pins_next as
