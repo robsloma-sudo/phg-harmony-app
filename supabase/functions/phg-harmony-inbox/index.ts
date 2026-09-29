@@ -113,10 +113,11 @@ const SCHEMA = {
   },
 };
 
-/* v23 SPEED: OpenAI priority processing (faster, steadier replies; same model and answers). Override with
+/* v29 (Rob 2026-09-29: "don't use any form of payment right now"): priority processing is OFF by default; set
+   OPENAI_SERVICE_TIER=priority to turn it back on. v23 SPEED: OpenAI priority processing (faster, steadier replies; same model and answers). Override with
    OPENAI_SERVICE_TIER ("default" turns it off). If the account refuses it, it is switched off for this instance and
    the request is sent again without it. */
-let TIER: string | null = (Deno.env.get("OPENAI_SERVICE_TIER") || "priority").trim();
+let TIER: string | null = (Deno.env.get("OPENAI_SERVICE_TIER") || "default").trim();
 if (TIER === "default" || TIER === "auto" || !TIER) TIER = null;
 const tierOf = () => (TIER ? { service_tier: TIER } : {});
 async function responsesCall(oa: string, body: Record<string, unknown>): Promise<Response> {

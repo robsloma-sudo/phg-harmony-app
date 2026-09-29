@@ -524,9 +524,10 @@ function fastPlan(t: string): { source: string; params: P } | null {
 /* v6: ASK. Anything the fixed catalog can't answer is written as one read-only SELECT and run through
    public.phg_harmony_query (the knowledge-map gateway: select only, table allowlist, project-scoped RLS, logged).
    One repair round on a planner error. The gateway does not bound its own runtime, so the caller does (12 s). */
-/* v11 SPEED: OpenAI priority processing, like the inbox (OPENAI_SERVICE_TIER; "default" turns it off). If the account
+/* v12 (Rob 2026-09-29: no extra payment): priority processing OFF by default (OPENAI_SERVICE_TIER=priority to re-enable).
+   v11 SPEED: OpenAI priority processing, like the inbox (OPENAI_SERVICE_TIER; "default" turns it off). If the account
    refuses it, it is switched off for this instance and the request is sent again without it. */
-let TIER: string | null = (Deno.env.get("OPENAI_SERVICE_TIER") || "priority").trim();
+let TIER: string | null = (Deno.env.get("OPENAI_SERVICE_TIER") || "default").trim();
 if (TIER === "default" || TIER === "auto" || !TIER) TIER = null;
 async function oaCall(oa: string, body: Record<string, unknown>): Promise<Response> {
   const send = () => fetch("https://api.openai.com/v1/responses", {
