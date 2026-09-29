@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.35 A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.36 DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -39977,12 +39977,23 @@ function lookFrom(ds){
   if(!ds||typeof ds!=='object')return null;
   var lay=LAYOUTS[ds.layout]?ds.layout:'solstice',base=DIRS.filter(function(d){return d.id===lay;})[0]||DIRS[0],pal={};
   Object.keys(base.pal).forEach(function(k){var v=ds.palette&&ds.palette[k];pal[k]=/^#[0-9a-f]{6}$/i.test(String(v||''))?v:base.pal[k];});
+  guardContrast(pal);
   var serifish=/(Serif|Garamond|Caslon|Playfair|Fraunces|Lora|Crimson|Marcellus|Rozha|Yeseva|Italiana|Abril)/;
   loadFont(ds.display_font);loadFont(ds.body_font);
   return {id:lay,key:'look'+Date.now().toString(36)+PMS.looks.length,custom:true,name:String(ds.name||'New look').slice(0,40),
     df:ds.display_font?"'"+ds.display_font+"',"+(serifish.test(ds.display_font)?'Georgia,serif':'system-ui,sans-serif'):base.df,
     bf:ds.body_font?"'"+ds.body_font+"',"+(serifish.test(ds.body_font)?'Georgia,serif':'system-ui,sans-serif'):base.bf,
-    pal:pal,style:String(ds.art_style||base.style).slice(0,400)};
+    pal:pal,thesis:String(ds.thesis||'').slice(0,300),style:String(ds.art_style||base.style).slice(0,400)};
+}
+/* hard gate from the design knowledge base: text must stay readable whatever palette comes back */
+function lum(h){var c=hexToRgb(h).map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);});return .2126*c[0]+.7152*c[1]+.0722*c[2];}
+function cr(a,b){var x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
+function guardContrast(p){
+  if(cr(p.ink,p.paper)<7){p.ink=cr('#141210',p.paper)>=cr('#f7f3ea',p.paper)?'#141210':'#f7f3ea';}
+  for(var j=0;j<4&&cr(p.ink,p.paper)<7;j++)p.paper=mix(p.paper,lum(p.ink)<.2?'#ffffff':'#000000',.35);
+  for(var i=0;i<6&&cr(p.muted,p.paper)<4.5;i++)p.muted=mix(p.muted,p.ink,.35);
+  if(cr(p.ink,p.bg)<4.5&&cr(p.paper,p.bg)<1.5)p.bg=mix(p.bg,p.paper,.5);
+  return p;
 }
 function usedLooks(){return PMS.looks.map(function(l){return l.name+' ('+l.id+', '+l.pal.bg+'/'+l.pal.accent+', '+String(l.df).split(',')[0]+')';});}
 function addLook(ds){var l=lookFrom(ds);if(!l)return null;PMS.looks.push(l);PMS.look=PMS.looks.length-1;PMS.variant=0;PMS.page=0;return l;}

@@ -1,7 +1,7 @@
 # Harmony Conversation Model
 
 Build spec for talking to all of PHG: asking about any data, building recipes and menus by voice,
-organising everything in folders, and driving the app's screens hands-free.
+organising it with views and filters, and driving the app's screens hands-free.
 
 Status: proposal for Rob, 2026-09-28. Nothing here is built yet unless it says "exists today".
 Invoice photo capture is deliberately left for a later phase (Rob, 2026-09-28).
@@ -13,7 +13,7 @@ Invoice photo capture is deliberately left for a later phase (Rob, 2026-09-28).
 The end goal (Rob, 2026-09-28): as each business builds out its model, Harmony finds and improves its
 **profitability**. "Your costs are too high on that. Your labor is too high this week. These should be your
 reporting periods. You're losing this much in food waste. Charge this much more on these items. Cut back on dairy
-costs." Everything else in this spec (the knowledge map, setup skeleton, folders, voice building, finance data)
+costs." Everything else in this spec (the knowledge map, setup walkthrough, views and filters, voice building, finance data)
 exists so Harmony has complete, trustworthy data about a business to coach it from. Section 4D describes the coach.
 
 ---
@@ -22,7 +22,7 @@ exists so Harmony has complete, trustworthy data about a business to coach it fr
 
 Every time Rob speaks, Harmony turns it into a **job** (find something, build something, organise
 something, show something, change the screen). A job has **slots** it must fill (which drink, which
-venue, which folder). Harmony fills what it can from the words, the conversation and the screen, and
+venue, which menu). Harmony fills what it can from the words, the conversation and the screen, and
 asks **one short question at a time** for the rest, offering choices that really exist in the data.
 To answer, it walks a **map of all PHG data** (every table described in plain words, with the paths
 between them). To change anything it makes a **proposal** and saves only after a yes. To change the
@@ -41,7 +41,7 @@ immediately, **parks** the job, listens, and later offers to pick the parked job
 | Conversation state (`conversations`, `goals` (nested), `plans`, `tasks`, `conversation_referents`) | Built 2026-09-20 but **not wired to the app**; referents table empty | Becomes Harmony's memory: jobs = goals, parked jobs = suspended goals, "it/that one" = referents |
 | Conversation tests (`conversation_tests`, `golden_tests`, `shadow_regression_cases`) | 4 + 32 + 10 cases | The regression suite for every dialog below |
 | Recipe + costing schema (`units`, `ingredients`, `prep_recipes` (nestable), `recipe_components`, `vendors`, `procurement_catalog_items`, `purchase_costs`, `recipe_cost_snapshots`) | Tables exist, **all empty** except 13 units and 6 ingredients | The costing graph. Filled by voice building now, by invoices later |
-| House menus `menu_projects` | 1 project; has a flat `season` text field | Becomes one kind of folder item |
+| House menus `menu_projects` | 1 project; has a flat `season` text field | A house menu is a normal row; views group its items |
 | Read-only SQL gateway `phg_designer_query` | Works for the menu designer agent: read-only transaction, 20 s timeout, row cap, every query logged | Pattern for Harmony's deep-question tool |
 | In-app voice (talk mode) | Hands-free, turn-based. Mic is **off while Harmony speaks**; interrupt only by tapping the orb | Upgrade to talk-over interruption (section 9) |
 | Data canvas map (Leaflet) | Draws pins and flies to one place. No zoom/focus/filter by voice; pins not kept after drawing | Upgrade to a controllable map (section 8) |
@@ -62,7 +62,7 @@ before changing them.
                     references)      memory)              screen: UI command bus
                                            |
                                     Knowledge map (all tables, plain words, paths, live values)
-                                    Workspace (folders, links, views)
+                                    Views and filters (saved, per project and person)
 ```
 
 1. **Voice in/out**: listens, speaks, stops the moment Rob talks (section 9).
@@ -72,7 +72,7 @@ before changing them.
 4. **Tools**: reads (registered capabilities first, the data-map navigator for anything else),
    writes (proposals only), screen commands.
 5. **Knowledge map**: the description of all data (section 4).
-6. **Workspace**: folders and what is linked into them (section 6).
+6. **Views and filters**: saved ways of looking at any data (section 6).
 
 ---
 
@@ -94,7 +94,7 @@ things.
 | Buying and cost | vendor / distributor, catalog item (what the vendor sells), purchase cost, invoice, recipe cost, COGS | `phg.vendors`, `phg.procurement_catalog_items`, `phg.purchase_costs`, `phg.purchase_invoices`, `phg.recipe_cost_snapshots` |
 | Operations | sales, POS item, labor, shift, expense, inventory count, budget, P&L | `phg.sales_*`, `phg.labor_*`, `phg.operating_expenses`, `phg.inventory_*`, `phg.budget_*`, `phg.pl_snapshots` |
 | Knowledge | classic spec, cocktail tag, flavor pairing, design principle, training package | `cocktail_reference`, `cocktail_tag_*`, `phg_flavor.*`, `phg_design.*`, `phg.training_packages` |
-| Organising | folder, note, task, idea, reminder | new `phg.workspace_*` (section 6), `phg.harmony_notes` |
+| Organising | view, filter, note, task, idea, reminder | new `phg.saved_views` / `phg.saved_filters` (section 6), `phg.harmony_notes` |
 
 ### 4.2 Paths between things
 
@@ -228,7 +228,7 @@ Starter skeleton (examples, not final):
   Airtable, accounting system).
 - **Accounting**: chart of accounts (start from a restaurant template, rename/add by talking), accounting system.
 - **Targets**: labor %, COGS % per category, comp % limit, prime cost, weekly budgets by account group.
-- **Menus and recipes**: menu types, seasons, folder template preferences, units (oz vs ml), house pour sizes,
+- **Menus and recipes**: menu types, seasons, default views, units (oz vs ml), house pour sizes,
   house technique rules (e.g. stir 6 to 8 seconds).
 - **People and permissions**: who can approve prices, publish menus, see labor and pay.
 - **Voice and style**: how much detail, spoken number style, name Harmony uses for them, when to open the app.
@@ -254,6 +254,26 @@ confirmed_by, confirmed_at, history`. Harmony can always say where a value came 
 5. **Setup status**: "What's left to set up?" lists missing settings by what they unlock ("Add your labor
    targets to get labor alerts").
 
+### 4B.3a The setup walkthrough (visual, then automatic)
+
+Setting up a business is a guided, on-screen walkthrough that Harmony talks through, step by step:
+
+1. **The business and its places**: name, type, locations, revenue centers, calendar (week start, periods).
+2. **Who you buy from and pay**: suppliers, distributors, service providers (linen, pest control, music, repairs,
+   POS, utilities), landlords. Harmony asks, fills in what it can from uploaded invoices, email or spreadsheets,
+   and shows each one as a card to confirm (name, kind, contact, delivery days, default account).
+3. **How you code invoices**: the chart of accounts (start from the restaurant template, rename or add accounts)
+   and the coding rules, shown on real example invoices: "Breakthru lines for liquor go to 5100-01; their bar mix
+   lines to 5200. Right?" Each confirmed answer becomes a rule.
+4. **Sales and labor sources**: which POS and scheduling or payroll tools, and how data will arrive.
+5. **Targets and budgets**: labor %, COGS % by category, comp limit, weekly budgets by account group.
+6. **Review**: a summary screen of the financial model, with anything still missing and what it unlocks.
+
+After setup, the model runs itself: new invoices are coded by the confirmed rules (asking only when unsure),
+new parties are proposed when they first appear, metrics and views update as data arrives, and every later
+conversation adds to or corrects the model. Stored in `phg.parties` and `phg.invoice_coding_rules` plus the
+setting tables (drafts 02 and 04).
+
 ### 4B.4 Harmony learns the business (memory)
 
 - **Glossary**: the business's own words mapped to PHG things ("hall" = revenue center Hall; "the stalls" =
@@ -268,7 +288,7 @@ confirmed_by, confirmed_at, history`. Harmony can always say where a value came 
 
 ### 4B.5 Admin layer (Rob)
 
-Rob manages the skeleton itself: setting definitions, question wording, folder templates, chart-of-accounts
+Rob manages the skeleton itself: setting definitions, question wording, starter views, chart-of-accounts
 templates, metric definitions, POS adapters, and the question bank. Each business only answers; the admin
 decides what can be asked. Changes apply to every business without code.
 
@@ -283,7 +303,7 @@ each person gets their own layer inside the project.
 | Layer | Belongs to | Holds | Shared with |
 |---|---|---|---|
 | **PHG shared knowledge** | Everyone | Market data (41k venues, 12k menus, brands, NOMs, labels, census), classic specs, finance and design knowledge, the admin skeleton and templates | All projects, read-only |
-| **Project** | One business (`phg.accounts`) | Settings (4B), glossary, folders, recipes, menus, ingredients, vendors, costs, sales, labor, budgets, data-source mappings, project memory, Harmony device keys | Only members of that project |
+| **Project** | One business (`phg.accounts`) | Settings (4B), glossary, saved views and filters, recipes, menus, ingredients, vendors, costs, sales, labor, budgets, data-source mappings, project memory, Harmony device keys | Only members of that project |
 | **Person in project** | One user in one project (`phg.account_memberships`) | Role and permissions, voice and detail preferences, personal notes and reminders, habits, parked jobs, conversation history | Only that person (admins can see the setup, not the private notes) |
 
 ### 4C.2 Rules
@@ -301,11 +321,11 @@ each person gets their own layer inside the project.
   projects makes one key per project or says "switch to ..." at the start.
 - The PHG admin (Rob) manages the shared layer and the skeleton, and can enter a project only as a member of it.
 - **What carries over vs what doesn't** (Rob, 2026-09-28): functions, capabilities, templates, the skeleton and
-  shared knowledge work the same in every project and for every user. Anything **created** in a project (folders,
+  shared knowledge work the same in every project and for every user. Anything **created** in a project (views,
   files, records, recipes, preps, menus, ingredients, costs, notes) stays in that project and is never carried
   into another.
 - **Cross-project export (tabled, PHG-043)**: a deliberate, user-started link or export that copies chosen items
-  (e.g. a recipe or a folder) from one project to another the user belongs to, with provenance kept. Not built now.
+  (e.g. a recipe, a menu or a view) from one project to another the user belongs to, with provenance kept. Not built now.
 
 ## 4D. The profit coach
 
@@ -380,7 +400,7 @@ Every request becomes a job: `{kind, slots, status, source turn, result, parked_
 | **find** | "all the margaritas at X in Denver", "where is NOM 1610", "average price of a Paloma in Iowa" |
 | **explain** | "why is our COGS up", "what makes this brand different" |
 | **build** | new cocktail, new prep recipe, new dish (later), new menu, new menu item |
-| **organise** | make a folder, save to folder, move, rename, "what's in Spring 2028" |
+| **organise** | save a view or filter, rename, "show me everything for Spring 2028", "by week" |
 | **show** | open map, zoom, focus, filter, open a menu, go to a screen |
 | **change** | set a price, swap an ingredient, change a quantity |
 | **note** | remind me, log this idea |
@@ -396,9 +416,9 @@ This uses the existing `goals` (nested, with suspended/superseded states) and `c
 | find items on menus | item or cocktail; place (state, city or venue) | venue type, price range, current vs all menus | current menus only |
 | find venue | name or kind; place | type, has cocktails | Rob's states (IA, CO, NY) |
 | brand info | brand | aspect (distillery, products, labels, where poured, price) | overview first |
-| new cocktail | name (or "untitled"), destination (folder, menu or later) | family, base spirit, season, target price, glass, garnish | draft status |
-| new prep recipe | name, ingredients + amounts, method | yield, shelf life, storage, destination | destination "Unfiled" if skipped |
-| save | what (defaults to the current job's result), where | new folder? | ask "where?" |
+| new cocktail | name (or "untitled"), destination (a menu, or later) | family, base spirit, season, target price, glass, garnish | draft status |
+| new prep recipe | name, ingredients + amounts, method | yield, shelf life, storage, menu | saved as a draft prep if no menu given |
+| save | what (defaults to the current job's result) | which menu, tags | saved as a normal record |
 | map control | action (zoom, focus, filter, select) | target | current map |
 
 ### 5.3 Question rules (how to not sound robotic)
@@ -422,81 +442,58 @@ This uses the existing `goals` (nested, with suspended/superseded states) and `c
 | Same name, several matches | "I see [A in Des Moines] and [A in Ankeny]. Which one?" |
 | Scope | "Just current menus, or older ones too?" |
 | Version | "Classic, your house one, from the internet, a few variations, or build one together?" |
-| Destination | "Where should it go: [Spring 2028 > Cocktails], a new folder, or leave it unfiled?" |
-| Folder missing | "There's no Seasonal 2026 folder yet. Create it under Menus?" |
+| Destination | "Add it to the Spring 2028 menu, or keep it as a draft for later?" |
+| Menu missing | "There's no Seasonal 2026 menu yet. Start one?" |
 | New ingredient | "I don't have 'Tajin salt' yet. Add it as a new ingredient?" |
 | Ambiguous ingredient | "Salt: kosher, sea salt or table salt?" |
 | Unit | "Is that grams or ounces?" |
 | Yield | "What does the batch make, roughly?" |
 | Template now or later | "Set up the menu template first, or just the recipe for now?" |
-| Confirm write | "Save 'Citrus Brine' to Spring 2028 > Prep book? Say yes to save." |
+| Confirm write | "Save 'Citrus Brine' as a prep recipe for the Spring 2028 menu? Say yes to save." |
 | Interrupted | "Sorry, go ahead." then later "Want me to finish the Manhattan, or save it for later?" |
 | Too broad | "That's 4,000 venues. Narrow it by city, type, or cocktails only?" |
 | No data | "I don't have [X] for [place]. Closest I have is [Y]. Want that?" |
 
 ---
 
-## 6. Folders: an open workspace
+## 6. Views and filters (no folders)
 
-Rob wants folders for menus, recipe books, ingredients and seasons, nested as deep as needed, that
-can hold anything, with views like Finance and Training inside a menu folder, and that grow as he
-talks. Design:
+Decision (Rob, 2026-09-29): **no folders.** Everything anyone builds by talking to Harmony is stored as ordinary
+rows in the database (recipes, preps, ingredients, menu items, parties, invoices, costs, notes, settings). People
+find and organise it with **saved views and filters** over those tables, the same way for every kind of data.
 
-### 6.1 Data model (new tables, need migration approval)
+### 6.1 Filters
 
-- `phg.workspace_folders`: `id, account_id, parent_id (nesting), name, kind, template_key, icon,
-  sort, metadata, created_by, created_at, archived_at`.
-  Kinds: `folder` (plain), `project` (e.g. a seasonal menu), `book` (recipe book, prep book),
-  `view` (a computed page such as Finance), `smart` (a saved search).
-- `phg.workspace_links`: `folder_id, entity_type, entity_id, label, role, sort, added_by, added_at`.
-  A link, not a copy: the same recipe can sit in "Spring 2028 > Cocktails" and "Recipe book > Stirred".
-- `phg.workspace_entity_types`: the open-ended registry of what can be linked (recipe, prep recipe,
-  menu item, house menu, ingredient, vendor, venue, brand, NOM, menu from the library, note, file,
-  training package, **record**). New types can be added without a new table.
-- `phg.workspace_records`: free-form records (`type, title, fields jsonb, files`) for anything that
-  doesn't have its own table yet. This is the "build it as we talk" part: "make a supplier contact
-  card for Breakthru" becomes a record until it deserves a real table.
-- `phg.workspace_templates`: saved folder structures.
+- **Time filters**, defined per business from its calendar settings (4B): 1 week at a time, 2 weeks at a time,
+  4 weeks, a month, a quarter, period to date, same period last year, or any custom window ("Thursday to Sunday").
+  Each is a named preset that resolves to start and end dates from any as-of date, so "last two weeks" and "the
+  two weeks before that" always mean the same thing.
+- **Field filters**: any column the knowledge map (section 4) knows, e.g. category = dairy, vendor = Breakthru,
+  GL account starts with 5100, cocktails with tequila, menu items over $14, recipes missing a cost.
+- Filters are **said or tapped** ("just dairy", "only Breakthru invoices", "by week"), saved with a name when the
+  person wants to reuse them ("save that as Dairy spend"), and belong to the project, or only to that person.
 
-### 6.2 Templates
+### 6.2 Views
 
-"Seasonal menu" template (example: Spring 2028):
+A view = what (one kind of thing, or a set of metrics) + filters + time preset + grouping + columns + sort +
+display (table, bars, tiles, map, dashboard). Examples:
 
-```
-Spring 2028                       (project; linked house menu project)
-  Menu design                     (the menu layout, versions, proofs)
-  Cocktails                       (recipe links, in menu order)
-  Prep book                       (syrups, brines, batches, nested preps)
-  Food                            (later)
-  Finance                         (view: computed)
-  Training                        (training packages per item)
-  Sourcing                        (vendors, catalog items used)
-  Notes and ideas
-```
-
-Other templates: Recipe book, Ingredient library (by category), Venue research, Brand research.
-Rob can say "make a new seasonal menu for Fall 2028" and get the whole structure.
-
-### 6.3 Views (computed, never typed in)
-
-- **Finance**: for everything linked in the parent folder: each ingredient's cost per unit, each prep's
-  batch cost and cost per unit, each recipe's cost, sale price, COGS %, margin, target COGS %, and a
-  list of **missing costs** ("cost pending: 6 ingredients"). Uses `recipe_cost_snapshots` and the
-  costing path in 4.2. Works now with pending costs; fills in when prices arrive.
-- **Training**: training packages for linked menu items (existing capability).
-- **Recipe book**: printable specs of linked recipes.
-- **Shopping / par list** (later): quantities from recipes x expected sales.
-
-### 6.4 Talking to folders
-
-| Rob says | Harmony does |
+| View | What it shows |
 |---|---|
-| "Add a new house cocktail to my seasonal 2026 folder" | Finds the folder (or asks, or offers to create it), starts a build job with destination set |
-| "Make a folder called Agave for Spring 2028" | Proposes the new folder under Spring 2028, creates it on yes |
-| "What's in Spring 2028?" | Speaks a summary, offers to open it |
-| "Move the brine to the prep book" | Moves the link, says where it went, can undo |
-| "Show me the finance for Spring 2028" | Opens the Finance view; speaks the headline (cost, COGS %, pending costs) |
-| "Save it for later" | Saves to "Unfiled" (the inbox folder), says so |
+| Dairy costs, week by week | purchase lines where category = dairy, grouped by week, last 12 weeks, bars |
+| Spring 2028 menu | menu items where menu = Spring 2028, with recipe cost, price, COGS %, missing costs |
+| Labor by role, two weeks at a time | labor hours and $ by role, grouped by 2-week period, vs target |
+| Prep book | prep recipes, grouped by type (syrups, brines, batches), with batch cost |
+| Declining budget, this week | budget remaining by GL group for the current week, pace bar |
+
+"Show me dairy costs one week at a time" becomes a view on the fly; "save it" keeps it; "open Dairy costs" brings
+it back; "now by month" changes only the time grouping. Harmony can pin views for the weekly brief.
+
+### 6.3 Storage
+
+`phg.time_presets` (per business), `phg.saved_filters`, `phg.saved_views`, all project-scoped with an optional
+owner. Views resolve to a read-only query through the knowledge-map gateway (4.3); they never store copies of
+data. Drafted in `supabase/migration_drafts/03_saved_views_and_filters.sql`.
 
 ---
 
@@ -518,7 +515,7 @@ Harmony: Added the zest of 6 lemons. Steps so far: dissolve the salt in the wate
          bring to a simmer, cool overnight. How much does the batch make?
 Rob:     About a liter.
 Harmony: Citrus brine, makes about 1 liter. Kosher salt is new to your ingredients, lemons are
-         already there. Costs are pending until we have prices. Save it to Spring 2028 > Prep book?
+         already there. Costs are pending until we have prices. Save it as a prep recipe for the Spring 2028 menu?
 Rob:     Yes.
 Harmony: Saved. Want to use it in a recipe now?
 ```
@@ -536,13 +533,13 @@ Harmony: Saved. Want to use it in a recipe now?
 6. **Cost**: each matched ingredient follows catalog item -> vendor -> latest purchase cost. With no
    prices yet, the recipe is saved with "cost pending" per ingredient. When costs arrive later
    (invoice photos, a later phase), every recipe and the Finance views update on their own.
-7. **Save**: one proposal: create the prep/recipe + new ingredients + link into the folder. One yes.
+7. **Save**: one proposal: create the prep/recipe + new ingredients (+ link to a menu if asked). One yes.
 8. **Drinks** use the same loop with bar units, a method (stir 6 to 8 seconds, shake hard), glass,
    garnish, and optional link to a house menu item and a price.
 
 ### 7.3 New write actions needed in the Command Center
 
-`create_folder`, `rename_folder`, `move_link`, `link_to_folder`, `unlink`, `create_record`,
+`save_filter`, `save_view`, `update_view`, `archive_view`, `create_party`, `create_coding_rule`,
 `create_ingredient`, `create_prep_recipe` (with components), `create_recipe_version` (with components),
 `update_recipe_draft`, `attach_recipe_to_menu_item`. Existing actions stay (`create_menu_item`,
 `persist_recipe_candidate`, `set_purchase_cost`, `set_menu_price` ...).
@@ -559,7 +556,7 @@ bus (`window.harmonyUI.run(cmd)`) that each screen registers with.
 | Map | `zoom(in / out / level)`, `focus(entity)`, `select(pin)`, `filter(layer, on/off, criteria)`, `layers(list)`, `reset` | "zoom in", "zoom in on Don Julio", "only distilleries", "hide the venues", "show Jalisco" |
 | Brand / venue card | `open(entity)`, `tab(products / labels / where poured / prices)` | "pull up everything on Casamigos", "where is it poured in Denver" |
 | Menu library | `filter(state, city, type, cocktail, ingredient)`, `open(menu)`, `next page` | "show me menus in Des Moines with a Paloma" |
-| Folders | `open(folder)`, `show view(Finance)`, `back` | "open Spring 2028", "show the finance" |
+| Views | `open(view)`, `group(week / 2 weeks / month)`, `filter(field, value)`, `save` | "open Dairy costs", "now by month", "just Breakthru", "save that" |
 | Menu studio | existing design commands (paint, next design, darker, page 2, undo ...) | unchanged |
 | Anywhere | `go(screen)`, `close`, `scroll`, `read this` | "go to the dashboard", "close the map" |
 
@@ -603,7 +600,7 @@ native iPhone app later.
 
 - Reads: free, account-scoped, whitelist only, logged.
 - Writes: always a proposal first (existing token flow). Spoken yes is enough for low-risk writes
-  (create a draft, new folder, link, note, new ingredient). Prices, publishing, deleting and
+  (create a draft, save a view, note, new ingredient). Prices, publishing, deleting and
   anything financial need the on-screen Approve button.
 - Every write is undoable ("undo that") for at least the session; deletes are archive-first.
 - Numbers (money, COGS) always come from database functions, never from the model's arithmetic
@@ -620,8 +617,8 @@ native iPhone app later.
 | 1 | **Screen command bus + controllable map** (zoom, focus by name, filter layers, brand card) | Frontend only |
 | 2 | **Knowledge map + navigator** (entity catalog, paths, value samples, read-only gateway for Harmony) so "all margaritas at venue X in city Y" and deep questions work | Migration: map tables + read-only role/function |
 | 3 | **Dialogue manager** (jobs, slots, question rules, parking, memory via goals/referents), shared by app and Action button | Wiring existing tables; small migration |
-| 4 | **Folders workspace** (folders, links, records, templates, Finance/Training views) | Migration: workspace tables + new write actions |
-| 5 | **Voice building** of recipes and preps (capture loop, ingredient matching, nested preps, save to folder, cost pending) | New Command Center actions |
+| 4 | **Views and filters** (time presets, saved filters, saved views, spoken and tapped) | Migration: view tables + new write actions |
+| 5 | **Voice building** of recipes and preps (capture loop, ingredient matching, nested preps, save to a menu, cost pending) | New Command Center actions |
 | 6 | **Talk-over** in the app (option 1, then maybe realtime) | Frontend + tuning on Rob's phone |
 | 2A | **Projects, setup skeleton + finance data**: project/person layers and RLS audit (add account_id where missing), setting definitions, account settings, glossary/memory, guided setup, data-source adapters and mappings, chart-of-accounts template, metric functions | Migration; Rob as admin writes the first skeleton with Harmony |
 | 7 | **Costing live** in Finance views as prices arrive | Airtable prices first, invoices later |
@@ -638,7 +635,7 @@ above, run before every deploy.
 1. Start order: recommend Phase 1 (map control, no migration), Phase 2 (knowledge map) and Phase 2A (setup
    skeleton) together, since every later feature reads settings.
 2. Approve the migrations as each phase starts.
-3. Voice approval: is a spoken "yes" enough for drafts, folders, ingredients and settings? (Recommended yes;
+3. Voice approval: is a spoken "yes" enough for drafts, views, ingredients and settings? (Recommended yes;
    prices, publishing and deletes stay on-screen.)
 4. Model cost: stronger model for the dialogue manager and navigator (recommended).
 5. Business-specific details (POS, week start, targets, accounting system) are **not decided here**: each business

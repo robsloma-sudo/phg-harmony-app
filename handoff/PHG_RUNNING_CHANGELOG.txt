@@ -1800,3 +1800,29 @@ menus. Something is wrong with the app. The menu editor is not working."
 - Tests (stubbed service): tiki menu -> "Lava Lounge"; next -> "Lagoon"; next -> "Neon Reef"; back/back/next through
   looks; "make a new menu with more tequila drinks" -> fresh draft "Agave House"; "add another rum drink to the menu"
   -> edit; "give it a different look, more modern" -> design call; classic designs; zero page errors.
+
+------------------------------------------------------------------------------
+PHG-20260929-DEPLOY-4935 + DESIGNKB + VIEWS | USER_PROMPT + DEPLOY + CHANGE + DESIGN | 2026-09-29
+Rob: "Deploy. And let's make sure everything you've learned about menu design and all those sources about design
+theory and .edu sites and everything is transferred over. Let's rethink the folder system ... we won't need
+folders. We just have to pull from tables and fields and columns and rows ... we'll create filters for every week
+and every month ... view by one week at a time, by two weeks at a time, by one month at a time ... just costs of
+dairy ... the setup process essentially will be a walkthrough, a visual walkthrough of how we code invoices, who
+our suppliers are, who our distributors are, who our service providers are ... then further on everything just
+gets automated and built automatically as conversations are had."
+- DEPLOY 18.49.35: main 6c36b09, Netlify 6abb02b67f53f2000836307b ready (published 00:13:49Z).
+- Design knowledge -> Harmony's menu designer: phg-harmony-attach v5 (live) adds design_knowledge.ts, a snapshot of
+  phg_design (104 principles >= 0.9 confidence across menu design/engineering, typography, colour, accessibility,
+  composition, gestalt, grid, identity, imagery, art direction; the hard gates and process guidance; the source
+  list incl. the peer-reviewed menu studies, Albers, Bringhurst, Ruder, Hofmann, Müller-Brockmann, Lupton, Tufte,
+  MIT OCW, Yale, W3C). Both menu drafting and new looks are written from it and each look now carries a one-sentence
+  creative thesis. phg_design is not readable by the existing designer gateway (permission denied), so a live read
+  needs an approved accessor (PHG-044); until then the snapshot is refreshed by hand.
+- App 18.49.36: contrast hard gate on every generated look (ink/paper >= 7:1, muted >= 4.5:1, paper nudged if
+  needed); thesis kept on the look.
+- Spec: section 6 folders replaced by Views and filters (time presets 1 week / 2 weeks / 4 weeks / month / quarter
+  / custom, field filters e.g. dairy, saved views = what + filters + time + grouping + display); 4B.3a setup
+  walkthrough (business, parties = suppliers / distributors / service providers, invoice coding on real invoices,
+  sales and labor sources, targets, review; then automatic coding and updating); all folder references removed.
+- Migration-drafting agent redirected: 03 = saved views and filters; parties + invoice_coding_rules in 02; folder
+  actions replaced by view/filter actions in 06.

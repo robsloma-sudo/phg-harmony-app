@@ -1,7 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { DESIGN_KNOWLEDGE } from "./design_knowledge.ts";
 
 /* PHG HARMONY ATTACH — Harmony's conversation brain in the Harmony view.
+   v6: menus and looks are designed from PHG's design knowledge base (design_knowledge.ts) and carry a creative thesis.
    v5: every drafted menu carries its own design (palette, fonts, layout, art style); mode "design" invents a
        new look for the current menu.
    v3: mode "menu" drafts/revises a whole menu as strict JSON (see MENU_INSTRUCTIONS).
@@ -54,11 +56,12 @@ const CHAT_INSTRUCTIONS = [
    The app renders it on one of five page layouts, with the palette, fonts and art style invented here. */
 const DISPLAY_FONTS = ["DM Serif Display", "Playfair Display", "Cormorant Garamond", "Bebas Neue", "Space Grotesk", "Abril Fatface", "Fraunces", "Syne", "Unbounded", "Marcellus", "Rozha One", "Yeseva One", "Righteous", "Monoton", "Big Shoulders Display", "Italiana", "Limelight", "Chivo", "Archivo Black", "Libre Caslon Display"];
 const BODY_FONTS = ["Inter", "EB Garamond", "Work Sans", "DM Sans", "Lora", "IBM Plex Sans", "Source Serif 4", "Karla", "Manrope", "Crimson Pro"];
-const DESIGN_RULES = "design = a visual identity made for THIS concept, different from any look listed as already used: name (one or two evocative words, not a generic label), layout (solstice = painted field above, reading field below, a sun or focal disc; garden = airy panes and arches; noche = dark cinematic field; swiss = geometric grid with bold shapes; letterpress = classic engraved frame), palette (bg, paper, ink, muted, accent, art1, art2, art3 as #rrggbb; ink must read clearly on paper and bg, contrast at least 7:1; dark palettes are fine), display_font and body_font from the lists, art_style = one sentence describing the painted artwork style (medium, texture, light, mood; no text in the art).";
+const DESIGN_RULES = "design = a visual identity made for THIS concept, different from any look listed as already used: thesis (one sentence: the intended identity and guest experience, from which every choice follows), name (one or two evocative words, not a generic label), layout (solstice = painted field above, reading field below, a sun or focal disc; garden = airy panes and arches; noche = dark cinematic field; swiss = geometric grid with bold shapes; letterpress = classic engraved frame), palette (bg, paper, ink, muted, accent, art1, art2, art3 as #rrggbb; ink must read clearly on paper and bg, contrast at least 7:1; dark palettes are fine), display_font and body_font from the lists, art_style = one sentence describing the painted artwork style (medium, texture, light, mood; no text in the art).";
 const DESIGN_PROPS = {
   type: "object", additionalProperties: false,
-  required: ["name", "layout", "palette", "display_font", "body_font", "art_style"],
+  required: ["thesis", "name", "layout", "palette", "display_font", "body_font", "art_style"],
   properties: {
+    thesis: { type: "string" },
     name: { type: "string" },
     layout: { type: "string", enum: ["solstice", "garden", "noche", "swiss", "letterpress"] },
     palette: { type: "object", additionalProperties: false, required: ["bg", "paper", "ink", "muted", "accent", "art1", "art2", "art3"],
@@ -74,6 +77,7 @@ const DESIGN_INSTRUCTIONS = [
   "Follow any direction they gave (e.g. more modern, darker, beachy, luxurious, 70s).",
   DESIGN_RULES,
   "reply = one short spoken sentence naming the new look and what makes it different.",
+  DESIGN_KNOWLEDGE,
 ].join(" ");
 const DESIGN_SCHEMA = { type: "object", additionalProperties: false, required: ["reply", "design"], properties: { reply: { type: "string" }, design: DESIGN_PROPS } };
 
@@ -86,6 +90,7 @@ const MENU_INSTRUCTIONS = [
   "No slogans, no taglines, no filler lines anywhere. style_hint picks the visual direction that suits the concept: solstice (sunny, Mexican, coastal, citrus), garden (brunch, botanical, wine, daytime), noche (night, cocktail lounge, speakeasy, tiki, neon), swiss (modern, brewery, minimal), letterpress (classic, supper club, steakhouse, whiskey). concept = a short visual subject for painted art (no text).",
   "reply = one or two warm spoken sentences saying what you made or changed. Plain text.",
   DESIGN_RULES,
+  DESIGN_KNOWLEDGE,
 ].join(" ");
 const menuSchema = (withDesign: boolean) => ({
   type: "object", additionalProperties: false, required: ["reply", "changed", "menu"],
