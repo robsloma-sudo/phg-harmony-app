@@ -270,6 +270,8 @@ Action so far: cron 7 (promotion) and 13 (extraction) paused ~15:57Z. Workflow w
   fix: supersede per source not per account; skip duplicate/subset item sets; upstream URL/fingerprint
   filter; reversible repair restoring good menus.
 Next: apply fix + repair (with backup table), verify, then re-enable 13 then 7.
+  2026-09-29: job 13 was re-enabled in error 09:41-13:15 UTC (54,297 staging rows, 168 venues, 0 promoted);
+  paused again. The repair must cover staging rows loaded in that window. Job 7 must stay off.
 
 PHG-036e (P1, needs Rob) Designer DB access is enforced by the gateway only when the agent uses it; the agent's
   execute_sql connector runs as the main DB user. Create a LOGIN role that is only a member of phg_menu_designer and

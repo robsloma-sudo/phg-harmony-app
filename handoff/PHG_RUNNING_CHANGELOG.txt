@@ -2157,3 +2157,14 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   Storage: menu_extraction_sources 98 MB / 31,648 rows (~3 KB each); full backlog ~ +1.2 GB (DB now 2.7 GB).
   Items land in staging_menu_extract; promotion (job 7) and explorer refresh (job 8) are still paused.
 - Job 9 (website discovery) NOT enabled: it uses Firecrawl (paid) -> needs Rob's OK.
+
+2026-09-29 13:15 UTC — CORRECTION: job 13 re-enabled in error, now paused again
+- Job 13 (extraction) was paused on purpose for PHG-026 ("apply fix + repair, then re-enable 13 then 7"); the
+  PHG-026 fix was reviewed over 5 rounds but never applied live. I missed that gate when re-enabling it at 09:41.
+- It ran 09:41-13:11 UTC (~210 runs, all succeeded). Writes: 54,297 staging_menu_extract rows (loaded_at >=
+  09:40) from 1,007 pages at only 168 venues -> the PHG-026 duplicate pattern (item pages each returning the whole
+  menu). 9,298 marked promotion_ready. NOTHING promoted (job 7 still paused), nothing superseded. accounts with
+  menu_status='extracted' and updated_at in the window: 347 (the save RPC sets this; other writers may overlap).
+- Paused again 13:15 UTC (cron.alter_job(13, active:=false)); job command still has the stuck-claim reset.
+- For the PHG-026 repair: include staging rows with loaded_at in [2026-09-29 09:40, 13:16) UTC. Do NOT enable
+  job 7 until the PHG-026 fix is applied.
