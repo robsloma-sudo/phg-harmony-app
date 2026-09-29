@@ -374,3 +374,7 @@ PHG-049 (P0, in progress) Every IA/CO/NY venue's menu. 2026-09-29: acquisition s
   deep discovery (job 20) re-enabled every 2 min. Watch: job 16/20 run status, auth latency, render backlog. Next:
   venues with no website (~7,500) need website discovery (job 9, paused); HTML capture v2 worker still needs Railway.
 
+
+PHG-050 (P1, planned) Roll out the remaining 47 states + DC. Plan: handoff/PHG_50_STATE_ROLLOUT.html; research
+  data/expansion/states_1..4.jsonl. Blocked on Rob for: Census API key, Google Places budget, paid lists (IN, NE,
+  DE), records requests for the 15 manual states. Waves by population (wave 1 ~145M people).

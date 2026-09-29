@@ -2117,3 +2117,13 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   statement_timeout 10 s / lock_timeout 500 ms; 2,225 venues with a website but <=3 menu links are its queue.
 - Coverage before (venues with websites 21,366): 7,925 with a menu document, 11,320 with links but no document,
   2,121 with no links.
+
+2026-09-29 — 50-state rollout plan (PHG-050)
+- Rob asked for a full plan for the next 47 states + DC: how each state's venue and census data goes in, what is
+  automated, what he must do by hand. Research: data/expansion/states_1..4.jsonl (48 jurisdictions, 4 agents,
+  WebSearch only, sourced). Plan page: handoff/PHG_50_STATE_ROLLOUT.html (also published as a private artifact).
+- Liquor-licence lists: 11 fully automatable (CT, DC, FL, CA, IL, KY-verify, MI, MO, OR, TX, VA), 22 partial,
+  15 manual (AL, AK, AR, DE, HI, LA, MT, NV, NH, NM, NC, RI, SC, SD, WV). Est. ~311k venues.
+- Census: ingest-census-acs covers every ZCTA (~33,800) once a free Census API key is set; fully automated.
+- Rob's manual items: Census API key, Google Places budget (~$6k-$11k est.), Railway capacity, paid lists
+  (IN $150 + $10/1,000, NE $40, DE $25), records requests in the manual states.
