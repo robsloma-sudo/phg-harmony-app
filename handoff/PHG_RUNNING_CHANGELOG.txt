@@ -2129,3 +2129,10 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   (IN $150 + $10/1,000, NE $40, DE $25), records requests in the manual states.
 - Deployed phg-harmony-data v10 (pipeline source; byte-identical) and phg-harmony-inbox v26 (CONVERSE knows the
   menu pipeline; boot check 200). "How's the pipeline?" now answers by voice with a spoken summary and a dashboard.
+- 05:55 UTC check-in. First real Harmony turns (3, Shortcut): "prep" 1.8-2.3 s was the Shortcut's name check
+  running BEFORE planning; plan done at 3.4-4.1 s; a data turn took 9.9 s total. Fix: inbox v27 starts the planner
+  on the words as heard in parallel and keeps that plan when the name check changes nothing (marks.spec=1), else
+  re-plans. Priority tier stayed on for every turn.
+- Pipeline (phg_pipeline_status): last hour 536 documents, 468 pages rendered, 155 venues got their first menu
+  (was 230 / 81). Render queue 168 pages (keeping up). Jobs 16/20 all succeeding since the 05:31 fix; job 20
+  ~1.0 s/run. Menus read: NY 3,353, CO 1,845, IA 916.
