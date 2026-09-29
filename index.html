@@ -6300,7 +6300,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     </div>
     <div id="err"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.43 GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.44 VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -16881,6 +16881,10 @@ function drawMap(anchor, near, byVenue){
   }
   if(Object.keys(MCITY).some(function(k){return MCITY[k]})){
     pts=pts.filter(function(p){return MCITY[(p.city||"").trim()]});
+  }
+  /* 18.49.44: the venue-type filter (set from the venue table or by voice, "only bars") thins the map too */
+  if(typeof VTYPE!=="undefined"&&Object.keys(VTYPE).some(function(k){return VTYPE[k]})){
+    pts=pts.filter(function(p){return VTYPE[p.venue_type]});
   }
   if(anchor){
     pts.push({venue:anchor.venue,lat:anchor.lat,lng:anchor.lng,isAnchor:true,
@@ -41089,6 +41093,12 @@ function harmonyConverse(q){
       if(j.voice_first&&window.phgPrevoiceSet)phgPrevoiceSet(j.voice_first,j.speak);
       if(j.menu_lookup&&typeof harmonyFindMenu==='function'){harmonyFindMenu(j.menu_lookup);return;}
       if(j.view&&window.harmonyDataShow)window.harmonyDataShow(j.view);
+      /* 18.49.44: a reply may drive the screen: actions:[{action:'filter.set'|'filter.clear'|'sort.set'|'page.go'|'page.size'|'data.refine'|'map.fit'|any harmonyUI action,...}].
+         Each runs quietly (the reply's own speak says what happened); unknown actions are ignored. */
+      if(Array.isArray(j.actions)&&window.harmonyUI&&typeof window.harmonyUI.exec==='function')j.actions.slice(0,12).forEach(function(a){
+        if(!a||typeof a!=='object'||typeof a.action!=='string')return;
+        try{var b={};for(var k in a)b[k]=a[k];if(b.quiet==null)b.quiet=true;window.harmonyUI.exec(b);}catch(e){if(window.console)console.warn('harmony action',a&&a.action,e);}
+      });
       if(typeof agentSay==='function')agentSay(j.speak);
       if(j.next==='end')HCONV.ctx='';
     })
@@ -41453,11 +41463,17 @@ body.hvx-data.pms-open #hdPanel{display:none}
 .hdCatItem button{align-self:flex-start;text-align:left;border:0;cursor:pointer;font:500 12px/1.35 'Inter',system-ui,sans-serif;color:#cffafe;background:rgba(103,232,249,.08);border-radius:10px;padding:6px 9px}
 body.hvx-data-loading #hdPanel .hdBody{opacity:.45;transition:opacity .2s}
 @media (prefers-reduced-motion:reduce){#hdPanel,.hdBar .t i,.hdPin b,.hdDonut svg path{animation:none!important}}
+/* 18.49.44 voice filters: what is applied to the view, paging, Clear */
+.hdRefine{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px;padding:7px 10px;border-radius:12px;background:rgba(103,232,249,.06);box-shadow:inset 0 0 0 1px rgba(103,232,249,.18);font:500 12px/1.35 'Inter',system-ui,sans-serif;color:#cffafe}
+.hdRefine .t{flex:1;min-width:0}
+.hdRefine em{font-style:normal;color:#94a3b8;font-variant-numeric:tabular-nums}
+.hdRefine button{border:0;cursor:pointer;font:600 12px/1 'Inter',system-ui,sans-serif;color:#cffafe;background:rgba(103,232,249,.12);border-radius:8px;padding:6px 9px}
+.hdRefine button:disabled{opacity:.35;cursor:default}
 </style>
 <script id="phgDataCanvasV1">
 (function(){
 var DATA_URL='https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-harmony-data';
-var HD={map:null,last:null};
+var HD={map:null,last:null,base:null,orig:null,query:null,baseQuery:null};
 function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function svg(d){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+d+'</svg>';}
 var IC={
@@ -41521,9 +41537,13 @@ function close(){
   HD.pins=[];HD.groups={};HD.sel=null;
   document.body.classList.remove('hvx-data');
 }
-function show(view){
+function show(view,opt){
   var p=panel();if(!p||!view)return;
   if(HD.map){try{HD.map.remove();}catch(e){}HD.map=null;}
+  /* 18.49.44: a fresh view becomes the base that voice filters refine; a refined copy keeps the base
+     (opt.refine), and a server re-query swaps the unrefined rows (opt.orig) and its query (opt.query) */
+  if(!(opt&&opt.refine)){HD.base=view;HD.orig=view;HD.query=HD.baseQuery=(view.query&&view.query.source)?view.query:null;}
+  else{if(opt.orig)HD.orig=opt.orig;if(opt.query!==undefined)HD.query=opt.query;}
   HD.last=view;
   p.querySelector('.hdKind').textContent=KIND[view.type]||'';
   p.querySelector('.hdTitle').textContent=view.title||'';
@@ -41540,11 +41560,31 @@ function show(view){
   else if(t==='place')h='<div class="hdCard hdPlace" style="position:static;max-height:none">'+placeHTML(view)+'</div>';
   else if(t==='catalog')h=catalogHTML();
   else h='<div class="hdEmpty">'+esc(view.title||'Nothing to show')+'</div>';
+  if(view._refine)h=refineBarHTML(view._refine)+h;
   b.innerHTML=h;p.hidden=false;document.body.classList.add('hvx-data');
+  if(view._refine)wireRefineBar(b);
   if(t==='place')wirePlace(b,view);
   if(t==='catalog')b.querySelectorAll('[data-ask]').forEach(function(el){el.onclick=function(e){e.stopPropagation();ask(el.getAttribute('data-ask'));};});
 }
+/* 18.49.44: the voice-filter strip above a refined view: what is applied, paging, and Clear */
+function refineBarHTML(r){
+  return '<div class="hdRefine"><span class="t">'+esc(r.note||'')+'</span>'+(r.pages>1?'<button type="button" data-rf="prev" aria-label="Previous page"'+(r.page<=1?' disabled':'')+'>&#8249;</button><em>'+r.page+' / '+r.pages+'</em><button type="button" data-rf="next" aria-label="Next page"'+(r.page>=r.pages?' disabled':'')+'>&#8250;</button>':'')+(r.clear?'<button type="button" data-rf="clear">Clear</button>':'')+'</div>';
+}
+function wireRefineBar(root){
+  root.querySelectorAll('[data-rf]').forEach(function(el){el.onclick=function(e){e.stopPropagation();var a=el.getAttribute('data-rf'),V=window.phgVoiceData;if(!V)return;if(a==='clear')V.clear();else V.page(a==='next'?1:-1);};});
+}
 var REGION={MX:[[14.5,-117.5],[32.7,-86.7]],US:[[24.5,-125],[49.5,-66.9]]};
+function pinNum(){for(var i=0;i<arguments.length;i++){var v=arguments[i];if(v==null||v==='')continue;var n=typeof v==='number'?v:parseFloat(String(v).replace(/[$,\s]/g,''));if(isFinite(n))return n;}return null;}
+function pinAttrs(p){
+  var sub=String(p.sub||''),parts=sub.split('·').map(function(x){return x.trim();}),loc=(parts[0]||'').split(',');
+  var st=p.state||p.state_code||((loc[1]||'').trim().match(/^[A-Z]{2}$/)?(loc[1]||'').trim():'');
+  var vt=p.venue_type||(parts[1]&&/^[a-z_ ]+$/.test(parts[1])?parts[1]:'');
+  var avg=sub.match(/avg \$(\d+(?:\.\d+)?)/i),dr=sub.match(/(\d+) drinks?/i);
+  return {name:String(p.label||''),city:String(p.city||(loc.length>1?loc[0]:'')||'').trim(),state:String(st||'').toUpperCase(),venue_type:String(vt||''),
+    price:pinNum(p.price,p.avg_price,p.median_price,p.item_price,avg&&avg[1]),income:pinNum(p.income,p.median_income),age:pinNum(p.median_age,p.age),
+    rating:pinNum(p.rating),drinks:pinNum(p.items,p.drink_items,p.drinks,dr&&dr[1],p.weight),
+    text:(String(p.label||'')+' '+sub+' '+(p.brands||[]).join(' ')+' '+(p.items_text||'')).toLowerCase()};
+}
 function drawMap(el,view,body){
   if(typeof L==='undefined'){el.innerHTML='<div class="hdEmpty">The map library did not load.</div>';return;}
   var m=L.map(el,{zoomControl:false,attributionControl:true,preferCanvas:true,worldCopyJump:true});HD.map=m;
@@ -41561,7 +41601,9 @@ function drawMap(el,view,body){
       :L.circleMarker([p.lat,p.lng],{radius:p.weight?Math.min(9,4+Math.sqrt(p.weight)/3):5.5,weight:1.2,color:'#a5f3fc',fillColor:'#22d3ee',fillOpacity:.7});
     var kind=p.kind||(p.nom?'distillery':'venue');
     var g=HD.groups[kind]||(HD.groups[kind]=L.layerGroup().addTo(m));
-    var rec={p:p,mk:mk,kind:kind};HD.pins.push(rec);
+    /* 18.49.44: every original pin field stays on the marker (mk.phgPin) and a normalised copy of the
+       filterable ones (city, state, venue_type, price, income, age, rating, drinks) sits on rec.a */
+    var rec={p:p,mk:mk,kind:kind,g:g,a:pinAttrs(p),off:false};HD.pins.push(rec);mk.phgPin=p;
     mk.bindPopup(pop).addTo(g);
     mk.on('click',function(){HD.sel=rec;openPlace(rec);});
   });
@@ -41621,6 +41663,8 @@ function ask(q){
     window.PHG_PENDING=false;
     if(j.source==='menu_lookup'&&typeof window.harmonyFindMenu==='function')return window.harmonyFindMenu(q);
     if(j.source==='none'||!j.view){if(typeof window.harmonyChat==='function')return window.harmonyChat(q);return say('I do not have data for that yet.');}
+    /* 18.49.44: remember how this view was made, so a spoken filter can ask the server again */
+    if(!j.view.query&&j.source&&j.source!=='ask'&&j.source!=='none'&&j.source!=='menu_lookup')j.view.query={source:j.source,params:j.params||{}};
     show(j.view);
     say(j.speak||'Here it is.');
   })
@@ -41643,7 +41687,7 @@ function pinScore(rec,q){
   return hit/qt.length*.9;
 }
 function findPins(q){
-  return HD.pins.filter(function(r){return !HD.hidden[r.kind];}).map(function(r){return {r:r,s:pinScore(r,q)};})
+  return HD.pins.filter(function(r){return !HD.hidden[r.kind]&&!r.off;}).map(function(r){return {r:r,s:pinScore(r,q)};})
     .filter(function(x){return x.s>=.6;}).sort(function(a,b){return b.s-a.s;});
 }
 function selectPin(rec,zoom){
@@ -41653,7 +41697,13 @@ function selectPin(rec,zoom){
   m.flyTo([rec.p.lat,rec.p.lng],Math.max(m.getZoom(),zoom||12),{duration:1.4});
   setTimeout(function(){try{rec.mk.openPopup();}catch(e){}},1500);
 }
-function visible(){return HD.pins.filter(function(r){return !HD.hidden[r.kind];});}
+function visible(){return HD.pins.filter(function(r){return !HD.hidden[r.kind]&&!r.off;});}
+/* 18.49.44: voice filters hide single pins (rec.off) on top of the per-kind layers */
+function filterPins(pred){
+  var n=0;HD.pins.forEach(function(r){var on=!pred||!!pred(r);r.off=!on;try{if(on){if(!r.g.hasLayer(r.mk))r.mk.addTo(r.g);n++;}else if(r.g.hasLayer(r.mk))r.g.removeLayer(r.mk);}catch(e){}});
+  if(HD.sel&&HD.sel.off){HD.sel=null;if(HD.selMk&&HD.map){try{HD.map.removeLayer(HD.selMk);}catch(e){}}HD.selMk=null;}
+  return n;
+}
 function fitVisible(){var m=HD.map,b=visible().map(function(r){return [r.p.lat,r.p.lng];});if(m&&b.length)m.flyToBounds(b,{padding:[28,28],maxZoom:13,duration:1});}
 function setKind(kind,on){
   var m=HD.map,g=HD.groups[kind];if(!m||!g)return false;
@@ -41726,7 +41776,13 @@ window.harmonyMap={
   tall:function(on){var c=HD.place&&HD.place.card;if(!c)return false;c.classList.toggle('tall',on!==false);return true;},
   map:function(){return HD.map;},
   kinds:function(){return Object.keys(HD.groups);},
-  count:function(kind){return HD.pins.filter(function(r){return (!kind||r.kind===kind)&&!HD.hidden[r.kind];}).length;},
+  count:function(kind){return HD.pins.filter(function(r){return (!kind||r.kind===kind)&&!HD.hidden[r.kind]&&!r.off;}).length;},
+  /* 18.49.44: for voice filters */
+  pins:function(){return HD.pins.slice();},
+  visiblePins:function(){return visible();},
+  filterPins:filterPins,
+  fitVisible:function(){fitVisible();return visible().length;},
+  select:function(rec,open){if(!rec||!HD.map)return false;selectPin(rec,13);if(open)setTimeout(function(){openPlace(rec,true);},900);return true;},
   zoom:function(d){var m=HD.map;if(!m)return false;if(d==='max')m.setZoom(15);else m.setZoom(Math.max(2,Math.min(18,m.getZoom()+d)));return m.getZoom();},
   zoomTo:function(z){var m=HD.map;if(!m)return false;m.setZoom(Math.max(2,Math.min(18,z|0)));return m.getZoom();},
   pan:function(dir,big){var m=HD.map;if(!m)return false;var s=m.getSize(),f=big?.6:.33,d={left:[-s.x*f,0],west:[-s.x*f,0],right:[s.x*f,0],east:[s.x*f,0],up:[0,-s.y*f],north:[0,-s.y*f],down:[0,s.y*f],south:[0,s.y*f]}[dir];if(!d)return false;m.panBy(d);return true;},
@@ -41742,6 +41798,9 @@ window.harmonyMap={
   labels:function(){return visible().map(function(r){return String(r.p.label||'').replace(/^NOM\s*\d+\s*·\s*/,'');});}
 };
 window.harmonyShowData=ask;window.harmonyWantsData=wants;window.harmonyDataShow=show;window.harmonyDataClose=close;
+/* 18.49.44: what the voice filters (#phgVoiceFiltersV2) read: the view on screen, the unrefined rows under it and how to re-query */
+window.harmonyDataURL=DATA_URL;
+window.harmonyDataState=function(){var p=document.getElementById('hdPanel');return {open:!!(p&&!p.hidden),last:HD.last,orig:HD.orig,base:HD.base,query:HD.query,baseQuery:HD.baseQuery,isMap:!!(HD.map&&HD.last&&HD.last.type==='map')};};
 window.harmonyDataCatalog=function(){show({type:'catalog',title:'What Harmony can show you'});say('Here is everything I can put on screen. Tap an example, or just ask me in your own words.');};
 /* close the canvas with the view; "close the map / chart" by voice */
 new MutationObserver(function(){if(!document.getElementById('phgView')&&document.body.classList.contains('hvx-data'))close();}).observe(document.body,{childList:true});
@@ -41888,8 +41947,10 @@ add({g:'Harmony',ex:['what can I say','voice commands'],re:/^(what can i (say|do
 function showHelp(){
   var groups={};CMDS.forEach(function(c){if(!c.ex)return;(groups[c.g]=groups[c.g]||[]).push.apply(groups[c.g],c.ex);});
   var rows=[];Object.keys(groups).forEach(function(g){groups[g].forEach(function(x){rows.push([g,'“'+x+'”']);});});
+  /* 18.49.44: filters, sorting and paging by voice (#phgVoiceFiltersV2) */
+  try{if(typeof window.phgVoiceFilterHelp==='function')window.phgVoiceFilterHelp().forEach(function(r){rows.push([r[0],'“'+r[1]+'”']);});}catch(e){}
   if(typeof window.harmonyDataShow==='function'&&viewOpen())window.harmonyDataShow({type:'table',title:'Things you can say',table:{cols:['What','Say'],rows:rows}});
-  say('You can drive the map: zoom in or out, zoom in on a distillery by name, hide or show venues or distilleries, next one, tell me about that one. You can open any screen by name, like the dashboard, costing, the recipe database or voice settings. And you can ask me anything about PHG data.');
+  say('You can drive the map: zoom in or out, zoom in on a distillery by name, zoom to a city or state, hide or show venues or distilleries, next one, tell me about that one. On any list, map or chart you can filter, sort and page, like “only bars in Denver under $14”, “cheapest first”, “income over 100k”, “next page” or “show 50 per page”, and ask “how many” or “what’s the average price”. You can open any screen by name, like the dashboard, costing, the recipe database or voice settings. And you can ask me anything about PHG data.');
 }
 
 /* ---------- the bus ---------- */
@@ -41968,6 +42029,1192 @@ if(window.PMS&&typeof PMS.hear==='function'){
   };
 }
 })();
+</script>
+
+<script id="phgVoiceFiltersV2">
+/* 18.49.44 VOICE FILTERS FOR DATA
+   Rob: "manipulate data sets by voice through Harmony" - filters, sorting, paging, zooming and very specific
+   answers about whatever list, chart or map is on screen. Two halves:
+   1. phgParseDataCommand(text, ctx): a pure parser (no DOM) that turns words into one structured command:
+        {type:'filter', filters:[{key,value|min|max,mode,neg,label}], sort?}   key: state city venue_type price income
+             age rating spirit menu_kind has_menu radius q
+        {type:'clear', key?}  {type:'sort', key, dir}  {type:'page', page|delta}  {type:'pageSize', n}
+        {type:'map.fit', city|state}  {type:'map.all'}  {type:'detail', index|name}  {type:'stat', stat, field}
+      ctx (optional) = {cities:[names on screen]} so bare city names on screen are understood.
+   2. An applier that sends the command to the surface on screen: the Menu Library (corpus setters), the Market
+      dashboard drinks pages (state / FILT / SORT / CHART), the Competitors map and venue table, Menu Studio's
+      build-your-own filters, or the Harmony data panel (#hdPanel), where the view is refined on the phone - or
+      re-asked of phg-harmony-data when the view says how it was made (view.query = {source, params}).
+   Words reach it first on every path into Harmony (agentAnswer is wrapped once more, outside the command bus);
+   anything it does not recognise, or that does not fit what is on screen, goes on to the bus and Harmony
+   unchanged. harmonyUI.exec also takes filter.set, filter.clear, sort.set, page.go, page.size, data.refine and
+   map.fit, so the conversation service can drive the same filters with reply.actions. */
+(function(G){
+'use strict';
+/* =====================================================================================================
+   1. GRAMMAR (pure)
+   ===================================================================================================== */
+var STATE_NAMES={alabama:'AL',alaska:'AK',arizona:'AZ',arkansas:'AR',california:'CA',colorado:'CO',connecticut:'CT',delaware:'DE',florida:'FL',georgia:'GA',hawaii:'HI',idaho:'ID',illinois:'IL',indiana:'IN',iowa:'IA',kansas:'KS',kentucky:'KY',louisiana:'LA',maine:'ME',maryland:'MD',massachusetts:'MA',michigan:'MI',minnesota:'MN',mississippi:'MS',missouri:'MO',montana:'MT',nebraska:'NE',nevada:'NV','new hampshire':'NH','new jersey':'NJ','new mexico':'NM','new york state':'NY','new york':'NY','north carolina':'NC','north dakota':'ND',ohio:'OH',oklahoma:'OK',oregon:'OR',pennsylvania:'PA','rhode island':'RI','south carolina':'SC','south dakota':'SD',tennessee:'TN',texas:'TX',utah:'UT',vermont:'VT',virginia:'VA','washington state':'WA',washington:'WA','west virginia':'WV',wisconsin:'WI',wyoming:'WY','district of columbia':'DC'};
+var STATE_LABEL={};(function(){for(var k in STATE_NAMES)if(!STATE_LABEL[STATE_NAMES[k]]&&!/ state$/.test(k))STATE_LABEL[STATE_NAMES[k]]=k.replace(/\b[a-z]/g,function(c){return c.toUpperCase();});})();
+/* the three states PHG covers: [[south, west], [north, east]] */
+var STATE_BOUNDS={IA:[[40.37,-96.64],[43.50,-90.14]],CO:[[36.99,-109.06],[41.00,-102.04]],NY:[[40.49,-79.76],[45.02,-71.85]]};
+/* major cities in IA, CO and NY: name, state, lat, lng, other names; bare:false = only after "in"/"to" (a drink or a word too) */
+var CITIES=[
+ ['Des Moines','IA',41.5868,-93.6250,['dsm']],['West Des Moines','IA',41.5772,-93.7113],['Ankeny','IA',41.7318,-93.6001],['Urbandale','IA',41.6266,-93.7122],['Clive','IA',41.6031,-93.7241],['Johnston','IA',41.6730,-93.6977],['Waukee','IA',41.6116,-93.8852],['Altoona','IA',41.6444,-93.4647],
+ ['Cedar Rapids','IA',41.9779,-91.6656],['Marion','IA',42.0342,-91.5977],['Iowa City','IA',41.6611,-91.5302],['Coralville','IA',41.6766,-91.5918],['North Liberty','IA',41.7492,-91.5977],['Davenport','IA',41.5236,-90.5776],['Bettendorf','IA',41.5245,-90.5157],
+ ['Sioux City','IA',42.4999,-96.4003],['Waterloo','IA',42.4928,-92.3426],['Cedar Falls','IA',42.5349,-92.4453],['Ames','IA',42.0308,-93.6319],['Council Bluffs','IA',41.2619,-95.8608],['Dubuque','IA',42.5006,-90.6646],['Mason City','IA',43.1536,-93.2010],['Ottumwa','IA',41.0200,-92.4113],['Fort Dodge','IA',42.4975,-94.1680],['Burlington','IA',40.8075,-91.1129],
+ ['Denver','CO',39.7392,-104.9903],['Boulder','CO',40.0150,-105.2705],['Fort Collins','CO',40.5853,-105.0844],['Colorado Springs','CO',38.8339,-104.8214],['Aurora','CO',39.7294,-104.8319],['Lakewood','CO',39.7047,-105.0814],['Littleton','CO',39.6133,-105.0166],['Golden','CO',39.7555,-105.2211,null,false],
+ ['Pueblo','CO',38.2544,-104.6091],['Greeley','CO',40.4233,-104.7091],['Longmont','CO',40.1672,-105.1019],['Loveland','CO',40.3978,-105.0749],['Arvada','CO',39.8028,-105.0875],['Westminster','CO',39.8367,-105.0372],['Englewood','CO',39.6478,-104.9878],['Thornton','CO',39.8680,-104.9719],['Centennial','CO',39.5807,-104.8772],
+ ['Castle Rock','CO',39.3722,-104.8561],['Broomfield','CO',39.9205,-105.0867],['Aspen','CO',39.1911,-106.8175],['Vail','CO',39.6403,-106.3742],['Breckenridge','CO',39.4817,-106.0384],['Durango','CO',37.2753,-107.8801],['Grand Junction','CO',39.0639,-108.5506],['Steamboat Springs','CO',40.4850,-106.8317,['steamboat']],['Estes Park','CO',40.3772,-105.5217],
+ ['New York City','NY',40.7128,-74.0060,['nyc','new york city','the city']],['Manhattan','NY',40.7831,-73.9712,null,false],['Brooklyn','NY',40.6782,-73.9442],['Queens','NY',40.7282,-73.7949],['The Bronx','NY',40.8448,-73.8648,['bronx']],['Staten Island','NY',40.5795,-74.1502],['Long Island City','NY',40.7447,-73.9485],
+ ['Buffalo','NY',42.8864,-78.8784,null,false],['Rochester','NY',43.1566,-77.6088],['Albany','NY',42.6526,-73.7562],['Syracuse','NY',43.0481,-76.1474],['Yonkers','NY',40.9312,-73.8988],['Ithaca','NY',42.4440,-76.5019],['Saratoga Springs','NY',43.0831,-73.7846,['saratoga']],['White Plains','NY',41.0340,-73.7629],['Hudson','NY',42.2529,-73.7910,null,false],['Schenectady','NY',42.8142,-73.9396],['Troy','NY',42.7284,-73.6918],['Utica','NY',43.1009,-75.2327],['Binghamton','NY',42.0987,-75.9180],['Poughkeepsie','NY',41.7004,-73.9210],['Montauk','NY',41.0359,-71.9545],['The Hamptons','NY',40.9632,-72.1848,['hamptons']]
+];
+/* venue types as people say them; m matches the app's venue_type values (Google place types: bar, cocktail_bar,
+   mexican_restaurant ...); srv is the word phg-harmony-data matches with ilike */
+var VT=[
+ {k:'cocktail_bar',label:'cocktail bars',re:'cocktail (?:bar|lounge)s?|lounges?',m:/cocktail|lounge/,srv:'cocktail'},
+ {k:'wine_bar',label:'wine bars',re:'wine bars?',m:/wine_bar/,srv:'wine_bar'},
+ {k:'sports_bar',label:'sports bars',re:'sports bars?',m:/sports/,srv:'sports'},
+ {k:'pub',label:'pubs',re:'(?:irish )?pubs?|taverns?|gastropubs?',m:/pub|tavern/,srv:'pub'},
+ {k:'night_club',label:'night clubs',re:'night ?clubs?|dance clubs?',m:/night_club|club/,srv:'night'},
+ {k:'brewery',label:'breweries',re:'breweries|brewery|brew ?pubs?|tap ?rooms?|beer halls?',m:/brew|taproom|beer_hall/,srv:'brew'},
+ {k:'winery',label:'wineries',re:'wineries|winery|vineyards?',m:/winer|vineyard/,srv:'winer'},
+ {k:'hotel',label:'hotels',re:'hotels?(?: bars?)?|resorts?',m:/hotel|resort|(^|_)inn(_|$)/,srv:'hotel'},
+ {k:'cafe',label:'cafes',re:'cafes?|coffee (?:shops?|houses?)',m:/cafe|coffee/,srv:'cafe'},
+ {k:'steak_house',label:'steakhouses',re:'steak ?houses?',m:/steak/,srv:'steak'},
+ {k:'bar_and_grill',label:'bar and grills',re:'bar (?:and|n) grills?|grills?',m:/grill/,srv:'grill'},
+ {k:'bar',label:'bars',re:'bars?',m:/(^|_)(bar|pub|lounge|tavern|night_club)(_|$)/,srv:'bar'},
+ {k:'restaurant',label:'restaurants',re:'restaurants?|eateries|places to eat|diners?|bistros?',m:/restaurant|steak_house|diner|bistro|eatery|grill/,srv:'restaurant'}
+];
+var CUISINES=['mexican','tex mex','italian','japanese','sushi','chinese','thai','indian','french','american','new american','seafood','pizza','taco','mediterranean','greek','asian','korean','vietnamese','spanish','tapas','barbecue','bbq','latin','german','irish','southern','cajun','peruvian','brazilian','cuban','ramen','fine dining','family'];
+var SPIRITS=[
+ {k:'tequila',re:'tequilas?',w:/tequila/},{k:'mezcal',re:'mezcals?|mescals?',w:/mezcal|mescal/},{k:'vodka',re:'vodkas?',w:/vodka/},{k:'gin',re:'gins?',w:/\bgin\b/},{k:'rum',re:'rums?',w:/\brum\b/},
+ {k:'whiskey',re:'whiske?ys?|whiskies|bourbons?|ryes?|scotch(?:es)?',w:/whiske?y|whiskies|bourbon|\brye\b|scotch/},{k:'brandy_cognac',re:'brand(?:y|ies)|cognacs?',w:/brandy|cognac/},
+ {k:'liqueur_amaro',re:'liqueurs?|amar[oi]s?',w:/liqueur|amaro|amari/},{k:'sake_soju',re:'sake|soju',w:/sake|soju/},{k:'beer',re:'beers?|ipas?',w:/beer|\bipa\b|lager|\bale\b/},{k:'wine',re:'wines?',w:/wine/},
+ {k:'cider_seltzer',re:'ciders?|(?:hard )?seltzers?',w:/cider|seltzer/},{k:'non_alcoholic',re:'non[- ]?alcoholic(?: drinks)?|mocktails?|zero[- ]proof(?: drinks)?|alcohol[- ]free(?: drinks)?|n a drinks',w:/non[- ]?alcoholic|mocktail|zero[- ]proof|alcohol[- ]free/},
+ {k:'cocktails',re:'cocktails?',w:/cocktail/}
+];
+var SPIRIT_LABEL={whiskey:'whiskey',brandy_cognac:'brandy',liqueur_amaro:'liqueurs',sake_soju:'sake',cider_seltzer:'cider',non_alcoholic:'non-alcoholic drinks',cocktails:'cocktails'};
+var MENU_KINDS=[
+ {k:'happy_hour',label:'happy hour menus',re:'happy[- ]hours?'},{k:'cocktails',label:'cocktail menus',re:'cocktails?'},{k:'drinks',label:'drinks menus',re:'drinks?|beverages?|bar'},
+ {k:'food',label:'food menus',re:'food|dinner|lunch'},{k:'brunch',label:'brunch menus',re:'brunch'},{k:'specials',label:'specials pages',re:'specials?|events?'},
+ {k:'wine',label:'wine lists',re:'wines?'},{k:'beer',label:'beer lists',re:'beers?'},{k:'delivery',label:'delivery listings',re:'delivery'}
+];
+var SORTS_FIRST=[
+ [/^(cheapest|least expensive|lowest[- ]priced|lowest prices?|cheaper|most affordable)/,'price','asc'],
+ [/^(most expensive|priciest|highest[- ]priced|highest prices?|pricier|pricey|expensive)/,'price','desc'],
+ [/^(highest[- ]income|higher[- ]income|richest|wealthiest|most affluent|most expensive (?:areas?|neighbou?rhoods?))/,'income','desc'],
+ [/^(lowest[- ]income|lower[- ]income|poorest|least affluent)/,'income','asc'],
+ [/^(youngest|younger)(?: areas?| neighbou?rhoods?| crowds?)?/,'age','asc'],[/^(oldest|older)(?: areas?| neighbou?rhoods?| crowds?)?/,'age','desc'],
+ [/^(newest|latest|most recent|recent|new)/,'recent','desc'],
+ [/^(highest[- ]rated|best[- ]rated|top[- ]rated|best|highest rating)/,'rating','desc'],[/^(lowest[- ]rated|worst[- ]rated|worst)/,'rating','asc'],
+ [/^(most reviewed|most reviews)/,'reviews','desc'],[/^(closest|nearest)/,'dist','asc'],[/^(farthest|furthest)/,'dist','desc'],
+ [/^(biggest|largest|most drinks|most items|busiest)/,'drinks','desc'],[/^(smallest|fewest drinks|fewest items)/,'drinks','asc']
+];
+var FIELD_WORDS=[
+ [/^(price|prices|pricing|cost|costs|drink price|drink prices|how much)$/,'price'],[/^(name|names|venue name|alphabetical(ly)?|title)$/,'name'],[/^(city|cities|town|towns)$/,'city'],
+ [/^(state|states)$/,'state'],[/^((median |household |area )?income|incomes|wealth|affluence)$/,'income'],[/^((median )?age|ages)$/,'age'],
+ [/^(rating|ratings|stars|score|scores)$/,'rating'],[/^(reviews?|review count)$/,'reviews'],[/^(distance|miles|how far)$/,'dist'],
+ [/^(drinks|items|drink count|number of drinks|size|menu size|count)$/,'drinks'],[/^(date|newest|recent|recency|time|most recent|when)$/,'recent'],
+ [/^(type|venue type|venue types|kind)$/,'venue_type'],[/^(venue|venues|bar|bar name|place|restaurant)$/,'venue']
+];
+var SORT_DEFAULT_DIR={price:'asc',name:'asc',city:'asc',state:'asc',income:'desc',age:'asc',rating:'desc',reviews:'desc',dist:'asc',drinks:'desc',recent:'desc',venue_type:'asc',venue:'asc'};
+var ORD={first:1,'1st':1,second:2,'2nd':2,third:3,'3rd':3,fourth:4,'4th':4,fifth:5,'5th':5,sixth:6,'6th':6,seventh:7,'7th':7,eighth:8,'8th':8,ninth:9,'9th':9,tenth:10,'10th':10,eleventh:11,'11th':11,twelfth:12,'12th':12,last:-1,final:-1};
+var ORD_RE='(?:first|1st|second|2nd|third|3rd|fourth|4th|fifth|5th|sixth|6th|seventh|7th|eighth|8th|ninth|9th|tenth|10th|eleventh|11th|twelfth|12th|last|final)';
+
+/* ---------- words -> text the patterns can read ---------- */
+var UNITS={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19};
+var TENS={twenty:20,thirty:30,forty:40,fourty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+var ONE_BEFORE={page:1,number:1,no:1,'#':1,under:1,over:1,than:1,and:1,between:1,to:1,from:1,below:1,above:1,least:1,most:1,is:1,of:1,top:1,item:1,result:1,row:1,rated:1,rating:1,within:1,size:1,'$':1};
+function isNW(w){return UNITS[w]!=null||TENS[w]!=null;}
+function oneIsNumber(w,i){var p=w[i-1],n=w[i+1];if(p&&ONE_BEFORE[p])return true;return !!(n&&(isNW(n)||/^(hundred|thousand|k|dollars?|bucks?|per|percent|stars?|miles?)$/.test(n)));}
+function numberize(t){
+  var w=t.split(' '),out=[],i=0,lastRun=-1;
+  while(i<w.length){
+    var x=w[i];
+    var startsRun=(isNW(x)&&(x!=='one'||oneIsNumber(w,i)))||(x==='a'&&(w[i+1]==='hundred'||w[i+1]==='thousand'));
+    if(!startsRun){out.push(x);i++;continue;}
+    var total=0,cur=0,j=i,any=false;
+    while(j<w.length){
+      var y=w[j];
+      if(!any&&y==='a'&&(w[j+1]==='hundred'||w[j+1]==='thousand')){cur=1;any=true;j++;continue;}
+      if(UNITS[y]!=null){if(any&&!(cur%10===0&&cur>=20&&cur<100)&&!(cur>=100&&cur%100===0)&&!(total>0&&cur===0))break;cur+=UNITS[y];any=true;j++;continue;}
+      if(TENS[y]!=null){if(any&&!(cur>=100&&cur%100===0)&&!(total>0&&cur===0))break;cur+=TENS[y];any=true;j++;continue;}
+      if(y==='hundred'&&any){cur=(cur||1)*100;j++;continue;}
+      if(y==='thousand'&&any){total+=(cur||1)*1000;cur=0;j++;continue;}
+      if(y==='and'&&any&&(cur>=100||total>0)&&w[j+1]&&isNW(w[j+1])){j++;continue;}
+      break;
+    }
+    var v=total+cur;
+    /* "twelve fifty" = 12.50: a run of 1-99 straight after another run of 1-99 */
+    if(lastRun===out.length-1&&out.length&&/^\d{1,2}$/.test(out[out.length-1])&&v>=10&&v<=99&&(TENS[w[i]]!=null||(UNITS[w[i]]>=10))){out[out.length-1]=out[out.length-1]+'.'+(v<10?'0':'')+v;}
+    else{out.push(String(v));lastRun=out.length-1;}
+    i=j;
+  }
+  return out.join(' ');
+}
+function norm(t){
+  t=String(t==null?'':t).toLowerCase().replace(/[\u2019\u2018`]/g,"'").replace(/[\u201c\u201d"]/g,' ').replace(/&/g,' and ').replace(/[\u2013\u2014]/g,'-');
+  t=t.replace(/(\d),(?=\d{3}\b)/g,'$1').replace(/(\d)\.(\d)/g,'$1\u0001$2').replace(/[^a-z0-9$%'#+\u0001\- ]+/g,' ').replace(/\u0001/g,'.');
+  t=t.replace(/(^|\s)-+(?=\s|$)/g,' ').replace(/\s+/g,' ').trim();
+  t=t.replace(/^(hey |ok |okay )?harmony\b\s*/,'').replace(/^(please|can you|could you|would you|will you|i want you to|i'd like you to|i would like you to|let's|lets|go ahead and)\s+/,'').replace(/^please\s+/,'')
+     .replace(/\s+(please|for me|real quick|thanks|thank you)$/,'').trim();
+  t=numberize(t);
+  t=t.replace(/\$ (?=\d)/g,'$').replace(/(\d+(?:\.\d+)?) ?(?:dollars?|bucks?|usd)\b/g,'$$$1').replace(/\$\$/g,'$')
+     .replace(/(\d+(?:\.\d+)?) ?(?:k|grand)\b/g,function(m,a){return String(Math.round(parseFloat(a)*1000));})
+     .replace(/(\d+(?:\.\d+)?) thousand\b/g,function(m,a){return String(Math.round(parseFloat(a)*1000));})
+     .replace(/(\d+) ?(?:percent|per cent)\b/g,'$1%').replace(/\s+/g,' ').trim();
+  return t;
+}
+/* ---------- places ---------- */
+var PLACES=null;
+function places(){
+  if(PLACES)return PLACES;var P=[];
+  Object.keys(STATE_NAMES).forEach(function(n){P.push({n:n,kind:'state',code:STATE_NAMES[n],name:STATE_LABEL[STATE_NAMES[n]],bare:true});});
+  CITIES.forEach(function(c){var al=[c[0].toLowerCase()].concat(c[4]||[]);if(/^the /.test(al[0]))al.push(al[0].slice(4));
+    al.forEach(function(a){P.push({n:a,kind:'city',name:c[0],st:c[1],ll:[c[2],c[3]],bare:c[5]!==false&&a!=='the city'});});});
+  P.sort(function(a,b){return b.n.length-a.n.length;});
+  return (PLACES=P);
+}
+function esc2(s){return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+/* longest known place at the start of s */
+function placeAt(s,ctx,prep){
+  var P=places(),i;
+  for(i=0;i<P.length;i++){var p=P[i];if((prep||p.bare)&&(s===p.n||s.indexOf(p.n+' ')===0))return {len:p.n.length,place:p};}
+  var cs=(ctx&&ctx.cities)||[];cs=cs.map(function(c){return String(c||'').toLowerCase().replace(/,.*$/,'').trim();}).filter(function(c){return c.length>2;}).sort(function(a,b){return b.length-a.length;});
+  for(i=0;i<cs.length;i++){if(s===cs[i]||s.indexOf(cs[i]+' ')===0)return {len:cs[i].length,place:{n:cs[i],kind:'city',name:title(cs[i]),st:'',bare:true,ctx:true}};}
+  return null;
+}
+function title(s){return String(s||'').replace(/\b([a-z])/g,function(c){return c.toUpperCase();});}
+function placeItem(p,mode){
+  if(p.kind==='state')return {key:'state',value:p.code,name:p.name,mode:mode||'set',label:'in '+p.name};
+  return {key:'city',value:p.name,st:p.st||'',ll:p.ll||null,mode:mode||'set',label:'in '+p.name,guess:!!p.guess};
+}
+function money(v){v=+v;return '$'+(v%1?v.toFixed(2):String(v));}
+function kfmt(v){v=+v;return v>=1000?'$'+(v%1000?(v/1000).toFixed(1):v/1000)+'k':'$'+v;}
+function rangeLabel(it){
+  var f=it.key==='income'?kfmt:it.key==='price'?money:function(v){return String(v);};
+  var pre=it.key==='income'?'in areas with income ':it.key==='age'?'in areas with median age ':it.key==='rating'?'rated ':'';
+  if(it.min!=null&&it.max!=null)return pre+'between '+f(it.min)+' and '+f(it.max);
+  if(it.max!=null)return pre+(it.maxIncl?'up to ':'under ')+f(it.max);
+  return pre+(it.key==='rating'?'':'over ')+f(it.min)+(it.key==='rating'?'+':'');
+}
+function amt(s,key){var v=parseFloat(String(s).replace(/[$,]/g,''));if(!isFinite(v))return null;if(key==='income'&&v<1000)v*=1000;return v;}
+/* ---------- the filter chain: "margaritas under $14 in Denver, cheapest first" ---------- */
+var MONEY='\\$?(\\d+(?:\\.\\d+)?)';
+var LT='(?:under|below|less than|cheaper than|lower than|beneath|no more than|not more than|at most|up to|max(?:imum)?(?: of)?|a max of|within|no higher than|younger than)';
+var GT='(?:over|above|more than|pricier than|more expensive than|higher than|at least|min(?:imum)?(?: of)?|starting at|from|older than|greater than)';
+var AREA='(?:areas?|neighbou?rhoods?|zips?|zip codes?|places|parts of town|suburbs|communities|towns|cities|demographics?|markets?)';
+function rangeSeg(rest,key,lead){
+  var m,re,it=null,len=0;
+  re=new RegExp('^'+lead+'(?:between|from) '+MONEY+' (?:and|to|-) '+MONEY+'\\b');
+  if((m=rest.match(re))){it={key:key,min:amt(m[1],key),max:amt(m[2],key)};len=m[0].length;}
+  else if((m=rest.match(new RegExp('^'+lead+MONEY+' ?(?:-|to) ?'+MONEY+'\\b')))&&lead){it={key:key,min:amt(m[1],key),max:amt(m[2],key)};len=m[0].length;}
+  else if((m=rest.match(new RegExp('^'+lead+LT+' '+MONEY+'(?: (or less|or under|or cheaper|max|tops|or younger))?\\b')))){it={key:key,max:amt(m[1],key),maxIncl:/at most|up to|no more|not more|max|or less|no higher/.test(m[0])};len=m[0].length;}
+  else if((m=rest.match(new RegExp('^'+lead+GT+' '+MONEY+'(?: (or more|and up|plus|or older|or higher|or better))?\\b')))){it={key:key,min:amt(m[1],key),minIncl:/at least|min|starting|or more|and up|plus/.test(m[0])};len=m[0].length;}
+  else if((m=rest.match(new RegExp('^'+lead+MONEY+' (or less|and under|or under|or cheaper|max|or younger|and younger)\\b')))){it={key:key,max:amt(m[1],key),maxIncl:true};len=m[0].length;}
+  else if((m=rest.match(new RegExp('^'+lead+MONEY+' ?(or more|and up|and over|plus|\\+|or older|and older|or better)(?=\\s|$)')))){it={key:key,min:amt(m[1],key),minIncl:true};len=m[0].length;}
+  if(!it)return null;
+  if(it.min!=null&&it.max!=null&&it.min>it.max){var t=it.min;it.min=it.max;it.max=t;}
+  it.mode='set';it.label=rangeLabel(it);
+  return {len:len,item:it};
+}
+function segPrice(rest){
+  var r=rangeSeg(rest,'price','(?:(?:that |which )?(?:are |is |cost |costs |costing |priced |price(?:d)? |prices? |go for |sell for |selling for |for )?)');
+  if(!r)return null;
+  /* "under 50k" / "over 100000" is money, but not a drink price: that is area income */
+  var big=(r.item.max||0)>=1000||(r.item.min||0)>=1000;
+  if(big){r.item.key='income';r.item.label=rangeLabel(r.item);}
+  return r;
+}
+function segIncome(rest){
+  var lead='(?:(?:in |from |for )?(?:the )?(?:'+AREA+' )?(?:with |where |that have |having )?(?:a |the )?(?:median |household |area |average |avg |neighbou?rhood )*(?:household )?(?:incomes?|earnings?|earning|making|that earn|that make)(?: is| are| of| at)? )';
+  var r=rangeSeg(rest,'income',lead);if(r)return r;
+  var m;
+  if((m=rest.match(new RegExp('^(?:in |from |for )?(?:the )?(?:more |most |very )?(affluent|wealthy|wealthier|rich|richer|high[- ]income|higher[- ]income|well[- ]off|upper[- ]income|upper[- ]class|moneyed)(?: '+AREA+')?\\b'))))
+    return {len:m[0].length,item:{key:'income',min:100000,minIncl:true,mode:'set',label:'in affluent areas'}};
+  if((m=rest.match(new RegExp('^(?:in |from |for )?(?:the )?(low[- ]income|lower[- ]income|poorer|poor|less affluent|working[- ]class|cheaper)(?: '+AREA+')\\b|^(?:in |from |for )?(?:the )?(low[- ]income|lower[- ]income|less affluent|working[- ]class)\\b'))))
+    return {len:m[0].length,item:{key:'income',max:50000,mode:'set',label:'in lower-income areas'}};
+  if((m=rest.match(new RegExp('^(?:in |from |for )?(?:the )?(middle[- ]income|middle[- ]class)(?: '+AREA+')?\\b'))))
+    return {len:m[0].length,item:{key:'income',min:50000,max:100000,mode:'set',label:'in middle-income areas'}};
+  return null;
+}
+function segAge(rest){
+  var lead='(?:(?:in |from |for )?(?:the )?(?:'+AREA+' )?(?:with |where |that have |having )?(?:a |the )?(?:median |average |avg )?(?:age|ages)(?: is| are| of)? )';
+  var r=rangeSeg(rest,'age',lead);
+  if(r){r.len+=((rest.slice(r.len).match(/^ years?(?: old)?\b/)||[''])[0]).length;return r;}
+  var m;
+  if((m=rest.match(new RegExp('^(?:in |from |for )?(?:the )?(?:more |most |very )?(younger|young|youthful|college|student|millennial|gen z)(?: '+AREA+'| crowds?| people| populations?)\\b'))))
+    return {len:m[0].length,item:{key:'age',max:35,mode:'set',label:'in younger areas'}};
+  if((m=rest.match(new RegExp('^(?:in |from |for )?(?:the )?(?:more |most )?(older|old|retiree|retirement|mature)(?: '+AREA+'| crowds?| people| populations?)\\b'))))
+    return {len:m[0].length,item:{key:'age',min:45,minIncl:true,mode:'set',label:'in older areas'}};
+  return null;
+}
+function segRating(rest){
+  var m;
+  if((m=rest.match(/^(?:that are |which are )?(highly rated|well rated|top rated|best rated|highest rated|great reviews|good reviews)\b/)))
+    return {len:m[0].length,item:{key:'rating',min:4.5,minIncl:true,mode:'set',label:'rated 4.5+'}};
+  var r=rangeSeg(rest,'rating','(?:(?:with )?(?:a )?(?:rating|ratings|rated|stars?)(?: of| is)? )');
+  if(r){r.len+=((rest.slice(r.len).match(/^ stars?\b/)||[''])[0]).length;return r;}
+  if((m=rest.match(/^(?:rated |rating |with |a )*(\d(?:\.\d)?) stars? ?(?:and up|or more|or better|or higher|plus|\+)/)))return {len:m[0].length,item:{key:'rating',min:+m[1],minIncl:true,mode:'set',label:'rated '+m[1]+'+'}};
+  return null;
+}
+function segRadius(rest){var m=rest.match(/^within (\d+(?:\.\d+)?) ?(?:miles?|mi)\b(?: of (?:my|our|the) (?:account|venue|bar|place))?/);return m?{len:m[0].length,item:{key:'radius',value:+m[1],mode:'set',label:'within '+m[1]+' miles'}}:null;}
+function segHasMenu(rest){
+  var m;
+  if((m=rest.match(/^(?:that |which |who )?(?:have|has|having|with|w)(?: a| their| read| real)? (?:drinks? )?(?:menus?|menu data|menu items|menus read|drinks? data)(?: data)?(?: on file)?\b/)))return {len:m[0].length,item:{key:'has_menu',value:true,mode:'set',label:'with menus'}};
+  if((m=rest.match(/^(?:without|with no|no|missing|that don't have|lacking)(?: a| their)? (?:drinks? )?(?:menus?|menu data)\b/)))return {len:m[0].length,item:{key:'has_menu',value:false,mode:'set',label:'without menus'}};
+  return null;
+}
+var MK_RE=null;
+function segMenuKind(rest){
+  var m=rest.match(/^happy[- ]hours?(?: (?:menus?|pages?|specials|deals|lists?))?\b/);
+  if(m)return {len:m[0].length,item:{key:'menu_kind',value:'happy_hour',mode:'set',label:'happy hour menus'}};
+  for(var i=0;i<MENU_KINDS.length;i++){var k=MENU_KINDS[i],r=new RegExp('^(?:'+k.re+') (?:menus?|pages?|lists?|listings?)\\b');if((m=rest.match(r)))return {len:m[0].length,item:{key:'menu_kind',value:k.k,mode:'set',label:k.label},noun:k.label};}
+  return null;
+}
+function spiritAt(s){
+  for(var i=0;i<SPIRITS.length;i++){var sp=SPIRITS[i],m=s.match(new RegExp('^(?:'+sp.re+')(?: (?:drinks|cocktails|brands|bottles|pours|based drinks|based cocktails))?\\b'));if(m)return {len:m[0].length,k:sp.k,word:m[0].replace(/ (drinks|cocktails|brands|bottles|pours|based drinks|based cocktails)$/,'')};}
+  return null;
+}
+function segSpirit(rest){
+  var m,s;
+  if((m=rest.match(/^(?:with|that have|that has|having|has|have|containing|contain|contains|serving|that serve|which serve|made with|using|featuring|pouring|w)(?: some| any| a)? /))&&(s=spiritAt(rest.slice(m[0].length))))
+    return {len:m[0].length+s.len,item:{key:'spirit',value:s.k,word:s.word,mode:'set',label:'with '+s.word}};
+  if((m=rest.match(/^(?:no|without|not|excluding|exclude|except|minus|hide|skip|that don't have|that do not have|without any|with no|leave out|drop)(?: the| any)? /))&&(s=spiritAt(rest.slice(m[0].length))))
+    return {len:m[0].length+s.len,item:{key:'spirit',value:s.k,word:s.word,neg:true,mode:'set',label:'without '+s.word}};
+  if((s=spiritAt(rest)))return {len:s.len,bare:true,item:{key:'spirit',value:s.k,word:s.word,mode:'set',label:'with '+s.word}};
+  return null;
+}
+function vtAt(s){
+  var m,i;
+  for(i=0;i<CUISINES.length;i++){var c=CUISINES[i];m=s.match(new RegExp('^'+esc2(c)+' (?:restaurants?|places|spots|food|joints?|kitchens?)\\b'));if(m){var key=c.replace(/ /g,'_')+'_restaurant';return {len:m[0].length,vt:{k:key,label:c+' restaurants',m:new RegExp(c.replace(/ /g,'_').replace('bbq','(bbq|barbecue)')),srv:c.split(' ')[0]}};}}
+  for(i=0;i<VT.length;i++){m=s.match(new RegExp('^(?:'+VT[i].re+')\\b'));if(m)return {len:m[0].length,vt:VT[i]};}
+  return null;
+}
+function vtItem(v,mode,neg){return {key:'venue_type',value:v.k,srv:v.srv,match:v.m.source,label:v.label,mode:mode||'set',neg:!!neg};}
+function segVenueType(rest,mode){
+  var v=vtAt(rest);if(!v)return null;
+  var len=v.len+((rest.slice(v.len).match(/^ (?:only|venues|type|types)\b/)||[''])[0]).length;
+  return {len:len,item:vtItem(v.vt,mode==='remove'?'set':mode,mode==='remove'),noun:v.vt.label};
+}
+function segPlace(rest,ctx,mode){
+  var m=rest.match(/^(?:in|at|around|near|within|from|for|across|throughout|inside)(?: the)?(?: (?:state|city|town|area) of)? /),prep=!!m,s=m?rest.slice(m[0].length):rest;
+  var p=placeAt(s,ctx,prep);
+  if(!p&&prep&&!/^the /.test(rest.slice(m[0].length-4))){
+    /* "in Pella": an unknown town. Up to three plain words, stopping at the next filter word. */
+    var g=s.match(/^([a-z][a-z'.-]*(?: [a-z][a-z'.-]*){0,2}?)(?= (?:under|over|below|above|between|with|without|sorted|sort|cheapest|most|and|that|which|where|only|priced|costing|less|more|no|by|in|for|from|first|,)\b|$)/);
+    if(g&&!/^(the|a|an|my|our|this|that|these|those|here|there|order|total|stock|it|them|general|particular|detail|town|areas?|all|every|any)\b/.test(g[1])&&!vtAt(g[1])&&!spiritAt(g[1])&&!/\d/.test(g[1]))
+      p={len:g[1].length,place:{n:g[1],kind:'city',name:title(g[1]),st:'',guess:true}};
+  }
+  if(!p)return null;
+  var len=(m?m[0].length:0)+p.len,tail=rest.slice(len).match(/^ (?:only|too|as well|instead)\b/);
+  if(tail){len+=tail[0].length;if(/too|as well/.test(tail[0]))mode='add';}
+  var it=placeItem(p.place,mode==='remove'?'set':mode);if(mode==='remove'){it.neg=true;it.label='outside '+it.label.replace(/^in /,'');}
+  if(p.place.guess)it.guess=true;
+  return {len:len,item:it};
+}
+function segWhole(rest){
+  var m=rest.match(/^(?:in |across )?(?:the )?(?:(?:whole|entire) (?:country|us|nation|map)|nationwide|all (?:the )?states|every state|everywhere|all (?:of )?the us|all over)\b/);
+  return m?{len:m[0].length,item:{key:'state',clear:true,mode:'set',label:'across the country'}}:null;
+}
+function sortFrom(tail){
+  tail=String(tail||'').trim();
+  var dir=null,mm=tail.match(/ ?\b(ascending|descending|low to high|high to low|lowest (?:to highest|first)|highest (?:to lowest|first)|smallest first|largest first|biggest first|a to z|z to a|reversed?|in reverse|up|down)$/);
+  if(mm){dir=/desc|high to low|highest|largest|biggest|z to a|revers|down/.test(mm[1])?'desc':'asc';tail=tail.slice(0,mm.index).trim();}
+  tail=tail.replace(/^(the |their |its )/,'').replace(/ (first|on top)$/,'');
+  var i;for(i=0;i<SORTS_FIRST.length;i++){var s=tail.match(SORTS_FIRST[i][0]);if(s&&s[0].length===tail.length)return {key:SORTS_FIRST[i][1],dir:dir||SORTS_FIRST[i][2]};}
+  for(i=0;i<FIELD_WORDS.length;i++)if(FIELD_WORDS[i][0].test(tail))return {key:FIELD_WORDS[i][1],dir:dir||SORT_DEFAULT_DIR[FIELD_WORDS[i][1]]||'asc'};
+  if(/^(a to z|alphabetical(ly)?)$/.test(tail))return {key:'name',dir:'asc'};
+  if(/^z to a$/.test(tail))return {key:'name',dir:'desc'};
+  if(tail&&tail.split(' ').length<=3&&!/\d/.test(tail)&&!/^(it|them|that|this|me|you|what|how)\b/.test(tail))return {key:tail,dir:dir||'asc',generic:true};
+  return null;
+}
+function segSort(rest){
+  var m=rest.match(/^(?:and |then |with the |with |the )?(.+?)(?: ones| drinks| items| places| venues| menus| bars| restaurants)? (?:first|on top|at the top|up top)\b/);
+  if(m){for(var i=0;i<SORTS_FIRST.length;i++){var s=m[1].match(SORTS_FIRST[i][0]);if(s&&s[0].length===m[1].length)return {len:m[0].length,sort:{key:SORTS_FIRST[i][1],dir:SORTS_FIRST[i][2]}};}}
+  m=rest.match(/^(?:and |then )?(?:sorted|sort|ordered|order|ranked|rank|arranged)(?: them| it)? (?:by|on) ([a-z ]+?)(?= (?:and|then|with|in|under|over)\b|$)/);
+  if(m){var so=sortFrom(m[1]);if(so&&!so.generic)return {len:m[0].length,sort:so};}
+  m=rest.match(/^(?:(?:and|then) )?(?:by )?(price|name|city|income|rating|age) (low to high|high to low|ascending|descending|a to z|z to a)\b/);
+  if(m)return {len:m[0].length,sort:sortFrom(m[1]+' '+m[2])};
+  return null;
+}
+/* words that mean this is a question or a different request, never a filter value */
+var STOPQ=/^(what|what's|whats|how|why|who|whom|whose|when|where|which|is|are|was|were|do|does|did|can|could|would|should|will|shall|i|i'm|im|i'd|you|your|we|us|me|my|our|tell|open|close|go|make|create|draft|design|build|write|send|email|text|call|remind|note|zoom|pan|move|scroll|help|say|hear|play|stop|it|that|this|they|them|there|here|of|to|not|yes|no|yeah|nope|hey|hi|hello|thanks|thank|menu|about|explain|compare|versus|vs|hide|remove|delete|add|save|print|export|share|price|average|median|much|many|if|then|than|because|so|also|let|lets|let's|set|put|get|give|take|bring|find|look|need|want|like|love|hate|know|think|should|must|have|has|had|be|been|recipe|spec|recommend|suggest|library|studio|costing|inventory|settings|training|templates?|notes|harmony|gallery|corpus|pipeline|coverage|competitors|distillery|distilleries|producers?|noms?|factories|pins?|a|an|some|any|every|each|more|less|same|other|another|new|next|previous|back|page|per|sort|order|filter|clear|reset|zoom|map|chart|table|graph|list|data|report|dashboard|screen|view|card)$/;
+var LEAD=/^(?:(?:and |but |ok |okay |now |so |then )*)(?:show(?: me)?(?: only| just| all)?|only show|just show|display|filter(?: it| them| this| that| the list| the results| results| the map| the table| these)?(?: down)?(?: to| by| for| on)?|narrow(?: it| this| them| that| the list| the results)?(?: down)?(?: to| by)?|limit(?: it| this| them| the list| the results)?(?: to)?|restrict(?: it| this| them)?(?: to)?|let me see|let's see|give me|i want(?: to see)?|i only want|i'd like(?: to see)?|keep(?: only)?|what about|how about|switch(?: it| the list| the map)?(?: over| back)?(?: to)?|change(?: it| the list)?(?: over)?(?: to)|go with|make it|set(?: it| the filter| the list)?(?: to)|search(?: for)?|look for|only|just|and only|see|pull up|bring up|find me|list)\b ?/;
+function parseChain(c,ctx){
+  var rest=c,filters=[],sort=null,left=[],chunks=0,lastWasLeft=false,verb=false,mode='set',nouns=[],guard=0,m,r;
+  function push(it){filters.push(it);lastWasLeft=false;}
+  while(rest&&guard++<60){
+    rest=rest.replace(/^[,\s]+/,'');if(!rest)break;
+    if((m=rest.match(LEAD))&&m[0].length){verb=true;if(/switch|change|set|make it/.test(m[0]))mode='set';rest=rest.slice(m[0].length);lastWasLeft=false;continue;}
+    if((m=rest.match(/^(?:also|plus|add|include|including|and add|and also|as well as|along with)\b ?/))){mode='add';verb=true;rest=rest.slice(m[0].length);lastWasLeft=false;continue;}
+    if((m=rest.match(/^(?:not|exclude|excluding|except(?: for)?|minus|remove|drop|take out|without|no|hide|skip|leave out|other than)\b /))){
+      var nx=rest.slice(m[0].length).replace(/^the /,''),r2=segVenueType(nx,'remove')||segPlace(nx,ctx,'remove');
+      if(r2){push(r2.item);rest=nx.slice(r2.len);verb=true;continue;}
+    }
+    r=segWhole(rest)||segHasMenu(rest)||segIncome(rest)||segAge(rest)||segRating(rest)||segRadius(rest)||segPrice(rest)||segSort(rest)||segMenuKind(rest)||segVenueType(rest,mode)||segSpirit(rest)||segPlace(rest,ctx,mode);
+    if(r){if(r.bare&&r.item&&filters.length&&filters[filters.length-1].key==='spirit'&&filters[filters.length-1].neg){r.item.neg=true;r.item.label='without '+r.item.word;}
+      if(r.item)push(r.item);if(r.sort){sort=r.sort;lastWasLeft=false;}if(r.noun)nouns.push(r.noun);rest=rest.slice(r.len);if(r.item&&r.item.key!=='spirit')mode=mode==='add'?'add':'set';continue;}
+    if((m=rest.match(/^(?:and|or|but|then|with|that|which|who|are|is|where|there|the|all|of|a|an|some|any|those|these|ones|ones that are|available|here|now|only|just|too|as well|please|instead|also|again|on (?:the|this) (?:map|list|page|screen|table)|in (?:the|this) (?:list|table|view|results))\b ?/))){rest=rest.slice(m[0].length);continue;}
+    if((m=rest.match(/^(venues?|places?|spots?|results?|rows?|items?|listings?|options?|locations?|menus?|drinks?|stuff|things|pins|entries|records)\b ?/))){nouns.push(m[1]);rest=rest.slice(m[0].length);lastWasLeft=false;continue;}
+    var w=rest.split(' ')[0];
+    if(!lastWasLeft)chunks++;left.push(w);lastWasLeft=true;rest=rest.slice(w.length);
+  }
+  if(guard>=60)return null;
+  if(left.length){
+    if(chunks>1||left.length>4)return null;
+    for(var i=0;i<left.length;i++)if(STOPQ.test(left[i])||/^\d/.test(left[i]))return null;
+    if(!filters.length&&!verb)return null;
+    filters.push({key:'q',value:left.join(' '),mode:'set',label:left.join(' ')});
+  }
+  if(!filters.length&&!sort)return null;
+  if(!filters.length)return {type:'sort',key:sort.key,dir:sort.dir};
+  return {type:'filter',filters:filters,sort:sort,verb:verb,noun:nouns[0]||null};
+}
+/* ---------- whole-utterance commands ---------- */
+var CLEAR_KEYS=[[/^(price|prices|pricing|cost|price range|price limit|price cap)$/,'price'],[/^(city|cities|town|place|location)$/,'city'],[/^(state|states)$/,'state'],
+ [/^(venue type|venue types|type|types|venue|kind|bar type)$/,'venue_type'],[/^((median |household )?income|incomes|affluence)$/,'income'],[/^((median )?age|ages)$/,'age'],
+ [/^(spirit|spirits|liquor|tequila|vodka|gin|rum|whiskey|mezcal)$/,'spirit'],[/^(menu type|menu types|menu kind|happy hour)$/,'menu_kind'],[/^(search|text|keyword|words?|query|name)$/,'q'],
+ [/^(sort|sorting|order|ordering)$/,'sort'],[/^(radius|distance)$/,'radius'],[/^(rating|ratings|stars)$/,'rating'],[/^(menu|menus|menu only|menu data)$/,'has_menu']];
+function clearKey(w){w=String(w||'').trim();for(var i=0;i<CLEAR_KEYS.length;i++)if(CLEAR_KEYS[i][0].test(w))return CLEAR_KEYS[i][1];return null;}
+function parseWhole(c,ctx){
+  var m,k;
+  /* ---- clear ---- */
+  if(/^(clear|reset|remove|drop|delete|undo|lose|get rid of|take off|turn off|cancel|kill|scrap|forget)( all| every| the| my| any| of| these| those| this)* ?(filters?|filtering|everything|selections?|criteria|constraints)( again)?$/.test(c)||/^(clear|reset|undo|cancel)( (it|all|everything|them))?$/.test(c)||/^(start over|start again|show everything again|no filters?|unfilter( it| them)?|clear all|reset all|reset (it|everything|the list|the results|the filters)|clear (it|everything|the list|the results)|remove all (the )?filters|take (off|away) (all )?(the )?filters|back to (all|everything)|show (me )?everything again|all of them again)$/.test(c))
+    return {type:'clear'};
+  if((m=c.match(/^(?:clear|remove|drop|reset|delete|undo|lose|get rid of|take off|turn off|cancel|forget|ignore|lift|no more)(?: the| my| that| this)? (.+?)(?: filters?| limits?| range| constraint| criteria| cap| sort)?$/))&&(k=clearKey(m[1])))return {type:'clear',key:k};
+  if((m=c.match(/^(?:show |in |at |for |across |from )?(?:any|all|every|all the|any of the)? ?(price|prices|city|cities|state|states|venue types?|types|income|incomes|age|ages|rating|ratings|kind of venue|kinds of venues)( levels?| again| too)?$/))&&/^(show |in |at |for |across |from )?(any|all|every)/.test(c)&&(k=clearKey(m[1].replace(/kinds? of venues?/,'type'))))return {type:'clear',key:k};
+  if(/^(show )?(all|every|any) (venues?|places|bars and restaurants|kinds of (places|venues)|venue types?)$/.test(c))return {type:'clear',key:'venue_type'};
+  if(/^(show )?(the )?(whole|entire) (country|nation|us)$|^(show )?(all (the )?states|every state|nationwide)$/.test(c))return {type:'clear',key:'state'};
+  /* ---- paging ---- */
+  if(/^((go |go to |show |show me |see |skip to |jump to )?(the )?(next|following) (page|screen|set|batch|results)|page (forward|ahead|down)|(show |see |load |show me )(some )?more( results| rows| menus)?|more results|keep going|more please)$/.test(c))return {type:'page',delta:1};
+  if(/^((go |go to |show |show me |see |jump to )?(the )?(previous|prior|last|earlier) (page|set|batch|results)|page (back|up)|(go )?back (a|one) page|back a page|one page back)$/.test(c)&&!/last (page|set|batch|results)$/.test(c))return {type:'page',delta:-1};
+  if(/^((go |go to |jump to |skip to |show |show me |back to )?(the )?(first|1st|opening|top|start) (page|set|results)|page 1|(go )?back to (the )?(start|beginning|first page|top of the list))$/.test(c))return {type:'page',page:1};
+  if(/^((go |go to |jump to |skip to |show |show me )?(the )?(last|final|end) (page|set)|(go )?to the end( of the list)?)$/.test(c))return {type:'page',page:'last'};
+  if((m=c.match(/^(?:go |go to |jump to |skip to |show |show me |open |turn to |flip to )?(?:the )?(?:page|pg)(?: number)? #?(\d+)$/))||(m=c.match(/^(?:go to |jump to |show )?(?:the )?(\d+)(?:st|nd|rd|th) page$/)))return {type:'page',page:+m[1]};
+  if((m=c.match(/^(?:show|display|give me|i want|let me see|set|make it|use|change it to|switch to|put)?(?: me)?(?: the)? ?(?:page size(?: to| of)? )?(\d+)(?: results| rows| items| menus| records| venues| drinks| entries| cards| at a time| of them)*(?: (?:per|a|each|every|on (?:a|each|one|the)) (?:page|screen)| at a time| at once| per screen)$/))||(m=c.match(/^(?:set |make |change )?(?:the )?page size(?: to| of)? (\d+)$/)))return {type:'pageSize',n:+m[1]};
+  /* ---- sort ---- */
+  if(/^(shuffle|reshuffle|randomi[sz]e|scramble)( it| them| the list| the results| these| the menus| again| up)*$|^(random order|mix (it|them|the list) up|show (them|it) (in )?random(ly)?( order)?|in random order)$/.test(c))return {type:'sort',key:'shuffle',dir:'asc'};
+  if(/^(reverse|flip|invert)( it| them| the order| the sort| the sorting| the list| order)?$|^(the other way( round| around)?|other way( round| around)?)$/.test(c))return {type:'sort',key:'$reverse',dir:'asc'};
+  if((m=c.match(/^(?:and |then |now )?(?:sort|order|rank|arrange|organi[sz]e|re-?sort|reorder|put)(?: it| them| this| these| that| those| the list| the results| results| the table| the map| the menus| everything| all)?(?: in order)?(?: by| on| from| according to)? (.+)$/))){var so=sortFrom(m[1]);if(so)return {type:'sort',key:so.key,dir:so.dir,generic:!!so.generic};}
+  if((m=c.match(/^(?:and |then |now )?(?:sorted |ordered |ranked )?by (.+)$/))){var s2=sortFrom(m[1]);if(s2&&!s2.generic)return {type:'sort',key:s2.key,dir:s2.dir};}
+  if((m=c.match(/^(?:show |put |list |and |now )?(?:me )?(?:the )?(.+?)(?: ones| drinks| items| places| venues| menus| bars| restaurants| areas)? (?:first|on top|at the top|up top)$/))){var s3=sortFrom(m[1]);if(s3&&!s3.generic)return {type:'sort',key:s3.key,dir:s3.dir};}
+  if(/^(newest|latest|most recent|newest ones|most recent ones)$/.test(c))return {type:'sort',key:'recent',dir:'desc'};
+  if(/^(alphabetical(ly)?|a to z|abc order|in alphabetical order)$/.test(c))return {type:'sort',key:'name',dir:'asc'};
+  if(/^z to a$/.test(c))return {type:'sort',key:'name',dir:'desc'};
+  if((m=c.match(/^(price|name|city|income|rating|age) (low to high|high to low|ascending|descending|a to z|z to a)$/)))return {type:'sort',key:sortFrom(m[1]).key,dir:sortFrom(m[1]+' '+m[2]).dir};
+  /* ---- map ---- */
+  if(/^(show (me )?(all|everything)( on the map| again| of them)?|show (me )?all (the )?(pins|results|places|venues|of them)|zoom (out )?to fit( everything| all( of them)?)?|fit (all|everything)( on (the )?screen)?|zoom out to (see )?(all|everything)|see (it )?all|see everything|show the whole (map|thing|list))$/.test(c))return {type:'map.all'};
+  if((m=c.match(/^(?:zoom|fly|jump|move|pan|go|take me|take us|bring me|center|centre|recenter|recentre|focus|head|show(?: me)?|map|frame|fit)(?: the map)?(?: (?:in|out|over|back|down|across|up))?(?: (?:on|to|into|onto|in to|over to|toward|towards|at|around|in on))? (?:the )?(?:(?:state|city|town|area) of )?(.+?)(?: on (?:the|a) map| please| area| region| metro)?$/))){
+    var verbShow=/^(show|map|frame|fit)/.test(c),onMap=/ on (the|a) map$/.test(c);
+    var p=placeAt(m[1],ctx,true);
+    if(p&&p.len===m[1].length&&(!verbShow||onMap||/^(map|frame|fit)/.test(c)))return p.place.kind==='state'?{type:'map.fit',state:p.place.code,name:p.place.name}:{type:'map.fit',city:p.place.name,st:p.place.st||'',ll:p.place.ll||null,name:p.place.name};
+  }
+  /* ---- detail: one row ---- */
+  if((m=c.match(new RegExp('^(?:(open|show(?: me)?|pull up|bring up|tell me(?: more)? about|what(?:\'s| is| about)|details (?:on|for|about)|more (?:about|on)|read(?: me)?|view|select|pick|choose|go to|zoom (?:in )?(?:on|to)|expand|describe) )?(?:the )?(?:('+ORD_RE+')|(?:number|no|#|item|result|row|entry|card|menu|venue) ?(\\d+))(?: one| result| row| item| menu| venue| place| entry| listing| card| pin| drink| on (?:the|this) (?:list|page|map|screen))?$')))){
+    var idx=m[2]?ORD[m[2]]:+m[3];if(idx)return {type:'detail',index:idx,verb:/^(open|pull|bring|view|select|pick|choose|go|zoom|expand)/.test(m[1]||'')?'open':'tell'};
+  }
+  /* ---- stats ---- */
+  if((m=c.match(/^(?:so |and |ok )?(?:what(?:'s| is| are)|tell me|give me|show me|whats)?(?: the)? ?(average|avg|mean|median|typical|middle|lowest|cheapest|min|minimum|highest|most expensive|max|maximum|top)(?: drink| menu)?(?: (price|prices|cost|income|incomes|age|rating|ratings))?(?: (?:here|of these|for these|of those|of them|now|then|on (?:the |this )?(?:screen|list|map|page)|in this (?:list|view)))?$/))&&(m[2]||/average|avg|mean|median|typical|cheapest|most expensive/.test(m[1]))){
+    var st=/average|avg|mean|typical/.test(m[1])?'avg':/median|middle/.test(m[1])?'median':/lowest|cheapest|min/.test(m[1])?'min':'max';
+    var fld=m[2]?(/income/.test(m[2])?'income':/age/.test(m[2])?'age':/rating/.test(m[2])?'rating':'price'):'price';
+    return {type:'stat',stat:st,field:fld};
+  }
+  if(/^(so |and |ok )?(how many( (are there|is that|is it|of them|results|rows|items|venues|menus|places|pins|drinks|bars|restaurants|entries|records|matches|are showing|are left|left|now|total|in total|did (you|we) find|do (we|you) have|are on (the |this )?(screen|list|map|page)|on (the |this )?(screen|list|map|page)|showing|there))*|what('s| is) the (count|total)|count (them|these|those|it)|how big is (the|this) list|number of results)$/.test(c))return {type:'stat',stat:'count',field:'*'};
+  return null;
+}
+function parseDetailName(c){
+  var m=c.match(/^(?:open(?: up)?|pull up|bring up|tell me(?: more)? about|details (?:on|for|about)|more (?:about|on)|info (?:on|about)|select|pick|choose)(?: the)? (.{2,60}?)(?: one| menu| venue| place| card| listing)?$/);
+  if(!m)return null;var n=m[1].trim();
+  if(/^(it|that|this|them|those|these|that one|this one|him|her|there|here|up|more|everything|all|the card|my notes|notes|settings)$/.test(n))return null;
+  return {type:'detail',name:n,verb:/^(open|pull|bring|select|pick|choose)/.test(c)?'open':'tell'};
+}
+function phgParseDataCommand(text,ctx){
+  var c=norm(text);if(!c||c.length>180)return null;
+  var r=null;
+  try{r=parseWhole(c,ctx||{})||parseChain(c,ctx||{})||parseDetailName(c);}catch(e){r=null;}
+  if(r)r.text=c;
+  return r;
+}
+G.phgParseDataCommand=phgParseDataCommand;
+G.phgDataGrammar={norm:norm,numberize:numberize,places:places,CITIES:CITIES,STATE_BOUNDS:STATE_BOUNDS,STATE_NAMES:STATE_NAMES,STATE_LABEL:STATE_LABEL,VT:VT,SPIRITS:SPIRITS,vtAt:vtAt,spiritAt:spiritAt,placeAt:placeAt,rangeLabel:rangeLabel,sortFrom:sortFrom};
+if(typeof document==='undefined'||typeof window==='undefined')return;
+/* =====================================================================================================
+   2. APPLIER (browser only)
+   ===================================================================================================== */
+var QUIET=false;
+/* speech is captured when a command starts, so a reply that runs actions quietly stays quiet after an await */
+function speaker(){var q=QUIET;return function(t){if(q||!t)return;try{if(typeof G.agentSay==='function')G.agentSay(t);}catch(e){}};}
+function warn(a,b){try{if(G.console)G.console.warn('voiceFilters',a,b);}catch(e){}}
+function fnx(n){return typeof G[n]==='function'?G[n]:null;}
+function call(n){var f=fnx(n);if(!f)return undefined;try{return f.apply(G,[].slice.call(arguments,1));}catch(e){warn(n,e);return undefined;}}
+function viewOpen(){return !!(document.body&&document.body.classList.contains('phg-view-open'));}
+function hdState(){try{return typeof G.harmonyDataState==='function'?G.harmonyDataState():null;}catch(e){return null;}}
+function HM(){return G.harmonyMap||null;}
+function low(s){return String(s==null?'':s).toLowerCase().trim();}
+function fmtN(n){return Number(n||0).toLocaleString('en-US');}
+function toNum(v){if(typeof v==='number')return v;var t=String(v==null?'':v).replace(/[$,\s]/g,'').toLowerCase(),m=t.match(/^(-?\d+(?:\.\d+)?)(k)?/);return m?parseFloat(m[1])*(m[2]?1000:1):NaN;}
+function inRange(n,it){if(!isFinite(n))return false;if(it.min!=null&&(it.minIncl?n<it.min:n<=it.min))return false;if(it.max!=null&&(it.maxIncl?n>it.max:n>=it.max))return false;return true;}
+function plural(w){w=String(w||'').trim();if(!w||/s$/.test(w))return w;if(/(ch|sh|x)$/.test(w))return w+'es';if(/[^aeiou]y$/.test(w))return w.slice(0,-1)+'ies';return w+'s';}
+function stem(w){return low(w).split(' ').map(function(x){return x.length>4&&/(ch|sh|x)es$/.test(x)?x.slice(0,-2):x.length>3&&/ies$/.test(x)?x.slice(0,-3)+'y':x.length>3&&/[^s]s$/.test(x)?x.slice(0,-1):x;});}
+function textHas(text,q){var t=' '+low(text).normalize('NFD').replace(/[̀-ͯ]/g,'')+' ';return stem(q).every(function(w){return t.indexOf(w)>=0;});}
+function cityKey(s){return low(s).replace(/,.*$/,'').replace(/^the /,'').replace(/\s+/g,' ');}
+function cityAliases(it){var a=[cityKey(it.value)];CITIES.forEach(function(c){if(c[0]===it.value){(c[4]||[]).forEach(function(x){a.push(cityKey(x));});}});if(it.value==='New York City')a.push('new york','manhattan');return a;}
+function cityIs(v,it){var k=cityKey(v);if(!k)return false;var al=cityAliases(it);return al.indexOf(k)>=0;}
+function vtRe(it){try{return new RegExp(it.match||it.value,'i');}catch(e){return /^$/;}}
+function vtIs(v,it){return v!=null&&v!==''&&vtRe(it).test(low(v).replace(/[\s-]+/g,'_'));}
+function uniqVals(rows,f){var s={},o=[];(rows||[]).forEach(function(r){var v=r&&r[f];if(v!=null&&v!==''&&!s[v]){s[v]=1;o.push(v);}});return o;}
+function spiritRe(k){for(var i=0;i<SPIRITS.length;i++)if(SPIRITS[i].k===k)return SPIRITS[i].w;return new RegExp(k);}
+function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
+/* census and income bands, from their labels ("under $50k", "$50k-$65k", "$100k+", "30–35", "45+") */
+function bandRange(label){
+  var t=low(label).replace(/[–—]/g,'-'),k=/\dk/.test(t)?1000:1,m;
+  if(/unknown|no census|^na$/.test(t))return null;
+  if((m=t.match(/under \$?(\d+(?:\.\d+)?)/)))return [null,+m[1]*k];
+  if((m=t.match(/\$?(\d+(?:\.\d+)?)k?\s*-\s*\$?(\d+(?:\.\d+)?)/)))return [+m[1]*k,+m[2]*k];
+  if((m=t.match(/\$?(\d+(?:\.\d+)?)k?\s*\+/)))return [+m[1]*k,null];
+  return null;
+}
+function pickBands(list,it){
+  var out=[],ranged=[];
+  list.forEach(function(b){var r=bandRange(b.label);if(!r)return;ranged.push(b);var lo=r[0],hi=r[1],mid=lo==null?hi*0.8:hi==null?lo*1.2:(lo+hi)/2;
+    if((it.min==null||mid>=it.min)&&(it.max==null||mid<=it.max))out.push(b.v);});
+  if(!out.length&&ranged.length)out.push((it.min!=null?ranged[ranged.length-1]:ranged[0]).v);
+  return out;
+}
+/* ---------- what Harmony says back ---------- */
+var SORT_LABEL={price:{asc:'cheapest first',desc:'most expensive first'},income:{asc:'lowest income first',desc:'highest income first'},age:{asc:'youngest areas first',desc:'oldest areas first'},name:{asc:'A to Z',desc:'Z to A'},city:{asc:'by city',desc:'by city, Z to A'},state:{asc:'by state',desc:'by state, Z to A'},recent:{asc:'oldest first',desc:'newest first'},shuffle:{asc:'shuffled',desc:'shuffled'},rating:{asc:'lowest rated first',desc:'highest rated first'},reviews:{asc:'fewest reviews first',desc:'most reviewed first'},dist:{asc:'closest first',desc:'farthest first'},drinks:{asc:'fewest drinks first',desc:'most drinks first'},venue:{asc:'by venue',desc:'by venue, Z to A'},venue_type:{asc:'by venue type',desc:'by venue type, Z to A'}};
+function sortLabel(s){if(!s)return '';var l=SORT_LABEL[s.key];return l?(l[s.dir]||l.asc):'by '+String(s.key).replace(/_/g,' ')+(s.dir==='desc'?', high to low':'');}
+var ORDER={price:1,rating:2,spirit:3,has_menu:4,menu_kind:5,city:6,state:6,venue_type:7,income:8,age:9,radius:10};
+function describe(items,sort,noun,count,extra){
+  var q=null,vt=null,mk=null,rest=[];
+  (items||[]).forEach(function(it){if(it.key==='q')q=it;else if(it.key==='venue_type'&&!it.neg&&!vt)vt=it;else if(it.key==='menu_kind'&&!mk)mk=it;else if(it.label)rest.push(it);});
+  rest.sort(function(a,b){return (ORDER[a.key]||20)-(ORDER[b.key]||20);});
+  var n=q?plural(q.value):vt?vt.label:mk&&/menus|lists|pages|listings/.test(mk.label)?mk.label:(noun||'results');
+  if(q&&vt)rest.unshift({label:'at '+vt.label});
+  if(mk&&n!==mk.label)rest.unshift({label:'on '+mk.label});
+  if(count===1){var nw=n.split(' ');nw[nw.length-1]=stem(nw[nw.length-1]).join(' ');n=nw.join(' ');}
+  var body=n+(rest.length?' '+rest.map(function(x){return x.label;}).join(' '):'');
+  var s=count===0?'No '+body+'.':(count!=null?'Showing '+fmtN(count)+' '+body:'Showing '+body)+(sort?', '+sortLabel(sort):'')+'.';
+  if(count===0)s+=' Say “clear filters” to start over.';
+  return s+(extra?' '+extra:'');
+}
+function skipNote(skip,where){
+  if(!skip||!skip.length)return '';
+  var names={price:'price',income:'income',age:'age',rating:'rating',spirit:'spirit',menu_kind:'menu type',has_menu:'menu data',radius:'distance',city:'city',state:'state',venue_type:'venue type',q:'name or drink'};
+  var ks=[];skip.forEach(function(it){var n=names[it.key]||it.key;if(ks.indexOf(n)<0)ks.push(n);});
+  return (where||'This view')+' can’t filter by '+ks.join(' or ')+'.';
+}
+/* ---------- which surface is on screen ---------- */
+var SECTION_PAGES={cocktails:1,beer:1,wine:1,liquor:1,non_alcoholic:1,unclassified:1};
+function surf(){
+  if(viewOpen()){var st=hdState();if(st&&st.open&&st.last)return st.isMap?'hdmap':'hd';return null;}
+  var app=G.APP;
+  if(app==='dash'){var pg=G.page,cb=G.CORPUS_BROWSER;
+    if(cb&&cb.open&&pg==='home')return 'library';
+    if(pg==='competitors'||pg==='map')return 'mmap';
+    if(SECTION_PAGES[pg])return 'mcat';
+    return 'market';}
+  if(app==='menu'&&G.MD&&G.MD.view==='own')return 'studio';
+  return null;
+}
+function ctxFor(s){
+  var c=[];
+  try{
+    if(s==='library')c=(call('corpusCities')||[]).map(function(x){return x.v;});
+    else if(s==='mcat')c=uniqVals(mRows(),'city');
+    else if(s==='mmap'||s==='market')c=uniqVals(G.VENUES,'city');
+    else if(s==='studio'){var ck=call('mdCityKey');if(ck)c=call('mdUniq',ck)||[];}
+    else if(s==='hdmap'){var h=HM();if(h&&h.pins)c=uniqVals(h.pins().map(function(r){return r.a||{};}),'city');}
+    else if(s==='hd'){var st=hdState(),m=st&&toModel(st.orig);if(m){var cm=colMap(m);if(cm.city!=null)c=uniqVals(m.rows.map(function(r){return {v:r.c[cm.city]};}),'v');}}
+  }catch(e){}
+  return {cities:c.slice(0,600)};
+}
+
+/* ===================== Menu Library (corpus browser) ===================== */
+function lib(){return G.CORPUS_BROWSER;}
+function libRedraw(){call('corpusDrawChips');call('corpusPanelHead');}
+function libLoad(){var b=lib();b.page=0;libRedraw();call('corpusLoad');}
+function libWait(cb){var b=lib(),t0=Date.now();setTimeout(function tick(){if(!b.busy||Date.now()-t0>12000)return cb();setTimeout(tick,200);},60);}
+function libCount(){var b=lib();return b.capped?'more than '+fmtN(b.count):fmtN(b.count);}
+function libArr(k,vals,mode){var a=lib().f[k];if(!Array.isArray(a))return;if(mode!=='add')a.length=0;vals.forEach(function(v){if(a.indexOf(v)<0)a.push(v);});}
+function libDrop(k,vals){var a=lib().f[k];if(!Array.isArray(a))return;vals.forEach(function(v){var i=a.indexOf(v);if(i>=0)a.splice(i,1);});}
+var LIB_SORT={name:{asc:'name'},city:{asc:'city'},income:{desc:'income_desc',asc:'income_asc'},age:{asc:'age_asc',desc:'age_desc'},recent:{desc:'recent',asc:'recent'}};
+var LIB_MENU={happy_hour:{kind:'happy_hour',has:'happy_hour'},cocktails:{has:'cocktails'},drinks:{kinds:['beverage','mixed']},food:{kinds:['food','mixed']},brunch:{has:'brunch'},specials:{has:'specials'},wine:{has:'wine'},beer:{has:'beer'},delivery:{has:'delivery'}};
+function libFilter(cmd,sp){
+  var b=lib(),f=b.f,done=[],skip=[];
+  cmd.filters.forEach(function(it){
+    var k=it.key;
+    if(k==='state'){if(it.clear)f.state=[];else if(it.neg)libDrop('state',[it.value]);else libArr('state',[it.value],it.mode);done.push(it);}
+    else if(k==='city'){
+      var opts=(call('corpusCities')||[]).map(function(x){return x.v;}),vals=opts.filter(function(v){return cityIs(v,it);});
+      if(!vals.length){if(opts.length){skip.push(it);return;}vals=[low(it.value)];}
+      if(it.neg)libDrop('city',vals);else{libArr('city',vals,it.mode);if(it.st&&f.state.length&&f.state.indexOf(it.st)<0)f.state=[];}
+      done.push(it);
+    }
+    else if(k==='venue_type'){
+      var vv=(b.vals&&b.vals.venue_types)||[],all=vv.map(function(x){return typeof x==='string'?x:x&&x.v;}).filter(Boolean);
+      var hit=all.filter(function(v){return vtIs(v,it);});
+      if(!all.length)hit=[it.value];
+      if(it.neg){libArr('venue_type',all.filter(function(v){return !vtIs(v,it);}),'set');}
+      else if(!hit.length){skip.push(it);return;}else libArr('venue_type',hit,it.mode);
+      done.push(it);
+    }
+    else if(k==='income'||k==='age'){var def=G.CORPUS_CENSUS_DEF&&G.CORPUS_CENSUS_DEF[k];if(!def){skip.push(it);return;}f[k]=pickBands(def.bands.map(function(x){return {v:x[0],label:x[1]};}),it);done.push(it);}
+    else if(k==='spirit'){if(it.neg){libDrop('has',[it.value]);libArr('hide',[it.value],'add');}else{libDrop('hide',[it.value]);libArr('has',[it.value],'add');}done.push(it);}
+    else if(k==='menu_kind'){var mk=LIB_MENU[it.value];if(!mk){skip.push(it);return;}
+      if(mk.kinds)f.menu_kind=mk.kinds.slice();if(mk.kind&&f.menu_kind.indexOf(mk.kind)<0)f.menu_kind.push(mk.kind);if(mk.has){libDrop('hide',[mk.has]);libArr('has',[mk.has],'add');}done.push(it);}
+    else if(k==='q'){f.q=String(it.value);var el=document.getElementById('corpusQ');if(el)el.value=f.q;done.push(it);}
+    else skip.push(it);
+  });
+  var sorted=cmd.sort?libSortSet(cmd.sort):null;
+  if(!done.length&&!sorted){sp(skipNote(skip,'The Menu Library')+(skip.some(function(x){return x.key==='price';})?' For prices, ask me something like “margarita prices in Denver”.':''));return true;}
+  libLoad();
+  libWait(function(){var b2=lib();sp(b2.error?'The Menu Library says: '+b2.error:describe(done,sorted?cmd.sort:null,'menus',null).replace(/^Showing /,'Showing '+libCount()+' ')+(skip.length?' '+skipNote(skip,'The Menu Library'):''));});
+  return true;
+}
+function libSortSet(s){
+  var f=lib().f;
+  if(s.key==='shuffle'){var b=lib();b.seed='r'+(Number(String(b.seed||'r1').slice(1))+1||2);f.sort='shuffle';return true;}
+  if(s.key==='$reverse'){var rv={income_desc:'income_asc',income_asc:'income_desc',age_asc:'age_desc',age_desc:'age_asc'}[f.sort];if(!rv)return false;f.sort=rv;return true;}
+  var m=LIB_SORT[s.key]||(s.key==='venue'?LIB_SORT.name:null);if(!m)return false;
+  var v=m[s.dir]||m.asc||m.desc;f.sort=v;try{call('corpusSavePrefs');}catch(e){}return true;
+}
+function libApply(cmd){
+  var b=lib(),f=b.f,sp=speaker();
+  if(b.view){
+    var v=b.view;
+    if(cmd.type==='page'&&v.pages&&v.pages.length){
+      if(cmd.delta)call('corpusViewStep',cmd.delta);else{v.idx=cmd.page==='last'?v.pages.length-1:clamp((cmd.page|0)-1,0,v.pages.length-1);call('mlvRender');}
+      sp('Page '+(v.idx+1)+' of '+v.pages.length+'.');return true;
+    }
+    if(cmd.type==='stat'&&cmd.stat==='count'){sp('This menu has '+v.pages.length+' page'+(v.pages.length===1?'':'s')+'.');return true;}
+    if(cmd.type==='detail'&&cmd.name)return false;
+    call('corpusViewClose');
+  }
+  var pages=function(){return b.count?Math.max(1,Math.ceil(b.count/b.size)):1;};
+  switch(cmd.type){
+  case 'filter':return libFilter(cmd,sp);
+  case 'map.fit':return libFilter({filters:[cmd.state?{key:'state',value:cmd.state,mode:'set',label:'in '+cmd.name}:{key:'city',value:cmd.city,st:cmd.st,mode:'set',label:'in '+cmd.city}]},sp);
+  case 'map.all':case 'clear':
+    if(!cmd.key||cmd.type==='map.all'){call('corpusReset');libWait(function(){sp('Cleared the filters. Showing '+libCount()+' menus.');});return true;}
+    if(cmd.key==='sort'){f.sort='recent';libLoad();libWait(function(){sp('Back to newest first.');});return true;}
+    var map={city:'city',state:'state',venue_type:'venue_type',income:'income',age:'age',q:'q'};
+    if(cmd.key==='spirit'){f.has=f.has.filter(function(x){return !SPIRITS.some(function(s){return s.k===x;});});f.hide=f.hide.filter(function(x){return !SPIRITS.some(function(s){return s.k===x;});});libLoad();}
+    else if(cmd.key==='menu_kind'){f.menu_kind=['beverage','mixed'];libDrop('has',['happy_hour','brunch','specials','delivery']);libLoad();}
+    else if(map[cmd.key]){call('corpusClearKey',map[cmd.key]);if(cmd.key==='q'){var el=document.getElementById('corpusQ');if(el)el.value='';}}
+    else{sp('The Menu Library has no '+cmd.key.replace(/_/g,' ')+' filter to clear.');return true;}
+    libWait(function(){sp('Cleared. Showing '+libCount()+' menus.');});return true;
+  case 'sort':
+    if(!libSortSet(cmd)){sp('The Menu Library can sort by newest, venue name, city, income, age or shuffle - not by '+String(cmd.key).replace(/_/g,' ')+'.');return true;}
+    libLoad();libWait(function(){sp(cmd.key==='$reverse'?'Reversed.':'Sorted '+sortLabel(cmd)+'.');});return true;
+  case 'page':
+    var n=pages(),p=cmd.delta?b.page+cmd.delta:cmd.page==='last'?n-1:(cmd.page|0)-1;
+    if(p<0){sp('You’re on the first page.');return true;}
+    if(!b.capped&&p>n-1){sp('There '+(n===1?'is only one page':'are only '+n+' pages')+'.');return true;}
+    call('corpusGo',p);libWait(function(){sp('Page '+(lib().page+1)+(b.capped?'':' of '+pages())+'.');});return true;
+  case 'pageSize':
+    var sizes=G.CORPUS_SIZES||[20,50,100],best=sizes[0];sizes.forEach(function(x){if(Math.abs(x-cmd.n)<Math.abs(best-cmd.n))best=x;});
+    call('corpusPick','size',best);libWait(function(){sp('Showing '+best+' per page'+(best!==cmd.n?' (the library pages by 20, 50 or 100)':'')+'.');});return true;
+  case 'detail':
+    var rows=b.rows||[],row=null,i;
+    if(cmd.index){i=cmd.index===-1?rows.length-1:cmd.index-1;if(i>=rows.length&&cmd.index>b.page*b.size)i=cmd.index-1-b.page*b.size;row=rows[i];}
+    else{for(i=0;i<rows.length;i++){if(textHas((rows[i].accounts||{}).account_name||'',cmd.name)){row=rows[i];break;}}if(!row)return false;}
+    if(!row){sp('There are only '+rows.length+' on this page.');return true;}
+    var nm=(row.accounts||{}).account_name||'This venue',where=[row.city?title(low(row.city)):'',row.state].filter(Boolean).join(', ');
+    if(cmd.verb==='open'||!cmd.index){if(row.id!=null&&(row.thumb||row.page_count||row.pages)){call('corpusView',Number(row.id));sp('Opening '+nm+(where?', '+where:'')+'.');}else sp(nm+(where?', '+where:'')+'. That one has no pages to show yet.');return true;}
+    sp(nm+(where?', '+where:'')+(row.venue_type?', '+String(row.venue_type).replace(/_/g,' '):'')+(row.menu_kind?'. '+String(row.menu_kind).replace(/_/g,' ')+' menu':'')+'. Say “open it” to see it.');
+    PENDING_OPEN={at:Date.now(),fn:function(){call('corpusView',Number(row.id));}};return true;
+  case 'stat':
+    if(cmd.stat==='count'){sp(libCount()+' menus match'+(b.count===1?'es':'')+' right now.');return true;}
+    sp('The Menu Library doesn’t carry prices. Ask me something like “average margarita price in Denver”.');return true;
+  }
+  return false;
+}
+var PENDING_OPEN=null;
+
+/* ===================== Market dashboard (drinks pages, competitors map, other pages) ===================== */
+function mRows(){var pg=G.page;if(SECTION_PAGES[pg])return call('sectionRows',pg)||[];return G.EXP||[];}
+function mPasses(r){var f=fnx('passes');try{return f?f(r):true;}catch(e){return true;}}
+function mWait(cb){var t0=Date.now();setTimeout(function tick(){if(G.STATE==='ALL'||(G.EXP&&G.EXP.length&&G.VENUES&&G.VENUES.length)||Date.now()-t0>15000)return setTimeout(cb,150);setTimeout(tick,250);},300);}
+function setObj(o,vals,mode){if(!o)return;if(mode!=='add')Object.keys(o).forEach(function(k){o[k]=false;});vals.forEach(function(v){o[v]=true;});}
+function onKeys(o){return Object.keys(o||{}).filter(function(k){return o[k];});}
+function secLabel(){var s=(G.SECTIONS||[]).filter(function(x){return x.k===G.page;})[0];return s?low(s.label):'items';}
+var SEC_FOR={beer:'beer',wine:'wine',cocktails:'cocktails',non_alcoholic:'non_alcoholic'};
+function mVenueRows(){
+  var V=G.VENUES||[],cOn=onKeys(G.MCITY).length?G.MCITY:onKeys(G.VCITY).length?G.VCITY:null,tOn=onKeys(G.VTYPE).length?G.VTYPE:null,menu=G.MENUONLY,by={};
+  if(menu)(G.EXP||[]).forEach(function(r){by[r.venue]=1;});
+  return V.filter(function(v){if(cOn&&!cOn[(v.city||'').trim()]&&!cOn[v.city])return false;if(tOn&&!tOn[v.venue_type])return false;if(menu&&!by[v.venue])return false;return true;});
+}
+function mFit(cities,state,ll){
+  var M=G.MAP;if(!M||!M._loaded||typeof L==='undefined')return false;
+  var pts=mVenueRows().filter(function(v){return v.lat!=null&&(!cities||cities.some(function(c){return cityIs(v.city,{value:c});}))&&(!state||!v.state_code||v.state_code===state);}).map(function(v){return [+v.lat,+v.lng];});
+  try{if(pts.length)M.fitBounds(pts,{padding:[36,36],maxZoom:14});else if(state&&STATE_BOUNDS[state])M.fitBounds(STATE_BOUNDS[state]);else if(ll)M.setView(ll,12);else return false;}catch(e){return false;}
+  return true;
+}
+function mSortSet(s,surface){
+  var S=G.SORT;if(!S)return false;
+  if(s.key==='$reverse'){if(!S.key)return false;S.dir=-S.dir;return true;}
+  var col;
+  if(surface==='mmap')col={name:'venue',venue:'venue',city:'city',venue_type:'venue_type',rating:'rating',reviews:'reviews',dist:'dist'}[s.key];
+  else col={price:'item_price',name:'item_name',venue:'venue',city:'city',style:'subfamily',drinks:null}[s.key];
+  var chartMode={price:'value',name:'name',drinks:'count'}[s.key];
+  if(surface==='mcat'&&chartMode&&G.CHART){var asc=s.dir==='asc';var mode=chartMode==='name'?(asc?'name':'name_asc'):(asc?chartMode+'_asc':chartMode);['c_city','c_item','c_type','c_sub'].forEach(function(id){G.CHART[id]=mode;});}
+  if(!col)return !!(surface==='mcat'&&chartMode);
+  S.table=surface==='mmap'?'venues':'items';S.key=col;S.dir=s.dir==='desc'?-1:1;return true;
+}
+function mSorted(rows,surface){
+  var S=G.SORT,f=fnx('sortRows');if(!f)return rows;
+  try{return surface==='mmap'?f('venues',rows,{rating:'num',reviews:'num',dist:'num'}):f('items',rows,{item_price:'num'});}catch(e){return rows;}
+}
+function mStats(rows){var p=rows.map(function(r){return +r.item_price;}).filter(function(x){return isFinite(x)&&x>0;}).sort(function(a,b){return a-b;});
+  return {n:rows.length,priced:p.length,avg:p.length?p.reduce(function(a,b){return a+b;},0)/p.length:null,median:p.length?p[Math.floor(p.length/2)]:null,min:p[0],max:p[p.length-1]};}
+function mktApply(cmd,s){
+  var sp=speaker(),F=function(){return G.FILT;};
+  if(!G.FILT){return false;}
+  var noun=s==='mcat'?secLabel():s==='mmap'?'venues':'items';
+  if(cmd.type==='map.fit'&&s!=='mmap')cmd={type:'filter',filters:[cmd.state?{key:'state',value:cmd.state,mode:'set',label:'in '+cmd.name}:{key:'city',value:cmd.city,st:cmd.st,mode:'set',label:'in '+cmd.city}]};
+  switch(cmd.type){
+  case 'filter':
+    var items=cmd.filters,done=[],skip=[],switched=false,navTo=null;
+    items.forEach(function(it){if(it.key==='state'&&!it.neg){if(G.STATE!==(it.clear?'ALL':it.value)){call('setState',it.clear?'ALL':it.value);switched=true;}done.push(it);}});
+    if(!switched)items.forEach(function(it){if(it.key==='city'&&it.st&&!it.neg&&G.STATE!==it.st&&!items.some(function(x){return x.key==='state';})){call('setState',it.st);switched=true;}});
+    if(s==='market'){
+      var other=items.filter(function(it){return it.key!=='state';});
+      if(other.length&&!switched&&!done.length){sp('Open a drinks page like Cocktails, or the Map view, and I can filter it. Say “go to cocktails”.');return true;}
+      mWait(function(){sp(done.length?'Switched to '+(G.STATE==='ALL'?'the whole country':(STATE_LABEL[G.STATE]||G.STATE))+'.'+(other.length?' Open a drinks page or the Map view to filter by '+other.map(function(x){return x.key.replace(/_/g,' ');}).join(' and ')+'.':''):'');});
+      return true;
+    }
+    var apply=function(){
+      var rows=s==='mmap'?(G.VENUES||[]):mRows(),FL=F();
+      items.forEach(function(it){
+        var k=it.key;if(k==='state')return;
+        if(k==='city'){
+          var all=uniqVals(rows,'city'),hit=all.filter(function(v){return cityIs(v,it);});
+          if(!hit.length&&rows.length&&!it.neg){skip.push(it);it.missing=true;return;}
+          if(!hit.length)hit=[it.value];
+          var vals=it.neg?all.filter(function(v){return !cityIs(v,it);}):hit,mode=it.neg?'set':it.mode;
+          if(s==='mmap'){setObj(G.MCITY,vals.map(function(v){return String(v).trim();}),mode);setObj(G.VCITY,vals,mode);G.MAPKEY='';}
+          else setObj(FL.city,vals,mode);
+          done.push(it);
+        }else if(k==='venue_type'){
+          var allT=uniqVals(rows,'venue_type'),t=allT.filter(function(v){return vtIs(v,it)!==!!it.neg;});
+          if(!t.length){skip.push(it);it.missing=true;return;}
+          if(s==='mmap'){setObj(G.VTYPE,t,it.neg?'set':it.mode);if(G.ANCHOR)setObj(G.CTYPES,t,it.neg?'set':it.mode);G.MAPKEY='';}
+          else setObj(FL.venue_type,t,it.neg?'set':it.mode);
+          done.push(it);
+        }else if(k==='income'){setObj(FL.income_band,pickBands((G.INC||[]).map(function(x){return {v:x,label:x};}),it),'set');done.push(it);}
+        else if(k==='age'){setObj(FL.age_band,pickBands((G.AGE||[]).map(function(x){return {v:x,label:x};}),it),'set');done.push(it);}
+        else if(k==='has_menu'&&s==='mmap'){G.MENUONLY=it.value!==false;G.MAPKEY='';done.push(it);}
+        else if(k==='radius'&&s==='mmap'){if(!G.ANCHOR){skip.push(it);it.why='anchor';return;}var R2=G.RADII||[it.value],best=R2[0];R2.forEach(function(x){if(Math.abs(x-it.value)<Math.abs(best-it.value))best=x;});G.RADIUS=best;done.push(it);}
+        else if((k==='spirit'||k==='menu_kind')&&!it.neg&&SEC_FOR[it.value]&&s==='mcat'){navTo=SEC_FOR[it.value];done.push(it);}
+        else skip.push(it);
+      });
+      var sorted=cmd.sort?mSortSet(cmd.sort,s):false;
+      if(navTo&&navTo!==G.page)call('nav',navTo);else call('render');
+      if(s==='mmap'){var cities=items.filter(function(x){return x.key==='city'&&!x.neg&&!x.missing;}).map(function(x){return x.value;});setTimeout(function(){mFit(cities.length?cities:null,null,null);},450);}
+      var n=s==='mmap'?mVenueRows().length:mRows().filter(mPasses).length,miss=skip.filter(function(x){return x.missing;});
+      var extra=(miss.length?'I don’t see '+miss.map(function(x){return x.key==='city'?x.value:x.label;}).join(' or ')+' on this page. ':'')+(skip.filter(function(x){return !x.missing;}).length?skipNote(skip.filter(function(x){return !x.missing;}),s==='mmap'?'The map':'This page')+(skip.some(function(x){return x.why==='anchor';})?' Pick your account first for a radius.':''):'');
+      if(!done.length){sp(extra||'Nothing to change.');return;}
+      sp(describe(done,sorted?cmd.sort:null,navTo?secLabel():noun,n,extra.trim()));
+    };
+    if(switched){sp('Switching to '+(STATE_LABEL[G.STATE]||G.STATE)+'…');mWait(apply);}else apply();
+    return true;
+  case 'clear':case 'map.all':
+    if(!cmd.key||cmd.type==='map.all'){call('clearFilters');if(s==='mmap'){G.MCITY={};G.VCITY={};G.VTYPE={};G.MENUONLY=false;G.MAPKEY='';call('render');setTimeout(function(){mFit(null,null,null);},450);}
+      sp('Cleared the filters.'+(s==='mmap'?' Showing '+fmtN(mVenueRows().length)+' venues.':s==='mcat'?' Showing '+fmtN(mRows().filter(mPasses).length)+' '+noun+'.':''));return true;}
+    var k=cmd.key,FL=F();
+    if(k==='state'){call('setState','ALL');sp('Showing the whole country.');return true;}
+    if(k==='sort'){G.SORT.key=null;G.SORT.table=null;G.SORT.dir=1;call('render');sp('Sorting cleared.');return true;}
+    if(k==='city'){FL.city={};G.MCITY={};G.VCITY={};G.MAPKEY='';}
+    else if(k==='venue_type'){FL.venue_type={};G.VTYPE={};G.CTYPES={};G.MAPKEY='';}
+    else if(k==='income')FL.income_band={};else if(k==='age')FL.age_band={};
+    else if(k==='has_menu'){G.MENUONLY=false;G.MAPKEY='';}
+    else{sp('There’s no '+k.replace(/_/g,' ')+' filter on this page.');return true;}
+    call('render');sp('Cleared the '+k.replace(/_/g,' ')+' filter.');return true;
+  case 'sort':
+    if(s==='market'){sp('Open a drinks page or the Map view to sort.');return true;}
+    if(cmd.key==='shuffle'){sp('This page can’t shuffle; try “sort by price” or “by city”.');return true;}
+    if(!mSortSet(cmd,s)){sp('This page sorts by '+(s==='mmap'?'venue, city, type, rating, reviews or distance':'price, item, venue or city')+'.');return true;}
+    call('render');sp(cmd.key==='$reverse'?'Reversed.':'Sorted '+sortLabel(cmd)+'.');return true;
+  case 'page':case 'pageSize':
+    sp('This page isn’t split into pages; say “scroll down” to see more.');return true;
+  case 'map.fit':
+    if(!mFit(cmd.city?[cmd.city]:null,cmd.state||null,cmd.ll)){sp('The map isn’t ready yet.');return true;}
+    sp('Zoomed to '+cmd.name+'.');return true;
+  case 'stat':
+    if(s==='mmap'){var vr=mVenueRows();if(cmd.stat==='count'){sp(fmtN(vr.length)+' venues'+(onKeys(G.MCITY).length?' in '+onKeys(G.MCITY).join(', '):'')+'.');return true;}
+      var names={};vr.forEach(function(v){names[v.venue]=1;});var st1=mStats((G.EXP||[]).filter(function(r){return names[r.venue]&&mPasses(r);}));sp(statSay(cmd,st1,'drinks at these venues'));return true;}
+    if(s==='market'){sp('Open a drinks page and I can count and average it.');return true;}
+    var st2=mStats(mRows().filter(mPasses));
+    if(cmd.stat==='count'){sp(fmtN(st2.n)+' '+noun+(st2.priced<st2.n?', '+fmtN(st2.priced)+' with a price':'')+'.');return true;}
+    sp(statSay(cmd,st2,noun));return true;
+  case 'detail':
+    var list=s==='mmap'?mSorted(mVenueRows(),s):mSorted(mRows().filter(mPasses),s),row=null,i;
+    if(cmd.index){i=cmd.index===-1?list.length-1:cmd.index-1;row=list[i];if(!row){sp('There are only '+list.length+'.');return true;}}
+    else{for(i=0;i<list.length;i++){if(textHas(list[i].venue||'',cmd.name)||textHas(list[i].item_name||'',cmd.name)){row=list[i];break;}}if(!row)return false;}
+    if(s==='mmap'){if(cmd.verb==='open'||!cmd.index)call('pickVenue',encodeURIComponent(row.venue));
+      sp(row.venue+', '+(row.city||'')+(row.venue_type?', '+String(row.venue_type).replace(/_/g,' '):'')+(row.rating!=null?', rated '+row.rating:'')+(row.dist!=null?', '+(+row.dist).toFixed(1)+' miles away':'')+'.');return true;}
+    sp((cmd.index?'Number '+(i+1)+': ':'')+row.item_name+(row.item_price!=null?', $'+(+row.item_price).toFixed(2).replace(/\.00$/,''):'')+' at '+row.venue+(row.city?' in '+row.city:'')+'.');return true;
+  }
+  return false;
+}
+function statSay(cmd,st,noun){
+  if(!st.priced)return 'There are no prices here to work that out.';
+  var f=function(v){return '$'+(+v).toFixed(2);};
+  if(cmd.field!=='price')return 'This page doesn’t list '+cmd.field+' per item.';
+  if(cmd.stat==='avg')return 'The average is '+f(st.avg)+' across '+fmtN(st.priced)+' '+noun+'.';
+  if(cmd.stat==='median')return 'The median is '+f(st.median)+' across '+fmtN(st.priced)+' '+noun+'.';
+  if(cmd.stat==='min')return 'The cheapest is '+f(st.min)+'.';
+  return 'The most expensive is '+f(st.max)+'.';
+}
+
+/* ===================== Menu Studio: build your own ===================== */
+function studioApply(cmd){
+  var MD=G.MD,f=MD&&MD.f,sp=speaker();if(!f)return false;
+  var count=function(){var r=call('mdCustom');return r?r.length:0;};
+  if(cmd.type==='map.fit')cmd={type:'filter',filters:[cmd.state?{key:'state',value:cmd.state,mode:'set',label:'in '+cmd.name}:{key:'city',value:cmd.city,st:cmd.st,mode:'set',label:'in '+cmd.city}]};
+  if(cmd.type==='filter'){
+    var done=[],skip=[];
+    cmd.filters.forEach(function(it){
+      var k=it.key,all,vals;
+      if(k==='state'){f.states=it.clear?[]:it.neg?f.states.filter(function(x){return x!==it.value;}):(it.mode==='add'?f.states.concat([it.value]):[it.value]);done.push(it);}
+      else if(k==='city'){var ck=call('mdCityKey');all=ck?(call('mdUniq',ck)||[]):[];vals=all.filter(function(v){return cityIs(v,it)!==!!it.neg;});if(!vals.length){skip.push(it);return;}f.cities=it.mode==='add'&&!it.neg?(f.cities||[]).concat(vals):vals;done.push(it);}
+      else if(k==='venue_type'){all=call('mdUniq','venue_type')||[];vals=all.filter(function(v){return vtIs(v,it)!==!!it.neg;});if(!vals.length){skip.push(it);return;}f.types=it.mode==='add'&&!it.neg?f.types.concat(vals):vals;done.push(it);}
+      else if(k==='income'){f.inc=pickBands((G.MD_INC||G.INC||[]).map(function(x){return {v:x,label:x};}),it);done.push(it);}
+      else if(k==='age'){all=call('mdUniq','age_band')||G.AGE||[];f.age=pickBands(all.map(function(x){return {v:x,label:x};}),it);done.push(it);}
+      else if(k==='price'){var lo=MD.PRICE_LO||4,hi=MD.PRICE_HI||30;f.lo=it.min!=null?clamp(Math.floor(it.min),lo,hi):lo;f.hi=it.max!=null?clamp(Math.ceil(it.max),lo,hi):hi;done.push(it);}
+      else skip.push(it);
+    });
+    if(done.length){MD.mode='custom';MD.drinksFor=null;call('render');}
+    sp(done.length?'Build your own: '+fmtN(count())+' comparable venues '+done.map(function(x){return x.label;}).join(' ')+'.'+(skip.length?' '+skipNote(skip,'Menu Studio'):''):skipNote(skip,'Menu Studio'));
+    return true;
+  }
+  if(cmd.type==='clear'){if(!cmd.key||cmd.key==='price'){if(!cmd.key)call('mdClearAll');f.lo=MD.PRICE_LO||4;f.hi=MD.PRICE_HI||30;MD.drinksFor=null;call('render');}
+    else{var mk={state:'states',venue_type:'types',income:'inc',age:'age',city:'cities'}[cmd.key];if(!mk){sp('Menu Studio has no '+cmd.key.replace(/_/g,' ')+' filter.');return true;}f[mk]=[];MD.drinksFor=null;call('render');}
+    sp('Cleared. '+fmtN(count())+' comparable venues.');return true;}
+  if(cmd.type==='stat'&&cmd.stat==='count'){sp(fmtN(count())+' comparable venues match the filters.');return true;}
+  if(cmd.type==='sort'||cmd.type==='page'||cmd.type==='pageSize'){sp('Menu Studio’s filters don’t sort or page; try “only bars in Iowa under $14”.');return true;}
+  return false;
+}
+
+/* ===================== Harmony data panel (#hdPanel): refine the view on screen ===================== */
+var R={base:null,f:{},sort:null,page:1,size:20,order:[]};
+function hdSync(){var st=hdState();if(!st||!st.base)return null;if(R.base!==st.base)R={base:st.base,f:{},sort:null,page:1,size:R.size||20,order:[]};return st;}
+function fkey(it){return it.key==='spirit'?'spirit:'+it.value:it.key;}
+function items(){return Object.keys(R.f).map(function(k){return R.f[k];});}
+function mergeItem(it){
+  var k=fkey(it),cur=R.f[k];
+  if(it.clear){delete R.f[k];return;}
+  if(it.mode==='add'&&cur&&!cur.neg&&!it.neg&&/^(city|state|venue_type)$/.test(it.key)){var any=(cur.any||[cur]).concat([it]);R.f[k]={key:it.key,any:any,value:it.value,label:'in '+any.map(function(x){return x.label.replace(/^in /,'');}).join(' or '),mode:'set'};return;}
+  R.f[k]=it;
+}
+function toModel(v){
+  if(!v)return null;
+  if((v.type==='table'||v.type==='dashboard'||v.type==='donut')&&v.table&&v.table.cols&&v.table.rows&&v.table.rows.length)return {kind:'table',cols:v.table.cols.slice(),rows:v.table.rows.map(function(r,i){return {c:r,i:i};})};
+  if(v.type==='bars'&&v.bars&&v.bars.length){var t=low(v.title),dim=/city/.test(t)?'City':/venue type|by type/.test(t)?'Type':/venue/.test(t)?'Venue':/state/.test(t)?'State':/brand/.test(t)?'Brand':'Name';
+    return {kind:'bars',cols:[dim,v.unit==='$'?'Price':'Value','Items','Detail'],rows:v.bars.map(function(b,i){return {c:[b.label,b.value,b.n==null?'':b.n,b.sub||''],i:i,src:b};})};}
+  return null;
+}
+function colMap(model){
+  var cm={},cols=model.cols.map(low);
+  function share(i,test){var n=0,t=0;model.rows.slice(0,40).forEach(function(r){var v=r.c[i];if(v==null||v==='')return;t++;if(test(v))n++;});return t?n/t:0;}
+  var isN=function(v){return isFinite(toNum(v));};
+  cols.forEach(function(c,i){
+    if(cm.income==null&&/income/.test(c))cm.income=i;
+    else if(cm.age==null&&/\bage\b/.test(c))cm.age=i;
+    else if(cm.rating==null&&/rating|stars/.test(c))cm.rating=i;
+    else if(cm.price==null&&/price|avg|average|median|cost|\$|value/.test(c)&&!/income/.test(c)&&share(i,isN)>.6&&(c!=='value'||model.cols[1]==='Price'))cm.price=i;
+    else if(cm.drinks==null&&/^(items|drinks|menu items|listings|count|n|drink items|drinks on menus)$/.test(c))cm.drinks=i;
+    else if(cm.reviews==null&&/reviews?/.test(c))cm.reviews=i;
+    else if(cm.city==null&&/city|town/.test(c))cm.city=i;
+    else if(cm.state==null&&/^state|state code/.test(c))cm.state=i;
+    else if(cm.type==null&&/type/.test(c))cm.type=i;
+    else if(cm.venue==null&&/venue|^bar$|restaurant|place|account/.test(c))cm.venue=i;
+    else if(cm.date==null&&/date|approved|when|updated|added/.test(c))cm.date=i;
+  });
+  if(cm.price==null)cols.forEach(function(c,i){if(cm.price==null&&!/income/.test(c)&&share(i,function(v){return /^\$\s?\d/.test(String(v));})>.6)cm.price=i;});
+  cm.name=0;return cm;
+}
+function stateOf(text){var m=String(text||'').match(/,\s*([A-Z]{2})\b/);return m?m[1]:'';}
+/* one filter -> a row test (null when this view has nothing to test it against) */
+function rowPred(it,cm,model){
+  var k=it.key,rows=model.rows;
+  var rng=function(i){return function(r){return inRange(toNum(r.c[i]),it);};};
+  var all=function(r){return r.c.map(function(x){return x==null?'':String(x);}).join(' | ');};
+  var p=null;
+  if(it.any){var ps=it.any.map(function(x){return rowPred(x,cm,model);});if(ps.some(function(x){return !x;}))return null;return function(r){return ps.some(function(f){return f(r);});};}
+  if(k==='price'&&cm.price!=null)p=rng(cm.price);
+  else if(k==='income'&&cm.income!=null)p=rng(cm.income);
+  else if(k==='age'&&cm.age!=null)p=rng(cm.age);
+  else if(k==='rating'&&cm.rating!=null)p=rng(cm.rating);
+  else if(k==='has_menu'&&cm.drinks!=null)p=function(r){var n=toNum(r.c[cm.drinks]);return it.value===false?!(n>0):n>0;};
+  else if(k==='city'){var ci=cm.city!=null?cm.city:(model.cols[0]==='City'?0:null);
+    if(ci!=null)p=function(r){return cityIs(r.c[ci],it);};
+    else if(rows.some(function(r){return cityAliases(it).some(function(a){return (' '+low(all(r))+' ').indexOf(' '+a)>=0;});}))p=function(r){return cityAliases(it).some(function(a){return (' '+low(all(r))+' ').indexOf(' '+a)>=0;});};}
+  else if(k==='state'){if(it.clear)return function(){return true;};
+    if(cm.state!=null)p=function(r){var v=String(r.c[cm.state]||'');return v.toUpperCase()===it.value||low(v)===low(it.name);};
+    else if(model.cols[0]==='State')p=function(r){var v=String(r.c[0]||'');return v.toUpperCase()===it.value||low(v)===low(it.name);};
+    else if(rows.some(function(r){return stateOf(all(r));}))p=function(r){return stateOf(all(r))===it.value;};}
+  else if(k==='venue_type'){var ti=cm.type!=null?cm.type:(model.cols[0]==='Type'?0:null);if(ti!=null)p=function(r){return vtIs(r.c[ti],it);};}
+  else if(k==='q')p=function(r){return textHas(all(r),it.value);};
+  else if(k==='spirit'){var w=spiritRe(it.value);p=function(r){return w.test(low(all(r)));};}
+  if(!p)return null;
+  return it.neg?function(r){return !p(r);}:p;
+}
+function pinPred(it,pins){
+  var k=it.key,has=function(f){return pins.some(function(r){var v=r.a&&r.a[f];return v!=null&&v!==''&&(typeof v!=='number'||isFinite(v));});},p=null;
+  if(it.any){var ps=it.any.map(function(x){return pinPred(x,pins);});if(ps.some(function(x){return !x;}))return null;return function(r){return ps.some(function(f){return f(r);});};}
+  if((k==='price'||k==='income'||k==='age'||k==='rating')&&has(k))p=function(r){return inRange(r.a[k],it);};
+  else if(k==='has_menu'&&has('drinks'))p=function(r){return it.value===false?!(r.a.drinks>0):r.a.drinks>0;};
+  else if(k==='city'&&has('city'))p=function(r){return cityIs(r.a.city,it);};
+  else if(k==='state'){if(it.clear)return function(){return true;};if(has('state'))p=function(r){return r.a.state===it.value;};}
+  else if(k==='venue_type'&&has('venue_type'))p=function(r){return vtIs(r.a.venue_type,it);};
+  else if(k==='q')p=function(r){return textHas(r.a.text||r.a.name,it.value);};
+  else if(k==='spirit'){var w=spiritRe(it.value);p=function(r){return w.test(r.a.text||'');};}
+  if(!p)return null;
+  return it.neg?function(r){return !p(r);}:p;
+}
+/* what phg-harmony-data can re-query per source (it ignores params it does not know) */
+var SRV={drink_prices:'q state city venue_type price income age sort',drink_map:'q state city venue_type price income age sort',venues:'state city venue_type has_menu',distilleries:'state',menu_breakdown:'state'};
+function srvKeys(q){var o={};if(!q||!q.source)return o;(Array.isArray(q.keys)?q.keys:(SRV[q.source]||'').split(' ')).forEach(function(k){if(k)o[k]=1;});return o;}
+function canSrv(it,ok){return !!(ok[it.key]&&!it.neg&&!it.any&&it.mode!=='add'&&!(it.key==='city'&&it.guess&&false));}
+function itemParams(it,clear){
+  var e=function(v){return clear||v==null?'':String(v);},k=it.key;
+  if(k==='price'||k==='income'||k==='age'){var o={};o[k+'_min']=e(it.min);o[k+'_max']=e(it.max);return o;}
+  if(k==='state')return {state:clear||it.clear?'':it.value,city:''};
+  if(k==='city')return clear?{city:''}:{city:it.value,state:it.st||''};
+  if(k==='venue_type')return {venue_type:clear?'':(it.srv||it.value)};
+  if(k==='has_menu')return {with_menus:clear||it.value===false?'':'1'};
+  if(k==='q')return {q:clear?'':stem(it.value).join(' ')};
+  return {};
+}
+var SORT_PARAM={price:{asc:'price_asc',desc:'price_desc'},income:{desc:'income_desc',asc:'income_asc'},rating:{desc:'rating_desc'},name:{asc:'name'},city:{asc:'city'}};
+function sortParam(s){if(!s)return '';var m=SORT_PARAM[s.key];return m&&m[s.dir]||'';}
+function requery(q,params,cb){
+  var tok=typeof G.phgAuthAccessToken==='function'?G.phgAuthAccessToken():null;if(!tok||!G.harmonyDataURL)return cb(new Error('signin'));
+  var acct=null;try{acct=G.PHGAUTH.workspace.account.id||null;}catch(e){}
+  var clean={};for(var k in params){var v=params[k];if(v==null||String(v).trim()==='')continue;clean[k]=String(v);}
+  document.body.classList.add('hvx-data-loading');
+  fetch(G.harmonyDataURL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify({source:q.source,params:clean,account_id:acct})})
+  .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok)throw new Error(j.detail||j.error||('HTTP '+r.status));return j;});})
+  .then(function(j){
+    document.body.classList.remove('hvx-data-loading');
+    if(!j||!j.view)throw new Error('no view');
+    var nq=(j.view.query&&j.view.query.source)?j.view.query:{source:j.source||q.source,params:j.params||clean,keys:q.keys};j.view.query=nq;
+    G.harmonyDataShow(j.view,{refine:true,orig:j.view,query:nq});cb(null,j);
+  })
+  .catch(function(e){document.body.classList.remove('hvx-data-loading');cb(e);});
+}
+function sortRowsBy(rows,s,cm,model){
+  if(!s)return rows;
+  if(s.key==='shuffle'){var a=rows.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  var idx={price:cm.price,income:cm.income,age:cm.age,rating:cm.rating,reviews:cm.reviews,drinks:cm.drinks,city:cm.city,state:cm.state,venue:cm.venue,venue_type:cm.type,recent:cm.date,name:cm.name}[s.key];
+  if(idx==null){var w=low(s.key);model.cols.forEach(function(c,i){if(idx==null&&low(c).indexOf(w)>=0)idx=i;});}
+  if(idx==null)return null;
+  var num=rows.filter(function(r){return isFinite(toNum(r.c[idx]));}).length>rows.length*.6&&!/name|venue|city|state|type/.test(s.key),d=s.dir==='desc'?-1:1;
+  return rows.slice().sort(function(a,b){
+    var x=a.c[idx],y=b.c[idx];
+    if(num){x=toNum(x);y=toNum(y);if(!isFinite(x))return 1;if(!isFinite(y))return -1;return (x-y)*d;}
+    x=low(x);y=low(y);return x<y?-d:x>y?d:0;
+  });
+}
+function sortPins(recs,s){
+  if(!s)return recs;
+  if(s.key==='shuffle')return sortRowsBy(recs.map(function(r){return {c:[r],r:r};}),s,{},{cols:[]}).map(function(x){return x.r;});
+  var f={price:'price',income:'income',age:'age',rating:'rating',drinks:'drinks',city:'city',state:'state',name:'name',venue:'name',venue_type:'venue_type'}[s.key];if(!f)return null;
+  var d=s.dir==='desc'?-1:1,num=/price|income|age|rating|drinks/.test(f);
+  return recs.slice().sort(function(a,b){var x=a.a[f],y=b.a[f];if(num){if(x==null||!isFinite(x))return 1;if(y==null||!isFinite(y))return -1;return (x-y)*d;}x=low(x);y=low(y);return x<y?-d:x>y?d:0;});
+}
+function hdNoun(orig,model){
+  if(orig.type==='map'){var h=HM(),k=h&&h.kinds?h.kinds():[];return k.length===1?(h.kindWord?h.kindWord(k[0]):k[0]+'s'):'places';}
+  var c=low(model&&model.cols[0]||'row');return plural(c==='name'?'row':c);
+}
+/* redraw the view from its unrefined rows with every filter, the sort and the page */
+function hdRender(){
+  var st=hdState();if(!st||!st.orig)return null;var orig=st.orig;
+  if(orig.type==='map'){
+    var h=HM();if(!h||!h.filterPins)return null;var pins=h.pins(),preds=[];
+    items().forEach(function(it){if(it.srv)return;var p=pinPred(it,pins);if(p)preds.push(p);});
+    h.filterPins(preds.length?function(r){return preds.every(function(p){return p(r);});}:null);
+    var vis=h.visiblePins();R.order=sortPins(vis,R.sort)||vis;
+    if(preds.length||R.fitNext)h.fitVisible();R.fitNext=false;
+    return {count:vis.length,total:pins.length,kind:'map'};
+  }
+  var model=toModel(orig);if(!model){G.harmonyDataShow(orig,{refine:true});return {count:null};}
+  var cm=colMap(model),preds=[];
+  items().forEach(function(it){if(it.srv)return;var p=rowPred(it,cm,model);if(p)preds.push(p);});
+  var rows=model.rows.filter(function(r){return preds.every(function(p){return p(r);});});
+  rows=sortRowsBy(rows,R.sort,cm,model)||rows;R.order=rows;
+  var total=rows.length,pages=Math.max(1,Math.ceil(total/R.size));R.page=clamp(R.page,1,pages);
+  var pr=rows.slice((R.page-1)*R.size,R.page*R.size),active=items().length>0||!!R.sort;
+  if(!active&&pages===1){G.harmonyDataShow(orig,{refine:true});return {count:total,total:model.rows.length,page:1,pages:1};}
+  var v={};for(var k in orig)v[k]=orig[k];
+  if(model.kind==='bars')v.bars=pr.map(function(r){return r.src;});
+  else{v.table={};for(var t in orig.table)v.table[t]=orig.table[t];v.table.rows=pr.map(function(r){return r.c;});}
+  if(orig.type==='dashboard'&&preds.length&&cm.price!=null){var p=rows.map(function(r){return toNum(r.c[cm.price]);}).filter(isFinite).sort(function(a,b){return a-b;});
+    if(p.length)v.tiles=[{label:'Shown',value:fmtN(rows.length)},{label:'Average',value:'$'+(p.reduce(function(a,b){return a+b;},0)/p.length).toFixed(2)},{label:'Median',value:'$'+p[Math.floor(p.length/2)].toFixed(2)},{label:'Range',value:'$'+p[0]+'–$'+p[p.length-1]}];}
+  var sTot=orig.table&&orig.table.total,note=items().map(function(x){return x.label;}).concat(R.sort?[sortLabel(R.sort)]:[]).join(' · ');
+  note=(note?note+' · ':'')+fmtN(total)+' of '+fmtN(model.rows.length)+(sTot&&sTot>model.rows.length?' shown (of '+fmtN(sTot)+')':'');
+  v._refine={note:note,page:R.page,pages:pages,clear:active};
+  G.harmonyDataShow(v,{refine:true});
+  return {count:total,total:model.rows.length,page:R.page,pages:pages};
+}
+function hdSay(sp,res,extra,noun){
+  var st=hdState(),orig=st&&st.orig;if(!res||!orig)return;
+  var model=orig.type==='map'?null:toModel(orig);
+  sp(describe(items(),R.sort,noun||hdNoun(orig,model),res.count,((res.pages>1?'Page '+res.page+' of '+res.pages+'.':'')+(extra?' '+extra:'')).trim()));
+}
+function hdRefine(sp,srvParams,extra,after){
+  var st=hdState(),q=st&&st.query;
+  if(q&&srvParams&&Object.keys(srvParams).length){
+    var params={};for(var k in (q.params||{}))params[k]=q.params[k];for(var k2 in srvParams)params[k2]=srvParams[k2];
+    requery(q,params,function(err,j){
+      if(err){items().forEach(function(it){it.srv=false;});if(String(err.message)==='signin'){sp('Sign in to PHG so I can ask for that again.');}var r0=hdRender();if(after)after(r0,err);else hdSay(sp,r0,extra);return;}
+      if(j&&j.view&&j.view.type==='empty'){sp(j.speak||'Nothing matches that.');return;}
+      var r=hdRender();if(after)after(r);else hdSay(sp,r,extra);
+    });
+    return;
+  }
+  var res=hdRender();if(after)after(res);else hdSay(sp,res,extra);
+}
+function hdApply(cmd,s){
+  var st=hdSync(),sp=speaker(),h=HM();if(!st)return false;
+  if(s==='hdmap'&&h&&h.placeOpen&&h.placeOpen()&&!/^(map\.fit|clear)$/.test(cmd.type))return false;
+  var orig=st.orig,isMap=orig&&orig.type==='map',model=isMap?null:toModel(orig);
+  if(!isMap&&!model)return false;
+  var cm=model?colMap(model):null,pins=isMap&&h&&h.pins?h.pins():[],ok=srvKeys(st.query);
+  switch(cmd.type){
+  case 'filter':
+    var srv={},use=[],skip=[];
+    cmd.filters.forEach(function(it){
+      var client=isMap?pinPred(it,pins):rowPred(it,cm,model);
+      if(st.query&&canSrv(it,ok)){it.srv=true;var ip=itemParams(it);for(var k in ip)srv[k]=ip[k];use.push(it);}
+      else if(client){it.srv=false;use.push(it);}
+      else skip.push(it);
+    });
+    var looksNew=cmd.filters.some(function(it){return /^(city|state|venue_type|q)$/.test(it.key);});
+    /* a different question (a place, venue type or drink this view can't be narrowed by): Harmony answers it afresh */
+    if(skip.length&&looksNew&&typeof G.harmonyConverse==='function'&&cmd.raw){G.harmonyConverse(String(cmd.raw).trim());return true;}
+    if(!use.length){sp(skipNote(skip,isMap?'This map':'This view')+' Ask me for it directly, like “'+(skip[0].key==='price'?'margaritas under $14 in Denver':'bars in Denver')+'”.');return true;}
+    var before={};for(var bk in R.f)before[bk]=R.f[bk];var beforeSort=R.sort,bare=!cmd.verb&&!Object.keys(srv).length&&typeof G.harmonyConverse==='function'&&cmd.raw;
+    use.forEach(mergeItem);R.page=1;R.fitNext=isMap;
+    if(cmd.sort){R.sort=cmd.sort;var sp1=ok.sort&&sortParam(cmd.sort);if(sp1)srv.sort=sp1;}
+    hdRefine(sp,srv,skip.length?skipNote(skip,isMap?'This map':'This view'):'',function(r){
+      /* a bare phrase ("tequila", "Boulder") that would empty the view is more likely a new question: undo, ask Harmony */
+      if(bare&&r&&r.count===0){R.f=before;R.sort=beforeSort;R.fitNext=false;hdRender();G.harmonyConverse(String(cmd.raw).trim());return;}
+      hdSay(sp,r,skip.length?skipNote(skip,isMap?'This map':'This view'):'');
+    });
+    return true;
+  case 'clear':case 'map.all':
+    var all=!cmd.key||cmd.type==='map.all',had=false,cleared=[];
+    if(cmd.key==='sort'){R.sort=null;var sq=st.query&&st.query.params&&st.query.params.sort;hdRefine(sp,sq?{sort:''}:null,'',function(r){sp('Sorting cleared.');});return true;}
+    Object.keys(R.f).forEach(function(k){var it=R.f[k];if(all||it.key===cmd.key){if(it.srv)had=true;cleared.push(it);delete R.f[k];}});
+    if(all){R.sort=null;R.page=1;}
+    if(!cleared.length&&!all){sp('There’s no '+cmd.key.replace(/_/g,' ')+' filter on this view.');return true;}
+    R.fitNext=isMap;
+    var fin=function(r){if(isMap&&all&&h&&h.showAll)h.showAll();sp(all?(isMap?'Showing all '+fmtN(h&&h.count?h.count():(r&&r.count)||0)+' pins.':'Cleared. Showing all '+fmtN(r&&r.count||0)+' '+hdNoun(hdState().orig,toModel(hdState().orig))+'.'):'Cleared the '+cmd.key.replace(/_/g,' ')+' filter. '+describe(items(),R.sort,hdNoun(hdState().orig,toModel(hdState().orig)),r&&r.count));};
+    if(had&&all){G.harmonyDataShow(R.base,{refine:true,orig:R.base,query:st.baseQuery});var r1=hdRender();fin(r1);return true;}
+    if(had){var cp={};cleared.forEach(function(it){var ip=itemParams(it,true);for(var k in ip)cp[k]=ip[k];});hdRefine(sp,cp,'',fin);return true;}
+    fin(hdRender());return true;
+  case 'sort':
+    if(cmd.key==='$reverse'){if(!R.sort){sp('Say how to sort first, like “cheapest first”.');return true;}R.sort={key:R.sort.key,dir:R.sort.dir==='desc'?'asc':'desc'};}
+    else{var test=isMap?sortPins(pins,cmd):sortRowsBy(model.rows,cmd,cm,model);if(!test){sp('This '+(isMap?'map':'view')+' has no '+String(cmd.key).replace(/_/g,' ')+' to sort by.'+(isMap?'':' Columns: '+model.cols.join(', ')+'.'));return true;}R.sort={key:cmd.key,dir:cmd.dir};}
+    R.page=1;
+    var sp2=ok.sort&&sortParam(R.sort),srvS=sp2&&orig.table&&orig.table.total>(orig.table.rows||[]).length?{sort:sp2}:null;
+    hdRefine(sp,srvS,'',function(r){
+      if(isMap){var f=R.order&&R.order[0];sp('Sorted '+sortLabel(R.sort)+'.'+(f?' First is '+f.p.label+(f.a.price!=null&&R.sort.key==='price'?' at $'+(+f.a.price).toFixed(2):'')+'. Say “open the first one”.':''));}
+      else sp('Sorted '+sortLabel(R.sort)+'.'+(r&&r.pages>1?' Page 1 of '+r.pages+'.':''));
+    });
+    return true;
+  case 'page':
+    if(isMap){sp('A map has no pages. Say “next one” to step through the pins.');return true;}
+    var tot=Math.max(1,Math.ceil((R.order.length||model.rows.length)/R.size)),np=cmd.delta?R.page+cmd.delta:cmd.page==='last'?tot:(cmd.page|0);
+    if(np<1){sp('You’re on the first page.');return true;}
+    if(np>tot){sp(tot===1?'Everything fits on one page.':'There are only '+tot+' pages.');return true;}
+    R.page=np;var r2=hdRender();sp('Page '+r2.page+' of '+r2.pages+'.');return true;
+  case 'pageSize':
+    if(isMap){sp('A map has no pages.');return true;}
+    R.size=clamp(cmd.n|0,5,200);R.page=1;var r3=hdRender();sp('Showing '+R.size+' per page'+(r3&&r3.pages>1?', page 1 of '+r3.pages:'')+'.');return true;
+  case 'map.fit':
+    return fitPlace(cmd,s,sp);
+  case 'detail':
+    var act=items().length||R.sort,list=isMap?(act&&R.order?R.order:(h&&h.visiblePins?h.visiblePins():[])):(act?R.order:model.rows),i,one=null;
+    if(cmd.index){i=cmd.index===-1?(isMap?list.length-1:Math.min(list.length,R.page*R.size)-1):(isMap?cmd.index-1:(R.page-1)*R.size+cmd.index-1);one=list[i];if(!one){sp('There are only '+(isMap?list.length:Math.min(R.size,list.length-(R.page-1)*R.size))+' here.');return true;}}
+    else{for(i=0;i<list.length;i++){var txt=isMap?list[i].a.name:String(list[i].c[cm.venue!=null?cm.venue:0]);if(textHas(txt,cmd.name)){one=list[i];break;}}
+      if(!one&&!isMap)for(i=0;i<list.length;i++){if(textHas(list[i].c.join(' '),cmd.name)){one=list[i];break;}}
+      if(!one)return false;}
+    if(isMap){h.select(one,cmd.verb==='open'||!cmd.index);sp((cmd.index?'Number '+(i+1)+': ':'')+one.p.label+(one.p.sub?', '+one.p.sub:'')+'.');return true;}
+    var cells=model.cols.map(function(c,j){var v=one.c[j];return v==null||v===''?'':(j===0?String(v):c+' '+v);}).filter(Boolean);
+    if(cmd.verb==='open'&&cm.venue!=null&&typeof G.harmonyShowData==='function'){var vn=one.c[cm.venue],cc=cm.city!=null?one.c[cm.city]:'';sp('Opening '+vn+'.');G.harmonyShowData('Drinks profile for '+vn+(cc?' in '+cc:''));return true;}
+    sp((cmd.index?'Number '+(cmd.index===-1?'last':cmd.index)+': ':'')+cells.join(', ')+'.');return true;
+  case 'stat':
+    if(isMap){var vis=h.visiblePins();if(cmd.stat==='count'){sp(fmtN(vis.length)+' '+hdNoun(orig)+(items().length?' '+items().map(function(x){return x.label;}).join(' '):'')+' on this map.');return true;}
+      var pv=vis.map(function(r){return r.a[cmd.field==='price'?'price':cmd.field];}).filter(function(x){return x!=null&&isFinite(x);}).sort(function(a,b){return a-b;});
+      if(!pv.length){sp('These pins don’t carry '+(cmd.field==='price'?'prices':cmd.field)+'. Ask me “average margarita price in Denver” instead.');return true;}
+      sp(statText(cmd,pv,'places'));return true;}
+    var rows=(items().length||R.sort)?R.order:model.rows;
+    if(cmd.stat==='count'){var sT=orig.table&&orig.table.total;sp(fmtN(rows.length)+' '+hdNoun(orig,model)+(items().length?' match':'')+(sT&&!items().length&&sT>rows.length?' on screen, of '+fmtN(sT)+' in all':'')+'.');return true;}
+    var ci=cmd.field==='income'?cm.income:cmd.field==='age'?cm.age:cmd.field==='rating'?cm.rating:cm.price;
+    if(ci==null){
+      var tile=(orig.tiles||[]).filter(function(t){return new RegExp(cmd.stat==='avg'?'average|avg':cmd.stat==='median'?'median':'range','i').test(t.label);})[0];
+      if(tile&&!items().length){sp('The '+low(tile.label)+' is '+tile.value+'.');return true;}
+      sp('This view has no '+(cmd.field==='price'?'price':cmd.field)+' column.');return true;}
+    var vals=rows.map(function(r){return toNum(r.c[ci]);}).filter(isFinite).sort(function(a,b){return a-b;});
+    if(!items().length&&cmd.field==='price'&&(orig.tiles||[]).length){var t2=(orig.tiles||[]).filter(function(t){return new RegExp(cmd.stat==='avg'?'^average|^avg':cmd.stat==='median'?'^median':'^$','i').test(t.label);})[0];if(t2){sp('The '+low(t2.label)+' is '+t2.value+' across all of them; on screen it’s '+statText(cmd,vals,hdNoun(orig,model),true)+'.');return true;}}
+    if(!vals.length){sp('No numbers to work with here.');return true;}
+    sp(statText(cmd,vals,hdNoun(orig,model)));return true;
+  }
+  return false;
+}
+function statText(cmd,v,noun,bare){
+  var cur=cmd.field==='price'||cmd.field==='income',f=function(x){return cur?(cmd.field==='income'?'$'+Math.round(x/1000)+'k':'$'+(+x).toFixed(2)):String(Math.round(x*10)/10);};
+  var val=cmd.stat==='avg'?v.reduce(function(a,b){return a+b;},0)/v.length:cmd.stat==='median'?v[Math.floor(v.length/2)]:cmd.stat==='min'?v[0]:v[v.length-1];
+  if(bare)return f(val);
+  var w={avg:'The average',median:'The median',min:cmd.field==='price'?'The cheapest':'The lowest',max:cmd.field==='price'?'The most expensive':'The highest'}[cmd.stat];
+  return w+(cmd.field==='price'?'':' '+cmd.field)+' is '+f(val)+(cmd.stat==='avg'||cmd.stat==='median'?' across '+fmtN(v.length)+' '+noun:'')+'.';
+}
+/* "zoom to Denver": the pins in Denver if the map has them, else the city or state from the built-in table */
+function placeOf(cmd){
+  if(cmd.state)return {bounds:STATE_BOUNDS[cmd.state]||null,name:cmd.name||STATE_LABEL[cmd.state]||cmd.state};
+  var ll=cmd.ll;if(!ll)CITIES.forEach(function(c){if(!ll&&cityIs(c[0],{value:cmd.city}))ll=[c[2],c[3]];});
+  return {ll:ll,name:cmd.name||cmd.city};
+}
+function fitPlace(cmd,s,sp){
+  var m=null,h=HM(),pl=placeOf(cmd);
+  if(s==='hdmap'&&h&&h.map)m=h.map();
+  else if(s!=='hd'&&!viewOpen()&&G.MAP&&G.MAP._loaded)m=G.MAP;
+  else if(s!=='hd'&&viewOpen()&&G.HVIEW&&G.HVIEW.map&&G.HVIEW.map._loaded)m=G.HVIEW.map;
+  if(!m){if(typeof G.harmonyShowData==='function'&&viewOpen()){G.harmonyShowData('Show venues in '+pl.name+' on a map');return true;}sp('There’s no map open.');return true;}
+  if(s==='hdmap'&&h&&h.pins){
+    var recs=h.pins().filter(function(r){return !r.off&&(cmd.state?r.a.state===cmd.state:cityIs(r.a.city,{value:cmd.city}));});
+    if(recs.length){try{m.flyToBounds(recs.map(function(r){return [r.p.lat,r.p.lng];}),{padding:[28,28],maxZoom:13,duration:1});}catch(e){}sp('Zoomed to '+pl.name+': '+fmtN(recs.length)+' pin'+(recs.length===1?'':'s')+'.');return true;}
+  }
+  try{if(pl.bounds)m.flyToBounds(pl.bounds,{duration:1});else if(pl.ll)m.flyTo(pl.ll,cmd.state?7:12,{duration:1.2});else{sp('I don’t know where '+pl.name+' is.');return true;}}catch(e){return false;}
+  sp('Zoomed to '+pl.name+(s==='hdmap'?'; no pins there on this map.':'.'));return true;
+}
+
+/* ===================== routing ===================== */
+function applyCmd(cmd,s){
+  s=s||surf();if(!s||!cmd)return false;
+  if(s==='library')return libApply(cmd);
+  if(s==='mcat'||s==='mmap'||s==='market')return mktApply(cmd,s);
+  if(s==='studio')return studioApply(cmd);
+  if(s==='hd'||s==='hdmap')return hdApply(cmd,s);
+  return false;
+}
+/* the bus keeps these (zoom in/out, pan, zoom to a level, what can I say) */
+var BUS_FIRST=/^(zoom ?(in|out|closer|back out|further out)( (a lot|a bunch|way in|way out|more|a little|a bit|all the way))?|zoom (in |out )?to (level )?\d+|(pan|move|go|scroll|slide|shift)( the map)? (left|right|up|down|north|south|east|west)( (a lot|a little|a bit))?|what can i (say|do|ask)( you)?|voice commands|help)$/;
+function hear(q){
+  var raw=String(q||'');if(!raw.trim()||raw.length>200)return false;
+  var s=surf();if(!s&&!viewOpen())return false;
+  var c=norm(raw);if(!c||BUS_FIRST.test(c))return false;
+  if(PENDING_OPEN&&Date.now()-PENDING_OPEN.at<60000&&/^(open|show) (it|that|that one|it up)$/.test(c)){var f=PENDING_OPEN.fn;PENDING_OPEN=null;try{f();}catch(e){}speaker()('Opening it.');return true;}
+  var cmd=phgParseDataCommand(raw,ctxFor(s));if(!cmd)return false;cmd.raw=raw;
+  /* in the Harmony view with nothing on the panel only "zoom to <place>" is ours (it opens a map there) */
+  if(!s){if(cmd.type!=='map.fit')return false;try{return fitPlace(cmd,null,speaker());}catch(e){return false;}}
+  var ok=false;try{ok=applyCmd(cmd,s);}catch(e){warn('apply',e);ok=false;}
+  if(ok)G.PHG_LAST_UI_COMMAND={q:c,g:'Filter data',at:Date.now(),cmd:cmd};
+  return !!ok;
+}
+
+/* ---------- structured actions (reply.actions from the conversation service, or any caller) ---------- */
+function num(v){if(v==null||v==='')return null;var n=toNum(v);return isFinite(n)?n:null;}
+function surfaceFor(name){
+  var n=low(name),cur=surf();if(!n)return cur;
+  if(/harmony|panel|data|view/.test(n)){var st=hdState();return st&&st.open?(st.isMap?'hdmap':'hd'):null;}
+  if(/library|corpus/.test(n))return 'library';if(/competitor|map/.test(n))return 'mmap';if(/studio/.test(n))return 'studio';
+  if(/market|dash/.test(n))return cur==='mcat'||cur==='mmap'?cur:'market';return cur;
+}
+function itemFromAction(a){
+  var k=low(a.key).replace(/\s+/g,'_'),v=a.value,alias={price_min:['price','min'],price_max:['price','max'],min_price:['price','min'],max_price:['price','max'],income_min:['income','min'],income_max:['income','max'],age_min:['age','min'],age_max:['age','max'],rating_min:['rating','min']};
+  var it;
+  if(alias[k]){it={key:alias[k][0],mode:'set'};it[alias[k][1]]=num(v);it.minIncl=it.maxIncl=true;it.label=rangeLabel(it);return it;}
+  if(/^(price|income|age|rating)$/.test(k)){
+    if(v&&typeof v==='object')it={key:k,min:num(v.min),max:num(v.max),minIncl:true,maxIncl:true,mode:'set'};
+    else if(typeof v==='string'&&isNaN(+v)){var p=phgParseDataCommand((k==='income'?'income ':k==='age'?'median age ':'')+v);it=p&&p.filters&&p.filters.filter(function(x){return x.key===k;})[0];if(!it)return null;return it;}
+    else{var n=num(v);if(n==null)return null;var op=low(a.op||'max');it={key:k,mode:'set'};if(/^(min|gt|gte|over|above)$/.test(op))it.min=n;else it.max=n;it.minIncl=it.maxIncl=/e$|^(min|max)$/.test(op);}
+    it.label=rangeLabel(it);return it;
+  }
+  if(k==='state'){var sv=String(v||'').trim(),code=sv.length===2?sv.toUpperCase():STATE_NAMES[low(sv)];if(!code&&!/^(all|any|)$/i.test(sv))return null;return code?{key:'state',value:code,name:STATE_LABEL[code]||code,mode:a.mode||'set',neg:!!a.neg,label:'in '+(STATE_LABEL[code]||code)}:{key:'state',clear:true,mode:'set',label:'across the country'};}
+  if(k==='city'){var pc=placeAt(low(v),{},true),cn=pc&&pc.place.kind==='city'?pc.place:null;return {key:'city',value:cn?cn.name:title(String(v||'')),st:cn?cn.st:(a.state||''),ll:cn?cn.ll:null,mode:a.mode||'set',neg:!!a.neg,label:'in '+(cn?cn.name:title(String(v||'')))};}
+  if(k==='venue_type'||k==='type'){var vt=vtAt(low(v).replace(/_/g,' '))||vtAt(low(v).replace(/_/g,' ')+'s');if(vt)return vtItem(vt.vt,a.mode||'set',!!a.neg);var raw=low(v).replace(/\s+/g,'_');return raw?{key:'venue_type',value:raw,srv:raw.split('_')[0],match:esc2(raw),label:raw.replace(/_/g,' ')+'s',mode:'set',neg:!!a.neg}:null;}
+  if(k==='spirit'||k==='family'){var s1=spiritAt(low(v));if(!s1)return null;return {key:'spirit',value:s1.k,word:s1.word,neg:!!a.neg,mode:'set',label:(a.neg?'without ':'with ')+s1.word};}
+  if(k==='menu_kind'){var mk=MENU_KINDS.filter(function(x){return x.k===low(v);})[0];return mk?{key:'menu_kind',value:mk.k,mode:'set',label:mk.label}:null;}
+  if(k==='has_menu'||k==='with_menus'){var b=!(v===false||/^(0|false|no|off)$/i.test(String(v)));return {key:'has_menu',value:b,mode:'set',label:b?'with menus':'without menus'};}
+  if(k==='radius'){var r=num(v);return r?{key:'radius',value:r,mode:'set',label:'within '+r+' miles'}:null;}
+  if(/^(q|text|search|drink|name)$/.test(k)&&v)return {key:'q',value:String(v),mode:'set',label:String(v)};
+  return null;
+}
+function sortKeyOf(k){var s=sortFrom(low(k).replace(/_/g,' '));if(s)return s;var m=String(k||'').match(/^(\w+)_(asc|desc)$/);return m?{key:m[1],dir:m[2]}:null;}
+/* changes in phg-harmony-data's own vocabulary (price_max, city, sort: "price_asc", offset ...) -> items */
+function itemsFromChanges(ch){
+  var out=[],clears=[],sort=null,page=null;
+  ['price','income','age','rating'].forEach(function(k){if(!((k+'_min') in ch)&&!((k+'_max') in ch))return;var lo=num(ch[k+'_min']),hi=num(ch[k+'_max']);if(lo==null&&hi==null){clears.push(k);return;}var it={key:k,min:lo,max:hi,minIncl:true,maxIncl:true,mode:'set'};it.label=rangeLabel(it);out.push(it);});
+  [['state','state'],['city','city'],['venue_type','venue_type'],['with_menus','has_menu'],['q','q'],['family','spirit']].forEach(function(p){if(!(p[0] in ch))return;var v=ch[p[0]];if(v==null||v===''){clears.push(p[1]);return;}var it=itemFromAction({key:p[0],value:v});if(it)out.push(it);});
+  if('sort' in ch){sort=ch.sort?sortKeyOf(ch.sort):null;if(!ch.sort)clears.push('sort');}
+  if('offset' in ch&&num(ch.offset)!=null)page=Math.floor(num(ch.offset)/R.size)+1;
+  if('page' in ch&&num(ch.page)!=null)page=num(ch.page);
+  return {items:out,clears:clears,sort:sort,page:page};
+}
+function dataRefine(changes,opt){
+  changes=changes||{};var st=hdSync();if(!st||!st.open)return false;
+  var q0=QUIET;if(opt&&opt.quiet)QUIET=true;var sp=speaker();QUIET=q0;
+  var x=itemsFromChanges(changes);
+  x.clears.forEach(function(k){if(k==='sort'){R.sort=null;return;}Object.keys(R.f).forEach(function(f){if(R.f[f].key===k)delete R.f[f];});});
+  var srv=null;
+  if(st.query){srv={};for(var k in changes)srv[k]=changes[k];x.items.forEach(function(it){it.srv=true;});}
+  x.items.forEach(mergeItem);if(x.sort)R.sort=x.sort;R.page=x.page||1;R.fitNext=st.isMap;
+  if(srv&&!Object.keys(srv).length)srv=null;
+  hdRefine(sp,srv,'');
+  return true;
+}
+G.harmonyDataRefine=function(changes,opt){try{return dataRefine(changes,opt);}catch(e){warn('refine',e);return false;}};
+var EXEC={
+  'filter.set':function(a){var it=itemFromAction(a);if(!it)return false;return applyCmd({type:'filter',filters:[it]},surfaceFor(a.surface));},
+  'filter.clear':function(a){var k=a.key?(clearKey(low(a.key).replace(/_/g,' '))||low(a.key)):undefined;return applyCmd({type:'clear',key:k},surfaceFor(a.surface));},
+  'sort.set':function(a){var s=sortKeyOf(a.key||'');if(!s)return false;if(a.dir)s.dir=/desc/i.test(a.dir)?'desc':'asc';return applyCmd({type:'sort',key:s.key,dir:s.dir},surfaceFor(a.surface));},
+  'page.go':function(a){var c={type:'page'};if(a.delta!=null)c.delta=(+a.delta<0?-1:1);else if(a.page==='last')c.page='last';else if(num(a.page)!=null)c.page=num(a.page);else return false;return applyCmd(c,surfaceFor(a.surface));},
+  'page.size':function(a){var n=num(a.n!=null?a.n:a.size);if(!n)return false;return applyCmd({type:'pageSize',n:n},surfaceFor(a.surface));},
+  'data.refine':function(a){return dataRefine(a.changes||{},{quiet:a.quiet});},
+  'map.fit':function(a){var c=null;if(a.state){var it=itemFromAction({key:'state',value:a.state});if(it&&!it.clear)c={type:'map.fit',state:it.value,name:it.name};}else if(a.city){var ci=itemFromAction({key:'city',value:a.city});c={type:'map.fit',city:ci.value,st:ci.st,ll:ci.ll,name:ci.value};}if(!c)return false;return applyCmd(c,surfaceFor(a.surface)||'hdmap');}
+};
+function hookExec(){
+  var UI=G.harmonyUI;if(!UI||typeof UI.exec!=='function'||UI._v2)return;
+  var _exec=UI.exec;UI._v2=true;
+  UI.exec=function(a){
+    a=a||{};var h=EXEC[a.action];if(!h)return _exec.apply(this,arguments);
+    var q0=QUIET;QUIET=!!a.quiet;
+    try{return h(a);}catch(e){warn('exec '+a.action,e);return false;}finally{QUIET=q0;}
+  };
+  UI.data={parse:phgParseDataCommand,apply:function(cmd,s){return applyCmd(cmd,s);},surface:surf,refine:G.harmonyDataRefine};
+}
+hookExec();
+/* the refine strip's buttons (canvas) */
+G.phgVoiceData={
+  clear:function(){var q=QUIET;QUIET=true;try{applyCmd({type:'clear'},surf());}finally{QUIET=q;}},
+  page:function(d){var q=QUIET;QUIET=true;try{applyCmd({type:'page',delta:d},surf());}finally{QUIET=q;}},
+  state:function(){return {filters:items(),sort:R.sort,page:R.page,size:R.size};},
+  hear:hear
+};
+G.phgVoiceFilterHelp=function(){
+  return [['Filter data','only bars in Denver'],['Filter data','margaritas under $14 in Denver, cheapest first'],['Filter data','between 10 and 15 dollars'],['Filter data','income over 100k'],
+    ['Filter data','younger areas'],['Filter data','with tequila / no vodka'],['Filter data','happy hour menus'],['Filter data','only venues with menus'],['Filter data','switch to Colorado'],
+    ['Filter data','remove the price filter'],['Filter data','clear filters'],['Sort','cheapest first'],['Sort','highest income first'],['Sort','sort by city'],['Sort','shuffle'],
+    ['Pages','next page'],['Pages','page 3'],['Pages','show 50 per page'],['Map','zoom to Denver'],['Map','zoom to Iowa'],['Map','show all'],
+    ['Details','open the first one'],['Details','tell me about number 3'],['Details','what’s the average price'],['Details','how many']];
+};
+/* Words reach the filters first on every path into Harmony; the bus and Harmony get whatever is left. */
+if(typeof G.agentAnswer==='function'){
+  var _ans=G.agentAnswer;
+  G.agentAnswer=function(q){
+    var hit=false;try{hit=hear(q);}catch(e){warn('hear',e);hit=false;}
+    if(hit){try{if(G.AGENT)G.AGENT.thinking=false;}catch(e){}return;}
+    return _ans.apply(this,arguments);
+  };
+}
+})(typeof window!=='undefined'?window:this);
 </script>
 
 
