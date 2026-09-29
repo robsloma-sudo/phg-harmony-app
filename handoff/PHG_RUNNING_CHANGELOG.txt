@@ -2400,3 +2400,7 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   - phg-menu-corpus-browser v9 returns a signed URL for the original file (pdf/image).
   - Headless test: iPhone 3x and desktop 2x draw at 1.0 device px per page px, Letter aspect kept, page 2 and the
     PDF button work.
+- 2026-09-29 Rob: "Always go with the original file if possible" (standing rule, in PHG_OPEN_ISSUES.txt).
+  - App 18.49.49: image menus also open from the stored original upload (full resolution), with the rendered copy as a
+    fallback if the original fails. Zoom stops at the original's own resolution.
+  - Tested headless: 2,400 px original used; fallback to the 1,400 px copy when the original 404s.

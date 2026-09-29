@@ -420,3 +420,8 @@ PHG-053 (DONE 2026-09-29, Rob: exclude all)  Existing accounts that break the li
 
 PHG-054 (standing) Review Harmony's failure log at the start of every session with Rob: handoff/HARMONY_FEEDBACK_REVIEW.md
   (phg.v_harmony_feedback_open). Fixes become phg.harmony_lessons (live without deploy) or code/data changes.
+
+STANDING RULE (Rob, 2026-09-29): always use the ORIGINAL file when one exists - show, zoom, share and build from the
+  stored original PDF / image, never a converted copy (snapshot, screenshot, re-encode). Copies are only a fallback when
+  the original cannot load. Applies to the menu viewer (done: 18.49.48 PDF, 18.49.49 image) and any future feature that
+  displays or processes menu files.

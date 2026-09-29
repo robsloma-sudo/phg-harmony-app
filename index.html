@@ -6301,7 +6301,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     <div id="err"></div>
     <div id="dataWarn"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.48 SHARP MENU PAGES FROM THE REAL PDF · HARMONY LEARNS FROM MISSES · LIVE LICENCE COVERAGE · FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.49 ORIGINAL FILES FIRST · SHARP MENU PAGES FROM THE REAL PDF · HARMONY LEARNS FROM MISSES · LIVE LICENCE COVERAGE · FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -7670,7 +7670,7 @@ function corpusDraw(){
 var MLV=null;
 function corpusView(id,keepIdx){
  var b=CORPUS_BROWSER,idx=(keepIdx&&b.view&&b.view.id===id)?b.view.idx:null;corpusPanelClose();
- b.view={id:id,busy:true,error:'',doc:null,pages:[],idx:0,census:null};mlvMount();if(MLV){MLV.pdfFailed=false;MLV.pdf=null;}mlvRender();
+ b.view={id:id,busy:true,error:'',doc:null,pages:[],idx:0,census:null};mlvMount();if(MLV){MLV.pdfFailed=false;MLV.origFailed=false;MLV.pdf=null;}mlvRender();
  corpusPost({action:'document',document_id:id}).then(function(j){
    if(!b.view||b.view.id!==id)return;var pg=j.pages||[],first=0;for(var i=0;i<pg.length;i++)if(pg[i].signed_url){first=i;break;}
    if(idx!==null&&idx<pg.length)first=idx;
@@ -7695,7 +7695,7 @@ function mlvMount(){
   else if(a==='fit')mlvFitToggle();else if(a==='reload'){var v=CORPUS_BROWSER.view;if(v)corpusView(v.id,true);}});
  var sc=MLV.scroll,img=MLV.img;
  img.addEventListener('load',function(){if(!MLV||MLV.img!==img)return;if(MLV.swap){MLV.swap=false;return;}if(!MLV.pdf){MLV.nw=img.naturalWidth||MLV.nw;MLV.nh=img.naturalHeight||MLV.nh;}MLV.s=1;img.hidden=false;MLV.msg.textContent='';mlvApply();sc.scrollTop=0;sc.scrollLeft=0;mlvPreload();});
- img.addEventListener('error',function(){if(!MLV||MLV.img!==img||!MLV.src)return;img.hidden=true;MLV.msg.innerHTML='This page link expired or could not load. <button type="button" class="mlvb" data-a="reload">Reload</button>';});
+ img.addEventListener('error',function(){if(!MLV||MLV.img!==img||!MLV.src)return;var cv=CORPUS_BROWSER.view;if(cv&&cv.original&&MLV.src===cv.original.signed_url&&!MLV.origFailed){MLV.origFailed=true;MLV.src='';mlvRender();return;}img.hidden=true;MLV.msg.innerHTML='This page link expired or could not load. <button type="button" class="mlvb" data-a="reload">Reload</button>';});
  function dist(a,b){var x=a.clientX-b.clientX,y=a.clientY-b.clientY;return Math.sqrt(x*x+y*y)||1;}
  sc.addEventListener('touchstart',function(e){
   if(e.touches.length===2){var a=e.touches[0],b=e.touches[1],cx=(a.clientX+b.clientX)/2,cy=(a.clientY+b.clientY)/2,r=img.getBoundingClientRect();
@@ -7797,7 +7797,10 @@ function mlvRender(){
  var orig=v.original,pdfBtn=el.querySelector('.mlvpdf');if(pdfBtn){if(orig&&orig.signed_url){pdfBtn.href=orig.signed_url;pdfBtn.hidden=false;pdfBtn.textContent=orig.kind==='pdf'?'PDF':'Original';}else pdfBtn.hidden=true;}
  if(orig&&orig.kind==='pdf'&&orig.signed_url&&!MLV.pdfFailed){mlvPdfShow(v,p);return;}
  if(!p||!p.signed_url){img.hidden=true;MLV.src='';img.removeAttribute('src');msg.textContent=p?'Page '+(p.page_number||v.idx+1)+' is '+(p.render_status||'pending')+' and not rendered yet.':'No rendered pages yet.';return;}
- MLV.pdf=null;if(MLV.src!==p.signed_url){MLV.src=p.signed_url;MLV.nw=p.width||0;MLV.nh=p.height||0;MLV.s=1;img.hidden=true;img.alt=(a.account_name||'Menu')+' page '+(p.page_number||v.idx+1);
+ MLV.pdf=null;
+ /* Rob 2026-09-29: always the original file when there is one - an image menu shows the uploaded image itself */
+ if(orig&&orig.kind==='image'&&orig.signed_url&&v.pages.length<=1&&!MLV.origFailed)p={signed_url:orig.signed_url,page_number:1,width:0,height:0};
+ if(MLV.src!==p.signed_url){MLV.src=p.signed_url;MLV.nw=p.width||0;MLV.nh=p.height||0;MLV.s=1;img.hidden=true;img.alt=(a.account_name||'Menu')+' page '+(p.page_number||v.idx+1);
   msg.textContent='Loading full-resolution page…';img.src=p.signed_url;}
 }
 document.addEventListener('gesturestart',function(e){if(MLV)e.preventDefault();},{passive:false});
