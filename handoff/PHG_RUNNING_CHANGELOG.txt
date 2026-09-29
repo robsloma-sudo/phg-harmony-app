@@ -1973,3 +1973,9 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   (only this project's rows). Note: drink_name is mostly empty outside Iowa, so drinks are matched on item_name too.
 - phg-harmony-inbox v18: passes user + project to the data service (ask_fallback) and logs every turn to
   phg.harmony_turns (action, what was understood, reply, correction flag) without delaying the reply.
+
+[2026-09-29] REPAIR (inbox v19 live)
+- "No / that's wrong / not what I asked": the planner names the part that was wrong (item, version, place, source,
+  intent, amount, time), carries on right away if the correction is already in their words, otherwise asks ONE pointed
+  question with the likely alternatives (never repeats the old answer, never "start over"). Logged to
+  phg.harmony_corrections with wrong_part, and the turn is flagged is_correction in phg.harmony_turns.

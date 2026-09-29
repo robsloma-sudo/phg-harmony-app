@@ -61,6 +61,7 @@ const CONVERSE = [
   "say: what you say now for clarify, answer, read_back, note (brief confirmation), open_screen ('Opening it now.') and end (a short goodbye). Leave say empty for recipe and data; those are spoken by the next step. Warm, natural, plain text, no markdown, no filler.",
   "Never invent business figures or prices.",
   "HEARING: names of brands, producers, cocktails and places come from many languages (Spanish, French, Italian, Japanese...) and the speech engine can mishear them. When 'Speech notes' say a name was unsure and it matters for the answer, ask ONE short question: 'Did you mean Siete Leguas or Siete Misterios?' (clarify). If they correct a name ('no, I said Fortaleza', 'it's Cynar, not Chee nar', 'I meant East and Co'), or confirm your 'Did you mean' question, fill heard_fix: wrong = the words that were heard or that you used, right = the name they meant, kind = brand | venue | cocktail | ingredient | place | term; then carry on with their request using the right name, without making them repeat it. Otherwise leave heard_fix wrong and right empty.",
+  "REPAIR: when they reject your last answer ('no', 'that's wrong', 'not what I asked', 'that's not right', 'wrong one'), set repair to the part that was wrong: item (wrong drink, brand or venue), version (classic vs house vs internet, or a variant such as Black Manhattan for Manhattan), place (city, state or venue), source, intent (they wanted something else entirely), amount (a number or measure), time. If their words already say what they meant, carry on with the corrected request (recipe or data) right away. If not, clarify with ONE pointed question about that part, offering the likely alternatives from the conversation (e.g. 'Sorry about that. Did you want the classic Manhattan, or your house one?'); never just repeat your previous answer and never ask them to start over. Otherwise repair is none.",
 ].join(" ");
 
 const RECIPE_VOICE = [
@@ -82,7 +83,7 @@ const CREATE_VOICE = [
 const KIND_ENUM = KINDS;
 const SCHEMA = {
   type: "object", additionalProperties: false,
-  required: ["action", "say", "recipe_drink", "recipe_source", "data_query", "open_query", "note_text", "kind", "tags", "due_iso", "heard_fix"],
+  required: ["action", "say", "recipe_drink", "recipe_source", "data_query", "open_query", "note_text", "kind", "tags", "due_iso", "repair", "heard_fix"],
   properties: {
     action: { type: "string", enum: ["clarify", "recipe", "data", "note", "read_back", "offer_open", "open_screen", "answer", "end"] },
     say: { type: "string" },
@@ -94,6 +95,7 @@ const SCHEMA = {
     kind: { type: "string", enum: KIND_ENUM },
     tags: { type: "array", items: { type: "string" } },
     due_iso: { type: ["string", "null"] },
+    repair: { type: "string", enum: ["none", "item", "version", "place", "source", "intent", "amount", "time"] },
     heard_fix: {
       type: "object", additionalProperties: false, required: ["wrong", "right", "kind"],
       properties: { wrong: { type: "string" }, right: { type: "string" }, kind: { type: "string", enum: ["brand", "venue", "cocktail", "ingredient", "place", "term"] } },
@@ -362,7 +364,14 @@ Deno.serve(async (req) => {
   const COMMON = new Set(["the", "and", "that", "this", "one", "menu", "drink", "recipe", "price", "bar", "yes", "no", "not", "what", "with"]);
   const safeFix = wrong.length >= 3 && right.length >= 2 && wrong.length <= 120 && right.length <= 200 && nz(wrong).trim() !== nz(right).trim() &&
     !nz(right).includes(nz(wrong)) && !nz(wrong).includes(nz(right)) && heardBefore.includes(nz(wrong)) && !COMMON.has(nz(wrong).trim());
-  turnCorrection = !!(wrong && right);
+  const repair = String(out.repair || "none");
+  turnCorrection = !!(wrong && right) || repair !== "none";
+  turnUnderstood.repair = repair;
+  /* v19: a rejected answer that was not a misheard name is logged with the part that was wrong, for the review */
+  if (repair !== "none" && !safeFix) {
+    try { await dbx("correction_add", { user: userId, account: accountId, heard: String(ctx.turns[ctx.turns.length - 1]?.h || "").slice(0, 300), meant: text.slice(0, 300), wrong_part: repair }); }
+    catch (e) { console.log(JSON.stringify({ repair_log_error: String((e as Error)?.message || e) })); }
+  }
   if (safeFix) {
     try {
       if (accountId) await dbx("alias_upsert", { user: userId, account: accountId, heard: wrong, means: right, kind: hf.kind || "term", source: "correction" });
