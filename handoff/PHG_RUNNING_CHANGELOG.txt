@@ -2059,3 +2059,11 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
 - Tests: deno check on all three functions; mocked OpenAI stream (split SSE chunks) -> first-sentence voice starts
   ~40% into the planner stream, JSON parses, mismatch returns nothing, empty stream falls back; all 13 inline scripts
   in index.html pass node --check.
+
+[2026-09-29] DEPLOYED 18.49.42 + INBOX v23 (Rob: "Deploy all of this and keep working")
+- Netlify production deploy 6abb42e3 (commit 69288cc on main) = app 18.49.42: early first-sentence voice, service
+  warm-up, plus 18.49.41 place cards (tap a pin / say "expand it").
+- phg-harmony-inbox v23: OpenAI priority processing for the planner and spoken answers (OPENAI_SERVICE_TIER; if the
+  account refuses it, it switches itself off and resends - tested with a mocked refusal); every turn now logs its
+  timings (prep, plan, data, spoken, voice, total), whether voice_first was sent, and the tier, in
+  phg.harmony_turns.understood. Live check via pg_net: warm 200.

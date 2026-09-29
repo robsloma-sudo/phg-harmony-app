@@ -22,7 +22,8 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
    Model: OPENAI_API_KEY + gpt-4.1 (override OPENAI_INBOX_MODEL).
    v22 SPEED: planner and spoken answers are streamed; with the app's voice settings (tts) the first sentence is
    voiced while the rest is written and returned as voice_first; notes, library and reference lookups run in parallel;
-   {warm:true} wakes the function. */
+   {warm:true} wakes the function.
+   v23: OpenAI priority processing (OPENAI_SERVICE_TIER, falls back automatically); per-turn timings in the turn log. */
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -106,11 +107,27 @@ const SCHEMA = {
   },
 };
 
-async function llm(oa: string, model: string, instructions: string, input: string, opts: Record<string, unknown> = {}) {
-  const r = await fetch("https://api.openai.com/v1/responses", {
+/* v23 SPEED: OpenAI priority processing (faster, steadier replies; same model and answers). Override with
+   OPENAI_SERVICE_TIER ("default" turns it off). If the account refuses it, it is switched off for this instance and
+   the request is sent again without it. */
+let TIER: string | null = (Deno.env.get("OPENAI_SERVICE_TIER") || "priority").trim();
+if (TIER === "default" || TIER === "auto" || !TIER) TIER = null;
+const tierOf = () => (TIER ? { service_tier: TIER } : {});
+async function responsesCall(oa: string, body: Record<string, unknown>): Promise<Response> {
+  const send = () => fetch("https://api.openai.com/v1/responses", {
     method: "POST", headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model, instructions, input, max_output_tokens: 600, ...opts }),
+    body: JSON.stringify({ ...body, ...tierOf() }),
   });
+  let r = await send();
+  if (TIER && (r.status === 400 || r.status === 403)) {
+    const t = await r.clone().text().catch(() => "");
+    if (/service_tier|priority/i.test(t)) { console.log(JSON.stringify({ tier_off: t.slice(0, 200) })); TIER = null; r = await send(); }
+  }
+  return r;
+}
+
+async function llm(oa: string, model: string, instructions: string, input: string, opts: Record<string, unknown> = {}) {
+  const r = await responsesCall(oa, { model, instructions, input, max_output_tokens: 600, ...opts });
   const j = await r.json().catch(() => ({}));
   let t = typeof j.output_text === "string" ? j.output_text : "";
   if (!t && Array.isArray(j.output)) for (const o of j.output) for (const c of (o?.content || [])) if (c?.type === "output_text") t += c.text || "";
@@ -123,10 +140,7 @@ async function llmStream(oa: string, model: string, instructions: string, input:
   if (!onText) return llm(oa, model, instructions, input, opts);
   let r: Response;
   try {
-    r = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST", headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model, instructions, input, max_output_tokens: 600, ...opts, stream: true }),
-    });
+    r = await responsesCall(oa, { model, instructions, input, max_output_tokens: 600, ...opts, stream: true });
   } catch { return llm(oa, model, instructions, input, opts); }
   if (!r.ok || !r.body) {
     const j = await r.json().catch(() => ({}));
@@ -173,6 +187,7 @@ function earlyVoice(oa: string | undefined, tts: any) {
   const ok = !!oa && tts && typeof tts === "object";
   const voice = ok ? String(tts.voice || "marin").toLowerCase() : "";
   let started: { text: string; p: Promise<string | null> } | null = null;
+  let vMs = 0;
   const start = (text: string) => {
     if (started || !ok || !TTS_VOICES.has(voice) || text.length < 2 || text.length > 600) return;
     let speed = Number(tts.speed == null ? 1 : tts.speed); if (!Number.isFinite(speed)) speed = 1; speed = Math.max(.25, Math.min(4, speed));
@@ -186,11 +201,13 @@ function earlyVoice(oa: string | undefined, tts: any) {
       let bin = ""; for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode(...u8.subarray(i, i + 0x8000));
       return btoa(bin);
     }).catch(() => null);
+    const t0 = Date.now(); p.then(() => { vMs = Date.now() - t0; });
     started = { text, p };
   };
   return {
     feed(soFar: string) { if (!started) { const f = firstSpoken(soFar, false); if (f) start(f); } },
     finish(full: string) { if (!started) start(firstSpoken(full, true)); },
+    voiceMs() { return vMs; },
     async result(speak: string, capMs = 3000) {
       if (!started) return null;
       const norm = (x: string) => x.replace(/\s+/g, " ").trim();
@@ -390,15 +407,17 @@ Deno.serve(async (req) => {
      Harmony app?" (offered = true in context) and they said yes. */
   /* v18: every turn is logged (phg.harmony_turns) so corrections can be traced back and reviewed; never blocks the reply */
   let turnAction = "", turnUnderstood: any = {}, turnCorrection = false;
+  const T0 = Date.now(); const marks: Record<string, number> = {};   // v23: timings, kept in the turn log
   const ev = earlyVoice(oa, inAppSurface ? b.tts : null);
   const reply = async (speak: string, next: "listen" | "open" | "end", extra: Record<string, unknown> = {}, last: any = ctx.last, offered = false) => {
-    try {
-      const p = dbx("turn_log", { user: userId, account: accountId, surface: inAppSurface ? "app" : via, text: text.slice(0, 1000), action: turnAction || next, understood: turnUnderstood, reply: speak.slice(0, 1500), is_correction: turnCorrection }).catch(() => null);
-      (globalThis as any).EdgeRuntime?.waitUntil?.(p);
-    } catch { /* logging is optional */ }
     const turns = [...ctx.turns, { u: text.slice(0, 300), h: speak.slice(0, 400) }].slice(-6);
     const link = String(extra.url || last?.url || home);
     const voice_first = await ev.result(speak).catch(() => null);
+    marks.total = Date.now() - T0; if (ev.voiceMs()) marks.voice = ev.voiceMs();
+    try {
+      const p = dbx("turn_log", { user: userId, account: accountId, surface: inAppSurface ? "app" : via, text: text.slice(0, 1000), action: turnAction || next, understood: { ...turnUnderstood, ms: marks, voice_first: !!voice_first, tier: TIER || "default" }, reply: speak.slice(0, 1500), is_correction: turnCorrection }).catch(() => null);
+      (globalThis as any).EdgeRuntime?.waitUntil?.(p);
+    } catch { /* logging is optional */ }
     return json({ ok: true, speak, next, ...extra, ...(voice_first ? { voice_first } : {}), url: next === "open" ? link : "", app_url: link, context: JSON.stringify({ turns, last, offered }) });
   };
   if (!text) {
@@ -436,6 +455,7 @@ Deno.serve(async (req) => {
      so Harmony never offers to open the app there, and replies carry a "view" for the screen. */
   const inApp = via === "app" || b.surface === "app";
   const recent = await recentP;
+  marks.prep = Date.now() - T0;
   const plannerInput = [
     `Current time: ${new Date().toISOString()} (user's time zone ${tz}).`,
     recent.length ? "Their recent notes: " + recent.map((n: any) => `[${n.kind}${n.done ? ", done" : ""}] ${n.body}`).join(" | ") : "",
@@ -448,6 +468,7 @@ Deno.serve(async (req) => {
   const SAYS = new Set(["clarify", "answer", "read_back", "end", "note"]);
   const plan = await llmStream(oa, model, CONVERSE, plannerInput, { max_output_tokens: 500, text: { format: { type: "json_schema", name: "harmony_turn", strict: true, schema: SCHEMA } } },
     b.tts && inAppSurface ? (t) => { const p = partialSay(t); if (SAYS.has(p.action)) ev.feed(p.say); } : undefined);
+  marks.plan = Date.now() - T0;
   let out: any = null;
   try { out = JSON.parse(plan.text); } catch { out = null; }
   if (!out) {
@@ -512,6 +533,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ prompt: q, user: userId, account: accountId, ask_fallback: true }),
       });
       const dj = await dr.json().catch(() => ({}));
+      marks.data = Date.now() - T0;
       if (dr.ok && dj.source === "menu_lookup" && inApp) return reply("Opening that menu.", "listen", { menu_lookup: q });
       if (dr.ok && dj.source === "menu_lookup") {
         /* v20: phone locked (the Shortcut): read the venue's drinks out loud from PHG's menu data, then offer the screen */
@@ -615,6 +637,7 @@ order by r.quality_score desc nulls last limit 1`;
     } else {
       speakText = (await speakLlm(model, RECIPE_VOICE, `Drink: ${ref?.cocktail_name || drink}. What they said: ${text}. ` + (ref ? `PHG classic reference spec: ${JSON.stringify(ref)}` : "No PHG reference; use the widely accepted classic spec for exactly this drink."))).text;
     }
+    marks.spoken = Date.now() - T0;
     if (speakText) ev.finish(speakText);
     const last = { title: `${drink} recipe`, detail: speakText, url: cardUrl };
     const useLib = !!lib && src !== "internet" && src !== "house" && src !== "list" && src !== "create";
