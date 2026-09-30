@@ -433,7 +433,6 @@ PHG-056 (open) Deploy ingest-state-licenses with the OR address fix (repo only) 
 PHG-057 (open) Firecrawl lanes running: job 9 (website discovery) and job 33 (paid blocked menus). Watch the
   menu_api_usage_ledger credits and yield. Job 33 empties itself (returns nothing_blocked) when the backlog is done.
 PHG-058 (open) Sugar/acid balance layer - batch 1 profiles + calculator live (see changelog 2026-09-30).  Next: batch 2
-  .claude/skills/phg-cocktail-formulation): batch 1 profiles + calculator LIVE (changelog 2026-09-30). Next: batch 2
   profiles (vermouths, ginger beers, rums, Campari/Aperol, maraschino, coffee liqueurs, agave syrup, juice TA), and
   Rob's call on unpublished liqueur acidity (Cointreau TA).
 PHG-059 (standing, Rob 2026-09-30) Paid Firecrawl scrapes only where a test sample shows >= 70% success. Jobs 9 and
