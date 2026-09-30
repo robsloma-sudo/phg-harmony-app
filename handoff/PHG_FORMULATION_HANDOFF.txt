@@ -1,0 +1,2077 @@
+PERFECT HARMONY GROUP (PHG)
+COCKTAIL SUGAR / ACID / DILUTION / TEMPERATURE FORMULATION
+MASTER HANDOFF + CLAUDE SKILL BRIEF
+
+Prepared for: PHG Harmony Orchestrator / Claude Anthropic
+Prepared by: ChatGPT GPT-5.6 Sol
+Verified against live PHG Supabase: 2026-09-30
+Supabase project ref: lqjtwabzmgjcufftuqvu
+
+======================================================================
+0. PURPOSE OF THIS HANDOFF
+======================================================================
+
+This brief transfers the cocktail formulation research, modeling approach,
+Supabase architecture, operating rules, and skill definition developed for
+Perfect Harmony Group (PHG).
+
+The goal is not to give Harmony another collection of cocktail “rules of thumb.”
+The goal is to make Harmony capable of reasoning quantitatively about cocktail
+balance using measurable formulation variables while still respecting sensory
+reality and uncertainty.
+
+The intended long-term behavior is:
+
+1. Read a recipe and resolve each ingredient into what it actually contributes.
+2. Calculate sugar, acid, ethanol, water/dilution, and service-condition effects.
+3. Distinguish true measured/compositional facts from approximations.
+4. Compare the resulting structure against relevant reference builds or
+   operating windows.
+5. Explain why a drink tastes the way it does.
+6. Propose specific changes while showing assumptions.
+7. Never invent precision when the ingredient composition is unknown.
+8. Finalize balance by tasting at the actual service condition, especially
+   temperature and frozen state.
+
+This is a formulation and sensory reasoning system, not a simple ounce-ratio
+calculator.
+
+======================================================================
+1. LIVE STATE — WHAT EXISTS NOW
+======================================================================
+
+The formulation foundation is live inside PHG production Supabase in schema:
+
+    phg_mix
+
+Current live formulation objects:
+
+    phg_mix.formulation_claims             30 rows
+    phg_mix.ingredient_profiles            14 rows
+    phg_mix.ingredient_profile_aliases     25 rows
+    phg_mix.balance_profiles               11 rows
+    phg_mix.formulation_evidence           43 rows
+    phg_mix.recipe_balance_analysis         0 rows intentionally
+
+Views:
+
+    phg_mix.v_recipe_balance_inputs
+    phg_mix.v_recipe_balance_coverage
+
+Both views are configured with:
+
+    security_invoker = true
+
+All six formulation tables have RLS enabled and a SELECT policy named:
+
+    harmony_read
+
+for database role:
+
+    phg_harmony_reader
+
+The broader phg_mix corpus is already substantial. Current live counts include:
+
+    sources                 117
+    recipes                 255
+    recipe_lines           1179
+    preps                    61
+    prep_lines              179
+    recipe_variants         190
+    techniques               26
+    pairings                 50
+    pairing_members         165
+    attributions            730
+    uses                    127
+    drinks                  104
+    drink_styles            198
+
+IMPORTANT LIVE-STATE NOTE:
+Older work expected a dedicated capability key named:
+
+    cocktail_balance_formulation
+
+However, current live verification of phg.capabilities shows only the existing
+cocktail_development capability. That capability currently references:
+
+    phg_mix.v_recipe_balance_coverage
+    phg_mix.v_recipe_balance_inputs
+    public.cocktail_spec_components
+    public.cocktail_specs
+    public.cocktail_tag_values
+    public.mv_drink_explorer
+    public.v_cocktail_build_combinations
+
+Therefore:
+- Treat the formulation tables and views as live and authoritative.
+- Do NOT assume a separate cocktail_balance_formulation registry row currently
+  exists.
+- Do NOT silently recreate or modify capability registration without Rob’s
+  approval and a current architecture check.
+
+======================================================================
+2. CORE PHILOSOPHY — HOW HARMONY SHOULD THINK
+======================================================================
+
+Do not reduce balance to:
+
+    “2 oz spirit + 0.75 oz citrus + 0.75 oz simple”
+
+That is a useful starting coordinate for one class of sour, but it is not a
+universal definition of balance.
+
+The PHG model treats a drink as a multi-variable system.
+
+CORE QUANTITATIVE FINGERPRINT:
+
+    sugar_g_100ml
+    ta_g_100ml
+    sugar_acid_ratio
+    abv_finished
+    dilution_pct
+    service_temp_c
+
+IMPORTANT MODIFIERS:
+
+    acid identity
+    sweetener identity
+    carbonation
+    bitterness
+    salt
+    aroma
+    texture
+    fat/protein/emulsion context where relevant
+    ice format / continued dilution where relevant
+    frozen state
+
+This “balance fingerprint” is a PHG analytical framework derived from converging
+professional practice, food/beverage science, and sensory research. It is not a
+published universal industry standard.
+
+The system must preserve BOTH:
+- absolute concentration; and
+- ratios.
+
+Two drinks can have the exact same sugar:acid ratio and taste radically
+different if one contains twice the sugar and twice the acid.
+
+Example:
+
+    Drink A
+    sugar = 5.0 g/100 mL
+    TA    = 0.6 g/100 mL
+    ratio = 8.33
+
+    Drink B
+    sugar = 10.0 g/100 mL
+    TA    = 1.2 g/100 mL
+    ratio = 8.33
+
+Same ratio.
+Very different intensity.
+
+Never throw away absolute concentration.
+
+======================================================================
+3. BRIX — WHAT IT IS AND WHAT IT IS NOT
+======================================================================
+
+PHG definition:
+
+Degrees Brix is a soluble-solids scale referenced to sucrose. In an ideal
+sucrose-water reference solution:
+
+    1 °Bx ≈ 1 gram sucrose per 100 grams of solution.
+
+For a PURE SUCROSE + WATER reference system:
+
+    1:1 sucrose:water BY WEIGHT
+    = 50% sucrose by mass
+    = 50 °Bx ideal reference solution
+
+    2:1 sucrose:water BY WEIGHT
+    = 66.6667% sucrose by mass
+    = ~66.7 °Bx ideal reference solution
+
+Bartender reference values loaded into PHG:
+
+    1:1 simple syrup BY VOLUME ≈ 48 °Bx
+    2:1 rich syrup BY VOLUME  ≈ 65.1 °Bx
+
+These volume-based numbers are working/reference values, not laws. Granulation,
+packing, heating, temperature, evaporation, and preparation technique can move
+the actual result.
+
+CRITICAL RULE:
+
+    BRIX IS NOT PERCEIVED SWEETNESS.
+
+Brix is primarily a concentration / soluble-solids measurement. Perceived
+sweetness depends on:
+
+    sugar identity
+    concentration
+    acids
+    ethanol
+    aroma
+    temperature
+    matrix
+    bitterness
+    carbonation
+    other dissolved materials
+
+Do not translate Brix directly into “how sweet the cocktail tastes.”
+
+======================================================================
+4. TRUE BRIX VS APPARENT BRIX
+======================================================================
+
+Standard refractometers are calibrated around sucrose solutions.
+
+In a cocktail containing ethanol, acids, salts, other sugars, juices,
+liqueurs, and other dissolved solids, a refractometer can return a useful
+reading but it is not necessarily “true sucrose Brix.”
+
+PHG language:
+
+    true Brix
+        Use only where the matrix supports that interpretation, especially a
+        sucrose-water reference solution.
+
+    apparent Brix
+        Use for a refractometer reading from an alcoholic or compositionally
+        complex cocktail unless the matrix has been validated.
+
+When precision matters:
+
+    calculate actual sugar from ingredient composition
+    rather than pretending the refractometer reading equals sugar concentration.
+
+This is specifically important with alcoholic ingredients such as orange
+liqueurs.
+
+======================================================================
+5. SUGARS — DO NOT TREAT ALL SUGARS AS EQUIVALENT
+======================================================================
+
+PHG uses sucrose as the reference sweetness = 1.0 where appropriate.
+
+But:
+
+    equal grams of sucrose, glucose, and fructose
+    do NOT necessarily produce equal perceived sweetness.
+
+Relative sweetness changes with:
+- sugar identity
+- concentration
+- temperature
+- test conditions
+- beverage matrix
+
+Therefore:
+
+DO NOT create one universal permanent conversion such as:
+    “fructose is always X times sucrose”
+
+unless the conditions and source justify it.
+
+Separate these concepts:
+
+    chemical sugar mass
+    Brix / soluble solids
+    sucrose-equivalent sensory sweetness
+    actual perceived sweetness
+
+The first two can often be measured or calculated.
+The last two are sensory models.
+
+======================================================================
+6. CURRENT SWEETENER / INGREDIENT PROFILES IN SUPABASE
+======================================================================
+
+The following profiles currently exist:
+
+1. ip_simple_1_1_weight
+   Name: 1:1 Simple Syrup by Weight
+   Class: sweetener
+   ABV: 0
+   Brix: 50.0
+   Sugar: 50.0 g/100 g
+   Confidence: high
+   Verification: derived
+   Meaning: ideal fully dissolved sucrose-water reference solution.
+
+2. ip_simple_1_1_volume
+   Name: 1:1 Simple Syrup by Volume
+   Class: sweetener
+   ABV: 0
+   Brix: 48.0
+   Confidence: medium
+   Verification: primary_practitioner
+   Rule: measure production batches if precision matters.
+
+3. ip_rich_2_1_weight
+   Name: 2:1 Rich Simple Syrup by Weight
+   Class: sweetener
+   Brix: 66.6667
+   Sugar: 66.6667 g/100 g
+   Confidence: high
+   Verification: derived.
+
+4. ip_rich_2_1_volume
+   Name: 2:1 Rich Simple Syrup by Volume
+   Class: sweetener
+   Brix: 65.1
+   Confidence: medium
+   Verification: primary_practitioner.
+
+5. ip_simple_syrup_unspecified
+   Name: Simple Syrup — Strength Unspecified
+   Class: sweetener
+   Brix: intentionally NULL
+   Sugar concentration: intentionally NULL
+   Confidence: low
+   Critical rule:
+       DO NOT assign 50 Brix automatically.
+       Resolve the source recipe, house syrup strength, or measured batch Brix.
+
+6. ip_sucrose_reference
+   Name: Sucrose
+   Sugar: 100 g/100 g
+   Relative sweetness reference: 1.0
+   Note:
+       Relative sweetness of other sugars depends on concentration and
+       temperature.
+
+7. ip_granulated_sucrose
+   Name: Granulated White Sugar / Sucrose
+   Sugar: 100 g/100 g
+   Note:
+       teaspoons/barspoons still require a mass conversion to calculate grams.
+
+8. ip_cointreau_unique
+   Name: Cointreau l'Unique
+   Class: liqueur
+   ABV: 40%
+   Sugar: 22.5 g/100 mL
+   Confidence: high
+   Verification: official
+   Critical rule:
+       Do not infer true Brix from a standard sucrose refractometer because
+       ethanol is present.
+
+9. ip_triple_sec_unspecified
+   Name: Triple Sec — Product Unspecified
+   Class: liqueur
+   ABV: intentionally NULL
+   Sugar: intentionally NULL
+   Critical rule:
+       DO NOT substitute Cointreau composition for generic triple sec.
+       Brands vary materially in alcohol and sugar.
+
+10. ip_lemon_juice_working
+    Name: Fresh Lemon Juice — Cocktail Working Model
+    TA: 6.0 g/100 mL working target
+    observed/reference range loaded: 5.28–6.368 g/100 mL
+    Confidence: high
+    Rule:
+        measure batch TA when repeatability matters.
+
+11. ip_lime_juice_working
+    Name: Fresh Lime Juice — Cocktail Working Model
+    TA: 6.0 g/100 mL working target
+    Acid model:
+        ~4% citric
+        ~2% malic
+    Critical note:
+        actual lime chemistry is more complex.
+
+12. ip_orange_juice_working
+    Name: Orange Juice — Cocktail Working Model
+    TA: ~1.0 g/100 mL
+    Confidence: medium
+    Rule:
+        use measured TA/Brix for precision.
+
+13. ip_water
+    Name: Water
+    Sugar: 0
+    ABV: 0.
+
+14. ip_club_soda
+    Name: Club Soda / Soda Water — Unsweetened
+    Sugar: 0
+    ABV: 0
+    Assumption:
+        no caloric sweetener; mineral/sodium content varies.
+
+======================================================================
+7. ALIAS RESOLUTION
+======================================================================
+
+phg_mix.ingredient_profile_aliases maps recipe language to formulation profiles.
+
+Examples currently live:
+
+    "simple syrup"
+        -> ip_simple_syrup_unspecified
+
+    "sugar syrup"
+        -> ip_simple_syrup_unspecified
+
+    "1:1 simple syrup by weight"
+        -> ip_simple_1_1_weight
+
+    "50 brix simple syrup"
+        -> ip_simple_1_1_weight
+
+    "1:1 simple syrup by volume"
+        -> ip_simple_1_1_volume
+
+    "2:1 rich simple syrup by weight"
+        -> ip_rich_2_1_weight
+
+    "66.7 brix rich syrup"
+        -> ip_rich_2_1_weight
+
+    "2:1 rich simple syrup by volume"
+        -> ip_rich_2_1_volume
+
+    "Cointreau"
+    "Cointreau l'Unique"
+    "Cointreau (triple sec)"
+        -> ip_cointreau_unique
+
+    "triple sec"
+        -> ip_triple_sec_unspecified
+
+    "fresh lemon juice"
+    "lemon juice"
+        -> ip_lemon_juice_working
+
+    "fresh lime juice"
+    "lime juice"
+        -> ip_lime_juice_working
+
+    "orange juice"
+        -> ip_orange_juice_working
+
+    "sugar"
+    "superfine sugar"
+    "white cane sugar"
+        -> ip_granulated_sucrose
+
+    "water"
+    "chilled water"
+        -> ip_water
+
+    "club soda"
+    "soda water"
+        -> ip_club_soda
+
+The alias layer is intentionally conservative.
+
+If a recipe says “simple syrup,” Harmony should NOT quietly reinterpret that as
+“1:1 by weight.”
+
+If a recipe says “triple sec,” Harmony should NOT quietly reinterpret it as
+Cointreau.
+
+Unknown composition should remain unknown until resolved.
+
+======================================================================
+8. ACIDITY — TITRATABLE ACIDITY VS pH
+======================================================================
+
+PHG treats pH and titratable acidity as different measurements.
+
+pH:
+    describes hydrogen-ion activity.
+
+TA / titratable acidity:
+    represents the neutralizable acid load.
+
+For cocktail structural balance, TA is usually the more useful quantity for
+calculating the acid load contributed by a juice or acid-adjusted component.
+
+However:
+
+    TA does not fully predict perceived sourness.
+    pH does not fully predict perceived sourness.
+
+Sensory perception also depends on:
+- acid identity
+- concentration
+- buffering
+- sugar
+- ethanol
+- aroma
+- temperature
+- matrix
+
+Do not replace one metric with the other.
+
+======================================================================
+9. CURRENT ACID WORKING MODELS
+======================================================================
+
+Cocktail-practitioner working model:
+
+    fresh lemon juice ≈ 6% TA
+    fresh lime juice  ≈ 6% TA
+
+Lime-like acid model:
+
+    ~4% citric acid
+    ~2% malic acid
+    total ≈ 6%
+
+Orange working model:
+
+    ~1% acid
+
+These are FORMULATION WORKING MODELS, not statements that every lemon, lime, or
+orange physically has those exact values.
+
+Fruit varies with:
+- cultivar
+- maturity
+- storage
+- source
+- harvest
+- batch
+
+When repeatability matters:
+    measure the actual batch.
+
+======================================================================
+10. ACID ADJUSTMENT
+======================================================================
+
+PHG definition:
+
+Acid adjustment adds measured acid—commonly citric and/or malic—to a lower-acid
+juice so that its structural acidity approaches a desired target while preserving
+the original fruit’s aromatic identity.
+
+Common use cases:
+    orange
+    grapefruit
+    pineapple
+    other fruit juices
+
+Important:
+    acid-adjusted orange is NOT “chemically or sensorially identical to lemon.”
+    The aroma, sugars, texture, bitterness, minerals, and other compounds remain
+    different.
+
+Use acid adjustment to manipulate structural acidity, not to pretend the fruit
+became another fruit.
+
+======================================================================
+11. CORDIALS — SUGAR CAN DILUTE ACID CONCENTRATION
+======================================================================
+
+A common formulation mistake is to sweeten an acidic juice heavily and then
+assume its acid intensity is unchanged.
+
+Example:
+    lime juice -> high-Brix lime cordial
+
+When a large amount of sugar/water is introduced, the acid concentration of the
+finished cordial can be lower than the starting juice.
+
+Therefore:
+    a cordial may need measured acid added back to restore the intended
+    sweet-acid structure.
+
+This matters especially when targeting a high standardized Brix.
+
+Garret Richard / Jasper’s Mix reference loaded into PHG:
+
+    approximately 66 Brix
+
+The conceptual purpose is powerful:
+    turn “sweet enough” into a repeatable formulation input.
+
+But:
+    66 Brix is a specific professional example,
+    not a universal cordial target.
+
+======================================================================
+12. SWEET / SOUR PERCEPTUAL INTERACTION
+======================================================================
+
+Sweetness and sourness do not behave as two independent linear sliders.
+
+Human sensory research supports mutual suppression:
+
+    added sucrose can reduce perceived sourness
+    added acid can reduce perceived sweetness
+
+Therefore:
+
+DO NOT model perception as:
+
+    perceived sweetness = sugar - acid
+
+or any simplistic universal subtraction rule.
+
+Keep chemical structure separate from sensory interpretation.
+
+The chemical fingerprint can tell Harmony what changed.
+Sensory data and tasting tell Harmony how the change is experienced.
+
+======================================================================
+13. SUGAR / ACID RATIO
+======================================================================
+
+A useful structural ratio is:
+
+    sugar_acid_ratio = sugar concentration / titratable acid concentration
+
+If using Brix in a juice-standard style context, the USDA reference definition is
+conceptually:
+
+    Brix / grams acid per 100 g product
+
+PHG should prefer internally consistent units and explicitly label them.
+
+Never output a ratio without also retaining:
+    sugar concentration
+    acid concentration
+
+Ratio alone hides intensity.
+
+======================================================================
+14. ETHANOL IS A SENSORY INGREDIENT
+======================================================================
+
+Do not treat ABV as merely a compliance or strength number.
+
+Human ethanol sensory research loaded into PHG tested concentrations including:
+
+    4%
+    8%
+    16%
+    32%
+    48% v/v
+
+Findings support multiple ethanol sensations:
+
+    sweetness
+    bitterness
+    drying
+    burning / tingling
+
+Dominant reported qualities shift with concentration.
+
+Loaded finding:
+    bitterness prominent around 8–16%
+    burning/tingling prominent around 32–48%
+
+Real cocktails are more complex than aqueous ethanol studies, but the main
+formulation lesson is clear:
+
+    changing ABV can change the perceived balance even if sugar and acid stay
+    chemically constant.
+
+======================================================================
+15. DILUTION IS AN INGREDIENT
+======================================================================
+
+There is no universal “25% dilution is correct” rule.
+
+Water changes:
+
+    sugar concentration
+    acid concentration
+    ABV
+    aroma release
+    bitterness
+    texture
+    temperature
+    total intensity
+
+Shaken and stirred drinks can occupy different useful regions.
+
+Harmony must track:
+
+    pre_dilution_volume_ml
+    finished_volume_ml
+    dilution_pct
+
+When possible, calculate dilution from measured pre/post weights or volumes for
+a specific service protocol.
+
+Do not silently apply one universal dilution constant across all drinks.
+
+======================================================================
+16. TEMPERATURE
+======================================================================
+
+Service temperature changes perceived sweetness and overall flavor.
+
+Sensory research supports a concentration-dependent relationship between
+temperature and sucrose sweetness.
+
+Cooling can reduce perceived sweetness at lower-to-moderate sucrose
+concentrations, while the magnitude of the temperature effect can decrease at
+higher concentrations.
+
+PHG practitioner service windows currently stored:
+
+SHAKEN:
+    approximately -10 °C to -5 °C
+
+STIRRED:
+    approximately -7 °C to -0.5 °C
+
+These come from Dave Arnold practitioner guidance and are stored as HEURISTICS,
+not universal laws.
+
+Rule:
+
+    colder is not automatically better.
+
+Excessive cold can mute:
+    aroma
+    sweetness
+    flavor differentiation
+
+Always evaluate a drink at its actual service temperature.
+
+======================================================================
+17. FROZEN COCKTAIL MODEL
+======================================================================
+
+Frozen cocktails require a separate formulation mindset.
+
+Both:
+    sugar / dissolved solids
+and:
+    ethanol
+
+depress the freezing point.
+
+Texture therefore depends on at least:
+
+    sugar / solids
+    ABV
+    total water
+    temperature
+    machine behavior
+    other dissolved material
+    optional hydrocolloid structure
+
+Professional starting operating window currently stored:
+
+    finished Brix: approximately 13–15
+    finished ABV:  approximately 0–10%
+
+CRITICAL:
+These are operating / texture starting windows.
+
+They are NOT:
+    universal ideal sweetness
+or:
+    universal ideal alcohol levels
+
+A particular machine may tolerate a different range.
+
+Frozen final rule:
+
+    TASTE THE DRINK FROZEN.
+
+A room-temperature frozen batch is not the final sensory state.
+
+Extreme cold alters:
+    sweetness
+    aroma
+    bitterness
+    texture
+
+======================================================================
+18. MULTI-ROLE INGREDIENT DECOMPOSITION
+======================================================================
+
+Do not assign one ingredient one role.
+
+Example:
+    Cointreau contributes:
+        ethanol
+        sugar
+        orange aroma
+        bitterness
+        water
+        other dissolved material
+
+A vermouth might contribute:
+    ethanol
+    residual sugar
+    acid
+    bitterness
+    aromatic compounds
+    water
+
+A fruit purée might contribute:
+    sugar
+    acid
+    soluble solids
+    fiber
+    viscosity
+    aroma
+    water
+
+Harmony must think in CONTRIBUTIONS, not labels.
+
+======================================================================
+19. COINTREAU EXAMPLE
+======================================================================
+
+Official Cointreau data loaded:
+
+    product: Cointreau l'Unique
+    ABV: 40%
+    sugar: 22.5 g / 100 mL
+    approximately 6.8 g sugar / 30 mL
+
+This makes Cointreau an excellent example of why a liqueur cannot be modeled as
+“just booze” or “just sweetener.”
+
+Important:
+    generic triple sec MUST NOT inherit these values.
+
+======================================================================
+20. SALT
+======================================================================
+
+A practitioner-level claim is loaded that sub-threshold salt can brighten and
+round some cocktails without a salty taste.
+
+Treat this as a seasoning variable.
+
+Never prescribe a universal salt dose.
+
+Recipe-specific sensory validation is required.
+
+======================================================================
+21. CURRENT BALANCE / REFERENCE PROFILES
+======================================================================
+
+11 balance profiles currently live:
+
+1. bp_classic_sour_start
+   2 oz spirit
+   0.75 oz citrus
+   0.75 oz 1:1 simple
+   Purpose:
+       starting coordinate, not universal optimum.
+
+2. bp_frozen_campari_window
+   13–15 Brix
+   0–10% finished ABV
+   Purpose:
+       frozen operating/texture starting window.
+
+3. bp_shaken_temp_window
+   -10 to -5 °C
+   Dave Arnold practitioner heuristic.
+
+4. bp_stirred_temp_window
+   -7 to -0.5 °C
+   Dave Arnold practitioner heuristic.
+
+Official-reference builds:
+
+5. bp_iba_margarita
+   50 mL tequila 100% agave
+   20 mL triple sec
+   15 mL fresh lime
+   Important:
+       sugar cannot be finalized until triple-sec product is known.
+
+6. bp_iba_whiskey_sour
+   45 mL bourbon
+   25 mL fresh lemon
+   20 mL sugar syrup
+   Important:
+       syrup strength unspecified by IBA.
+
+7. bp_iba_sidecar
+   50 mL cognac
+   20 mL triple sec
+   20 mL lemon
+   Important:
+       triple-sec sugar varies by product.
+
+8. bp_iba_john_collins
+   45 mL gin
+   30 mL lemon
+   15 mL simple syrup
+   60 mL soda
+   Important:
+       syrup strength unspecified; carbonation matters.
+
+9. bp_iba_long_island
+   15 mL vodka
+   15 mL tequila
+   15 mL white rum
+   15 mL gin
+   15 mL Cointreau
+   25 mL lemon
+   30 mL simple syrup
+   cola top
+   Important:
+       cola quantity/composition and syrup strength must be known for exact
+       final sweetness.
+
+10. bp_iba_daiquiri
+    60 mL white Cuban rum
+    20 mL fresh lime
+    2 barspoons superfine sugar
+    Important:
+        exact sugar requires mass, because barspoon mass is not standardized.
+
+11. bp_iba_caipirinha
+    60 mL cachaça
+    1 whole lime
+    4 tsp white cane sugar
+    Important:
+        whole-fruit yield, peel oils, bitterness, and teaspoon mass add
+        uncertainty.
+
+======================================================================
+22. FORMULATION CLAIMS — 30 CLAIMS BY TOPIC
+======================================================================
+
+ACIDITY:
+    fc_acid_adjustment_definition
+    fc_cordial_restore_acid
+    fc_lemon_lime_working_ta
+    fc_lime_acid_working_model
+    fc_orange_acid_working_model
+    fc_ta_vs_ph
+
+ALCOHOL:
+    fc_ethanol_multisensory
+
+BRIX:
+    fc_brix_definition
+    fc_jaspers_mix_66_brix
+    fc_rich_2_1_weight
+    fc_simple_1_1_weight
+    fc_simple_volume_brix
+
+DILUTION:
+    fc_dilution_not_universal
+
+FROZEN:
+    fc_freezing_point_sugar_alcohol
+    fc_frozen_abv_window
+    fc_frozen_brix_window
+    fc_frozen_rebalance_service_temp
+
+INGREDIENT DECOMPOSITION:
+    fc_cointreau_sugar_abv
+    fc_ingredient_multirole
+
+MEASUREMENT:
+    fc_balance_fingerprint
+    fc_brix_acid_ratio_definition
+    fc_refractometer_complex_matrix
+
+SALT:
+    fc_subthreshold_salt
+
+SWEET / ACID INTERACTION:
+    fc_absolute_intensity_matters
+    fc_sweet_sour_mutual_suppression
+
+SWEETNESS:
+    fc_brix_not_perceived_sweetness
+    fc_sugar_identity_matters
+
+TEMPERATURE:
+    fc_shaken_temperature_window
+    fc_stirred_temperature_window
+    fc_temperature_sweetness_interaction
+
+Each claim stores:
+
+    key
+    topic
+    claim_type
+    statement
+    quantitative JSON
+    conditions JSON
+    limitations
+    confidence
+    verification
+    status
+
+Claude should READ THE LIMITATIONS, not merely the statement.
+
+======================================================================
+23. EVIDENCE / SOURCE MODEL
+======================================================================
+
+phg_mix.formulation_evidence links formulation objects to source records.
+
+Current evidence links:
+
+    balance_profile      11 links
+    claim                26 links
+    ingredient_profile    6 links
+
+Source keys currently linked by formulation evidence include:
+
+    src_campari_academy
+    src_cointreau_official
+    src_cooking_issues
+    src_diffords
+    src_ethanol_perception_2015
+    src_foodchem_sugar_sweetness_2019
+    src_iba_world
+    src_nist_ar200
+    src_popsci_cocktail_calculus
+    src_rumreader_planters_punch
+    src_sweet_sour_interactions_2020
+    src_sweet_suppression_2023
+    src_temperature_sucrose_1982
+    src_usda_grapefruit_standard
+    src_vinepair_acid_adjusting
+
+The source registry also contains:
+
+    src_liquid_intelligence
+
+but current formulation_evidence does not show it as directly linked to these
+formulation records. Do not imply a direct row-level evidence link where none
+exists.
+
+======================================================================
+24. MAJOR RESEARCH SOURCES
+======================================================================
+
+OFFICIAL / STANDARDS / PRODUCER
+
+International Bartenders Association
+    source key: src_iba_world
+    https://iba-world.com/cocktails/
+    Use:
+        official recipe specs / reference builds.
+
+Cointreau Nutritional Information
+    source key: src_cointreau_official
+    publisher: Cointreau
+    https://www.cointreau.com/int/en/nutritional-information
+    Use:
+        official Cointreau sugar and ABV data.
+
+USDA — United States Standards for Grades of Grapefruit Juice
+    source key: src_usda_grapefruit_standard
+    Use:
+        official Brix / acid / Brix-acid ratio definitions.
+
+NIST — AR200 Refractometer Meter / User Guide
+    source key: src_nist_ar200
+    Use:
+        sucrose calibration and Brix/refractometer limitations.
+
+PROFESSIONAL / PRACTITIONER
+
+Dave Arnold — Liquid Intelligence
+    source key: src_liquid_intelligence
+    publisher: W. W. Norton, 2014
+    Use:
+        science-based cocktail technique framework.
+    Note:
+        source is registered but not presently directly linked in
+        formulation_evidence.
+
+Dave Arnold — Cocktail Calculus Chart: The Inner Workings Of Recipes
+    source key: src_popsci_cocktail_calculus
+    Popular Science, 2014
+    Use:
+        quantitative cocktail-family structure.
+
+Cooking Issues
+    source key: src_cooking_issues
+    Dave Arnold / Nastassia Lopez
+    https://cookingissues.com
+    Use:
+        temperature, dilution, technique practitioner material.
+
+VinePair Cocktail College — Jack Schramm acid-adjusting discussion
+    source key: src_vinepair_acid_adjusting
+    https://vinepair.com/cocktail-college/techniques-acid-adjusting/
+    Use:
+        lemon/lime ~6% TA working model
+        lime citric/malic working model
+        orange ~1% acid
+        acid-adjustment practice.
+
+Campari Academy
+    source key: src_campari_academy
+    https://www.campariacademy.com
+    Use:
+        professional frozen cocktail operating windows.
+
+Difford’s Guide
+    source key: src_diffords
+    https://www.diffordsguide.com
+    Use:
+        syrup Brix reference values and cocktail reference material.
+
+Garret Richard / Ben Schaffer — Perfecting the Practice of Planter’s Punch
+    source key: src_rumreader_planters_punch
+    The Rum Reader, 2022
+    https://www.rumreader.com/perfecting-the-practice-of-planters-punch/
+    Use:
+        Jasper’s Mix ~66 Brix standardization concept.
+
+PEER-REVIEWED / ACADEMIC
+
+Taste Interactions between Sweetness of Sucrose and Sourness of Citric and
+Tartaric Acid among Chinese and Danish Consumers
+    source key: src_sweet_sour_interactions_2020
+    Foods, 2020
+    https://pmc.ncbi.nlm.nih.gov/articles/PMC7600934/
+    Use:
+        mutual sweet/sour suppression.
+
+Suppression of sweetness: evidence for central mechanism for suppression of
+sweetness from sucrose by citric acid
+    source key: src_sweet_suppression_2023
+    Chemical Senses, 2023
+    https://pubmed.ncbi.nlm.nih.gov/37668445/
+    Use:
+        citric-acid suppression of sucrose sweetness.
+
+Perceptual Qualities of Ethanol Depend on Concentration...
+    source key: src_ethanol_perception_2015
+    Chemosensory Perception, 2015
+    https://pmc.ncbi.nlm.nih.gov/articles/PMC5006941/
+    Use:
+        ethanol sensory contribution by concentration.
+
+Effects of temperature on the perceived sweetness of sucrose
+    source key: src_temperature_sucrose_1982
+    Physiology & Behavior, 1982
+    DOI: 10.1016/0031-9384(82)90212-8
+    Use:
+        concentration-dependent temperature effects on sucrose sweetness.
+
+A new sensory sweetness definition and sweetness conversion method of five
+natural sugars...
+    source key: src_foodchem_sugar_sweetness_2019
+    Food Chemistry, 2019
+    Use:
+        sugar identity and concentration effects on relative sweetness.
+
+======================================================================
+25. HOW TO READ THE RECIPE BALANCE VIEWS
+======================================================================
+
+VIEW 1:
+    phg_mix.v_recipe_balance_inputs
+
+Purpose:
+    map each recipe line to a formulation ingredient profile.
+
+Important output fields include:
+
+    recipe_key
+    recipe_name
+    family
+    subfamily
+    method
+    serve
+    position
+    ingredient_raw
+    ingredient_normalized
+    amount
+    unit
+    ml
+    profile_key
+    profile_name
+    profile_basis
+    profile_confidence
+    abv_pct
+    brix_deg
+    sugar_g_100ml
+    sugar_g_100g
+    relative_sweetness_sucrose
+    ta_g_100ml
+    ph
+    sugar_profile
+    acid_profile
+    resolution_state
+
+resolution_state meanings:
+
+    mapped
+        Ingredient profile exists and is compositionally usable for its role.
+
+    mapped_needs_composition
+        Alias resolves to a profile, but exact composition is deliberately
+        unresolved.
+        Examples:
+            generic simple syrup
+            generic triple sec
+
+    unmapped
+        No formulation profile is currently attached.
+
+VIEW 2:
+    phg_mix.v_recipe_balance_coverage
+
+Purpose:
+    tell Harmony whether a recipe is sufficiently resolved before quantitative
+    analysis.
+
+Fields include:
+
+    total_lines
+    mapped_lines
+    composition_ready_lines
+    composition_unresolved_lines
+    unmapped_lines
+    mapped_pct
+    composition_ready_pct
+    unmapped_ingredients[]
+    unresolved_composition_ingredients[]
+
+CRITICAL RULE:
+    Use coverage FIRST.
+    Do not calculate a fake precise result from incomplete composition.
+
+======================================================================
+26. LIVE COVERAGE EXAMPLES
+======================================================================
+
+Current examples:
+
+Margarita — rx_margarita
+    mapped: 66.7%
+    composition-ready: 66.7%
+    unmapped:
+        tequila
+
+IBA Margarita — rx_margarita_classic_iba
+    mapped: 66.7%
+    composition-ready: 33.3%
+    unmapped:
+        100% agave tequila
+    composition unresolved:
+        triple sec
+
+Daiquiri — rx_daiquiri_classic
+    mapped: 66.7%
+    composition-ready: 33.3%
+    unmapped:
+        white Cuban-style rum
+    composition unresolved:
+        sugar syrup
+
+Sidecar — rx_sidecar
+    mapped: 80.0%
+    composition-ready: 60.0%
+    unmapped:
+        cognac
+    composition unresolved:
+        sugar syrup
+
+Tom Collins — rx_tom_collins
+    mapped: 75.0%
+    composition-ready: 50.0%
+    unmapped:
+        gin
+    composition unresolved:
+        simple syrup
+
+Long Island Iced Tea — rx_long_island_iced_tea
+    mapped: 37.5%
+    composition-ready: 25.0%
+    unmapped:
+        cola
+        gin
+        tequila
+        vodka
+        white rum
+    composition unresolved:
+        simple syrup
+
+Caipirinha — rx_caipirinha
+    mapped: 33.3%
+    composition-ready: 33.3%
+    unmapped:
+        cachaça
+        lime
+
+These are not failures.
+They are the system refusing false precision.
+
+======================================================================
+27. CALCULATION MODEL
+======================================================================
+
+When the required ingredient composition is known, calculate contributions
+ingredient by ingredient.
+
+For an ingredient with a known sugar concentration:
+
+    sugar_g_i =
+        ingredient_volume_ml
+        * sugar_g_100ml
+        / 100
+
+For a known titratable acidity:
+
+    ta_g_i =
+        ingredient_volume_ml
+        * ta_g_100ml
+        / 100
+
+For ethanol:
+
+    ethanol_ml_i =
+        ingredient_volume_ml
+        * abv_pct
+        / 100
+
+Totals:
+
+    total_sugar_g = sum(sugar_g_i)
+
+    total_ta_g = sum(ta_g_i)
+
+    total_ethanol_ml = sum(ethanol_ml_i)
+
+    pre_dilution_volume_ml = sum(ingredient liquid volumes)
+
+After service dilution:
+
+    finished_volume_ml =
+        pre_dilution_volume_ml
+        + dilution_water_ml
+        + any explicit water/carbonated top where included
+
+Then:
+
+    sugar_g_100ml =
+        total_sugar_g
+        / finished_volume_ml
+        * 100
+
+    ta_g_100ml =
+        total_ta_g
+        / finished_volume_ml
+        * 100
+
+    sugar_acid_ratio =
+        sugar_g_100ml / ta_g_100ml
+
+    abv_finished =
+        total_ethanol_ml
+        / finished_volume_ml
+        * 100
+
+Dilution:
+
+    dilution_pct =
+        (finished_volume_ml - pre_dilution_volume_ml)
+        / pre_dilution_volume_ml
+        * 100
+
+IMPORTANT:
+These equations are only as valid as their inputs.
+
+If the syrup strength is unknown:
+    do not fake sugar_g.
+
+If a liqueur sugar level is unknown:
+    do not borrow another brand’s value.
+
+If dilution is unknown:
+    output a pre-dilution result or scenario range and label it.
+
+If juice TA is a working model:
+    label it as an assumption.
+
+======================================================================
+28. BRIX ESTIMATION IN FINISHED COCKTAILS
+======================================================================
+
+recipe_balance_analysis includes:
+
+    brix_estimated
+
+Use this carefully.
+
+Do not equate:
+    grams sugar / 100 mL
+with:
+    true °Brix
+
+without accounting for density/mass basis and matrix.
+
+In an alcoholic complex cocktail, prefer:
+    calculated sugar concentration
+over:
+    pretending a refractometer Brix number is pure sugar.
+
+If a measured refractometer value is supplied for an alcoholic drink:
+    label it “apparent Brix” unless the measurement method has been validated.
+
+======================================================================
+29. recipe_balance_analysis — DESIGNED BUT INTENTIONALLY EMPTY
+======================================================================
+
+Current live row count:
+
+    0
+
+This is intentional.
+
+The table exists to persist versioned recipe analyses once the ingredient inputs
+are sufficiently resolved.
+
+Fields include:
+
+    recipe_key
+    analysis_version
+    calculated_at
+    pre_dilution_volume_ml
+    finished_volume_ml
+    sugar_g
+    sugar_g_100ml
+    ta_g
+    ta_g_100ml
+    sugar_acid_ratio
+    abv_pre_dilution
+    abv_finished
+    brix_estimated
+    service_temp_c
+    carbonated
+    input_coverage_pct
+    assumptions JSON
+    warnings[]
+    created_at
+
+DO NOT bulk-populate this table from incomplete ingredients.
+
+False precision would be worse than an empty table.
+
+======================================================================
+30. RECOMMENDED HARMONY READ SEQUENCE
+======================================================================
+
+When asked:
+
+    “Analyze this cocktail”
+    “Why is this too sweet?”
+    “Make this brighter”
+    “How would this work frozen?”
+    “Compare these two recipes”
+    “What happens if I replace Cointreau with another triple sec?”
+
+Use this sequence:
+
+STEP 1 — IDENTIFY RECIPE
+Read:
+    phg_mix.recipes
+    phg_mix.recipe_lines
+
+STEP 2 — CHECK COVERAGE FIRST
+Read:
+    phg_mix.v_recipe_balance_coverage
+
+If composition_ready_pct is incomplete:
+    identify exact missing/unresolved inputs.
+
+STEP 3 — READ LINE-BY-LINE FORMULATION INPUTS
+Read:
+    phg_mix.v_recipe_balance_inputs
+
+STEP 4 — RESOLVE INGREDIENTS
+Use:
+    phg_mix.ingredient_profiles
+    phg_mix.ingredient_profile_aliases
+
+Never silently upgrade an unresolved generic term into a specific product.
+
+STEP 5 — CALCULATE ONLY WHAT IS SUPPORTED
+Calculate:
+    sugar
+    TA
+    ratio
+    ABV
+    dilution
+    service-condition context
+
+STEP 6 — READ PRINCIPLES / CLAIMS
+Query:
+    phg_mix.formulation_claims
+
+by topic relevant to the question.
+
+STEP 7 — READ EVIDENCE
+Join:
+    phg_mix.formulation_evidence
+to:
+    phg_mix.sources
+
+Use evidence confidence/verification in the explanation.
+
+STEP 8 — COMPARE AGAINST RELEVANT PROFILE
+Query:
+    phg_mix.balance_profiles
+
+Do not compare a frozen drink against a room-temperature sour template without
+explaining the mismatch.
+
+STEP 9 — EXPLAIN ASSUMPTIONS
+Explicitly state:
+    measured
+    official
+    practitioner heuristic
+    derived
+    unresolved
+
+STEP 10 — GIVE SENSORY INTERPRETATION
+Explain what the numbers likely mean.
+
+Do not claim the numbers replace tasting.
+
+STEP 11 — FINALIZE AT SERVICE CONDITION
+Especially:
+    frozen
+    carbonated
+    very cold
+    high-ABV
+    bitter
+    saline
+    fat-washed / textured drinks
+
+======================================================================
+31. EXAMPLE SQL — READ-ONLY
+======================================================================
+
+Coverage:
+
+SELECT *
+FROM phg_mix.v_recipe_balance_coverage
+WHERE recipe_key = 'rx_margarita_classic_iba';
+
+Inputs:
+
+SELECT *
+FROM phg_mix.v_recipe_balance_inputs
+WHERE recipe_key = 'rx_margarita_classic_iba'
+ORDER BY position;
+
+Ingredient profile:
+
+SELECT *
+FROM phg_mix.ingredient_profiles
+WHERE key = 'ip_cointreau_unique';
+
+Alias resolution:
+
+SELECT *
+FROM phg_mix.ingredient_profile_aliases
+WHERE lower(alias) = lower('triple sec');
+
+Relevant claims:
+
+SELECT *
+FROM phg_mix.formulation_claims
+WHERE topic IN ('sweetness','acidity','sweet_acid_interaction','measurement')
+  AND status = 'active';
+
+Relevant profile:
+
+SELECT *
+FROM phg_mix.balance_profiles
+WHERE key = 'bp_iba_margarita';
+
+Evidence:
+
+SELECT
+    e.record_type,
+    e.record_key,
+    e.evidence_role,
+    e.locator,
+    e.note,
+    s.key AS source_key,
+    s.title,
+    s.publisher,
+    s.year,
+    s.url
+FROM phg_mix.formulation_evidence e
+JOIN phg_mix.sources s
+  ON s.key = e.source_key
+WHERE e.record_key = 'fc_ta_vs_ph';
+
+======================================================================
+32. REQUIRED LANGUAGE / CONFIDENCE DISCIPLINE
+======================================================================
+
+Use terms like:
+
+    “official producer data”
+    “peer-reviewed finding”
+    “professional working model”
+    “practitioner heuristic”
+    “derived calculation”
+    “measured”
+    “estimated”
+    “unresolved”
+
+Do not flatten them into one confidence class.
+
+For example:
+
+GOOD:
+    “Using the PHG lemon working model of ~6% TA...”
+
+BAD:
+    “Lemon juice is 6% acid.”
+
+GOOD:
+    “Cointreau’s official data gives 22.5 g sugar/100 mL.”
+
+BAD:
+    “Triple sec has 22.5 g sugar/100 mL.”
+
+GOOD:
+    “The batch measures 14 apparent Brix in this alcoholic matrix.”
+
+BAD:
+    “The drink contains 14% sugar because the refractometer says 14 Brix.”
+
+======================================================================
+33. REQUIRED GUARDRAILS
+======================================================================
+
+1. Brix is not perceived sweetness.
+
+2. pH is not TA.
+
+3. Sugar/acid ratio does not replace absolute concentration.
+
+4. “Simple syrup” does not automatically mean 50 Brix.
+
+5. “Triple sec” does not automatically mean Cointreau.
+
+6. A liqueur can add sugar + ethanol + aroma + bitterness + water at once.
+
+7. Do not apply a single dilution percentage to all cocktails.
+
+8. Taste at actual service temperature.
+
+9. Frozen texture targets are not universal flavor targets.
+
+10. Do not use a refractometer in an alcoholic matrix as if it directly reports
+    grams of sugar.
+
+11. Do not generate a precise recipe_balance_analysis if ingredient coverage is
+    insufficient.
+
+12. Preserve uncertainty. Ask for or request measurements when the missing input
+    materially changes the answer.
+
+13. Never write to PHG canonical recipe/menu data merely because an analysis
+    suggests a change. Use PHG proposal/approval orchestration.
+
+======================================================================
+34. HOW HARMONY SHOULD HANDLE A MARGARITA
+======================================================================
+
+Example request:
+
+    “Analyze my Margarita.”
+
+Harmony should NOT immediately say:
+    “A Margarita should be 2:1:1.”
+
+Instead:
+
+1. Get the exact recipe.
+2. Resolve tequila.
+3. Resolve lime.
+4. Resolve the orange liqueur PRODUCT.
+5. Determine whether additional syrup/agave exists.
+6. Determine serving style and dilution.
+7. Use lime TA working model or measured TA.
+8. Use product-specific liqueur sugar and ABV.
+9. Calculate:
+       sugar_g_100ml
+       ta_g_100ml
+       ratio
+       finished ABV
+       dilution
+10. Compare to relevant Margarita / sour structural references.
+11. Explain:
+       whether sweetness comes from liqueur vs added syrup
+       whether acidity is low/high in absolute terms
+       how dilution shifts intensity
+       how cold service changes perception
+12. If the user says “too sweet,” identify which lever can change:
+       less sweetener
+       drier orange liqueur
+       more acid
+       acid adjustment
+       more dilution
+       lower service temperature
+       bitterness/salt/aroma changes
+    while explaining that these are NOT sensory equivalents.
+
+======================================================================
+35. HOW HARMONY SHOULD HANDLE A FROZEN MARGARITA
+======================================================================
+
+Do NOT merely take the shaken Margarita and blend it with ice.
+
+Evaluate:
+
+    finished sugar / apparent or calculated solids
+    finished ABV
+    water load
+    acid concentration
+    machine target
+    frozen service temperature
+    texture
+
+Starting operating window stored:
+
+    13–15 Brix
+    0–10% finished ABV
+
+Then:
+    tune acid and sensory sweetness at the final frozen temperature.
+
+A batch that tastes balanced warm may taste dull, harsh, or insufficiently sweet
+when frozen.
+
+======================================================================
+36. WHAT IS NOT FINISHED
+======================================================================
+
+The formulation system is a foundation, not a completed world model.
+
+Known gaps:
+
+1. Recipe ingredient coverage is incomplete.
+
+2. Many base spirits are not yet mapped to formulation profiles.
+   For sugar/acid calculation this may be acceptable when sugar/acid = 0 is
+   product-appropriate, but ABV still needs product/spec confirmation.
+
+3. Generic liqueurs need product-specific sugar + ABV data.
+
+4. More juices need:
+       Brix
+       sugar composition
+       TA
+       pH
+       acid identity
+       batch variability
+
+5. Densities are missing for many ingredients.
+   This matters when converting between mass-based Brix and volume-based recipe
+   quantities.
+
+6. recipe_balance_analysis has not been populated.
+
+7. Empirical PHG “corridors” for drink families still need to be learned from
+   properly resolved recipes and sensory testing.
+
+8. There is not yet a complete sucrose-equivalent sweetness engine for mixed
+   sugars.
+
+9. Carbonation, bitterness, salt, fat, protein, viscosity, and aroma are modeled
+   conceptually but are not yet converted into one universal quantitative
+   sensory equation—and they should not be forced into one prematurely.
+
+======================================================================
+37. RECOMMENDED NEXT RESEARCH PRIORITIES
+======================================================================
+
+Priority 1:
+    Expand product-specific ingredient composition.
+
+Focus especially on:
+    orange liqueurs
+    amari
+    vermouths
+    aperitifs
+    cordials
+    commercial syrups
+    fruit purées
+    juices
+    wines / fortified wines
+
+Fields:
+    sugar g/100 mL
+    ABV
+    density where available
+    Brix/apparent Brix where meaningful
+    TA
+    pH
+    acid identity
+    source
+    confidence
+    temperature / method
+
+Priority 2:
+    Create measured house-ingredient profiles.
+
+Examples:
+    house simple
+    rich simple
+    agave syrup dilution
+    honey syrup
+    grenadine
+    lime cordial
+    clarified juices
+    acid-adjusted juices
+    syrups
+    shrubs
+    batches
+
+Priority 3:
+    Instrument measurement workflow.
+
+Capture:
+    refractometer reading
+    measurement temperature
+    whether alcoholic
+    pH
+    TA titration result
+    density if known
+    batch ID / date
+    source method
+
+Priority 4:
+    Build versioned recipe analysis.
+
+Only after coverage threshold is sufficient.
+
+Priority 5:
+    Build sensory validation dataset.
+
+Record:
+    service temp
+    dilution
+    panel/person
+    sweetness perception
+    acid perception
+    balance rating
+    intensity
+    bitterness
+    aroma
+    texture
+    notes
+
+Do not train “perfect balance” from chemistry alone.
+
+======================================================================
+38. CLAUDE SKILL DEFINITION
+======================================================================
+
+SKILL NAME:
+    PHG Cocktail Formulation & Sensory Balance
+
+PRIMARY ROLE:
+    Quantitative cocktail formulation specialist for sugar, acid, dilution,
+    alcohol, temperature, frozen behavior, and ingredient contribution.
+
+TRIGGERS:
+    Any request involving:
+        sweet
+        dry
+        sour
+        tart
+        acid
+        Brix
+        syrup strength
+        sugar
+        dilution
+        ABV
+        frozen cocktail
+        slush
+        cordial
+        acid adjustment
+        refractometer
+        TA
+        pH
+        citrus balance
+        liqueur sweetness
+        recipe optimization
+        drink comparison
+        batching balance
+
+REQUIRED DATA SOURCES:
+    phg_mix.v_recipe_balance_coverage
+    phg_mix.v_recipe_balance_inputs
+    phg_mix.ingredient_profiles
+    phg_mix.ingredient_profile_aliases
+    phg_mix.formulation_claims
+    phg_mix.formulation_evidence
+    phg_mix.balance_profiles
+    phg_mix.sources
+    phg_mix.recipes
+    phg_mix.recipe_lines
+
+OPTIONAL / PERSISTENCE:
+    phg_mix.recipe_balance_analysis
+    only after composition coverage is sufficient and the analysis is versioned.
+
+CORE CAPABILITIES:
+    ingredient contribution decomposition
+    sugar mass calculation
+    TA calculation
+    sugar/acid ratio calculation
+    ABV calculation
+    dilution modeling
+    service-temperature reasoning
+    frozen operating-window reasoning
+    source/evidence tracing
+    uncertainty reporting
+    formulation change proposals
+    comparison between versions/recipes
+
+NON-CAPABILITIES / PROHIBITED SHORTCUTS:
+    do not infer unknown syrup strength
+    do not infer unknown liqueur sugar
+    do not convert alcoholic refractometer Brix directly to sugar
+    do not call ratio “balance” by itself
+    do not claim chemistry completely predicts sensory perception
+    do not publish recipe/menu changes without orchestration approval
+
+OUTPUT CONTRACT FOR ANALYSIS:
+
+    Recipe:
+    Resolved inputs:
+    Unresolved inputs:
+    Input coverage:
+    Sugar:
+    Titratable acidity:
+    Sugar/acid ratio:
+    ABV:
+    Dilution:
+    Service temperature:
+    Frozen constraints if applicable:
+    Sensory interpretation:
+    Main drivers:
+    Assumptions:
+    Evidence level:
+    Suggested experiments / changes:
+    What measurement would reduce uncertainty most:
+
+======================================================================
+39. IDEAL RESPONSE STYLE
+======================================================================
+
+Harmony should make the science usable to a beverage professional.
+
+Do not bury the user in chemistry unless requested.
+
+Preferred structure:
+
+    “Here is what is happening.”
+    “Here are the numbers we can actually support.”
+    “Here is what is still unknown.”
+    “Here is the lever I would test first.”
+    “Here is what that lever changes chemically and sensorially.”
+    “Taste it at service temperature and compare.”
+
+If Rob asks for depth:
+    expose the full calculations, sources, assumptions, and alternative models.
+
+If Rob asks for a quick answer:
+    give the conclusion first, but never hide a material uncertainty.
+
+======================================================================
+40. PHG ARCHITECTURE / ACTION BOUNDARY
+======================================================================
+
+Harmony/Claude should reason from PHG data.
+
+For read/analysis:
+    query Supabase through the governed Harmony read path.
+
+For consequential action:
+    proposal -> n8n orchestration -> approval gate -> execution -> verification.
+
+Do not make canonical menu, recipe, security, schema, or deployment changes just
+because the formulation model produced a recommendation.
+
+The agent is the reasoning layer.
+n8n is the workflow/control layer.
+Supabase is the data/evidence layer.
+
+======================================================================
+41. SECURITY NOTE — IMPORTANT BUT SEPARATE
+======================================================================
+
+During live verification on 2026-09-30, the Supabase advisory output reported a
+large number of pre-existing phg-schema tables with RLS disabled.
+
+This is broader PHG security debt and is NOT specific to the new phg_mix
+formulation tables.
+
+The formulation tables listed in this brief ARE RLS-enabled with harmony_read
+SELECT policies.
+
+Do not “fix all RLS” casually as part of this cocktail-formulation work.
+Enabling RLS without the right policies can break production access.
+
+Security remediation must be a separate reviewed project with:
+    table-by-table access intent
+    policies
+    tests
+    rollback plan
+
+======================================================================
+42. HANDOFF DIRECTIVE TO CLAUDE
+======================================================================
+
+You are now responsible for preserving and advancing this formulation system.
+
+DO:
+
+- Treat the live phg_mix formulation tables as the current source of truth.
+- Preserve the distinction between measured, official, peer-reviewed,
+  practitioner, and derived data.
+- Read limitations and confidence fields.
+- Expand ingredient resolution methodically.
+- Prefer product-specific composition.
+- Make uncertainty visible.
+- Calculate from known composition.
+- Taste and validate at real service conditions.
+- Keep sensory perception separate from chemistry while connecting the two.
+- Use n8n approval/control workflows for consequential changes.
+- Keep Rob out of manual system-to-system relay whenever the orchestration layer
+  can do it safely.
+
+DO NOT:
+
+- collapse balance into ounce ratios;
+- treat Brix as sweetness;
+- treat pH as TA;
+- treat sugar/acid ratio as sufficient;
+- silently assume generic ingredient composition;
+- fill recipe_balance_analysis with fake precision;
+- overwrite canonical recipe/menu data from an analytical suggestion;
+- weaken access control to make querying easier;
+- invent a universal sweetness equation without evidence.
+
+The objective is to make PHG progressively better at explaining, predicting,
+testing, and reproducing cocktail balance in a way that is both scientifically
+defensible and practically useful behind a bar.
+
+END OF HANDOFF

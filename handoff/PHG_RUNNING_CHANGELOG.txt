@@ -2467,3 +2467,11 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   - Coverage: 0 of 255 recipes fully ready. 229 of 1,179 lines mapped; 194 have enough composition data.
   - The biggest gaps are base spirits and modifiers: vodka 45, bitters 35, gin 30, vermouths 31, rye 14, ginger beer
     14, tomato juice 12, rich syrup name variants 19, agave syrup 14.
+- 2026-09-30 Rob pasted the formulation master handoff (sugar/acid/dilution/temperature, prepared by ChatGPT).
+  - Saved verbatim to handoff/PHG_FORMULATION_HANDOFF.txt.
+  - Verified against the live database. RLS and the harmony_read policy (phg_harmony_reader) are on all six
+    tables; recipe_balance_analysis has the policy too, which the brief does not mention. Both views are
+    security_invoker. Row counts match. The capability is cocktail_development only.
+  - New repo skill .claude/skills/phg-cocktail-formulation/SKILL.md (brief section 38). It covers the read
+    sequence, formulas, guardrails, confidence language and output contract.
+  - Nothing written to phg_mix. recipe_balance_analysis stays empty until coverage allows it.

@@ -432,5 +432,6 @@ PHG-056 (open) Deploy ingest-state-licenses with the OR address fix (repo only) 
   temporary probe-licence-sources function when source research is finished.
 PHG-057 (open) Firecrawl lanes running: job 9 (website discovery) and job 33 (paid blocked menus). Watch the
   menu_api_usage_ledger credits and yield. Job 33 empties itself (returns nothing_blocked) when the backlog is done.
-PHG-058 (open) Sugar/acid balance layer (phg_mix): needs spirit/modifier profiles and aliases, then a calculator
+PHG-058 (open) Sugar/acid balance layer (phg_mix; brief handoff/PHG_FORMULATION_HANDOFF.txt, skill
+  .claude/skills/phg-cocktail-formulation): needs sourced spirit/modifier profiles and aliases, then a calculator
   that fills recipe_balance_analysis, then Harmony/app access. Waiting on Rob's go-ahead (see chat 2026-09-30).
