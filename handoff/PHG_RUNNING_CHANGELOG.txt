@@ -2404,3 +2404,30 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   - App 18.49.49: image menus also open from the stored original upload (full resolution), with the rendered copy as a
     fallback if the original fails. Zoom stops at the original's own resolution.
   - Tested headless: 2,400 px original used; fallback to the 1,400 px copy when the original 404s.
+- 2026-09-30 Rob "go. Do all ones through four." (the helper agents hit their usage limit; done by the lead):
+  1. Licence geocoding (free US Census batch geocoder, no key):
+     - geocode-licenses edge function v1 deployed (verify_jwt off, x-ingest-token). It reads pending rows through
+       phg_license_geocode_batch, posts them to Census, and writes back through phg_license_geocode_apply.
+     - The apply step fills ZIP and city only where they are empty. No_Match and Tie rows are stamped so they are not
+       retried.
+     - cron job 32 'phg-license-geocode' runs every 5 minutes: one call per state that still has pending rows,
+       1,000 rows each (the PostgREST row cap). It stays on so new licences get geocoded automatically.
+     - First runs matched about 88-92% (RI 920/1,000, GA 881/1,000, CA 882/1,000).
+  2. RI and GA gaps:
+     - RI: all 1,874 done. 1,706 geocoded, and their ZIPs filled from the match. The 168 Census could not match
+       keep no ZIP.
+     - GA: cities are being filled as each batch lands (881 in the first batch).
+  3. OR bug found by geocoding:
+     - The loader's regex was greedy and ate the street name, so 8,019 OR addresses were bare house numbers (60% did
+       not match).
+     - Repaired in the database from raw.physical_address and re-queued for geocoding.
+     - Loader fixed in the repo. It deploys with the next ingest-state-licenses change; no OR reload is scheduled.
+  4. PA, NC, OH and UT: no free automated route today, checked from Supabase through the temporary allowlisted
+     probe-licence-sources function:
+     - PA: the PLCB export is disallowed by its robots.txt.
+     - NC: abc2.nc.gov times out (Cloudflare 522) from the cloud.
+     - OH: apps2.com.ohio.gov resets cloud connections, and the OPAL reports are Power BI.
+     - UT: the "Licensee List" is a Google Looker Studio report (robots allow; there is no file).
+     - Free route: download the CSV/Excel in a browser (OH lookup export, NC search, UT Looker "Export") and drop it
+       in the repo; the lead loads it through phg_license_upsert under the same rules.
+  5. phg-harmony-data: live v15 is byte-identical to the repo's v16 code (verified by diff).

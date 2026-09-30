@@ -463,11 +463,16 @@ const ADAPTERS: Record<string, Adapter> = {
   OR: socrata("data.oregon.gov", "srxe-qkm2", "license_expired = 'No'", (r) => {
     const type = t(r.license_type);
     const addr = String(r.physical_address ?? "");
+    /* "1525 GEARY ST SE ALBANY OR  97322-6838": drop "OR zip", then the known city (a greedy [A-Z ]+ city pattern
+       used to eat the street name too, leaving only "1525") */
+    const city = t(r.city) ?? "";
+    let street = addr.replace(/\s+OR\s+\d{5}(-\d{0,4})?\s*$/i, "").replace(/[\s,]+$/, "");
+    if (city && street.toUpperCase().endsWith(" " + city.toUpperCase()) && street.length > city.length + 3) street = street.slice(0, street.length - city.length).replace(/[\s,]+$/, "");
     return {
       state: "OR", license_no: t(r.license_number), license_type: type,
       on_premise: type ? (/\bON-PREMISES\b/i.test(type) && !/\bOFF-PREMISES\b/i.test(type)) : null, status: "active",
       business_name: t(r.trade_name) || t(r.licensee_name), owner_name: t(r.licensee_name),
-      address: t(addr.replace(/\s+[A-Z .'-]+\s+OR\s+\d{5}(-\d{4})?\s*$/i, "")), city: t(r.city), zip: zip5(addr.replace(/-\d{4}\s*$/, "")),
+      address: t(street), city: t(r.city), zip: zip5(addr.replace(/-\d{4}\s*$/, "")),
       county: t(r.county), issued_on: isoDate(r.effective_date), expires_on: isoDate(r.license_expires), raw: r,
     };
   }, "or_olcc_socrata"),

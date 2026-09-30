@@ -425,3 +425,8 @@ STANDING RULE (Rob, 2026-09-29): always use the ORIGINAL file when one exists - 
   stored original PDF / image, never a converted copy (snapshot, screenshot, re-encode). Copies are only a fallback when
   the original cannot load. Applies to the menu viewer (done: 18.49.48 PDF, 18.49.49 image) and any future feature that
   displays or processes menu files.
+PHG-055 (open) PA/NC/OH/UT licences need a browser download (no free automated route; see changelog 2026-09-30).
+  OH: apps2.com.ohio.gov/liqr/PermitLookup/PermitHolder -> Excel/CSV icon. NC: abc2.nc.gov/Search/Permit.
+  UT: Looker "Licensee List" linked from abs.utah.gov/licenses-permits/license-information -> Export CSV. PA: disallowed.
+PHG-056 (open) Deploy ingest-state-licenses with the OR address fix (repo only) on the next loader change. Delete the
+  temporary probe-licence-sources function when source research is finished.
