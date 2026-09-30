@@ -2475,3 +2475,32 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   - New repo skill .claude/skills/phg-cocktail-formulation/SKILL.md (brief section 38). It covers the read
     sequence, formulas, guardrails, confidence language and output contract.
   - Nothing written to phg_mix. recipe_balance_analysis stays empty until coverage allows it.
+- 2026-09-30 Rob: go on step 1 (sourced profiles) and step 3 (calculator); step 2 (aliases) explained in chat.
+  Rob also: "only use paid Firecrawl scrapes if you get a 70% success rate". Job 33 (blocked menus, 8%) and job 9
+  (website discovery, 41% confirmed) are both paused until a test sample shows 70% or better.
+  - Research fetches for this work: 10 of 11 Firecrawl fetches succeeded (91%), about 80 credits.
+  - Migration 20260930180000 (batch 1):
+    - 9 sources: 27 CFR 5.142/5.143, EU 2019/787 London gin, NOM-006 tequila, USDA FDC, Brix-SG table,
+      Coca-Cola US, state liquor listings, Hayman's.
+    - 20 new profiles:
+      - generic vodka, London dry gin, gin, bourbon, straight rye, rye, bourbon-or-rye and tequila (ABV left NULL,
+        because it depends on the product);
+      - Ketel One 40%, Hayman's 41.2%, Angostura 44.7%, Coca-Cola US 10.99 g/100 mL;
+      - generic cola, ginger beer (flagged to resolve), pineapple, tomato, egg white, cranberry cocktail;
+      - 1:1 and 2:1 syrups whose weight/volume basis isn't stated, as bounded ranges.
+    - Syrup densities (50 Brix = 61.49 g/100 mL, not 50). USDA sugars for lemon, lime and orange.
+    - Claim fc_brix_mass_vs_volume. 86 aliases.
+    - Coverage: mapped lines 229 -> 564 of 1,179; composition-ready 194 -> 511.
+  - Migration 20260930190000 (calculator):
+    - Densities from USDA portion weights. TA = 0 for sucrose syrups and water; soda counts as 0 (the TA method
+      degasses CO2).
+    - New ingredient_profiles.physical_state column (solid sugar needs grams).
+    - phg_mix.calc_recipe_balance and guarded persist functions. First run saved 3 recipes: Vodka Mojito, Southside,
+      Whiskey Sour with egg; 252 refused with exact blockers.
+    - A first pass had wrongly treated no-amount lines as garnish (5 bad rows). Deleted, the rule was tightened, and
+      the run was redone.
+  - Top blockers now:
+    - unstated simple/sugar syrup (44 recipes; by design);
+    - Cointreau acidity not published (23);
+    - ginger beer (26), vermouths (31), tomato juice TA (12);
+    - agave syrup, pineapple TA, Campari, maraschino, coffee liqueur, rums.

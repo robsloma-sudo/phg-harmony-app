@@ -40,6 +40,23 @@ All six formulation tables have RLS with a `harmony_read` SELECT policy for `phg
 7. Compare against the right `balance_profiles` entry. Explain it if the style doesn't match (e.g. frozen vs shaken).
 8. State assumptions and evidence level. Give a sensory reading and one lever to test. Taste at service temperature.
 
+## Calculator (live since 2026-09-30)
+
+- `select phg_mix.calc_recipe_balance('rx_...', 20)`: read-only (SECURITY INVOKER; granted to `phg_harmony_reader`).
+  The second argument is an optional dilution-% scenario. It returns:
+  - `complete` flags for volume, sugar, TA and ABV;
+  - `blockers` and `unresolved` lists, naming the exact ingredient;
+  - pre-dilution totals and concentrations, with ranges where a profile is a range (e.g. a 2:1 syrup whose weight or
+    volume basis isn't stated);
+  - per-line contributions, and warnings.
+  It never fills a gap. Dashes and drops are trace. Garnish units (leaf, sprig, wedge, slice, twist, peel, pinch)
+  are left out. Anything else without a profile or a volume blocks the result.
+  Solids measured by spoon (`physical_state = 'solid'`) need grams.
+- `phg_mix.persist_recipe_balance(key)` and `persist_all_recipe_balances()` (service_role only) write
+  `recipe_balance_analysis` (version `phg-balance-v1`) only when volume, sugar and TA are all complete. ABV is stored
+  only if it is also complete. Values are pre-dilution (`assumptions.basis`).
+- Syrup sugar per mL uses density: sugar_g_100ml = Brix x density (see `fc_brix_mass_vs_volume`).
+
 ## Formulas (per ingredient i, volumes in mL)
 
 ```
