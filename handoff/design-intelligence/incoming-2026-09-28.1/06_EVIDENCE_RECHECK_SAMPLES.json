@@ -1,0 +1,61 @@
+{
+  "status": "Handoff-only samples; not inserted into Supabase",
+  "review_date": "2026-09-28",
+  "scope": "Selected public pages and abstracts, not an exhaustive ingest",
+  "records": [
+    {
+      "key": "mit_squint_instruction",
+      "source": "https://ocw.mit.edu/courses/6-831-user-interface-design-and-implementation-spring-2011/pages/in-class-activities/graphic-design/",
+      "read_scope": "Public activity page/search-returned text",
+      "evidence_class": "academic_instruction",
+      "observation": "The activity explicitly asks learners to inspect broad salience, visual variables, contrast and alignment.",
+      "derived_action": "Use a reduced-detail view to compare observed hierarchy to intent.",
+      "limit": "Instructional exercise, not proof of one optimal aesthetic or sales effect."
+    },
+    {
+      "key": "typography_context",
+      "source": "https://practicaltypography.com/line-length.html",
+      "read_scope": "Public article text",
+      "evidence_class": "practitioner_guidance",
+      "observation": "The author proposes a practical character-count range for prose line length.",
+      "derived_action": "Use measure as an explicit variable, then evaluate the actual font and use case.",
+      "limit": "Not a universal fixed measure for short menu labels, display typography, or every writing system."
+    },
+    {
+      "key": "letterform_plural_history",
+      "source": "https://letterformarchive.org/news/toolkit-for-learning-type-history-non-linear-lenses/",
+      "read_scope": "Full public article text",
+      "evidence_class": "academic_instruction",
+      "observation": "Themed collections examine global scripts, material processes, modular type, information organization, and grid-breaking.",
+      "derived_action": "Diversify precedent retrieval across structure, culture, material and historical context.",
+      "limit": "Reading this introduction does not equal analyzing every artifact or linked lecture."
+    },
+    {
+      "key": "wcag_applicability",
+      "source": "https://www.w3.org/WAI/WCAG22/quickref/",
+      "read_scope": "Public criterion text, selected sections",
+      "evidence_class": "technical_standard",
+      "observation": "Text contrast, non-text contrast, reflow, and text-spacing tolerance are separate criteria.",
+      "derived_action": "Choose relevant criteria, test actual background pairs and record untested or not-applicable states.",
+      "limit": "Do not turn an override tolerance into a mandatory default style, or claim all accessibility criteria were tested."
+    },
+    {
+      "key": "menu_attention_not_purchase",
+      "source": "https://www.sciencedirect.com/science/article/pii/S0278431922002195",
+      "read_scope": "Publisher-indexed abstract/highlights; direct page fetch returned 403",
+      "evidence_class": "research_abstract_only",
+      "observation": "The meta-analysis reports differing effects across physiological measures, attitudes/intentions and purchase outcomes.",
+      "derived_action": "Record the actual outcome measured rather than treating attention as revenue proof.",
+      "limit": "No full-text methodology appraisal, subgroup extraction, or effect-size calculation performed in this handoff."
+    },
+    {
+      "key": "menu_scanpath_scope",
+      "source": "https://www.sciencedirect.com/science/article/pii/S0278431911002015",
+      "read_scope": "Publisher-indexed abstract; direct page fetch returned 403",
+      "evidence_class": "research_abstract_only",
+      "observation": "The observed scanpaths differ from industry anecdotes and challenge traditional sweet-spot assumptions.",
+      "derived_action": "Use task-based hierarchy and test audience behavior instead of claiming a universal menu triangle.",
+      "limit": "Does not prove layout position never matters; historical author attribution needs verification."
+    }
+  ]
+}

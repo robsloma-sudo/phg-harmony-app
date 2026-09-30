@@ -1,0 +1,55 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Cantina — bar menu (explore-J Horizon)</title>
+<style>
+@font-face{font-family:Fr;font-weight:400 900;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/build/fonts/fraunces.woff2) format("woff2")}
+@font-face{font-family:Fr;font-style:italic;font-weight:400 700;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/build/fonts/fraunces-i.woff2) format("woff2")}
+@font-face{font-family:Dm;font-weight:400 800;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/build/fonts/dmsans.woff2) format("woff2")}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#F4EDE1}
+.page{position:relative;background:#F4EDE1;color:#221C22;overflow:hidden}
+/* ART layer: three posterised dusk bands, hard edges, no gradient. Print: field bleeds 3 mm past trim. */
+.field{position:absolute;left:0;right:0;top:0}
+.b1{background:#1E2147} .b2{background:#5A2B4F} .b3{background:#D98A2E}
+.field div{width:100%}
+.mast{position:absolute;left:0;right:0;text-align:center;color:#F4EDE1}
+.wm{font:420 var(--wm)/1 Fr;letter-spacing:.2em;margin-right:-.2em;font-variation-settings:"opsz" 144,"SOFT" 0,"WONK" 0}
+.sub{font:400 var(--subsz)/1 Dm;letter-spacing:.24em;margin-top:var(--subgap);margin-right:-.24em;color:#E9E1D6}
+/* TEXT layer */
+.read{position:absolute;left:var(--mx);right:var(--mx);display:flex;flex-direction:column;justify-content:space-between}
+h2{font:600 var(--h2)/1 Dm;letter-spacing:.3em;margin-right:-.3em;text-transform:uppercase;color:#1E2147;text-align:center;margin-bottom:var(--h2gap)}
+h3{font:italic 400 var(--h3)/1 Fr;color:#5B5058;text-align:center;margin:var(--h3top) 0 var(--h3gap)}
+h2+h3{margin-top:0}
+.it{text-align:center;margin-bottom:var(--itgap)}
+.nm{font:500 var(--nm)/1.2 Fr;font-variation-settings:"opsz" 18;color:#221C22;font-variant-numeric:lining-nums tabular-nums}
+.nm .p{margin-left:.62em}
+.ds{font:400 var(--ds)/1.3 Dm;color:#5B5058;margin-top:var(--dsgap)}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:start}
+.col{padding:0 10px}
+.col .sec+.sec{margin-top:var(--secgap)}
+.it:last-child{margin-bottom:0}
+
+body.letter .page{width:816px;height:1056px;
+  --wm:104px;--subsz:12.5px;--subgap:22px;--mx:72px;--h2:12.5px;--h2gap:16px;--h3:15px;--h3top:20px;--h3gap:11px;
+  --nm:18.5px;--ds:13px;--dsgap:4px;--itgap:15px;--secgap:30px;--b1:236px;--b2:50px;--b3:17px;--mt:74px;--rt:352px}
+body.letter .b1{height:var(--b1)} body.letter .b2{height:var(--b2)} body.letter .b3{height:var(--b3)}
+body.letter .mast{top:var(--mt)}
+body.letter .read{top:var(--rt);bottom:52px}
+body.letter .main{width:520px;margin:0 auto}
+body.phone .page{width:390px;
+  --wm:52px;--subsz:10.5px;--subgap:14px;--mx:28px;--h2:12px;--h2gap:14px;--h3:14.5px;--h3top:18px;--h3gap:10px;
+  --nm:17.5px;--ds:13px;--dsgap:3px;--itgap:15px;--secgap:40px}
+body.phone .b1{height:150px} body.phone .b2{height:46px} body.phone .b3{height:15px}
+body.phone .mast{top:48px}
+body.phone .read{position:relative;left:auto;right:auto;padding:44px var(--mx) 56px;display:block}
+body.phone .field{position:relative}
+body.phone .row{display:block;margin-top:40px}
+body.phone .col{padding:0} body.phone .col+.col{margin-top:40px;border:0!important}
+body.phone .tierrule{margin-top:40px}
+</style></head><body class="letter"><div class="page">
+<div class="field" aria-hidden="true"><div class="b1"></div><div class="b2"></div><div class="b3"></div></div>
+<header class="mast"><div class="wm">CANTINA</div><div class="sub">&amp; cocktail bar · Iowa City, Iowa</div></header>
+<main class="read">
+<section class="sec main" id="sec_cocktails"><h2>Cocktails</h2><h3>Classics</h3><div class="it" data-id="beta_manhattan"><div class="nm"><span class="n">Manhattan</span><span class="p">15</span></div><div class="ds">Rye whiskey · sweet vermouth · cocktail cherry</div></div><div class="it" data-id="beta_margarita"><div class="nm"><span class="n">Margarita</span><span class="p">15</span></div><div class="ds">Tequila blanco · fresh lime juice · orange liqueur · agave syrup</div></div><h3>House Originals</h3><div class="it" data-id="beta_daiquiri"><div class="nm"><span class="n">House Daiquiri</span><span class="p">14</span></div><div class="ds">White rum · fresh lime juice · demerara syrup</div></div><div class="it" data-id="beta_old_fashioned"><div class="nm"><span class="n">Brown Butter Old Fashioned</span><span class="p">16</span></div><div class="ds">Brown butter-washed bourbon · demerara syrup · aromatic bitters</div></div></section>
+
+<div class="row"><div class="col"><section class="sec" id="sec_beer"><h2>Draft Beer</h2><div class="it" data-id="beta_czech_pilsner"><div class="nm"><span class="n">Czech Pilsner</span><span class="p">7</span></div><div class="ds">Crisp pale lager</div></div><div class="it" data-id="beta_dry_hopped_ipa"><div class="nm"><span class="n">Dry-Hopped IPA</span><span class="p">8</span></div><div class="ds">Hop-forward</div></div><div class="it" data-id="beta_amber_lager"><div class="nm"><span class="n">Amber Lager</span><span class="p">7</span></div><div class="ds">Toasty</div></div></section><section class="sec" id="sec_cider"><h2>Cider</h2><div class="it" data-id="beta_dry_cider"><div class="nm"><span class="n">Dry Cider</span><span class="p">8</span></div><div class="ds">Sparkling</div></div></section></div><div class="col"><section class="sec" id="sec_wine"><h2>Wine</h2><h3>By the Glass</h3><div class="it" data-id="beta_malbec"><div class="nm"><span class="n">Malbec</span><span class="p">12</span></div><div class="ds">Dry red wine</div></div><div class="it" data-id="beta_pinot_grigio"><div class="nm"><span class="n">Pinot Grigio</span><span class="p">11</span></div><div class="ds">Dry white wine</div></div><h3>Sparkling</h3><div class="it" data-id="beta_brut_rose"><div class="nm"><span class="n">Brut Rosé</span><span class="p">13</span></div><div class="ds">Dry sparkling</div></div></section></div><div class="col"><section class="sec" id="sec_spirits"><h2>Spirits</h2><h3>Agave</h3><div class="it" data-id="beta_blanco_tequila"><div class="nm"><span class="n">Blanco Tequila</span><span class="p">12</span></div></div><div class="it" data-id="beta_anejo_tequila"><div class="nm"><span class="n">Añejo Tequila</span><span class="p">16</span></div></div><h3>Brandy</h3><div class="it" data-id="beta_cognac_vsop"><div class="nm"><span class="n">Cognac VSOP</span><span class="p">18</span></div></div></section></div></div>
+
+</main></div></body></html>

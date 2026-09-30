@@ -1,0 +1,407 @@
+<title>PHG 50-State Rollout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one reading column for the plan, a full-width scrolling table for the 48 states */
+:root{--bg:#f6f7f4;--panel:#ffffff;--ink:#17201b;--soft:#56625b;--line:#dde3dc;--agave:#2f6f5a;--agave-soft:#e3efe9;--amber:#a6621c;--amber-soft:#f6ead9;--rust:#a3412e;--rust-soft:#f5e1dc;
+--display:'Bricolage Grotesque',ui-sans-serif,system-ui,sans-serif;--body:'IBM Plex Sans',ui-sans-serif,system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101512;--panel:#161d19;--ink:#e6ece8;--soft:#9aa9a1;--line:#2a342f;--agave:#7fc4a8;--agave-soft:#1d2f28;--amber:#e0a560;--amber-soft:#33281a;--rust:#e6907c;--rust-soft:#3a221d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#101512;--panel:#161d19;--ink:#e6ece8;--soft:#9aa9a1;--line:#2a342f;--agave:#7fc4a8;--agave-soft:#1d2f28;--amber:#e0a560;--amber-soft:#33281a;--rust:#e6907c;--rust-soft:#3a221d;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--body);margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 64px}
+.col{max-width:760px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(28px,5vw,42px);letter-spacing:-.01em}
+h2{font-size:24px;margin-top:44px;padding-top:18px;border-top:1px solid var(--line)}
+h3{font-size:17px}
+p{margin:.6em 0}
+.lede{font-size:17px;color:var(--soft);max-width:66ch}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--agave)}
+.stats{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;min-width:130px;flex:1 1 130px}
+.stat b{display:block;font:700 26px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px;color:var(--soft)}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:16px 0;padding:0;list-style:none;counter-reset:s}
+.flow li{counter-increment:s;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14px}
+.flow li::before{content:"Step " counter(s);display:block;font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--agave);margin-bottom:6px}
+.flow li b{display:block;margin-bottom:2px}
+.tag{font:500 11px/1 var(--mono);padding:3px 7px;border-radius:99px;white-space:nowrap}
+.tag.auto{background:var(--agave-soft);color:var(--agave)}.tag.cost{background:var(--amber-soft);color:var(--amber)}.tag.you{background:var(--rust-soft);color:var(--rust)}
+.wave{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0}
+.wave p{font:500 13.5px/1.7 var(--mono);color:var(--soft);margin:.3em 0 0;word-spacing:.2em}
+ul.todo{padding-left:1.1em}ul.todo li{margin:.35em 0}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel);margin-top:14px}
+table{border-collapse:collapse;width:100%;min-width:980px;font-size:13.5px}
+th{position:sticky;top:0;background:var(--panel);text-align:left;font:500 11px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);padding:10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.st b{display:block;font:700 16px/1 var(--display)}td.st small{color:var(--soft)}
+td.num{font-variant-numeric:tabular-nums;text-align:right;font-family:var(--mono)}
+td.agency{max-width:220px}
+ul.steps{margin:0;padding-left:1em}ul.steps li{margin:.15em 0}
+.note{font-size:12.5px;color:var(--soft);margin:.4em 0 0}
+.muted{color:var(--soft)}
+a{color:var(--agave);text-underline-offset:2px}
+.pill{font:500 11.5px/1 var(--mono);padding:4px 8px;border-radius:99px;white-space:nowrap}
+.pill.full{background:var(--agave-soft);color:var(--agave)}.pill.partial{background:var(--amber-soft);color:var(--amber)}.pill.manual{background:var(--rust-soft);color:var(--rust)}
+.conf{font:12px var(--mono);color:var(--soft)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.filters button{font:500 13px var(--body);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:99px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filters button:focus-visible{outline:2px solid var(--agave);outline-offset:2px}
+.callout{border-left:3px solid var(--amber);background:var(--amber-soft);padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0;font-size:14px}
+</style>
+<div class="wrap">
+<div class="col">
+<p class="eyebrow">Perfect Harmony Group · expansion plan · 29 Sep 2026</p>
+<h1>Every state's bars, menus and census data</h1>
+<p class="lede">Iowa, Colorado and New York run end to end today. This is how the other 47 states and DC get the same treatment, which steps run by themselves, and exactly what needs a person.</p>
+<div class="stats">
+<div class="stat"><b>48</b><span>states + DC researched</span></div>
+<div class="stat"><b>11</b><span>fully automatable from day one</span></div>
+<div class="stat"><b>22</b><span>need a periodic export or a scraper</span></div>
+<div class="stat"><b>15</b><span>need a records request or a person</span></div>
+<div class="stat"><b>~311k</b><span>venues to expect (est.)</span></div>
+</div>
+
+<h2>What happens for every state</h2>
+<p>The pipeline is the one Iowa, Colorado and New York already use. Only step 1 differs by state; everything after it is the same code.</p>
+<ol class="flow">
+<li><b>Licence list</b>The state's on-premise liquor licences (bars, restaurants, hotels), from open data, a file, or a records request. <span class="tag you">varies by state</span></li>
+<li><b>Venues + location</b>Normalise names and addresses, collapse stacked permits, geocode with the free Census geocoder. <span class="tag auto">automated</span></li>
+<li><b>Google Places</b>Website, phone, rating, type and exact coordinates for each venue. <span class="tag cost">paid per venue</span></li>
+<li><b>Menu links</b>Scan each website for drinks, cocktail, wine, beer and happy-hour menus; deep discovery for hard sites. <span class="tag auto">automated</span></li>
+<li><b>Download + render</b>PDFs, images and HTML pages saved and turned into page images (the pipeline fixed today). <span class="tag auto">automated</span></li>
+<li><b>Read + classify</b>Drinks, prices, brands, menu type; feeds the gallery, the map and Harmony. <span class="tag auto">automated</span></li>
+<li><b>Census</b>ACS 5-year ZIP (ZCTA) demographics for the whole state in one API pass. <span class="tag auto">automated after one key</span></li>
+</ol>
+
+<h2>Census data: all 50 states in one run</h2>
+<p>The <code>ingest-census-acs</code> function already loads ACS 2020–2024 5-year estimates for a state through the Census API, normalised to the same shape as Iowa. It needs one thing from you: a free Census API key (signup at api.census.gov, takes minutes). Without a key the API rate-limits, which is why the current load leaned on Census Reporter.</p>
+<p>With the key: every state's ZIP-level income, age, population and education tables load in one scheduled pass (about 33,800 ZCTAs nationwide), then refresh once a year when the Census Bureau publishes the next 5-year release. Nothing else is manual.</p>
+
+<h2>Rollout waves</h2>
+<p>Ordered by how much runs by itself, then by population, so the biggest markets with clean data come first.</p>
+<div class="wave"><h3>Wave 1 · 11 states · ~145M people</h3><p>CA, TX, FL, IL, MI, VA, MO, KY, OR, CT, DC</p></div><div class="wave"><h3>Wave 2 · 22 states · ~121M people</h3><p>PA, OH, GA, NJ, WA, AZ, TN, MA, IN, MD, WI, MN, OK, UT, KS, MS, ID, NE, ME, ND, VT, WY</p></div><div class="wave"><h3>Wave 3 · 15 states · ~44M people</h3><p>NC, SC, AL, LA, NV, AR, NM, WV, HI, NH, MT, RI, DE, SD, AK</p></div>
+<div class="callout"><b>A baseline for the hard states.</b> Where a state has no usable licence list, a free open places dataset (for example Overture Maps' bar and restaurant places) can seed venues right away, and the licence list replaces it when the records request comes back. Its licence terms need a check before we use it; Google Places text search by city is the paid alternative.</div>
+
+<h2>What you have to do by hand</h2>
+<h3 style="margin-top:14px">Once</h3>
+<ul class="todo">
+<li><b>Census API key</b>: sign up at api.census.gov/data/key_signup.html and send it to me; I store it as a server secret.</li>
+<li><b>Google Places budget</b>: set a monthly cap in Google Cloud for the Places API. At about 2–3.5¢ per venue, ~311k venues is roughly $6k–$11k spread over the rollout (estimate; Google's free monthly allowance lowers it).</li>
+<li><b>Railway</b>: deploy the HTML capture v2 worker (PHG-034); it captures more of each menu page for every state.</li>
+<li><b>Paid lists</b>: approve Indiana's bulk file ($150 + $10 per 1,000 records), Nebraska's roster ($40) and Delaware's master list ($25 if the free email request is slow).</li>
+</ul>
+<h3 style="margin-top:14px">Records requests and hand-offs, by state</h3>
+<p class="muted">Each is a one-time request (most states allow email); several should be repeated yearly to keep lists fresh.</p>
+<ul class="todo"><li><b>IN</b> · Buy a bulk Excel export at secure.in.gov/ai/appfiles/atc-license-bulk/ (filter to retailer permit types 210/211 etc.), roughly $150-$250 per pull; repeat periodically; Alternatively submit an APRA request via in.gov/atc/public-records for a full active-permit list</li><li><b>NE</b> · Order the Active License Roster in Excel ($40) from NLCC (P.O. Box 95046, Lincoln NE 68509; pay via PayPort) and re-order periodically; OR scrape the free active.cgi Active License Holder listing on a schedule (verify it lists all rows)</li><li><b>NC</b> · Email Contact@abc.nc.gov / file a public records request for all active retail on-premise permits with DBA and address; Or scrape abc2.nc.gov/Search/Permit by county</li><li><b>SC</b> · Check the SCDOR &#x27;License Searches &amp; ABL Resources&#x27; page for any active-licence export; if only lookup, submit SC FOIA request to SCDOR ABL for a spreadsheet of active PBW, PO7 and LBD licences with addresses; Repeat request periodically (quarterly)</li><li><b>AL</b> · Submit public records request at https://alabcboard.gov/public-records-request asking for all active on-premise retail licenses (CSV/XLSX) with addresses; Or scrape licensesearch.alabama.gov/AOWB county by county</li><li><b>LA</b> · Submit public records request at atc.louisiana.gov/contact/public-records-requests for a spreadsheet of all active Class A-General and Class A-Restaurant permits; repeat periodically; Or scrape the LAATC license search portal</li><li><b>NV</b> · Submit NRS 239 public records requests to Clark County Business License (702-455-4340), City of Las Vegas, Henderson, North Las Vegas, Washoe County, Reno, Sparks for active liquor licence lists; Or export category searches from Clark County Business License Search</li><li><b>AR</b> · Send Arkansas FOIA request to ABC for all active retail on-premise permits (Excel); Optionally parse monthly Permit Change List PDFs to keep it current</li><li><b>NM</b> · Submit an IPRA request to NM RLD (ABC Division, 505-476-4875) for all active liquor licences with type and premises address; Or scrape the NM-PLUS public search</li><li><b>WV</b> · Submit WV FOIA request to WVABCA Licensing (ABCA.Licensing@wv.gov) for spreadsheet of all active retail on-premise (Class A / private club / restaurant) licences with addresses; Alternatively script the licensesearch.aspx form per county and licence type (55 counties)</li><li><b>HI</b> · Download Maui licensee list PDF annually and parse; Submit UIPA request to Honolulu Liquor Commission for active licensee list (~2,500 licenses); Request lists from Kauai and Hawaii County liquor departments</li><li><b>NH</b> · Email RightToKnow@liquor.nh.gov (or write 50 Storrs St, Concord NH 03301) requesting an electronic list of all active on-premise licensees with licence type, DBA and address; repeat periodically</li><li><b>MT</b> · Email/call CARD licensing (406-444-6900) or file a public records request asking for an export of all active retail alcoholic beverage licences with licence number, DBA, address; Alternatively scrape the License Lookup at revenue.mt.gov/licenses (check terms)</li><li><b>RI</b> · Submit APRA public records request to RI DBR (Division of Commercial Licensing, liquor) for the latest compiled municipal annual liquor licence reports (all active Class B/C/D etc.) in Excel; Optionally pull Providence ui7z-kv69 via Socrata API for Providence refreshes; Repeat annually after Dec 1 reporting deadline</li><li><b>DE</b> · Email OABCCquestions@delaware.gov or buy the $25 retailer master list from the OABCC online portal; refresh periodically</li><li><b>SD</b> · Email SD DOR Special Taxes Division (SpecialT@state.sd.us) requesting a spreadsheet of all active on-sale (liquor, wine, malt beverage) licences with premises addresses; If refused, collect city lists from Sioux Falls and Rapid City (largest markets) finance offices; Refresh annually (licences renew July 1)</li><li><b>AK</b> · Use AK-ACCIS public license search and export/scrape Beverage Dispensary and Restaurant/Eating Place licenses, or email AMCO for a full active license export</li></ul>
+
+<h2>Timeline</h2>
+<p><b>Week 1</b>: Census key in, all states' census loaded. Wave 1 licence loaders built (each is a copy of the Colorado or New York loader pointed at a new dataset) and Places enrichment started for the largest states. Records requests for Wave 3 sent the same week, since they take 2–6 weeks to come back.</p>
+<p><b>Weeks 2–3</b>: Wave 2 exports and scrapers. Menus flow for Wave 1 as Places finishes (at today's pipeline speed, about 800 menus an hour).</p>
+<p><b>Weeks 4–8</b>: Wave 3 as request responses arrive; the open places baseline fills gaps in the meantime.</p>
+</div>
+
+<h2>State by state</h2>
+<p class="muted">From 48 research passes on each state's licensing agency and open-data portal. Links point at what the research actually found; "not found" means no dataset link was confirmed. Population is approximate (millions), used for ordering.</p>
+<div class="filters" role="group" aria-label="Filter states">
+<button type="button" data-f="all" aria-pressed="true">All 48</button>
+<button type="button" data-f="full" aria-pressed="false">Automated</button>
+<button type="button" data-f="partial" aria-pressed="false">Partly</button>
+<button type="button" data-f="manual" aria-pressed="false">Manual</button>
+</div>
+<div class="tablebox"><table>
+<thead><tr><th>State</th><th>Automation</th><th>Regime</th><th>Licence data</th><th>Issued by</th><th>What a person must do</th><th>Pop. (M)</th><th>Confidence</th></tr></thead>
+<tbody><tr data-a="full"><td class="st"><b>CA</b><small>California</small></td>
+<td><span class="pill full">Automated</span></td>
+<td>license</td><td>File download<br><a href="https://www.abc.ca.gov/licensing/licensing-reports/" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">California Department of Alcoholic Beverage Control (ABC)<br><span class="muted">State ABC issues all licenses; cities/counties handle zoning/conditional use permits only.</span></td>
+<td><ul class="steps"><li>Confirm raw data download URL on Licensing Reports page, then schedule download and filter to types 40,41,42,47,48,51,52,75</li></ul><p class="note">Largest state (~90k+ retail licenses est.). Data not geocoded; census tract available in some reports.</p></td>
+<td class="num">39.4</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="full"><td class="st"><b>TX</b><small>Texas</small></td>
+<td><span class="pill full">Automated</span></td>
+<td>license</td><td>Open data (API)<br><a href="https://data.texas.gov/dataset/TABCLicenses/kguh-7q9z" target="_blank" rel="noopener">Socrata</a></td>
+<td class="agency">Texas Alcoholic Beverage Commission (TABC)<br><span class="muted">State-issued by TABC; local option elections determine wet/dry status by county/JP precinct/city.</span></td>
+<td><ul class="steps"><li class="muted">None: schedule it</li></ul><p class="note">~123k rows including inactive; filter to active MB/BG/N/NB. Dry areas remain in parts of TX. Mixed beverage gross receipts dataset is a useful ranking signal.</p></td>
+<td class="num">31.3</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="full"><td class="st"><b>FL</b><small>Florida</small></td>
+<td><span class="pill full">Automated</span></td>
+<td>license</td><td>File download<br><a href="https://www2.myfloridalicense.com/alcoholic-beverages-and-tobacco/public-records/" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Florida DBPR Division of Alcoholic Beverages and Tobacco (ABT)<br><span class="muted">State issues licenses; local zoning/sign-off on location.</span></td>
+<td><ul class="steps"><li>Copy the per-district ABT licensee CSV URLs from the Public Records page once, then schedule daily/weekly download</li></ul><p class="note">Combine with DBPR Hotels &amp; Restaurants food service file for richer restaurant coverage. Some counties have dry status (e.g. Liberty County historically).</p></td>
+<td class="num">23.4</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="full"><td class="st"><b>IL</b><small>Illinois</small></td>
+<td><span class="pill full">Automated</span></td>
+<td>license</td><td>File download<br><a href="https://ilcc.illinois.gov/content/dam/soi/en/web/ilcc/datasources/ilcc-licenses-daily-export.csv" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Illinois Liquor Control Commission (ILCC)</td>
+<td><ul class="steps"><li class="muted">None: schedule it</li></ul><p class="note">Addresses not confirmed geocoded; plan to geocode via Google Places. Some municipalities are dry by local option. Rows likely contain one row per owner/officer, so dedupe on license number.</p></td>
+<td class="num">12.7</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="full"><td class="st"><b>MI</b><small>Michigan</small></td>
+<td><span class="pill full">Automated</span></td>
+<td>control</td><td>File download<br><a href="https://www.michigan.gov/lara/bureau-list/lcc/licensing-list" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Michigan Liquor Control Commission (MLCC), LARA<br><span class="muted">State-issued, but local governing body approval is required for on-premises licences.</span></td>
+<td><ul class="steps"><li class="muted">None: schedule it</li></ul><p class="note">Control state (state is the spirits wholesaler). Direct xlsx link not captured; scrape the Licensing Lists page for the current file link. Exclude escrowed/conditional statuses.</p></td>
+<td class="num">10.1</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="full"><td class="st"><b>VA</b><small>Virginia</small></td>
+<td><span class="pill full">Automated</span></td>
+<td>control</td><td>File download<br><a href="https://abc.virginia.gov/library/licenses/other-documents/licensee-download.xlsx?la=en" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Virginia Alcoholic Beverage Control Authority (Virginia ABC)<br><span class="muted">State-issued by Virginia ABC; localities may object; some localities restrict mixed beverage.</span></td>
+<td><ul class="steps"><li class="muted">None: schedule it</li></ul><p class="note">~20,000 licensed businesses total (all classes). Scheduled download of the xlsx is straightforward; verify update cadence.</p></td>
+<td class="num">8.8</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="full"><td class="st"><b>MO</b><small>Missouri</small></td>
+<td><span class="pill full">Automated</span></td>
+<td>license</td><td>Open data (API)<br><a href="https://data.mo.gov/Regulatory/Missouri-Active-Alcohol-License-Data/yyhn-562y" target="_blank" rel="noopener">Socrata</a></td>
+<td class="agency">Missouri Division of Alcohol and Tobacco Control (ATC)<br><span class="muted">State licence plus city/county liquor licence required.</span></td>
+<td><ul class="steps"><li class="muted">None: schedule it</li></ul><p class="note">Columns: LICENSEE, DBA NAME, ADDRESS, PHONE NUMBER, PRIMARY/SECONDARY LICENSE, PRIMARY/SECONDARY TYPE, COUNTY; no lat/long seen.</p></td>
+<td class="num">6.2</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="full"><td class="st"><b>KY</b><small>Kentucky</small></td>
+<td><span class="pill full">Automated</span></td>
+<td>license</td><td>Open data (API)<br><a href="https://data.louisvilleky.gov/datasets/louisville-metro-ky-abc-state-licenses" target="_blank" rel="noopener">ArcGIS</a></td>
+<td class="agency">Kentucky Department of Alcoholic Beverage Control (ABC)<br><span class="muted">State licence plus local (city/county) ABC administrator licence; wet/dry/moist status set by local option.</span></td>
+<td><ul class="steps"><li class="muted">None: schedule it</li></ul><p class="note">Confirm that the Louisville-hosted &#x27;ABC State Licenses&#x27; layer is really statewide before relying on it (description says all active state ABC licences). Many dry/moist counties. Geocoding status of the layer not confirmed.</p></td>
+<td class="num">4.6</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="full"><td class="st"><b>OR</b><small>Oregon</small></td>
+<td><span class="pill full">Automated</span></td>
+<td>control</td><td>Open data (API)<br><a href="https://data.oregon.gov/business/OLCC-Liquor-Business-Licenses-Endorsements/srxe-qkm2" target="_blank" rel="noopener">Socrata</a></td>
+<td class="agency">Oregon Liquor and Cannabis Commission (OLCC)<br><span class="muted">State issues; city/county gives recommendation.</span></td>
+<td><ul class="steps"><li class="muted">None: schedule it</li></ul><p class="note">Best in this batch - direct CO/NY-style Socrata pull. Control state (state-run liquor agency stores).</p></td>
+<td class="num">4.3</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="full"><td class="st"><b>CT</b><small>Connecticut</small></td>
+<td><span class="pill full">Automated</span></td>
+<td>license</td><td>Open data (API)<br><a href="https://data.ct.gov/dataset/Liquor-Permits/gwv2-eswx" target="_blank" rel="noopener">Socrata</a></td>
+<td class="agency">Connecticut Department of Consumer Protection, Liquor Control Division<br><span class="muted">State DCP issues permits; local zoning approval required.</span></td>
+<td><ul class="steps"><li class="muted">None: schedule it</li></ul><p class="note">Check whether gwv2-eswx includes geocoded location column and status filter (Active). Verify update cadence.</p></td>
+<td class="num">3.7</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="full"><td class="st"><b>DC</b><small>District of Columbia</small></td>
+<td><span class="pill full">Automated</span></td>
+<td>license</td><td>Open data (API)<br><a href="https://opendata.dc.gov/datasets/DCGIS::liquor-licenses/about" target="_blank" rel="noopener">ArcGIS</a></td>
+<td class="agency">Alcoholic Beverage and Cannabis Administration (ABCA)<br><span class="muted">DC is a single jurisdiction; ABCA issues all.</span></td>
+<td><ul class="steps"><li class="muted">None: schedule it</li></ul><p class="note">Class-letter meanings summarized from general knowledge of DC licensing; confirm on ABCA types page.</p></td>
+<td class="num">0.7</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="partial"><td class="st"><b>PA</b><small>Pennsylvania</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>control</td><td>File download<br><a href="https://www.plcbplus.pa.gov/pub/Login.aspx/Default.aspx?PossePresentation=LicenseSearch" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Pennsylvania Liquor Control Board (PLCB)<br><span class="muted">State issues; municipal quota by county population and local option referenda.</span></td>
+<td><ul class="steps"><li>Open PLCB+ License Search / Data Export and download the full active-licences CSV periodically (POSSE page - may be scriptable with a headless browser)</li></ul><p class="note">Control state (Fine Wine &amp; Good Spirits stores). Some dry municipalities.</p></td>
+<td class="num">13.1</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="partial"><td class="st"><b>OH</b><small>Ohio</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>control</td><td>Search site only<br><a href="https://apps2.com.ohio.gov/liqr/PermitLookup/PermitHolder" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Ohio Department of Commerce, Division of Liquor Control (DOLC)<br><span class="muted">State issues permits; local option elections (precinct-level wet/dry) and local objection rights.</span></td>
+<td><ul class="steps"><li>Run Permit Holder lookup by county (88 counties) and export CSV/Excel via grid icons; or request bulk export from DOLC</li></ul><p class="note">Control state for spirits (agency liquor stores). Many precincts dry. Filter D-class permits for bars/restaurants.</p></td>
+<td class="num">11.9</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>GA</b><small>Georgia</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>File download<br><a href="https://dor.georgia.gov/active-alcohol-licenses" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Georgia Department of Revenue, Alcohol &amp; Tobacco Division<br><span class="muted">Dual system: local license from city/county is required before state license; locals set hours, distance rules, and wet/dry via local option.</span></td>
+<td><ul class="steps"><li>Download the latest quarterly Active Alcohol Licenses report each quarter from dor.georgia.gov/active-alcohol-licenses (file link changes)</li></ul><p class="note">Some counties remain dry; state list covers all since state license is also required.</p></td>
+<td class="num">11.2</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>NJ</b><small>New Jersey</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>File download<br><a href="https://www.njoag.gov/about/divisions-and-offices/division-of-alcoholic-beverage-control-home/licensing-bureau-applications-and-information/licensing-reports/" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">NJ Division of Alcoholic Beverage Control (ABC), Office of the Attorney General<br><span class="muted">Retail consumption/distribution licences are issued by municipalities (ABC boards / governing bodies); state compiles the statewide listing.</span></td>
+<td><ul class="steps"><li>Periodically open the Licensing Reports page and download the latest &#x27;Retail Licensee Listing (.xlsx)&#x27; (URL changes each release; could be automated by scraping the page for the .xlsx link)</li></ul><p class="note">Some dry towns (e.g. Ocean City, Haddonfield historically). Releases appear roughly monthly-to-quarterly. No geocoding.</p></td>
+<td class="num">9.5</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="partial"><td class="st"><b>WA</b><small>Washington</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>File download<br><a href="https://lcb.wa.gov/records/frequently-requested-lists" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Washington State Liquor and Cannabis Board (LCB/WSLCB)<br><span class="muted">State-issued by LCB; local authorities notified and may object.</span></td>
+<td><ul class="steps"><li>Download &#x27;On Premise Licensees&#x27; list from lcb.wa.gov/records/frequently-requested-lists (save .ASP as Excel) monthly; can likely be scripted once the direct file URL is confirmed</li><li>Review RCW 42.56.070(8) commercial-use restriction before use</li></ul><p class="note">Near-full automation possible via scripted download; Socrata 9dee-kzm5 gives renewals only (not full active list). Tribal casinos may be under separate compacts.</p></td>
+<td class="num">7.9</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="partial"><td class="st"><b>AZ</b><small>Arizona</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>Search site only<br><a href="https://liquor.az.gov/license-search" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Arizona Department of Liquor Licenses and Control (DLLC)<br><span class="muted">State issues licenses; city/county governing body gives recommendation on applications.</span></td>
+<td><ul class="steps"><li>Run license-search filtered by type (06, 07, 12, 11, 14) and status Active; export/scrape results, or submit a public records request for a CSV of active licenses</li></ul><p class="note">Old ColdFusion azliquor.gov query pages (license_recordcount.cfm) still indexed; may offer query results. Tribal lands may have separate licensing.</p></td>
+<td class="num">7.6</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>TN</b><small>Tennessee</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>Search site only<br><a href="https://rlpsmobile.abc.tn.gov/LicenseSearch/licensesearchindex" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Tennessee Alcoholic Beverage Commission (TABC)</td>
+<td><ul class="steps"><li>Submit TABC open records request form to TABC.PublicRecords@tn.gov asking for all active LBD / on-premises consumption licences with addresses and licence type (spreadsheet)</li><li>Automate Nashville beer permits via data.nashville.gov 3wb6-xy3j</li><li>Repeat TABC request quarterly</li></ul><p class="note">Beer-only bars/restaurants will be missing from a TABC LBD list; need local beer board data. Some counties/cities remain dry for LBD.</p></td>
+<td class="num">7.2</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>MA</b><small>Massachusetts</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>Search site only<br><a href="https://www.mass.gov/info-details/abcc-active-licenses" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Massachusetts Alcoholic Beverages Control Commission (ABCC)<br><span class="muted">Retail licences are granted by the city/town local licensing authority and approved by ABCC.</span></td>
+<td><ul class="steps"><li>Open the ABCC Active Licenses page and download the Active Retail Licenses list if a file is offered, or run an ePLACE search for License Type = On-premises Retail and export</li><li>Otherwise file a public records request with ABCC for all active Section 12 licences</li></ul><p class="note">Format of the Active Retail Licenses list not confirmed from search. A few towns are dry.</p></td>
+<td class="num">7.1</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>IN</b><small>Indiana</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>Paid list<br><a href="https://secure.in.gov/ai/appfiles/atc-license-bulk/" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Indiana Alcohol and Tobacco Commission (ATC)<br><span class="muted">State-issued permits; each county has a local alcoholic beverage board that reviews applications, but ATC holds the list.</span></td>
+<td><ul class="steps"><li>Buy a bulk Excel export at secure.in.gov/ai/appfiles/atc-license-bulk/ (filter to retailer permit types 210/211 etc.), roughly $150-$250 per pull; repeat periodically</li><li>Alternatively submit an APRA request via in.gov/atc/public-records for a full active-permit list</li></ul><p class="note">About 10,000+ permits statewide. Bulk download is paid, so schedule quarterly rather than daily. Did not confirm whether an IN.gov subscription allows API access.</p></td>
+<td class="num">6.9</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>MD</b><small>Maryland</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>hybrid</td><td>No statewide list<br><span class="muted">not found</span></td>
+<td class="agency">Maryland Alcohol, Tobacco, and Cannabis Commission (ATCC) for state/manufacturer licences; 25 local liquor boards for retail<br><span class="muted">Retail licences are issued by 24 county boards of license commissioners plus Baltimore City (25 jurisdictions). No statewide retail list.</span></td>
+<td><ul class="steps"><li>Pull Baltimore City and Montgomery County open datasets via Socrata API</li><li>For other counties, download PDFs/lists from board websites or file Maryland Public Information Act requests with each local board</li></ul><p class="note">Montgomery County (and some others, e.g. Worcester historically) runs county-controlled wholesale/dispensaries, hence hybrid. Some areas remain dry by local law.</p></td>
+<td class="num">6.3</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>WI</b><small>Wisconsin</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>Search site only<br><a href="https://www.revenue.wi.gov/Pages/OnlineServices/retail-alcohol-beverage-license-search.aspx" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Wisconsin Department of Revenue, Division of Alcohol Beverages (DAB)<br><span class="muted">Retail licences issued by ~1,851 municipalities (cities, villages, towns); DOR compiles reports.</span></td>
+<td><ul class="steps"><li>Check the DOR Retail Alcohol Beverage License Search / Municipal Retail License Report page for a downloadable statewide file; download annually after July 15</li><li>If only searchable, request the compiled AT-827 dataset (CSV) from DOR via public records request</li></ul><p class="note">Wisconsin has very high bar density; many rural town-issued licences. Data quality depends on municipal reporting.</p></td>
+<td class="num">6.0</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>MN</b><small>Minnesota</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>Search site only<br><a href="https://app.dps.mn.gov/AGEDIS5/DataAccess/pages/license-search" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Minnesota Department of Public Safety, Alcohol and Gambling Enforcement Division (AGE)<br><span class="muted">Retail on-sale and off-sale licences are issued by cities (or counties in unincorporated areas); AGE certifies/records them.</span></td>
+<td><ul class="steps"><li>Either scrape the AGE license search city by city, or submit a Minnesota Government Data Practices Act request to AGE (651-201-7000) for a statewide on-sale licence export</li></ul><p class="note">Many cities run municipal liquor stores (off-sale) but on-sale is private. 3.2 beer-only licences are local.</p></td>
+<td class="num">5.8</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>OK</b><small>Oklahoma</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>File download<br><a href="https://oklahoma.gov/able-commission/brand-registration/brand-registration-reports/listing-of-licensees-by-license-type.html" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Oklahoma Alcoholic Beverage Laws Enforcement (ABLE) Commission<br><span class="muted">State issues; city/county also issue local alcoholic beverage licences (e.g. City of OKC); mixed-beverage sales require county election approval.</span></td>
+<td><ul class="steps"><li>Periodically download the Mixed Beverage (and Beer &amp; Wine) Licensee List from the &#x27;Listing of Licensees by License Type&#x27; page (confirm format)</li></ul><p class="note">A few counties still disallow mixed beverage sales. Tribal casinos licensed separately.</p></td>
+<td class="num">4.1</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>UT</b><small>Utah</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>control</td><td>File download<br><a href="https://webapps2.abc.utah.gov/ProdApps/DocumentServer/Documents/?document=licensee_list.pdf" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Utah Department of Alcoholic Beverage Services (DABS)<br><span class="muted">State-issued by DABS with local consent from city/county required.</span></td>
+<td><ul class="steps"><li>Open abs.utah.gov License Information page and download the current licensee list (PDF); verify legacy webapps2 URL still works</li><li>Parse PDF into rows; or file GRAMA request to DABS for an Excel version</li><li>Repeat monthly</li></ul><p class="note">Control state: DABS runs spirits retail; on-premise licences capped by population quotas. Legacy PDF URL may be outdated.</p></td>
+<td class="num">3.5</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>KS</b><small>Kansas</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>File download<br><a href="https://www.kdor.ks.gov/apps/liquorlicensee/Active.aspx" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Kansas Department of Revenue, Alcoholic Beverage Control (ABC)<br><span class="muted">Liquor licences are state-issued, but Cereal Malt Beverage (CMB, beer-only) licences are issued by city or county clerks and are NOT in the state list.</span></td>
+<td><ul class="steps"><li>Open kdor.ks.gov/apps/liquorlicensee/Active.aspx and click the Excel export (ASP.NET page; may need headless browser to automate)</li></ul><p class="note">Some counties still prohibit liquor-by-the-drink or require food-sales percentage (local option). Beer-only bars/restaurants with only a CMB licence will be missed.</p></td>
+<td class="num">3.0</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>MS</b><small>Mississippi</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>control</td><td>Search site only<br><a href="https://www.dor.ms.gov/abc-permits" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Mississippi Department of Revenue, Alcoholic Beverage Control (ABC)<br><span class="muted">Local option: counties/municipalities vote wet/dry; state DOR issues the permits.</span></td>
+<td><ul class="steps"><li>Scrape the paginated dor.ms.gov/abc-permits listing (drupal ?page=N) weekly, or request an Excel export from DOR</li></ul><p class="note">~2,700 ABC permits. Control state (state warehouse for spirits/wine). Many dry counties/towns.</p></td>
+<td class="num">2.9</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>ID</b><small>Idaho</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>control</td><td>Search site only<br><a href="https://apps.isp.idaho.gov/AbcReporting/license/search" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Idaho State Police, Alcohol Beverage Control (ABC) Bureau<br><span class="muted">State ABC issues licenses; cities and counties also issue local licenses (beer/wine/liquor) and approve.</span></td>
+<td><ul class="steps"><li>Use ABC Reporting active license search and export all active retail licenses periodically (or request via public records)</li></ul><p class="note">Control state: Idaho State Liquor Division sells bottled spirits. Liquor licenses capped by city population (2 + 1 per 1,500 residents); waiting lists in 70+ cities.</p></td>
+<td class="num">2.0</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>NE</b><small>Nebraska</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>Paid list<br><a href="https://lcc.nebraska.gov/licensing-sdl/active-license-roster" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Nebraska Liquor Control Commission (NLCC)<br><span class="muted">State issues; city/village/county governing body must recommend approval of each application.</span></td>
+<td><ul class="steps"><li>Order the Active License Roster in Excel ($40) from NLCC (P.O. Box 95046, Lincoln NE 68509; pay via PayPort) and re-order periodically</li><li>OR scrape the free active.cgi Active License Holder listing on a schedule (verify it lists all rows)</li></ul><p class="note">Free HTML list may allow a scheduled scrape, making this near-full automation. No geocoding.</p></td>
+<td class="num">2.0</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="partial"><td class="st"><b>ME</b><small>Maine</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>control</td><td>File download<br><a href="https://www.maine.gov/dafs/bablo/liquor-licensing/license-data" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Maine Bureau of Alcoholic Beverages and Lottery Operations (BABLO)<br><span class="muted">On-premise applications must first be approved by the municipality (or county commissioners for unorganized territory); state issues the licence.</span></td>
+<td><ul class="steps"><li>Download the monthly .csv/.xlsx from the BABLO License Data page (direct file URL not captured; may change monthly, so scrape the page link)</li></ul><p class="note">Control state for spirits (state-run wholesale). Direct file URL not seen in search results.</p></td>
+<td class="num">1.4</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="partial"><td class="st"><b>ND</b><small>North Dakota</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>license</td><td>File download<br><a href="https://attorneygeneral.nd.gov/licensing-and-gaming/license-holders" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">North Dakota Attorney General, Licensing Section</td>
+<td><ul class="steps"><li>Download the current alcoholic beverage licensee PDF from the AG License Holders page and parse it (pdf-to-table); repeat periodically</li></ul><p class="note">PDF parsing required; on/off-premise distinction not clear at state level, rely on Places type.</p></td>
+<td class="num">0.8</td><td><span class="conf high">high</span></td></tr>
+<tr data-a="partial"><td class="st"><b>VT</b><small>Vermont</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>control</td><td>File download<br><a href="https://liquorcontrol.vermont.gov/information/lists-reports" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Vermont Department of Liquor and Lottery, Division of Liquor Control (DLL)<br><span class="muted">First/Second Class applications are approved by the town/city local control board (selectboard/council) before state issuance.</span></td>
+<td><ul class="steps"><li>Download the active licensees report from liquorcontrol.vermont.gov/information/lists-reports (or DLL portal) and filter First/Third Class</li><li>Repeat monthly; if the report is not machine-readable, request an Excel export from DLL</li></ul><p class="note">Control state for spirits (agency stores). Report format/URL of the file itself not verified.</p></td>
+<td class="num">0.6</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="partial"><td class="st"><b>WY</b><small>Wyoming</small></td>
+<td><span class="pill partial">Partly</span></td>
+<td>control</td><td>File download<br><span class="muted">not found</span></td>
+<td class="agency">Wyoming Department of Revenue, Liquor Division (WLD)<br><span class="muted">Licences issued by local licensing authorities: city/town councils inside municipalities, boards of county commissioners outside; Liquor Division reviews.</span></td>
+<td><ul class="steps"><li>Locate and download &#x27;Wyoming Active Liquor License Holder List&#x27; from liquor365.wyo.gov (or request from Liquor Division)</li><li>Filter to Retail, Restaurant, Bar &amp; Grill, Resort classes; refresh quarterly</li></ul><p class="note">Control state (state wholesaler). ~1,794 licences total incl. 818 retail, 245 restaurant, 128 bar &amp; grill. Wind River Reservation has tribal regulation.</p></td>
+<td class="num">0.6</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>NC</b><small>North Carolina</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>control</td><td>Search site only<br><a href="https://abc2.nc.gov/Search/Permit" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">North Carolina Alcoholic Beverage Control Commission (NC ABCC)<br><span class="muted">State ABCC issues retail permits; spirits retail via ~170 local ABC boards (county/city); mixed-beverage sales require local election approval.</span></td>
+<td><ul class="steps"><li>Email Contact@abc.nc.gov / file a public records request for all active retail on-premise permits with DBA and address</li><li>Or scrape abc2.nc.gov/Search/Permit by county</li></ul><p class="note">Control state with local ABC boards. Some dry/partially wet counties. Mixed beverage permit is the key bar/restaurant signal.</p></td>
+<td class="num">11.0</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>SC</b><small>South Carolina</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>license</td><td>Search site only<br><a href="https://dor.sc.gov/alcohol-beverage-licensing-abl/license-searches-abl-resources" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">South Carolina Department of Revenue (SCDOR), Alcohol Beverage Licensing (ABL)<br><span class="muted">State-issued by SCDOR; local governments can protest; Sunday sales (7-day permits) depend on county/municipal referendum.</span></td>
+<td><ul class="steps"><li>Check the SCDOR &#x27;License Searches &amp; ABL Resources&#x27; page for any active-licence export; if only lookup, submit SC FOIA request to SCDOR ABL for a spreadsheet of active PBW, PO7 and LBD licences with addresses</li><li>Repeat request periodically (quarterly)</li></ul><p class="note">Could not confirm a downloadable active-licence list via search; the ABL resources page may contain one - verify manually. LBD licences are separate from beer/wine permits, so a full bar holds several.</p></td>
+<td class="num">5.5</td><td><span class="conf low">low</span></td></tr>
+<tr data-a="manual"><td class="st"><b>AL</b><small>Alabama</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>control</td><td>Search site only<br><a href="http://licensesearch.alabama.gov/AOWB" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Alabama Alcoholic Beverage Control Board (ABC Board)<br><span class="muted">State ABC Board issues licenses; cities/counties must approve applications (local consent) and some issue their own local licenses. Wet/dry status set locally.</span></td>
+<td><ul class="steps"><li>Submit public records request at https://alabcboard.gov/public-records-request asking for all active on-premise retail licenses (CSV/XLSX) with addresses</li><li>Or scrape licensesearch.alabama.gov/AOWB county by county</li></ul><p class="note">Control state (ABC Board runs state liquor stores). Many dry or partially dry counties with wet municipalities; licenses cluster in wet cities.</p></td>
+<td class="num">5.2</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>LA</b><small>Louisiana</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>license</td><td>Records request<br><a href="https://laatcabc.atc.la.gov/laatcprod/pub/Login.aspx?PossePresentation=LicenseSearch" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Louisiana Office of Alcohol and Tobacco Control (ATC)<br><span class="muted">Dual: state ATC permit plus parish/municipal alcohol permit (e.g. New Orleans Alcoholic Beverage Outlet licence).</span></td>
+<td><ul class="steps"><li>Submit public records request at atc.louisiana.gov/contact/public-records-requests for a spreadsheet of all active Class A-General and Class A-Restaurant permits; repeat periodically</li><li>Or scrape the LAATC license search portal</li></ul><p class="note">No statewide bulk file found. Some parishes/wards dry by local option. NOLA data covers Orleans Parish only.</p></td>
+<td class="num">4.6</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>NV</b><small>Nevada</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>license</td><td>Search site only<br><span class="muted">not found</span></td>
+<td class="agency">No state retail licensing agency; Nevada Department of Taxation licenses importers/wholesalers only. Retail liquor licences issued by counties/cities (e.g. Clark County Dept of Business License, City of Las Vegas, Washoe County, City of Reno)</td>
+<td><ul class="steps"><li>Submit NRS 239 public records requests to Clark County Business License (702-455-4340), City of Las Vegas, Henderson, North Las Vegas, Washoe County, Reno, Sparks for active liquor licence lists</li><li>Or export category searches from Clark County Business License Search</li></ul><p class="note">Fragmented local licensing; Clark + Washoe cover most of the market. Many casino-resort outlets operate under a single resort licence, so Places enrichment is essential.</p></td>
+<td class="num">3.3</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>AR</b><small>Arkansas</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>license</td><td>Records request<br><a href="https://www.dfa.arkansas.gov/office/alcohol-beverage-control/permit-changes/" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Arkansas Alcoholic Beverage Control Division (ABC), Dept. of Finance and Administration<br><span class="muted">State issues permits; wet/dry status by county/city local option election.</span></td>
+<td><ul class="steps"><li>Send Arkansas FOIA request to ABC for all active retail on-premise permits (Excel)</li><li>Optionally parse monthly Permit Change List PDFs to keep it current</li></ul><p class="note">Many dry counties; private clubs (Class A dry county) serve alcohol there. Act 762 of 2025 removed nonprofit requirement for private clubs.</p></td>
+<td class="num">3.1</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>NM</b><small>New Mexico</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>license</td><td>Search site only<br><a href="https://nmrldlpi.my.site.com/abc/s/public-search" target="_blank" rel="noopener">other</a></td>
+<td class="agency">NM Regulation and Licensing Department, Alcoholic Beverage Control Division (ABC)<br><span class="muted">State issues; local option districts and local governing body approval.</span></td>
+<td><ul class="steps"><li>Submit an IPRA request to NM RLD (ABC Division, 505-476-4875) for all active liquor licences with type and premises address</li><li>Or scrape the NM-PLUS public search</li></ul><p class="note">Dispenser licences mix bars and package stores; filter via Places. Tribal lands/pueblos have their own rules.</p></td>
+<td class="num">2.1</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>WV</b><small>West Virginia</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>control</td><td>Search site only<br><a href="https://www.wvabca.com/licensesearch.aspx" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">West Virginia Alcohol Beverage Control Administration (WVABCA)<br><span class="muted">State-issued by WVABCA; local option for Sunday sales.</span></td>
+<td><ul class="steps"><li>Submit WV FOIA request to WVABCA Licensing (ABCA.Licensing@wv.gov) for spreadsheet of all active retail on-premise (Class A / private club / restaurant) licences with addresses</li><li>Alternatively script the licensesearch.aspx form per county and licence type (55 counties)</li></ul><p class="note">Spirits wholesale is state-controlled (retail privatized). Private club licensing historically required membership.</p></td>
+<td class="num">1.8</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>HI</b><small>Hawaii</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>license</td><td>Search site only<br><a href="https://mauicounty.gov/DocumentCenter/View/150480/List-of-Licensees-Alpha-PDF?bidId=" target="_blank" rel="noopener">other</a></td>
+<td class="agency">County liquor commissions: Honolulu Liquor Commission; Maui, Hawaii and Kauai County Departments of Liquor Control<br><span class="muted">Licenses issued by each county (Honolulu, Maui, Hawaii, Kauai), not the state.</span></td>
+<td><ul class="steps"><li>Download Maui licensee list PDF annually and parse</li><li>Submit UIPA request to Honolulu Liquor Commission for active licensee list (~2,500 licenses)</li><li>Request lists from Kauai and Hawaii County liquor departments</li></ul><p class="note">Class numbers from HRS 281 general knowledge; verify per county.</p></td>
+<td class="num">1.4</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>NH</b><small>New Hampshire</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>control</td><td>Records request<br><span class="muted">not found</span></td>
+<td class="agency">New Hampshire Liquor Commission (NHLC), Division of Enforcement &amp; Licensing<br><span class="muted">State issues; local governing body approval required.</span></td>
+<td><ul class="steps"><li>Email RightToKnow@liquor.nh.gov (or write 50 Storrs St, Concord NH 03301) requesting an electronic list of all active on-premise licensees with licence type, DBA and address; repeat periodically</li></ul><p class="note">Control state: state runs all retail spirits/wine stores (NH Liquor &amp; Wine Outlets). Small state - one request covers everything.</p></td>
+<td class="num">1.4</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>MT</b><small>Montana</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>control</td><td>Search site only<br><a href="https://revenue.mt.gov/licenses/" target="_blank" rel="noopener">agency site</a></td>
+<td class="agency">Montana Department of Revenue, Cannabis and Alcohol Regulation Division (CARD, formerly Alcoholic Beverage Control Division)<br><span class="muted">State issues licences; quota by city/county population. Local governing body may object but does not issue.</span></td>
+<td><ul class="steps"><li>Email/call CARD licensing (406-444-6900) or file a public records request asking for an export of all active retail alcoholic beverage licences with licence number, DBA, address</li><li>Alternatively scrape the License Lookup at revenue.mt.gov/licenses (check terms)</li></ul><p class="note">Control state: state is spirits wholesaler; retail spirits via agency liquor stores. All-beverage licences are scarce quota licences (high-value), so bars are well defined. Many tribal reservations have their own rules.</p></td>
+<td class="num">1.1</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>RI</b><small>Rhode Island</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>license</td><td>Records request<br><span class="muted">not found</span></td>
+<td class="agency">Rhode Island Department of Business Regulation (DBR), Division of Commercial Licensing - Liquor Enforcement and Compliance<br><span class="muted">Retail on-premise licences (Class B/C/D etc.) are issued by the 39 city/town councils or boards of licenses (e.g. Providence Board of Licenses), not the state.</span></td>
+<td><ul class="steps"><li>Submit APRA public records request to RI DBR (Division of Commercial Licensing, liquor) for the latest compiled municipal annual liquor licence reports (all active Class B/C/D etc.) in Excel</li><li>Optionally pull Providence ui7z-kv69 via Socrata API for Providence refreshes</li><li>Repeat annually after Dec 1 reporting deadline</li></ul><p class="note">Small state (39 municipalities) so a one-time request + annual refresh is workable. Municipal reports vary in completeness. Providence dataset id seen in search result URL but its liquor coverage not verified.</p></td>
+<td class="num">1.1</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>DE</b><small>Delaware</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>license</td><td>Paid list<br><span class="muted">not found</span></td>
+<td class="agency">Office of the Alcoholic Beverage Control Commissioner (OABCC)<br><span class="muted">State OABCC issues licenses; local zoning.</span></td>
+<td><ul class="steps"><li>Email OABCCquestions@delaware.gov or buy the $25 retailer master list from the OABCC online portal; refresh periodically</li></ul><p class="note">Small state; retailer list is small and cheap. Portal URL for purchase not captured.</p></td>
+<td class="num">1.0</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>SD</b><small>South Dakota</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>license</td><td>Records request<br><span class="muted">not found</span></td>
+<td class="agency">South Dakota Department of Revenue, Special Taxes Division (alcohol licensing)<br><span class="muted">Licences require local approval: municipal governing body (finance officer) inside city limits, county commission (auditor) outside; the state DOR then issues.</span></td>
+<td><ul class="steps"><li>Email SD DOR Special Taxes Division (SpecialT@state.sd.us) requesting a spreadsheet of all active on-sale (liquor, wine, malt beverage) licences with premises addresses</li><li>If refused, collect city lists from Sioux Falls and Rapid City (largest markets) finance offices</li><li>Refresh annually (licences renew July 1)</li></ul><p class="note">Low population; Sioux Falls and Rapid City cover most bars/restaurants. Tribal lands have separate tribal alcohol regulation.</p></td>
+<td class="num">0.9</td><td><span class="conf medium">medium</span></td></tr>
+<tr data-a="manual"><td class="st"><b>AK</b><small>Alaska</small></td>
+<td><span class="pill manual">Manual</span></td>
+<td>license</td><td>Search site only<br><span class="muted">not found</span></td>
+<td class="agency">Alcohol &amp; Marijuana Control Office (AMCO), Alcoholic Beverage Control Board, Dept. of Commerce, Community &amp; Economic Development</td>
+<td><ul class="steps"><li>Use AK-ACCIS public license search and export/scrape Beverage Dispensary and Restaurant/Eating Place licenses, or email AMCO for a full active license export</li></ul><p class="note">Over 100 local-option (dry/damp) communities, mostly rural; population-based license limits. Small total volume (~a few thousand licenses) so a one-time request is practical.</p></td>
+<td class="num">0.7</td><td><span class="conf medium">medium</span></td></tr></tbody></table></div>
+</div>
+<script>
+(function(){var bs=document.querySelectorAll('.filters button');bs.forEach(function(b){b.addEventListener('click',function(){var f=b.getAttribute('data-f');bs.forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('tbody tr').forEach(function(r){r.hidden=!(f==='all'||r.getAttribute('data-a')===f);});});});})();
+</script>

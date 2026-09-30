@@ -1,0 +1,1623 @@
+{
+ "round": 11,
+ "concept": "Lotería de la Cantina, a real tabla of four cards (2 + 2): El Cantarito (44) is the featured card, top-left and tallest, over La Botella (8); El Barril (9) over La Rosa (41). Every card has a 3 pt frame in its colour, its traditional Don Clemente number in the top-left corner (marigold numeral on an ink chip), one face composition (cut-paper figure left, cantor verse right, scaled to the card), and the lotería name in the band under the figure (one title style, one size). The drinks list is the card's reverse.",
+ "page": {
+  "size": "US Letter 8.5 x 11 in",
+  "w_pt": 612,
+  "h_pt": 792,
+  "margins_pt": {
+   "top": 36,
+   "right": 36,
+   "bottom": 36,
+   "left": 36
+  },
+  "bleed": "none (cream flood to trim, home/office print)"
+ },
+ "grid": {
+  "deck_pt": {
+   "x": 36.0,
+   "y": 138.0,
+   "w": 540.0,
+   "h": 618.0
+  },
+  "columns_pt": [
+   264,
+   264
+  ],
+  "gutter_pt": 12,
+  "baseline_step_pt": 6,
+  "rows": "2 + 2 tabla, columns 264 / 264 pt, 12 pt gutter. Left: El Cantarito 384 (face 141) + 12 + La Botella 222 (face 81) = 618. Right: El Barril 318 (face 141) + 12 + La Rosa 288 (face 147) = 618. All heights multiples of 6 pt from the deck top; name bands of El Cantarito and El Barril share one baseline. One rhythm on every card: 12 pt from the name band to the first subhead and above every subhead, 6 pt below every subhead, 12 pt item gap, 12 pt lines.",
+  "card_anatomy": "3 pt frame in the card colour; face (141 / 81 / 141 / 147 pt) = tinted panel with a 0.75 pt inset hairline at 3 pt; lotería number chip 24 x 24 pt at 6 pt from the top-left corner (Fraunces 700 12 pt marigold on ink); one composition on every card: square cut-paper figure (face - 36 pt) at x = 36 pt, cantor verse Fraunces italic 10/12 pt to its right; 24 pt name band under the figure (Spanish name Fraunces 700 12 pt caps + English gloss, identical on every card); 12 pt; list; 9 pt bottom padding + 3 pt frame = 12 pt"
+ },
+ "palette": {
+  "cream": "#F6EEDF",
+  "card": "#FBF5EA",
+  "featured_card": "#F3E3CB",
+  "ink": "#231B16",
+  "terracotta": "#A63C1A",
+  "agave": "#2F5D50",
+  "marigold": "#E3A018",
+  "muted": "#5A4A3F",
+  "loteria_rosa": "#C2185B",
+  "agave_blue": "#1E3F66"
+ },
+ "type": {
+  "display": "Fraunces 700 (title 24/24 pt, 18 pt below the 36 pt papel picado; card titles 12 pt caps 2 pt tracking in the name band, one size on every card)",
+  "card_numbers": "Fraunces 700 12 pt, marigold #E3A018 on ink #231B16 chip (the only marigold type; never on cream)",
+  "items": "Fraunces 600 10.5/12 pt (every card)",
+  "prices": "Fraunces 700 11.5/12 pt, tnum + lnum, in the card colour (terracotta, agave blue, agave green, rosa)",
+  "descriptions": "DM Sans 8/12 pt stacked under the name on all 14 items, ink; cocktails add a non-breaking serve cue in italic muted #5A4A3F; Brut Rosé adds a muted italic 7.5 pt 'glass / bottle TBC' right-aligned under its price",
+  "verse": "Fraunces italic 10/12 pt muted, every card",
+  "gloss": "Fraunces italic 8.5 pt in the name band, every card",
+  "subheads": "DM Sans 700 caps 7/12 pt, English only, rule in the card colour",
+  "name_bar": "24 pt band; terracotta (El Cantarito), agave blue #1E3F66 (La Botella), agave green (El Barril), lotería rosa (La Rosa), cream text on all four; marigold as type only in the number chips on ink",
+  "body_baseline_pt": 12,
+  "item_gap_pt": 12
+ },
+ "masthead": {
+  "papel_picado_pt": {
+   "x": 36.0,
+   "y": 36.0,
+   "w": 540.0,
+   "h": 36.0
+  },
+  "title_pt": {
+   "x": 173.88,
+   "y": 87.0,
+   "w": 264.22,
+   "h": 29.25
+  },
+  "location_pt": {
+   "x": 249.68,
+   "y": 114.0,
+   "w": 112.64,
+   "h": 11.25
+  },
+  "footer_pt": {
+   "x": 36.0,
+   "y": 756.0,
+   "w": 540.0,
+   "h": 0.0
+  }
+ },
+ "elements": [
+  {
+   "kind": "image",
+   "ref": "banner",
+   "x": 36.0,
+   "y": 36.0,
+   "w": 540.0,
+   "h": 36.0
+  },
+  {
+   "kind": "header",
+   "ref": "title",
+   "x": 173.88,
+   "y": 87.0,
+   "w": 264.22,
+   "h": 29.25,
+   "text": "Cantina & Cocktail Bar"
+  },
+  {
+   "kind": "subheader",
+   "ref": "loc",
+   "x": 249.68,
+   "y": 114.0,
+   "w": 112.64,
+   "h": 11.25,
+   "text": "IOWA CITY, IOWA"
+  },
+  {
+   "kind": "grid",
+   "ref": "deck",
+   "x": 36.0,
+   "y": 138.0,
+   "w": 540.0,
+   "h": 618.0
+  },
+  {
+   "kind": "ornament",
+   "ref": "foot",
+   "x": 36.0,
+   "y": 756.0,
+   "w": 540.0,
+   "h": 0.0
+  },
+  {
+   "kind": "card",
+   "ref": "sec_cocktails",
+   "x": 36.0,
+   "y": 138.0,
+   "w": 264.0,
+   "h": 384.0,
+   "n": 1,
+   "featured": true
+  },
+  {
+   "kind": "card_face",
+   "ref": "sec_cocktails",
+   "x": 39.0,
+   "y": 141.0,
+   "w": 258.0,
+   "h": 141.0
+  },
+  {
+   "kind": "card_number",
+   "ref": "sec_cocktails",
+   "x": 45.0,
+   "y": 147.0,
+   "w": 24.0,
+   "h": 24.0,
+   "text": "44"
+  },
+  {
+   "kind": "header",
+   "ref": "sec_cocktails",
+   "x": 86.88,
+   "y": 262.5,
+   "w": 119.6,
+   "h": 15.0,
+   "text": "EL CANTARITO"
+  },
+  {
+   "kind": "verse",
+   "ref": "sec_cocktails",
+   "x": 194.48,
+   "y": 175.5,
+   "w": 88.03,
+   "h": 48.0,
+   "text": "Tanto va el cántaro al agua, que se quiebra y te moja las enaguas.",
+   "note": "cultural text: traditional loteria cantor verse, not an item fact"
+  },
+  {
+   "kind": "gloss",
+   "ref": "sec_cocktails",
+   "x": 212.48,
+   "y": 266.25,
+   "w": 36.62,
+   "h": 10.5,
+   "text": "Cocktails"
+  },
+  {
+   "kind": "figure",
+   "ref": "sec_cocktails",
+   "x": 75.0,
+   "y": 147.0,
+   "w": 105.0,
+   "h": 105.0
+  },
+  {
+   "kind": "name_bar",
+   "ref": "sec_cocktails",
+   "x": 39.0,
+   "y": 258.0,
+   "w": 258.0,
+   "h": 24.0,
+   "text": "EL CANTARITO\nCocktails"
+  },
+  {
+   "kind": "subheader",
+   "ref": "sub_cocktails_house_originals",
+   "x": 49.5,
+   "y": 295.5,
+   "w": 83.36,
+   "h": 9.0,
+   "text": "HOUSE ORIGINALS"
+  },
+  {
+   "kind": "subheader",
+   "ref": "sub_cocktails_classics",
+   "x": 49.5,
+   "y": 409.5,
+   "w": 44.98,
+   "h": 9.0,
+   "text": "CLASSICS"
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_old_fashioned",
+   "x": 49.5,
+   "y": 311.25,
+   "w": 144.28,
+   "h": 13.5,
+   "text": "Brown Butter Old Fashioned"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_old_fashioned",
+   "x": 273.46,
+   "y": 310.5,
+   "w": 13.04,
+   "h": 14.25,
+   "text": "16"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_old_fashioned",
+   "x": 49.5,
+   "y": 324.75,
+   "w": 198.56,
+   "h": 22.5,
+   "text": "Brown butter-washed bourbon, demerara and bitters. Over one large cube, orange peel.",
+   "lines": 2
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_daiquiri",
+   "x": 49.5,
+   "y": 359.25,
+   "w": 77.06,
+   "h": 13.5,
+   "text": "House Daiquiri"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_daiquiri",
+   "x": 273.26,
+   "y": 358.5,
+   "w": 13.24,
+   "h": 14.25,
+   "text": "14"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_daiquiri",
+   "x": 49.5,
+   "y": 372.75,
+   "w": 181.49,
+   "h": 22.5,
+   "text": "White rum, fresh lime and house demerara syrup. In a coupe, lime coin.",
+   "lines": 2
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_margarita",
+   "x": 49.5,
+   "y": 425.25,
+   "w": 50.92,
+   "h": 13.5,
+   "text": "Margarita"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_margarita",
+   "x": 273.87,
+   "y": 424.5,
+   "w": 12.63,
+   "h": 14.25,
+   "text": "15"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_margarita",
+   "x": 49.5,
+   "y": 438.75,
+   "w": 218.86,
+   "h": 22.5,
+   "text": "Bright and citrus-forward: blanco tequila, fresh lime, orange liqueur and agave syrup. On the rocks, lime wheel.",
+   "lines": 2
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_manhattan",
+   "x": 49.5,
+   "y": 473.25,
+   "w": 55.77,
+   "h": 13.5,
+   "text": "Manhattan"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_manhattan",
+   "x": 273.87,
+   "y": 472.5,
+   "w": 12.63,
+   "h": 14.25,
+   "text": "15"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_manhattan",
+   "x": 49.5,
+   "y": 486.75,
+   "w": 212.74,
+   "h": 22.5,
+   "text": "Spirit-forward: rye whiskey, sweet vermouth and aromatic bitters. In a coupe, cocktail cherry.",
+   "lines": 2
+  },
+  {
+   "kind": "card",
+   "ref": "sec_spirits",
+   "x": 36.0,
+   "y": 534.0,
+   "w": 264.0,
+   "h": 222.0,
+   "n": 2,
+   "featured": false
+  },
+  {
+   "kind": "card_face",
+   "ref": "sec_spirits",
+   "x": 39.0,
+   "y": 537.0,
+   "w": 258.0,
+   "h": 81.0
+  },
+  {
+   "kind": "card_number",
+   "ref": "sec_spirits",
+   "x": 45.0,
+   "y": 543.0,
+   "w": 24.0,
+   "h": 24.0,
+   "text": "8"
+  },
+  {
+   "kind": "header",
+   "ref": "sec_spirits",
+   "x": 101.87,
+   "y": 598.5,
+   "w": 99.26,
+   "h": 15.0,
+   "text": "LA BOTELLA"
+  },
+  {
+   "kind": "verse",
+   "ref": "sec_spirits",
+   "x": 140.33,
+   "y": 559.5,
+   "w": 136.34,
+   "h": 12.0,
+   "text": "La herramienta del borracho.",
+   "note": "cultural text: traditional loteria cantor verse, not an item fact"
+  },
+  {
+   "kind": "gloss",
+   "ref": "sec_spirits",
+   "x": 207.13,
+   "y": 602.25,
+   "w": 26.99,
+   "h": 10.5,
+   "text": "Spirits"
+  },
+  {
+   "kind": "figure",
+   "ref": "sec_spirits",
+   "x": 75.0,
+   "y": 543.0,
+   "w": 45.0,
+   "h": 45.0
+  },
+  {
+   "kind": "name_bar",
+   "ref": "sec_spirits",
+   "x": 39.0,
+   "y": 594.0,
+   "w": 258.0,
+   "h": 24.0,
+   "text": "LA BOTELLA\nSpirits"
+  },
+  {
+   "kind": "subheader",
+   "ref": "sub_spirits_agave",
+   "x": 49.5,
+   "y": 631.5,
+   "w": 79.86,
+   "h": 9.0,
+   "text": "AGAVE & BRANDY"
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_blanco_tequila",
+   "x": 49.5,
+   "y": 647.25,
+   "w": 75.42,
+   "h": 13.5,
+   "text": "Blanco Tequila"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_blanco_tequila",
+   "x": 273.49,
+   "y": 646.5,
+   "w": 13.01,
+   "h": 14.25,
+   "text": "12"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_blanco_tequila",
+   "x": 49.5,
+   "y": 660.75,
+   "w": 100.88,
+   "h": 10.5,
+   "text": "Tequila blanco, by the pour.",
+   "lines": 1
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_anejo_tequila",
+   "x": 49.5,
+   "y": 683.25,
+   "w": 69.9,
+   "h": 13.5,
+   "text": "Añejo Tequila"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_anejo_tequila",
+   "x": 273.46,
+   "y": 682.5,
+   "w": 13.04,
+   "h": 14.25,
+   "text": "16"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_anejo_tequila",
+   "x": 49.5,
+   "y": 696.75,
+   "w": 96.0,
+   "h": 10.5,
+   "text": "Tequila añejo, by the pour.",
+   "lines": 1
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_cognac_vsop",
+   "x": 49.5,
+   "y": 719.25,
+   "w": 69.66,
+   "h": 13.5,
+   "text": "Cognac VSOP"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_cognac_vsop",
+   "x": 273.36,
+   "y": 718.5,
+   "w": 13.14,
+   "h": 14.25,
+   "text": "18"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_cognac_vsop",
+   "x": 49.5,
+   "y": 732.75,
+   "w": 98.73,
+   "h": 10.5,
+   "text": "VSOP Cognac, by the pour.",
+   "lines": 1
+  },
+  {
+   "kind": "card",
+   "ref": "sec_beer",
+   "x": 312.0,
+   "y": 138.0,
+   "w": 264.0,
+   "h": 318.0,
+   "n": 3,
+   "featured": false
+  },
+  {
+   "kind": "card_face",
+   "ref": "sec_beer",
+   "x": 315.0,
+   "y": 141.0,
+   "w": 258.0,
+   "h": 141.0
+  },
+  {
+   "kind": "card_number",
+   "ref": "sec_beer",
+   "x": 321.0,
+   "y": 147.0,
+   "w": 24.0,
+   "h": 24.0,
+   "text": "9"
+  },
+  {
+   "kind": "header",
+   "ref": "sec_beer",
+   "x": 372.75,
+   "y": 262.5,
+   "w": 86.39,
+   "h": 15.0,
+   "text": "EL BARRIL"
+  },
+  {
+   "kind": "verse",
+   "ref": "sec_beer",
+   "x": 472.11,
+   "y": 181.5,
+   "w": 84.76,
+   "h": 36.0,
+   "text": "Tanto bebió el albañil, que quedó como barril.",
+   "note": "cultural text: traditional loteria cantor verse, not an item fact"
+  },
+  {
+   "kind": "gloss",
+   "ref": "sec_beer",
+   "x": 465.14,
+   "y": 266.25,
+   "w": 50.1,
+   "h": 10.5,
+   "text": "Beer & Cider"
+  },
+  {
+   "kind": "figure",
+   "ref": "sec_beer",
+   "x": 351.0,
+   "y": 147.0,
+   "w": 105.0,
+   "h": 105.0
+  },
+  {
+   "kind": "name_bar",
+   "ref": "sec_beer",
+   "x": 315.0,
+   "y": 258.0,
+   "w": 258.0,
+   "h": 24.0,
+   "text": "EL BARRIL\nBeer & Cider"
+  },
+  {
+   "kind": "subheader",
+   "ref": "sub_beer_draft",
+   "x": 325.5,
+   "y": 295.5,
+   "w": 69.86,
+   "h": 9.0,
+   "text": "DRAFT & CIDER"
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_czech_pilsner",
+   "x": 325.5,
+   "y": 311.25,
+   "w": 69.16,
+   "h": 13.5,
+   "text": "Czech Pilsner"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_czech_pilsner",
+   "x": 556.17,
+   "y": 310.5,
+   "w": 6.33,
+   "h": 14.25,
+   "text": "7"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_czech_pilsner",
+   "x": 325.5,
+   "y": 324.75,
+   "w": 58.75,
+   "h": 10.5,
+   "text": "Crisp pale lager.",
+   "lines": 1
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_dry_hopped_ipa",
+   "x": 325.5,
+   "y": 347.25,
+   "w": 85.28,
+   "h": 13.5,
+   "text": "Dry-Hopped IPA"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_dry_hopped_ipa",
+   "x": 554.98,
+   "y": 346.5,
+   "w": 7.52,
+   "h": 14.25,
+   "text": "8"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_dry_hopped_ipa",
+   "x": 325.5,
+   "y": 360.75,
+   "w": 83.0,
+   "h": 10.5,
+   "text": "Hop-forward draft IPA.",
+   "lines": 1
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_amber_lager",
+   "x": 325.5,
+   "y": 383.25,
+   "w": 66.33,
+   "h": 13.5,
+   "text": "Amber Lager"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_amber_lager",
+   "x": 556.17,
+   "y": 382.5,
+   "w": 6.33,
+   "h": 14.25,
+   "text": "7"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_amber_lager",
+   "x": 325.5,
+   "y": 396.75,
+   "w": 71.68,
+   "h": 10.5,
+   "text": "Toasty amber lager.",
+   "lines": 1
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_dry_cider",
+   "x": 325.5,
+   "y": 419.25,
+   "w": 49.52,
+   "h": 13.5,
+   "text": "Dry Cider"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_dry_cider",
+   "x": 554.98,
+   "y": 418.5,
+   "w": 7.52,
+   "h": 14.25,
+   "text": "8"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_dry_cider",
+   "x": 325.5,
+   "y": 432.75,
+   "w": 70.51,
+   "h": 10.5,
+   "text": "Dry sparkling cider.",
+   "lines": 1
+  },
+  {
+   "kind": "card",
+   "ref": "sec_wine",
+   "x": 312.0,
+   "y": 468.0,
+   "w": 264.0,
+   "h": 288.0,
+   "n": 4,
+   "featured": false
+  },
+  {
+   "kind": "card_face",
+   "ref": "sec_wine",
+   "x": 315.0,
+   "y": 471.0,
+   "w": 258.0,
+   "h": 147.0
+  },
+  {
+   "kind": "card_number",
+   "ref": "sec_wine",
+   "x": 321.0,
+   "y": 477.0,
+   "w": 24.0,
+   "h": 24.0,
+   "text": "41"
+  },
+  {
+   "kind": "header",
+   "ref": "sec_wine",
+   "x": 396.11,
+   "y": 598.5,
+   "w": 69.09,
+   "h": 15.0,
+   "text": "LA ROSA"
+  },
+  {
+   "kind": "verse",
+   "ref": "sec_wine",
+   "x": 479.05,
+   "y": 514.5,
+   "w": 76.89,
+   "h": 36.0,
+   "text": "Rosita, Rosaura, ven que te quiero ver.",
+   "note": "cultural text: traditional loteria cantor verse, not an item fact"
+  },
+  {
+   "kind": "gloss",
+   "ref": "sec_wine",
+   "x": 471.2,
+   "y": 602.25,
+   "w": 20.7,
+   "h": 10.5,
+   "text": "Wine"
+  },
+  {
+   "kind": "figure",
+   "ref": "sec_wine",
+   "x": 351.0,
+   "y": 477.0,
+   "w": 111.0,
+   "h": 111.0
+  },
+  {
+   "kind": "name_bar",
+   "ref": "sec_wine",
+   "x": 315.0,
+   "y": 594.0,
+   "w": 258.0,
+   "h": 24.0,
+   "text": "LA ROSA\nWine"
+  },
+  {
+   "kind": "subheader",
+   "ref": "sub_wine_by_the_glass",
+   "x": 325.5,
+   "y": 631.5,
+   "w": 116.66,
+   "h": 9.0,
+   "text": "RED, WHITE & SPARKLING"
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_malbec",
+   "x": 325.5,
+   "y": 647.25,
+   "w": 36.57,
+   "h": 13.5,
+   "text": "Malbec"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_malbec",
+   "x": 549.49,
+   "y": 646.5,
+   "w": 13.01,
+   "h": 14.25,
+   "text": "12"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_malbec",
+   "x": 325.5,
+   "y": 660.75,
+   "w": 48.23,
+   "h": 10.5,
+   "text": "Dry red wine.",
+   "lines": 1
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_pinot_grigio",
+   "x": 325.5,
+   "y": 683.25,
+   "w": 62.05,
+   "h": 13.5,
+   "text": "Pinot Grigio"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_pinot_grigio",
+   "x": 551.25,
+   "y": 682.5,
+   "w": 11.25,
+   "h": 14.25,
+   "text": "11"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_pinot_grigio",
+   "x": 325.5,
+   "y": 696.75,
+   "w": 56.05,
+   "h": 10.5,
+   "text": "Dry white wine.",
+   "lines": 1
+  },
+  {
+   "kind": "item_name",
+   "ref": "beta_brut_rose",
+   "x": 325.5,
+   "y": 719.25,
+   "w": 50.29,
+   "h": 13.5,
+   "text": "Brut Rosé"
+  },
+  {
+   "kind": "price",
+   "ref": "beta_brut_rose",
+   "x": 550.08,
+   "y": 718.5,
+   "w": 12.42,
+   "h": 14.25,
+   "text": "13"
+  },
+  {
+   "kind": "description",
+   "ref": "beta_brut_rose",
+   "x": 325.5,
+   "y": 732.0,
+   "w": 237.0,
+   "h": 12.75,
+   "text": "Dry sparkling rosé. glass / bottle TBC",
+   "lines": 2
+  }
+ ],
+ "cards": [
+  {
+   "n": 1,
+   "ref": "sec_cocktails",
+   "name": "EL CANTARITO",
+   "loteria_name": "EL CANTARITO\nCocktails",
+   "featured": true,
+   "box_pt": {
+    "x": 36.0,
+    "y": 138.0,
+    "w": 264.0,
+    "h": 384.0
+   },
+   "edges_pt": {
+    "left": 36.0,
+    "top": 138.0,
+    "right": 300.0,
+    "bottom": 522.0
+   },
+   "padding_pt": {
+    "left": 0.0,
+    "right": 0.0,
+    "top": 0.0,
+    "bottom": 9.0
+   },
+   "border_pt": 3.0,
+   "face_pt": {
+    "x": 39.0,
+    "y": 141.0,
+    "w": 258.0,
+    "h": 141.0
+   },
+   "cardno": "44",
+   "cardno_pt": {
+    "x": 45.0,
+    "y": 147.0,
+    "w": 24.0,
+    "h": 24.0
+   },
+   "figure_pt": {
+    "x": 75.0,
+    "y": 147.0,
+    "w": 105.0,
+    "h": 105.0
+   },
+   "figure_drawn_pt": {
+    "x": 75.0,
+    "y": 147.0,
+    "w": 105.0,
+    "h": 105.0
+   },
+   "figure_share_of_face_height": 0.74,
+   "verse_pt": 10.0,
+   "name_bar_pt": {
+    "x": 39.0,
+    "y": 258.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "space_below_name_bar_pt": 0.0,
+   "verse": "Tanto va el cántaro al agua, que se quiebra y te moja las enaguas.",
+   "verse_clipped": false,
+   "gloss": "Cocktails",
+   "row_ys_pt": {
+    "figure_top": 147.0,
+    "name_bar_top": 258.0,
+    "body_rule": 294.0,
+    "first_item_row": 312.0
+   },
+   "item_name_left_pt": [
+    49.5
+   ],
+   "price_right_pt": [
+    286.5
+   ],
+   "item_gaps_pt": [
+    12.0
+   ],
+   "line_heights_pt": [
+    12.0
+   ],
+   "items": [
+    {
+     "ref": "beta_old_fashioned",
+     "name": "Brown Butter Old Fashioned",
+     "price": "16",
+     "desc": "Brown butter-washed bourbon, demerara and bitters. Over one large cube, orange peel.",
+     "desc_lines": 2,
+     "last_line_words": 6
+    },
+    {
+     "ref": "beta_daiquiri",
+     "name": "House Daiquiri",
+     "price": "14",
+     "desc": "White rum, fresh lime and house demerara syrup. In a coupe, lime coin.",
+     "desc_lines": 2,
+     "last_line_words": 5
+    },
+    {
+     "ref": "beta_margarita",
+     "name": "Margarita",
+     "price": "15",
+     "desc": "Bright and citrus-forward: blanco tequila, fresh lime, orange liqueur and agave syrup. On the rocks, lime wheel.",
+     "desc_lines": 2,
+     "last_line_words": 9
+    },
+    {
+     "ref": "beta_manhattan",
+     "name": "Manhattan",
+     "price": "15",
+     "desc": "Spirit-forward: rye whiskey, sweet vermouth and aromatic bitters. In a coupe, cocktail cherry.",
+     "desc_lines": 2,
+     "last_line_words": 6
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "ref": "sec_spirits",
+   "name": "LA BOTELLA",
+   "loteria_name": "LA BOTELLA\nSpirits",
+   "featured": false,
+   "box_pt": {
+    "x": 36.0,
+    "y": 534.0,
+    "w": 264.0,
+    "h": 222.0
+   },
+   "edges_pt": {
+    "left": 36.0,
+    "top": 534.0,
+    "right": 300.0,
+    "bottom": 756.0
+   },
+   "padding_pt": {
+    "left": 0.0,
+    "right": 0.0,
+    "top": 0.0,
+    "bottom": 9.0
+   },
+   "border_pt": 3.0,
+   "face_pt": {
+    "x": 39.0,
+    "y": 537.0,
+    "w": 258.0,
+    "h": 81.0
+   },
+   "cardno": "8",
+   "cardno_pt": {
+    "x": 45.0,
+    "y": 543.0,
+    "w": 24.0,
+    "h": 24.0
+   },
+   "figure_pt": {
+    "x": 75.0,
+    "y": 543.0,
+    "w": 45.0,
+    "h": 45.0
+   },
+   "figure_drawn_pt": {
+    "x": 75.0,
+    "y": 543.0,
+    "w": 45.0,
+    "h": 45.0
+   },
+   "figure_share_of_face_height": 0.56,
+   "verse_pt": 10.0,
+   "name_bar_pt": {
+    "x": 39.0,
+    "y": 594.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "space_below_name_bar_pt": 0.0,
+   "verse": "La herramienta del borracho.",
+   "verse_clipped": false,
+   "gloss": "Spirits",
+   "row_ys_pt": {
+    "figure_top": 543.0,
+    "name_bar_top": 594.0,
+    "body_rule": 630.0,
+    "first_item_row": 648.0
+   },
+   "item_name_left_pt": [
+    49.5
+   ],
+   "price_right_pt": [
+    286.5
+   ],
+   "item_gaps_pt": [
+    12.0
+   ],
+   "line_heights_pt": [
+    12.0
+   ],
+   "items": [
+    {
+     "ref": "beta_blanco_tequila",
+     "name": "Blanco Tequila",
+     "price": "12",
+     "desc": "Tequila blanco, by the pour.",
+     "desc_lines": 1,
+     "last_line_words": 5
+    },
+    {
+     "ref": "beta_anejo_tequila",
+     "name": "Añejo Tequila",
+     "price": "16",
+     "desc": "Tequila añejo, by the pour.",
+     "desc_lines": 1,
+     "last_line_words": 5
+    },
+    {
+     "ref": "beta_cognac_vsop",
+     "name": "Cognac VSOP",
+     "price": "18",
+     "desc": "VSOP Cognac, by the pour.",
+     "desc_lines": 1,
+     "last_line_words": 5
+    }
+   ]
+  },
+  {
+   "n": 3,
+   "ref": "sec_beer",
+   "name": "EL BARRIL",
+   "loteria_name": "EL BARRIL\nBeer & Cider",
+   "featured": false,
+   "box_pt": {
+    "x": 312.0,
+    "y": 138.0,
+    "w": 264.0,
+    "h": 318.0
+   },
+   "edges_pt": {
+    "left": 312.0,
+    "top": 138.0,
+    "right": 576.0,
+    "bottom": 456.0
+   },
+   "padding_pt": {
+    "left": 0.0,
+    "right": 0.0,
+    "top": 0.0,
+    "bottom": 9.0
+   },
+   "border_pt": 3.0,
+   "face_pt": {
+    "x": 315.0,
+    "y": 141.0,
+    "w": 258.0,
+    "h": 141.0
+   },
+   "cardno": "9",
+   "cardno_pt": {
+    "x": 321.0,
+    "y": 147.0,
+    "w": 24.0,
+    "h": 24.0
+   },
+   "figure_pt": {
+    "x": 351.0,
+    "y": 147.0,
+    "w": 105.0,
+    "h": 105.0
+   },
+   "figure_drawn_pt": {
+    "x": 351.0,
+    "y": 147.0,
+    "w": 105.0,
+    "h": 105.0
+   },
+   "figure_share_of_face_height": 0.74,
+   "verse_pt": 10.0,
+   "name_bar_pt": {
+    "x": 315.0,
+    "y": 258.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "space_below_name_bar_pt": 0.0,
+   "verse": "Tanto bebió el albañil, que quedó como barril.",
+   "verse_clipped": false,
+   "gloss": "Beer & Cider",
+   "row_ys_pt": {
+    "figure_top": 147.0,
+    "name_bar_top": 258.0,
+    "body_rule": 294.0,
+    "first_item_row": 312.0
+   },
+   "item_name_left_pt": [
+    325.5
+   ],
+   "price_right_pt": [
+    562.5
+   ],
+   "item_gaps_pt": [
+    12.0
+   ],
+   "line_heights_pt": [
+    12.0
+   ],
+   "items": [
+    {
+     "ref": "beta_czech_pilsner",
+     "name": "Czech Pilsner",
+     "price": "7",
+     "desc": "Crisp pale lager.",
+     "desc_lines": 1,
+     "last_line_words": 3
+    },
+    {
+     "ref": "beta_dry_hopped_ipa",
+     "name": "Dry-Hopped IPA",
+     "price": "8",
+     "desc": "Hop-forward draft IPA.",
+     "desc_lines": 1,
+     "last_line_words": 3
+    },
+    {
+     "ref": "beta_amber_lager",
+     "name": "Amber Lager",
+     "price": "7",
+     "desc": "Toasty amber lager.",
+     "desc_lines": 1,
+     "last_line_words": 3
+    },
+    {
+     "ref": "beta_dry_cider",
+     "name": "Dry Cider",
+     "price": "8",
+     "desc": "Dry sparkling cider.",
+     "desc_lines": 1,
+     "last_line_words": 3
+    }
+   ]
+  },
+  {
+   "n": 4,
+   "ref": "sec_wine",
+   "name": "LA ROSA",
+   "loteria_name": "LA ROSA\nWine",
+   "featured": false,
+   "box_pt": {
+    "x": 312.0,
+    "y": 468.0,
+    "w": 264.0,
+    "h": 288.0
+   },
+   "edges_pt": {
+    "left": 312.0,
+    "top": 468.0,
+    "right": 576.0,
+    "bottom": 756.0
+   },
+   "padding_pt": {
+    "left": 0.0,
+    "right": 0.0,
+    "top": 0.0,
+    "bottom": 9.0
+   },
+   "border_pt": 3.0,
+   "face_pt": {
+    "x": 315.0,
+    "y": 471.0,
+    "w": 258.0,
+    "h": 147.0
+   },
+   "cardno": "41",
+   "cardno_pt": {
+    "x": 321.0,
+    "y": 477.0,
+    "w": 24.0,
+    "h": 24.0
+   },
+   "figure_pt": {
+    "x": 351.0,
+    "y": 477.0,
+    "w": 111.0,
+    "h": 111.0
+   },
+   "figure_drawn_pt": {
+    "x": 351.0,
+    "y": 477.0,
+    "w": 111.0,
+    "h": 111.0
+   },
+   "figure_share_of_face_height": 0.76,
+   "verse_pt": 10.0,
+   "name_bar_pt": {
+    "x": 315.0,
+    "y": 594.0,
+    "w": 258.0,
+    "h": 24.0
+   },
+   "space_below_name_bar_pt": 0.0,
+   "verse": "Rosita, Rosaura, ven que te quiero ver.",
+   "verse_clipped": false,
+   "gloss": "Wine",
+   "row_ys_pt": {
+    "figure_top": 477.0,
+    "name_bar_top": 594.0,
+    "body_rule": 630.0,
+    "first_item_row": 648.0
+   },
+   "item_name_left_pt": [
+    325.5
+   ],
+   "price_right_pt": [
+    562.5
+   ],
+   "item_gaps_pt": [
+    12.0
+   ],
+   "line_heights_pt": [
+    12.0
+   ],
+   "items": [
+    {
+     "ref": "beta_malbec",
+     "name": "Malbec",
+     "price": "12",
+     "desc": "Dry red wine.",
+     "desc_lines": 1,
+     "last_line_words": 3
+    },
+    {
+     "ref": "beta_pinot_grigio",
+     "name": "Pinot Grigio",
+     "price": "11",
+     "desc": "Dry white wine.",
+     "desc_lines": 1,
+     "last_line_words": 3
+    },
+    {
+     "ref": "beta_brut_rose",
+     "name": "Brut Rosé",
+     "price": "13",
+     "desc": "Dry sparkling rosé. glass / bottle TBC",
+     "desc_lines": 2,
+     "last_line_words": 7
+    }
+   ]
+  }
+ ],
+ "measured_checks": {
+  "printed_ink_margins_pt": {
+   "left": 36.0,
+   "top": 36.0,
+   "right": 36.0,
+   "bottom": 36.0
+  },
+  "page_margins_pt": {
+   "top": 36,
+   "right": 36,
+   "bottom": 36,
+   "left": 36
+  },
+  "card_edges_pt": {
+   "1": {
+    "left": 36.0,
+    "top": 138.0,
+    "right": 300.0,
+    "bottom": 522.0
+   },
+   "2": {
+    "left": 36.0,
+    "top": 534.0,
+    "right": 300.0,
+    "bottom": 756.0
+   },
+   "3": {
+    "left": 312.0,
+    "top": 138.0,
+    "right": 576.0,
+    "bottom": 456.0
+   },
+   "4": {
+    "left": 312.0,
+    "top": 468.0,
+    "right": 576.0,
+    "bottom": 756.0
+   }
+  },
+  "deck_within_margins": true,
+  "no_card_overflow": true,
+  "max_empty_space_in_a_card_pt": 0.0,
+  "grid_origin_deck_top_pt": 138.0,
+  "cross_card_baseline_offsets_from_6pt_grid_pt": {
+   "1": {
+    "card_top": 0.0,
+    "name_bar_top": 0.0,
+    "name_bar_bottom": 0.0,
+    "subheads": [
+     0.0,
+     0.0
+    ],
+    "item_rows": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "2": {
+    "card_top": 0.0,
+    "name_bar_top": 0.0,
+    "name_bar_bottom": 0.0,
+    "subheads": [
+     0.0
+    ],
+    "item_rows": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "3": {
+    "card_top": 0.0,
+    "name_bar_top": 0.0,
+    "name_bar_bottom": 0.0,
+    "subheads": [
+     0.0
+    ],
+    "item_rows": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "4": {
+    "card_top": 0.0,
+    "name_bar_top": 0.0,
+    "name_bar_bottom": 0.0,
+    "subheads": [
+     0.0
+    ],
+    "item_rows": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "cross_card_baseline_alignment": true,
+  "card_bottoms_pt": {
+   "1": 522.0,
+   "2": 756.0,
+   "3": 456.0,
+   "4": 756.0
+  },
+  "columns_end_same_baseline": true,
+  "figure_share_of_face": {
+   "1": 0.74,
+   "2": 0.56,
+   "3": 0.74,
+   "4": 0.76
+  },
+  "figures_at_least_40pct_of_face": true,
+  "face_share_of_card": {
+   "1": 0.37,
+   "2": 0.36,
+   "3": 0.44,
+   "4": 0.51
+  },
+  "featured_face_35_to_40pct": true,
+  "card_heights_pt": {
+   "1": 384.0,
+   "2": 222.0,
+   "3": 318.0,
+   "4": 288.0
+  },
+  "face_heights_pt": {
+   "1": 141.0,
+   "2": 81.0,
+   "3": 141.0,
+   "4": 147.0
+  },
+  "heights_multiple_of_6pt": true,
+  "card_numbers": {
+   "1": "44",
+   "2": "8",
+   "3": "9",
+   "4": "41"
+  },
+  "card_numbers_source": "traditional Don Clemente lotería numbers (El Cantarito 44, La Botella 8, El Barril 9, La Rosa 41)",
+  "verse_pt": {
+   "1": 10.0,
+   "2": 10.0,
+   "3": 10.0,
+   "4": 10.0
+  },
+  "verses_9pt_or_larger": true,
+  "title_clear_of_flags_pt": 15.0,
+  "location_to_cards_pt": 12.75,
+  "verses_unclipped": true,
+  "one_title_per_card": true,
+  "no_card_more_than_12pt_empty": true,
+  "body_baseline_pt": [
+   12.0
+  ],
+  "one_12pt_baseline": true,
+  "baseline_anchor": "deck top (y = 138 pt); every card top, name band top/bottom, subhead and item row sits on a 6 pt step from it (3 pt frame + face height = a multiple of 6)",
+  "item_gaps_pt": [
+   12.0
+  ],
+  "same_item_gap_every_card": true,
+  "same_bottom_padding_every_card": true,
+  "no_one_word_last_line_print": true,
+  "no_one_word_last_line_phone": true,
+  "accent_contrast": {
+   "rosa_on_card": 5.41,
+   "rosa_on_featured": 4.66,
+   "note": "rosa is one of the four card colours (La Rosa frame, cartouche, rule) and a papel picado colour; cream on rosa cartouche"
+  },
+  "fonts_loaded": 6,
+  "letter_png_px": [
+   2550,
+   3300
+  ],
+  "phone_png_px": [
+   1170,
+   6804
+  ],
+  "phone": {
+   "scroll_width_px": 390,
+   "tab_bar_position": "sticky",
+   "tabs": 4,
+   "tabbar_scroll_vs_client_px": [
+    358,
+    358
+   ],
+   "all_tabs_fit_390": true,
+   "active_tab_label": "EL CANTARITO",
+   "cards_stacked_single_column": true,
+   "text_rotation": [
+    "none",
+    "none",
+    "none",
+    "none"
+   ],
+   "frame_rotation": [
+    "none",
+    "none",
+    "none",
+    "none"
+   ],
+   "verse_px": [
+    15,
+    15,
+    15,
+    15
+   ],
+   "verse_9pt_or_larger": true,
+   "active_tab_bg": "rgb(166, 60, 26)",
+   "inactive_tab_bg": "rgb(251, 245, 234)",
+   "active_state_distinct": true
+  },
+  "subhead_space_above_pt": {
+   "1": [
+    12.0,
+    12.0
+   ],
+   "2": [
+    12.0
+   ],
+   "3": [
+    12.0
+   ],
+   "4": [
+    12.0
+   ]
+  },
+  "subhead_space_below_pt": {
+   "1": [
+    6.0,
+    6.0
+   ],
+   "2": [
+    6.0
+   ],
+   "3": [
+    6.0
+   ],
+   "4": [
+    6.0
+   ]
+  },
+  "subhead_space_above_equal_every_card_0_5mm": true,
+  "subhead_space_above_is_12pt": true,
+  "subhead_space_below_equal_every_card_0_5mm": true,
+  "subhead_space_below_is_6pt": true,
+  "same_item_gap_across_cards": true,
+  "price_box_heights_pt": [
+   14.25
+  ],
+  "same_price_size_across_cards": true,
+  "same_item_name_size_across_cards": true,
+  "price_colour_per_card": {
+   "1": "#A63C1A",
+   "2": "#1E3F66",
+   "3": "#2F5D50",
+   "4": "#C2185B"
+  },
+  "price_type": "Fraunces 700, 11.5/12 pt, font-feature-settings tnum + lnum",
+  "contrast": {
+   "cream_on_rosa_namebar": 5.09,
+   "cream_on_agave_blue_namebar": 9.3,
+   "marigold_number_on_ink_chip": 7.51,
+   "cream_on_agave_namebar": 6.5,
+   "cream_on_terracotta_namebar": 5.55,
+   "terracotta_price_on_featured": 5.08,
+   "agave_blue_price_on_card": 9.88,
+   "terracotta_price_on_card": 5.89,
+   "muted_tbc_on_card": 7.78,
+   "agave_price_on_card": 6.91,
+   "rosa_price_on_card": 5.41,
+   "muted_serve_cue_on_featured": 6.7
+  },
+  "serve_cues_print": {
+   "beta_old_fashioned": {
+    "lines": 1,
+    "shares_line_with_description": false,
+    "words": 6
+   },
+   "beta_daiquiri": {
+    "lines": 1,
+    "shares_line_with_description": false,
+    "words": 5
+   },
+   "beta_margarita": {
+    "lines": 1,
+    "shares_line_with_description": true,
+    "words": 5
+   },
+   "beta_manhattan": {
+    "lines": 1,
+    "shares_line_with_description": true,
+    "words": 5
+   }
+  },
+  "serve_cues_phone": {
+   "beta_old_fashioned": {
+    "lines": 1,
+    "shares_line_with_description": false,
+    "words": 6
+   },
+   "beta_daiquiri": {
+    "lines": 1,
+    "shares_line_with_description": true,
+    "words": 5
+   },
+   "beta_margarita": {
+    "lines": 1,
+    "shares_line_with_description": false,
+    "words": 5
+   },
+   "beta_manhattan": {
+    "lines": 1,
+    "shares_line_with_description": false,
+    "words": 5
+   }
+  },
+  "no_orphan_cue_print": true,
+  "no_orphan_cue_phone": true,
+  "no_orphan_cue_note": "a cue counts as orphaned if it is split across lines or leaves one word on a line; each cue is non-breaking, so it either follows its description on the same line or sits whole on the next line (see serve_cues_*.shares_line_with_description)",
+  "all_contrast_4_5_or_more": true,
+  "margins_equal_within_1mm": true
+ }
+}

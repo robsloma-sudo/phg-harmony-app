@@ -1,0 +1,720 @@
+{
+ "preview-letter.png": {
+  "page": {
+   "sel": ".page",
+   "text": "CANTINA\nCANTINA\n\nCantina\n& coc",
+   "x": 0,
+   "y": 0,
+   "w": 816,
+   "h": 1056
+  },
+  "wordmark": {
+   "sel": ".wmk",
+   "text": "CANTINA",
+   "x": 64,
+   "y": 36.4,
+   "w": 688,
+   "h": 128
+  },
+  "sub": {
+   "sel": ".sub",
+   "text": "& cocktail bar · Iowa City, Io",
+   "x": 64,
+   "y": 169,
+   "w": 338.7,
+   "h": 17
+  },
+  "columns": [
+   {
+    "sel": ".col",
+    "text": "Cocktails\nClassics\nMargarita15",
+    "x": 64,
+    "y": 376,
+    "w": 322,
+    "h": 551.9
+   },
+   {
+    "sel": ".col",
+    "text": "Spirits\nAgave\nBlanco Tequila12",
+    "x": 430,
+    "y": 376,
+    "w": 322,
+    "h": 606.7
+   }
+  ],
+  "section_heads": [
+   {
+    "sel": "h2",
+    "text": "Cocktails",
+    "x": 64,
+    "y": 376,
+    "w": 322,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Beer",
+    "x": 64,
+    "y": 723.9,
+    "w": 322,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Spirits",
+    "x": 430,
+    "y": 376,
+    "w": 322,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Wine",
+    "x": 430,
+    "y": 638.3,
+    "w": 322,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Cider",
+    "x": 430,
+    "y": 900.5,
+    "w": 322,
+    "h": 18
+   }
+  ],
+  "sub_heads": [
+   {
+    "sel": "h3",
+    "text": "Classics",
+    "x": 64,
+    "y": 407,
+    "w": 322,
+    "h": 11.5
+   },
+   {
+    "sel": "h3",
+    "text": "House Originals",
+    "x": 64,
+    "y": 546,
+    "w": 322,
+    "h": 11.5
+   },
+   {
+    "sel": "h3",
+    "text": "Draft",
+    "x": 64,
+    "y": 754.9,
+    "w": 322,
+    "h": 11.5
+   },
+   {
+    "sel": "h3",
+    "text": "Agave",
+    "x": 430,
+    "y": 407,
+    "w": 322,
+    "h": 11.5
+   },
+   {
+    "sel": "h3",
+    "text": "Brandy",
+    "x": 430,
+    "y": 528.7,
+    "w": 322,
+    "h": 11.5
+   },
+   {
+    "sel": "h3",
+    "text": "By the Glass",
+    "x": 430,
+    "y": 669.3,
+    "w": 322,
+    "h": 11.5
+   },
+   {
+    "sel": "h3",
+    "text": "Sparkling",
+    "x": 430,
+    "y": 791,
+    "w": 322,
+    "h": 11.5
+   }
+  ],
+  "items": [
+   {
+    "sel": ".it",
+    "text": "Margarita15Tequila blanco · fr",
+    "x": 64,
+    "y": 426.3,
+    "w": 322,
+    "h": 55.4
+   },
+   {
+    "sel": ".it",
+    "text": "Manhattan15Rye whiskey · sweet",
+    "x": 64,
+    "y": 494.7,
+    "w": 322,
+    "h": 38.2
+   },
+   {
+    "sel": ".it",
+    "text": "House Daiquiri14White rum · fr",
+    "x": 64,
+    "y": 565.3,
+    "w": 322,
+    "h": 38.2
+   },
+   {
+    "sel": ".it",
+    "text": "Brown Butter Old Fashioned16Br",
+    "x": 64,
+    "y": 616.5,
+    "w": 322,
+    "h": 55.4
+   },
+   {
+    "sel": ".it",
+    "text": "Czech Pilsner7Crisp pale lager",
+    "x": 64,
+    "y": 774.2,
+    "w": 322,
+    "h": 38.2
+   },
+   {
+    "sel": ".it",
+    "text": "Dry-Hopped IPA8Hop-forward dra",
+    "x": 64,
+    "y": 825.4,
+    "w": 322,
+    "h": 38.2
+   },
+   {
+    "sel": ".it",
+    "text": "Amber Lager7Toasty amber lager",
+    "x": 64,
+    "y": 876.6,
+    "w": 322,
+    "h": 38.2
+   },
+   {
+    "sel": ".it",
+    "text": "Blanco Tequila12Blanco tequila",
+    "x": 430,
+    "y": 426.3,
+    "w": 322,
+    "h": 38.2
+   },
+   {
+    "sel": ".it",
+    "text": "Añejo Tequila16Añejo tequila p",
+    "x": 430,
+    "y": 477.5,
+    "w": 322,
+    "h": 38.2
+   },
+   {
+    "sel": ".it",
+    "text": "Cognac VSOP18VSOP Cognac pour",
+    "x": 430,
+    "y": 548,
+    "w": 322,
+    "h": 38.2
+   },
+   {
+    "sel": ".it",
+    "text": "Malbec12Dry red wine",
+    "x": 430,
+    "y": 688.5,
+    "w": 322,
+    "h": 38.2
+   },
+   {
+    "sel": ".it",
+    "text": "Pinot Grigio11Dry white wine",
+    "x": 430,
+    "y": 739.8,
+    "w": 322,
+    "h": 38.2
+   },
+   {
+    "sel": ".it",
+    "text": "Brut Rosé13Dry sparkling rosé",
+    "x": 430,
+    "y": 810.3,
+    "w": 322,
+    "h": 38.2
+   },
+   {
+    "sel": ".it",
+    "text": "Dry Cider8Dry sparkling cider",
+    "x": 430,
+    "y": 931.5,
+    "w": 322,
+    "h": 38.2
+   }
+  ],
+  "text_extent": [
+   64,
+   36.37419128417969,
+   752,
+   982.71875
+  ],
+  "eye_travel": [
+   {
+    "item": "Margarita",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 12.4,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "Manhattan",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 13.4,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "House Daiquiri",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 17.2,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "Brown Butter Old Fashioned",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 28.5,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "Czech Pilsner",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 14.5,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "Dry-Hopped IPA",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 17.7,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "Amber Lager",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 14.1,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "Blanco Tequila",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 16.6,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "Añejo Tequila",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 15.9,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "Cognac VSOP",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 16.2,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "Malbec",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 10.2,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "Pinot Grigio",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 14.7,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "Brut Rosé",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 12.6,
+    "gap_pct": 1.93
+   },
+   {
+    "item": "Dry Cider",
+    "gap_px": 15.8,
+    "name_start_to_price_end_pct": 11.6,
+    "gap_pct": 1.93
+   }
+  ],
+  "wordmark_font_px": 105.99,
+  "art": {
+   "cx": 650.0,
+   "cy": 100.0,
+   "r": 200.0,
+   "bottom": 336.84,
+   "crest_y": 210.0,
+   "stroke": 2.2
+  }
+ },
+ "preview-phone.png": {
+  "page": {
+   "sel": ".page",
+   "text": "CANTINA\nCANTINA\n\nCantina\n& coc",
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 1402
+  },
+  "wordmark": {
+   "sel": ".wmk",
+   "text": "CANTINA",
+   "x": 24,
+   "y": 18.5,
+   "w": 342,
+   "h": 63
+  },
+  "sub": {
+   "sel": ".sub",
+   "text": "& cocktail bar · Iowa City, Io",
+   "x": 24,
+   "y": 188,
+   "w": 246.7,
+   "h": 14
+  },
+  "columns": [
+   {
+    "sel": ".col",
+    "text": "Cocktails\nClassics\nMargarita15",
+    "x": 24,
+    "y": 226,
+    "w": 342,
+    "h": 530.3
+   },
+   {
+    "sel": ".col",
+    "text": "Spirits\nAgave\nBlanco Tequila12",
+    "x": 24,
+    "y": 795.3,
+    "w": 342,
+    "h": 570.2
+   }
+  ],
+  "section_heads": [
+   {
+    "sel": "h2",
+    "text": "Cocktails",
+    "x": 24,
+    "y": 226,
+    "w": 342,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Beer",
+    "x": 24,
+    "y": 564.3,
+    "w": 342,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Spirits",
+    "x": 24,
+    "y": 795.3,
+    "w": 342,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Wine",
+    "x": 24,
+    "y": 1045.6,
+    "w": 342,
+    "h": 18
+   },
+   {
+    "sel": "h2",
+    "text": "Cider",
+    "x": 24,
+    "y": 1296,
+    "w": 342,
+    "h": 18
+   }
+  ],
+  "sub_heads": [
+   {
+    "sel": "h3",
+    "text": "Classics",
+    "x": 24,
+    "y": 257,
+    "w": 342,
+    "h": 11.5
+   },
+   {
+    "sel": "h3",
+    "text": "House Originals",
+    "x": 24,
+    "y": 397.6,
+    "w": 342,
+    "h": 11.5
+   },
+   {
+    "sel": "h3",
+    "text": "Draft",
+    "x": 24,
+    "y": 595.3,
+    "w": 342,
+    "h": 11.5
+   },
+   {
+    "sel": "h3",
+    "text": "Agave",
+    "x": 24,
+    "y": 826.3,
+    "w": 342,
+    "h": 11.5
+   },
+   {
+    "sel": "h3",
+    "text": "Brandy",
+    "x": 24,
+    "y": 948.8,
+    "w": 342,
+    "h": 11.5
+   },
+   {
+    "sel": "h3",
+    "text": "By the Glass",
+    "x": 24,
+    "y": 1076.6,
+    "w": 342,
+    "h": 11.5
+   },
+   {
+    "sel": "h3",
+    "text": "Sparkling",
+    "x": 24,
+    "y": 1199.1,
+    "w": 342,
+    "h": 11.5
+   }
+  ],
+  "items": [
+   {
+    "sel": ".it",
+    "text": "Margarita15Tequila blanco · fr",
+    "x": 24,
+    "y": 276.3,
+    "w": 342,
+    "h": 56.8
+   },
+   {
+    "sel": ".it",
+    "text": "Manhattan15Rye whiskey · sweet",
+    "x": 24,
+    "y": 346.1,
+    "w": 342,
+    "h": 38.6
+   },
+   {
+    "sel": ".it",
+    "text": "House Daiquiri14White rum · fr",
+    "x": 24,
+    "y": 416.9,
+    "w": 342,
+    "h": 38.6
+   },
+   {
+    "sel": ".it",
+    "text": "Brown Butter Old Fashioned16Br",
+    "x": 24,
+    "y": 468.5,
+    "w": 342,
+    "h": 56.8
+   },
+   {
+    "sel": ".it",
+    "text": "Czech Pilsner7Crisp pale lager",
+    "x": 24,
+    "y": 614.6,
+    "w": 342,
+    "h": 38.6
+   },
+   {
+    "sel": ".it",
+    "text": "Dry-Hopped IPA8Hop-forward dra",
+    "x": 24,
+    "y": 666.2,
+    "w": 342,
+    "h": 38.6
+   },
+   {
+    "sel": ".it",
+    "text": "Amber Lager7Toasty amber lager",
+    "x": 24,
+    "y": 717.7,
+    "w": 342,
+    "h": 38.6
+   },
+   {
+    "sel": ".it",
+    "text": "Blanco Tequila12Blanco tequila",
+    "x": 24,
+    "y": 845.6,
+    "w": 342,
+    "h": 38.6
+   },
+   {
+    "sel": ".it",
+    "text": "Añejo Tequila16Añejo tequila p",
+    "x": 24,
+    "y": 897.2,
+    "w": 342,
+    "h": 38.6
+   },
+   {
+    "sel": ".it",
+    "text": "Cognac VSOP18VSOP Cognac pour",
+    "x": 24,
+    "y": 968.1,
+    "w": 342,
+    "h": 38.6
+   },
+   {
+    "sel": ".it",
+    "text": "Malbec12Dry red wine",
+    "x": 24,
+    "y": 1095.9,
+    "w": 342,
+    "h": 38.6
+   },
+   {
+    "sel": ".it",
+    "text": "Pinot Grigio11Dry white wine",
+    "x": 24,
+    "y": 1147.5,
+    "w": 342,
+    "h": 38.6
+   },
+   {
+    "sel": ".it",
+    "text": "Brut Rosé13Dry sparkling rosé",
+    "x": 24,
+    "y": 1218.4,
+    "w": 342,
+    "h": 38.6
+   },
+   {
+    "sel": ".it",
+    "text": "Dry Cider8Dry sparkling cider",
+    "x": 24,
+    "y": 1327,
+    "w": 342,
+    "h": 38.6
+   }
+  ],
+  "text_extent": [
+   24,
+   18.46216583251953,
+   366,
+   1365.546875
+  ],
+  "eye_travel": [
+   {
+    "item": "Margarita",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 25.1,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "Manhattan",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 27.3,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "House Daiquiri",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 35,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "Brown Butter Old Fashioned",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 57.9,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "Czech Pilsner",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 29.5,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "Dry-Hopped IPA",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 36.1,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "Amber Lager",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 28.7,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "Blanco Tequila",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 33.7,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "Añejo Tequila",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 32.3,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "Cognac VSOP",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 33,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "Malbec",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 20.7,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "Pinot Grigio",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 29.8,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "Brut Rosé",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 25.6,
+    "gap_pct": 3.92
+   },
+   {
+    "item": "Dry Cider",
+    "gap_px": 15.3,
+    "name_start_to_price_end_pct": 23.6,
+    "gap_pct": 3.92
+   }
+  ],
+  "wordmark_font_px": 52.69,
+  "art": {
+   "cx": 315.24,
+   "cy": 49.89,
+   "r": 99.4,
+   "bottom": 167.6,
+   "crest_y": 104.56,
+   "stroke": 1.5
+  }
+ }
+}

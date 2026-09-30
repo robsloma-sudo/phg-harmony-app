@@ -1,0 +1,131 @@
+{
+ "manifest_sha256_16": "6bd0338296207153",
+ "letter_dom_diff": {
+  "items_found": 50,
+  "items_expected": 50,
+  "errors": [],
+  "missing": [],
+  "duplicates": [],
+  "pass": true
+ },
+ "letter_price_pairs": {
+  "max_gap_em": 0.42,
+  "all_same_line": true,
+  "pass": true
+ },
+ "phone_dom_diff": {
+  "items_found": 50,
+  "items_expected": 50,
+  "errors": [],
+  "missing": [],
+  "duplicates": [],
+  "pass": true
+ },
+ "phone_price_pairs": {
+  "max_gap_em": 0.42,
+  "all_same_line": true,
+  "pass": true
+ },
+ "content_counts": {
+  "cocktails": 12,
+  "spirits": 25,
+  "beer_cider": 6,
+  "wine": 3,
+  "zero_proof": 4
+ },
+ "content_counts_ok": true,
+ "spirit_sensory_printed": "all",
+ "contrast_front": {
+  "min": 5.04,
+  "at": "8",
+  "below_4_5": [],
+  "pass": true
+ },
+ "contrast_back": {
+  "min": 6.66,
+  "at": "Star size: Iowa accounts pouring the brand (PHG brand graph)",
+  "below_4_5": [],
+  "pass": true
+ },
+ "contrast_phone": {
+  "min": 5.06,
+  "at": "7",
+  "below_4_5": [],
+  "pass": true
+ },
+ "legibility_letter_min_pt": {
+  "front": 8.5,
+  "back": 8.5
+ },
+ "legibility_letter_pass": true,
+ "legibility_phone_min_px": 12,
+ "legibility_phone_pass": true,
+ "safe_area_front": {
+  "min_x": 36,
+  "min_y": 37.5,
+  "max_x": 556.39,
+  "max_y": 746.81,
+  "pass_": true
+ },
+ "safe_area_back": {
+  "min_x": 36,
+  "min_y": 36,
+  "max_x": 575.0,
+  "max_y": 754.75,
+  "pass_": true
+ },
+ "banned_lines_found": [],
+ "no_banned_lines": true,
+ "ingredient_role_order_ok": true,
+ "garnish_separate_ok": true,
+ "png": {
+  "front": [
+   2550,
+   3300
+  ],
+  "back": [
+   2550,
+   3300
+  ],
+  "phone": [
+   1170,
+   14532
+  ]
+ },
+ "phone_no_hscroll": true,
+ "fonts_loaded": [
+  "Newsreader normal",
+  "Newsreader italic",
+  "Instrument Sans normal"
+ ],
+ "text_overlaps": [],
+ "front_text_clear_of_rim": "ok",
+ "hours_phg_inferred": {
+  "5 pm": [
+   "Ranch Water",
+   "Paloma"
+  ],
+  "6 pm": [
+   "Batanga",
+   "House Daiquiri"
+  ],
+  "7 pm": [
+   "Margarita",
+   "Spicy Pineapple Margarita"
+  ],
+  "8 pm": [
+   "Mezcal Negroni",
+   "Loess"
+  ],
+  "9 pm": [
+   "Manhattan"
+  ],
+  "10 pm": [
+   "Milpa Old Fashioned",
+   "Brown Butter Old Fashioned"
+  ],
+  "11 pm": [
+   "Carajillo"
+  ]
+ }
+}

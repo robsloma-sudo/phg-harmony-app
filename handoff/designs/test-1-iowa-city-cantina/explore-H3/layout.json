@@ -1,0 +1,534 @@
+{
+ "preview-letter.png": {
+  "wordmark": {
+   "sel": ".wmk",
+   "text": "CANTINA",
+   "x": 64,
+   "y": 36.8,
+   "w": 688,
+   "h": 123
+  },
+  "sub": {
+   "sel": ".sub",
+   "text": "& cocktail bar · Iowa City, Io",
+   "x": 64,
+   "y": 167.8,
+   "w": 330.4,
+   "h": 13
+  },
+  "columns": [
+   {
+    "x": 64,
+    "y": 205,
+    "w": 240,
+    "last_line_box_bottom": 998,
+    "last_glyph_bottom": 992.5
+   },
+   {
+    "x": 328,
+    "y": 205,
+    "w": 200,
+    "last_line_box_bottom": 998,
+    "last_glyph_bottom": 992.5
+   }
+  ],
+  "section_heads": [
+   {
+    "sel": "h2",
+    "text": "Cocktails",
+    "x": 64,
+    "y": 200,
+    "w": 240,
+    "h": 39
+   },
+   {
+    "sel": "h2",
+    "text": "Beer",
+    "x": 64,
+    "y": 707,
+    "w": 240,
+    "h": 39
+   },
+   {
+    "sel": "h2",
+    "text": "Cider",
+    "x": 328,
+    "y": 200,
+    "w": 200,
+    "h": 39
+   },
+   {
+    "sel": "h2",
+    "text": "Spirits",
+    "x": 328,
+    "y": 356,
+    "w": 200,
+    "h": 39
+   },
+   {
+    "sel": "h2",
+    "text": "Wine",
+    "x": 328,
+    "y": 707,
+    "w": 200,
+    "h": 39
+   }
+  ],
+  "sub_heads": [
+   {
+    "sel": "h3",
+    "text": "Classics",
+    "x": 64,
+    "y": 256,
+    "w": 240,
+    "h": 13
+   },
+   {
+    "sel": "h3",
+    "text": "House Originals",
+    "x": 64,
+    "y": 464,
+    "w": 240,
+    "h": 13
+   },
+   {
+    "sel": "h3",
+    "text": "Draft",
+    "x": 64,
+    "y": 763,
+    "w": 240,
+    "h": 13
+   },
+   {
+    "sel": "h3",
+    "text": "Agave",
+    "x": 328,
+    "y": 412,
+    "w": 200,
+    "h": 13
+   },
+   {
+    "sel": "h3",
+    "text": "Brandy",
+    "x": 328,
+    "y": 581,
+    "w": 200,
+    "h": 13
+   },
+   {
+    "sel": "h3",
+    "text": "By the Glass",
+    "x": 328,
+    "y": 763,
+    "w": 200,
+    "h": 13
+   },
+   {
+    "sel": "h3",
+    "text": "Sparkling",
+    "x": 328,
+    "y": 932,
+    "w": 200,
+    "h": 13
+   }
+  ],
+  "eye_travel": [
+   {
+    "item": "Margarita",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 12
+   },
+   {
+    "item": "Manhattan",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 13.1
+   },
+   {
+    "item": "House Daiquiri",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 16.7
+   },
+   {
+    "item": "Brown Butter Old Fashioned",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 27.7
+   },
+   {
+    "item": "Czech Pilsner",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 14.1
+   },
+   {
+    "item": "Dry-Hopped IPA",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 17.2
+   },
+   {
+    "item": "Amber Lager",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 13.7
+   },
+   {
+    "item": "Dry Cider",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 11.3
+   },
+   {
+    "item": "Blanco Tequila",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 16.1
+   },
+   {
+    "item": "Añejo Tequila",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 15.5
+   },
+   {
+    "item": "Cognac VSOP",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 15.8
+   },
+   {
+    "item": "Malbec",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 9.9
+   },
+   {
+    "item": "Pinot Grigio",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 14.3
+   },
+   {
+    "item": "Brut Rosé",
+    "gap_px": 15.3,
+    "gap_pct": 1.87,
+    "name_start_to_price_end_pct": 12.2
+   }
+  ],
+  "grid": {
+   "u": 13,
+   "first_baseline": 215,
+   "horizon": 215,
+   "heads_subheads_names_off_grid_max_px": 0.0,
+   "descriptions_off_half_grid_max_px": 0.0,
+   "n_baselines": 26,
+   "n_desc_baselines": 14
+  },
+  "wordmark_font_px": 101.08,
+  "cap": [
+   64.0,
+   137.79
+  ],
+  "t_i_gap_css": [
+   460.48,
+   479.04
+  ],
+  "sun": {
+   "cx": 688.2,
+   "cy": 100.9,
+   "r": 220,
+   "edge_x_range_in_cap_band": [
+    468.2,
+    471.32
+   ]
+  },
+  "column_top": 205,
+  "feet_line_box": [
+   {
+    "foot": 998,
+    "extra_units": 10,
+    "section_margin_units": [
+     0,
+     1
+    ],
+    "item_units": [
+     6,
+     3
+    ],
+    "heads_on_unit_tops": "2/2"
+   },
+   {
+    "foot": 998,
+    "extra_units": 6,
+    "section_margin_units": [
+     0,
+     1,
+     1
+    ],
+    "item_units": [
+     0,
+     2,
+     2
+    ],
+    "heads_on_unit_tops": "3/3"
+   }
+  ],
+  "shift": {
+   "h2": -5,
+   "h3": -1,
+   "np": -9,
+   "d": -6.5
+  }
+ },
+ "preview-phone.png": {
+  "wordmark": {
+   "sel": ".wmk",
+   "text": "CANTINA",
+   "x": 24,
+   "y": 10.7,
+   "w": 342,
+   "h": 61
+  },
+  "sub": {
+   "sel": ".sub",
+   "text": "& cocktail bar · Iowa City, Io",
+   "x": 24,
+   "y": 83,
+   "w": 215.8,
+   "h": 10
+  },
+  "columns": [
+   {
+    "x": 24,
+    "y": 150,
+    "w": 246,
+    "last_line_box_bottom": 1815,
+    "last_glyph_bottom": 1808.5
+   }
+  ],
+  "section_heads": [
+   {
+    "sel": "h2",
+    "text": "Cocktails",
+    "x": 24,
+    "y": 147,
+    "w": 246,
+    "h": 45
+   },
+   {
+    "sel": "h2",
+    "text": "Beer",
+    "x": 24,
+    "y": 642,
+    "w": 246,
+    "h": 45
+   },
+   {
+    "sel": "h2",
+    "text": "Cider",
+    "x": 24,
+    "y": 987,
+    "w": 246,
+    "h": 45
+   },
+   {
+    "sel": "h2",
+    "text": "Spirits",
+    "x": 24,
+    "y": 1152,
+    "w": 246,
+    "h": 45
+   },
+   {
+    "sel": "h2",
+    "text": "Wine",
+    "x": 24,
+    "y": 1512,
+    "w": 246,
+    "h": 45
+   }
+  ],
+  "sub_heads": [
+   {
+    "sel": "h3",
+    "text": "Classics",
+    "x": 24,
+    "y": 210,
+    "w": 246,
+    "h": 15
+   },
+   {
+    "sel": "h3",
+    "text": "House Originals",
+    "x": 24,
+    "y": 405,
+    "w": 246,
+    "h": 15
+   },
+   {
+    "sel": "h3",
+    "text": "Draft",
+    "x": 24,
+    "y": 705,
+    "w": 246,
+    "h": 15
+   },
+   {
+    "sel": "h3",
+    "text": "Agave",
+    "x": 24,
+    "y": 1215,
+    "w": 246,
+    "h": 15
+   },
+   {
+    "sel": "h3",
+    "text": "Brandy",
+    "x": 24,
+    "y": 1380,
+    "w": 246,
+    "h": 15
+   },
+   {
+    "sel": "h3",
+    "text": "By the Glass",
+    "x": 24,
+    "y": 1575,
+    "w": 246,
+    "h": 15
+   },
+   {
+    "sel": "h3",
+    "text": "Sparkling",
+    "x": 24,
+    "y": 1740,
+    "w": 246,
+    "h": 15
+   }
+  ],
+  "eye_travel": [
+   {
+    "item": "Margarita",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 25.1
+   },
+   {
+    "item": "Manhattan",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 27.3
+   },
+   {
+    "item": "House Daiquiri",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 35
+   },
+   {
+    "item": "Brown Butter Old Fashioned",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 57.9
+   },
+   {
+    "item": "Czech Pilsner",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 29.5
+   },
+   {
+    "item": "Dry-Hopped IPA",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 36.1
+   },
+   {
+    "item": "Amber Lager",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 28.7
+   },
+   {
+    "item": "Dry Cider",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 23.6
+   },
+   {
+    "item": "Blanco Tequila",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 33.7
+   },
+   {
+    "item": "Añejo Tequila",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 32.3
+   },
+   {
+    "item": "Cognac VSOP",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 33
+   },
+   {
+    "item": "Malbec",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 20.7
+   },
+   {
+    "item": "Pinot Grigio",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 29.8
+   },
+   {
+    "item": "Brut Rosé",
+    "gap_px": 15.3,
+    "gap_pct": 3.92,
+    "name_start_to_price_end_pct": 25.6
+   }
+  ],
+  "grid": {
+   "u": 15,
+   "first_baseline": 162,
+   "horizon": 72,
+   "heads_subheads_names_off_grid_max_px": 0.0,
+   "descriptions_off_half_grid_max_px": 0.0,
+   "n_baselines": 26,
+   "n_desc_baselines": 14
+  },
+  "wordmark_font_px": 50.25,
+  "cap": [
+   24.0,
+   60.68
+  ],
+  "t_i_gap_css": [
+   221.0,
+   230.33
+  ],
+  "sun": {
+   "cx": 336.91,
+   "cy": 42.34,
+   "r": 112,
+   "edge_x_range_in_cap_band": [
+    224.91,
+    226.42
+   ]
+  },
+  "column_top": 150,
+  "feet_line_box": null,
+  "shift": {
+   "h2": -3,
+   "h3": 0,
+   "np": -9,
+   "d": -7.5
+  }
+ }
+}

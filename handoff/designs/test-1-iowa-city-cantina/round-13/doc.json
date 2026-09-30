@@ -1,0 +1,1224 @@
+{
+  "id": "menu_1",
+  "phg": {
+    "revision": 3,
+    "sync_token": "ee0078835a5451a9c9b51d90be0d49ca70c07f7255d9e4139a8dfbe06ee3727c",
+    "last_synced_at": "2026-09-23T14:38:49.023736+00:00",
+    "menu_project_id": "ddc4bb5b-70e6-4581-8aae-1b4042cd75ef"
+  },
+  "size": "letter_p",
+  "title": "Cantina & Cocktail Bar",
+  "sections": [
+    {
+      "id": "sec_cocktails",
+      "desc": "Classic and house cocktails.",
+      "name": "Cocktails",
+      "subs": [
+        {
+          "id": "sub_cocktails_classics",
+          "desc": "",
+          "name": "Clásicos · Classics",
+          "items": [
+            {
+              "id": "beta_margarita",
+              "phg": {
+                "menu_item_id": "14555870-57d2-4dd1-9722-bfd1cff8f6ce",
+                "recipe_stale": false,
+                "recipe_project_id": "6ffaffaa-1d2a-4ddc-8b1a-0dbb0bd6dd69",
+                "recipe_version_id": "f06abb74-762a-4f89-81b2-76a9e4714f3c"
+              },
+              "desc": "Bright and citrus-forward: blanco tequila, fresh lime, orange liqueur and agave syrup. On the rocks, lime wheel.",
+              "meta": {
+                "family": "Sour",
+                "section": "cocktails",
+                "beta_seed": true,
+                "canonical": "Margarita",
+                "subfamily": "classics",
+                "serve_format": "Shake with ice and strain over fresh ice",
+                "venue_heading": "Cocktails",
+                "identity_class": "known",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": []
+              },
+              "name": "Margarita",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_margarita",
+                  "label": "",
+                  "value": 15,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": [
+                {
+                  "kind": "ingredient",
+                  "name": "Tequila Blanco",
+                  "role": "Base spirit",
+                  "unit": "oz",
+                  "quantity": 2
+                },
+                {
+                  "kind": "ingredient",
+                  "name": "Fresh Lime Juice",
+                  "role": "Citrus",
+                  "unit": "oz",
+                  "quantity": 0.75
+                },
+                {
+                  "kind": "ingredient",
+                  "name": "Orange Liqueur",
+                  "role": "Liqueur",
+                  "unit": "oz",
+                  "quantity": 0.75
+                },
+                {
+                  "kind": "prep",
+                  "name": "Agave Syrup",
+                  "role": "Sweetener",
+                  "unit": "oz",
+                  "quantity": 0.5
+                }
+              ]
+            },
+            {
+              "id": "beta_manhattan",
+              "phg": {
+                "menu_item_id": "bf732e78-8130-474b-af6f-bf8a25f0122a",
+                "recipe_stale": false,
+                "recipe_project_id": "80b98160-2eac-4a46-9fc7-537ccf1a59b2",
+                "recipe_version_id": "9fb77eaa-c5eb-477c-8e21-acbc89a0e942"
+              },
+              "desc": "Rye, sweet vermouth and aromatic bitters. In a coupe, cocktail cherry.",
+              "meta": {
+                "family": "Spirit-Forward",
+                "section": "cocktails",
+                "beta_seed": true,
+                "canonical": "Manhattan",
+                "subfamily": "classics",
+                "serve_format": "Stir with ice and strain",
+                "venue_heading": "Cocktails",
+                "identity_class": "known",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": []
+              },
+              "name": "Manhattan",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_manhattan",
+                  "label": "",
+                  "value": 15,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": [
+                {
+                  "kind": "ingredient",
+                  "name": "Rye Whiskey",
+                  "role": "Base spirit",
+                  "unit": "oz",
+                  "quantity": 2
+                },
+                {
+                  "kind": "ingredient",
+                  "name": "Sweet Vermouth",
+                  "role": "Fortified wine",
+                  "unit": "oz",
+                  "quantity": 1
+                },
+                {
+                  "kind": "ingredient",
+                  "name": "Aromatic Bitters",
+                  "role": "Bitters",
+                  "unit": "dash",
+                  "quantity": 2
+                },
+                {
+                  "kind": "ingredient",
+                  "name": "Cocktail Cherry",
+                  "role": "Garnish",
+                  "unit": "each",
+                  "quantity": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "sub_cocktails_house_originals",
+          "desc": "",
+          "name": "De la Casa · House Originals",
+          "items": [
+            {
+              "id": "beta_old_fashioned",
+              "phg": {
+                "menu_item_id": "0cc4e912-1640-4410-b5b0-b1c6ebae0ee3",
+                "recipe_stale": false,
+                "recipe_project_id": "b70aeb56-8b52-4ee2-89a4-82255893bdc5",
+                "recipe_version_id": "7095fd3d-58fb-43f5-8e8f-1a0afadeafa7"
+              },
+              "desc": "Brown butter-washed bourbon, demerara and bitters. Over a large cube, orange peel.",
+              "meta": {
+                "family": "Old Fashioned",
+                "section": "cocktails",
+                "beta_seed": true,
+                "canonical": "Brown Butter Old Fashioned",
+                "subfamily": "house_originals",
+                "serve_format": "Stir with ice and strain over a large cube",
+                "venue_heading": "Cocktails",
+                "identity_class": "known",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": false
+                },
+                "missing_ingredients": [
+                  "allergen confirmation (brown butter: dairy)"
+                ]
+              },
+              "name": "Brown Butter Old Fashioned",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_old_fashioned",
+                  "label": "",
+                  "value": 16,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": [
+                {
+                  "kind": "prep",
+                  "name": "Brown Butter-Washed Bourbon",
+                  "role": "House prep / base spirit",
+                  "unit": "oz",
+                  "quantity": 2
+                },
+                {
+                  "kind": "prep",
+                  "name": "Demerara Syrup",
+                  "role": "House prep / sweetener",
+                  "unit": "oz",
+                  "quantity": 0.25
+                },
+                {
+                  "kind": "ingredient",
+                  "name": "Aromatic Bitters",
+                  "role": "Bitters",
+                  "unit": "dash",
+                  "quantity": 2
+                }
+              ]
+            },
+            {
+              "id": "beta_daiquiri",
+              "phg": {
+                "menu_item_id": "44dcba6e-20db-46b2-b887-626ed63cf0de",
+                "recipe_stale": false,
+                "recipe_project_id": "58a6d62f-0b20-4cb8-b168-69fc3fed1d31",
+                "recipe_version_id": "14d45e57-72fa-4d23-8274-24e5c80e4b12"
+              },
+              "desc": "White rum, fresh lime and house demerara syrup. In a coupe, lime coin.",
+              "meta": {
+                "family": "Sour",
+                "section": "cocktails",
+                "beta_seed": true,
+                "canonical": "House Daiquiri",
+                "subfamily": "house_originals",
+                "serve_format": "Shake with ice and fine strain",
+                "venue_heading": "Cocktails",
+                "identity_class": "known",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": []
+              },
+              "name": "House Daiquiri",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_daiquiri",
+                  "label": "",
+                  "value": 14,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": [
+                {
+                  "kind": "ingredient",
+                  "name": "White Rum",
+                  "role": "Base spirit",
+                  "unit": "oz",
+                  "quantity": 2
+                },
+                {
+                  "kind": "ingredient",
+                  "name": "Fresh Lime Juice",
+                  "role": "Citrus",
+                  "unit": "oz",
+                  "quantity": 0.75
+                },
+                {
+                  "kind": "prep",
+                  "name": "Demerara Syrup",
+                  "role": "House prep",
+                  "unit": "oz",
+                  "notes": "House 1:1 demerara syrup by weight.",
+                  "quantity": 0.75
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "items": []
+    },
+    {
+      "id": "sec_spirits",
+      "desc": "Straight pours by category.",
+      "name": "Spirits",
+      "subs": [
+        {
+          "id": "sub_spirits_agave",
+          "desc": "",
+          "name": "Agave · Agave",
+          "items": [
+            {
+              "id": "beta_blanco_tequila",
+              "phg": {
+                "menu_item_id": "19d79518-edde-4331-b64a-0b7c21f30c79",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "Blanco tequila, poured straight.",
+              "meta": {
+                "family": null,
+                "section": "spirits",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "agave",
+                "serve_format": null,
+                "venue_heading": "Spirits",
+                "identity_class": "spirit",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "brand",
+                  "pour size"
+                ]
+              },
+              "name": "Blanco Tequila",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_blanco_tequila",
+                  "label": "",
+                  "value": 12,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            },
+            {
+              "id": "beta_anejo_tequila",
+              "phg": {
+                "menu_item_id": "124f8949-6661-4c84-8333-b07754dbf859",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "Añejo tequila, poured straight.",
+              "meta": {
+                "family": null,
+                "section": "spirits",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "agave",
+                "serve_format": null,
+                "venue_heading": "Spirits",
+                "identity_class": "spirit",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "brand",
+                  "age statement",
+                  "pour size"
+                ]
+              },
+              "name": "Añejo Tequila",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_anejo_tequila",
+                  "label": "",
+                  "value": 16,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            }
+          ]
+        },
+        {
+          "id": "sub_spirits_brandy",
+          "desc": "",
+          "name": "Brandy · Brandy",
+          "items": [
+            {
+              "id": "beta_cognac_vsop",
+              "phg": {
+                "menu_item_id": "75501d63-42c4-45cc-8a86-d8cdb30d8909",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "VSOP Cognac, poured straight.",
+              "meta": {
+                "family": null,
+                "section": "spirits",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "brandy",
+                "serve_format": null,
+                "venue_heading": "Spirits",
+                "identity_class": "spirit",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "brand / house",
+                  "pour size"
+                ]
+              },
+              "name": "Cognac VSOP",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_cognac_vsop",
+                  "label": "",
+                  "value": 18,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            }
+          ]
+        }
+      ],
+      "items": []
+    },
+    {
+      "id": "sec_beer",
+      "desc": "Draft beer selections.",
+      "name": "Beer",
+      "subs": [
+        {
+          "id": "sub_beer_draft",
+          "desc": "",
+          "name": "De Barril · Draft",
+          "items": [
+            {
+              "id": "beta_czech_pilsner",
+              "phg": {
+                "menu_item_id": "90b0a7e3-c21a-43a9-bf8b-d70732e5f8bf",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "Crisp pale lager.",
+              "meta": {
+                "family": null,
+                "section": "beer",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "draft",
+                "serve_format": null,
+                "venue_heading": "Beer",
+                "identity_class": "beer",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "brewery",
+                  "ABV",
+                  "pour size"
+                ]
+              },
+              "name": "Czech Pilsner",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_czech_pilsner",
+                  "label": "",
+                  "value": 7,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            },
+            {
+              "id": "beta_dry_hopped_ipa",
+              "phg": {
+                "menu_item_id": "8fb136cd-c0a3-447b-8eb5-db55b6acf304",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "Hop-forward draft IPA.",
+              "meta": {
+                "family": null,
+                "section": "beer",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "draft",
+                "serve_format": null,
+                "venue_heading": "Beer",
+                "identity_class": "beer",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "brewery",
+                  "ABV",
+                  "pour size"
+                ]
+              },
+              "name": "Dry-Hopped IPA",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_dry_hopped_ipa",
+                  "label": "",
+                  "value": 8,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            },
+            {
+              "id": "beta_amber_lager",
+              "phg": {
+                "menu_item_id": "70657e1e-2e07-4a40-8746-cd8e23068c21",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "Toasty amber lager.",
+              "meta": {
+                "family": null,
+                "section": "beer",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "draft",
+                "serve_format": null,
+                "venue_heading": "Beer",
+                "identity_class": "beer",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "brewery",
+                  "ABV",
+                  "pour size"
+                ]
+              },
+              "name": "Amber Lager",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_amber_lager",
+                  "label": "",
+                  "value": 7,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            }
+          ]
+        }
+      ],
+      "items": []
+    },
+    {
+      "id": "sec_cider",
+      "desc": "Cider selection.",
+      "name": "Sidra · Cider",
+      "subs": [],
+      "items": [
+        {
+          "id": "beta_dry_cider",
+          "phg": {
+            "menu_item_id": "65c39a14-647f-40d9-b85b-64868341f464",
+            "recipe_stale": false,
+            "recipe_project_id": null,
+            "recipe_version_id": null
+          },
+          "desc": "Dry sparkling cider.",
+          "meta": {
+            "family": null,
+            "section": "cider",
+            "beta_seed": true,
+            "canonical": null,
+            "subfamily": null,
+            "serve_format": null,
+            "venue_heading": "Cider",
+            "identity_class": "cider",
+            "sample_content": true,
+            "public_components": {},
+            "public_visibility": {
+              "item": true,
+              "brand": true,
+              "price": true,
+              "description": true,
+              "ingredients": true,
+              "house_recipe": true
+            },
+            "missing_ingredients": [
+              "producer",
+              "ABV",
+              "format (draft or can)"
+            ]
+          },
+          "name": "Dry Cider",
+          "brand": "",
+          "badges": [],
+          "origin": {
+            "item_name": null,
+            "venue_key": null
+          },
+          "prices": [
+            {
+              "id": "p_beta_dry_cider",
+              "label": "",
+              "value": 8,
+              "source": "manual"
+            }
+          ],
+          "source": "manual",
+          "components": []
+        }
+      ]
+    },
+    {
+      "id": "sec_wine",
+      "desc": "Wine by the glass and sparkling selections.",
+      "name": "Wine",
+      "subs": [
+        {
+          "id": "sub_wine_by_the_glass",
+          "desc": "",
+          "name": "Por Copa · By the Glass",
+          "items": [
+            {
+              "id": "beta_malbec",
+              "phg": {
+                "menu_item_id": "f6f9d57e-5451-4419-b0cf-ee35ae07e499",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "Dry red wine.",
+              "meta": {
+                "family": null,
+                "section": "wine",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "by_the_glass",
+                "serve_format": null,
+                "venue_heading": "Wine",
+                "identity_class": "wine",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "producer",
+                  "region",
+                  "vintage",
+                  "pour size"
+                ]
+              },
+              "name": "Malbec",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_malbec",
+                  "label": "",
+                  "value": 12,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            },
+            {
+              "id": "beta_pinot_grigio",
+              "phg": {
+                "menu_item_id": "5ba7511f-28b7-49ca-b26f-b8e566b53777",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "Dry white wine.",
+              "meta": {
+                "family": null,
+                "section": "wine",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "by_the_glass",
+                "serve_format": null,
+                "venue_heading": "Wine",
+                "identity_class": "wine",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "producer",
+                  "region",
+                  "vintage",
+                  "pour size"
+                ]
+              },
+              "name": "Pinot Grigio",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_pinot_grigio",
+                  "label": "",
+                  "value": 11,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            }
+          ]
+        },
+        {
+          "id": "sub_wine_sparkling",
+          "desc": "",
+          "name": "Espumoso · Sparkling",
+          "items": [
+            {
+              "id": "beta_brut_rose",
+              "phg": {
+                "menu_item_id": "32a35bd3-b6e1-4b20-9619-4d7c9ad2713b",
+                "recipe_stale": false,
+                "recipe_project_id": null,
+                "recipe_version_id": null
+              },
+              "desc": "Dry sparkling rosé.",
+              "meta": {
+                "family": null,
+                "section": "wine",
+                "beta_seed": true,
+                "canonical": null,
+                "subfamily": "sparkling",
+                "serve_format": null,
+                "venue_heading": "Wine",
+                "identity_class": "wine",
+                "sample_content": true,
+                "public_components": {},
+                "public_visibility": {
+                  "item": true,
+                  "brand": true,
+                  "price": true,
+                  "description": true,
+                  "ingredients": true,
+                  "house_recipe": true
+                },
+                "missing_ingredients": [
+                  "producer",
+                  "region",
+                  "vintage",
+                  "glass or bottle (price label empty in the draft; not printed)"
+                ]
+              },
+              "name": "Brut Rosé",
+              "brand": "",
+              "badges": [],
+              "origin": {
+                "item_name": null,
+                "venue_key": null
+              },
+              "prices": [
+                {
+                  "id": "p_beta_brut_rose",
+                  "label": "",
+                  "value": 13,
+                  "source": "manual"
+                }
+              ],
+              "source": "manual",
+              "components": []
+            }
+          ]
+        }
+      ],
+      "items": []
+    }
+  ],
+  "subtitle": "Iowa City, Iowa",
+  "meta": {
+    "designer_notes": {
+      "round": 13,
+      "recipe_versions": {
+        "beta_old_fashioned": [
+          "7095fd3d-58fb-43f5-8e8f-1a0afadeafa7",
+          "Rocks",
+          "Stir with ice and strain over a large cube",
+          "Orange peel"
+        ],
+        "beta_daiquiri": [
+          "14d45e57-72fa-4d23-8274-24e5c80e4b12",
+          "Coupe",
+          "Shake with ice and fine strain",
+          "Lime coin"
+        ],
+        "beta_margarita": [
+          "f06abb74-762a-4f89-81b2-76a9e4714f3c",
+          "Rocks",
+          "Shake with ice and strain over fresh ice",
+          "Lime wheel"
+        ],
+        "beta_manhattan": [
+          "9fb77eaa-c5eb-477c-8e21-acbc89a0e942",
+          "Coupe",
+          "Stir with ice and strain",
+          "Cocktail cherry"
+        ]
+      },
+      "concept": "Lotería de la Cantina, a real tabla of four cards. Top: El Cantarito (44, cocktails, Margarita first) and La Botella (8, agave & brandy); below: La Rosa (41, wine) under El Cantarito and El Barril (9, beer & cider) under La Botella. Every card: 3 pt frame in its colour; one face template (105 pt cut-paper figure at the same x on every card, its traditional Don Clemente number as an 11 pt italic ink numeral in the figure's top-left corner, cantor verse and name band in a column at the same x offset); the drinks list below under the draft's own subheads, SPANISH · English.",
+      "cards": [
+        {
+          "n": 1,
+          "ref": "sec_cocktails",
+          "name": "Cocktails",
+          "loteria_name": "EL CANTARITO",
+          "loteria_number": 44,
+          "number_source": "traditional Don Clemente lotería numbering",
+          "cantor_verse": "Tanto va el cántaro al agua, que se quiebra y te moja las enaguas.",
+          "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
+          "figure": "cantarito",
+          "featured": true,
+          "card_h_pt": 354,
+          "face_h_pt": 117,
+          "figure_pt": 105,
+          "items": [
+            "beta_margarita",
+            "beta_manhattan",
+            "beta_old_fashioned",
+            "beta_daiquiri"
+          ]
+        },
+        {
+          "n": 2,
+          "ref": "sec_spirits",
+          "name": "Spirits",
+          "loteria_name": "LA BOTELLA",
+          "loteria_number": 8,
+          "number_source": "traditional Don Clemente lotería numbering",
+          "cantor_verse": "La herramienta del borracho.",
+          "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
+          "figure": "bottle",
+          "featured": false,
+          "card_h_pt": 276,
+          "face_h_pt": 117,
+          "figure_pt": 105,
+          "items": [
+            "beta_blanco_tequila",
+            "beta_anejo_tequila",
+            "beta_cognac_vsop"
+          ]
+        },
+        {
+          "n": 3,
+          "ref": "sec_wine",
+          "name": "Wine",
+          "loteria_name": "LA ROSA",
+          "loteria_number": 41,
+          "number_source": "traditional Don Clemente lotería numbering",
+          "cantor_verse": "Rosita, Rosaura, ven que te quiero ahora.",
+          "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
+          "figure": "rose",
+          "featured": false,
+          "card_h_pt": 264,
+          "face_h_pt": 117,
+          "figure_pt": 105,
+          "items": [
+            "beta_malbec",
+            "beta_pinot_grigio",
+            "beta_brut_rose"
+          ]
+        },
+        {
+          "n": 4,
+          "ref": "sec_beer",
+          "name": "Beer & Cider",
+          "loteria_name": "EL BARRIL",
+          "loteria_number": 9,
+          "number_source": "traditional Don Clemente lotería numbering",
+          "cantor_verse": "Tanto bebió el albañil, que quedó como barril.",
+          "verse_status": "cultural text (traditional lotería cantor verse), not an item fact; see needs_input",
+          "figure": "barrel",
+          "featured": false,
+          "card_h_pt": 306,
+          "face_h_pt": 117,
+          "figure_pt": 105,
+          "items": [
+            "beta_czech_pilsner",
+            "beta_dry_hopped_ipa",
+            "beta_amber_lager",
+            "beta_dry_cider"
+          ]
+        }
+      ],
+      "copy_sources": {
+        "beta_margarita": {
+          "printed": "Bright and citrus-forward: blanco tequila, fresh lime, orange liqueur and agave syrup.",
+          "serve_cue": "On the rocks, lime wheel.",
+          "serve_cue_source": "phg.recipe_versions f06abb74-762a-4f89-81b2-76a9e4714f3c: glassware 'Rocks' + method 'strain over fresh ice' -> 'On the rocks'; garnish 'Lime wheel'",
+          "recipe_version_id": "f06abb74-762a-4f89-81b2-76a9e4714f3c",
+          "words_from": "draft desc (tequila blanco, lime, orange liqueur, agave, 'Bright and citrus-forward'); draft_doc components 'Fresh Lime Juice', 'Agave Syrup' (prep)",
+          "gateway_rows": [],
+          "missing": []
+        },
+        "beta_manhattan": {
+          "printed": "Rye, sweet vermouth and aromatic bitters.",
+          "serve_cue": "In a coupe, cocktail cherry.",
+          "serve_cue_source": "phg.recipe_versions 9fb77eaa-c5eb-477c-8e21-acbc89a0e942: glassware 'Coupe' -> 'In a coupe'; garnish 'Cocktail cherry'",
+          "recipe_version_id": "9fb77eaa-c5eb-477c-8e21-acbc89a0e942",
+          "words_from": "menu_items.menu_description 'Rye, sweet vermouth, aromatic bitters.' (venue's own words); draft_doc components 'Rye Whiskey', 'Sweet Vermouth', 'Aromatic Bitters'",
+          "gateway_rows": [],
+          "missing": []
+        },
+        "beta_old_fashioned": {
+          "printed": "Brown butter-washed bourbon, demerara and bitters.",
+          "serve_cue": "Over a large cube, orange peel.",
+          "serve_cue_source": "phg.recipe_versions 7095fd3d-58fb-43f5-8e8f-1a0afadeafa7: method 'strain over a large cube' -> 'Over a large cube'; garnish 'Orange peel'",
+          "recipe_version_id": "7095fd3d-58fb-43f5-8e8f-1a0afadeafa7",
+          "words_from": "draft desc (brown butter-washed bourbon, demerara, bitters); draft_doc components 'Demerara Syrup' (prep), 'Aromatic Bitters'",
+          "gateway_rows": [],
+          "missing": [
+            "allergen confirmation (brown butter: dairy)"
+          ]
+        },
+        "beta_daiquiri": {
+          "printed": "White rum, fresh lime and house demerara syrup.",
+          "serve_cue": "In a coupe, lime coin.",
+          "serve_cue_source": "phg.recipe_versions 14d45e57-72fa-4d23-8274-24e5c80e4b12: glassware 'Coupe' -> 'In a coupe'; garnish 'Lime coin'",
+          "recipe_version_id": "14d45e57-72fa-4d23-8274-24e5c80e4b12",
+          "words_from": "draft desc (white rum, lime, house demerara syrup); draft_doc components 'Fresh Lime Juice', 'Demerara Syrup' ('House 1:1 demerara syrup')",
+          "gateway_rows": [],
+          "missing": []
+        },
+        "beta_blanco_tequila": {
+          "printed": "Blanco tequila, poured straight.",
+          "serve_cue": "",
+          "serve_cue_source": "",
+          "recipe_version_id": null,
+          "words_from": "draft menu_description 'Blanco tequila pour.' reworded; 'poured straight' from the draft Spirits section desc 'Straight pours by category.' (no new fact)",
+          "gateway_rows": [
+            "beverage_categories 04d72e1f-650d-490c-8ad8-54a6eb8aa766 'Blanco / plata' (notes null; authority_note 'NOM-006-SCFI-2012 §5, clase.')"
+          ],
+          "missing": [
+            "brand",
+            "pour size"
+          ]
+        },
+        "beta_anejo_tequila": {
+          "printed": "Añejo tequila, poured straight.",
+          "serve_cue": "",
+          "serve_cue_source": "",
+          "recipe_version_id": null,
+          "words_from": "draft menu_description 'Añejo tequila pour.' reworded; 'poured straight' from the draft Spirits section desc 'Straight pours by category.' (no new fact)",
+          "gateway_rows": [
+            "beverage_categories 9f4dae69-e84c-4b65-b7d9-1b417658b78d 'Añejo' (notes null; authority_note 'NOM-006-SCFI-2012 §5, clase.')"
+          ],
+          "missing": [
+            "brand",
+            "age statement",
+            "pour size"
+          ]
+        },
+        "beta_cognac_vsop": {
+          "printed": "VSOP Cognac, poured straight.",
+          "serve_cue": "",
+          "serve_cue_source": "",
+          "recipe_version_id": null,
+          "words_from": "draft menu_description 'VSOP Cognac pour.' reworded; 'poured straight' from the draft Spirits section desc 'Straight pours by category.' (no new fact)",
+          "gateway_rows": [
+            "beverage_categories a88f6e79-9438-6e3d-2656-406fad2b829f 'Cognac' (notes null)",
+            "beverage_categories bec5063c-5274-9534-91da-53a2f10c8255 'VSOP' (notes null, no age statement)"
+          ],
+          "missing": [
+            "brand / house",
+            "pour size"
+          ]
+        },
+        "beta_czech_pilsner": {
+          "printed": "Crisp pale lager.",
+          "serve_cue": "",
+          "serve_cue_source": "",
+          "recipe_version_id": null,
+          "words_from": "draft menu_description, verbatim",
+          "gateway_rows": [],
+          "missing": [
+            "brewery",
+            "ABV",
+            "pour size"
+          ]
+        },
+        "beta_dry_hopped_ipa": {
+          "printed": "Hop-forward draft IPA.",
+          "serve_cue": "",
+          "serve_cue_source": "",
+          "recipe_version_id": null,
+          "words_from": "draft menu_description, verbatim",
+          "gateway_rows": [],
+          "missing": [
+            "brewery",
+            "ABV",
+            "pour size"
+          ]
+        },
+        "beta_amber_lager": {
+          "printed": "Toasty amber lager.",
+          "serve_cue": "",
+          "serve_cue_source": "",
+          "recipe_version_id": null,
+          "words_from": "draft menu_description, verbatim",
+          "gateway_rows": [],
+          "missing": [
+            "brewery",
+            "ABV",
+            "pour size"
+          ]
+        },
+        "beta_dry_cider": {
+          "printed": "Dry sparkling cider.",
+          "serve_cue": "",
+          "serve_cue_source": "",
+          "recipe_version_id": null,
+          "words_from": "draft menu_description, verbatim",
+          "gateway_rows": [],
+          "missing": [
+            "producer",
+            "ABV",
+            "format (draft or can)"
+          ]
+        },
+        "beta_malbec": {
+          "printed": "Dry red wine.",
+          "serve_cue": "",
+          "serve_cue_source": "",
+          "recipe_version_id": null,
+          "words_from": "draft menu_description, verbatim",
+          "gateway_rows": [],
+          "missing": [
+            "producer",
+            "region",
+            "vintage",
+            "pour size"
+          ]
+        },
+        "beta_pinot_grigio": {
+          "printed": "Dry white wine.",
+          "serve_cue": "",
+          "serve_cue_source": "",
+          "recipe_version_id": null,
+          "words_from": "draft menu_description, verbatim",
+          "gateway_rows": [],
+          "missing": [
+            "producer",
+            "region",
+            "vintage",
+            "pour size"
+          ]
+        },
+        "beta_brut_rose": {
+          "printed": "Dry sparkling rosé.",
+          "serve_cue": "",
+          "serve_cue_source": "",
+          "recipe_version_id": null,
+          "words_from": "draft menu_description, verbatim",
+          "gateway_rows": [],
+          "missing": [
+            "producer",
+            "region",
+            "vintage",
+            "glass or bottle (price label empty in the draft; not printed)"
+          ]
+        }
+      },
+      "gateway_query": "Round 12 gateway calls (public.phg_designer_query): log_id 167 (beverage_categories 04d72e1f, 9f4dae69, a88f6e79, bec5063c), log_id 168 (phg.menu_items joined to phg.recipe_versions on current_recipe_version_id: glassware, garnish, method), log_id 169 (spirit_lexicon terms blanco / añejo / VSOP / plata: 0 rows), log_id 170 (spirit_lexicon columns: term, family, subfamily, notes; no definitions), log_id 171 (every beverage_categories row under tequila and cognac: blanco, añejo and VSOP have notes = null).",
+      "spirits_copy": "Each spirit prints its own draft description reworded into guest voice with no new fact: 'Blanco tequila pour.' -> 'Blanco tequila, poured straight.'; 'Añejo tequila pour.' -> 'Añejo tequila, poured straight.'; 'VSOP Cognac pour.' -> 'VSOP Cognac, poured straight.'. 'poured straight' is the draft Spirits section desc 'Straight pours by category.'.",
+      "manhattan": "'Rye, sweet vermouth and aromatic bitters.' (the venue's own menu_description words). 'Spirit-forward' (a class label) dropped; 'rye whiskey' shortened to 'rye'.",
+      "brut_rose_price": "Prints like every other price under 'Espumoso · Sparkling', unlabelled. The empty glass / bottle label is asked in needs_input only.",
+      "structure_changes": "The draft's own subheads are restored in one pattern, SPANISH · English ('y' only in Spanish, '&' only in English): Cocktails 'Clásicos · Classics' (Margarita first) then 'De la Casa · House Originals'; Spirits 'Agave · Agave' then 'Brandy · Brandy'; Beer 'De Barril · Draft' then the draft's own Cider section as 'Sidra · Cider'; Wine 'Por Copa · By the Glass' then 'Espumoso · Sparkling'. No section or subsection is merged in doc.json. 'Tintos, Blancos y Espumoso' and 'Cerveza & Sidra' are gone.",
+      "card_layout": "2 + 2 tabla with a per-column break: columns 261 / 261 pt, 18 pt gutter, 12 pt between cards. Column 1: El Cantarito 354 pt + 12 + La Rosa 264 pt; column 2: La Botella 276 pt + 12 + El Barril 306 pt; deck 630 pt on a 6 pt row grid. Card tops, faces, name bands, subheads and item rows all sit on 6 pt steps from the deck top.",
+      "break_note": "Shared rows cannot hold 12 pt or less of empty space per card with this content (El Cantarito needs about 90 pt more than La Botella), and El Barril (4 items, 2 subheads) under El Cantarito would make column 1 about 138 pt taller than column 2. So each column breaks at its own line and La Rosa sits under El Cantarito, El Barril under La Botella; the lower name bands are therefore not aligned across the gutter.",
+      "retired_junmai_ginjo": "Junmai Ginjo is a phg.menu_items row that is not in draft_doc.json; it is intentionally left off pending the venue's decision.",
+      "palette_note": "Four hues: terracotta (El Cantarito), ink (La Botella), agave green (El Barril), lotería rosa (La Rosa); marigold is the accent (papel picado and figure details). La Botella's prices and subhead rules are deep marigold #8C5A00 (5.41:1 on the card) so they no longer print flat black like its names."
+    }
+  }
+}

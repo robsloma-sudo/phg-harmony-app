@@ -1,0 +1,526 @@
+{
+ "preview-letter.png": [
+  {
+   "text": "Cocktails",
+   "role": "H2",
+   "min": 4.99
+  },
+  {
+   "text": "Beer",
+   "role": "H2",
+   "min": 4.99
+  },
+  {
+   "text": "Wine",
+   "role": "H2",
+   "min": 4.99
+  },
+  {
+   "text": "Spirits",
+   "role": "H2",
+   "min": 4.99
+  },
+  {
+   "text": "Cider",
+   "role": "H2",
+   "min": 4.99
+  },
+  {
+   "text": "& cocktail bar · Iowa City, Iowa",
+   "role": "sub",
+   "min": 6.53
+  },
+  {
+   "text": "Classics",
+   "role": "H3",
+   "min": 6.53
+  },
+  {
+   "text": "Rye whiskey · sweet vermouth · cocktail ",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Tequila blanco · lime · orange liqueur ·",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "House Originals",
+   "role": "H3",
+   "min": 6.53
+  },
+  {
+   "text": "White rum · lime · house demerara syrup",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Brown butter-washed bourbon · demerara ·",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Draft",
+   "role": "H3",
+   "min": 6.53
+  },
+  {
+   "text": "Crisp pale lager",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Hop-forward",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Toasty",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "By the Glass",
+   "role": "H3",
+   "min": 6.53
+  },
+  {
+   "text": "Dry red wine",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Dry white wine",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Sparkling",
+   "role": "H3",
+   "min": 6.53
+  },
+  {
+   "text": "Dry sparkling",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Sparkling",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Good drinks",
+   "role": "tag",
+   "min": 6.53
+  },
+  {
+   "text": "Good people",
+   "role": "tag",
+   "min": 6.53
+  },
+  {
+   "text": "Manhattan",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "15",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Margarita",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "15",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "House Daiquiri",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "14",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Brown Butter Old Fashioned",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "16",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Czech Pilsner",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "7",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Dry-Hopped IPA",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "8",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Amber Lager",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "7",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Malbec",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "12",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Pinot Grigio",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "11",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Brut Rosé",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "13",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Blanco Tequila",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "12",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Añejo Tequila",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "16",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Cognac VSOP",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "18",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Dry Cider",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "8",
+   "role": "p",
+   "min": 14.6
+  }
+ ],
+ "preview-phone.png": [
+  {
+   "text": "Cocktails",
+   "role": "H2",
+   "min": 4.99
+  },
+  {
+   "text": "Beer",
+   "role": "H2",
+   "min": 4.99
+  },
+  {
+   "text": "Wine",
+   "role": "H2",
+   "min": 4.99
+  },
+  {
+   "text": "Spirits",
+   "role": "H2",
+   "min": 4.99
+  },
+  {
+   "text": "Cider",
+   "role": "H2",
+   "min": 4.99
+  },
+  {
+   "text": "& cocktail bar · Iowa City, Iowa",
+   "role": "sub",
+   "min": 6.53
+  },
+  {
+   "text": "Classics",
+   "role": "H3",
+   "min": 6.53
+  },
+  {
+   "text": "Rye whiskey · sweet vermouth · cocktail ",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Tequila blanco · lime · orange liqueur ·",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "House Originals",
+   "role": "H3",
+   "min": 6.53
+  },
+  {
+   "text": "White rum · lime · house demerara syrup",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Brown butter-washed bourbon · demerara ·",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Draft",
+   "role": "H3",
+   "min": 6.53
+  },
+  {
+   "text": "Crisp pale lager",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Hop-forward",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Toasty",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "By the Glass",
+   "role": "H3",
+   "min": 6.53
+  },
+  {
+   "text": "Dry red wine",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Dry white wine",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Sparkling",
+   "role": "H3",
+   "min": 6.53
+  },
+  {
+   "text": "Dry sparkling",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Sparkling",
+   "role": "d",
+   "min": 6.53
+  },
+  {
+   "text": "Good drinks",
+   "role": "tag",
+   "min": 6.53
+  },
+  {
+   "text": "Good people",
+   "role": "tag",
+   "min": 6.53
+  },
+  {
+   "text": "Manhattan",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "15",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Margarita",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "15",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "House Daiquiri",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "14",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Brown Butter Old Fashioned",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "16",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Czech Pilsner",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "7",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Dry-Hopped IPA",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "8",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Amber Lager",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "7",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Malbec",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "12",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Pinot Grigio",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "11",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Brut Rosé",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "13",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Blanco Tequila",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "12",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Añejo Tequila",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "16",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Cognac VSOP",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "18",
+   "role": "p",
+   "min": 14.6
+  },
+  {
+   "text": "Dry Cider",
+   "role": "n",
+   "min": 14.6
+  },
+  {
+   "text": "8",
+   "role": "p",
+   "min": 14.6
+  }
+ ]
+}

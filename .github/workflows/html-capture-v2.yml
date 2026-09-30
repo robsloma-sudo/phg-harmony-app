@@ -1,0 +1,41 @@
+# PHG-034: HTML capture v2 worker on GitHub Actions. Works the 'html_capture_v2' lane of menu-capture-v2-api
+# (pages queued with phg_capture_v2_queue) and exits when the lane is empty. No stored secret: the API checks
+# GitHub's OIDC token (repository id + this workflow file).
+name: HTML capture v2
+on:
+  push:
+    branches: [claude/phg-gallery-html-render-j246dy]
+    paths: [".github/workflows/html-capture-v2.yml", "workers/html-capture/**"]
+  workflow_dispatch:
+    inputs:
+      max_jobs: { description: "pages per runner (0 = until empty)", default: "0" }
+permissions:
+  contents: read
+  id-token: write
+concurrency: { group: html-capture-v2, cancel-in-progress: false }
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        n: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip, cache-dependency-path: workers/html-capture/requirements.txt }
+      - run: pip install -r workers/html-capture/requirements.txt && python -m playwright install --with-deps chromium
+      - name: Fixture tests (old vs new)
+        working-directory: workers/html-capture
+        run: CHROMIUM=none python test/run_fixtures.py
+      - name: Work the v2 lane
+        working-directory: workers/html-capture
+        env:
+          PHG_WORKER_API_URL: https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/menu-capture-v2-api
+          PHG_AUTH: github-oidc
+          PHG_WORKER_ID: gh-${{ github.run_id }}-${{ matrix.n }}
+          PHG_EXIT_WHEN_EMPTY: "1"
+          PHG_MAX_JOBS: ${{ inputs.max_jobs || '0' }}
+          PHG_IDLE_SECONDS: "5"
+        run: timeout 50m python -u worker.py

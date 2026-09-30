@@ -1,0 +1,136 @@
+code,name,parent_code,type,cogs_category,labor_class,expense_category_key,budget_group,notes
+1200,Deposits,,asset,,,pass_through,,Refundable deposits (utility or lease); never an expense
+1500,Furniture & equipment,,asset,,,capital_purchase,,Capital purchases above the business's capitalization threshold
+1510,Leasehold improvements,,asset,,,capital_purchase,,Build-out and improvements to the space
+4000,Sales,,revenue,,,,,Parent of all sales
+4100,Food sales,4000,revenue,,,,,
+4200,Beverage sales,4000,revenue,,,,,
+4200-01,Liquor sales,4200,revenue,,,,,
+4200-02,Beer sales,4200,revenue,,,,,
+4200-03,Wine sales,4200,revenue,,,,,
+4250,N/A beverage sales,4200,revenue,,,,,
+4300,Merchandise sales,4000,revenue,,,,,
+4400,Events & catering sales,4000,revenue,,,,,"Private events, buyouts, catering"
+4500,Cover & admission,4000,revenue,,,,,
+4600,Service charges retained,4000,revenue,,,,,Only the part the house keeps (not tips paid out)
+4900,Discounts & comps,4000,revenue,,,,,Contra revenue: entered as negative sales
+4900-10,Discounts,4900,revenue,,,,,Contra revenue
+4900-20,Comps,4900,revenue,,,,,Contra revenue
+4900-30,Loyalty & rewards redeemed,4900,revenue,,,,,Contra revenue
+5000,Cost of goods sold,,cogs,,,,,Parent of all COGS (inventory method: begin + purchases - end)
+5100,Bar cost,5000,cogs,,,,bar_cost,
+5100-01,Liquor,5100,cogs,liquor,,,bar_cost,Spirits and liqueurs
+5100-02,Beer,5100,cogs,beer,,,bar_cost,"Beer, cider, seltzer, kegs"
+5100-03,Wine,5100,cogs,wine,,,bar_cost,"Wine, sake, vermouth by the bottle if the business counts it as wine"
+5200,Bar mix,5000,cogs,bar_mix,,,bar_cost,Everything that goes in a drink that is not alcohol
+5200-10,Mixers & syrups,5200,cogs,bar_mix,,,bar_cost,"Tonic, soda, juices, purees, syrups, bitters"
+5200-20,Bar produce & garnish,5200,cogs,bar_mix,,,bar_cost,"Citrus, herbs, fruit, garnish"
+5200-30,Ice,5200,cogs,bar_mix,,,bar_cost,Bagged or specialty ice
+5300,Food cost,5000,cogs,food,,,food_cost,
+5300-10,Meat & seafood,5300,cogs,food,,,food_cost,
+5300-20,Produce,5300,cogs,food,,,food_cost,
+5300-30,Dairy,5300,cogs,food,,,food_cost,
+5300-40,Dry goods & grocery,5300,cogs,food,,,food_cost,
+5300-50,Bakery,5300,cogs,food,,,food_cost,
+5420,N/A beverage cost,5000,cogs,na_bev,,,bar_cost,
+5420-10,N/A beverages,5420,cogs,na_bev,,,bar_cost,"Bottled and canned soft drinks, water, energy drinks, N/A beer and spirits"
+5420-20,Fountain drinks,5420,cogs,na_bev,,,bar_cost,Bag-in-box syrup and fountain CO2 billed with it
+5420-30,Coffee & tea,5420,cogs,na_bev,,,bar_cost,
+5500,Merchandise cost,5000,cogs,other,,,other_cogs,
+6100,Labor,,labor,,,,labor,
+6110,Management salaries,6100,labor,,management,,labor,
+6120,Hourly wages,6100,labor,,hourly,,labor,
+6120-10,Front of house wages,6120,labor,,hourly,,labor,
+6120-20,Back of house wages,6120,labor,,hourly,,labor,
+6120-30,Bar wages,6120,labor,,hourly,,labor,"Bartenders, barbacks"
+6130,Overtime,6100,labor,,hourly,,labor,
+6140,Contract & temp labor,6100,labor,,hourly,,labor,"Staffing agencies, event help"
+6150,Payroll taxes,6100,labor,,taxes_benefits,,labor,
+6160,Benefits,6100,labor,,taxes_benefits,,labor,"Health, retirement, staff meals if tracked here"
+6170,Workers compensation,6100,labor,,taxes_benefits,,labor,
+6200,Operating supplies,,operating_expense,,,smallwares_supplies,operating_supplies,
+6210,Paper & disposables,6200,operating_expense,,,smallwares_supplies,operating_supplies,"To-go containers, napkins, straws, cups"
+6230,Linen & uniform,6200,operating_expense,,,cleaning_linen,operating_supplies,
+6230-05,Linen & laundry service,6230,operating_expense,,,cleaning_linen,operating_supplies,"Towels, aprons, mats (rental service)"
+6230-10,Uniforms,6230,operating_expense,,,cleaning_linen,operating_supplies,
+6240,Supplies,6200,operating_expense,,,smallwares_supplies,operating_supplies,
+6240-05,Bar supplies,6240,operating_expense,,,smallwares_supplies,operating_supplies,"Bar tools, picks, pour spouts, bar mats"
+6240-10,Glassware,6240,operating_expense,,,smallwares_supplies,operating_supplies,
+6240-17,Chemicals & janitorial,6240,operating_expense,,,cleaning_linen,operating_supplies,"Dish chemicals, sanitizer, cleaning supplies"
+6240-20,Restaurant supplies,6240,operating_expense,,,smallwares_supplies,operating_supplies,
+6240-25,Smallwares,6240,operating_expense,,,smallwares_supplies,operating_supplies,"Pans, utensils, small kitchen tools"
+6240-30,Catering & event supplies,6240,operating_expense,,,smallwares_supplies,operating_supplies,
+6250,Menus & printing,6200,operating_expense,,,smallwares_supplies,operating_supplies,
+6260,Decor & flowers,6200,operating_expense,,,other_opex,operating_supplies,
+6270,Freight & delivery charges,6200,operating_expense,,,other_opex,operating_supplies,
+6270-10,Freight,6270,operating_expense,,,other_opex,operating_supplies,
+6270-20,Fuel surcharges,6270,operating_expense,,,other_opex,operating_supplies,
+6300,Facility,,operating_expense,,,,facility,
+6310,Telephone,6300,operating_expense,,,technology_software,facility,
+6315,Music & entertainment,6300,operating_expense,,,music_entertainment,facility,"DJs, bands, music licensing and streaming"
+6320,TV & internet,6300,operating_expense,,,technology_software,facility,
+6325,Grease trap & hood cleaning,6300,operating_expense,,,cleaning_linen,facility,
+6330,Pest control,6300,operating_expense,,,repairs_maintenance,facility,
+6335,CO2 & gas,6300,operating_expense,,,other_opex,facility,Beverage CO2 and nitrogen
+6335-10,CO2 tank lease,6335,operating_expense,,,other_opex,facility,
+6335-15,CO2 & gas supplies,6335,operating_expense,,,other_opex,facility,
+6340,Equipment lease & rental,6300,operating_expense,,,other_opex,facility,
+6345,Utilities,6300,operating_expense,,,utilities,facility,
+6345-05,Water & sewer,6345,operating_expense,,,utilities,facility,
+6345-10,Electric,6345,operating_expense,,,utilities,facility,
+6345-15,Gas utility,6345,operating_expense,,,utilities,facility,Natural gas or propane
+6345-20,Alarm & monitoring,6345,operating_expense,,,security,facility,
+6350,Repairs & maintenance,6300,operating_expense,,,repairs_maintenance,facility,
+6350-05,Computer & POS repair,6350,operating_expense,,,repairs_maintenance,facility,
+6350-10,Equipment repair,6350,operating_expense,,,repairs_maintenance,facility,"Refrigeration, ice machine, draft system, kitchen equipment"
+6350-15,Landscaping & grounds,6350,operating_expense,,,repairs_maintenance,facility,
+6350-20,Trash & recycling,6350,operating_expense,,,waste_disposal,facility,
+6350-25,Building repairs,6350,operating_expense,,,repairs_maintenance,facility,"Plumbing, electrical, doors, locks"
+6355,Security services,6300,operating_expense,,,security,facility,"Door staff agency, cameras"
+6360,Cleaning service,6300,operating_expense,,,cleaning_linen,facility,
+6400,General & administrative,,operating_expense,,,,g_and_a,
+6410,Office,6400,operating_expense,,,other_opex,g_and_a,
+6410-05,Office supplies,6410,operating_expense,,,other_opex,g_and_a,
+6410-10,Postage & shipping,6410,operating_expense,,,other_opex,g_and_a,
+6410-15,Computer supplies,6410,operating_expense,,,technology_software,g_and_a,
+6415,Dues & subscriptions,6400,operating_expense,,,technology_software,g_and_a,
+6415-10,POS & software,6415,operating_expense,,,technology_software,g_and_a,
+6420,Professional fees,6400,operating_expense,,,professional_fees,g_and_a,
+6420-10,Accounting & bookkeeping,6420,operating_expense,,,professional_fees,g_and_a,
+6420-20,Legal,6420,operating_expense,,,professional_fees,g_and_a,
+6420-30,Consulting,6420,operating_expense,,,professional_fees,g_and_a,
+6425,Bank charges,6400,operating_expense,,,merchant_processing,g_and_a,
+6430,Card processing fees,6400,operating_expense,,,merchant_processing,g_and_a,Only when not netted from reported sales
+6435,Payroll service fees,6400,operating_expense,,,professional_fees,g_and_a,
+6440,Insurance,6400,operating_expense,,,insurance,g_and_a,
+6440-10,General liability,6440,operating_expense,,,insurance,g_and_a,
+6440-20,Liquor liability,6440,operating_expense,,,insurance,g_and_a,
+6440-30,Property insurance,6440,operating_expense,,,insurance,g_and_a,
+6445,Licenses & permits,6400,operating_expense,,,licenses_permits,g_and_a,
+6445-10,Liquor license,6445,operating_expense,,,licenses_permits,g_and_a,
+6450,Travel & meals,6400,operating_expense,,,other_opex,g_and_a,
+6455,Training & education,6400,operating_expense,,,other_opex,g_and_a,
+6460,Delivery platform fees,6400,operating_expense,,,merchant_processing,g_and_a,Third-party delivery commissions
+6465,Cash over/short,6400,operating_expense,,,other_opex,g_and_a,
+6500,Marketing,,operating_expense,,,marketing,marketing,
+6510,Advertising,6500,operating_expense,,,marketing,marketing,
+6515,Promotions,6500,operating_expense,,,marketing,marketing,
+6520,Social media & digital,6500,operating_expense,,,marketing,marketing,"Email tools, ads, content"
+6525,Events & sponsorships,6500,operating_expense,,,marketing,marketing,
+6530,Signage & printed marketing,6500,operating_expense,,,marketing,marketing,
+6535,Donations,6500,operating_expense,,,marketing,marketing,
+6540,Rewards & loyalty program,6500,operating_expense,,,marketing,marketing,"Program cost, not the redeemed value (that is 4900-30)"
+7000,Occupancy,,operating_expense,,,rent_occupancy,occupancy,
+7010,Rent,7000,operating_expense,,,rent_occupancy,occupancy,
+7020,Common area maintenance,7000,operating_expense,,,rent_occupancy,occupancy,
+7030,Property tax,7000,operating_expense,,,property_tax,occupancy,
+7040,Percentage rent,7000,operating_expense,,,rent_occupancy,occupancy,
+8000,Other income & expense,,other_expense,,,,,Below the line: not in operating profit
+8010,Depreciation,8000,other_expense,,,,,
+8020,Amortization,8000,other_expense,,,,,
+8030,Interest expense,8000,other_expense,,,,,
+8040,Management fees,8000,other_expense,,,,,
+8050,Income tax,8000,other_expense,,,income_tax,,
+8100,Other income,8000,other_income,,,,,
+8110,Vendor rebates & allowances,8100,other_income,,,,,
+8120,Interest income,8100,other_income,,,,,

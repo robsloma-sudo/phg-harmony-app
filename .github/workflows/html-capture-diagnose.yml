@@ -1,0 +1,31 @@
+# PHG-034: capture the URLs in workers/html-capture/diagnose_urls.txt old-style and with v2 on a real browser
+# with internet access, and commit half-size previews + diagnostics to branch capture-v2-debug for review.
+name: HTML capture v2 diagnose
+on:
+  push:
+    branches: [claude/phg-gallery-html-render-j246dy]
+    paths: ["workers/html-capture/diagnose_urls.txt", "workers/html-capture/capture.py", "workers/html-capture/test/diagnose.py", ".github/workflows/html-capture-diagnose.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: html-capture-diagnose, cancel-in-progress: true }
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r workers/html-capture/requirements.txt && python -m playwright install --with-deps chromium
+      - name: Diagnose
+        working-directory: workers/html-capture
+        run: OUT=$RUNNER_TEMP/diag python test/diagnose.py
+      - name: Publish to capture-v2-debug
+        run: |
+          cd $RUNNER_TEMP/diag
+          git init -q && git checkout -q -b capture-v2-debug
+          git config user.name "phg-capture-bot" && git config user.email "actions@users.noreply.github.com"
+          echo "run ${{ github.run_id }} sha ${{ github.sha }}" > RUN.txt
+          git add -A && git commit -qm "diagnose run ${{ github.run_id }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" capture-v2-debug

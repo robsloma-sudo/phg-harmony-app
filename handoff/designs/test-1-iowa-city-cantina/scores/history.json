@@ -1,0 +1,79 @@
+{
+ "2": {
+  "combined": 83.7,
+  "critic": 87.4,
+  "content": 87.7,
+  "accuracy": 76.0,
+  "n": 15
+ },
+ "3": {
+  "combined": 83.9,
+  "critic": 85.6,
+  "content": 85.7,
+  "accuracy": 80.5,
+  "n": 15
+ },
+ "4": {
+  "combined": 65.4,
+  "critic": 63.5,
+  "content": 70.8,
+  "accuracy": 61.9,
+  "n": 15
+ },
+ "5": {
+  "combined": 64.4,
+  "critic": 64.2,
+  "content": 71.2,
+  "accuracy": 57.9,
+  "n": 15
+ },
+ "6": {
+  "combined": 68.7,
+  "critic": 69.6,
+  "content": 70.4,
+  "accuracy": 66.2,
+  "n": 15
+ },
+ "7": {
+  "combined": 68.2,
+  "critic": 66.2,
+  "content": 70.7,
+  "accuracy": 67.7,
+  "n": 15
+ },
+ "8": {
+  "combined": 70.7,
+  "critic": 70.4,
+  "content": 71.5,
+  "accuracy": 70.1,
+  "n": 15
+ },
+ "9": {
+  "combined": 66.8,
+  "critic": 63.5,
+  "content": 72.1,
+  "accuracy": 64.8,
+  "n": 15
+ },
+ "10": {
+  "combined": 68.9,
+  "critic": 69.2,
+  "content": 70.8,
+  "accuracy": 66.6,
+  "n": 15
+ },
+ "11": {
+  "combined": 71.4,
+  "critic": 75.2,
+  "content": 74.7,
+  "accuracy": 64.4,
+  "n": 15
+ },
+ "12": {
+  "combined": 71.4,
+  "critic": 73.0,
+  "content": 72.1,
+  "accuracy": 69.2,
+  "n": 15
+ }
+}

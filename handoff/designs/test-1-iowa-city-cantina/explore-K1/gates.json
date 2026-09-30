@@ -1,0 +1,209 @@
+{
+ "manifest_sha256_16": "6bd0338296207153",
+ "content_letter": {
+  "items_checked": 50,
+  "manifest_items": 50,
+  "errors": [],
+  "pass": true
+ },
+ "content_phone": {
+  "items_checked": 50,
+  "manifest_items": 50,
+  "errors": [],
+  "pass": true
+ },
+ "price_proximity_letter": {
+  "inline_rows": 25,
+  "max_gap_em": 0.544,
+  "worst": "Czech Pilsner",
+  "all_same_line": true,
+  "pass_inline": true,
+  "table_rows": 25,
+  "table_price_right_edge_spread_px": 0.0,
+  "table_guide": "each table row sits on its own furrow rule that runs through the price column",
+  "pass_table": true,
+  "pass": true
+ },
+ "price_proximity_phone": {
+  "inline_rows": 25,
+  "max_gap_em": 0.444,
+  "worst": "Margarita",
+  "all_same_line": true,
+  "pass_inline": true,
+  "table_rows": 25,
+  "table_price_right_edge_spread_px": 0,
+  "table_guide": "each table row sits on its own furrow rule that runs through the price column",
+  "pass_table": true,
+  "pass": true
+ },
+ "contrast_worst_pixel": {
+  "front": {
+   "elements": 80,
+   "min_ratio": 5.7,
+   "min_element": "15",
+   "pass": true
+  },
+  "back": {
+   "elements": 190,
+   "min_ratio": 5.7,
+   "min_element": "12",
+   "pass": true
+  },
+  "phone": {
+   "elements": 260,
+   "min_ratio": 5.7,
+   "min_element": "15",
+   "pass": true
+  },
+  "method": "page rendered twice at 300 dpi (phone 3x): with text, and with all .tx text transparent. Each text line box is narrowed to its ink box (+2 px) from the difference image, and every background pixel inside it is compared with the text colour; the minimum ratio is reported."
+ },
+ "legibility": {
+  "letter_front": {
+   "min_size": 8.5,
+   "unit": "pt",
+   "element": "Contour strips · Iowa",
+   "pass": true
+  },
+  "letter_back": {
+   "min_size": 8.5,
+   "unit": "pt",
+   "element": "class",
+   "pass": true
+  },
+  "phone": {
+   "min_size": 13.0,
+   "unit": "css px",
+   "element": "& Cocktail Bar · Iowa City, Iowa",
+   "pass": true
+  }
+ },
+ "no_taglines": {
+  "banned_hits": [],
+  "non_item_strings": [
+   "CASA · HOUSE POURS",
+   "Cerveza y sidra · Beer & cider",
+   "Clásicos · Classics",
+   "DE BARRIL · DRAFT",
+   "De la Casa · House",
+   "Destilados · Spirits",
+   "EN LATA · CANS",
+   "ESPUMOSOS · SPARKLING",
+   "MEZCAL",
+   "POR COPA · BY THE GLASS",
+   "SIDRA · CIDER",
+   "Sin alcohol · Zero proof",
+   "TEQUILA · AÑEJO",
+   "TEQUILA · BLANCO",
+   "TEQUILA · REPOSADO",
+   "Vino · Wine",
+   "Cantina",
+   "& Cocktail Bar · Iowa City, Iowa",
+   "legend: Contour strips · Iowa / Agave hileras · Jalisco / months in oak (NOM class) / unaged / age not stated / proposed — pending approval",
+   "table heads: class / NOM / region / 0 12 24 36 mo oak / $"
+  ],
+  "pass": true
+ },
+ "ingredient_role_order_and_garnish_separate": {
+  "note": "ingredients printed exactly in manifest order (manifest ingredient_order = role order); garnish is its own element on the serve line with the glass, never inside the ingredient line",
+  "pass": true
+ },
+ "safe_area": {
+  "text_ink_margins_pt": {
+   "front": {
+    "left": 36.72,
+    "top": 206.64,
+    "right": 36.24,
+    "bottom": 37.92
+   },
+   "back": {
+    "left": 36.72,
+    "top": 82.08,
+    "right": 36.24,
+    "bottom": 37.92
+   }
+  },
+  "min_pt": 36.24,
+  "required_pt": 36,
+  "menu_clears_legend": {
+   "front": true,
+   "back": true
+  },
+  "menu_vs_legend": {
+   "front": {
+    "menu_text_bottom_pt": 725.11,
+    "legend_top_pt": 742.01
+   },
+   "back": {
+    "menu_text_bottom_pt": 727.59,
+    "legend_top_pt": 736.02
+   }
+  },
+  "proposal_ring_left_pt": {
+   "front": 27.5,
+   "back": 27.5
+  },
+  "note": "text ink measured on the difference between the full render and the text-free render; the hairline proposal rings are non-text key marks that hang 9.5 pt left of the names (outside the text margin, 26.5 pt from trim).",
+  "pass": true
+ },
+ "bleed_pdf": {
+  "file": "menu-print-bleed.pdf",
+  "pages": [
+   {
+    "w_pt": 666.0,
+    "h_pt": 846.0
+   },
+   {
+    "w_pt": 666.0,
+    "h_pt": 846.0
+   }
+  ],
+  "sheet": "666 x 846 pt = 612 x 792 trim + 2 x (9 pt = 3.175 mm bleed + 18 pt slug), crop marks at trim",
+  "bleed_samples": [
+   {
+    "page": 1,
+    "top_bleed_nonwhite_frac": 1.0,
+    "left_bleed_nonwhite_frac": 1.0,
+    "top_bleed_mean_rgb": [
+     120,
+     107,
+     82
+    ]
+   },
+   {
+    "page": 2,
+    "top_bleed_nonwhite_frac": 1.0,
+    "left_bleed_nonwhite_frac": 1.0,
+    "top_bleed_mean_rgb": [
+     189,
+     159,
+     106
+    ]
+   }
+  ],
+  "pass": true
+ },
+ "formats": {
+  "front_png": [
+   2550,
+   3300
+  ],
+  "back_png": [
+   2550,
+   3300
+  ],
+  "phone_png": [
+   1170,
+   15342
+  ],
+  "phone_scroll_width_css": 390,
+  "no_horizontal_scroll": true,
+  "fonts_loaded": [
+   "IBM Plex Sans Condensed 400 normal",
+   "IBM Plex Sans Condensed 500 normal",
+   "IBM Plex Sans Condensed 600 normal",
+   "Newsreader 300 600 italic",
+   "Newsreader 300 700 normal"
+  ]
+ },
+ "all_hard_gates_pass": true
+}

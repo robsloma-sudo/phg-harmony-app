@@ -1,0 +1,5555 @@
+{
+ "id": "menu_coa_drinks",
+ "title": "Coa Cantina — Drinks",
+ "size": "legal_p",
+ "sections": [
+  {
+   "id": "sec_margaritas",
+   "name": "Margaritas",
+   "desc": "Made with blanco tequila, except the Coa Mezcal Margarita.",
+   "items": [
+    {
+     "id": "sme_173909",
+     "name": "Coa Margarita",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173909",
+       "label": "",
+       "value": 11,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173909,
+      "source_section": "Margaritas",
+      "source_name": "Coa Margarita",
+      "missing_ingredients": [
+       "all modifiers (citrus, sweetener, liqueur), rim, garnish"
+      ]
+     },
+     "origin": {
+      "item_name": "Coa Margarita",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      }
+     ]
+    },
+    {
+     "id": "sme_173910",
+     "name": "Coa Mezcal Margarita",
+     "brand": "",
+     "desc": "Made with Banhez mezcal",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173910",
+       "label": "",
+       "value": 12,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173910,
+      "source_section": "Margaritas",
+      "source_name": "Coa Mezcal Margarita",
+      "missing_ingredients": [
+       "all modifiers, rim, garnish"
+      ]
+     },
+     "origin": {
+      "item_name": "Coa Mezcal Margarita",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Banhez mezcal",
+       "role": "base",
+       "spec_source": "venue"
+      }
+     ]
+    },
+    {
+     "id": "sme_173911",
+     "name": "Cucumber Jalapeno",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173911",
+       "label": "",
+       "value": 13,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173911,
+      "source_section": "Margaritas",
+      "source_name": "Cucumber Jalapeno",
+      "missing_ingredients": [
+       "form of cucumber / jalapeno; modifiers; rim"
+      ]
+     },
+     "origin": {
+      "item_name": "Cucumber Jalapeno",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Cucumber",
+       "role": "flavour",
+       "spec_source": "name"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Jalapeno",
+       "role": "flavour",
+       "spec_source": "name"
+      }
+     ]
+    },
+    {
+     "id": "sme_173912",
+     "name": "Mango",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173912",
+       "label": "",
+       "value": 14,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173912,
+      "source_section": "Margaritas",
+      "source_name": "Mango",
+      "missing_ingredients": [
+       "form of mango; modifiers; rim"
+      ]
+     },
+     "origin": {
+      "item_name": "Mango",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Mango",
+       "role": "flavour",
+       "spec_source": "name"
+      }
+     ]
+    },
+    {
+     "id": "sme_173908",
+     "name": "Blackberry",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173908",
+       "label": "",
+       "value": 12,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173908,
+      "source_section": "Margaritas",
+      "source_name": "Blackberry",
+      "missing_ingredients": [
+       "form of blackberry; modifiers; rim"
+      ]
+     },
+     "origin": {
+      "item_name": "Blackberry",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Blackberry",
+       "role": "flavour",
+       "spec_source": "name"
+      }
+     ]
+    },
+    {
+     "id": "sme_173913",
+     "name": "Peach",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173913",
+       "label": "",
+       "value": 12,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173913,
+      "source_section": "Margaritas",
+      "source_name": "Peach",
+      "missing_ingredients": [
+       "form of peach; modifiers; rim"
+      ]
+     },
+     "origin": {
+      "item_name": "Peach",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Peach",
+       "role": "flavour",
+       "spec_source": "name"
+      }
+     ]
+    },
+    {
+     "id": "sme_173914",
+     "name": "Pineapple",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173914",
+       "label": "",
+       "value": 12,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173914,
+      "source_section": "Margaritas",
+      "source_name": "Pineapple",
+      "missing_ingredients": [
+       "form of pineapple; modifiers; rim"
+      ]
+     },
+     "origin": {
+      "item_name": "Pineapple",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Pineapple",
+       "role": "flavour",
+       "spec_source": "name"
+      }
+     ]
+    },
+    {
+     "id": "sme_173915",
+     "name": "Strawberry",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173915",
+       "label": "",
+       "value": 12,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173915,
+      "source_section": "Margaritas",
+      "source_name": "Strawberry",
+      "missing_ingredients": [
+       "form of strawberry; modifiers; rim"
+      ]
+     },
+     "origin": {
+      "item_name": "Strawberry",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Strawberry",
+       "role": "flavour",
+       "spec_source": "name"
+      }
+     ]
+    }
+   ],
+   "subs": []
+  },
+  {
+   "id": "sec_cocktails",
+   "name": "Cocktails",
+   "desc": "",
+   "items": [
+    {
+     "id": "sme_173918",
+     "name": "Coa Paloma",
+     "brand": "",
+     "desc": "Blanco tequila, fresh lime, grapefruit, Aperol, grapefruit soda, salted rim",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173918",
+       "label": "",
+       "value": 10,
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "p_sme_184680",
+       "label": "Upgrade to Don Julio Blanco",
+       "value": 4,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173918,
+      "source_section": "Cocktails",
+      "source_name": "Coa Paloma",
+      "merged_from": [
+       184680
+      ]
+     },
+     "origin": {
+      "item_name": "Coa Paloma",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Fresh lime",
+       "role": "citrus",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Grapefruit",
+       "role": "citrus",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Aperol",
+       "role": "modifier",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Grapefruit soda",
+       "role": "lengthener",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Salted rim",
+       "role": "garnish",
+       "spec_source": "venue"
+      }
+     ]
+    },
+    {
+     "id": "sme_173921",
+     "name": "Ranch Water",
+     "brand": "",
+     "desc": "Blanco tequila, fresh lime juice, Topo Chico sparkling water",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173921",
+       "label": "",
+       "value": 11,
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "p_sme_184681",
+       "label": "Upgrade to Deleon Platinum",
+       "value": 2,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173921,
+      "source_section": "Cocktails",
+      "source_name": "Ranch Water",
+      "merged_from": [
+       184681
+      ],
+      "missing_ingredients": [
+       "garnish"
+      ]
+     },
+     "origin": {
+      "item_name": "Ranch Water",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Fresh lime juice",
+       "role": "citrus",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Topo Chico sparkling water",
+       "role": "lengthener",
+       "spec_source": "venue"
+      }
+     ]
+    },
+    {
+     "id": "sme_173916",
+     "name": "Bloody Maria",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173916",
+       "label": "",
+       "value": 8,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173916,
+      "source_section": "Cocktails",
+      "source_name": "Bloody Maria",
+      "missing_ingredients": [
+       "tomato base, citrus, seasonings, rim, garnish (standard Bloody Mary spec in proposal.md, not printed)"
+      ]
+     },
+     "origin": {
+      "item_name": "Bloody Maria",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      }
+     ]
+    },
+    {
+     "id": "sme_173920",
+     "name": "Michelada",
+     "brand": "",
+     "desc": "Made with Dos Equis",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173920",
+       "label": "",
+       "value": 8,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173920,
+      "source_section": "Cocktails",
+      "source_name": "Michelada",
+      "missing_ingredients": [
+       "michelada mix / seasonings, citrus, rim, garnish"
+      ]
+     },
+     "origin": {
+      "item_name": "Michelada",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Dos Equis",
+       "role": "base",
+       "spec_source": "venue"
+      }
+     ]
+    },
+    {
+     "id": "sme_173917",
+     "name": "Cantaritos",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173917",
+       "label": "",
+       "value": 12,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173917,
+      "source_section": "Cocktails",
+      "source_name": "Cantaritos",
+      "missing_ingredients": [
+       "all modifiers, mixers, rim, garnish"
+      ]
+     },
+     "origin": {
+      "item_name": "Cantaritos",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      }
+     ]
+    },
+    {
+     "id": "sme_173919",
+     "name": "Mexican Ashtray",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173919",
+       "label": "",
+       "value": 7,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173919,
+      "source_section": "Cocktails",
+      "source_name": "Mexican Ashtray",
+      "missing_ingredients": [
+       "all modifiers and garnish"
+      ]
+     },
+     "origin": {
+      "item_name": "Mexican Ashtray",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Tequila",
+       "role": "base",
+       "spec_source": "venue"
+      }
+     ]
+    }
+   ],
+   "subs": []
+  },
+  {
+   "id": "sec_frozen",
+   "name": "Frozen Drinks",
+   "desc": "Made with blanco tequila.",
+   "items": [
+    {
+     "id": "sme_173923",
+     "name": "Mango Margarita",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173923",
+       "label": "",
+       "value": 12,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173923,
+      "source_section": "Frozen Drinks",
+      "source_name": "Mango Margarita",
+      "missing_ingredients": [
+       "frozen base / mix"
+      ]
+     },
+     "origin": {
+      "item_name": "Mango Margarita",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Mango",
+       "role": "flavour",
+       "spec_source": "name"
+      }
+     ]
+    },
+    {
+     "id": "sme_173924",
+     "name": "Strawberry Margarita",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173924",
+       "label": "",
+       "value": 10,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173924,
+      "source_section": "Frozen Drinks",
+      "source_name": "Strawberry Margarita",
+      "missing_ingredients": [
+       "frozen base / mix"
+      ]
+     },
+     "origin": {
+      "item_name": "Strawberry Margarita",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      },
+      {
+       "kind": "ingredient",
+       "name": "Strawberry",
+       "role": "flavour",
+       "spec_source": "name"
+      }
+     ]
+    },
+    {
+     "id": "sme_173925",
+     "name": "Tropical Twist Margarita",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173925",
+       "label": "",
+       "value": 11,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173925,
+      "source_section": "Frozen Drinks",
+      "source_name": "Tropical Twist Margarita",
+      "missing_ingredients": [
+       "which tropical fruits; frozen base / mix"
+      ]
+     },
+     "origin": {
+      "item_name": "Tropical Twist Margarita",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      }
+     ]
+    },
+    {
+     "id": "sme_173922",
+     "name": "Fro Po",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173922",
+       "label": "",
+       "value": 10,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173922,
+      "source_section": "Frozen Drinks",
+      "source_name": "Fro Po",
+      "missing_ingredients": [
+       "all flavours and mixers"
+      ]
+     },
+     "origin": {
+      "item_name": "Fro Po",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Blanco tequila",
+       "role": "base",
+       "spec_source": "venue"
+      }
+     ]
+    }
+   ],
+   "subs": []
+  },
+  {
+   "id": "sec_beer",
+   "name": "Beer",
+   "desc": "",
+   "items": [],
+   "subs": [
+    {
+     "id": "sub_beer_draft",
+     "name": "Draft",
+     "desc": "",
+     "items": [
+      {
+       "id": "sme_173926",
+       "name": "Dos Equis",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173926",
+         "label": "",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173926,
+        "source_section": "Drafts",
+        "source_name": "Dos Equis",
+        "missing_ingredients": [
+         "style",
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Dos Equis",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173928",
+       "name": "Pacifico",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173928",
+         "label": "",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173928,
+        "source_section": "Drafts",
+        "source_name": "Pacifico",
+        "missing_ingredients": [
+         "style",
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Pacifico",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173927",
+       "name": "Modelo Negra",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173927",
+         "label": "",
+         "value": 7,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173927,
+        "source_section": "Drafts",
+        "source_name": "Modelo Negra",
+        "missing_ingredients": [
+         "style",
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Modelo Negra",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173930",
+       "name": "Exile Swarm Golden Ale",
+       "brand": "",
+       "desc": "Golden ale",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173930",
+         "label": "",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173930,
+        "source_section": "Drafts",
+        "source_name": "Exile Swarm Golden Ale",
+        "missing_ingredients": [
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Exile Swarm Golden Ale",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173931",
+       "name": "Clockhouse Witch Slap IPA",
+       "brand": "",
+       "desc": "IPA",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173931",
+         "label": "",
+         "value": 8,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173931,
+        "source_section": "Drafts",
+        "source_name": "Clockhouse Witch Slap IPA",
+        "missing_ingredients": [
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Clockhouse Witch Slap IPA",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173929",
+       "name": "Busch Light",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173929",
+         "label": "",
+         "value": 4,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173929,
+        "source_section": "Drafts",
+        "source_name": "Busch Light",
+        "missing_ingredients": [
+         "style",
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Busch Light",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      }
+     ]
+    },
+    {
+     "id": "sub_beer_bottles",
+     "name": "Bottles & Cans",
+     "desc": "",
+     "items": [
+      {
+       "id": "sme_173937",
+       "name": "Modelo Especial",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173937",
+         "label": "",
+         "value": 5,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173937,
+        "source_section": "Bottles & Cans",
+        "source_name": "Modelo Especial",
+        "missing_ingredients": [
+         "style",
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Modelo Especial",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173936",
+       "name": "Victoria",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173936",
+         "label": "",
+         "value": 5,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173936,
+        "source_section": "Bottles & Cans",
+        "source_name": "Victoria",
+        "missing_ingredients": [
+         "style",
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Victoria",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173941",
+       "name": "Corona",
+       "brand": "",
+       "desc": "International pale lager",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173941",
+         "label": "",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173941,
+        "source_section": "Bottles & Cans",
+        "source_name": "Corona",
+        "missing_ingredients": [
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Corona",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173942",
+       "name": "Sol",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173942",
+         "label": "",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173942,
+        "source_section": "Bottles & Cans",
+        "source_name": "Sol",
+        "missing_ingredients": [
+         "style",
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Sol",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173938",
+       "name": "Tecate",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173938",
+         "label": "",
+         "value": 4,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173938,
+        "source_section": "Bottles & Cans",
+        "source_name": "Tecate",
+        "missing_ingredients": [
+         "style",
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Tecate",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173932",
+       "name": "Bud Light",
+       "brand": "",
+       "desc": "American light lager",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173932",
+         "label": "",
+         "value": 4,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173932,
+        "source_section": "Bottles & Cans",
+        "source_name": "Bud Light",
+        "missing_ingredients": [
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Bud Light",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173933",
+       "name": "Coors Light",
+       "brand": "",
+       "desc": "American light lager",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173933",
+         "label": "",
+         "value": 4,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173933,
+        "source_section": "Bottles & Cans",
+        "source_name": "Coors Light",
+        "missing_ingredients": [
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Coors Light",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173934",
+       "name": "High Life",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173934",
+         "label": "",
+         "value": 4,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173934,
+        "source_section": "Bottles & Cans",
+        "source_name": "High Life",
+        "missing_ingredients": [
+         "style",
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "High Life",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173935",
+       "name": "Busch Light",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173935",
+         "label": "",
+         "value": 4,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173935,
+        "source_section": "Bottles & Cans",
+        "source_name": "Busch Light",
+        "missing_ingredients": [
+         "style",
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Busch Light",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173940",
+       "name": "Ultra",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173940",
+         "label": "",
+         "value": 4,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173940,
+        "source_section": "Bottles & Cans",
+        "source_name": "Ultra",
+        "missing_ingredients": [
+         "style",
+         "ABV"
+        ]
+       },
+       "origin": {
+        "item_name": "Ultra",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sec_seltzer_cider",
+   "name": "Seltzer & Cider",
+   "desc": "",
+   "items": [],
+   "subs": [
+    {
+     "id": "sub_seltzer",
+     "name": "Seltzer",
+     "desc": "",
+     "items": [
+      {
+       "id": "sme_173943",
+       "name": "High Noon Peach",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173943",
+         "label": "",
+         "value": 8,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173943,
+        "source_section": "Bottles & Cans",
+        "source_name": "High Noon Peach",
+        "missing_ingredients": [
+         "base spirit / style",
+         "ABV"
+        ],
+        "placement_note": "venue lists under Bottles & Cans"
+       },
+       "origin": {
+        "item_name": "High Noon Peach",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173944",
+       "name": "High Noon Passion",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173944",
+         "label": "",
+         "value": 8,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173944,
+        "source_section": "Bottles & Cans",
+        "source_name": "High Noon Passion",
+        "missing_ingredients": [
+         "base spirit / style",
+         "ABV"
+        ],
+        "placement_note": "venue lists under Bottles & Cans"
+       },
+       "origin": {
+        "item_name": "High Noon Passion",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173945",
+       "name": "High Noon Pineapple",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173945",
+         "label": "",
+         "value": 8,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173945,
+        "source_section": "Bottles & Cans",
+        "source_name": "High Noon Pineapple",
+        "missing_ingredients": [
+         "base spirit / style",
+         "ABV"
+        ],
+        "placement_note": "venue lists under Bottles & Cans"
+       },
+       "origin": {
+        "item_name": "High Noon Pineapple",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173948",
+       "name": "High Noon Tequila Lime",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173948",
+         "label": "",
+         "value": 8,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173948,
+        "source_section": "Bottles & Cans",
+        "source_name": "High Noon Tequila Lime",
+        "missing_ingredients": [
+         "base spirit / style",
+         "ABV"
+        ],
+        "placement_note": "venue lists under Bottles & Cans"
+       },
+       "origin": {
+        "item_name": "High Noon Tequila Lime",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173949",
+       "name": "High Noon Tequila Passion Fruit",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173949",
+         "label": "",
+         "value": 8,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173949,
+        "source_section": "Bottles & Cans",
+        "source_name": "High Noon Tequila Passion Fruit",
+        "missing_ingredients": [
+         "base spirit / style",
+         "ABV"
+        ],
+        "placement_note": "venue lists under Bottles & Cans"
+       },
+       "origin": {
+        "item_name": "High Noon Tequila Passion Fruit",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173950",
+       "name": "High Noon Tequila Strawberry",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173950",
+         "label": "",
+         "value": 8,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173950,
+        "source_section": "Bottles & Cans",
+        "source_name": "High Noon Tequila Strawberry",
+        "missing_ingredients": [
+         "base spirit / style",
+         "ABV"
+        ],
+        "placement_note": "venue lists under Bottles & Cans"
+       },
+       "origin": {
+        "item_name": "High Noon Tequila Strawberry",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173951",
+       "name": "High Noon Tequila Grapefruit",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173951",
+         "label": "",
+         "value": 8,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173951,
+        "source_section": "Bottles & Cans",
+        "source_name": "High Noon Tequila Grapefruit",
+        "missing_ingredients": [
+         "base spirit / style",
+         "ABV"
+        ],
+        "placement_note": "venue lists under Bottles & Cans"
+       },
+       "origin": {
+        "item_name": "High Noon Tequila Grapefruit",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173946",
+       "name": "White Claw Black Cherry",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173946",
+         "label": "",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173946,
+        "source_section": "Bottles & Cans",
+        "source_name": "White Claw Black Cherry",
+        "missing_ingredients": [
+         "base spirit / style",
+         "ABV"
+        ],
+        "placement_note": "venue lists under Bottles & Cans"
+       },
+       "origin": {
+        "item_name": "White Claw Black Cherry",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173947",
+       "name": "White Claw Mango",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173947",
+         "label": "",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173947,
+        "source_section": "Bottles & Cans",
+        "source_name": "White Claw Mango",
+        "missing_ingredients": [
+         "base spirit / style",
+         "ABV"
+        ],
+        "placement_note": "venue lists under Bottles & Cans"
+       },
+       "origin": {
+        "item_name": "White Claw Mango",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      }
+     ]
+    },
+    {
+     "id": "sub_cider",
+     "name": "Cider",
+     "desc": "",
+     "items": [
+      {
+       "id": "sme_173939",
+       "name": "Angry Orchad Green Apple",
+       "brand": "",
+       "desc": "",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173939",
+         "label": "",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173939,
+        "source_section": "Bottles & Cans",
+        "source_name": "Angry Orchad Green Apple",
+        "missing_ingredients": [
+         "style",
+         "ABV"
+        ],
+        "placement_note": "venue lists under Bottles & Cans"
+       },
+       "origin": {
+        "item_name": "Angry Orchad Green Apple",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sec_tequila",
+   "name": "Tequila",
+   "desc": "By expression",
+   "items": [],
+   "subs": [
+    {
+     "id": "sub_teq_blanco",
+     "name": "Blanco",
+     "desc": "",
+     "items": [
+      {
+       "id": "sme_173976",
+       "name": "818",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173976",
+         "label": "Blanco",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173976,
+        "source_section": "Blanco",
+        "source_name": "818"
+       },
+       "origin": {
+        "item_name": "818",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173977",
+       "name": "Astral Blanco",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173977",
+         "label": "Blanco",
+         "value": 8,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173977,
+        "source_section": "Blanco",
+        "source_name": "Astral Blanco"
+       },
+       "origin": {
+        "item_name": "Astral Blanco",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173978",
+       "name": "Avion",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173978",
+         "label": "Blanco",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173978,
+        "source_section": "Blanco",
+        "source_name": "Avion"
+       },
+       "origin": {
+        "item_name": "Avion",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173979",
+       "name": "Casa Dragones",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173979",
+         "label": "Blanco",
+         "value": 15,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173979,
+        "source_section": "Blanco",
+        "source_name": "Casa Dragones"
+       },
+       "origin": {
+        "item_name": "Casa Dragones",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173980",
+       "name": "Casa Noble",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173980",
+         "label": "Blanco",
+         "value": 10,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173980,
+        "source_section": "Blanco",
+        "source_name": "Casa Noble"
+       },
+       "origin": {
+        "item_name": "Casa Noble",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173981",
+       "name": "Casamigos",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173981",
+         "label": "Blanco",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173981,
+        "source_section": "Blanco",
+        "source_name": "Casamigos"
+       },
+       "origin": {
+        "item_name": "Casamigos",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173982",
+       "name": "Centenario",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173982",
+         "label": "Blanco",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173982,
+        "source_section": "Blanco",
+        "source_name": "Centenario"
+       },
+       "origin": {
+        "item_name": "Centenario",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173983",
+       "name": "Cincoro",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173983",
+         "label": "Blanco",
+         "value": 15,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173983,
+        "source_section": "Blanco",
+        "source_name": "Cincoro"
+       },
+       "origin": {
+        "item_name": "Cincoro",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173984",
+       "name": "Clase Azul",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173984",
+         "label": "Blanco",
+         "value": 30,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173984,
+        "source_section": "Blanco",
+        "source_name": "Clase Azul"
+       },
+       "origin": {
+        "item_name": "Clase Azul",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173985",
+       "name": "Codigo",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173985",
+         "label": "Blanco",
+         "value": 9,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173985,
+        "source_section": "Blanco",
+        "source_name": "Codigo"
+       },
+       "origin": {
+        "item_name": "Codigo",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173986",
+       "name": "Codigo Rosa",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173986",
+         "label": "Blanco",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173986,
+        "source_section": "Blanco",
+        "source_name": "Codico Rosa",
+        "name_normalised_from": "Codico Rosa",
+        "name_normalisation_cite": "brands 13226856-a0ac-4a4f-af5b-09aa80799bd6 \"Codigo 1530\""
+       },
+       "origin": {
+        "item_name": "Codico Rosa",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173988",
+       "name": "Corazon",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173988",
+         "label": "Blanco",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173988,
+        "source_section": "Blanco",
+        "source_name": "Corazon"
+       },
+       "origin": {
+        "item_name": "Corazon",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173987",
+       "name": "Corralejo",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173987",
+         "label": "Blanco",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173987,
+        "source_section": "Blanco",
+        "source_name": "Corallejo",
+        "name_normalised_from": "Corallejo",
+        "name_normalisation_cite": "brands 1a7a2d92-8bdb-44f1-b165-335b84ac84df \"Corralejo\""
+       },
+       "origin": {
+        "item_name": "Corallejo",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173989",
+       "name": "Deleon Platinum",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173989",
+         "label": "Blanco",
+         "value": 9,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173989,
+        "source_section": "Blanco",
+        "source_name": "Deleon Platinum"
+       },
+       "origin": {
+        "item_name": "Deleon Platinum",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173990",
+       "name": "Don Julio",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173990",
+         "label": "Blanco",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173990,
+        "source_section": "Blanco",
+        "source_name": "Don Julio"
+       },
+       "origin": {
+        "item_name": "Don Julio",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173991",
+       "name": "El Mayor",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173991",
+         "label": "Blanco",
+         "value": 7,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173991,
+        "source_section": "Blanco",
+        "source_name": "El Mayor"
+       },
+       "origin": {
+        "item_name": "El Mayor",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173992",
+       "name": "El Tesoro",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173992",
+         "label": "Blanco",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173992,
+        "source_section": "Blanco",
+        "source_name": "El Tesoro"
+       },
+       "origin": {
+        "item_name": "El Tesoro",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173993",
+       "name": "Espolon",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173993",
+         "label": "Blanco",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173993,
+        "source_section": "Blanco",
+        "source_name": "Espolon"
+       },
+       "origin": {
+        "item_name": "Espolon",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173994",
+       "name": "Exotico",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173994",
+         "label": "Blanco",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173994,
+        "source_section": "Blanco",
+        "source_name": "Exotico"
+       },
+       "origin": {
+        "item_name": "Exotico",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173995",
+       "name": "Flecha Azul",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173995",
+         "label": "Blanco",
+         "value": 15,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173995,
+        "source_section": "Blanco",
+        "source_name": "Fleche Azul",
+        "name_normalised_from": "Fleche Azul",
+        "name_normalisation_cite": "brands 5b6902fd-95e3-4a2a-86cb-cc2adf978ab5 \"Flecha Azul\""
+       },
+       "origin": {
+        "item_name": "Fleche Azul",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173996",
+       "name": "Fortaleza",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173996",
+         "label": "Blanco",
+         "value": 18,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173996,
+        "source_section": "Blanco",
+        "source_name": "Fortaleza"
+       },
+       "origin": {
+        "item_name": "Fortaleza",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173997",
+       "name": "Herradura",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173997",
+         "label": "Blanco",
+         "value": 9,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173997,
+        "source_section": "Blanco",
+        "source_name": "Herradura"
+       },
+       "origin": {
+        "item_name": "Herradura",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173998",
+       "name": "House Infused Jalapeno Tequila",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173998",
+         "label": "Blanco",
+         "value": 9,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173998,
+        "source_section": "Blanco",
+        "source_name": "House Infused Jalapeno Tequila"
+       },
+       "origin": {
+        "item_name": "House Infused Jalapeno Tequila",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_173999",
+       "name": "Jaja",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_173999",
+         "label": "Blanco",
+         "value": 8,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 173999,
+        "source_section": "Blanco",
+        "source_name": "Ja Ja",
+        "name_normalised_from": "Ja Ja",
+        "name_normalisation_cite": "brands 0bb1bf79-0262-48ba-a93f-b30df910b8d3 \"Jaja\""
+       },
+       "origin": {
+        "item_name": "Ja Ja",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174000",
+       "name": "Jose Cuervo de la Familia Platino",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174000",
+         "label": "Blanco",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174000,
+        "source_section": "Blanco",
+        "source_name": "Jose Cuervo de la Familia Platino"
+       },
+       "origin": {
+        "item_name": "Jose Cuervo de la Familia Platino",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174001",
+       "name": "Lunazul",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174001",
+         "label": "Blanco",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174001,
+        "source_section": "Blanco",
+        "source_name": "Lunazul"
+       },
+       "origin": {
+        "item_name": "Lunazul",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174002",
+       "name": "Milagro",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174002",
+         "label": "Blanco",
+         "value": 7,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174002,
+        "source_section": "Blanco",
+        "source_name": "Milagro"
+       },
+       "origin": {
+        "item_name": "Milagro",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174003",
+       "name": "Milagro Select Barrel Reserve",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174003",
+         "label": "Blanco",
+         "value": 10,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174003,
+        "source_section": "Blanco",
+        "source_name": "Milagro Select Barrel Reserve"
+       },
+       "origin": {
+        "item_name": "Milagro Select Barrel Reserve",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174004",
+       "name": "Number Juan",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174004",
+         "label": "Blanco",
+         "value": 9,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174004,
+        "source_section": "Blanco",
+        "source_name": "Number Juan"
+       },
+       "origin": {
+        "item_name": "Number Juan",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174005",
+       "name": "Olmeca Altos",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174005",
+         "label": "Blanco",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174005,
+        "source_section": "Blanco",
+        "source_name": "Olmeca Altos"
+       },
+       "origin": {
+        "item_name": "Olmeca Altos",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174006",
+       "name": "Pasote",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174006",
+         "label": "Blanco",
+         "value": 15,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174006,
+        "source_section": "Blanco",
+        "source_name": "Pasote"
+       },
+       "origin": {
+        "item_name": "Pasote",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174007",
+       "name": "Patron",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174007",
+         "label": "Blanco",
+         "value": 10,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174007,
+        "source_section": "Blanco",
+        "source_name": "Patron"
+       },
+       "origin": {
+        "item_name": "Patron",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174008",
+       "name": "Roca Patron",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174008",
+         "label": "Blanco",
+         "value": 16,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174008,
+        "source_section": "Blanco",
+        "source_name": "Roca Patron"
+       },
+       "origin": {
+        "item_name": "Roca Patron",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174009",
+       "name": "Siete Leguas",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174009",
+         "label": "Blanco",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174009,
+        "source_section": "Blanco",
+        "source_name": "Siete Leguas"
+       },
+       "origin": {
+        "item_name": "Siete Leguas",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174011",
+       "name": "Tequila Ocho",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174011",
+         "label": "Blanco",
+         "value": 15,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174011,
+        "source_section": "Blanco",
+        "source_name": "Tequila Ocho"
+       },
+       "origin": {
+        "item_name": "Tequila Ocho",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174010",
+       "name": "Teremana",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174010",
+         "label": "Blanco",
+         "value": 7,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174010,
+        "source_section": "Blanco",
+        "source_name": "Tremana",
+        "name_normalised_from": "Tremana",
+        "name_normalisation_cite": "brands ff00b87a-599d-4968-acfe-4d822c303872 \"Teremana\""
+       },
+       "origin": {
+        "item_name": "Tremana",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174012",
+       "name": "Tres Generaciones",
+       "brand": "",
+       "desc": "Blanco tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174012",
+         "label": "Blanco",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174012,
+        "source_section": "Blanco",
+        "source_name": "Tres Generaciones"
+       },
+       "origin": {
+        "item_name": "Tres Generaciones",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      }
+     ]
+    },
+    {
+     "id": "sub_teq_reposado",
+     "name": "Reposado",
+     "desc": "",
+     "items": [
+      {
+       "id": "sme_174013",
+       "name": "818",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174013",
+         "label": "Reposado",
+         "value": 13,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174013,
+        "source_section": "Reposado",
+        "source_name": "818"
+       },
+       "origin": {
+        "item_name": "818",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174014",
+       "name": "Aman",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174014",
+         "label": "Reposado",
+         "value": 25,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174014,
+        "source_section": "Reposado",
+        "source_name": "Aman"
+       },
+       "origin": {
+        "item_name": "Aman",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174015",
+       "name": "Asombroso Rose",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174015",
+         "label": "Reposado",
+         "value": 13,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174015,
+        "source_section": "Reposado",
+        "source_name": "Asombroso Rose"
+       },
+       "origin": {
+        "item_name": "Asombroso Rose",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174016",
+       "name": "Avion",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174016",
+         "label": "Reposado",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174016,
+        "source_section": "Reposado",
+        "source_name": "Avion"
+       },
+       "origin": {
+        "item_name": "Avion",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174019",
+       "name": "Casa Noble",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174019",
+         "label": "Reposado",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174019,
+        "source_section": "Reposado",
+        "source_name": "Casa Noble"
+       },
+       "origin": {
+        "item_name": "Casa Noble",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174017",
+       "name": "Casamigos",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174017",
+         "label": "Reposado",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174017,
+        "source_section": "Reposado",
+        "source_name": "Casamigos"
+       },
+       "origin": {
+        "item_name": "Casamigos",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174020",
+       "name": "Centenario",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174020",
+         "label": "Reposado",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174020,
+        "source_section": "Reposado",
+        "source_name": "Centenario"
+       },
+       "origin": {
+        "item_name": "Centenario",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174021",
+       "name": "Cincoro",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174021",
+         "label": "Reposado",
+         "value": 20,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174021,
+        "source_section": "Reposado",
+        "source_name": "Cincoro"
+       },
+       "origin": {
+        "item_name": "Cincoro",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174022",
+       "name": "Clase Azul",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174022",
+         "label": "Reposado",
+         "value": 40,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174022,
+        "source_section": "Reposado",
+        "source_name": "Clase Azul"
+       },
+       "origin": {
+        "item_name": "Clase Azul",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174023",
+       "name": "Codigo",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174023",
+         "label": "Reposado",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174023,
+        "source_section": "Reposado",
+        "source_name": "Codigo"
+       },
+       "origin": {
+        "item_name": "Codigo",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174025",
+       "name": "Corazon Blantons",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174025",
+         "label": "Reposado",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174025,
+        "source_section": "Reposado",
+        "source_name": "Corazon Blantons"
+       },
+       "origin": {
+        "item_name": "Corazon Blantons",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174026",
+       "name": "Corazon E.H. Taylor",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174026",
+         "label": "Reposado",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174026,
+        "source_section": "Reposado",
+        "source_name": "Corazon E.H. Taylor"
+       },
+       "origin": {
+        "item_name": "Corazon E.H. Taylor",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174027",
+       "name": "Corazon Weller",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174027",
+         "label": "Reposado",
+         "value": 10,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174027,
+        "source_section": "Reposado",
+        "source_name": "Corazon Weller"
+       },
+       "origin": {
+        "item_name": "Corazon Weller",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174024",
+       "name": "Corralejo",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174024",
+         "label": "Reposado",
+         "value": 7,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174024,
+        "source_section": "Reposado",
+        "source_name": "Corallejo",
+        "name_normalised_from": "Corallejo",
+        "name_normalisation_cite": "brands 1a7a2d92-8bdb-44f1-b165-335b84ac84df \"Corralejo\""
+       },
+       "origin": {
+        "item_name": "Corallejo",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174028",
+       "name": "Deleon",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174028",
+         "label": "Reposado",
+         "value": 14,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174028,
+        "source_section": "Reposado",
+        "source_name": "Deleon"
+       },
+       "origin": {
+        "item_name": "Deleon",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174029",
+       "name": "Don Julio",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174029",
+         "label": "Reposado",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174029,
+        "source_section": "Reposado",
+        "source_name": "Don Julio"
+       },
+       "origin": {
+        "item_name": "Don Julio",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174030",
+       "name": "Don Julio 1942 Primavera",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174030",
+         "label": "Reposado",
+         "value": 30,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174030,
+        "source_section": "Reposado",
+        "source_name": "Don Julio 1942 Primavera"
+       },
+       "origin": {
+        "item_name": "Don Julio 1942 Primavera",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174031",
+       "name": "Don Julio Rosado",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174031",
+         "label": "Reposado",
+         "value": 40,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174031,
+        "source_section": "Reposado",
+        "source_name": "Don Julio Rosado"
+       },
+       "origin": {
+        "item_name": "Don Julio Rosado",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174032",
+       "name": "El Mayor",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174032",
+         "label": "Reposado",
+         "value": 9,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174032,
+        "source_section": "Reposado",
+        "source_name": "El Mayor"
+       },
+       "origin": {
+        "item_name": "El Mayor",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174033",
+       "name": "El Tesoro",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174033",
+         "label": "Reposado",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174033,
+        "source_section": "Reposado",
+        "source_name": "El Tesoro"
+       },
+       "origin": {
+        "item_name": "El Tesoro",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174034",
+       "name": "Espolon",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174034",
+         "label": "Reposado",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174034,
+        "source_section": "Reposado",
+        "source_name": "Espolon"
+       },
+       "origin": {
+        "item_name": "Espolon",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174035",
+       "name": "Flecha Azul",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174035",
+         "label": "Reposado",
+         "value": 13,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174035,
+        "source_section": "Reposado",
+        "source_name": "Fleche Azul",
+        "name_normalised_from": "Fleche Azul",
+        "name_normalisation_cite": "brands 5b6902fd-95e3-4a2a-86cb-cc2adf978ab5 \"Flecha Azul\""
+       },
+       "origin": {
+        "item_name": "Fleche Azul",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174036",
+       "name": "Fortaleza",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174036",
+         "label": "Reposado",
+         "value": 20,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174036,
+        "source_section": "Reposado",
+        "source_name": "Fortaleza"
+       },
+       "origin": {
+        "item_name": "Fortaleza",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174038",
+       "name": "Hacienda Vieja",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174038",
+         "label": "Reposado",
+         "value": 9,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174038,
+        "source_section": "Reposado",
+        "source_name": "Hacienda Vieja"
+       },
+       "origin": {
+        "item_name": "Hacienda Vieja",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174039",
+       "name": "Herradura",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174039",
+         "label": "Reposado",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174039,
+        "source_section": "Reposado",
+        "source_name": "Herradura"
+       },
+       "origin": {
+        "item_name": "Herradura",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174040",
+       "name": "Hussongs",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174040",
+         "label": "Reposado",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174040,
+        "source_section": "Reposado",
+        "source_name": "Hussongs"
+       },
+       "origin": {
+        "item_name": "Hussongs",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174041",
+       "name": "Jaja",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174041",
+         "label": "Reposado",
+         "value": 10,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174041,
+        "source_section": "Reposado",
+        "source_name": "Ja Ja",
+        "name_normalised_from": "Ja Ja",
+        "name_normalisation_cite": "brands 0bb1bf79-0262-48ba-a93f-b30df910b8d3 \"Jaja\""
+       },
+       "origin": {
+        "item_name": "Ja Ja",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174042",
+       "name": "Komos Rosa",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174042",
+         "label": "Reposado",
+         "value": 30,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174042,
+        "source_section": "Reposado",
+        "source_name": "Komos Rosa"
+       },
+       "origin": {
+        "item_name": "Komos Rosa",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174044",
+       "name": "La Gritona",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174044",
+         "label": "Reposado",
+         "value": 14,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174044,
+        "source_section": "Reposado",
+        "source_name": "La Gritona"
+       },
+       "origin": {
+        "item_name": "La Gritona",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174045",
+       "name": "Lunazul",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174045",
+         "label": "Reposado",
+         "value": 7,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174045,
+        "source_section": "Reposado",
+        "source_name": "Lunazul"
+       },
+       "origin": {
+        "item_name": "Lunazul",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174046",
+       "name": "Milagro",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174046",
+         "label": "Reposado",
+         "value": 7,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174046,
+        "source_section": "Reposado",
+        "source_name": "Milagro"
+       },
+       "origin": {
+        "item_name": "Milagro",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174047",
+       "name": "Milagro Select Barrel Reserve",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174047",
+         "label": "Reposado",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174047,
+        "source_section": "Reposado",
+        "source_name": "Milagro Select Barrel Reserve"
+       },
+       "origin": {
+        "item_name": "Milagro Select Barrel Reserve",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174048",
+       "name": "Number Juan",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174048",
+         "label": "Reposado",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174048,
+        "source_section": "Reposado",
+        "source_name": "Number Juan"
+       },
+       "origin": {
+        "item_name": "Number Juan",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174049",
+       "name": "Olmeca Altos",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174049",
+         "label": "Reposado",
+         "value": 6,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174049,
+        "source_section": "Reposado",
+        "source_name": "Olmeca Altos"
+       },
+       "origin": {
+        "item_name": "Olmeca Altos",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174050",
+       "name": "Pasote",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174050",
+         "label": "Reposado",
+         "value": 17,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174050,
+        "source_section": "Reposado",
+        "source_name": "Pasote"
+       },
+       "origin": {
+        "item_name": "Pasote",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174051",
+       "name": "Patron",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174051",
+         "label": "Reposado",
+         "value": 11,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174051,
+        "source_section": "Reposado",
+        "source_name": "Patron"
+       },
+       "origin": {
+        "item_name": "Patron",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174052",
+       "name": "Patron Barrel Select",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174052",
+         "label": "Reposado",
+         "value": 13,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174052,
+        "source_section": "Reposado",
+        "source_name": "Patron Barrel Select"
+       },
+       "origin": {
+        "item_name": "Patron Barrel Select",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174053",
+       "name": "Siete Leguas",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174053",
+         "label": "Reposado",
+         "value": 15,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174053,
+        "source_section": "Reposado",
+        "source_name": "Siete Leguas"
+       },
+       "origin": {
+        "item_name": "Siete Leguas",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174054",
+       "name": "Tapatio",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174054",
+         "label": "Reposado",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174054,
+        "source_section": "Reposado",
+        "source_name": "Tapatio"
+       },
+       "origin": {
+        "item_name": "Tapatio",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174043",
+       "name": "Tequila Ocho",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174043",
+         "label": "Reposado",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174043,
+        "source_section": "Reposado",
+        "source_name": "Tequila Ocho"
+       },
+       "origin": {
+        "item_name": "Tequila Ocho",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174055",
+       "name": "Teremana",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174055",
+         "label": "Reposado",
+         "value": 7,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174055,
+        "source_section": "Reposado",
+        "source_name": "Tremana",
+        "name_normalised_from": "Tremana",
+        "name_normalisation_cite": "brands ff00b87a-599d-4968-acfe-4d822c303872 \"Teremana\""
+       },
+       "origin": {
+        "item_name": "Tremana",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174056",
+       "name": "Tres Generaciones",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174056",
+         "label": "Reposado",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174056,
+        "source_section": "Reposado",
+        "source_name": "Tres Generaciones"
+       },
+       "origin": {
+        "item_name": "Tres Generaciones",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174057",
+       "name": "Tres Generaciones la Colonial",
+       "brand": "",
+       "desc": "Reposado tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174057",
+         "label": "Reposado",
+         "value": 20,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174057,
+        "source_section": "Reposado",
+        "source_name": "Tres Generaciones la Colonial"
+       },
+       "origin": {
+        "item_name": "Tres Generaciones la Colonial",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      }
+     ]
+    },
+    {
+     "id": "sub_teq_anejo",
+     "name": "Añejo",
+     "desc": "",
+     "items": [
+      {
+       "id": "sme_174058",
+       "name": "818",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174058",
+         "label": "Añejo",
+         "value": 15,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174058,
+        "source_section": "Anejo",
+        "source_name": "818"
+       },
+       "origin": {
+        "item_name": "818",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174059",
+       "name": "818 Reserve",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174059",
+         "label": "Añejo",
+         "value": 65,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174059,
+        "source_section": "Anejo",
+        "source_name": "818 Reserve"
+       },
+       "origin": {
+        "item_name": "818 Reserve",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174060",
+       "name": "Aman",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174060",
+         "label": "Añejo",
+         "value": 40,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174060,
+        "source_section": "Anejo",
+        "source_name": "Aman"
+       },
+       "origin": {
+        "item_name": "Aman",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174061",
+       "name": "Asombroso",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174061",
+         "label": "Añejo",
+         "value": 25,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174061,
+        "source_section": "Anejo",
+        "source_name": "Asombroso"
+       },
+       "origin": {
+        "item_name": "Asombroso",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174062",
+       "name": "Avion Reserva 44",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174062",
+         "label": "Añejo",
+         "value": 30,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174062,
+        "source_section": "Anejo",
+        "source_name": "Avion Reserva 44"
+       },
+       "origin": {
+        "item_name": "Avion Reserva 44",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174063",
+       "name": "Casa Noble",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174063",
+         "label": "Añejo",
+         "value": 15,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174063,
+        "source_section": "Anejo",
+        "source_name": "Casa Noble"
+       },
+       "origin": {
+        "item_name": "Casa Noble",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174064",
+       "name": "Casamigos",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174064",
+         "label": "Añejo",
+         "value": 15,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174064,
+        "source_section": "Anejo",
+        "source_name": "Casamigos"
+       },
+       "origin": {
+        "item_name": "Casamigos",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174065",
+       "name": "Centenario",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174065",
+         "label": "Añejo",
+         "value": 13,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174065,
+        "source_section": "Anejo",
+        "source_name": "Centenario"
+       },
+       "origin": {
+        "item_name": "Centenario",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174066",
+       "name": "Cincoro",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174066",
+         "label": "Añejo",
+         "value": 25,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174066,
+        "source_section": "Anejo",
+        "source_name": "Cincoro"
+       },
+       "origin": {
+        "item_name": "Cincoro",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174067",
+       "name": "Clase Azul",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174067",
+         "label": "Añejo",
+         "value": 200,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174067,
+        "source_section": "Anejo",
+        "source_name": "Clase Azul"
+       },
+       "origin": {
+        "item_name": "Clase Azul",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174068",
+       "name": "Corazon Eagle Rare",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174068",
+         "label": "Añejo",
+         "value": 25,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174068,
+        "source_section": "Anejo",
+        "source_name": "Corazon Eagle Rare"
+       },
+       "origin": {
+        "item_name": "Corazon Eagle Rare",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174070",
+       "name": "Corralejo",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174070",
+         "label": "Añejo",
+         "value": 8,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174070,
+        "source_section": "Anejo",
+        "source_name": "Corralejo"
+       },
+       "origin": {
+        "item_name": "Corralejo",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174071",
+       "name": "Corralejo Extra",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174071",
+         "label": "Añejo",
+         "value": 15,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174071,
+        "source_section": "Anejo",
+        "source_name": "Corralejo Extra",
+        "placement_note": "name says Extra; kept under Añejo as listed by the venue (round-2 rule 11)",
+        "class_cite": "products 2f16596f-5fcd-44eb-a02d-bde282f3f718 \"Corralejo Extra Anejo\" class extra_anejo"
+       },
+       "origin": {
+        "item_name": "Corralejo Extra",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174069",
+       "name": "Corralejo Extra 1821",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174069",
+         "label": "Añejo",
+         "value": 40,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174069,
+        "source_section": "Anejo",
+        "source_name": "Corralejo Extra 1821",
+        "placement_note": "name says Extra; kept under Añejo as listed by the venue (round-2 rule 11)"
+       },
+       "origin": {
+        "item_name": "Corralejo Extra 1821",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174072",
+       "name": "Don Julio",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174072",
+         "label": "Añejo",
+         "value": 13,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174072,
+        "source_section": "Anejo",
+        "source_name": "Don Julio"
+       },
+       "origin": {
+        "item_name": "Don Julio",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174073",
+       "name": "Don Julio 1942",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174073",
+         "label": "Añejo",
+         "value": 40,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174073,
+        "source_section": "Anejo",
+        "source_name": "Don Julio 1942"
+       },
+       "origin": {
+        "item_name": "Don Julio 1942",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174074",
+       "name": "Don Julio 70",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174074",
+         "label": "Añejo",
+         "value": 16,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174074,
+        "source_section": "Anejo",
+        "source_name": "Don Julio 70"
+       },
+       "origin": {
+        "item_name": "Don Julio 70",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174075",
+       "name": "Don Julio Real Extra",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174075",
+         "label": "Añejo",
+         "value": 110,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174075,
+        "source_section": "Anejo",
+        "source_name": "Don Julio Real Extra",
+        "placement_note": "name says Extra; kept under Añejo as listed by the venue (round-2 rule 11)"
+       },
+       "origin": {
+        "item_name": "Don Julio Real Extra",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174076",
+       "name": "El Mayor",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174076",
+         "label": "Añejo",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174076,
+        "source_section": "Anejo",
+        "source_name": "El Mayor"
+       },
+       "origin": {
+        "item_name": "El Mayor",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174077",
+       "name": "El Tesoro",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174077",
+         "label": "Añejo",
+         "value": 16,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174077,
+        "source_section": "Anejo",
+        "source_name": "El Tesoro"
+       },
+       "origin": {
+        "item_name": "El Tesoro",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174078",
+       "name": "Espolon",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174078",
+         "label": "Añejo",
+         "value": 7,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174078,
+        "source_section": "Anejo",
+        "source_name": "Espolon"
+       },
+       "origin": {
+        "item_name": "Espolon",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174080",
+       "name": "Flecha Azul",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174080",
+         "label": "Añejo",
+         "value": 17,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174080,
+        "source_section": "Anejo",
+        "source_name": "Fleche Azul",
+        "name_normalised_from": "Fleche Azul",
+        "name_normalisation_cite": "brands 5b6902fd-95e3-4a2a-86cb-cc2adf978ab5 \"Flecha Azul\""
+       },
+       "origin": {
+        "item_name": "Fleche Azul",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174082",
+       "name": "Gran Coramino",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174082",
+         "label": "Añejo",
+         "value": 35,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174082,
+        "source_section": "Anejo",
+        "source_name": "Gran Coramino"
+       },
+       "origin": {
+        "item_name": "Gran Coramino",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174081",
+       "name": "Gran Corralejo",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174081",
+         "label": "Añejo",
+         "value": 25,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174081,
+        "source_section": "Anejo",
+        "source_name": "Gran Corralejo"
+       },
+       "origin": {
+        "item_name": "Gran Corralejo",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174083",
+       "name": "Hacienda Vieja",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174083",
+         "label": "Añejo",
+         "value": 7,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174083,
+        "source_section": "Anejo",
+        "source_name": "Hacienda Vieja"
+       },
+       "origin": {
+        "item_name": "Hacienda Vieja",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174084",
+       "name": "Herradura",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174084",
+         "label": "Añejo",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174084,
+        "source_section": "Anejo",
+        "source_name": "Herradura"
+       },
+       "origin": {
+        "item_name": "Herradura",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174086",
+       "name": "Herradura Selección Suprema",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174086",
+         "label": "Añejo",
+         "value": 70,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174086,
+        "source_section": "Anejo",
+        "source_name": "Herradura Seleccion Suprema",
+        "name_normalised_from": "Herradura Seleccion Suprema",
+        "name_normalisation_cite": "brands df036bdd-53d5-4b05-80ba-6c2e29aab0ea \"Herradura Selección Suprema de Herradura\""
+       },
+       "origin": {
+        "item_name": "Herradura Seleccion Suprema",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174087",
+       "name": "Hussongs Platinum",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174087",
+         "label": "Añejo",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174087,
+        "source_section": "Anejo",
+        "source_name": "Hussongs Platinum"
+       },
+       "origin": {
+        "item_name": "Hussongs Platinum",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174088",
+       "name": "Jose Cuervo Reserva de la Familia",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174088",
+         "label": "Añejo",
+         "value": 40,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174088,
+        "source_section": "Anejo",
+        "source_name": "Jose Cuervo Reserva de la Familia"
+       },
+       "origin": {
+        "item_name": "Jose Cuervo Reserva de la Familia",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174090",
+       "name": "Komos Ultra",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174090",
+         "label": "Añejo",
+         "value": 100,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174090,
+        "source_section": "Anejo",
+        "source_name": "Komos Ultra"
+       },
+       "origin": {
+        "item_name": "Komos Ultra",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174091",
+       "name": "Milagro",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174091",
+         "label": "Añejo",
+         "value": 8,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174091,
+        "source_section": "Anejo",
+        "source_name": "Milagro"
+       },
+       "origin": {
+        "item_name": "Milagro",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174092",
+       "name": "Milagro Select Barrel Reserve",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174092",
+         "label": "Añejo",
+         "value": 15,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174092,
+        "source_section": "Anejo",
+        "source_name": "Milagro Select Barrel Reserve"
+       },
+       "origin": {
+        "item_name": "Milagro Select Barrel Reserve",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174093",
+       "name": "Number Juan",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174093",
+         "label": "Añejo",
+         "value": 13,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174093,
+        "source_section": "Anejo",
+        "source_name": "Number Juan"
+       },
+       "origin": {
+        "item_name": "Number Juan",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174094",
+       "name": "Pasote",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174094",
+         "label": "Añejo",
+         "value": 22,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174094,
+        "source_section": "Anejo",
+        "source_name": "Pasote"
+       },
+       "origin": {
+        "item_name": "Pasote",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174095",
+       "name": "Patron",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174095",
+         "label": "Añejo",
+         "value": 12,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174095,
+        "source_section": "Anejo",
+        "source_name": "Patron"
+       },
+       "origin": {
+        "item_name": "Patron",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174097",
+       "name": "Patron Extra",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174097",
+         "label": "Añejo",
+         "value": 20,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174097,
+        "source_section": "Anejo",
+        "source_name": "Patron Extra",
+        "placement_note": "name says Extra; kept under Añejo as listed by the venue (round-2 rule 11)",
+        "class_cite": "products 9a28ff7a-d1af-40ad-859d-a5ead6d74ae6 \"Patron Extra Anejo\" class extra_anejo"
+       },
+       "origin": {
+        "item_name": "Patron Extra",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174096",
+       "name": "Patron Sherry Cask",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174096",
+         "label": "Añejo",
+         "value": 14,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174096,
+        "source_section": "Anejo",
+        "source_name": "Patron Sherry Cask"
+       },
+       "origin": {
+        "item_name": "Patron Sherry Cask",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174098",
+       "name": "Roca Patron",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174098",
+         "label": "Añejo",
+         "value": 19,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174098,
+        "source_section": "Anejo",
+        "source_name": "Roca Patron"
+       },
+       "origin": {
+        "item_name": "Roca Patron",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174099",
+       "name": "Siete Leguas",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174099",
+         "label": "Añejo",
+         "value": 17,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174099,
+        "source_section": "Anejo",
+        "source_name": "Siete Leguas"
+       },
+       "origin": {
+        "item_name": "Siete Leguas",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174100",
+       "name": "Tequila Ocho",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174100",
+         "label": "Añejo",
+         "value": 14,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174100,
+        "source_section": "Anejo",
+        "source_name": "Tequila Ocho"
+       },
+       "origin": {
+        "item_name": "Tequila Ocho",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174101",
+       "name": "Teremana",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174101",
+         "label": "Añejo",
+         "value": 10,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174101,
+        "source_section": "Anejo",
+        "source_name": "Teremana"
+       },
+       "origin": {
+        "item_name": "Teremana",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174102",
+       "name": "Tres Generaciones",
+       "brand": "",
+       "desc": "Añejo tequila",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174102",
+         "label": "Añejo",
+         "value": 13,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174102,
+        "source_section": "Anejo",
+        "source_name": "Tres Generaciones"
+       },
+       "origin": {
+        "item_name": "Tres Generaciones",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      }
+     ]
+    },
+    {
+     "id": "sub_teq_cristalino",
+     "name": "Cristalino",
+     "desc": "",
+     "items": [
+      {
+       "id": "sme_174018",
+       "name": "Casamigos Cristalino",
+       "brand": "",
+       "desc": "Reposado cristalino",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174018",
+         "label": "Reposado",
+         "value": 18,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174018,
+        "source_section": "Reposado",
+        "source_name": "Casamigos Cristalino",
+        "placement_note": "venue lists under Reposado",
+        "class_cite": "products 2a635ebb-ba30-4be9-9ef4-de957a258457 \"Casamigos Cristalino\" class cristalino"
+       },
+       "origin": {
+        "item_name": "Casamigos Cristalino",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174079",
+       "name": "Espolon Cristalino",
+       "brand": "",
+       "desc": "Añejo cristalino",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174079",
+         "label": "Añejo",
+         "value": 10,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174079,
+        "source_section": "Anejo",
+        "source_name": "Espolon Cristalino",
+        "placement_note": "venue lists under Añejo",
+        "class_cite": "products 9952863c-16f6-4a4d-81b8-3c8d142adbc7 \"Espolon Cristalino\" class cristalino"
+       },
+       "origin": {
+        "item_name": "Espolon Cristalino",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174037",
+       "name": "Gran Coramino Cristalino",
+       "brand": "",
+       "desc": "Reposado cristalino",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174037",
+         "label": "Reposado",
+         "value": 15,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174037,
+        "source_section": "Reposado",
+        "source_name": "Gran Coramino Cristalino",
+        "placement_note": "venue lists under Reposado",
+        "class_cite": "products 5bc87a16-7b10-48d8-8d13-bfb63548fbf2 \"Gran Coramino Reposado Cristalino\" class cristalino"
+       },
+       "origin": {
+        "item_name": "Gran Coramino Cristalino",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174085",
+       "name": "Herradura Cristalino",
+       "brand": "",
+       "desc": "Añejo cristalino",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174085",
+         "label": "Añejo",
+         "value": 13,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174085,
+        "source_section": "Anejo",
+        "source_name": "Herradura Cristalino",
+        "placement_note": "venue lists under Añejo"
+       },
+       "origin": {
+        "item_name": "Herradura Cristalino",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      },
+      {
+       "id": "sme_174089",
+       "name": "Komos Cristalino",
+       "brand": "",
+       "desc": "Añejo cristalino",
+       "badges": [],
+       "prices": [
+        {
+         "id": "p_sme_174089",
+         "label": "Añejo",
+         "value": 25,
+         "source": "staging_menu_extract"
+        }
+       ],
+       "meta": {
+        "source_id": 174089,
+        "source_section": "Anejo",
+        "source_name": "Komos Cristalnio",
+        "name_normalised_from": "Komos Cristalnio",
+        "name_normalisation_cite": "brands 677b30fe-fb44-4721-a40d-de037c587662 \"Komos\" + beverage_categories slug cristalino",
+        "placement_note": "venue lists under Añejo"
+       },
+       "origin": {
+        "item_name": "Komos Cristalnio",
+        "venue_key": "ACC-IA-LIC-LC0049193"
+       },
+       "source": "staging_menu_extract"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sec_vodka",
+   "name": "Vodka",
+   "desc": "",
+   "items": [
+    {
+     "id": "sme_173956",
+     "name": "Smirnoff",
+     "brand": "",
+     "desc": "Grape · orange · citrus · raspberry · watermelon",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173956",
+       "label": "",
+       "value": 6,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173956,
+      "source_section": "Vodka",
+      "source_name": "Smirnoff"
+     },
+     "origin": {
+      "item_name": "Smirnoff",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173952",
+     "name": "Swarm",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173952",
+       "label": "",
+       "value": 6,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173952,
+      "source_section": "Vodka",
+      "source_name": "Swarm"
+     },
+     "origin": {
+      "item_name": "Swarm",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173954",
+     "name": "Ketel One",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173954",
+       "label": "",
+       "value": 7,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173954,
+      "source_section": "Vodka",
+      "source_name": "Ketel One"
+     },
+     "origin": {
+      "item_name": "Ketel One",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173955",
+     "name": "Ketel One Botanical",
+     "brand": "",
+     "desc": "Cucumber & mint · grapefruit & rose · peach & orange blossom",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173955",
+       "label": "",
+       "value": 7,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173955,
+      "source_section": "Vodka",
+      "source_name": "Ketel One Botanical"
+     },
+     "origin": {
+      "item_name": "Ketel One Botanical",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173957",
+     "name": "Titos",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173957",
+       "label": "",
+       "value": 7,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173957,
+      "source_section": "Vodka",
+      "source_name": "Titos"
+     },
+     "origin": {
+      "item_name": "Titos",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173953",
+     "name": "Grey Goose",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173953",
+       "label": "",
+       "value": 8,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173953,
+      "source_section": "Vodka",
+      "source_name": "Grey Goose"
+     },
+     "origin": {
+      "item_name": "Grey Goose",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    }
+   ],
+   "subs": []
+  },
+  {
+   "id": "sec_gin",
+   "name": "Gin",
+   "desc": "",
+   "items": [
+    {
+     "id": "sme_173965",
+     "name": "Tanqueray",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173965",
+       "label": "",
+       "value": 6,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173965,
+      "source_section": "Gin",
+      "source_name": "Tanqueray"
+     },
+     "origin": {
+      "item_name": "Tanqueray",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173962",
+     "name": "Aviation",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173962",
+       "label": "",
+       "value": 7,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173962,
+      "source_section": "Gin",
+      "source_name": "Aviation"
+     },
+     "origin": {
+      "item_name": "Aviation",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173963",
+     "name": "Bombay Sapphire",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173963",
+       "label": "",
+       "value": 8,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173963,
+      "source_section": "Gin",
+      "source_name": "Bombay Sapphire"
+     },
+     "origin": {
+      "item_name": "Bombay Sapphire",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173964",
+     "name": "Hendrick's",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173964",
+       "label": "",
+       "value": 8,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173964,
+      "source_section": "Gin",
+      "source_name": "Hendrick's"
+     },
+     "origin": {
+      "item_name": "Hendrick's",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    }
+   ],
+   "subs": []
+  },
+  {
+   "id": "sec_rum",
+   "name": "Rum",
+   "desc": "",
+   "items": [
+    {
+     "id": "sme_173958",
+     "name": "Bacardi",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173958",
+       "label": "",
+       "value": 6,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173958,
+      "source_section": "Rum",
+      "source_name": "Bacardi"
+     },
+     "origin": {
+      "item_name": "Bacardi",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173959",
+     "name": "Bacardi Dragon Berry",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173959",
+       "label": "",
+       "value": 6,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173959,
+      "source_section": "Rum",
+      "source_name": "Bacardi Dragon Berry"
+     },
+     "origin": {
+      "item_name": "Bacardi Dragon Berry",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173960",
+     "name": "Captain Morgan",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173960",
+       "label": "",
+       "value": 6,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173960,
+      "source_section": "Rum",
+      "source_name": "Captain Morgan"
+     },
+     "origin": {
+      "item_name": "Captain Morgan",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173961",
+     "name": "Gosling's",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173961",
+       "label": "",
+       "value": 6,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173961,
+      "source_section": "Rum",
+      "source_name": "Gosling's"
+     },
+     "origin": {
+      "item_name": "Gosling's",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    }
+   ],
+   "subs": []
+  },
+  {
+   "id": "sec_whiskey",
+   "name": "Whiskey",
+   "desc": "",
+   "items": [
+    {
+     "id": "sme_173967",
+     "name": "Crown Apple",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173967",
+       "label": "",
+       "value": 7,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173967,
+      "source_section": "Whiskey",
+      "source_name": "Crown Apple"
+     },
+     "origin": {
+      "item_name": "Crown Apple",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173968",
+     "name": "Crown Royal",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173968",
+       "label": "",
+       "value": 7,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173968,
+      "source_section": "Whiskey",
+      "source_name": "Crown Royal"
+     },
+     "origin": {
+      "item_name": "Crown Royal",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173969",
+     "name": "Jack Daniels",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173969",
+       "label": "",
+       "value": 7,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173969,
+      "source_section": "Whiskey",
+      "source_name": "Jack Daniels"
+     },
+     "origin": {
+      "item_name": "Jack Daniels",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173970",
+     "name": "Jameson",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173970",
+       "label": "",
+       "value": 7,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173970,
+      "source_section": "Whiskey",
+      "source_name": "Jameson"
+     },
+     "origin": {
+      "item_name": "Jameson",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173966",
+     "name": "Cedar Ridge",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173966",
+       "label": "",
+       "value": 8,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173966,
+      "source_section": "Whiskey",
+      "source_name": "Cedar Ridge"
+     },
+     "origin": {
+      "item_name": "Cedar Ridge",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173972",
+     "name": "Templeton Rye",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173972",
+       "label": "",
+       "value": 8,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173972,
+      "source_section": "Whiskey",
+      "source_name": "Templeton Rye"
+     },
+     "origin": {
+      "item_name": "Templeton Rye",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173971",
+     "name": "Maker's Mark",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [],
+     "meta": {
+      "source_id": 173971,
+      "source_section": "Whiskey",
+      "source_name": "Maker's Mark",
+      "needs_price": true,
+      "print": false,
+      "print_note": "no price in the source; kept in doc.json, left off print and phone until priced"
+     },
+     "origin": {
+      "item_name": "Maker's Mark",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    }
+   ],
+   "subs": []
+  },
+  {
+   "id": "sec_scotch",
+   "name": "Scotch",
+   "desc": "",
+   "items": [
+    {
+     "id": "sme_173974",
+     "name": "Johnny Walker Red",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173974",
+       "label": "",
+       "value": 6,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173974,
+      "source_section": "Scotch",
+      "source_name": "Johnny Walker Red"
+     },
+     "origin": {
+      "item_name": "Johnny Walker Red",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_173973",
+     "name": "Glenlivet 12",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173973",
+       "label": "",
+       "value": 12,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173973,
+      "source_section": "Scotch",
+      "source_name": "Glenlivet 12"
+     },
+     "origin": {
+      "item_name": "Glenlivet 12",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    }
+   ],
+   "subs": []
+  },
+  {
+   "id": "sec_otros",
+   "name": "Otros",
+   "desc": "",
+   "items": [
+    {
+     "id": "sme_174103",
+     "name": "Café Patron",
+     "brand": "",
+     "desc": "",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_174103",
+       "label": "",
+       "value": 9,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 174103,
+      "source_section": "Misc",
+      "source_name": "Café Patron",
+      "placement_note": "venue section: Misc"
+     },
+     "origin": {
+      "item_name": "Café Patron",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    },
+    {
+     "id": "sme_174104",
+     "name": "Clase Azul Gold",
+     "brand": "",
+     "desc": "Joven tequila",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_174104",
+       "label": "",
+       "value": 125,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 174104,
+      "source_section": "Misc",
+      "source_name": "Clase Azul Gold",
+      "placement_note": "venue section: Misc",
+      "class_cite": "products d760d665-2d53-42a9-bdad-700bff970dc0 class joven"
+     },
+     "origin": {
+      "item_name": "Clase Azul Gold",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract"
+    }
+   ],
+   "subs": []
+  },
+  {
+   "id": "sec_alcohol_free",
+   "name": "Alcohol Free",
+   "desc": "",
+   "items": [
+    {
+     "id": "sme_173975",
+     "name": "Ritual Alternative Zero Proof",
+     "brand": "",
+     "desc": "Zero-proof alternatives to tequila, gin or whiskey",
+     "badges": [],
+     "prices": [
+      {
+       "id": "p_sme_173975",
+       "label": "",
+       "value": 7,
+       "source": "staging_menu_extract"
+      }
+     ],
+     "meta": {
+      "source_id": 173975,
+      "source_section": "Alcohol Free",
+      "source_name": "Ritual Alternative Zero Proof"
+     },
+     "origin": {
+      "item_name": "Ritual Alternative Zero Proof",
+      "venue_key": "ACC-IA-LIC-LC0049193"
+     },
+     "source": "staging_menu_extract",
+     "components": [
+      {
+       "kind": "ingredient",
+       "name": "Ritual Zero Proof (tequila, gin or whiskey alternative)",
+       "role": "base",
+       "spec_source": "venue"
+      }
+     ]
+    }
+   ],
+   "subs": []
+  }
+ ]
+}

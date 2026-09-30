@@ -1,0 +1,698 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+
+/* PHG HARMONY INBOX — the iPhone Action-button Shortcut's door into Harmony,
+   and the notes log for the app.
+
+   AUTH (deployed with verify_jwt=false; this function authenticates itself):
+     - the app:      Authorization: Bearer <user JWT>   (validated with auth.getUser)
+     - the Shortcut: x-api-key (or x-harmony-key, or body "key"): <personal key>  (SHA-256 looked up in
+                     phg.harmony_device_keys; never stored in plaintext)
+   Key management (issue/list/revoke) requires the app login, never a key.
+
+   ACTIONS (JSON body "action", default "inbox"):
+     inbox        {text}             -> route to note | answer | open; returns {speak, url}
+     add_note     {text, kind?}      -> save a note
+     list_notes   {limit?, open_only?}
+     update_note  {id, done}         (app only)
+     issue_key    {account_id?, name?} (app only) -> {key} shown once
+     list_keys / revoke_key {id}     (app only)
+
+   Tables: phg.harmony_notes, phg.harmony_device_keys (RLS on, service_role only).
+   Model: OPENAI_API_KEY + gpt-4.1 (override OPENAI_INBOX_MODEL).
+   v22 SPEED: planner and spoken answers are streamed; with the app's voice settings (tts) the first sentence is
+   voiced while the rest is written and returned as voice_first; notes, library and reference lookups run in parallel;
+   {warm:true} wakes the function.
+   v28: a named venue's menu skips the data router (menu_venue from the planner).
+   v27: Shortcut turns plan while the name check runs (saves ~2 s when no name is corrected).
+   v25: drink -> STYLE -> recipes (a style can hold hundreds of recipes; best-graded or the style's reference is given).
+   v24: cocktail VERSIONS (one drink, many full recipes; the named version wins, others are offered).
+   v23: OpenAI priority processing (OPENAI_SERVICE_TIER, falls back automatically); per-turn timings in the turn log. */
+
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-harmony-key, x-api-key",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+const json = (x: unknown, s = 200) =>
+  new Response(JSON.stringify(x), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
+
+const KINDS = ["note", "task", "idea", "reminder"];
+
+async function sha256hex(s: string) {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function newKey() {
+  const b = crypto.getRandomValues(new Uint8Array(32));
+  return "hk_" + btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/* v10: CONVERSATION. The Shortcut loops (listen -> Harmony -> speak -> listen) and passes back
+   the "context" string each turn, so Harmony remembers the thread without storing anything.
+   Before answering an open-ended request she asks ONE narrowing question with concrete choices
+   (e.g. classic vs your house Manhattan vs one from the internet vs a few variations vs build one
+   together). "next" tells the Shortcut what to do: listen again, open the app (only when asked
+   to see it on screen; iPhone still requires Face ID), or end. */
+const CONVERSE = [
+  "You are Harmony, the voice assistant of PHG (Perfect Harmony Group), a bar and restaurant operations and menu-design app. This is a hands-free voice conversation from the iPhone Action button; the phone may be locked, so everything is heard, never seen.",
+  "You get the recent turns and what you last showed them (context), then their new words. Decide the next action and return JSON only.",
+  "clarify: when a request is open-ended or has meaningfully different versions, ask ONE short question offering 2 to 5 concrete choices before answering. Recipes: 'Do you want the classic Manhattan, your house Manhattan, one from the internet, a few variations to pick from, or should we build one together?'. Data: ask for the missing piece. Prices, venues, bars and menus need a place: if they gave no city or state, ask which one (PHG covers Iowa, Colorado and New York, or all three). Prices also need the drink; venues may need the kind of place. Menus: which venue and city. Do NOT clarify when they already chose, answered your question in context, said 'just', 'quick' or 'the usual', or for notes.",
+  "recipe: once the drink and version are known. recipe_drink = the drink exactly as they named it, keeping every modifier (a 'chocolate Manhattan' is NOT a Manhattan; 'smoked', 'spicy', 'frozen', 'mezcal' versions keep that word). recipe_source = classic | house | internet | list | create. If they already said where they want it from ('from the internet', 'my house one', 'the classic'), use that and do not ask again. Twists that are not classics (chocolate Manhattan, spicy margarita) default to internet or create, never to the classic spec of the base drink.",
+  "Understand context: read the whole conversation. Short answers ('the second one', 'yeah the internet', 'Denver', 'my house') answer your last question. Never repeat a question they already answered. Sound like a sharp bartender colleague, not a form: one natural question at a time, and only when it changes the answer.",
+  "data: PHG data they want answered (NOM distilleries and where they are, distilleries in a town, venues or bars in a city, a venue's real menu, drink prices and averages, top brands, spirit categories on menus, a venue's drinks profile, ZIP census demographics, label approvals, how much data PHG has, the menu pipeline right now (are menus uploading, how fast, what is waiting, is anything stuck)); data_query = the full, specific question. When they want to see or hear ONE specific venue's menu, also fill menu_venue (venue name, city, two-letter state or empty); otherwise menu_venue is null.",
+  "note: they want something logged or remembered (task, reminder, idea, note); note_text cleaned up, kind, tags, due_iso (ISO 8601 with their offset) only if they gave a time. Never clarify notes.",
+  "read_back: they want the last result read out loud instead of opened ('don't open it', 'just tell me', 'read it to me', 'what were they'); put the full read-out, from context.last.detail, in say, in natural speech.",
+  "Questions PHG data can answer (where a NOM distillery is, even 'show me on a map'; venues, menus, prices, brands, demographics) are ALWAYS data first, so they hear the real answer; the app offer comes after. offer_open: only when they explicitly ask to open the app or the screen and there is nothing to look up first; you may ASK 'Want me to open it in the Harmony app?' (put that question in say). open_screen: ONLY when your previous turn asked whether to open the app AND they now clearly agree (yes, sure, do it, let's do it, approve, open it, go ahead). Otherwise never open anything. open_query = what to show if it isn't the last result.",
+  "answer: general conversation or bar knowledge you can answer directly in speech (1 to 4 sentences). Never answer facts about specific distilleries, NOMs, venues, menus or prices from memory; use data.",
+  "end: they're finished ('that's all', 'no thanks', 'nope', 'bye', 'stop', 'I'm good').",
+  "say: what you say now for clarify, answer, read_back, note (brief confirmation), open_screen ('Opening it now.') and end (a short goodbye). Leave say empty for recipe and data; those are spoken by the next step. Warm, natural, plain text, no markdown, no filler.",
+  "Never invent business figures or prices.",
+  "HEARING: names of brands, producers, cocktails and places come from many languages (Spanish, French, Italian, Japanese...) and the speech engine can mishear them. When 'Speech notes' say a name was unsure and it matters for the answer, ask ONE short question: 'Did you mean Siete Leguas or Siete Misterios?' (clarify). If they correct a name ('no, I said Fortaleza', 'it's Cynar, not Chee nar', 'I meant East and Co'), or confirm your 'Did you mean' question, fill heard_fix: wrong = the words that were heard or that you used, right = the name they meant, kind = brand | venue | cocktail | ingredient | place | term; then carry on with their request using the right name, without making them repeat it. Otherwise leave heard_fix wrong and right empty.",
+  "REPAIR: when they reject your last answer ('no', 'that's wrong', 'not what I asked', 'that's not right', 'wrong one'), set repair to the part that was wrong: item (wrong drink, brand or venue), version (classic vs house vs internet, or a variant such as Black Manhattan for Manhattan), place (city, state or venue), source, intent (they wanted something else entirely), amount (a number or measure), time. If their words already say what they meant, carry on with the corrected request (recipe or data) right away. If not, clarify with ONE pointed question about that part, offering the likely alternatives from the conversation (e.g. 'Sorry about that. Did you want the classic Manhattan, or your house one?'); never just repeat your previous answer and never ask them to start over. Otherwise repair is none.",
+].join(" ");
+
+const RECIPE_VOICE = [
+  "You are Harmony, an expert bartender speaking hands-free; everything you say is heard, not seen.",
+  "Walk them through the drink: the ingredients with exact measurements in ounces (and dashes or barspoons), then the method step by step (build, stir or shake, strain, ice), then the glass and the garnish.",
+  "TECHNIQUE (PHG house standard, from the owner): stirred drinks are stirred for six to eight seconds. Never state any other stir or shake duration, dilution time or temperature unless it is in the spec you were given; for shaken drinks say 'shake hard' without a time.",
+  "Say where the spec comes from in a few words (your house recipe, the classic spec, or the named source). If a spec is given, follow it exactly; fill a missing measurement only from the classic spec and say so.",
+  "Plain spoken sentences, no lists, no markdown, no symbols like ½ (say 'three quarters of an ounce'). 60 to 130 words. End with the garnish; no sign-off.",
+].join(" ");
+
+const LIST_VOICE = [
+  "You are Harmony, an expert bartender speaking hands-free. List four or five versions of the drink (their house version first if one is given; then the versions in PHG's graded library, by name, if listed; then other well-known variations), one short sentence each on what makes it different, then ask which one they want walked through. Plain speech, no lists or markdown, under 110 words.",
+].join(" ");
+
+const CREATE_VOICE = [
+  "You are Harmony, building a new cocktail together with a bar owner, hands-free. If you don't yet know their base spirit, flavour direction and occasion, ask the single most useful question with two to four choices. Once you know enough, propose one original spec with exact measurements, method, glass and garnish in natural speech, give it a short name, then ask if they want to tweak it or log it. Under 120 words, plain speech.",
+].join(" ");
+
+const KIND_ENUM = KINDS;
+const SCHEMA = {
+  type: "object", additionalProperties: false,
+  required: ["action", "say", "recipe_drink", "recipe_source", "data_query", "open_query", "note_text", "kind", "tags", "due_iso", "repair", "heard_fix", "menu_venue"],
+  properties: {
+    action: { type: "string", enum: ["clarify", "recipe", "data", "note", "read_back", "offer_open", "open_screen", "answer", "end"] },
+    say: { type: "string" },
+    recipe_drink: { type: ["string", "null"] },
+    recipe_source: { type: "string", enum: ["classic", "house", "internet", "list", "create", "none"] },
+    data_query: { type: ["string", "null"] },
+    open_query: { type: ["string", "null"] },
+    note_text: { type: "string" },
+    kind: { type: "string", enum: KIND_ENUM },
+    tags: { type: "array", items: { type: "string" } },
+    due_iso: { type: ["string", "null"] },
+    repair: { type: "string", enum: ["none", "item", "version", "place", "source", "intent", "amount", "time"] },
+    menu_venue: { anyOf: [{ type: "null" }, { type: "object", additionalProperties: false, required: ["venue", "city", "state"],
+      properties: { venue: { type: "string" }, city: { type: "string" }, state: { type: "string" } } }] },
+    heard_fix: {
+      type: "object", additionalProperties: false, required: ["wrong", "right", "kind"],
+      properties: { wrong: { type: "string" }, right: { type: "string" }, kind: { type: "string", enum: ["brand", "venue", "cocktail", "ingredient", "place", "term"] } },
+    },
+  },
+};
+
+/* v29 (Rob 2026-09-29: "don't use any form of payment right now"): priority processing is OFF by default; set
+   OPENAI_SERVICE_TIER=priority to turn it back on. v23 SPEED: OpenAI priority processing (faster, steadier replies; same model and answers). Override with
+   OPENAI_SERVICE_TIER ("default" turns it off). If the account refuses it, it is switched off for this instance and
+   the request is sent again without it. */
+let TIER: string | null = (Deno.env.get("OPENAI_SERVICE_TIER") || "default").trim();
+if (TIER === "default" || TIER === "auto" || !TIER) TIER = null;
+const tierOf = () => (TIER ? { service_tier: TIER } : {});
+async function responsesCall(oa: string, body: Record<string, unknown>): Promise<Response> {
+  const send = () => fetch("https://api.openai.com/v1/responses", {
+    method: "POST", headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ ...body, ...tierOf() }),
+  });
+  let r = await send();
+  if (TIER && (r.status === 400 || r.status === 403)) {
+    const t = await r.clone().text().catch(() => "");
+    if (/service_tier|priority/i.test(t)) { console.log(JSON.stringify({ tier_off: t.slice(0, 200) })); TIER = null; r = await send(); }
+  }
+  return r;
+}
+
+async function llm(oa: string, model: string, instructions: string, input: string, opts: Record<string, unknown> = {}) {
+  const r = await responsesCall(oa, { model, instructions, input, max_output_tokens: 600, ...opts });
+  const j = await r.json().catch(() => ({}));
+  let t = typeof j.output_text === "string" ? j.output_text : "";
+  if (!t && Array.isArray(j.output)) for (const o of j.output) for (const c of (o?.content || [])) if (c?.type === "output_text") t += c.text || "";
+  return { ok: r.ok, text: t.trim(), error: j?.error?.message };
+}
+
+/* v22 SPEED: the same call, streamed. onText gets the text so far on every delta, so Harmony can start voicing the
+   first sentence while the rest is still being written. Falls back to the plain call if streaming fails to start. */
+async function llmStream(oa: string, model: string, instructions: string, input: string, opts: Record<string, unknown> = {}, onText?: (t: string) => void) {
+  if (!onText) return llm(oa, model, instructions, input, opts);
+  let r: Response;
+  try {
+    r = await responsesCall(oa, { model, instructions, input, max_output_tokens: 600, ...opts, stream: true });
+  } catch { return llm(oa, model, instructions, input, opts); }
+  if (!r.ok || !r.body) {
+    const j = await r.json().catch(() => ({}));
+    return { ok: false, text: "", error: j?.error?.message || `HTTP ${r.status}` };
+  }
+  const rd = r.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buf = "", t = "", done = "", err: string | undefined;
+  for (;;) {
+    const { value, done: end } = await rd.read();
+    if (end) break;
+    buf += value;
+    let i: number;
+    while ((i = buf.indexOf("\n\n")) >= 0) {
+      const ev = buf.slice(0, i); buf = buf.slice(i + 2);
+      const line = ev.split("\n").find((l) => l.startsWith("data:"));
+      if (!line) continue;
+      let d: any; try { d = JSON.parse(line.slice(5).trim()); } catch { continue; }
+      if (d.type === "response.output_text.delta" && typeof d.delta === "string") { t += d.delta; try { onText(t); } catch { /* voice is optional */ } }
+      else if (d.type === "response.output_text.done" && typeof d.text === "string") done = d.text;
+      else if (d.type === "response.failed" || d.type === "error") err = d.response?.error?.message || d.message || "stream failed";
+    }
+  }
+  const text = (done || t).trim();
+  if (!text && !err) return llm(oa, model, instructions, input, opts);   // never let a quiet stream cost the turn
+  return { ok: !err && !!text, text, error: err };
+}
+
+/* v22 SPEED: early voice. When the app sends its voice settings (b.tts), the first sentence of what Harmony will say
+   is voiced here as soon as it has been written, in parallel with the rest of the thinking, and returned with the
+   reply (voice_first). The app plays it at once and voices the rest itself; if anything differs it ignores it. */
+const TTS_VOICES = new Set(["alloy", "ash", "ballad", "coral", "echo", "fable", "onyx", "nova", "sage", "shimmer", "verse", "marin", "cedar"]);
+function firstSpoken(t: string, final: boolean): string {
+  const x = t.replace(/\s+/g, " ").trimStart();
+  let end = 0;
+  const re = /[.!?]+["”’)]*\s/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(x + (final ? " " : "")))) {
+    end = m.index + m[0].length;
+    if (x.slice(0, end).trim().length >= 30) return x.slice(0, end).trim();
+  }
+  return final ? x.trim() : "";
+}
+function earlyVoice(oa: string | undefined, tts: any) {
+  const ok = !!oa && tts && typeof tts === "object";
+  const voice = ok ? String(tts.voice || "marin").toLowerCase() : "";
+  let started: { text: string; p: Promise<string | null> } | null = null;
+  let vMs = 0;
+  const start = (text: string) => {
+    if (started || !ok || !TTS_VOICES.has(voice) || text.length < 2 || text.length > 600) return;
+    let speed = Number(tts.speed == null ? 1 : tts.speed); if (!Number.isFinite(speed)) speed = 1; speed = Math.max(.25, Math.min(4, speed));
+    const instructions = String(tts.instructions || "").trim().slice(0, 3500) || undefined;
+    const p = fetch("https://api.openai.com/v1/audio/speech", {
+      method: "POST", headers: { Authorization: `Bearer ${oa}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: Deno.env.get("OPENAI_TTS_MODEL") || "gpt-4o-mini-tts", voice, input: text, instructions, speed, response_format: "mp3" }),
+    }).then(async (r) => {
+      if (!r.ok) return null;
+      const u8 = new Uint8Array(await r.arrayBuffer());
+      let bin = ""; for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode(...u8.subarray(i, i + 0x8000));
+      return btoa(bin);
+    }).catch(() => null);
+    const t0 = Date.now(); p.then(() => { vMs = Date.now() - t0; });
+    started = { text, p };
+  };
+  return {
+    feed(soFar: string) { if (!started) { const f = firstSpoken(soFar, false); if (f) start(f); } },
+    finish(full: string) { if (!started) start(firstSpoken(full, true)); },
+    voiceMs() { return vMs; },
+    async result(speak: string, capMs = 3000) {
+      if (!started) return null;
+      const norm = (x: string) => x.replace(/\s+/g, " ").trim();
+      if (!norm(speak).startsWith(norm(started.text))) return null;
+      const b64 = await Promise.race([started.p, new Promise<null>((r) => setTimeout(() => r(null), capMs))]);
+      return b64 ? { text: started.text, format: "mp3", audio_b64: b64 } : null;
+    },
+  };
+}
+/* the planner writes JSON; this reads the "say" value written so far */
+function partialSay(j: string): { action: string; say: string } {
+  const a = /"action"\s*:\s*"([a-z_]+)"/.exec(j)?.[1] || "";
+  const k = j.indexOf('"say"'); if (k < 0) return { action: a, say: "" };
+  const q = j.indexOf('"', j.indexOf(":", k) + 1); if (q < 0) return { action: a, say: "" };
+  let i = q + 1, raw = "";
+  while (i < j.length) { const c = j[i]; if (c === "\\") { if (i + 1 >= j.length) break; if (j[i + 1] === "u" && i + 5 >= j.length) break; raw += c + j[i + 1]; i += 2; continue; } if (c === '"') break; raw += c; i++; }
+  try { return { action: a, say: JSON.parse('"' + raw + '"') }; } catch { return { action: a, say: "" }; }
+}
+
+/* a compact spoken-friendly summary of a data view, kept in context for "read it to me" */
+function viewDetail(v: any): string {
+  if (!v) return "";
+  const out: string[] = [];
+  if (v.title) out.push(v.title);
+  (v.tiles || []).forEach((t: any) => out.push(`${t.label}: ${t.value}`));
+  const bars = v.bars?.bars || v.bars || v.side?.bars || [];
+  if (Array.isArray(bars)) bars.slice(0, 10).forEach((b: any) => out.push(`${b.label}: ${b.value}${b.sub ? " (" + b.sub + ")" : ""}`));
+  (v.slices || []).slice(0, 8).forEach((b: any) => out.push(`${b.label}: ${b.value}`));
+  if (v.card) { (v.card.rows || []).forEach((r: any) => out.push(`${r[0]}: ${r[1]}`)); if (v.card.chips?.length) out.push("Brands: " + v.card.chips.slice(0, 15).join(", ")); }
+  (v.rows || []).forEach((r: any) => Array.isArray(r) && out.push(`${r[0]}: ${r[1]}`));
+  if (v.spec) out.push("Spec: " + v.spec);
+  (v.table?.rows || []).slice(0, 8).forEach((r: any) => out.push(r.join(" · ")));
+  (v.pins || []).slice(0, 8).forEach((p: any) => out.push(`${p.label}${p.sub ? " — " + p.sub : ""}`));
+  return out.join("\n").slice(0, 1800);
+}
+
+async function readBody(req: Request): Promise<Record<string, any>> {
+  const ct = (req.headers.get("content-type") || "").toLowerCase();
+  let raw = "";
+  try {
+    if (ct.includes("multipart/form-data")) {
+      const fd = await req.formData(); const o: Record<string, any> = {};
+      fd.forEach((v, k) => { o[k] = typeof v === "string" ? v : ""; });
+      return lower(o);
+    }
+    raw = await req.text();
+  } catch { return {}; }
+  const t = raw.trim();
+  if (!t) return {};
+  if (t.startsWith("{")) { try { const j = JSON.parse(t); if (j && typeof j === "object") return lower(j); } catch { /* fall through */ } }
+  if (ct.includes("application/x-www-form-urlencoded") || (/^[\w-]+=/.test(t) && !/\s/.test(t.split("&")[0].split("=")[0]))) {
+    const o: Record<string, any> = {}; new URLSearchParams(t).forEach((v, k) => { o[k] = v; }); return lower(o);
+  }
+  return { text: t }; // plain text body: the whole thing is what they said
+}
+function lower(o: Record<string, any>) {
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(o)) out[String(k).trim().toLowerCase()] = v;
+  return out;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method !== "POST") return json({ ok: false, speak: "Send a POST request.", error: "POST required" }, 405);
+
+  const url = Deno.env.get("SUPABASE_URL");
+  const anon = Deno.env.get("SUPABASE_ANON_KEY");
+  const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const oa = Deno.env.get("OPENAI_API_KEY");
+  const model = Deno.env.get("OPENAI_INBOX_MODEL") || "gpt-4.1"; // v12: stronger model; the mini model lost context
+  const appUrl = (Deno.env.get("PHG_APP_URL") || "https://prismatic-rugelach-777e48.netlify.app").replace(/\/+$/, "");
+  if (!url || !anon || !service) return json({ ok: false, speak: "Harmony's inbox is not configured.", error: "runtime configuration missing" }, 500);
+  /* v3: phg is not exposed through the REST API (direct table calls got HTTP 406), so every
+     read/write goes through public.phg_harmony_inbox_db, a service_role-only SECURITY DEFINER
+     dispatcher (migration 20260928230000), the same pattern as phg_auth_bootstrap. */
+  const admin = createClient(url, service, { auth: { persistSession: false } });
+  const dbx = async (op: string, args: Record<string, unknown>) => {
+    const { data, error } = await admin.rpc("phg_harmony_inbox_db", { p_op: op, p_args: args });
+    if (error) throw new Error(error.message);
+    return data as any;
+  };
+
+  /* v5: Shortcuts can send the Request Body as JSON, Form (urlencoded or multipart) or plain
+     text, and people name the field "text", "Text", etc. Read all of them, case-insensitively. */
+  const b: Record<string, any> = await readBody(req);
+  /* v22: the app wakes this function when the mic opens, so the first real turn does not pay the start-up time */
+  if (b.warm) return json({ ok: true, warm: true });
+  const action = String(b.action || "inbox");
+
+  // ---- who is calling
+  let userId: string | null = null, accountId: string | null = null, via: "app" | "shortcut" = "app";
+  const bearer = (req.headers.get("Authorization") || "").replace(/^bearer\s+/i, "").trim();
+  const hkey = (req.headers.get("x-harmony-key") || req.headers.get("x-api-key") || String(b.key || "")).trim();
+  if (hkey) {
+    if (!/^hk_[A-Za-z0-9_-]{30,}$/.test(hkey)) return json({ ok: false, speak: "That Harmony key doesn't look right.", error: "bad key" }, 401);
+    let k: any = null;
+    try { k = await dbx("key_lookup", { hash: await sha256hex(hkey) }); }
+    catch (e) { return json({ ok: false, speak: "Harmony couldn't check your key just now. Try again in a moment.", error: String(e) }, 500); }
+    if (!k || k.revoked_at) return json({ ok: false, speak: "That Harmony key isn't valid anymore. Make a new one in the app.", error: "invalid key" }, 401);
+    userId = k.user_id; accountId = k.account_id; via = "shortcut";
+  } else if (bearer && bearer.split(".").length === 3) {
+    const sb = createClient(url, anon, { auth: { persistSession: false } });
+    const { data: ud, error: ue } = await sb.auth.getUser(bearer);
+    if (ue || !ud?.user) return json({ ok: false, error: "invalid or expired login" }, 401);
+    userId = ud.user.id;
+    accountId = b.account_id ? String(b.account_id) : null;
+  } else {
+    return json({ ok: false, speak: "Harmony needs your key to hear you.", error: "login or x-harmony-key required" }, 401);
+  }
+  if (accountId && via === "app") {
+    let member = false;
+    try { member = (await dbx("is_member", { user: userId, account: accountId })) === true; }
+    catch (e) { return json({ ok: false, error: "membership check failed: " + String((e as Error)?.message || e) }, 500); }
+    if (!member) return json({ ok: false, error: "not a member of that account" }, 403);
+  }
+  const appOnly = () => json({ ok: false, error: "sign in to the app for this" }, 403);
+
+  // ---- key management (app login only)
+  if (action === "issue_key") {
+    if (via !== "app") return appOnly();
+    const key = newKey();
+    let data: any;
+    try { data = await dbx("key_issue", { user: userId, account: accountId, name: String(b.name || "iPhone Shortcut").slice(0, 80), hash: await sha256hex(key), hint: key.slice(-4) }); }
+    catch (e) { return json({ ok: false, error: String((e as Error)?.message || e) }, 500); }
+    if (data?.error === "limit") return json({ ok: false, error: "5 active keys max; revoke one first" }, 409);
+    return json({ ok: true, key, ...data, endpoint: `${url}/functions/v1/phg-harmony-inbox` });
+  }
+  if (action === "list_keys") {
+    if (via !== "app") return appOnly();
+    try { return json({ ok: true, items: (await dbx("key_list", { user: userId })) || [] }); }
+    catch (e) { return json({ ok: false, error: String((e as Error)?.message || e) }, 500); }
+  }
+  if (action === "revoke_key") {
+    if (via !== "app") return appOnly();
+    try { await dbx("key_revoke", { user: userId, id: String(b.id || "") }); return json({ ok: true }); }
+    catch (e) { return json({ ok: false, error: String((e as Error)?.message || e) }, 500); }
+  }
+
+  // ---- notes
+  const listNotes = async (limit: number, openOnly: boolean) => {
+    try { return ((await dbx("notes_list", { user: userId, limit, open_only: openOnly })) || []) as any[]; }
+    catch { return [] as any[]; }
+  };
+  const saveNote = async (text: string, kind: string, tags: string[], due: string | null) => {
+    return await dbx("note_add", {
+      user: userId, account: accountId, kind: KINDS.includes(kind) ? kind : "note",
+      body: text.slice(0, 4000), tags: (tags || []).map((t) => String(t).toLowerCase().slice(0, 30)).slice(0, 5),
+      due: due && !isNaN(Date.parse(due)) ? new Date(due).toISOString() : "", source: via,
+    });
+  };
+  if (action === "list_notes") {
+    return json({ ok: true, items: await listNotes(Math.min(200, Math.max(1, Number(b.limit) || 50)), !!b.open_only) });
+  }
+  if (action === "update_note") {
+    if (via !== "app") return appOnly();
+    try { await dbx("note_done", { user: userId, id: String(b.id || ""), done: !!b.done }); return json({ ok: true }); }
+    catch (e) { return json({ ok: false, error: String((e as Error)?.message || e) }, 500); }
+  }
+  if (action === "delete_note") {
+    if (via !== "app") return appOnly();
+    try { await dbx("note_delete", { user: userId, id: String(b.id || "") }); return json({ ok: true }); }
+    catch (e) { return json({ ok: false, error: String((e as Error)?.message || e) }, 500); }
+  }
+  if (action === "add_note") {
+    const text = String(b.text || "").trim();
+    if (!text) return json({ ok: false, speak: "I didn't catch anything to log.", error: "text required" }, 400);
+    try {
+      const n = await saveNote(text, String(b.kind || "note"), Array.isArray(b.tags) ? b.tags : [], b.due_iso || null);
+      return json({ ok: true, route: "note", note: n, speak: "Logged." });
+    } catch (e) { return json({ ok: false, speak: "I couldn't save that note.", error: String(e) }, 500); }
+  }
+
+  // ---- inbox: one turn of the conversation (the Shortcut loops; the app calls it once)
+  if (action !== "inbox") return json({ ok: false, error: "unknown action" }, 400);
+  /* v6: take the words from whatever field the Shortcut used */
+  const RESERVED = new Set(["key", "action", "tz", "account_id", "kind", "tags", "due_iso", "limit", "open_only", "id", "done", "name", "context", "surface", "hear", "tts", "warm"]);
+  const others = Object.entries(b).filter(([k]) => !RESERVED.has(k));
+  const pick = () => {
+    for (const k of ["text", "input", "query", "prompt", "message", "dictated text", "dictated_text", "words", "q"]) {
+      if (typeof b[k] === "string" && b[k].trim()) return b[k];
+    }
+    const filled = others.filter(([, v]) => typeof v === "string" && v.trim()).sort((x, y) => String(y[1]).length - String(x[1]).length);
+    if (filled.length) return String(filled[0][1]);
+    const named = others.map(([k]) => k).filter((k) => /\s/.test(k)).sort((x, y) => y.length - x.length);
+    return named[0] || "";
+  };
+  let text = String(pick()).trim().slice(0, 2000);
+  let ctx: any = { turns: [], last: null };
+  try { const c = typeof b.context === "string" ? JSON.parse(b.context) : b.context; if (c && typeof c === "object") ctx = { turns: Array.isArray(c.turns) ? c.turns.slice(-6) : [], last: c.last || null, offered: !!c.offered }; } catch { /* fresh conversation */ }
+  console.log(JSON.stringify({ inbox: via, fields: Object.keys(b).filter((k) => k !== "key"), text_len: text.length, turns: ctx.turns.length }));
+  const inAppSurface = via === "app" || b.surface === "app";
+  const home = `${appUrl}/?harmony=1`;
+  const withQ = (q: string) => `${appUrl}/?harmony=1&q=${encodeURIComponent(q)}`;
+  /* v12: "url" is filled ONLY when Harmony is actually opening the app (next = "open"), so an
+     older Shortcut that opens any non-empty url never opens on its own. The link is kept in
+     app_url for display. Opening happens only after Harmony asked "Want me to open it in the
+     Harmony app?" (offered = true in context) and they said yes. */
+  /* v18: every turn is logged (phg.harmony_turns) so corrections can be traced back and reviewed; never blocks the reply */
+  let turnAction = "", turnUnderstood: any = {}, turnCorrection = false;
+  const T0 = Date.now(); const marks: Record<string, number> = {};   // v23: timings, kept in the turn log
+  const ev = earlyVoice(oa, inAppSurface ? b.tts : null);
+  const reply = async (speak: string, next: "listen" | "open" | "end", extra: Record<string, unknown> = {}, last: any = ctx.last, offered = false) => {
+    const turns = [...ctx.turns, { u: text.slice(0, 300), h: speak.slice(0, 400) }].slice(-6);
+    const link = String(extra.url || last?.url || home);
+    const voice_first = await ev.result(speak).catch(() => null);
+    marks.total = Date.now() - T0; if (ev.voiceMs()) marks.voice = ev.voiceMs();
+    try {
+      const p = dbx("turn_log", { user: userId, account: accountId, surface: inAppSurface ? "app" : via, text: text.slice(0, 1000), action: turnAction || next, understood: { ...turnUnderstood, ms: marks, voice_first: !!voice_first, tier: TIER || "default" }, reply: speak.slice(0, 1500), is_correction: turnCorrection }).catch(() => null);
+      (globalThis as any).EdgeRuntime?.waitUntil?.(p);
+    } catch { /* logging is optional */ }
+    return json({ ok: true, speak, next, ...extra, ...(voice_first ? { voice_first } : {}), url: next === "open" ? link : "", app_url: link, context: JSON.stringify({ turns, last, offered }) });
+  };
+  if (!text) {
+    return reply(ctx.turns.length ? "I didn't catch that. Say it again, or say that's all." : "I'm listening. Ask me anything, or tell me what to log.", "listen");
+  }
+  if (!oa) {
+    const n = await saveNote(text, "note", [], null).catch(() => null);
+    return reply(n ? "Logged." : "I couldn't save that.", "end");
+  }
+  const tz = String(b.tz || "America/Chicago");
+  /* v17: NAMES IN ANY LANGUAGE. The app's speech service already checked names against PHG's brands, producers,
+     cocktails and venues and sends what it heard (b.hear). The Shortcut's dictated text is checked here the same
+     way, through phg-speech-transcribe's text-only mode (3 s cap; on failure the words are used as heard). */
+  const recentP = listNotes(10, false);   // v22: fetched while the rest of the turn is prepared
+  let hear: any = b.hear && typeof b.hear === "object" ? b.hear : null;
+  /* v27 SPEED: the Shortcut's name check (~2 s) used to run before planning. Now the planner starts on the words as
+     heard at the same time; its answer is used when the check changes nothing (most turns), else it is re-planned. */
+  const inApp = via === "app" || b.surface === "app";
+  const SCHEMA_OPTS = { max_output_tokens: 500, text: { format: { type: "json_schema", name: "harmony_turn", strict: true, schema: SCHEMA } } };
+  const buildInput = (words: string, recent: any[], hn: string) => [
+    `Current time: ${new Date().toISOString()} (user's time zone ${tz}).`,
+    recent.length ? "Their recent notes: " + recent.map((n: any) => `[${n.kind}${n.done ? ", done" : ""}] ${n.body}`).join(" | ") : "",
+    ctx.turns.length ? "Conversation so far:\n" + ctx.turns.map((t: any) => `User: ${t.u}\nHarmony: ${t.h}`).join("\n") : "This is the start of the conversation.",
+    ctx.last ? `Last result (context.last): ${ctx.last.title || ""}\n${ctx.last.detail || ""}` : "",
+    inApp ? "They are IN the Harmony app looking at the screen: whatever you find is shown to them there. Never use offer_open or open_screen; use data to show things." : ctx.offered ? "Your previous turn asked whether to open the Harmony app." : "You have NOT offered to open the app in your previous turn, so open_screen is not allowed now.",
+    hn,
+    "They now said: " + words,
+  ].filter(Boolean).join("\n\n");
+  let specP: Promise<any> | null = null;
+  const asHeard = text;
+  if (!hear && via === "shortcut" && text.length > 3) {
+    specP = recentP.then((rc: any[]) => llmStream(oa, model, CONVERSE, buildInput(asHeard, rc, ""), SCHEMA_OPTS)).catch(() => null);
+    try {
+      const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 3000);
+      const hr = await fetch(`${url}/functions/v1/phg-speech-transcribe`, {
+        method: "POST", signal: ctl.signal, headers: { "Content-Type": "application/json", apikey: anon, Authorization: `Bearer ${anon}`, "x-phg-internal": service },
+        body: JSON.stringify({ text, user: userId, account: accountId, hint: ctx.turns.map((t: any) => t.u + " / " + t.h).join(" / ").slice(-600) }),
+      });
+      clearTimeout(tm);
+      const hj = await hr.json().catch(() => ({}));
+      if (hr.ok && hj.text) { hear = { heard: text, fixes: hj.fixes || [], unsure: hj.unsure || [] }; text = String(hj.text).slice(0, 2000); }
+    } catch { /* use the words as heard */ }
+  }
+  const hearNote = hear ? [
+    hear.heard && hear.heard !== text ? `Speech notes: the speech engine first heard "${String(hear.heard).slice(0, 300)}".` : "",
+    Array.isArray(hear.fixes) && hear.fixes.length ? "Names it corrected: " + hear.fixes.slice(0, 6).map((f: any) => `"${f.heard}" -> ${f.meant}`).join("; ") + "." : "",
+    Array.isArray(hear.unsure) && hear.unsure.length ? "Names it was unsure about: " + hear.unsure.slice(0, 4).map((u: any) => `"${u.heard}" could be ${(u.options || []).slice(0, 3).join(" or ")}`).join("; ") + "." : "",
+  ].filter(Boolean).join(" ") : "";
+  /* v16: the Harmony view in the app uses this same conversation brain (was: recipe questions in the app went
+     straight to a one-shot data lookup with no questions and no memory). In the app, results are shown on screen,
+     so Harmony never offers to open the app there, and replies carry a "view" for the screen. */
+  const recent = await recentP;
+  marks.prep = Date.now() - T0;
+  const plannerInput = buildInput(text, recent, hearNote);
+  const SAYS = new Set(["clarify", "answer", "read_back", "end", "note"]);
+  const unchanged = !!specP && text === asHeard && !(hear && ((hear.fixes || []).length || (hear.unsure || []).length));
+  const spec = unchanged ? await specP : null;
+  if (specP) marks.spec = spec?.ok ? 1 : 0;
+  const plan = spec?.ok ? spec : await llmStream(oa, model, CONVERSE, plannerInput, SCHEMA_OPTS,
+    b.tts && inAppSurface ? (t) => { const p = partialSay(t); if (SAYS.has(p.action)) ev.feed(p.say); } : undefined);
+  marks.plan = Date.now() - T0;
+  let out: any = null;
+  try { out = JSON.parse(plan.text); } catch { out = null; }
+  if (!out) {
+    const n = await saveNote(text, "note", [], null).catch(() => null);
+    return reply(n ? "I couldn't think that through just now, so I logged it as a note." : "Something went wrong. Try again.", "end", { error: plan.error });
+  }
+  const say = String(out.say || "").trim();
+  if (SAYS.has(String(out.action)) && say) ev.finish(say);
+  turnAction = String(out.action || "");
+  turnUnderstood = { recipe_drink: out.recipe_drink, recipe_source: out.recipe_source, data_query: out.data_query, heard_fix: out.heard_fix, hear: hear ? { fixes: (hear.fixes || []).length, unsure: (hear.unsure || []).length } : null };
+  /* v17: learn from a corrected name, so it is heard right next time (phg.harmony_aliases, read by the speech service) */
+  const hf = out.heard_fix || {};
+  const wrong = String(hf.wrong || "").trim(), right = String(hf.right || "").trim();
+  /* guards: the wrong words must really have been heard (a past or current turn), be more than a common word, and
+     neither side may contain the other ("Manhattan" must never be learned as "Black Manhattan") */
+  const nz = (x: string) => " " + x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim() + " ";
+  const heardBefore = nz([text, hear?.heard || "", ...ctx.turns.map((t: any) => t.u || "")].join(" "));
+  const COMMON = new Set(["the", "and", "that", "this", "one", "menu", "drink", "recipe", "price", "bar", "yes", "no", "not", "what", "with"]);
+  const safeFix = wrong.length >= 3 && right.length >= 2 && wrong.length <= 120 && right.length <= 200 && nz(wrong).trim() !== nz(right).trim() &&
+    !nz(right).includes(nz(wrong)) && !nz(wrong).includes(nz(right)) && heardBefore.includes(nz(wrong)) && !COMMON.has(nz(wrong).trim());
+  const repair = String(out.repair || "none");
+  turnCorrection = !!(wrong && right) || repair !== "none";
+  turnUnderstood.repair = repair;
+  /* v19: a rejected answer that was not a misheard name is logged with the part that was wrong, for the review */
+  if (repair !== "none" && !safeFix) {
+    try { await dbx("correction_add", { user: userId, account: accountId, heard: String(ctx.turns[ctx.turns.length - 1]?.h || "").slice(0, 300), meant: text.slice(0, 300), wrong_part: repair }); }
+    catch (e) { console.log(JSON.stringify({ repair_log_error: String((e as Error)?.message || e) })); }
+  }
+  if (safeFix) {
+    try {
+      if (accountId) await dbx("alias_upsert", { user: userId, account: accountId, heard: wrong, means: right, kind: hf.kind || "term", source: "correction" });
+      await dbx("correction_add", { user: userId, account: accountId, heard: wrong, meant: right, wrong_part: "item" });
+    } catch (e) { console.log(JSON.stringify({ learn_error: String((e as Error)?.message || e) })); }
+  }
+
+  if (out.action === "end") return reply(say || "Okay. Talk soon.", "end");
+  if (out.action === "clarify" || out.action === "answer" || out.action === "read_back") return reply(say || "Say that again?", "listen");
+  if (inApp && (out.action === "offer_open" || out.action === "open_screen")) {
+    const q2 = String(out.open_query || text).trim();
+    out.action = "data"; out.data_query = q2;
+  }
+  if (out.action === "offer_open" || (out.action === "open_screen" && !ctx.offered)) {
+    const last = out.open_query ? { ...(ctx.last || {}), url: withQ(String(out.open_query)) } : ctx.last;
+    return reply(say && /open/i.test(say) ? say : "Want me to open it in the Harmony app?", "listen", {}, last, true);
+  }
+  if (out.action === "open_screen") {
+    /* v15: open exactly what was offered; open_query only when nothing was */
+    const target = ctx.last?.url || (out.open_query ? withQ(String(out.open_query)) : home);
+    return reply(say || "Opening it now.", "open", { url: target });
+  }
+  if (out.action === "note") {
+    try { await saveNote(out.note_text || text, out.kind, out.tags, out.due_iso); }
+    catch (e) { return reply("I couldn't save that note.", "listen", { error: String(e) }); }
+    return reply((say || "Got it, logged.") + " Anything else?", "listen");
+  }
+  if (out.action === "data") {
+    const q = String(out.data_query || text).trim();
+    /* v28 SPEED: a specific venue's menu goes straight to the menu (the data router's extra model call is skipped) */
+    const mv = out.menu_venue && typeof out.menu_venue === "object" ? out.menu_venue : null;
+    const menuQ = mv && String(mv.venue || "").trim() ? { q: String(mv.venue).trim(), city: String(mv.city || "").trim(), state: String(mv.state || "").trim().toUpperCase().slice(0, 2) } : null;
+    /* phrased the way the app's menu finder (parseMenuLookup) reads it: "menu for NAME in CITY, ST" */
+    const menuSay = menuQ ? `menu for ${menuQ.q}` + (menuQ.city ? ` in ${menuQ.city}${menuQ.state ? ", " + menuQ.state : ""}` : menuQ.state ? ` in ${menuQ.state}` : "") : "";
+    let routed: any = null;
+    try {
+      if (menuQ) { marks.menu_fast = 1; routed = { ok: true, dj: { source: "menu_lookup", params: menuQ } }; }
+      else {
+      const dr = await fetch(`${url}/functions/v1/phg-harmony-data`, {
+        method: "POST", headers: { "Content-Type": "application/json", apikey: anon, "x-phg-internal": service },
+        /* v18: who is asking, so questions outside the fixed catalog go through the knowledge-map gateway */
+        body: JSON.stringify({ prompt: q, user: userId, account: accountId, ask_fallback: true }),
+      });
+      routed = { ok: dr.ok, dj: await dr.json().catch(() => ({})) };
+      }
+      const dr = { ok: routed.ok }, dj = routed.dj;
+      marks.data = Date.now() - T0;
+      if (dr.ok && dj.source === "menu_lookup" && inApp) return reply("Opening that menu.", "listen", { menu_lookup: menuSay || q });
+      if (dr.ok && dj.source === "menu_lookup") {
+        /* v20: phone locked (the Shortcut): read the venue's drinks out loud from PHG's menu data, then offer the screen */
+        try {
+          const pv = dj.params || {};
+          if (pv.q) {
+            const pr = await fetch(`${url}/functions/v1/phg-harmony-data`, {
+              method: "POST", headers: { "Content-Type": "application/json", apikey: anon, "x-phg-internal": service },
+              body: JSON.stringify({ source: "place_venue", params: { q: pv.q, city: pv.city || "", state: pv.state || "" } }),
+            });
+            const pj = await pr.json().catch(() => ({}));
+            if (pr.ok && pj.view?.type === "place" && pj.speak) {
+              return reply(String(pj.speak) + " Want me to read a section, like the cocktails, or open the full menu in the Harmony app?", "listen", {}, { title: pj.view.title, detail: viewDetail({ title: pj.view.title, rows: pj.view.rows, table: { rows: (pj.view.sections || []).flatMap((x: any) => (x.items || []).slice(0, 12).map((it: any) => [x.title, it.name, it.value])) } }), url: withQ(q) }, true);
+            }
+          }
+        } catch { /* fall back to offering the screen */ }
+        return reply("That menu is a document, so it needs the screen. Want me to open it in the Harmony app?", "listen", {}, { title: q, detail: "", url: withQ(q) }, true);
+      }
+      if (dr.ok && dj.speak && dj.source !== "none") {
+        const last = { title: dj.view?.title || q, detail: viewDetail(dj.view), url: withQ(q) };
+        /* v14: visual results (map, chart) are spoken first, then the app is offered; a yes opens it */
+        const visual = !inApp && /^(map|bars|donut|dashboard)$/.test(String(dj.view?.type || ""));
+        const more = inApp ? " Anything else?" : visual ? " Want me to open it in the Harmony app?" : dj.view && dj.view.type !== "empty" ? " Want me to read you the details?" : " Anything else?";
+        return reply(String(dj.speak) + more, "listen", inApp && dj.view ? { view: dj.view } : {}, last, visual);
+      }
+    } catch (e) { console.log(JSON.stringify({ data_error: String(e) })); }
+    return reply("I couldn't find that in PHG's data. Try asking it another way.", "listen");
+  }
+  if (out.action === "recipe") {
+    const drink = String(out.recipe_drink || "").replace(/[%_,()]/g, " ").trim();
+    const src = out.recipe_source;
+    let house: any[] = [];
+    if (accountId && (src === "house" || src === "list")) {
+      /* v13: "my house Manhattan" -> look up "Manhattan"; fall back to each longer word */
+      const hq = drink.replace(/\b(my|our|the|a|house|in-house|signature|version|recipe|spec)\b/gi, " ").replace(/\s+/g, " ").trim();
+      const tries = [hq, ...hq.split(" ").filter((w) => w.length >= 4).sort((x, y) => y.length - x.length)];
+      for (const q of tries) {
+        if (!q) continue;
+        try { house = (await dbx("house_recipes", { user: userId, account: accountId, q })) || []; } catch { house = []; }
+        if (house.length) break;
+      }
+    }
+    let ref: any = null, variantsKnown: string[] = [], lib: any = null;
+    /* v21: PHG's graded cocktail library (phg_mix, loaded from the mixology research) through the read-only gateway:
+       the best-graded spec for exactly this drink, with its sources and named variations. The name is reduced to
+       letters, digits, spaces, apostrophes and hyphens before it goes into the query. */
+    const libP = (async () => {
+    if (drink && src !== "internet" && src !== "house" && userId && accountId) {
+      const nm = drink.normalize("NFC").replace(/[^\p{L}\p{N} '\-]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 60).replace(/'/g, "''");
+      if (nm) {
+        try {
+          /* v24 VERSIONS: a drink has many full recipes (classic, traditional, Tommy's, Cadillac, frozen, happy hour...).
+             The drink is found by name inside what they asked ("cadillac margarita" -> Margarita); the version they named
+             wins, otherwise the drink's reference spec; the other versions are listed so Harmony can offer them. */
+          const N = (x: string) => `regexp_replace(lower(${x}), '[^a-z0-9 ]', '', 'g')`;
+          /* v25 STYLES: drink -> style (Cadillac, Frozen, Tommy's...) -> any number of recipes. A named style picks that
+             style's reference spec, else its best-graded recipe; no style named -> the drink's reference spec. */
+          const sql = `with w as (select ${N(`'${nm}'`)} as q),
+d as (select dr.key from phg_mix.drinks dr, w where w.q = ${N("dr.name")} or w.q like '%' || ${N("dr.name")} || '%'
+  or exists (select 1 from unnest(dr.aka) a where w.q = ${N("a")}) order by length(dr.name) desc limit 1),
+s as (select st.key, st.reference_recipe_key from phg_mix.drink_styles st, w where st.drink_key = (select key from d)
+  and (w.q like '%' || ${N("st.name")} || '%' or exists (select 1 from unnest(st.aka) a where w.q like '%' || ${N("a")} || '%'))
+  order by length(st.name) desc limit 1),
+c as (select r.*, case when ${N("r.name")} = w.q then 0 when r.key = (select reference_recipe_key from s) then 1
+    when r.style_key = (select key from s) then 2 when r.is_reference then 3 else 4 end as rnk
+  from phg_mix.recipes r, w
+  where r.drink_key = (select key from d) or ${N("r.name")} = w.q or exists (select 1 from unnest(r.aka) x where ${N("x")} = w.q))
+select c.key, c.name, c.family, c.method, c.glass, c.garnish, c.quality_grade, c.quality_score, c.verification, c.version_label, c.version_type, c.serve,
+ (select st.name from phg_mix.drink_styles st where st.key = c.style_key) as style,
+ (select count(*) from phg_mix.recipes x where x.style_key = c.style_key) as style_recipes,
+ (select json_agg(json_build_object('i', l.ingredient, 'a', l.amount, 'u', l.unit, 'n', l.note) order by l.position) from phg_mix.recipe_lines l where l.recipe_key = c.key) as lines,
+ (select json_agg(json_build_object('n', v.name, 'c', v.change)) from (select * from phg_mix.recipe_variants v2 where v2.recipe_key = c.key limit 6) v) as variants,
+ (select json_agg(distinct src.title) from phg_mix.attributions a join phg_mix.sources src on src.key = a.source_key where a.record_type = 'recipe' and a.record_key = c.key) as sources,
+ (select json_agg(json_build_object('label', st.name, 'type', st.version_type, 'recipes', (select count(*) from phg_mix.recipes x where x.style_key = st.key)) order by st.sort, st.name)
+    from phg_mix.drink_styles st where st.drink_key = c.drink_key and st.key is distinct from c.style_key) as versions
+from c order by c.rnk, c.quality_score desc nulls last limit 1`;
+          const t0 = Date.now();
+          const res: any = await Promise.race([admin.rpc("phg_harmony_query", { p_account: accountId, p_user: userId, p_sql: sql, p_max_rows: 5 }), new Promise((r) => setTimeout(() => r({ data: null }), 4000))]);
+          const d = res?.data;
+          if (d?.log_id) { try { await admin.rpc("phg_harmony_query_finish", { p_log_id: d.log_id, p_row_count: (d.rows || []).length, p_ms: Date.now() - t0, p_error: d.error || null }); } catch { /* log only */ } }
+          lib = d?.rows?.[0] || null;
+        } catch { lib = null; }
+      }
+    }
+    })();
+    /* v22: the library and the classic reference are looked up at the same time */
+    if (drink && src !== "internet") {
+      /* v16: exact name first, then names starting with it, then the shortest ("Manhattan" is not "Black Manhattan") */
+      const { data } = await admin.from("cocktail_reference").select("cocktail_name,base_spirit,consensus_spec,method,glassware,garnish,profile").ilike("cocktail_name", `%${drink}%`).limit(25);
+      const low = drink.toLowerCase();
+      const rk = (n: string) => { const x = n.toLowerCase(); return x === low ? 0 : x.startsWith(low) ? 1 : 2; };
+      const cands = (data || []).slice().sort((a: any, b: any) => rk(a.cocktail_name) - rk(b.cocktail_name) || a.cocktail_name.length - b.cocktail_name.length);
+      ref = cands[0] && (rk(cands[0].cocktail_name) < 2 || cands.length === 1) ? cands[0] : null;
+      variantsKnown = cands.map((x: any) => x.cocktail_name).filter((n: string) => n !== ref?.cocktail_name);
+    }
+    await libP;
+    const cardUrl = withQ(`How do you make a ${drink}?`);
+    const speakLlm = (m: string, ins: string, inp: string, o: Record<string, unknown> = {}) =>
+      llmStream(oa, m, ins, inp, o, b.tts && inAppSurface ? (t) => ev.feed(t) : undefined);
+    let speakText = "";
+    if (src === "house") {
+      if (!house.length) return reply(`I don't see a ${drink || "drink like that"} on your house menu yet. Want the classic spec instead, or one from the internet?`, "listen");
+      const h = house[0];
+      speakText = (await speakLlm(model, RECIPE_VOICE, `They asked for their HOUSE recipe. Drink: ${h.name}. House recipe (use exactly): ${JSON.stringify({ ingredients: h.ingredients, method: h.method, glassware: h.glassware, garnish: h.garnish, menu_price: h.menu_price, description: h.menu_description })}`)).text;
+    } else if (src === "internet") {
+      const w = await speakLlm(Deno.env.get("OPENAI_WEB_MODEL") || "gpt-4.1", RECIPE_VOICE + " Search the web for a well-regarded recipe for EXACTLY the drink asked for (keep every modifier, e.g. a chocolate Manhattan uses chocolate bitters or crème de cacao, not a plain Manhattan) from a reputable cocktail source (for example Difford's Guide, PUNCH, Liquor.com, Imbibe), follow its measurements, and name the source.", `Find and speak a recipe for: ${drink}. What they said: ${text}`, { tools: [{ type: "web_search_preview" }] });
+      speakText = w.text || (await speakLlm(model, RECIPE_VOICE, `Drink: ${drink}. The web search failed; use the classic spec and say it's the classic.` + (ref ? ` PHG reference: ${JSON.stringify(ref)}` : ""))).text;
+    } else if (src === "list") {
+      speakText = (await speakLlm(model, LIST_VOICE, `Drink: ${drink}.` + (house.length ? ` Their house version: ${JSON.stringify(house[0])}` : " They have no house version.") + (ref ? ` Classic reference: ${JSON.stringify(ref)}` : "") + (variantsKnown.length ? ` Variations in PHG's reference: ${variantsKnown.join(", ")}.` : "") + (lib ? ` Versions in PHG's graded library: ${[lib.version_label || lib.name, ...(lib.versions || []).map((v: any) => v.label)].filter(Boolean).join(", ")}.` : ""))).text;
+      return reply(speakText || `I couldn't list ${drink} variations just now.`, "listen", inApp ? { view: { type: "recipe", title: `${drink} variations`, spec: speakText, rows: [] } } : {}, { title: `${drink} variations`, detail: speakText, url: cardUrl });
+    } else if (src === "create") {
+      const convo = ctx.turns.map((t: any) => `User: ${t.u}\nHarmony: ${t.h}`).join("\n");
+      speakText = (await speakLlm(model, CREATE_VOICE, `Conversation so far:\n${convo}\nThey now said: ${text}\nStarting point: ${drink || "(not set)"}`)).text;
+      return reply(speakText || "Tell me the base spirit you want to build around.", "listen", inApp ? { view: { type: "recipe", title: `New ${drink || "cocktail"}`, spec: speakText, rows: [] } } : {}, { title: `New ${drink || "cocktail"}`, detail: speakText, url: home });
+    } else if (lib) {
+      /* v21: the library spec, with where it comes from and its grade */
+      const srcs = (lib.sources || []).slice(0, 3).join(", ");
+      const others = (lib.versions || []).slice(0, 6).map((v: any) => v.label + (v.recipes > 1 ? ` (${v.recipes} recipes)` : "")).filter(Boolean);
+      speakText = (await speakLlm(model, RECIPE_VOICE + " Say it is PHG's library spec (and which version, if a version label is given) and name up to two of its sources. If other versions of this drink are listed, end by naming up to three of them in a few words and offering one (for example 'I also have Tommy's and a Cadillac version'); otherwise, if variations are given, offer one of them.", `Drink: ${lib.name}${lib.style ? ` (style: ${lib.style}${lib.style_recipes > 1 ? `; PHG holds ${lib.style_recipes} recipes for this style and this is the best-graded one` : ""})` : lib.version_label ? ` (version: ${lib.version_label})` : ""}. What they said: ${text}. PHG library spec (grade ${lib.quality_grade}, sources: ${srcs}): ${JSON.stringify({ lines: lib.lines, method: lib.method, glass: lib.glass, garnish: lib.garnish })}. Other versions of this drink in PHG's library: ${others.length ? others.join(", ") : "none"}. Named variations: ${JSON.stringify((lib.variants || []).slice(0, 3))}`)).text;
+    } else {
+      speakText = (await speakLlm(model, RECIPE_VOICE, `Drink: ${ref?.cocktail_name || drink}. What they said: ${text}. ` + (ref ? `PHG classic reference spec: ${JSON.stringify(ref)}` : "No PHG reference; use the widely accepted classic spec for exactly this drink."))).text;
+    }
+    marks.spoken = Date.now() - T0;
+    if (speakText) ev.finish(speakText);
+    const last = { title: `${drink} recipe`, detail: speakText, url: cardUrl };
+    const useLib = !!lib && src !== "internet" && src !== "house" && src !== "list" && src !== "create";
+    const src2 = src === "house" ? "Your house recipe" : src === "internet" ? "From the web" : useLib ? `PHG library · grade ${lib.quality_grade} (${lib.quality_score})` : ref ? "PHG classic reference" : "Classic spec";
+    const rv = useLib
+      ? [["Build", (lib.lines || []).map((l: any) => [l.a, l.u, l.i].filter((x: any) => x != null && x !== "").join(" ")).join(" · ")], ["Method", lib.method], ["Glass", lib.glass], ["Garnish", lib.garnish], ["Sources", (lib.sources || []).join(", ")], ["Variations", (lib.variants || []).map((v: any) => v.n).join(", ")], ["Other versions", (lib.versions || []).map((v: any) => v.label).join(", ")]].filter((x) => x[1])
+      : ref && src !== "internet" && src !== "house" ? [["Glass", ref.glassware], ["Garnish", ref.garnish], ["Method", ref.method]].filter((x) => x[1]) : [];
+    const view = { type: "recipe", title: src === "house" && house[0] ? house[0].name : useLib ? lib.name + (lib.version_label && !String(lib.name).toLowerCase().includes(String(lib.version_label).toLowerCase().split(" (")[0]) ? ` · ${lib.version_label}` : "") : ref?.cocktail_name && src !== "internet" ? ref.cocktail_name : drink, spec: speakText, rows: [["Source", src2], ...rv, ...(!useLib && variantsKnown.length ? [["Also", variantsKnown.slice(0, 5).join(", ")]] : [])] };
+    return reply((speakText || `I couldn't pull that recipe just now.`) + " Want another version, or anything else?", "listen", inApp ? { view } : {}, last);
+  }
+  return reply(say || "Say that again?", "listen");
+});

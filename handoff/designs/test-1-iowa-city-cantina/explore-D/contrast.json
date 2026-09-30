@@ -1,0 +1,260 @@
+{
+ "preview-letter.png:geometry": {
+  "h": 1056,
+  "r": [
+   [
+    "HEADER",
+    48,
+    135.796875,
+    54,
+    762
+   ],
+   [
+    "plate",
+    160.796875,
+    432.796875,
+    60,
+    401
+   ],
+   [
+    "plate",
+    160.796875,
+    432.796875,
+    415,
+    756
+   ],
+   [
+    "plate",
+    440.796875,
+    704.796875,
+    60,
+    401
+   ],
+   [
+    "plate",
+    440.796875,
+    704.796875,
+    415,
+    756
+   ],
+   [
+    "reg",
+    729.796875,
+    976.78125,
+    54,
+    762
+   ],
+   [
+    "FOOTER",
+    990,
+    1006,
+    58,
+    758
+   ]
+  ]
+ },
+ "preview-letter.png": [
+  {
+   "text": "PHG Publishing Beta · Test Content",
+   "role": "SPAN",
+   "min": 6.57
+  },
+  {
+   "text": "Good drinks · good company",
+   "role": "SPAN",
+   "min": 6.62
+  },
+  {
+   "text": "Producer",
+   "role": "EM",
+   "min": 6.75
+  },
+  {
+   "text": "14",
+   "role": "no",
+   "min": 6.86
+  },
+  {
+   "text": "—",
+   "role": "U",
+   "min": 6.86
+  },
+  {
+   "text": "scale · 1 tick = ½ oz, measures per hous",
+   "role": "key",
+   "min": 6.87
+  }
+ ],
+ "preview-letter-guest.png:geometry": {
+  "h": 1056,
+  "r": [
+   [
+    "HEADER",
+    48,
+    135.796875,
+    54,
+    762
+   ],
+   [
+    "plate",
+    160.796875,
+    432.796875,
+    60,
+    401
+   ],
+   [
+    "plate",
+    160.796875,
+    432.796875,
+    415,
+    756
+   ],
+   [
+    "plate",
+    440.796875,
+    704.796875,
+    60,
+    401
+   ],
+   [
+    "plate",
+    440.796875,
+    704.796875,
+    415,
+    756
+   ],
+   [
+    "reg",
+    729.796875,
+    924.78125,
+    54,
+    762
+   ],
+   [
+    "FOOTER",
+    990,
+    1006,
+    58,
+    758
+   ]
+  ]
+ },
+ "preview-letter-guest.png": [
+  {
+   "text": "PHG Publishing Beta · Test Content",
+   "role": "SPAN",
+   "min": 6.57
+  },
+  {
+   "text": "Good drinks · good company",
+   "role": "SPAN",
+   "min": 6.62
+  },
+  {
+   "text": "scale · 1 tick = ½ oz, measures per hous",
+   "role": "key",
+   "min": 6.87
+  },
+  {
+   "text": "No. · specimen number",
+   "role": "key",
+   "min": 6.92
+  },
+  {
+   "text": "Cantina & Cocktail Bar · Iowa City",
+   "role": "kick",
+   "min": 6.93
+  },
+  {
+   "text": "A field guide: four cocktail plates, the",
+   "role": "sub",
+   "min": 6.93
+  }
+ ],
+ "preview-phone.png:geometry": {
+  "h": 2050,
+  "r": [
+   [
+    "HEADER",
+    22,
+    191.75,
+    16,
+    374
+   ],
+   [
+    "plate",
+    216.75,
+    471.75,
+    22,
+    368
+   ],
+   [
+    "plate",
+    479.75,
+    751.75,
+    22,
+    368
+   ],
+   [
+    "plate",
+    759.75,
+    1014.75,
+    22,
+    368
+   ],
+   [
+    "plate",
+    1022.75,
+    1286.75,
+    22,
+    368
+   ],
+   [
+    "reg",
+    1311.75,
+    1935.71875,
+    16,
+    374
+   ],
+   [
+    "FOOTER",
+    1945.71875,
+    1989.71875,
+    20,
+    370
+   ]
+  ]
+ },
+ "preview-phone.png": [
+  {
+   "text": "Good drinks · good company",
+   "role": "SPAN",
+   "min": 6.55
+  },
+  {
+   "text": "PHG Publishing Beta · Test Content",
+   "role": "SPAN",
+   "min": 6.55
+  },
+  {
+   "text": "Brandy",
+   "role": "H4",
+   "min": 6.63
+  },
+  {
+   "text": "Proof: “—” = fact not supplied",
+   "role": "pf",
+   "min": 6.72
+  },
+  {
+   "text": "Brand",
+   "role": "EM",
+   "min": 6.73
+  },
+  {
+   "text": "A field guide: four cocktail plates, the",
+   "role": "sub",
+   "min": 6.74
+  }
+ ]
+}

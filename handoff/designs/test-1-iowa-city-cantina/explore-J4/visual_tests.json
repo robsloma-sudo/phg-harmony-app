@@ -1,0 +1,137 @@
+{
+ "results": [
+  {
+   "file": "preview-letter.png",
+   "squint_salient_regions": 1,
+   "primary_area_pct": 31.32,
+   "primary_to_secondary": null,
+   "ground_luminance": 0.901,
+   "value_range_p5_p95": [
+    0.138,
+    0.932
+   ],
+   "accent_area_pct": 29.49,
+   "visual_centroid": [
+    0.582,
+    0.274
+   ]
+  },
+  {
+   "file": "before/preview-letter.png",
+   "squint_salient_regions": 1,
+   "primary_area_pct": 30.98,
+   "primary_to_secondary": null,
+   "ground_luminance": 0.897,
+   "value_range_p5_p95": [
+    0.138,
+    0.932
+   ],
+   "accent_area_pct": 29.49,
+   "visual_centroid": [
+    0.585,
+    0.277
+   ]
+  },
+  {
+   "file": "../explore-J3/preview-letter.png",
+   "squint_salient_regions": 1,
+   "primary_area_pct": 38.93,
+   "primary_to_secondary": null,
+   "ground_luminance": 0.876,
+   "value_range_p5_p95": [
+    0.138,
+    0.932
+   ],
+   "accent_area_pct": 35.53,
+   "visual_centroid": [
+    0.612,
+    0.342
+   ]
+  },
+  {
+   "file": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J4-after-read.png",
+   "squint_salient_regions": 24,
+   "primary_area_pct": 0.15,
+   "primary_to_secondary": 1.13,
+   "ground_luminance": 0.932,
+   "value_range_p5_p95": [
+    0.761,
+    0.932
+   ],
+   "accent_area_pct": 0.14,
+   "visual_centroid": [
+    0.402,
+    0.506
+   ]
+  },
+  {
+   "file": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J4-before-read.png",
+   "squint_salient_regions": 24,
+   "primary_area_pct": 0.15,
+   "primary_to_secondary": 1.13,
+   "ground_luminance": 0.932,
+   "value_range_p5_p95": [
+    0.737,
+    0.932
+   ],
+   "accent_area_pct": 0.14,
+   "visual_centroid": [
+    0.41,
+    0.506
+   ]
+  }
+ ],
+ "variant_silhouette": [
+  {
+   "a": "preview-letter.png",
+   "b": "before/preview-letter.png",
+   "silhouette_corr": 0.999
+  },
+  {
+   "a": "preview-letter.png",
+   "b": "../explore-J3/preview-letter.png",
+   "silhouette_corr": 0.638
+  },
+  {
+   "a": "preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J4-after-read.png",
+   "silhouette_corr": -0.166
+  },
+  {
+   "a": "preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J4-before-read.png",
+   "silhouette_corr": -0.156
+  },
+  {
+   "a": "before/preview-letter.png",
+   "b": "../explore-J3/preview-letter.png",
+   "silhouette_corr": 0.629
+  },
+  {
+   "a": "before/preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J4-after-read.png",
+   "silhouette_corr": -0.17
+  },
+  {
+   "a": "before/preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J4-before-read.png",
+   "silhouette_corr": -0.16
+  },
+  {
+   "a": "../explore-J3/preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J4-after-read.png",
+   "silhouette_corr": -0.233
+  },
+  {
+   "a": "../explore-J3/preview-letter.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J4-before-read.png",
+   "silhouette_corr": -0.248
+  },
+  {
+   "a": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J4-after-read.png",
+   "b": "/tmp/claude-0/-home-user-phg-harmony-app/c0df8ae8-562c-5574-b6e9-9bdd13434505/scratchpad/J4-before-read.png",
+   "silhouette_corr": 0.984
+  }
+ ],
+ "notes": "silhouette_corr > 0.8 = structurally similar directions (variant_silhouette_test fails)"
+}

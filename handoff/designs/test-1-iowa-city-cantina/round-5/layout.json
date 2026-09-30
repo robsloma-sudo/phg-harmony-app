@@ -1,0 +1,818 @@
+{
+ "round": 5,
+ "concept": "Lotería de la Cantina: each list is a numbered lotería card (frame, ordinal, cut-paper icon, banner with English name and Spanish kicker).",
+ "page": {
+  "size": "US Letter 8.5 x 11 in",
+  "w_pt": 612,
+  "h_pt": 792,
+  "margins_pt": {
+   "top": 36,
+   "right": 36,
+   "bottom": 36,
+   "left": 36
+  },
+  "bleed": "none (cream flood to trim, home/office print)"
+ },
+ "grid": {
+  "deck_pt": {
+   "x": 36.0,
+   "y": 131.99,
+   "w": 540.0,
+   "h": 606.01
+  },
+  "gutter_pt": 12,
+  "rows": "featured row (House Originals 318 pt | Classics 210 pt) + 2 rows of 2 x 264 pt; rows sized to content, spare height shared equally; cards stretch to equal height per row",
+  "card_inner": "1.5 pt ink frame + inset hairline at 3 pt (lotería double rule); padding 9 / 12 / 10 / 12 pt on every card"
+ },
+ "palette": {
+  "cream": "#F6EEDF",
+  "card": "#FBF5EA",
+  "featured_card": "#F3E3CB",
+  "ink": "#231B16",
+  "terracotta": "#A63C1A",
+  "agave": "#2F5D50",
+  "marigold": "#E3A018",
+  "muted": "#5A4A3F"
+ },
+ "type": {
+  "display": "Fraunces 700 (title 30/34 pt, banner names 13.5/15 pt, featured 17/19 pt)",
+  "numerals": "Fraunces 600 terracotta, lining tabular: card ordinals 26 pt (featured 36 pt), prices 11.5 pt (featured 14 pt)",
+  "items": "Fraunces 600 11.5/14 pt (featured 14/17 pt)",
+  "descriptions": "DM Sans 8.5/11 pt (featured 9.5/12.5 pt)",
+  "subheads": "DM Sans 700 caps 7.5 pt + Fraunces italic 9 pt Spanish",
+  "kickers": "Fraunces italic 9/11 pt",
+  "min_print_size_pt": 6.5
+ },
+ "masthead": {
+  "papel_picado_pt": {
+   "x": 36.0,
+   "y": 36.0,
+   "w": 540.0,
+   "h": 36.0
+  },
+  "title_pt": {
+   "x": 140.04,
+   "y": 74.5,
+   "w": 331.92,
+   "h": 36.75
+  },
+  "location_pt": {
+   "x": 249.68,
+   "y": 109.99,
+   "w": 112.64,
+   "h": 11.25
+  },
+  "footer_pt": {
+   "x": 36.0,
+   "y": 744.0,
+   "w": 540.0,
+   "h": 12.0
+  }
+ },
+ "cards": [
+  {
+   "n": 1,
+   "ref": "sub_cocktails_house_originals",
+   "name": "House Originals",
+   "kicker": "Cócteles de la casa",
+   "featured": true,
+   "box_pt": {
+    "x": 36.0,
+    "y": 131.99,
+    "w": 318.0,
+    "h": 183.76
+   },
+   "border_pt": 1.5,
+   "padding_pt": {
+    "left": 12.0,
+    "right": 12.0,
+    "top": 9.0,
+    "bottom": 10.0
+   },
+   "cardno_left_pt": 49.5,
+   "icon_right_pt": 340.5,
+   "item_name_left_pt": [
+    49.5
+   ],
+   "name_left_spread_mm": 0.0,
+   "price_right_pt": [
+    340.5
+   ],
+   "price_right_spread_mm": 0.0,
+   "desc_left_pt": [
+    49.5
+   ],
+   "subheader_left_pt": [],
+   "inner_left_pt": 13.5,
+   "inner_right_pt": 13.5,
+   "free_space_below_content_pt": -0.0,
+   "banner_pt": {
+    "x": 87.49,
+    "y": 144.48,
+    "w": 199.02,
+    "h": 50.02
+   },
+   "icon_pt": {
+    "x": 294.5,
+    "y": 146.48,
+    "w": 46.0,
+    "h": 46.0
+   },
+   "items": [
+    {
+     "ref": "beta_old_fashioned",
+     "name": "Brown Butter Old Fashioned",
+     "price": "16",
+     "name_pt": {
+      "x": 49.5,
+      "y": 208.49,
+      "w": 192.27,
+      "h": 17.25
+     },
+     "price_pt": {
+      "x": 325.29,
+      "y": 208.49,
+      "w": 15.21,
+      "h": 17.25
+     },
+     "desc_pt": {
+      "x": 49.5,
+      "y": 225.49,
+      "w": 245.99,
+      "h": 25.25
+     },
+     "desc_lines": 2,
+     "desc": "Brown butter-washed bourbon, demerara syrup, bitters; orange peel. Stirred; over a large cube."
+    },
+    {
+     "ref": "beta_daiquiri",
+     "name": "House Daiquiri",
+     "price": "14",
+     "name_pt": {
+      "x": 49.5,
+      "y": 261.49,
+      "w": 102.69,
+      "h": 17.25
+     },
+     "price_pt": {
+      "x": 325.15,
+      "y": 261.49,
+      "w": 15.35,
+      "h": 17.25
+     },
+     "desc_pt": {
+      "x": 49.5,
+      "y": 278.5,
+      "w": 242.41,
+      "h": 25.25
+     },
+     "desc_lines": 2,
+     "desc": "White rum, fresh lime, house demerara syrup; lime coin. Shaken; up, in a coupe."
+    }
+   ],
+   "subs": []
+  },
+  {
+   "n": 2,
+   "ref": "sub_cocktails_classics",
+   "name": "Classics",
+   "kicker": "Cócteles clásicos",
+   "featured": false,
+   "box_pt": {
+    "x": 366.0,
+    "y": 131.99,
+    "w": 210.0,
+    "h": 183.76
+   },
+   "border_pt": 1.5,
+   "padding_pt": {
+    "left": 12.0,
+    "right": 12.0,
+    "top": 9.0,
+    "bottom": 10.0
+   },
+   "cardno_left_pt": 379.5,
+   "icon_right_pt": 562.5,
+   "item_name_left_pt": [
+    379.5
+   ],
+   "name_left_spread_mm": 0.0,
+   "price_right_pt": [
+    562.5
+   ],
+   "price_right_spread_mm": 0.0,
+   "desc_left_pt": [
+    379.5
+   ],
+   "subheader_left_pt": [],
+   "inner_left_pt": 13.5,
+   "inner_right_pt": 13.5,
+   "free_space_below_content_pt": 23.0,
+   "banner_pt": {
+    "x": 411.49,
+    "y": 144.48,
+    "w": 107.02,
+    "h": 34.01
+   },
+   "icon_pt": {
+    "x": 526.5,
+    "y": 143.48,
+    "w": 36.0,
+    "h": 36.0
+   },
+   "items": [
+    {
+     "ref": "beta_margarita",
+     "name": "Margarita",
+     "price": "15",
+     "name_pt": {
+      "x": 379.5,
+      "y": 192.48,
+      "w": 55.75,
+      "h": 14.25
+     },
+     "price_pt": {
+      "x": 550.36,
+      "y": 192.48,
+      "w": 12.14,
+      "h": 14.25
+     },
+     "desc_pt": {
+      "x": 379.5,
+      "y": 206.48,
+      "w": 166.66,
+      "h": 33.26
+     },
+     "desc_lines": 3,
+     "desc": "Blanco tequila, fresh lime, orange liqueur, agave syrup; lime wheel. Bright and citrus-forward. Shaken; on the rocks."
+    },
+    {
+     "ref": "beta_manhattan",
+     "name": "Manhattan",
+     "price": "15",
+     "name_pt": {
+      "x": 379.5,
+      "y": 244.49,
+      "w": 61.05,
+      "h": 14.25
+     },
+     "price_pt": {
+      "x": 550.36,
+      "y": 244.49,
+      "w": 12.14,
+      "h": 14.25
+     },
+     "desc_pt": {
+      "x": 379.5,
+      "y": 258.49,
+      "w": 149.34,
+      "h": 22.25
+     },
+     "desc_lines": 2,
+     "desc": "Rye whiskey, sweet vermouth; cocktail cherry. Stirred; up, in a coupe."
+    }
+   ],
+   "subs": []
+  },
+  {
+   "n": 3,
+   "ref": "sec_spirits",
+   "name": "Spirits",
+   "kicker": "Destilados",
+   "featured": false,
+   "box_pt": {
+    "x": 36.0,
+    "y": 327.75,
+    "w": 264.0,
+    "h": 208.5
+   },
+   "border_pt": 1.5,
+   "padding_pt": {
+    "left": 12.0,
+    "right": 12.0,
+    "top": 9.0,
+    "bottom": 10.0
+   },
+   "cardno_left_pt": 49.5,
+   "icon_right_pt": 286.5,
+   "item_name_left_pt": [
+    49.5
+   ],
+   "name_left_spread_mm": 0.0,
+   "price_right_pt": [
+    286.5
+   ],
+   "price_right_spread_mm": 0.0,
+   "desc_left_pt": [
+    49.5
+   ],
+   "subheader_left_pt": [
+    49.5
+   ],
+   "inner_left_pt": 13.5,
+   "inner_right_pt": 13.5,
+   "free_space_below_content_pt": -3.26,
+   "banner_pt": {
+    "x": 81.49,
+    "y": 340.24,
+    "w": 161.02,
+    "h": 34.01
+   },
+   "icon_pt": {
+    "x": 250.5,
+    "y": 339.25,
+    "w": 36.0,
+    "h": 36.0
+   },
+   "items": [
+    {
+     "ref": "beta_blanco_tequila",
+     "name": "Blanco Tequila",
+     "price": "12",
+     "name_pt": {
+      "x": 49.5,
+      "y": 403.24,
+      "w": 82.57,
+      "h": 14.25
+     },
+     "price_pt": {
+      "x": 274.01,
+      "y": 403.24,
+      "w": 12.49,
+      "h": 14.25
+     },
+     "desc_pt": {
+      "x": 49.5,
+      "y": 417.25,
+      "w": 184.43,
+      "h": 22.25
+     },
+     "desc_lines": 2,
+     "desc": "Also called plata; a tequila class under Mexican standard NOM-006."
+    },
+    {
+     "ref": "beta_anejo_tequila",
+     "name": "Añejo Tequila",
+     "price": "16",
+     "name_pt": {
+      "x": 49.5,
+      "y": 444.25,
+      "w": 76.54,
+      "h": 14.25
+     },
+     "price_pt": {
+      "x": 274.0,
+      "y": 444.25,
+      "w": 12.5,
+      "h": 14.25
+     },
+     "desc_pt": {
+      "x": 49.5,
+      "y": 458.25,
+      "w": 221.31,
+      "h": 22.25
+     },
+     "desc_lines": 2,
+     "desc": "The aged class of tequila under Mexican standard NOM-006."
+    },
+    {
+     "ref": "beta_cognac_vsop",
+     "name": "Cognac VSOP",
+     "price": "18",
+     "name_pt": {
+      "x": 49.5,
+      "y": 502.25,
+      "w": 76.25,
+      "h": 14.25
+     },
+     "price_pt": {
+      "x": 274.02,
+      "y": 502.25,
+      "w": 12.48,
+      "h": 14.25
+     },
+     "desc_pt": {
+      "x": 49.5,
+      "y": 516.26,
+      "w": 193.45,
+      "h": 11.25
+     },
+     "desc_lines": 1,
+     "desc": "From the brandy shelf; VSOP marks its age grade."
+    }
+   ],
+   "subs": [
+    {
+     "ref": "sub_spirits_agave",
+     "text": "AGAVE",
+     "es": "Del agave",
+     "x_pt": 49.5
+    },
+    {
+     "ref": "sub_spirits_brandy",
+     "text": "BRANDY",
+     "es": "Brandy y coñac",
+     "x_pt": 49.5
+    }
+   ]
+  },
+  {
+   "n": 4,
+   "ref": "sec_beer",
+   "name": "Beer",
+   "kicker": "Cerveza",
+   "featured": false,
+   "box_pt": {
+    "x": 312.0,
+    "y": 327.75,
+    "w": 264.0,
+    "h": 208.5
+   },
+   "border_pt": 1.5,
+   "padding_pt": {
+    "left": 12.0,
+    "right": 12.0,
+    "top": 9.0,
+    "bottom": 10.0
+   },
+   "cardno_left_pt": 325.5,
+   "icon_right_pt": 562.5,
+   "item_name_left_pt": [
+    325.5
+   ],
+   "name_left_spread_mm": 0.0,
+   "price_right_pt": [
+    562.5
+   ],
+   "price_right_spread_mm": 0.0,
+   "desc_left_pt": [
+    325.5
+   ],
+   "subheader_left_pt": [
+    325.5
+   ],
+   "inner_left_pt": 13.5,
+   "inner_right_pt": 13.5,
+   "free_space_below_content_pt": 35.75,
+   "banner_pt": {
+    "x": 357.49,
+    "y": 340.24,
+    "w": 161.02,
+    "h": 34.01
+   },
+   "icon_pt": {
+    "x": 526.5,
+    "y": 339.25,
+    "w": 36.0,
+    "h": 36.0
+   },
+   "items": [
+    {
+     "ref": "beta_czech_pilsner",
+     "name": "Czech Pilsner",
+     "price": "7",
+     "name_pt": {
+      "x": 325.5,
+      "y": 403.24,
+      "w": 75.73,
+      "h": 14.25
+     },
+     "price_pt": {
+      "x": 556.43,
+      "y": 403.24,
+      "w": 6.07,
+      "h": 14.25
+     },
+     "desc_pt": {
+      "x": 325.5,
+      "y": 417.25,
+      "w": 141.59,
+      "h": 11.25
+     },
+     "desc_lines": 1,
+     "desc": "Crisp pale lager, bottom-fermented."
+    },
+    {
+     "ref": "beta_dry_hopped_ipa",
+     "name": "Dry-Hopped IPA",
+     "price": "8",
+     "name_pt": {
+      "x": 325.5,
+      "y": 433.24,
+      "w": 93.36,
+      "h": 14.25
+     },
+     "price_pt": {
+      "x": 555.4,
+      "y": 433.24,
+      "w": 7.1,
+      "h": 14.25
+     },
+     "desc_pt": {
+      "x": 325.5,
+      "y": 447.25,
+      "w": 190.01,
+      "h": 11.25
+     },
+     "desc_lines": 1,
+     "desc": "Hop-forward India pale ale, a top-fermented ale."
+    },
+    {
+     "ref": "beta_amber_lager",
+     "name": "Amber Lager",
+     "price": "7",
+     "name_pt": {
+      "x": 325.5,
+      "y": 463.24,
+      "w": 72.61,
+      "h": 14.25
+     },
+     "price_pt": {
+      "x": 556.43,
+      "y": 463.24,
+      "w": 6.07,
+      "h": 14.25
+     },
+     "desc_pt": {
+      "x": 325.5,
+      "y": 477.25,
+      "w": 206.21,
+      "h": 11.25
+     },
+     "desc_lines": 1,
+     "desc": "Toasty and bottom-fermented, from the lager family."
+    }
+   ],
+   "subs": [
+    {
+     "ref": "sub_beer_draft",
+     "text": "DRAFT",
+     "es": "De barril",
+     "x_pt": 325.5
+    }
+   ]
+  },
+  {
+   "n": 5,
+   "ref": "sec_cider",
+   "name": "Cider",
+   "kicker": "Sidra",
+   "featured": false,
+   "box_pt": {
+    "x": 36.0,
+    "y": 548.25,
+    "w": 264.0,
+    "h": 189.75
+   },
+   "border_pt": 1.5,
+   "padding_pt": {
+    "left": 12.0,
+    "right": 12.0,
+    "top": 9.0,
+    "bottom": 10.0
+   },
+   "cardno_left_pt": 49.5,
+   "icon_right_pt": 286.5,
+   "item_name_left_pt": [
+    49.5
+   ],
+   "name_left_spread_mm": 0.0,
+   "price_right_pt": [
+    286.5
+   ],
+   "price_right_spread_mm": 0.0,
+   "desc_left_pt": [
+    49.5
+   ],
+   "subheader_left_pt": [],
+   "inner_left_pt": 13.5,
+   "inner_right_pt": 13.5,
+   "free_space_below_content_pt": 81.0,
+   "banner_pt": {
+    "x": 81.49,
+    "y": 560.74,
+    "w": 161.02,
+    "h": 34.01
+   },
+   "icon_pt": {
+    "x": 250.5,
+    "y": 559.75,
+    "w": 36.0,
+    "h": 36.0
+   },
+   "items": [
+    {
+     "ref": "beta_dry_cider",
+     "name": "Dry Cider",
+     "price": "8",
+     "name_pt": {
+      "x": 49.5,
+      "y": 608.74,
+      "w": 54.22,
+      "h": 14.25
+     },
+     "price_pt": {
+      "x": 279.4,
+      "y": 608.74,
+      "w": 7.1,
+      "h": 14.25
+     },
+     "desc_pt": {
+      "x": 49.5,
+      "y": 622.75,
+      "w": 209.02,
+      "h": 22.25
+     },
+     "desc_lines": 2,
+     "desc": "Sparkling and dry; a fruit drink of its own, beside beer and wine."
+    }
+   ],
+   "subs": []
+  },
+  {
+   "n": 6,
+   "ref": "sec_wine",
+   "name": "Wine",
+   "kicker": "Vino",
+   "featured": false,
+   "box_pt": {
+    "x": 312.0,
+    "y": 548.25,
+    "w": 264.0,
+    "h": 189.75
+   },
+   "border_pt": 1.5,
+   "padding_pt": {
+    "left": 12.0,
+    "right": 12.0,
+    "top": 9.0,
+    "bottom": 10.0
+   },
+   "cardno_left_pt": 325.5,
+   "icon_right_pt": 562.5,
+   "item_name_left_pt": [
+    325.5
+   ],
+   "name_left_spread_mm": 0.0,
+   "price_right_pt": [
+    562.5
+   ],
+   "price_right_spread_mm": 0.0,
+   "desc_left_pt": [
+    325.5
+   ],
+   "subheader_left_pt": [
+    325.5
+   ],
+   "inner_left_pt": 13.5,
+   "inner_right_pt": 13.5,
+   "free_space_below_content_pt": -0.0,
+   "banner_pt": {
+    "x": 357.49,
+    "y": 560.74,
+    "w": 161.02,
+    "h": 34.01
+   },
+   "icon_pt": {
+    "x": 526.5,
+    "y": 559.75,
+    "w": 36.0,
+    "h": 36.0
+   },
+   "items": [
+    {
+     "ref": "beta_malbec",
+     "name": "Malbec",
+     "price": "12",
+     "name_pt": {
+      "x": 325.5,
+      "y": 623.74,
+      "w": 40.04,
+      "h": 14.25
+     },
+     "price_pt": {
+      "x": 550.01,
+      "y": 623.74,
+      "w": 12.49,
+      "h": 14.25
+     },
+     "desc_pt": {
+      "x": 325.5,
+      "y": 637.75,
+      "w": 51.28,
+      "h": 11.25
+     },
+     "desc_lines": 1,
+     "desc": "Dry red wine."
+    },
+    {
+     "ref": "beta_pinot_grigio",
+     "name": "Pinot Grigio",
+     "price": "11",
+     "name_pt": {
+      "x": 325.5,
+      "y": 653.74,
+      "w": 67.95,
+      "h": 14.25
+     },
+     "price_pt": {
+      "x": 551.72,
+      "y": 653.74,
+      "w": 10.78,
+      "h": 14.25
+     },
+     "desc_pt": {
+      "x": 325.5,
+      "y": 667.75,
+      "w": 59.59,
+      "h": 11.25
+     },
+     "desc_lines": 1,
+     "desc": "Dry white wine."
+    },
+    {
+     "ref": "beta_brut_rose",
+     "name": "Brut Rosé",
+     "price": "13",
+     "name_pt": {
+      "x": 325.5,
+      "y": 700.75,
+      "w": 55.04,
+      "h": 14.25
+     },
+     "price_pt": {
+      "x": 550.62,
+      "y": 700.75,
+      "w": 11.88,
+      "h": 14.25
+     },
+     "desc_pt": {
+      "x": 325.5,
+      "y": 714.75,
+      "w": 69.93,
+      "h": 11.25
+     },
+     "desc_lines": 1,
+     "desc": "Dry and sparkling."
+    }
+   ],
+   "subs": [
+    {
+     "ref": "sub_wine_by_the_glass",
+     "text": "BY THE GLASS",
+     "es": "Por copa",
+     "x_pt": 325.5
+    },
+    {
+     "ref": "sub_wine_sparkling",
+     "text": "SPARKLING",
+     "es": "Espumoso",
+     "x_pt": 325.5
+    }
+   ]
+  }
+ ],
+ "checks": {
+  "inner_left_spread_mm_across_cards": 0.0,
+  "inner_right_spread_mm_across_cards": 0.0,
+  "max_name_left_spread_in_a_card_mm": 0.0,
+  "max_price_right_spread_in_a_card_mm": 0.0,
+  "names_desc_subs_share_left_edge": true,
+  "cardno_on_name_edge": true,
+  "icon_on_price_edge": true,
+  "row_heights_pt": {
+   "131.99": [
+    183.76
+   ],
+   "327.75": [
+    208.5
+   ],
+   "548.25": [
+    189.75
+   ]
+  },
+  "equal_height_within_every_row": true,
+  "no_card_overflow": false,
+  "printed_ink_margins_pt": {
+   "left": 36.0,
+   "top": 36.0,
+   "right": 36.0,
+   "bottom": 36.0
+  },
+  "fonts_loaded": 6,
+  "letter_png_px": [
+   2550,
+   3300
+  ],
+  "phone_png_px": [
+   1170,
+   6552
+  ],
+  "phone": {
+   "scroll_width_px": 390,
+   "tab_bar_position": "sticky",
+   "tabs": 6,
+   "cards_stacked_single_column": true
+  }
+ }
+}

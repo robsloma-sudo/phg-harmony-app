@@ -1,0 +1,22 @@
+{
+ "results": [
+  {
+   "file": "preview-letter.png",
+   "squint_salient_regions": 1,
+   "primary_area_pct": 11.41,
+   "primary_to_secondary": null,
+   "ground_luminance": 0.924,
+   "value_range_p5_p95": [
+    0.349,
+    0.928
+   ],
+   "accent_area_pct": 7.39,
+   "visual_centroid": [
+    0.6,
+    0.177
+   ]
+  }
+ ],
+ "variant_silhouette": [],
+ "notes": "silhouette_corr > 0.8 = structurally similar directions (variant_silhouette_test fails)"
+}

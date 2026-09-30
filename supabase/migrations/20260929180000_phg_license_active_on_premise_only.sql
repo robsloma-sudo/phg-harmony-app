@@ -1,0 +1,12 @@
+-- Applied live 2026-09-29 as migrations phg_license_only_active_on_premise + phg_license_coverage_and_venues_rpc.
+-- Rule (Rob): only current, active, on-premise liquor licences; no off-premise, unknown type, inactive/pending/escrow/
+-- suspended/surrendered, expired or duplicate rows. CO/NY/IA are already in accounts (built from their licence lists).
+--   phg_license.qualifies(state, on_premise, status, expires_on)       -> the rule
+--   public.phg_license_upsert(jsonb)                                   -> drops non-qualifying rows, deletes licences that stop qualifying
+--   check constraint licenses_active_on_premise_only                   -> the table refuses anything else
+--   phg_license.v_venues                                               -> one row per venue (state + address + zip/city + name)
+--   public.phg_license_coverage() / phg_license_venues(...) / phg_license_breakdown(state, by)  -> app + Harmony read layer
+-- Full SQL: see the Supabase migration history (names above).
+-- + phg_license_state_stats_cache: phg_license.state_stats (per-state licences, venues, cities, top-50 by city/type/county),
+--   refreshed by phg_license.refresh_state_stats(state) on every loader progress call (live dashboard); coverage 9.3 s -> 4 ms.
+-- + phg_license_venues_filter_first: filter before de-duplicating; index (state, upper(city)).

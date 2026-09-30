@@ -1,0 +1,11 @@
+-- Applied live 2026-09-29 (migrations accounts_exclude_off_premise_expired_inactive, phg_license_daily_expiry_sweep).
+-- Rob: exclude all off-premise, expired and inactive liquor licences - also for the CO/NY/IA accounts.
+--   accounts.account_status gains 'excluded'; accounts.exclusion_reason records why. Nothing is deleted; every pipeline
+--   function, dashboard view and the venue universe already filter on account_status = 'active'.
+--   Excluded: IA Class E liquor stores + Class B grocery (off_premise 3,274), IA Active Upon Effective Date / Suspended /
+--   Temporarily Unlicensed / Call for Status (+ Canceled already permanently_closed) (inactive 2,165), IA expired 81,
+--   CO Fermented Malt Beverage and Wine (off_premise 1,328), CO expired 325. NY: all 21,384 qualify.
+--   Kept: IA Class C (LC), Special Class C (BW), Class D (LD), Class F (LF = private clubs) - all on-premise.
+--   phg_license.refresh_state_stats counts only active accounts for CO/NY/IA.
+--   Daily 07:13 UTC cron 'phg_license_daily_expiry' -> phg_license.daily_expiry_sweep(): removes expired licences,
+--   excludes accounts whose licence expired, refreshes coverage.

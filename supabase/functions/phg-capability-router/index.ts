@@ -1,0 +1,35 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization,x-client-info,apikey,content-type"};
+const out=(x:any,s=200)=>new Response(JSON.stringify(x),{status:s,headers:{...cors,"Content-Type":"application/json"}});
+Deno.serve(async(req)=>{if(req.method==="OPTIONS")return new Response("ok",{headers:cors});if(req.method!=="POST")return out({error:"POST required"},405);
+const url=Deno.env.get("SUPABASE_URL"),key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),oa=Deno.env.get("OPENAI_API_KEY"),model=Deno.env.get("OPENAI_MODEL")||"gpt-4o-mini";if(!url||!key||!oa)return out({error:"runtime config missing"},500);
+const b=await req.json().catch(()=>({})),message=String(b.message||"").trim();if(!message)return out({error:"message required"},400);const sb=createClient(url,key,{auth:{persistSession:false}});
+const {data:catalog}=await sb.rpc("phg_capability_catalog");
+const schema={type:"object",additionalProperties:false,properties:{needs_clarification:{type:"boolean"},clarification_question:{type:["string","null"]},calls:{type:"array",items:{type:"object",additionalProperties:false,properties:{capability:{type:"string"},arguments:{type:"object",additionalProperties:false,properties:{query:{type:["string","null"]},state:{type:["string","null"]},city:{type:["string","null"]},venue_type:{type:["string","null"]},drink:{type:["string","null"]},site:{type:["string","null"]},geo:{type:["string","null"]},location_key:{type:["string","null"]},start_date:{type:["string","null"]},end_date:{type:["string","null"]},period_a_start:{type:["string","null"]},period_a_end:{type:["string","null"]},period_b_start:{type:["string","null"]},period_b_end:{type:["string","null"]},revenue_center:{type:["string","null"]},sales_operation:{type:["string","null"]},build:{type:["string","null"]},spirit:{type:["string","null"]},limit:{type:"integer"}},required:["query","state","city","venue_type","drink","site","geo","location_key","start_date","end_date","period_a_start","period_a_end","period_b_start","period_b_end","revenue_center","sales_operation","build","spirit","limit"]},purpose:{type:"string"}},required:["capability","arguments","purpose"]}},response_goal:{type:"string"}},required:["needs_clarification","clarification_question","calls","response_goal"]};
+const instructions="You are the PHG capability router. Select only READY capabilities from the supplied catalog. Use the fewest capabilities that fully answer the request, but compose multiple calls when needed. Semantic distinction: venue_profile is for general venue-level profile metrics and characteristics; menu_composition is specifically for the structure and mix of the beverage menu, including cocktail counts, spirit pours, tequila representation, category/menu share, brands, and menu composition. Whenever the user explicitly asks about menu composition, beverage-program mix/structure, what kinds of beverage programs are using something, or representation within menus, prefer/include menu_composition rather than substituting venue_profile. Never select a capability absent from the catalog. If required entity/context is missing, ask one clarification. Do not invent operational sales/labor/expense/inventory/invoice/recipe data. Subjective analytical thresholds such as expensive, cheap, high, low, strong, weak, premium, affordable, large, small, or similar must never be silently invented. If the conversation context does not already contain an explicit definition or threshold for the requested subjective term, set needs_clarification=true and ask the user to define it; do not execute threshold-dependent capability calls yet. Return structured routing only.";
+const rr=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Authorization":`Bearer ${oa}`,"Content-Type":"application/json"},body:JSON.stringify({model,instructions,input:JSON.stringify({request:message,capabilities:catalog,conversation_context:b.conversation_context||null}),text:{format:{type:"json_schema",name:"phg_capability_route",strict:true,schema}}})});const raw=await rr.json();if(!rr.ok)return out({error:"routing failed",detail:raw?.error?.message||raw},502);
+let txt=raw.output_text;if(!txt&&Array.isArray(raw.output))for(const item of raw.output){const p=item?.content?.find((x:any)=>x?.type==="output_text");if(p?.text){txt=p.text;break;}}if(!txt)return out({error:"no route"},502);const route=JSON.parse(txt);if(route.needs_clarification)return out({status:"needs_clarification",question:route.clarification_question,route});
+const results:any[]=[];for(const call of route.calls){const a=call.arguments||{};let rpc="",args:any={};switch(call.capability){
+case"venue_search":rpc="phg_search_venues";args={p_query:a.query,p_state:a.state,p_limit:a.limit};break;
+case"venue_profile":rpc="phg_read_venue_profiles";args={p_search:a.query,p_limit:a.limit};break;
+case"market_demographics":rpc="phg_read_market_demographics";args={p_search:a.query,p_limit:a.limit};break;
+case"cocktail_price_analysis":rpc="phg_cocktail_price_stats";args={p_state:a.state,p_city:a.city,p_venue_type:a.venue_type,p_drink:a.drink};break;
+case"similar_venues":rpc="phg_similar_venues";args={p_site:a.site||a.query,p_limit:a.limit};break;
+case"menu_composition":rpc="phg_menu_composition";args={p_query:a.query,p_limit:a.limit};break;
+case"brand_presence":rpc="phg_brand_presence";args={p_brand:a.query,p_limit:a.limit};break;
+case"cocktail_resolve":rpc="phg_resolve_cocktail";args={p_name:a.query,p_limit:a.limit};break;
+case"beverage_classify":rpc="classify_item_cached";args={p_name:a.query};break;
+case"cocktail_build_patterns":rpc="phg_cocktail_build_patterns";args={p_build:a.build,p_spirit:a.spirit,p_limit:a.limit};break;
+case"product_brand_lookup":rpc="phg_product_lookup";args={p_query:a.query,p_limit:a.limit};break;
+case"source_provenance":rpc="phg_trace_observations";args={p_search:a.query,p_limit:a.limit};break;
+case"availability_intelligence":rpc="phg_current_availability";args={p_query:a.query,p_geo:a.geo,p_limit:a.limit};break;
+case"pipeline_quality":rpc="phg_pipeline_quality";args={};break;
+case"sales_analysis":
+ if(a.sales_operation==="compare"){rpc="phg_sales_period_compare";args={p_location_key:a.location_key,p_a_start:a.period_a_start,p_a_end:a.period_a_end,p_b_start:a.period_b_start,p_b_end:a.period_b_end};}
+ else if(a.sales_operation==="item_mix"){rpc="phg_sales_item_mix";args={p_location_key:a.location_key,p_start:a.start_date,p_end:a.end_date,p_limit:a.limit};}
+ else{rpc="phg_sales_summary";args={p_location_key:a.location_key,p_start:a.start_date,p_end:a.end_date,p_revenue_center:a.revenue_center};}
+ break;
+default:results.push({capability:call.capability,status:"unsupported_router_mapping"});continue;}
+const {data,error}=await sb.rpc(rpc,args);results.push({capability:call.capability,purpose:call.purpose,status:error?"failed":"succeeded",data:error?null:data,error:error?.message||null});}
+return out({status:"executed",route,results});});

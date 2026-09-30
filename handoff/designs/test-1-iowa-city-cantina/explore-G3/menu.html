@@ -1,0 +1,159 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Cantina · Bar menu</title><style>
+@font-face{font-family:Lab;font-weight:500;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/explore-G3/fonts/Oswald-500.ttf)}
+@font-face{font-family:Nr;font-weight:400;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/explore-G3/fonts/Newsreader-400.ttf)}
+@font-face{font-family:Nr;font-weight:500;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/explore-G3/fonts/Newsreader-500.ttf)}
+@font-face{font-family:Nr;font-weight:400;font-style:italic;src:url(file:///home/user/phg-harmony-app/handoff/designs/test-1-iowa-city-cantina/explore-G3/fonts/Newsreader-400i.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#EFE7D8}
+.page{position:relative;overflow:hidden;background:#EFE7D8;color:#1B1815;font-family:Nr;-webkit-font-smoothing:antialiased;
+  font-variant-numeric:lining-nums tabular-nums;--g:22px}
+svg.mon{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.plate-key{fill:#1B1815} .plate-red{fill:#9B2D1F}
+.foot{position:absolute;font-family:Lab;font-weight:500;text-transform:uppercase;font-size:12px;letter-spacing:.3em;
+  line-height:var(--g);white-space:nowrap;color:#1B1815}
+.foot .l2{color:#4D453D}
+/* one row grid: every line box is exactly one row (--g); every gap is a whole number of rows */
+.list{position:absolute;display:grid;align-items:start}
+h2,h3{font-family:Lab;font-weight:500;text-transform:uppercase;line-height:var(--g)}
+h2{font-size:15px;letter-spacing:.3em;color:#9B2D1F;margin-bottom:calc(var(--g)*1)}
+
+h3{font-size:12px;letter-spacing:.3em;color:#4D453D}
+.it+h3{margin-top:calc(var(--g)*var(--sub))}
+.sec+.sec{margin-top:calc(var(--g)*var(--sec))}
+.it+.it{margin-top:calc(var(--g)*1)}
+.row{line-height:var(--g)}
+.nm{font-size:19px;font-weight:500;letter-spacing:.005em}
+.pr{font-size:19px;font-weight:400;color:#4D453D;margin-left:.55em;font-variant-numeric:lining-nums tabular-nums}
+.ds{font-size:13.5px;font-style:italic;line-height:var(--g);color:#4D453D;text-wrap:pretty}
+.u{white-space:nowrap}
+
+body.letter .page{width:816px;height:1056px}
+body.letter .list{left:56px;grid-template-columns:282px 178px;column-gap:30px}
+
+body.phone .page{width:390px;padding:0 28px 44px;--g:21px}
+body.phone svg.mon{position:relative;display:block;margin-left:-28px}
+body.phone .foot{position:relative;margin-top:6px}
+body.phone .list{position:relative;margin-top:calc(var(--g)*2);grid-template-columns:1fr}
+body.phone .col1{margin-top:calc(var(--g)*3)}
+body.phone .nm,body.phone .pr{font-size:18px} body.phone .ds{font-size:13.5px}
+</style></head>
+<body class="letter"><div class="page" style="--sub:2;--sec:3">
+<svg class="mon" aria-label="Cantina">
+<defs>
+ <filter id="m-grain" x="-2%" y="-2%" width="104%" height="104%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+  <feTurbulence type="fractalNoise" baseFrequency="0.018 0.42" numOctaves="3" seed="11" result="n"/>
+  <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 -0.92" result="m"/>
+  <feFlood flood-color="#EFE7D8" result="p"/>
+  <feComposite in="p" in2="m" operator="in" result="pm"/>
+  <feComposite in="pm" in2="SourceAlpha" operator="in" result="pmc"/>
+  <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="pmc"/></feMerge>
+ </filter>
+ <filter id="m-rgrain" x="-2%" y="-2%" width="104%" height="104%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+  <feTurbulence type="fractalNoise" baseFrequency="0.0234 0.3360" numOctaves="3" seed="29" result="n"/>
+  <feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  1.0 0 0 0 -0.7" result="m"/>
+  <feComposite in="m" in2="SourceAlpha" operator="in" result="mc"/>
+  <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="mc"/></feMerge>
+ </filter>
+ <filter id="m-bite" x="-3%" y="-3%" width="106%" height="106%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+  <feMorphology in="SourceAlpha" operator="dilate" radius="0.5" result="d"/>
+  <feGaussianBlur in="d" stdDeviation="0.5" result="b"/>
+  <feOffset in="b" dx="0.5" dy="0.7" result="o"/>
+  <feFlood flood-color="#8A7A63" flood-opacity="0.16" result="c"/>
+  <feComposite in="c" in2="o" operator="in"/>
+ </filter>
+</defs><g id="mon" style="isolation:isolate"><g class="plate-key" fill-rule="evenodd" filter="url(#m-grain)"><path transform="translate(0.00,0)" d="M15.00,0.00 L50.00,0.00 L56.00,6.00 L56.00,30.00 L41.00,30.00 L41.00,18.00 L27.00,18.00 L20.00,25.00 L20.00,75.00 L27.00,82.00 L41.00,82.00 L41.00,70.00 L56.00,70.00 L56.00,94.00 L50.00,100.00 L15.00,100.00 L0.00,85.00 L0.00,15.00 Z"/><path transform="translate(62.00,0)" d="M20.00,0.00 L40.00,0.00 L60.00,100.00 L43.00,100.00 L38.60,78.00 L21.40,78.00 L17.00,100.00 L0.00,100.00 Z M30.00,35.00 L35.80,64.00 L24.20,64.00 Z"/><path transform="translate(128.00,0)" d="M0.00,6.00 L6.00,0.00 L22.00,0.00 L41.00,58.00 L41.00,0.00 L52.00,0.00 L58.00,6.00 L58.00,100.00 L36.00,100.00 L17.00,42.00 L17.00,100.00 L6.00,100.00 L0.00,94.00 Z"/><path transform="translate(192.00,0)" d="M6.00,0.00 L48.00,0.00 L54.00,6.00 L54.00,18.00 L36.50,18.00 L36.50,100.00 L17.50,100.00 L17.50,18.00 L0.00,18.00 L0.00,6.00 Z"/><path transform="translate(252.00,0)" d="M4.00,0.00 L15.00,0.00 L19.00,4.00 L19.00,96.00 L15.00,100.00 L4.00,100.00 L0.00,96.00 L0.00,4.00 Z"/><path transform="translate(277.00,0)" d="M0.00,6.00 L6.00,0.00 L22.00,0.00 L41.00,58.00 L41.00,0.00 L52.00,0.00 L58.00,6.00 L58.00,100.00 L36.00,100.00 L17.00,42.00 L17.00,100.00 L6.00,100.00 L0.00,94.00 Z"/><path transform="translate(341.00,0)" d="M20.00,0.00 L40.00,0.00 L60.00,100.00 L43.00,100.00 L38.60,78.00 L21.40,78.00 L17.00,100.00 L0.00,100.00 Z M30.00,35.00 L35.80,64.00 L24.20,64.00 Z"/></g><g class="plate-red" fill-rule="evenodd" style="mix-blend-mode:multiply" transform="rotate(0.9 200.5 50) translate(1.6 0)" filter="url(#m-rgrain)"><path transform="translate(0.00,0)" d="M15.00,0.00 L50.00,0.00 L56.00,6.00 L56.00,30.00 L41.00,30.00 L41.00,18.00 L27.00,18.00 L20.00,25.00 L20.00,75.00 L27.00,82.00 L41.00,82.00 L41.00,70.00 L56.00,70.00 L56.00,94.00 L50.00,100.00 L15.00,100.00 L0.00,85.00 L0.00,15.00 Z"/><path transform="translate(62.00,0)" d="M20.00,0.00 L40.00,0.00 L60.00,100.00 L43.00,100.00 L38.60,78.00 L21.40,78.00 L17.00,100.00 L0.00,100.00 Z M30.00,35.00 L35.80,64.00 L24.20,64.00 Z"/><path transform="translate(128.00,0)" d="M0.00,6.00 L6.00,0.00 L22.00,0.00 L41.00,58.00 L41.00,0.00 L52.00,0.00 L58.00,6.00 L58.00,100.00 L36.00,100.00 L17.00,42.00 L17.00,100.00 L6.00,100.00 L0.00,94.00 Z"/><path transform="translate(192.00,0)" d="M6.00,0.00 L48.00,0.00 L54.00,6.00 L54.00,18.00 L36.50,18.00 L36.50,100.00 L17.50,100.00 L17.50,18.00 L0.00,18.00 L0.00,6.00 Z"/><path transform="translate(252.00,0)" d="M4.00,0.00 L15.00,0.00 L19.00,4.00 L19.00,96.00 L15.00,100.00 L4.00,100.00 L0.00,96.00 L0.00,4.00 Z"/><path transform="translate(277.00,0)" d="M0.00,6.00 L6.00,0.00 L22.00,0.00 L41.00,58.00 L41.00,0.00 L52.00,0.00 L58.00,6.00 L58.00,100.00 L36.00,100.00 L17.00,42.00 L17.00,100.00 L6.00,100.00 L0.00,94.00 Z"/><path transform="translate(341.00,0)" d="M20.00,0.00 L40.00,0.00 L60.00,100.00 L43.00,100.00 L38.60,78.00 L21.40,78.00 L17.00,100.00 L0.00,100.00 Z M30.00,35.00 L35.80,64.00 L24.20,64.00 Z"/></g></g></svg>
+<div class="foot"><div>&amp; Cocktail Bar</div><div class="l2">Iowa City, Iowa</div></div>
+<div class="list">
+<div class="col col0"><section class="sec" data-id="sec_cocktails">
+<h2>Cocktails</h2>
+<h3>Classics</h3>
+<div class="it" data-id="beta_margarita"><p class="row"><span class="nm">Margarita</span> <span class="pr">15</span></p><p class="ds"><span class="u">Tequila blanco ·</span> <span class="u">fresh lime juice ·</span> <span class="u">orange liqueur ·</span> <span class="u">agave syrup ·</span> <span class="u">lime wheel</span>. <span class="u">Bright</span> <span class="u">and</span> <span class="u">citrus-forward.</span></p></div>
+<div class="it" data-id="beta_manhattan"><p class="row"><span class="nm">Manhattan</span> <span class="pr">15</span></p><p class="ds"><span class="u">Rye whiskey ·</span> <span class="u">sweet vermouth ·</span> <span class="u">cocktail cherry</span></p></div>
+<h3>House Originals</h3>
+<div class="it" data-id="beta_daiquiri"><p class="row"><span class="nm">House Daiquiri</span> <span class="pr">14</span></p><p class="ds"><span class="u">White rum ·</span> <span class="u">fresh lime juice ·</span> <span class="u">demerara syrup ·</span> <span class="u">lime coin</span></p></div>
+<div class="it" data-id="beta_old_fashioned"><p class="row"><span class="nm">Brown Butter Old Fashioned</span> <span class="pr">16</span></p><p class="ds"><span class="u">Brown butter-washed bourbon ·</span> <span class="u">demerara syrup ·</span> <span class="u">aromatic bitters ·</span> <span class="u">orange peel</span></p></div>
+</section>
+<section class="sec" data-id="sec_spirits">
+<h2>Spirits</h2>
+<h3>Agave</h3>
+<div class="it" data-id="beta_blanco_tequila"><p class="row"><span class="nm">Blanco Tequila</span> <span class="pr">12</span></p><p class="ds"><span class="u">Blanco</span> <span class="u">tequila</span> <span class="u">pour</span></p></div>
+<div class="it" data-id="beta_anejo_tequila"><p class="row"><span class="nm">Añejo Tequila</span> <span class="pr">16</span></p><p class="ds"><span class="u">Añejo</span> <span class="u">tequila</span> <span class="u">pour</span></p></div>
+<h3>Brandy</h3>
+<div class="it" data-id="beta_cognac_vsop"><p class="row"><span class="nm">Cognac VSOP</span> <span class="pr">18</span></p><p class="ds"><span class="u">VSOP</span> <span class="u">Cognac</span> <span class="u">pour</span></p></div>
+</section></div>
+<div class="col col1"><section class="sec" data-id="sec_beer">
+<h2>Beer</h2>
+<h3>Draft</h3>
+<div class="it" data-id="beta_czech_pilsner"><p class="row"><span class="nm">Czech Pilsner</span> <span class="pr">7</span></p><p class="ds"><span class="u">Crisp</span> <span class="u">pale</span> <span class="u">lager</span></p></div>
+<div class="it" data-id="beta_dry_hopped_ipa"><p class="row"><span class="nm">Dry-Hopped IPA</span> <span class="pr">8</span></p><p class="ds"><span class="u">Hop-forward</span> <span class="u">draft</span> <span class="u">IPA</span></p></div>
+<div class="it" data-id="beta_amber_lager"><p class="row"><span class="nm">Amber Lager</span> <span class="pr">7</span></p><p class="ds"><span class="u">Toasty</span> <span class="u">amber</span> <span class="u">lager</span></p></div>
+</section>
+<section class="sec" data-id="sec_cider">
+<h2>Cider</h2>
+<div class="it" data-id="beta_dry_cider"><p class="row"><span class="nm">Dry Cider</span> <span class="pr">8</span></p><p class="ds"><span class="u">Dry</span> <span class="u">sparkling</span> <span class="u">cider</span></p></div>
+</section>
+<section class="sec" data-id="sec_wine">
+<h2>Wine</h2>
+<h3>By the Glass</h3>
+<div class="it" data-id="beta_malbec"><p class="row"><span class="nm">Malbec</span> <span class="pr">12</span></p><p class="ds"><span class="u">Dry</span> <span class="u">red</span> <span class="u">wine</span></p></div>
+<div class="it" data-id="beta_pinot_grigio"><p class="row"><span class="nm">Pinot Grigio</span> <span class="pr">11</span></p><p class="ds"><span class="u">Dry</span> <span class="u">white</span> <span class="u">wine</span></p></div>
+<h3>Sparkling</h3>
+<div class="it" data-id="beta_brut_rose"><p class="row"><span class="nm">Brut Rosé</span> <span class="pr">13</span></p><p class="ds"><span class="u">Dry</span> <span class="u">sparkling</span> <span class="u">rosé</span></p></div>
+</section></div>
+</div>
+</div>
+<script>
+const WORD_LEN=401.000, A_START=62, SKEW=0.9, SLIP=1.6;
+async function layout(){
+  await document.fonts.ready;
+  const page=document.querySelector('.page'), phone=document.body.classList.contains('phone');
+  const svg=document.querySelector('svg.mon'), g=document.getElementById('mon'), foot=document.querySelector('.foot');
+  const W=page.offsetWidth;
+  // worst-case red spill past the key, in glyph units: skew displacement at the word ends + slip
+  const spill=Math.abs(Math.sin(SKEW*Math.PI/180))*WORD_LEN/2+Math.abs(SLIP)*0+0.5;
+  if(!phone){
+    const H=page.offsetHeight, M=56, crop=0.08, top=-H*0.012;
+    const G=parseFloat(getComputedStyle(page).getPropertyValue('--g'));
+    const fw=foot.offsetWidth, footGap=G;
+    const wordEnd=H-M-fw-footGap;
+    const S=(wordEnd-top)/WORD_LEN, cap=100*S, xTop=W+crop*cap, xBase=xTop-cap;
+    svg.setAttribute('width',W); svg.setAttribute('height',H);
+    g.setAttribute('transform',`translate(${xTop.toFixed(2)},${top.toFixed(2)}) rotate(90) scale(${S.toFixed(4)})`);
+    const fs=parseFloat(getComputedStyle(foot).fontSize), lh=G;
+    foot.style.transformOrigin='0 0';
+    foot.style.left=(xBase+(lh-fs)/2+fs*0.93).toFixed(2)+'px';
+    foot.style.top=(wordEnd+footGap).toFixed(2)+'px';
+    foot.style.transform='rotate(90deg)';
+    window.__mon={scale:S,cap_height:cap,x_top:xTop,x_baseline:xBase,crop_pct:crop*100,y_start:top,y_end:wordEnd,
+                  skew_deg:SKEW,slip_units:SLIP,red_spill_px:spill*S,visible_width:W-xBase};
+    // rows: the list sits on the page's row grid. Both columns start on the same row; the taller column ends on the
+    // bottom margin; the shorter one gains whole rows in its pacing gaps (never fractions: rows stay aligned)
+    const list=document.querySelector('.list'), cols=[...document.querySelectorAll('.col')];
+    list.style.top=M+'px';
+    const rows=c=>Math.round(c.getBoundingClientRect().height/G);
+    const R=cols.map(rows), N=Math.floor((H-2*M)/G);
+    // the list's first row aligns with the head of the A (the C stands alone in the top field beside nothing)
+    const yA=top+(A_START)*S, T=Math.max(0,Math.round((yA-M)/G));
+    list.style.top=(M+T*G)+'px';
+    // leftover rows go into the pacing gaps, whole rows only, section gaps first then sub-head gaps (round robin)
+    const extra={};
+    cols.forEach((c,i)=>{
+      let d=N-T-R[i]; extra['col'+i]=d; if(d<=0) return;
+      const secs=[...c.querySelectorAll('.sec+.sec')], subs=[...c.querySelectorAll('.it+h3')];
+      const add=el=>{el.style.marginTop=(parseFloat(getComputedStyle(el).marginTop)+G)+'px'; d--;};
+      while(d>0 && (secs.length||subs.length)){ for(const el of secs){ if(d>0) add(el); } for(const el of subs){ if(d>0) add(el); } }
+    });
+    const gapRows=[...document.querySelectorAll('.sec+.sec,.it+h3')].map(e=>[e.tagName==='SECTION'?e.dataset.id:e.textContent,Math.round(parseFloat(getComputedStyle(e).marginTop)/G)]);
+    window.__gapRows=gapRows;
+    window.__grid={row_px:G,rows_available:N,rows_used:R,top_offset_rows:T,list_top:M+T*G,extra_rows_added:extra,gap_rows:window.__gapRows};
+  } else {
+    const crop=0.08, S=W/WORD_LEN, cap=100*S;
+    svg.setAttribute('width',W); svg.setAttribute('height',(cap*(1-crop)+spill*S+6).toFixed(2));
+    g.setAttribute('transform',`translate(0,${(-crop*cap).toFixed(2)}) scale(${S.toFixed(4)})`);
+    window.__mon={scale:S,cap_height:cap,crop_pct:crop*100};
+  }
+  window.__ready=true;
+}
+layout();
+</script>
+</body></html>

@@ -1,0 +1,21 @@
+PHG CURRENT CANONICAL FRONTEND POINTER
+=====================================
+Repository: robsloma-sudo/phg-harmony-app
+Branch: main
+File: index.html
+Latest observed commit: a739f56bb511f95d5d6ce9a153aa62e8cbf7a394
+Commit message: PHG 18.49.4: distinguish candidate discovery from rendered gallery
+Observed current index.html blob SHA: fbf293dfe6c7994243f77c889e385b6b7ef35c37
+Re-verified: 2026-09-27T01:20Z (fresh clone; origin/main == a739f56; `git rev-parse HEAD:index.html` == fbf293d...)
+
+IMPORTANT:
+Use GitHub main/index.html as the source of truth. The locally attached gallery-pass
+index.html (PHG_GALLERY_PASS_1_2026-09-26.zip) and the archived "18.49 Safari voice"
+candidate both predate 18.49.0-18.49.4 and must not replace current main.
+Do not use the temporary quoting-fix/restore commits (8f222ee, a5b8b38, b2f1d86, 6b0d2ba)
+as a baseline; they are superseded by b624943 / 416bba5 / a739f56.
+
+Handoff files live in /handoff on the working branch:
+  handoff/PHG_RUNNING_CHANGELOG.txt   (mandatory)
+  handoff/PHG_OPEN_ISSUES.txt         (mandatory)
+  handoff/PHG_CURRENT_SOURCE_POINTER.txt

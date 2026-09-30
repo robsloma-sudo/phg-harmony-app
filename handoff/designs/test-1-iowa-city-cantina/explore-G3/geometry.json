@@ -1,0 +1,980 @@
+{
+ "variant": "after",
+ "contrast_on_paper": {
+  "ink": 14.39,
+  "ink2": 7.65,
+  "chile": 6.13
+ },
+ "letter": {
+  "page": [
+   0,
+   0,
+   816,
+   1056
+  ],
+  "monument": {
+   "scale": 2.1438204488778054,
+   "cap_height": 214.38204488778055,
+   "x_top": 833.1505635910224,
+   "x_baseline": 618.7685187032419,
+   "crop_pct": 8,
+   "y_start": -12.672,
+   "y_end": 847,
+   "skew_deg": 0.9,
+   "slip_units": 1.6,
+   "red_spill_px": 7.823480668482654,
+   "visible_width": 197.23148129675815
+  },
+  "grid": {
+   "row_px": 22,
+   "rows_available": 42,
+   "rows_used": [
+    35,
+    34
+   ],
+   "top_offset_rows": 3,
+   "list_top": 122,
+   "extra_rows_added": {
+    "col0": 4,
+    "col1": 5
+   },
+   "gap_rows": [
+    [
+     "House Originals",
+     3
+    ],
+    [
+     "sec_spirits",
+     5
+    ],
+    [
+     "Brandy",
+     3
+    ],
+    [
+     "sec_cider",
+     5
+    ],
+    [
+     "sec_wine",
+     5
+    ],
+    [
+     "Sparkling",
+     3
+    ]
+   ]
+  },
+  "foot": [
+   590.9,
+   869,
+   634.9,
+   1000.5
+  ],
+  "columns": [
+   [
+    56,
+    122,
+    338,
+    980
+   ],
+   [
+    368,
+    122,
+    546,
+    980
+   ]
+  ],
+  "sections": {
+   "sec_cocktails": [
+    56,
+    122,
+    338,
+    144
+   ],
+   "sec_spirits": [
+    56,
+    672,
+    338,
+    694
+   ],
+   "sec_beer": [
+    368,
+    122,
+    546,
+    144
+   ],
+   "sec_cider": [
+    368,
+    474,
+    546,
+    496
+   ],
+   "sec_wine": [
+    368,
+    672,
+    546,
+    694
+   ]
+  },
+  "subs": [
+   [
+    "Classics",
+    56,
+    166,
+    338,
+    188
+   ],
+   [
+    "House Originals",
+    56,
+    386,
+    338,
+    408
+   ],
+   [
+    "Agave",
+    56,
+    716,
+    338,
+    738
+   ],
+   [
+    "Brandy",
+    56,
+    914,
+    338,
+    936
+   ],
+   [
+    "Draft",
+    368,
+    166,
+    546,
+    188
+   ],
+   [
+    "By the Glass",
+    368,
+    716,
+    546,
+    738
+   ],
+   [
+    "Sparkling",
+    368,
+    914,
+    546,
+    936
+   ]
+  ],
+  "items": {
+   "beta_margarita": {
+    "name": [
+     56,
+     189,
+     139.9,
+     208
+    ],
+    "price": [
+     154,
+     189,
+     175.5,
+     208
+    ],
+    "desc": [
+     56,
+     210,
+     338,
+     254
+    ],
+    "desc_lines": [
+     "Tequila blanco · fresh lime juice · orange liqueur ·",
+     "agave syrup · lime wheel Bright and citrus-forward."
+    ]
+   },
+   "beta_manhattan": {
+    "name": [
+     56,
+     277,
+     149.6,
+     296
+    ],
+    "price": [
+     163.7,
+     277,
+     185.2,
+     296
+    ],
+    "desc": [
+     56,
+     298,
+     338,
+     320
+    ],
+    "desc_lines": [
+     "Rye whiskey · sweet vermouth · cocktail cherry"
+    ]
+   },
+   "beta_daiquiri": {
+    "name": [
+     56,
+     409,
+     182.9,
+     428
+    ],
+    "price": [
+     197,
+     409,
+     218.5,
+     428
+    ],
+    "desc": [
+     56,
+     430,
+     338,
+     474
+    ],
+    "desc_lines": [
+     "White rum · fresh lime juice ·",
+     "demerara syrup · lime coin"
+    ]
+   },
+   "beta_old_fashioned": {
+    "name": [
+     56,
+     497,
+     295,
+     516
+    ],
+    "price": [
+     309.1,
+     497,
+     330.7,
+     516
+    ],
+    "desc": [
+     56,
+     518,
+     338,
+     562
+    ],
+    "desc_lines": [
+     "Brown butter-washed bourbon · demerara syrup ·",
+     "aromatic bitters · orange peel"
+    ]
+   },
+   "beta_blanco_tequila": {
+    "name": [
+     56,
+     739,
+     178.6,
+     758
+    ],
+    "price": [
+     192.7,
+     739,
+     214.2,
+     758
+    ],
+    "desc": [
+     56,
+     760,
+     338,
+     782
+    ],
+    "desc_lines": [
+     "Blanco tequila pour"
+    ]
+   },
+   "beta_anejo_tequila": {
+    "name": [
+     56,
+     805,
+     171,
+     824
+    ],
+    "price": [
+     185.1,
+     805,
+     206.6,
+     824
+    ],
+    "desc": [
+     56,
+     826,
+     338,
+     848
+    ],
+    "desc_lines": [
+     "Añejo tequila pour"
+    ]
+   },
+   "beta_cognac_vsop": {
+    "name": [
+     56,
+     937,
+     173.2,
+     956
+    ],
+    "price": [
+     187.3,
+     937,
+     208.8,
+     956
+    ],
+    "desc": [
+     56,
+     958,
+     338,
+     980
+    ],
+    "desc_lines": [
+     "VSOP Cognac pour"
+    ]
+   },
+   "beta_czech_pilsner": {
+    "name": [
+     368,
+     189,
+     482,
+     208
+    ],
+    "price": [
+     496.1,
+     189,
+     506.9,
+     208
+    ],
+    "desc": [
+     368,
+     210,
+     546,
+     232
+    ],
+    "desc_lines": [
+     "Crisp pale lager"
+    ]
+   },
+   "beta_dry_hopped_ipa": {
+    "name": [
+     368,
+     255,
+     510.1,
+     274
+    ],
+    "price": [
+     524.2,
+     255,
+     535,
+     274
+    ],
+    "desc": [
+     368,
+     276,
+     546,
+     298
+    ],
+    "desc_lines": [
+     "Hop-forward draft IPA"
+    ]
+   },
+   "beta_amber_lager": {
+    "name": [
+     368,
+     321,
+     477.1,
+     340
+    ],
+    "price": [
+     491.3,
+     321,
+     502,
+     340
+    ],
+    "desc": [
+     368,
+     342,
+     546,
+     364
+    ],
+    "desc_lines": [
+     "Toasty amber lager"
+    ]
+   },
+   "beta_dry_cider": {
+    "name": [
+     368,
+     519,
+     452,
+     538
+    ],
+    "price": [
+     466.1,
+     519,
+     476.9,
+     538
+    ],
+    "desc": [
+     368,
+     540,
+     546,
+     562
+    ],
+    "desc_lines": [
+     "Dry sparkling cider"
+    ]
+   },
+   "beta_malbec": {
+    "name": [
+     368,
+     739,
+     429.8,
+     758
+    ],
+    "price": [
+     443.9,
+     739,
+     465.5,
+     758
+    ],
+    "desc": [
+     368,
+     760,
+     546,
+     782
+    ],
+    "desc_lines": [
+     "Dry red wine"
+    ]
+   },
+   "beta_pinot_grigio": {
+    "name": [
+     368,
+     805,
+     472.1,
+     824
+    ],
+    "price": [
+     486.2,
+     805,
+     507.7,
+     824
+    ],
+    "desc": [
+     368,
+     826,
+     546,
+     848
+    ],
+    "desc_lines": [
+     "Dry white wine"
+    ]
+   },
+   "beta_brut_rose": {
+    "name": [
+     368,
+     937,
+     450,
+     956
+    ],
+    "price": [
+     464.2,
+     937,
+     485.7,
+     956
+    ],
+    "desc": [
+     368,
+     958,
+     546,
+     980
+    ],
+    "desc_lines": [
+     "Dry sparkling rosé"
+    ]
+   }
+  },
+  "rows": {
+   "beta_margarita": 5,
+   "beta_manhattan": 5,
+   "beta_daiquiri": 5,
+   "beta_old_fashioned": 5,
+   "beta_blanco_tequila": 5,
+   "beta_anejo_tequila": 5,
+   "beta_cognac_vsop": 5,
+   "beta_czech_pilsner": 7.9,
+   "beta_dry_hopped_ipa": 7.9,
+   "beta_amber_lager": 7.9,
+   "beta_dry_cider": 7.9,
+   "beta_malbec": 7.9,
+   "beta_pinot_grigio": 7.9,
+   "beta_brut_rose": 7.9
+  },
+  "baselines_off_grid": 0,
+  "problems": [],
+  "channel_px": 64.9,
+  "gutter_px": 30
+ },
+ "phone": {
+  "page": [
+   0,
+   0,
+   390,
+   1724
+  ],
+  "monument": {
+   "scale": 0.972568578553616,
+   "cap_height": 97.2568578553616,
+   "crop_pct": 8
+  },
+  "grid": null,
+  "foot": [
+   28,
+   105,
+   362,
+   147
+  ],
+  "columns": [
+   [
+    28,
+    189,
+    362,
+    903
+   ],
+   [
+    28,
+    966,
+    362,
+    1680
+   ]
+  ],
+  "sections": {
+   "sec_cocktails": [
+    28,
+    189,
+    362,
+    210
+   ],
+   "sec_spirits": [
+    28,
+    630,
+    362,
+    651
+   ],
+   "sec_beer": [
+    28,
+    966,
+    362,
+    987
+   ],
+   "sec_cider": [
+    28,
+    1260,
+    362,
+    1281
+   ],
+   "sec_wine": [
+    28,
+    1407,
+    362,
+    1428
+   ]
+  },
+  "subs": [
+   [
+    "Classics",
+    28,
+    231,
+    362,
+    252
+   ],
+   [
+    "House Originals",
+    28,
+    420,
+    362,
+    441
+   ],
+   [
+    "Agave",
+    28,
+    672,
+    362,
+    693
+   ],
+   [
+    "Brandy",
+    28,
+    840,
+    362,
+    861
+   ],
+   [
+    "Draft",
+    28,
+    1008,
+    362,
+    1029
+   ],
+   [
+    "By the Glass",
+    28,
+    1449,
+    362,
+    1470
+   ],
+   [
+    "Sparkling",
+    28,
+    1617,
+    362,
+    1638
+   ]
+  ],
+  "items": {
+   "beta_margarita": {
+    "name": [
+     28,
+     253,
+     107.5,
+     271
+    ],
+    "price": [
+     121,
+     253,
+     141.5,
+     271
+    ],
+    "desc": [
+     28,
+     273,
+     362,
+     315
+    ],
+    "desc_lines": [
+     "Tequila blanco · fresh lime juice · orange liqueur ·",
+     "agave syrup · lime wheel Bright and citrus-forward."
+    ]
+   },
+   "beta_manhattan": {
+    "name": [
+     28,
+     337,
+     116.7,
+     355
+    ],
+    "price": [
+     130.2,
+     337,
+     150.6,
+     355
+    ],
+    "desc": [
+     28,
+     357,
+     362,
+     378
+    ],
+    "desc_lines": [
+     "Rye whiskey · sweet vermouth · cocktail cherry"
+    ]
+   },
+   "beta_daiquiri": {
+    "name": [
+     28,
+     442,
+     148.2,
+     460
+    ],
+    "price": [
+     161.8,
+     442,
+     182.2,
+     460
+    ],
+    "desc": [
+     28,
+     462,
+     362,
+     483
+    ],
+    "desc_lines": [
+     "White rum · fresh lime juice · demerara syrup · lime coin"
+    ]
+   },
+   "beta_old_fashioned": {
+    "name": [
+     28,
+     505,
+     254.5,
+     523
+    ],
+    "price": [
+     268,
+     505,
+     288.4,
+     523
+    ],
+    "desc": [
+     28,
+     525,
+     362,
+     567
+    ],
+    "desc_lines": [
+     "Brown butter-washed bourbon · demerara syrup ·",
+     "aromatic bitters · orange peel"
+    ]
+   },
+   "beta_blanco_tequila": {
+    "name": [
+     28,
+     694,
+     144.1,
+     712
+    ],
+    "price": [
+     157.7,
+     694,
+     178.1,
+     712
+    ],
+    "desc": [
+     28,
+     714,
+     362,
+     735
+    ],
+    "desc_lines": [
+     "Blanco tequila pour"
+    ]
+   },
+   "beta_anejo_tequila": {
+    "name": [
+     28,
+     757,
+     136.9,
+     775
+    ],
+    "price": [
+     150.5,
+     757,
+     170.9,
+     775
+    ],
+    "desc": [
+     28,
+     777,
+     362,
+     798
+    ],
+    "desc_lines": [
+     "Añejo tequila pour"
+    ]
+   },
+   "beta_cognac_vsop": {
+    "name": [
+     28,
+     862,
+     139,
+     880
+    ],
+    "price": [
+     152.6,
+     862,
+     173,
+     880
+    ],
+    "desc": [
+     28,
+     882,
+     362,
+     903
+    ],
+    "desc_lines": [
+     "VSOP Cognac pour"
+    ]
+   },
+   "beta_czech_pilsner": {
+    "name": [
+     28,
+     1030,
+     136,
+     1048
+    ],
+    "price": [
+     149.6,
+     1030,
+     159.8,
+     1048
+    ],
+    "desc": [
+     28,
+     1050,
+     362,
+     1071
+    ],
+    "desc_lines": [
+     "Crisp pale lager"
+    ]
+   },
+   "beta_dry_hopped_ipa": {
+    "name": [
+     28,
+     1093,
+     162.7,
+     1111
+    ],
+    "price": [
+     176.2,
+     1093,
+     186.4,
+     1111
+    ],
+    "desc": [
+     28,
+     1113,
+     362,
+     1134
+    ],
+    "desc_lines": [
+     "Hop-forward draft IPA"
+    ]
+   },
+   "beta_amber_lager": {
+    "name": [
+     28,
+     1156,
+     131.4,
+     1174
+    ],
+    "price": [
+     145,
+     1156,
+     155.2,
+     1174
+    ],
+    "desc": [
+     28,
+     1176,
+     362,
+     1197
+    ],
+    "desc_lines": [
+     "Toasty amber lager"
+    ]
+   },
+   "beta_dry_cider": {
+    "name": [
+     28,
+     1303,
+     107.6,
+     1321
+    ],
+    "price": [
+     121.1,
+     1303,
+     131.3,
+     1321
+    ],
+    "desc": [
+     28,
+     1323,
+     362,
+     1344
+    ],
+    "desc_lines": [
+     "Dry sparkling cider"
+    ]
+   },
+   "beta_malbec": {
+    "name": [
+     28,
+     1471,
+     86.5,
+     1489
+    ],
+    "price": [
+     100.1,
+     1471,
+     120.5,
+     1489
+    ],
+    "desc": [
+     28,
+     1491,
+     362,
+     1512
+    ],
+    "desc_lines": [
+     "Dry red wine"
+    ]
+   },
+   "beta_pinot_grigio": {
+    "name": [
+     28,
+     1534,
+     126.6,
+     1552
+    ],
+    "price": [
+     140.2,
+     1534,
+     160.6,
+     1552
+    ],
+    "desc": [
+     28,
+     1554,
+     362,
+     1575
+    ],
+    "desc_lines": [
+     "Dry white wine"
+    ]
+   },
+   "beta_brut_rose": {
+    "name": [
+     28,
+     1639,
+     105.7,
+     1657
+    ],
+    "price": [
+     119.3,
+     1639,
+     139.7,
+     1657
+    ],
+    "desc": [
+     28,
+     1659,
+     362,
+     1680
+    ],
+    "desc_lines": [
+     "Dry sparkling rosé"
+    ]
+   }
+  },
+  "rows": {
+   "beta_margarita": 4.1,
+   "beta_manhattan": 4.1,
+   "beta_daiquiri": 4.1,
+   "beta_old_fashioned": 4.1,
+   "beta_blanco_tequila": 4.1,
+   "beta_anejo_tequila": 4.1,
+   "beta_cognac_vsop": 4.1,
+   "beta_czech_pilsner": 4.1,
+   "beta_dry_hopped_ipa": 4.1,
+   "beta_amber_lager": 4.1,
+   "beta_dry_cider": 4.1,
+   "beta_malbec": 4.1,
+   "beta_pinot_grigio": 4.1,
+   "beta_brut_rose": 4.1
+  },
+  "baselines_off_grid": 0,
+  "problems": []
+ }
+}

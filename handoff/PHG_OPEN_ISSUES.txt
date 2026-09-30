@@ -1,0 +1,439 @@
+PERFECT HARMONY GROUP — OPEN ISSUES & RESOLUTION LOG
+=============================================================
+Last updated (UTC): 2026-09-28 — design-intelligence audit + benchmark plan; prior: 2026-09-27T17:40Z — gallery 18.49.6 (compact, census) under review; corpus-browser v4 + browse SQL v2 + census live
+Mandatory handoff companions: PHG_RUNNING_CHANGELOG.txt + PHG_OPEN_ISSUES.txt.
+Status reflects actual verification, not intent. Resolved entries and historical evidence are kept.
+Canonical frontend: main a739f56 (18.49.4), index.html blob fbf293d.
+
+-------------------------------------------------------------
+CURRENT STATUS SUMMARY (2026-09-27T01:20Z)
+-------------------------------------------------------------
+PHG-DI-01 OPEN P0  Design KB not wired into generation (no caller of phg_design_packet/knowledge) — see design-intelligence/AUDITED_STATUS...
+PHG-DI-02 OPEN P0  Ingredient display-role order not persisted — migration proposed, awaiting Rob approval
+PHG-DI-03 OPEN P1  phg_design_packet returns a generic packet for an unknown profile_key (should error)
+PHG-DI-04 OPEN P1  Controlled KB benchmark (plan written 2026-09-28) awaiting Rob go + Arm D choice
+PHG-DI-05 OPEN P1  Handoff files 02/04/05/09 + visual_examples + media not received
+PHG-001 IN PROGRESS P1  Menu Library: 18.49.5 on branch (images fixed, filters expanded); device acceptance + release open
+PHG-002 RESOLVED    P0  HTML worker closed-browser incident (redeploy 144c7bdb, 2026-09-27T00:08Z)
+PHG-003 OPEN        P1  Physical iPhone/iPad/desktop acceptance (node geometry, gallery, transitions)
+PHG-004 OPEN        P1  Exact Netlify production bytes vs GitHub main (main 861813c = 18.49.15 pushed 2026-09-28)
+PHG-005 OPEN        P2  PDF worker HTTP 401 logs (not rechecked since takeover)
+PHG-006 OPEN        P1  Extraction provider 402
+PHG-007 OPEN        P1  Railway worker source (WORKER_CODE_B64) not under version control
+PHG-008 OPEN        P2  n8n/Claude control plane unverified
+PHG-009 IN PROGRESS P1  Metric scope / refresh semantics
+PHG-010 RESOLVED    P1  Mandatory two-log handoff files (now also committed to repo /handoff)
+PHG-011 OPEN        P1  Ingredient / preparation text coverage
+PHG-012 IN PROGRESS P1  New backend verification (phg-menu-library-search, phg-menu-corpus-browser)
+PHG-013 OPEN        P2  Live browser test transport limitation (previous agent sandbox)
+PHG-014 RESOLVED    P2  Mobile controls / unsafe URL handling in gallery candidate
+PHG-015 OPEN        P1  Remaining HTML render queue (3,502 pending + 415 retry)
+PHG-016 OPEN        P1  HTML retry population: 390/415 are orphaned stale-claim resets
+PHG-017 OPEN        P2  HTML "Download is starting" pages are actually file downloads (misrouted)
+PHG-018 OPEN        P0  Supabase cron redesign — 8 jobs RE-ENABLED by someone else ~04:00Z (4 at 20 s); job 5 timing out
+PHG-019 OPEN        P2  Cron jobs 1 & 2 (gtt-ingest-iowa, gtt-enrich-places) still ACTIVE — not in paused list
+PHG-020 OPEN        P1  Home -> Menu Studio -> Financial -> Market freeze re-test
+PHG-021 MITIGATED   P0  Live 18.49.4 thumbnails served by chat-preview v2 (0 errors since 16:36Z); proper fix = ship branch build to main
+PHG-027 IN PROGRESS P1  Compact iPhone Menu Library + census filters + 20/50/100 paging: backend live, 18.49.6 built/tested, in review
+PHG-028 OPEN        P2  Old Netlify deploy-preview permalinks (before 51d222c) still serve /handoff and /supabase files
+PHG-029 OPEN        P2  Census data via Census Reporter (api.census.gov needs a key); refresh is manual; ZIP != ZCTA caveat
+PHG-030 IN PROGRESS P1  Menu-type filtering (beverage vs food/specials/happy hour/delivery/unread, multi-label tags)
+PHG-031 RESOLVED    P1  Long menus unreadable: 18.49.7 full-screen zoomable viewer (preview); >16 MP pages may need tiling
+PHG-032 OPEN        P1  ~4,700 documents have no text (mostly images): menu type unknown until read by vision/OCR (cost decision)
+PHG-033 IN REVIEW   P0  Finding real menus: capture gate v1 live (keep drink-word links, download/menu-hub links; hold generic "menu"; skip rest). 18.49.9 "Review links" sample awaiting Rob's rejects
+PHG-034 OPEN        P0  HTML captures incomplete (30% first-screen only, lazy photos blank, tabs missed): worker v2 in workers/html-capture, needs Railway deploy
+PHG-035 IN REVIEW   P0  What makes a drinks menu: equal categories + text rules live, 12/12 test cases; 12,356 docs unread (need text); spec in handoff/DRINKS_MENU_SPEC.md awaiting Rob
+PHG-036 OPEN        P1  Menu designer agent: brief written; needs Menu Studio proposal-apply path + task creation from the app
+PHG-037 OPEN        P1  Plaintext Anthropic API key in Rob's Gmail ('PHG n8n Managed Agents'); rotate it
+PHG-022 OPEN        P1  Corpus/library Edge functions have no account-level authorization
+PHG-023 OPEN        P2  phg-menu-library-search bugs: or() escaping, no ORDER BY, 3x over-fetch (not used by frontend)
+PHG-024 OPEN        P1  Job 5 gtt-refresh-state-stats failing 56/72 runs (5 s statement timeout) since re-enable
+
+-------------------------------------------------------------
+DETAIL
+-------------------------------------------------------------
+PHG-001 | IN PROGRESS | P1 | Menu Library / corpus gallery
+Owner: backend/CTO developer
+Evidence: 18.49.3 (416bba5) made Live Menu Corpus cards drill-down entry points; 18.49.4 (a739f56)
+  distinguishes candidate discovery from rendered-image gallery state. phg-menu-corpus-browser v1
+  deployed (authenticated). Earlier local gallery pass (78 responsive / 37 backend assertions) predates
+  18.49.x and is NOT canonical.
+Next: Physical device acceptance; expand filters server-side (cocktail, ingredient, spirit, prep classes,
+  venue type, city) with pagination — never load full corpus into browser memory.
+Verification: Not closed until device acceptance.
+
+PHG-002 | RESOLVED | P0 | HTML worker closed-browser incident
+Evidence: 23:10–23:12Z Sep 26 logs: "Browser.new_page: Target page, context or browser has been closed".
+  Redeploy 144c7bdb-ef21-46af-91aa-29f991cb4236 SUCCESS; html_render_ready resumed. Ready count
+  520 -> 541 (00:08Z) -> 1,028 (01:14Z) -> 943 railway-strategy ready + legacy at 01:20Z.
+  Throughput last full hour (00:00–01:00Z): 383 pages/hour.
+Residual: browser-close root cause unproven; worker should self-relaunch browser (see PHG-007/016).
+
+PHG-003 | OPEN | P1 | Physical-device acceptance
+Scope: 18.49.1 snap navigation, 18.49.2 front-facing larger separated node geometry (no overlapping
+  hit targets, clear tier ordering), 18.49.3/18.49.4 corpus drill-down gallery, simplified Home,
+  grouped Menu Studio, Financial depth, Market state-scoped detail loading. iPhone primary; iPad, desktop.
+Next: Rob to run on device; record results here.
+
+PHG-004 | OPEN | P1 | Exact Netlify production bytes
+Evidence: Netlify site prismatic-rugelach-777e48 previously matched GitHub; Replit public host
+  (worrisome-separate-browser.replit.app) serves older 2026-09-21.17 FINAL. Not re-verified after 18.49.x.
+Next: Tie served bytes/build marker to a739f56 before further release work.
+
+PHG-005 | OPEN | P2 | PDF worker authorization errors
+Evidence: Takeover logs 21:51–21:53Z Sep 26 repeated HTTP 401, page_id null. railway_external_pdf_render
+  ready=4,071, last update 2026-09-26 09:05Z — no PDF renders since then. No PDF pages currently pending
+  in the railway PDF strategy, so the 401s may be idle-poll noise OR a real token mismatch.
+Next: Check PDF worker logs; confirm x-worker-token matches internal_secrets
+  (menu_render_worker_token) without exporting values.
+
+PHG-006 | OPEN | P1 | Extraction provider 402
+Evidence: 100 recent candidate provider-402 records at takeover. Extraction crons now paused.
+Next: Establish billing/access before re-enabling job 13.
+
+PHG-007 | OPEN | P1 | Governed worker source
+Evidence: Both Railway workers execute WORKER_CODE_B64 env payload; source not in this repo.
+Next: Export current executable (no secrets), commit under a workers/ path, hash/version it, then fix
+  PHG-016 (orphaned claims) and browser self-relaunch in versioned code.
+
+PHG-008 | OPEN | P2 | n8n/Claude control plane — unverified. No change.
+
+PHG-009 | IN PROGRESS | P1 | Metric scope and refresh semantics
+Evidence: Candidates (~464,506), visual documents (6,328), page images (9,446 required) are different
+  stages. 18.49.4 labels these separately in UI. phg-menu-pipeline-live-stats refresh cron (22) paused,
+  so cached counters are stale; direct table counts are authoritative for now.
+
+PHG-010 | RESOLVED | P1 | Mandatory two-log handoff files
+Evidence: Files maintained through every handoff; as of 2026-09-27 also committed to
+  branch claude/phg-gallery-html-render-j246dy under /handoff.
+Next: Append/update every substantive turn. Never delete resolved entries.
+
+PHG-011 | OPEN | P1 | Ingredient / preparation text coverage
+Evidence: 4,800 public.menus rows with 0 nonempty raw_content; menu_items.raw_text null. Some stored
+  cocktail descriptions contain prep language (syrup, infusion, cordial, puree, bitters, citrus, garnish,
+  foam, tincture, saline, tea, coffee). phg-menu-library-search v1 exposes these filters.
+Rule: missing text is NOT proof of ingredient absence; UI must say "no text coverage", not "no match".
+Next: Capture visible HTML text during Railway screenshot (same page load) with provenance
+  (url, final url, hash, captured_at, document/page id); backfill in bounded batches.
+
+PHG-012 | IN PROGRESS | P1 | New backend verification
+Evidence: phg-menu-library-search v1 and phg-menu-corpus-browser v1 deployed, JWT required.
+Next: Authenticated end-to-end call from app; allowed / other-account / anonymous denial tests;
+  EXPLAIN on filter queries; private signed image URLs only (bucket stays private).
+
+PHG-013 | OPEN | P2 | Previous agent's browser test transport limitation (localhost blocked).
+  This session has Playwright + Chromium at /opt/pw-browsers; can run emulated viewport checks,
+  still not a substitute for physical devices.
+
+PHG-014 | RESOLVED | P2 | Mobile controls / unsafe URL handling (gallery candidate). Kept for history.
+
+PHG-015 | OPEN | P1 | Remaining HTML render queue
+Snapshot 2026-09-27T01:20:20Z (direct menu_visual_pages):
+  firecrawl_screenshot_after_download_check pending 3,502 (claimable by Railway claim_html)
+  railway_external_html_screenshot ready 943 | retry 415 | processing 1
+  other ready: pdf 4,071; original image 315; local pdf 50+4; firecrawl 31+106; download 1+7
+At ~380/h the pending set needs ~9–10 h, then retries.
+Update 2026-09-27T01:37:30Z (HTML strategies combined, railway + firecrawl_after_download_check):
+  ready 1,185 | pending 3,363 | retry 418 | processing 1. +136 ready in 17 min (~480/h).
+  Package snapshot 01:30:28Z (HTML ready 1,155 / pending 3,424 / retry 418) is consistent.
+CONSTRAINT: do NOT lower render resolution (target_width 1400) to improve throughput.
+
+PHG-016 | OPEN | P1 | HTML retry population = mostly orphaned claims
+Evidence (2026-09-27T01:20Z): of 415 retry rows, 390 have error "stale external html claim reset",
+  attempt_count=1, next_retry_at NULL. These are pages claimed by the worker during the closed-browser
+  incident that never got complete_html/fail_html; claim_html's 20-minute stale sweep reset them.
+  Remaining 25 are real per-page failures: read timeouts (6), HTTP 500 (4), Page.goto timeout (5),
+  screenshot timeout (2), "Download is starting" (4, see PHG-017), target crash (1), cert error (1),
+  missing source URL (1), execution context destroyed (1).
+Behaviour: claim_html orders by render_attempt_count ASC, so all attempt-0 pending pages are served
+  first; the 390 will be retried automatically after the pending set drains. No manual reset needed.
+Root fix (in worker, PHG-007): on browser/context errors, report fail_html for the claimed page and
+  relaunch Chromium instead of continuing to claim.
+
+PHG-017 | OPEN | P2 | HTML strategy pages that are really file downloads
+Evidence: "Page.goto: Download is starting" for sierrarestaurant, clocktowergrill, daggthainyc (/pdf/),
+  rikospizza (wp-content). These are PDFs misclassified as HTML; retrying will fail forever.
+Next: Route to PDF acquisition/render path (download + pymupdf at full resolution) rather than retry.
+
+PHG-018 | OPEN | P0 | Supabase cron redesign before reactivation
+Paused (verified active=false 2026-09-27T01:20Z): 5,6,7,12,13,14,15,16,17,18,20,22,23 (+3,8,9,10,11
+  were already inactive). Cause: overlapping jobs -> statement timeouts/deadlocks -> iPhone login 504.
+Next: Serialize via advisory lock / single dispatcher; stagger schedules; enable one job at a time with
+  monitoring of auth latency. DO NOT bulk-enable.
+
+PHG-019 | OPEN | P2 | Cron jobs 1 and 2 still active
+Evidence: job 1 gtt-ingest-iowa (*/3) and job 2 gtt-enrich-places (*/2) are active=true (verified
+  2026-09-27T01:20Z). CORRECTION 01:40Z: the CEO changeover package (PHG_CEO_CHANGEOVER_2026-09-26.zip,
+  TWO_DAY_UPDATE §2) does list these two as ACTIVE; my earlier note that they were "not mentioned" was
+  wrong — they were omitted only from the pasted summary.
+Next: Confirm they are light and not contributing to lock contention; include in PHG-018 schedule design.
+
+PHG-020 | OPEN | P1 | Navigation freeze re-test
+Next: Re-test Home -> Menu Studio -> Financial -> Market on iPhone after 18.49.0 state-scoped loading.
+
+
+-------------------------------------------------------------
+UPDATE 2026-09-27T15:20Z
+-------------------------------------------------------------
+PHG-001 | IN PROGRESS | Branch commit 5860d0c (18.49.5) replaces the gallery: signed images for every
+  capture method, real vocabularies, state/city/venue type/cocktail/ingredient/prep filters, page
+  viewer, coverage badges. Backend live (migration phg_corpus_browse + corpus-browser v3).
+  Next: Rob merges to main / releases; then iPhone/iPad acceptance of the gallery. Perf note: cocktail +
+  prep + state query 2.9 s; propose indexes menu_visual_documents(account_id),
+  menu_visual_pages(menu_visual_document_id) WHERE render_status='ready', staging_menu_extract(account_id).
+PHG-003 | OPEN | Emulated numbers now on record (changelog 0012): top-level overlap on all sizes; phone
+  depth 2 puts half the sections off-screen and shrinks the way back below 44 px. Design agreed:
+  screen-facing tier-1 ring (x/y ellipse with small z), full clock-face ring for a focused node's
+  children sized from the viewport, ancestors pinned >= 44 px. Implementation not started (agent was
+  rate-limited). Probe script: scratchpad n3probe.js (session-local; recreate from changelog 0012 recipe).
+PHG-016 | OPEN | Orphaned claims are continuous (2,988 of 3,030 retries at 15:12Z), not incident-only.
+  Worker must report fail_html on any exception and must not hold a claim across a browser restart.
+  Needs worker source (PHG-007). Retries self-serve after pending drains; pending is now 0.
+PHG-018 | OPEN P0 | Someone re-enabled jobs 5,7,12,13,15,16,18,22 at ~04:00Z (7,12,13,16 every 20 s)
+  without this agent. No deadlocks in 6 h, 19 connections, jobs 15/18 now sub-second (verify whether
+  they were rewritten). Dispatcher design (advisory lock, one connection, per-step timeouts, merged
+  accounts counters) still recommended; draft not written (agent rate-limited). Ask Rob who changed it.
+PHG-021 | REOPENED (live) | P0 | Root cause: live index.html 18.49.4 loads card thumbnails from
+  menu-render-chat-preview v1, which serves only page ids 778,783,784,786,793,797 and only
+  capture_method railway_pymupdf_jpeg. Every other card 404s (Rob's screenshot 2026-09-27: all
+  McGillicuddys Tap House cards broken; those 4 documents each have a ready html_download_link image).
+  Fixed on branch in 18.49.5 (signed URLs from corpus-browser v3) and carried into 18.50.1.
+  Two ways to fix production, both need Rob's decision:
+   (a) merge the branch build to main (Netlify production deploy), preferred; images stay behind
+       short-lived signed URLs; or
+   (b) server hotfix: let the preview service serve any ready page image by id, without sign-in.
+       Attempted 2026-09-27 ~16:20Z; blocked by the session's safety check as widening
+       unauthenticated access to stored images. Rob then approved it and v2 was deployed ~16:36Z
+       (rollback: v1.rollback.index.ts). Awaiting Rob's reload to confirm; (a) still preferred.
+PHG-027 | OPEN | P1 | Menu Library iPhone-compact redesign (Rob, 2026-09-27 ~16:30Z)
+  Ask: one-row toolbar of compact dropdowns sized to their text; smallest borders and buttons;
+  multi-select filters; 20/50/100 records per page; filter/view by census demographics as well as
+  city and state; iPhone-first for this display.
+  Status 17:40Z:
+  - Census: existing geography_demographics covered Iowa only. Loaded ACS 2024 5-year (2020-2024) by
+    ZIP Code Tabulation Area for IA/CO/NY into phg_census_zcta (3,326 ZCTAs); 17,395 of 17,457 menu
+    documents match by venue ZIP. Metrics: median household income, median age, share 21-34,
+    share of households $100k+, bachelor's+ (25+), Hispanic/Latino share.
+  - Backend live: phg_corpus_browse_documents/candidates v2 (string or array filters, census bands,
+    sort, limit <= 100), filter vocabularies v2 + 15-minute cache, phg-menu-corpus-browser v4.
+    Backward compatible with 18.49.4/18.49.5 request bodies (dry-run verified).
+    Timings: documents 0.4-1.0 s, candidates unfiltered 72 ms (v3: 6.2 s), filters cached.
+  - Frontend 18.49.6 in index.html (branch, not yet pushed): one-row chip toolbar, multi-select
+    bottom sheets on phone, 3-column compact cards, census chips, sort, 20/50/100 + numbered pages,
+    page header hidden while the library is open. 180 browser checks pass (iPhone, iPhone SE,
+    desktop, mock backend). Adversarial review workflow wf_76caf8a3-5ae running.
+  - Remaining: fix confirmed review findings, push branch (updates PR #3 preview), port to 18.50.x,
+    release to main needs Rob's go-ahead (the safety check blocks my push to main).
+PHG-030 | IN PROGRESS | P1 | Menu-type filtering (Rob 18:20Z). Beverage filter showed food menus, DoorDash
+  listings, cocktail photos and specials pages. Plan: per-document menu_kind (beverage, mixed, food, happy_hour,
+  specials, delivery, not_menu, unread) + multi-label tags (cocktails, beer, wine, spirits, sake_soju,
+  non_alcoholic, food, happy_hour, specials, brunch, events, delivery) so a page can be several things at once;
+  gallery chips Type (any of), Has (any of), Hide (none of) with notes. Design workflow wf_cbd5691d-568.
+PHG-031 | RESOLVED (preview) | P1 | Long menus shrunk to slivers. 18.49.7 viewer opens fit-to-width with
+  scroll, pinch/double-tap/wheel/button zoom at full resolution. Watch for iOS downsampling on 512 pages >16 MP.
+PHG-032 | OPEN | P1 | ~4,700 documents have no machine-readable text (image 3,123, pdf 616, html ~4,365 minus
+  those with archived page text). Their menu type stays "unread" until a vision/OCR step reads them. Needs Rob's
+  approval of the per-image cost (estimate from wf_cbd5691d-568).
+PHG-028 | OPEN | P2 | Netlify publishes the repo root. netlify.toml (51d222c) now 404s /handoff/*, /supabase/*
+  and /netlify.toml, but earlier deploy-preview permalinks for PR #3 still serve those files. No secrets
+  are in them (internal notes and SQL). Rob can delete old deploys in Netlify if wanted.
+PHG-029 | OPEN | P2 | Census source: api.census.gov now answers "Missing Key"; data was loaded from
+  api.censusreporter.org (same ACS 2024 5-year tables, release checked). A free Census API key would let
+  the loader use the Bureau directly. Refresh is manual (pg_net requests + phg_census_zcta_apply_cr +
+  phg_census_zcta_compute). ZIP codes that are not ZCTAs (PO boxes) show "No census data".
+PHG-022 | OPEN | corpus-browser v3 and library-search v1 authorize only "is an Auth user"; any signed-in user
+  sees every venue. Add account/role check (phg_language_context pattern) before wider rollout.
+PHG-023 | OPEN | library-search v1: esc() leaves , ( ) unescaped in PostgREST or() (filter injection), no
+  ORDER BY (unstable pagination), fetches 3x limit. Not called by the frontend; fix before wiring.
+PHG-024 | OPEN | Job 5 refresh_state_stats: 56/72 runs hit a 5.0 s statement timeout since re-enable
+  (avg 4.5 s). Public state stats (v_public_states/v_public_stats) refresh unreliably. Either raise the
+  per-step timeout to ~15 s and run every 10 min, or make the function incremental.
+
+PHG-025 | OPEN | P1 | Recoverable extraction backlog from the free-only path (added 2026-09-27T15:52Z)
+Evidence: since 03:40Z, 38,483 candidates attempted with allow_paid=false; 10,304 produced items.
+  Recoverable without paid calls: 18,057 'no confident priced items' (text archived in
+  menu_extraction_sources; ~2,275 mention cocktails; parser requires prices), 5,907 of those are
+  near-empty (<500 chars, likely JS-rendered) -> render via Railway Playwright; 3,590 'empty page' in
+  auto-retry; 604 PDF/image -> PDF text path. Paid Firecrawl mainly for 2,492 blocked (401/403/429).
+  Unrecoverable: 652 (404/410).
+Next: (1) parser v5 that keeps unpriced items in drink sections and re-run it over archived text
+  (no refetch); (2) route near-empty/JS pages to the Railway renderer for DOM text capture (pairs with
+  PHG-011 text capture); (3) when PHG-006 billing is restored, re-queue blocked + still-empty rows
+  with allow_paid=true under a credit cap.
+
+PHG-026 | FIXED 2026-09-29 (monitoring) | P0 | Duplicate menus from online-ordering item pages; promotion regressed 180 venues (2026-09-27)
+Evidence: staging 846,844 rows loaded today, 105,127 distinct (account,item,price); 7,344 menus created
+  today, 1,507 current; 180 pre-existing current menus superseded by smaller ones (items 5,894 -> 3,061,
+  cocktails 1,538 -> 1,066). Cause: item/detail URLs discovered as separate candidates, each returning
+  the full menu; submit_menu supersedes per account.
+Action so far: cron 7 (promotion) and 13 (extraction) paused ~15:57Z. Workflow wf_50c3da17-0c7 designing
+  fix: supersede per source not per account; skip duplicate/subset item sets; upstream URL/fingerprint
+  filter; reversible repair restoring good menus.
+Next: apply fix + repair (with backup table), verify, then re-enable 13 then 7.
+  2026-09-29: job 13 was re-enabled in error 09:41-13:15 UTC (54,297 staging rows, 168 venues, 0 promoted);
+  paused again. The repair must cover staging rows loaded in that window. Job 7 must stay off.
+
+PHG-036e (P1, needs Rob) Designer DB access is enforced by the gateway only when the agent uses it; the agent's
+  execute_sql connector runs as the main DB user. Create a LOGIN role that is only a member of phg_menu_designer and
+  give the designer a connector with those credentials; then remove execute_sql from the designer's tools.
+
+-------------------------------------------------------------
+FLAVOR INTELLIGENCE (PHG-FLV) — added 2026-09-28 from brief PHG-FLAVOR-DEV-2026-09-28.01
+Response: handoff/flavor/FLAVOR_LEAD_DEV_RESPONSE.md. Live phg_flavor: 36 sources cataloged, 0 acquired,
+0 findings, 0 production-eligible evidence. Engine NOT populated or connected.
+-------------------------------------------------------------
+PHG-FLV-001 | OPEN | P0 | needs Rob | = GLOBAL/backend-source-control. No repo rebuilds the live DB (408 live
+  migrations vs 22 on this branch, 0 on main; 83 deployed functions vs 6 in git). Migration 20260928063244 and all
+  flavor seed DML exist only live. Next: approve the repo/branch promotion; export 20260928063244 verbatim from
+  schema_migrations.statements plus idempotent seed files; export the other live-only migrations and function sources.
+PHG-FLV-002 | OPEN | P1 | H10 recovery: no restore test; Storage bytes not covered by DB backups; PITR unverified.
+  Next: restore drill on a branch/local stack reproducing 36/36/36/151/6/6 and registry checksum 625ace3b....
+PHG-FLV-003 | OPEN | P1 | The 19 rollback-only validation checks from the brief are not persisted. Recreate them as
+  supabase/tests/phg_flavor_foundation.sql, plus phg_flavor_baseline.sql.
+PHG-FLV-004 | OPEN | P1 | = GLOBAL/ingredient-normalization. phg.ingredients has 6 generated drafts; Maple Syrup
+  (6df22ecb) and Pure Maple Syrup (bd550a93) are unreferenced orphans; recipe JSON names do not join to ingredient
+  names; subjects UNIQUE(ingredient_id,form_key) allows duplicate NULL forms. Blocks subject loading. No merge until
+  decided.
+PHG-FLV-005 | OPEN | P1 | H1/H3: append-only and "backend-only" are ACL-only (no triggers/functions in phg_flavor);
+  service_role can write content directly. Plan: writer role + capability-checked functions + freeze/append-only
+  triggers.
+PHG-FLV-006 | OPEN | P1 | H7: no account_id/visibility on flavor records; phg.recipe_projects/recipe_versions also
+  lack account_id. Blocks in-house tasting evidence and release criterion E.
+PHG-FLV-007 | OPEN | P2 | phg-menu-item-generate-v2 returns why_it_works.flavor_progression (unsourced LLM text)
+  rendered in the Menu Development card. Must be labelled generated_hypothesis; never stored as other evidence.
+PHG-FLV-008 | OPEN | P1 | needs Rob | Source-access and rights decisions (acquisition order, book purchases,
+  publisher licences, FlavorDB2/RecipeDB noncommercial, Foodpairing/VCF paid, FooDB, embeddings/training policy,
+  assessor, customer data scope, menu co-occurrence, backup spend, owners). See response section 5.
+PHG-FLV-009 | OPEN | P2 | = GLOBAL/production-integration (blocked). Gateway design: parameterized SECURITY DEFINER
+  functions (phg_flavor_candidates/explain/resolve) through a flavor_evidence capability. Not the arbitrary-SQL
+  phg_designer_query pattern. Typed link tables, never evidence_document_ids bigint[] or fabricated claims.goal_id.
+PHG-FLV-010 | OPEN | P2 | H8 pipeline: no queue/lease/worker/bucket. Build disabled until Phase D approval.
+PHG-FLV-011 | OPEN | P2 | Two knowledge-base source registries: phg_design.sources (37) + phg_design.ingestion_runs are
+  independent of public.sources / phg_flavor. Do not merge implicitly; decide a shared rights model later.
+PHG-FLV-012 | OPEN | P2 | = GLOBAL/validation-tasting, GLOBAL/coverage-expansion, GLOBAL/security-review-existing
+  carried as-is from phg_flavor.work_items (queued). The new flavor gateway must add zero advisor findings.
+PHG-037r | OPEN | P2 | Recipe standards: cocktail_reference has no per-recipe sources, glass/garnish on 1/150, no
+  technique fields; 279 spec-source rows are "Claude general knowledge". Needs a recipe/technique standards table
+  (owner-set stir/shake rules, glass, garnish, dilution) and a sourced cleanup. Rob to discuss. (2026-09-28)
+PHG-038 | OPEN | P1 | needs Rob | Harmony "ask anything in Supabase by conversation". Today phg-harmony-data answers
+  only 12 fixed sources; follow-ups outside them fail. Proposal: data dictionary + tool-using agent (search catalog,
+  describe table, sample distinct values, read-only SQL through a gateway like phg_designer_query, ask the user) with
+  grounded clarifying questions, account scoping, PII/secret exclusions. Needs Rob's scope decisions and a migration
+  approval (read-only role + dictionary). (2026-09-28)
+PHG-038 (update 2026-09-28) | Full design in handoff/HARMONY_CONVERSATION_MODEL.md. Phases: 0 pull live-only sources
+  into git; 1 screen command bus + controllable map (frontend only); 2 knowledge map + navigator (migration);
+  3 dialogue manager (jobs/slots/parking, wire goals/referents); 4 folders workspace (migration); 5 voice recipe
+  building (new Command Center actions); 6 in-app talk-over; 7 live costing. Needs Rob's decisions (section 12).
+PHG-039 | OPEN | P2 | Invoice photos -> vision model -> purchase_costs. Deferred by Rob 2026-09-28 ("table that").
+  Costing schema is ready and empty; recipes save with "cost pending" until then.
+PHG-040 | OPEN | P1 | Live-only sources: phg-command-center, phg-language-interpreter, phg-conversation,
+  phg-orchestrator, phg-capability-router, phg-harmony-reason (and ~70 others) are not in git. Pull before editing.
+PHG-041 | OPEN | P1 | needs Rob | Setup skeleton + finance data (spec 4A/4B): setting_definitions, account_settings,
+  glossary/memory, data-source adapters + mappings, gl_accounts template, metric functions. Business details (POS,
+  week start, targets, accounting system) are answered per business through Harmony, not decided by Rob. Parkway FH
+  Airtable = first test business. Needs migration approval. (2026-09-28, revised same day)
+PHG-042 | OPEN | P1 | security | Airtable "Vendors/People/Login Info" stores usernames and passwords in plain fields.
+  Never sync them; recommend moving them to a password manager. (2026-09-28)
+PHG-043 | TABLED | P3 | Cross-project export/link (folders dropped 2026-09-29: export chosen records or views). Rob 2026-09-28: "There needs to be an option ... for link between two
+  files where we can export data from one project to another ... table it for now." Default rule stands: anything
+  created in a project (folders, files, recipes, menus, costs, notes) never carries over; functions, templates,
+  skeleton and shared knowledge do. Later design: user-started export of chosen items (recipe, folder) to another
+  project the user is a member of, copy with provenance (source project/item/version), optional live link that
+  offers updates; respects roles in both projects. Spec 4C.
+PHG-044 | OPEN | P2 | needs approval | Live read of phg_design for Harmony: a service_role-only SECURITY DEFINER accessor
+  (e.g. public.phg_design_digest(domains, min_confidence)) so phg-harmony-attach reads principles live instead of the
+  design_knowledge.ts snapshot (2026-09-29). Existing phg_designer_query gets "permission denied for schema phg_design".
+
+PHG-045 (P1, open) Per-project ingredient/prep keys: once draft 04 swaps the global unique keys for per-project ones,
+  four live functions still look up ingredient_key / prep_key with no account filter:
+  phg_upsert_draft_ingredient, phg_resolve_invoice_line_new_ingredient, phg_command_recipe_candidate_prepare,
+  phg_persist_generated_menu_candidates. Patch them (add account scoping) together with, or right after, applying 04.
+  Also: the 'party' entity still shares the aliases 'distributor'/'supplier' with the live 'vendor' entity.
+
+PHG-046 (P1, in progress) Deep product knowledge for distilleries and brands. Place cards show what PHG holds (CRT register,
+  TTB label lineups, menus). Missing: per-expression tasting notes, production (agave source, cooking, milling,
+  fermentation, still type, proof, aging and barrels, additive-free status), history/origin, bottle images, prices.
+  Plan: products/brand_lines filled from label approvals (free, in PHG), then a sourced research pass (CRT, brand sites,
+  public registries) stored with a source per fact. Needs Rob's OK for paid crawling and for the DB writes.
+  2026-09-29: phg_know live (draft 09 applied); 25 tequila brands / 87 bottlings loaded; data v8/v9 shows them on
+  distillery cards and answers bottle questions. Next: mezcal + more tequila (batch 2 running), page-level checks.
+
+PHG-047 (P1, open) PHG's own daily flash / finance system (replaces the idea of syncing Airtable). Blueprint:
+  handoff/DAILY_FLASH_REFERENCE.md. Needs drafts 02-05 applied (setup skeleton, finance foundation, period presets,
+  profit coach), then: daily entry by voice or POS connector, labor from shifts x rates, GL-coded invoices, weekly
+  inventory-method COGS, declining budget, prime cost; Harmony answers them by voice.
+  2026-09-29: GL / invoice-coding template built (handoff/GL_TEMPLATE.md, draft 04a, not applied): 135-account
+  'bar_restaurant_standard' chart + 36 vendor profiles; applies after draft 04.
+
+PHG-048 (P1, open) Harmony response time. DEPLOYED 18.49.42 + inbox v23 (priority tier, per-turn timings). Server side live (inbox v22, speech-generate v3, speech-transcribe v7):
+  streaming + early first-sentence voice + parallel lookups + warm-up. App 18.49.42 (plays voice_first) waits for
+  Rob's "deploy". After deploy: compare edge-log timings and time-to-first-sound against the 5.5 s baseline. If not
+  yet half: options are OpenAI priority processing for the planner (faster, costs more) and a smaller model only for
+  the short voice rewrites (recipe/list), each only with Rob's OK.
+
+PHG-049 (P0, in progress) Every IA/CO/NY venue's menu. 2026-09-29: acquisition stall fixed (dispatcher 16 s -> 0.15 s),
+  downloader v9 parallel, coverage-first ordering, 8,495 generic menu links released for 5,329 venues with no menu,
+  deep discovery (job 20) re-enabled every 2 min. Watch: job 16/20 run status, auth latency, render backlog. Next:
+  venues with no website (~7,500) need website discovery (job 9, paused); HTML capture v2 worker still needs Railway.
+
+
+PHG-050 (P1, planned) Roll out the remaining 47 states + DC. Plan: handoff/PHG_50_STATE_ROLLOUT.html; research
+  data/expansion/states_1..4.jsonl. Blocked on Rob for: Census API key, Google Places budget, paid lists (IN, NE,
+  DE), records requests for the 15 manual states. Waves by population (wave 1 ~145M people).
+
+PHG-048 follow-up (open): Shortcut menu questions ("show me Eatery A's menu in Des Moines") spend ~4.8 s in
+  phg-harmony-data routing, then a second place_venue call, before replying; target: route menu asks directly from
+  the planner and read the venue's drinks in one call.
+
+PHG-051 (P0, open) Market explorer is 4 days stale and missing most menus. mv_drink_explorer (and mv_dash_pins, plus
+  4 MVs built on them: mv_menu_dev_venue_profile, mv_dash_sections, mv_dash_breakdown, mv_dash_filters) were last
+  refreshed by cron 8 (refresh_explorer) on 2026-09-25 21:10 UTC (that run failed; job paused since, PHG-018: the two
+  non-concurrent refreshes lock readers and fed the iPhone-login 504s). Facts 2026-09-29: MV 37,657 rows; staging
+  1,114,366 rows of which 309,294 live (not superseded) and 176,696 live rows loaded after the last refresh. The base
+  view v_public_drink_explorer takes > 55 s, reads superseded staging rows too (PHG-026 duplicates / old prices), and
+  gets income/median age only from city-level geography_demographics, which exists for Iowa only (IA 99.6% of rows
+  have income, CO 0%, NY 0%), although ZIP-level phg_census_zcta covers 99.6% of CO/NY venues by postal code.
+  Everything that reads these MVs is stale: market pages, Menu Studio build, Harmony drink_prices / drink_map / venues.
+  Plan (draft, needs review before live): v2 view = live staging rows only (superseded_at is null) + ZIP census
+  fallback (coalesce city demo, phg_census_zcta by left(postal_code,5)) + staging_id appended; build *_next MVs
+  alongside (no reader locks), unique indexes so future refreshes are CONCURRENT, recreate the 4 dependents on the
+  new MV, then swap names in one short transaction (lock_timeout 3 s); re-enable refresh as a concurrent job.
+PHG-051 update 2026-09-29: SWAPPED LIVE after safety round 3 (pass). Remaining: timed refresh (job 29) -> switch cron 8
+  to the multi-statement refresh command + watchdog; drop *_old after a week of clean refreshes.
+PHG-051 update: v2 *_next MVs built and checked (see changelog). Swap waits on app 18.49.45 (no truncation for NY
+  75,549 rows) + safety review round 2 + rehearsal. Data-quality follow-up: NY 'unclassified' rows avg $239 (food items,
+  bottle prices, misparsed prices) - exclude from price stats or classify.
+PHG-052 update 2026-09-29: CT has a real permit dataset (gwv2-eswx minus LBD brand registrations); GA and NJ files load
+  with a browser UA -> all three in loader v11. Still blocked: FL (Cloudflare challenge), VA (TLS), AZ (Cloudflare),
+  MA (interactive Accela export). Excluded: IN and DE (paid), KS (non-commercial-use terms). Needs scraping/PDF: PA,
+  NC, OH, UT, MN, MS, VT, TN, LA, NM, SC. County/municipal only: WI, NV, MD, ND, WY, SD, HI, MT, AL, AR.
+PHG-052 (open) Licence sources needing another free route: CT (open data = brand registrations), VA (TLS chain not
+  trusted), FL + NJ (403 to automated requests), GA (no direct file link). Options: records requests, or a browser-
+  based download by Rob.
+
+PHG-053 (DONE 2026-09-29, Rob: exclude all)  Existing accounts that break the licence rule (active on-premise only):
+  - IA: 2,162 accounts are "Iowa Class E licensee" = retail liquor stores (off-premise).
+  - CO: 1,326 accounts are "Fermented Malt Beverage and Wine" = grocery/convenience (off-premise since 2023); 364 CO
+    accounts have an expiry date in the past.
+  These are CRM accounts (may be linked to menus/pipeline rows), so they were NOT deleted. Proposal: mark them
+  inactive / exclude them from coverage counts, after checking links.
+
+PHG-054 (standing) Review Harmony's failure log at the start of every session with Rob: handoff/HARMONY_FEEDBACK_REVIEW.md
+  (phg.v_harmony_feedback_open). Fixes become phg.harmony_lessons (live without deploy) or code/data changes.
+
+STANDING RULE (Rob, 2026-09-29): always use the ORIGINAL file when one exists - show, zoom, share and build from the
+  stored original PDF / image, never a converted copy (snapshot, screenshot, re-encode). Copies are only a fallback when
+  the original cannot load. Applies to the menu viewer (done: 18.49.48 PDF, 18.49.49 image) and any future feature that
+  displays or processes menu files.
+PHG-055 (open) PA/NC/OH/UT licences need a browser download (no free automated route; see changelog 2026-09-30).
+  OH: apps2.com.ohio.gov/liqr/PermitLookup/PermitHolder -> Excel/CSV icon. NC: abc2.nc.gov/Search/Permit.
+  UT: Looker "Licensee List" linked from abs.utah.gov/licenses-permits/license-information -> Export CSV. PA: disallowed.
+PHG-056 (open) Deploy ingest-state-licenses with the OR address fix (repo only) on the next loader change. Delete the
+  temporary probe-licence-sources function when source research is finished.
+PHG-057 (open) Firecrawl lanes running: job 9 (website discovery) and job 33 (paid blocked menus). Watch the
+  menu_api_usage_ledger credits and yield. Job 33 empties itself (returns nothing_blocked) when the backlog is done.
+PHG-058 (open) Sugar/acid balance layer - batch 1 profiles + calculator live (see changelog 2026-09-30).  Next: batch 2
+  profiles (vermouths, ginger beers, rums, Campari/Aperol, maraschino, coffee liqueurs, agave syrup, juice TA), and
+  Rob's call on unpublished liqueur acidity (Cointreau TA).
+PHG-059 (standing, Rob 2026-09-30) Paid Firecrawl scrapes only where a test sample shows >= 70% success. Jobs 9 and
+  33 are paused until then.
