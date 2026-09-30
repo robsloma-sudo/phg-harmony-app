@@ -2431,3 +2431,39 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
      - Free route: download the CSV/Excel in a browser (OH lookup export, NC search, UT Looker "Export") and drop it
        in the repo; the lead loads it through phg_license_upsert under the same rules.
   5. phg-harmony-data: live v15 is byte-identical to the repo's v16 code (verified by diff).
+- 2026-09-30 Rob: "I loaded a lot of Firecrawl credits, so let's start enabling Firecrawl for whatever we needed that we
+  were holding off on." (Only Firecrawl is allowed. Google Places (job 2) and other paid services stay off.)
+  - Job 9, gtt-discover-restaurant-websites, re-enabled (every minute, 100 accounts per call, Firecrawl search).
+    Test batch: 100 processed, 44 found, 40 review, 16 no match. Backlog about 6,244 IA/CO/NY accounts with no
+    website (about 2 credits each).
+  - extract-menu-candidates v5 (source now in the repo; v4 had never been committed):
+    - allow_paid:true runs in its own lease lane, candidate_extraction_paid.
+    - Firecrawl is now also used for pages that refused our fetcher with 401/403/429. v4 skipped exactly these, so
+      allow_paid alone would not have recovered them.
+    - Firecrawl 4xx answers are final.
+    - On 402/429 from Firecrawl the lane pauses for 15 minutes.
+    - The free cron 13 behaves the same as before.
+  - Migration 20260930170000:
+    - the lease function and phg_save_menu_candidate_extraction accept the paid lane;
+    - new phg_dispatch_paid_blocked_menus(20) takes blocked rows oldest first, with attempts < 6;
+    - cron job 33, gtt-extract-paid-blocked, runs every minute.
+    Backlog: 4,869 blocked pages, about 4 h and about 1 credit each.
+    First batch: 20 paid calls, 19 fetched, 93 items, 2 extracted and 6 more with items in review. last_error is
+    overwritten on save, so rows are not paid for twice.
+  - Not changed: PA/NC/OH/UT state sites. Their blocks are deliberate or cloud-IP blocks, and the rule against
+    getting around blocks still applies; browser downloads are still the route. The Firecrawl mixology research
+    is waiting on subagent capacity (resets Oct 4).
+- 2026-09-30 New sugar/acid balance layer found in phg_mix (created 13:15 UTC today, outside this repo's migrations):
+  - Tables:
+    - formulation_claims: 30 sourced claims (Brix, TA vs pH, 6% citrus TA, frozen 13-15 Brix / 0-10% ABV, service
+      temperatures, Cointreau 22.5 g/100 ml).
+    - formulation_evidence: 43.
+    - ingredient_profiles: 14 (syrups by weight/volume, citrus working models, Cointreau, generic "resolve first"
+      profiles).
+    - ingredient_profile_aliases: 25.
+    - balance_profiles: 11 (sour template, frozen window, IBA references).
+    - recipe_balance_analysis: empty (no calculator yet).
+  - Views: v_recipe_balance_inputs and v_recipe_balance_coverage.
+  - Coverage: 0 of 255 recipes fully ready. 229 of 1,179 lines mapped; 194 have enough composition data.
+  - The biggest gaps are base spirits and modifiers: vodka 45, bitters 35, gin 30, vermouths 31, rye 14, ginger beer
+    14, tomato juice 12, rich syrup name variants 19, agave syrup 14.
