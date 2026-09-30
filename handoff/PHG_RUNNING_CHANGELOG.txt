@@ -2531,3 +2531,19 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   - Four background agents launched: spirits, liqueur/vermouth and mixer research, writing
     data/mixology/formulation_batch3_*.jsonl; and a Firecrawl 70% analysis writing handoff/FIRECRAWL_70_PLAN.md.
     Loader: scripts/formulation_jsonl_to_sql.py, which requires a source URL and a quote for every row.
+- 2026-09-30 Formulation batch 3 spirits:
+  - Migration 20260930220000 adds 43 sourced rows: EU/UK/BR/MX category rules and 32 US brand ABVs.
+  - Category rules set sugar to 0 for the bourbon, vodka and tequila brands, and the "resolve" notes on those brands were removed.
+  - phg_mix now has 85 profiles, 247 aliases and 121 evidence rows. Mapped lines are 692/1,179, 45 recipes are fully mapped, and there are 7 saved analyses.
+  - The liqueur/vermouth/mixer JSONL is empty: that agent and the n8n agent died on HTTP 429 (the weekly limit resets Oct 4, 15:00 UTC).
+  - The analysis agent finished handoff/FIRECRAWL_70_PLAN.md:
+    - Job A: precision is 30% today and about 96% after re-scoring the stored candidates.
+    - Job B: 1 of 40 succeeded; next step is a pre-filter and then a 10-page test.
+  - n8n/SUPABASE_CHANGES_PROPOSED.sql is a proposal only and NOT applied. Its README was never written.
+- 2026-09-30 Rob: "create an extremely in depth and intensive brief for the lead agent of PHG" and "put into a zip file".
+  - Wrote handoff/PHG_LEAD_AGENT_BRIEF.md. It covers platforms, rules, architecture, the day-by-day work log, formulation, licences, Firecrawl, n8n, risks, a live snapshot, decisions and the file map.
+  - Added a root CLAUDE.md so any Claude Code agent opened on this repo (including claude.ai/code) loads the pointer and the hard rules automatically.
+  - Zip: handoff/PHG_LEAD_AGENT_PACKAGE.zip (the brief plus all handoff docs, the skill, the agent definitions and the n8n proposal).
+  - Found while writing the brief:
+    - Rob pushed 3 commits to main on 9/30: package.json, netlify/functions/harmony.mts and a test page. The branch doesn't have them, so merge origin/main before the next deploy.
+    - harmony.mts has no auth, so anyone can spend OpenAI credits through it (brief section 9, R2).
