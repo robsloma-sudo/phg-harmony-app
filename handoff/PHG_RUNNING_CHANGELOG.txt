@@ -2523,3 +2523,11 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
     fetches are pinned to basic proxy (no stealth).
   - The main unlock is a Rob decision: whether to model unpublished acidity of sweet ingredients (liqueurs, agave) as
     ~0. Vermouth and wine carry real acidity and need data either way.
+- 2026-09-30 Rob's decisions:
+  - (1) "Assume zero": unpublished titratable acidity of liqueurs/sweeteners counts as ~0. Implemented in the
+    calculator (migration 20260930210000, claim fc_policy_unpublished_sweet_acid) with a per-line warning. Vermouth,
+    wine, cola, juices and resolve-flagged profiles are excluded. Saved analyses 3 -> 7 (Margarita x3, White Lady).
+  - (2) Unsourced products stay flagged and are on hold; Rob's team will look for them elsewhere.
+  - Four background agents launched: spirits, liqueur/vermouth and mixer research, writing
+    data/mixology/formulation_batch3_*.jsonl; and a Firecrawl 70% analysis writing handoff/FIRECRAWL_70_PLAN.md.
+    Loader: scripts/formulation_jsonl_to_sql.py, which requires a source URL and a quote for every row.

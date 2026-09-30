@@ -55,6 +55,10 @@ All six formulation tables have RLS with a `harmony_read` SELECT policy for `phg
 - `phg_mix.persist_recipe_balance(key)` and `persist_all_recipe_balances()` (service_role only) write
   `recipe_balance_analysis` (version `phg-balance-v1`) only when volume, sugar and TA are all complete. ABV is stored
   only if it is also complete. Values are pre-dilution (`assumptions.basis`).
+- Policy `fc_policy_unpublished_sweet_acid` (Rob, 2026-09-30): a liqueur or sweetener with no published TA counts as
+  ~0 TA. Each such line gets its own warning; say so when you answer. It never applies to vermouth or wine, cola or
+  mixers, juices, or 'resolve'-flagged profiles.
+- Products with no accessible primary source stay flagged 'resolve' and are on hold (Rob, 2026-09-30). Don't guess them.
 - Syrup sugar per mL uses density: sugar_g_100ml = Brix x density (see `fc_brix_mass_vs_volume`).
 
 ## Formulas (per ingredient i, volumes in mL)
