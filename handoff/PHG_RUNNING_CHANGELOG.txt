@@ -2504,3 +2504,22 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
     - Cointreau acidity not published (23);
     - ginger beer (26), vermouths (31), tomato juice TA (12);
     - agave syrup, pineapple TA, Campari, maraschino, coffee liqueur, rums.
+- 2026-09-30 Formulation batch 2 (Rob: "Continue").
+  - Migration 20260930200000 adds:
+    - USDA agave syrup, undiluted: 68.0 g/100 g, fructose-dominant. Density 1.40 from the 1 tsp portion; the 1/4 cup
+      portion gives 0.93 g/mL, which is impossible, so it was rejected.
+    - "Agave syrup" with no dilution stated: flagged to resolve.
+    - Luxardo Maraschino 32% and Kahlua 20% (official ABV; sugar not published in a readable form).
+    - Generic maraschino, coffee liqueur, sweet and dry vermouth: flagged to resolve.
+    - 16 aliases.
+    - Coverage: mapped lines 564 -> 635; fully mapped recipes 20 -> 37. Saved analyses still 3.
+  - Sources refused or dropped:
+    - Alko: robots.txt disallows anthropic-ai and ClaudeBot, and it returns 403 to our server. The
+      product-composition-lookup function (deployed v1) is marked UNUSED.
+    - Systembolaget blocks automated access.
+    - Fever-Tree: age gate.
+    - Tomato-juice TA: the paper's abstract has no figure, so the 0.471% seen in a search summary was not used.
+  - Firecrawl research tally: 19 of 23 fetches returned usable data (83%), about 140 credits in total. From now on
+    fetches are pinned to basic proxy (no stealth).
+  - The main unlock is a Rob decision: whether to model unpublished acidity of sweet ingredients (liqueurs, agave) as
+    ~0. Vermouth and wine carry real acidity and need data either way.
