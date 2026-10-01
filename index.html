@@ -6301,7 +6301,7 @@ body.phg-view-open.menu-guide-active .agentPanel.harmonyModeFull .menuGuideInlin
     <div id="err"></div>
     <div id="dataWarn"></div>
     <div id="view"></div>
-    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-09-29.18.49.50 PRICED VENUE PINS · SERVER PAGING · ORIGINAL FILES FIRST · SHARP MENU PAGES FROM THE REAL PDF · HARMONY LEARNS FROM MISSES · LIVE LICENCE COVERAGE · FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
+    <div class="ft">PHG unified workspace &middot; developer retrofit 22-al26<br><span id="asof">&mdash;</span><br><span style="opacity:.6">build 2026-10-01.18.49.51 LIVE NATIONAL PIPELINE NUMBERS · PRICED VENUE PINS · SERVER PAGING · ORIGINAL FILES FIRST · SHARP MENU PAGES FROM THE REAL PDF · HARMONY LEARNS FROM MISSES · LIVE LICENCE COVERAGE · FULL MARKET EXPLORER · VOICE FILTERS FOR DATA · GEAR BESIDE SPEAK · HARMONY ANSWERS FASTER · TAP A PLACE ON THE MAP · NAMES IN ANY LANGUAGE · FASTER REPLIES · HEARING IN CONTEXT · ONE CONVERSATION BRAIN IN THE APP · FUZZY VENUE MENUS · DESIGNED FROM THE PHG DESIGN KNOWLEDGE BASE · A NEW LOOK FOR EVERY MENU · VOICE CONTROL OF THE MAP AND APP · HARMONY VOICE CONVERSATION · STAGE ORBS · ACTION BUTTON LIVE SETUP PAGE · HARMONY SHOWS ANY PHG DATA · NOM MAP SNAP · EDIT MENUS AS YOU TALK · MENUS FROM THE CONVERSATION · FIND ANY VENUE MENU · ACTION BUTTON + NOTES + HOME SCREEN · TEXT IN STEP WITH VOICE · MENU STUDIO IN THE HARMONY VIEW · HARMONY CONVERSATION · VOICE FIX · ATTACHMENTS · COSMIC MENUS · COSMIC SPEAK STAR · MINIMAL HARMONY VIEW · VOICE FIX · HANDS-FREE TALK IN HARMONY VIEW · REFERENCE PHOTOS · HARMONY MENU STAGE · VOICE LOOP · VIEWPORT PERFORMANCE · MENU DESIGNER HAND-OFF · EVERY DRINKS CATEGORY EQUAL · DRINKS LISTS · LINK-RULE REVIEW · ZOOM VIEWER · CENSUS · PHG</span></div>
   </main>
 </div>
 <script>
@@ -8138,7 +8138,8 @@ function load(){
     // the map mid-interaction.
     var ps=PIPESTATS||{};
     /* 18.49.45: HEAVY.primary, not EXP.length - the background unclassified rows must not rebuild a page that does not read them */
-    var sig=[STATE,S.places_done,S.websites,S.drink_items,S.menus_auto,VENUES.length,HEAVY.primary,STATES.length,ps.menu_candidates,ps.visual_documents,ps.visual_pages_ready,ps.visual_pages_pending,ps.updated_at].join("|");
+    if(STATE==="ALL"&&page==="home")licLoad(false);
+    var sig=[STATE,(LIC.data&&LIC.data.venues)||0,S.places_done,S.websites,S.drink_items,S.menus_auto,VENUES.length,HEAVY.primary,STATES.length,ps.menu_candidates,ps.visual_documents,ps.visual_pages_ready,ps.visual_pages_pending,ps.updated_at].join("|");
     /* The heavy tables reload only when the state changes or the counts
        behind them move - and only for a view that actually reads them. */
     var hsig = [STATE,S.drink_items,S.venues].join("|");
@@ -8665,11 +8666,23 @@ function corpusCard(){
    '<div class="note">Data points counts DEFINED cells, rows multiplied by columns &mdash; not populated ones. Many are null: most Colorado venues have no Places data yet, most menu items carry no description. This is the size of the grid, not a count of facts held.</div></div>';
 }
 
+/* 18.49.51 (Rob, 2026-10-01: "the pipeline numbers are not up to date"): the national tiles counted only the three
+   menu states (IA/CO/NY accounts) and showed Google Places progress, which is paused and finished. Venues nationwide now
+   comes from rpc phg_license_coverage (the 17 licence-list states + CO/NY/IA accounts, same rule as Market > Coverage);
+   the second tile is menus captured. Menu, website and drink-item counts are still IA/CO/NY and say so. */
+function nationalCounts(){
+  var d=LIC.data;
+  if(d&&d.venues)return {venues:+d.venues,licences:+d.licences||0,states:+d.states||0,live:true};
+  var loaded=STATES.filter(function(x){return x.venues>0}).length;
+  return {venues:S.venues||0,licences:0,states:loaded,live:false};
+}
+function menusCaptured(){return (Number(S.menus_auto)||0)+(Number(S.menus_manual)||0);}
 function countryHome(){
   var loaded=STATES.filter(function(x){return x.venues>0})
     .sort(function(a,b){return (b.venues||0)-(a.venues||0)});
-  var pct=S.venues?(S.places_done/S.venues*100):0;
-  var web=S.places_done?(S.websites/S.places_done*100):0;
+  var nat=nationalCounts();
+  var menuPct=S.websites?(menusCaptured()/S.websites*100):0;
+  var web=S.venues?(S.websites/S.venues*100):0;
   var fire=S.websites?(S.menus_auto/S.websites*100):0;
   var db=S.websites?(S.menus_read/S.websites*100):0;
 
@@ -8687,17 +8700,18 @@ function countryHome(){
   }).join("");
 
   return pipelineCorpusCard()+'<div class="grid g4">'+
-    metric("mV","Venues nationwide","across "+loaded.length+" states",PLAIN,"coverage")+
-    metric("mP","Places looked up",pct.toFixed(1)+"% complete",BLUE,"coverage")+
-    metric("mS","Websites found",web.toFixed(1)+"% hit rate",GREEN,"competitors")+
-    metric("mI","Drink items","names and prices",ORANGE,"cocktails")+
+    metric("mV","Venues nationwide","across "+nat.states+" states &middot; active on-premise",PLAIN,"coverage")+
+    metric("mP","Menus captured",menuPct.toFixed(1)+"% of venues with a website",BLUE,"coverage")+
+    metric("mS","Websites found",web.toFixed(1)+"% of IA, CO, NY venues",GREEN,"competitors")+
+    metric("mI","Drink items","names and prices &middot; IA, CO, NY",ORANGE,"cocktails")+
    '</div><div class="grid g3">'+
-    '<div class="card"><div class="ttl"><span style="color:'+BLUE+'">&#9673;</span><span class="ttltxt">Google Places</span><span class="pct" style="color:'+BLUE+'">'+pct.toFixed(1)+'%</span></div>'+
-     '<div class="pdesc">Licences and accounts queued for cataloguing</div>'+
-     '<div class="bar"><div class="fill" style="width:'+pct+'%;background:'+BLUE+'"></div></div>'+
-     '<div class="row"><span>Done</span><b>'+n(S.places_done)+'</b></div>'+
-     '<div class="row"><span>Remaining</span><b>'+n((S.venues||0)-(S.places_done||0))+'</b></div>'+
-     '<div class="row"><span>Of universe</span><b>'+n(S.venues)+'</b></div></div>'+
+    '<div class="card clik" onclick="nav(\'coverage\')"><div class="ttl"><span style="color:'+BLUE+'">&#9673;</span><span class="ttltxt">Venue universe</span><span class="pct" style="color:'+BLUE+'">'+nat.states+' states</span></div>'+
+     '<div class="pdesc">Active, on-premise liquor licences (one row per venue). '+(nat.live?'Live':'Loading the licence count&hellip;')+'</div>'+
+     '<div class="bar"><div class="fill" style="width:'+Math.min(100,nat.states/51*100).toFixed(1)+'%;background:'+BLUE+'"></div></div>'+
+     '<div class="row"><span>Venues</span><b>'+n(nat.venues)+'</b></div>'+
+     '<div class="row"><span>Licences</span><b>'+n(nat.licences)+'</b></div>'+
+     '<div class="row"><span>With menus tracked (IA, CO, NY)</span><b>'+n(S.venues)+'</b></div>'+
+     '<div class="row"><span>States not collected yet</span><b>'+n(Math.max(0,51-nat.states))+'</b></div></div>'+
     '<div class="card"><div class="ttl"><span style="color:'+ORANGE+'">&#9673;</span><span class="ttltxt">Edge Function &mdash; Menu Data Extraction</span><span class="pct" style="color:'+ORANGE+'">'+fire.toFixed(1)+'%</span></div>'+
      '<div class="pdesc">Menu URL and account URL extraction</div>'+
      '<div class="bar"><div class="fill" style="width:'+fire+'%;background:'+ORANGE+'"></div></div>'+
@@ -8718,7 +8732,7 @@ function countryHome(){
      '<span style="margin-left:auto;font-size:11px;color:var(--faint)">tap a row to open that state</span></div>'+
      '<table><thead><tr><th>State</th><th>Venues</th><th>Places</th><th>Websites</th><th>Menus read</th><th>Items</th></tr></thead>'+
      '<tbody>'+rows+'</tbody></table>'+
-     '<div class="note">'+n(50-loaded.length)+' states not yet collected. A state with no venues has not been measured as empty &mdash; it has not been gathered.</div></div>'+
+     '<div class="note">This table lists the states with menus tracked. Venue counts for all '+nat.states+' states with licence data are on Market &rsaquo; Coverage. '+n(Math.max(0,51-nat.states))+' states not yet collected. A state with no venues has not been measured as empty &mdash; it has not been gathered.</div></div>'+
    competitorsPage();
 }
 
@@ -23039,7 +23053,9 @@ function render(){
   if(page==="home"){
     if(CORPUS_BROWSER.open){if(!document.getElementById("corpusHost"))v.innerHTML=corpusBrowserPage();return;}
     v.innerHTML=(STATE==="ALL")?countryHome():homePage();
-    tick("mV",S.venues);tick("mP",S.places_done);tick("mS",S.websites);tick("mI",S.drink_items);
+    if(STATE==="ALL"){tick("mV",nationalCounts().venues);tick("mP",menusCaptured());}
+    else{tick("mV",S.venues);tick("mP",S.places_done);}
+    tick("mS",S.websites);tick("mI",S.drink_items);
   }else if(page==="competitors"||page==="map"){
     v.innerHTML=competitorsPage();
   }else if(page==="coverage"){

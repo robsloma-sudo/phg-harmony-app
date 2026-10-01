@@ -2547,3 +2547,22 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
   - Found while writing the brief:
     - Rob pushed 3 commits to main on 9/30: package.json, netlify/functions/harmony.mts and a test page. The branch doesn't have them, so merge origin/main before the next deploy.
     - harmony.mts has no auth, so anyone can spend OpenAI credits through it (brief section 9, R2).
+- 2026-10-01 Rob (screenshot of the national home tiles: "Venues nationwide 28,818 across 3 states", "Places looked up 100%",
+  "Websites found 22,436 77.9%", "Drink items 179,762", plus a Google Places card): "the pipeline numbers are not up to date."
+  - Checked: both caches are fresh. cached_state_stats is rebuilt every 5 min by job 5 (as_of 05:42 UTC), and the Live
+    Menu Corpus cache by job 22 (05:44 UTC): 49,957 documents and 58,105 pages ready.
+  - The real cause is what the tiles count. They count only the IA/CO/NY target accounts (28,818). They show Google Places
+    progress, which is paused and finished, so it always reads 100%.
+  - The live licence coverage is 198,055 venues and 201,270 licences in 20 states (the 17 licence-list states plus CO/NY/IA).
+    It was only shown on Market > Coverage.
+  - App 18.49.51 (branch only, NOT deployed):
+    - "Venues nationwide" now reads rpc phg_license_coverage, with "across 20 states · active on-premise".
+    - "Places looked up" is replaced by "Menus captured": menus_auto + menus_manual, as a % of venues with a website.
+    - The Websites and Drink items tiles are labelled IA, CO, NY.
+    - The Google Places card is replaced by a "Venue universe" card: venues, licences, menu-tracked venues, and states
+      not collected yet.
+    - The by-state note points to Coverage.
+    - The home poll calls licLoad (throttled to 25 s), and the licence venue count is part of the re-render signature.
+    - Single-state views are unchanged.
+  - Tested headless at 390 px with stubbed data: tiles and card show 20 states / 198,055 / 201,270; 15/15 inline scripts
+    pass node --check; zero page errors.
