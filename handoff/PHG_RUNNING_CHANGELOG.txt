@@ -2566,3 +2566,16 @@ Rob: "deploy" -> 18.49.39 pushed to main f19f371 (includes 18.49.38 hearing in c
     - Single-state views are unchanged.
   - Tested headless at 390 px with stubbed data: tiles and card show 20 states / 198,055 / 201,270; 15/15 inline scripts
     pass node --check; zero page errors.
+- 2026-10-01 Rob: the Action button does not answer like the in-app features since his larger update (built with another
+  agent). Wrote handoff/ACTION_BUTTON_BRIEF.md for that agent.
+  - Root cause, proven from the function logs: in-app calls send context (turns 0->6). Every Shortcut call arrives with
+    fields [""] and turns 0, i.e. an old single-shot Shortcut with an unnamed body field and no context. Every press
+    is a new conversation. Example: 02:55 "a few variations" -> "What drink?" right after he had said margarita.
+  - The brain is the same for both. phg-harmony-inbox live v35 = repo (unchanged since 9/29). phg-harmony-data live v22
+    adds PHG-086 tier-1 routing. phg-jev is shadow/test only.
+  - Production was replaced by an API upload at 2026-10-01 03:20 UTC: still marked 18.49.50, plus invited-user sign-in
+    through phg-access. It is not in GitHub.
+  - Recommended fix: rebuild Shortcut memory on the server from turns_recent (no migration), and keep one shared brain.
+    Rob's phone Shortcut should also be rebuilt per the setup page.
+  - Shared-brain bugs found: plain Old Fashioned returned 3x for his Oaxacan spec; "added to your recipe" was only a note;
+    "no reference spec" for a drink being built in the conversation.
