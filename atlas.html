@@ -1536,6 +1536,41 @@ body.phg-light .wxal a{color:#0e7490!important}
   #phgSheetBar .grip{width:44px;height:5px;border-radius:3px;background:var(--line2);pointer-events:none}
   #phgSheetBtn{position:absolute;right:8px;top:2px;border:1px solid var(--line2);background:var(--panel2);color:var(--mut);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600}
 }
+
+/* ---- iPhone layout: one header, one bottom stack, nothing overlapping ----
+   header: (app's Harmony orb + view switch) / Ask / buttons / active chips;  bottom: one of
+   [details card | map styles | weather time bar] directly above the Filters & Layers sheet */
+#phgBmBtn{display:none}
+@media (max-width:820px){
+  .top{top:calc(env(safe-area-inset-top,0px) + 42px)!important;left:10px!important;right:10px!important;flex-wrap:wrap;gap:6px}
+  .top .ask{flex-basis:100%}
+  #undo,#share{display:none!important}
+  #phgBmBtn{display:inline-block}
+  .tbtn{padding:6px 10px!important;font-size:11px!important}
+  .activebar{top:calc(env(safe-area-inset-top,0px) + 126px)!important;left:10px!important;right:52px!important;flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none}
+  .activebar::-webkit-scrollbar{display:none}
+  .activebar .achip{flex:none}
+  .ctrls{top:calc(env(safe-area-inset-top,0px) + 124px)!important;right:10px!important;gap:5px}
+  .ctrls .cbtn{width:34px!important;height:34px!important}
+  #b3d,#north,#tour{display:none!important}
+  .bm{display:none!important;left:10px!important;right:10px!important;bottom:calc(var(--sheet,40vh) + 8px)!important;justify-content:space-between;overflow-x:auto}
+  body.phg-bm .bm{display:flex!important}
+  .wxbar{left:10px!important;right:10px!important;bottom:calc(var(--sheet,40vh) + 8px)!important;padding:6px 8px!important}
+  body.phg-bm .wxbar,body.tp .wxbar{display:none!important}
+  .card{left:10px!important;right:10px!important;top:auto!important;bottom:calc(var(--sheet,40vh) + 8px)!important;max-height:calc(100vh - var(--sheet,40vh) - 190px)!important;z-index:7!important}
+  .toast{bottom:auto!important;top:calc(env(safe-area-inset-top,0px) + 166px)!important}
+}
+
+/* map styles live in the panel's third tab (Filters | Layers | Satellite); no floating strip */
+.bm{display:none!important}
+.tabs button.on[data-tab=views]{background:rgba(245,181,74,.18);color:#fff3dc}
+body.phg-light .tabs button.on[data-tab=views]{color:#9a5b00!important}
+#phgViews{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:4px 2px 14px}
+#phgViews .bmt{width:auto!important;display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px;border-radius:12px;border:1px solid var(--line);background:none;color:var(--mut);font-size:11.5px}
+#phgViews .bmt span{width:100%!important;height:64px!important;border-radius:9px;display:block}
+#phgViews .bmt.on{border-color:var(--cy);color:var(--tx);box-shadow:0 0 0 1px var(--cy) inset}
+.phg-views-note{grid-column:1/-1;color:var(--dim);font-size:11px;line-height:1.4;margin-top:2px}
+#panel.phg-views .search,#panel.phg-views .prow,#panel.phg-views #presets{display:none!important}
 #phgAck.show{opacity:1}#phgAck small{font-weight:500;opacity:.8;margin-left:8px}#phgAck.miss{background:rgba(71,85,105,.96)}
 </style>
 <div id="phgGate"><div><b>PHG Atlas</b><span id="phgGateMsg">Checking your PHG sign-in…</span></div></div>
@@ -1637,6 +1672,8 @@ function theme(t,keepBase){var light=t==='light';if(light===document.body.classL
     p.onclick=function(e){e.stopPropagation();weather(!(wxOnIds().length>0));};top.insertBefore(p,wx);}
   wxBtn();setInterval(wxBtn,800);
   var saved='dark';try{saved=localStorage.getItem(THEME)||'dark';}catch(e){}theme(saved,true);
+  /* light screen = light map underneath too (dark styles swap to Light grey; Satellite etc. stay) */
+  if(saved==='light'){try{if(BASE==='midnight'||BASE==='blueprint')setBase('grey');}catch(e){}}
   window.addEventListener('storage',function(e){if(e.key===THEME)theme(e.newValue==='light'?'light':'dark');});
 })();
 
@@ -1661,7 +1698,7 @@ function theme(t,keepBase){var light=t==='light';if(light===document.body.classL
     if(save){try{localStorage.setItem(KEY,JSON.stringify({f:st.open/innerHeight,c:st.collapsed}));}catch(e){}}
   }
   /* map padding follows the sheet instead of a fixed 52% */
-  window.pad=function(){if(!window.map||!map.setPadding)return;if(phone()){map.setPadding({top:150,bottom:(panel.classList.contains('hide')?0:st.h)+20,left:10,right:60});}
+  window.pad=function(){if(!window.map||!map.setPadding)return;if(phone()){map.setPadding({top:190,bottom:(panel.classList.contains('hide')?0:st.h)+20,left:10,right:60});}
     else map.setPadding({top:90,bottom:90,left:panel.classList.contains('hide')?20:390,right:70});};
   btn.addEventListener('click',function(e){e.stopPropagation();apply(st.collapsed?Math.max(st.open,Math.round(innerHeight*0.4)):MIN,true);});
   var drag=null;
@@ -1673,6 +1710,25 @@ function theme(t,keepBase){var light=t==='light';if(light===document.body.classL
   bar.addEventListener('pointerup',end);bar.addEventListener('pointercancel',end);
   addEventListener('resize',function(){if(phone())apply(st.collapsed?MIN:st.open,false);else{root.style.removeProperty('--sheet');try{parent.postMessage({phgAtlasSheet:0},location.origin);}catch(e){}}});
   if(phone())apply(st.collapsed?MIN:st.open,false);
+})();
+
+/* ---- third panel tab: Satellite (all basemaps, incl. satellite and blueprint) ---- */
+(function viewsTab(){
+  var tabs=document.getElementById('tabs');if(!tabs||typeof renderPanel!=='function'||typeof BASEMAPS==='undefined'){setTimeout(viewsTab,200);return;}
+  if(!tabs.querySelector('[data-tab="views"]')){var b=document.createElement('button');b.setAttribute('data-tab','views');b.textContent='Satellite';tabs.appendChild(b);}
+  var _rp=window.renderPanel;
+  window.renderPanel=function(){
+    var panel=document.getElementById('panel');
+    if(TAB!=='views'){panel.classList.remove('phg-views');return _rp.apply(this,arguments);}
+    panel.classList.add('phg-views');
+    Array.prototype.forEach.call(tabs.children,function(x){x.classList.toggle('on',x.dataset.tab==='views');});
+    document.getElementById('ptitle').textContent='Satellite & map views';
+    var h='<div id="phgViews">'+BASEMAPS.map(function(m){return'<button class="bmt'+(BASE===m[0]?' on':'')+'" data-phgbm="'+m[0]+'"><span class="'+m[2]+'"></span>'+m[1]+'</button>';}).join('')
+      +'<div class="phg-views-note">Weather satellite layers (clouds, true colour, night lights, smoke, snow) are under Layers \u2192 Weather.</div></div>';
+    document.getElementById('pbody').innerHTML=h;
+  };
+  document.getElementById('pbody').addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-phgbm]');if(!t)return;e.stopPropagation();
+    try{if(BASE!==t.dataset.phgbm)setBase(t.dataset.phgbm);}catch(_){}setTimeout(function(){if(TAB==='views')renderPanel();},50);});
 })();
 window.PHGAtlas={
   ready:ready,ack:ack,preload:gaz,
