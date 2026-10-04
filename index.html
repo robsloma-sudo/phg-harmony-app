@@ -5606,6 +5606,19 @@ body.phg-launch-review-open .phgPrimaryModeToggle{
     bottom:calc(env(safe-area-inset-bottom,0px) + 98px)!important
   }
 }
+
+/* Microphone & camera step: after sign-in, before the voice setup. */
+.phgPermRows{display:grid;gap:7px;margin-top:2px}
+.phgPermRow{padding:10px;border:1px solid rgba(255,255,255,.055);border-radius:12px;background:rgba(255,255,255,.015)}
+.phgLaunchMicState>span.bad{background:#ff7070;box-shadow:0 0 10px #ff7070}
+.phgPermHelp{margin-top:9px;padding:9px 10px;border:1px solid rgba(255,196,92,.26);border-radius:8px;
+  background:rgba(255,196,92,.05);color:var(--dim);font-size:9px;line-height:1.55}
+.phgPermHelp b,.phgPermNote b{color:var(--txt)}
+.phgPermNote{margin-top:9px;color:var(--faint);font-size:8px;line-height:1.5}
+.phgPermActions{gap:7px;flex-wrap:wrap}
+.phgPermNever{display:flex;justify-content:flex-end;margin-top:2px}
+.phgPermNever button{min-height:32px;padding:4px 2px;border:0;background:transparent;color:var(--faint);
+  font-size:8px;text-decoration:underline}
 </style>
 
 <style id="phg-launch-conversation-controls-v1">
@@ -7151,6 +7164,7 @@ var PHG_LAUNCH={
   voiceOpen:false,
   micOpen:false,
   conversationOpen:false,
+  permOpen:false,
   startView:'harmony',
   error:''
 };
@@ -7197,6 +7211,7 @@ function phgLaunchGateOpen(){
   PHG_LAUNCH.voiceOpen=!phgLaunchVoiceConfirmed();
   PHG_LAUNCH.micOpen=false;
   PHG_LAUNCH.conversationOpen=false;
+  PHG_LAUNCH.permOpen=phgPermNeeded();
   document.body.classList.add('phg-launch-review-open');
   /* Old setup is no longer an automatic post-login gate. It remains
      available from Help -> Run setup again. */
@@ -7219,9 +7234,16 @@ function phgLaunchGateOpen(){
       +'</div>';
     if(window.console)console.error('PHG launch review render failed',e);
   }
+  try{
+    phgPermProbe().then(function(){
+      if(!PHG_LAUNCH.open||!PHG_LAUNCH.permOpen||PHGPERM.busy||PHGPERM.touched)return;
+      if(!phgPermNeeded())PHG_LAUNCH.permOpen=false;
+      phgLaunchGateDraw();
+    });
+  }catch(pe){}
 }
 function phgLaunchGateClose(){
-  PHG_LAUNCH.open=false;PHG_LAUNCH.voiceOpen=false;PHG_LAUNCH.micOpen=false;PHG_LAUNCH.conversationOpen=false;
+  PHG_LAUNCH.open=false;PHG_LAUNCH.voiceOpen=false;PHG_LAUNCH.micOpen=false;PHG_LAUNCH.conversationOpen=false;PHG_LAUNCH.permOpen=false;
   document.body.classList.remove('phg-launch-review-open');
   var g=document.getElementById('phgLaunchGate');
   if(g&&g.parentNode)g.parentNode.removeChild(g);
@@ -7277,6 +7299,10 @@ function phgLaunchSettingsCard(label,value,note,action,actionLabel){
 }
 function phgLaunchGateDraw(){
   if(!PHG_LAUNCH.open)return;
+  if(PHG_LAUNCH.permOpen){
+    try{phgPermDraw(phgLaunchEnsure());return;}
+    catch(pe){PHG_LAUNCH.permOpen=false;if(window.console)console.error('PHG permission step failed',pe);}
+  }
   var g=phgLaunchEnsure(),v=phgLaunchCurrentVoice(),c=phgLaunchConversation();
   var confirmed=phgLaunchVoiceConfirmed();
   var mode=phgLaunchMode()==='desktop'?'Desktop':'Mobile';
@@ -7327,6 +7353,7 @@ function phgLaunchGateDraw(){
       +'<small>Harmony only records audio when you intentionally use a microphone control.</small></div></div>'
       +'<div class="phgLaunchDetailActions">'
       +(on?'<button onclick="phgLaunchMicDisable()">Disable microphone</button>':'<button class="primary" onclick="phgLaunchMicEnable()">Enable microphone</button>')
+      +'<button onclick="phgPermReopen()">Microphone &amp; camera access</button>'
       +'</div></section>';
   }
   if(PHG_LAUNCH.error)h+='<div class="phgLaunchError">'+phgAuthEsc(PHG_LAUNCH.error)+'</div>';
@@ -7336,6 +7363,173 @@ function phgLaunchGateDraw(){
     +'</div></div>';
   g.innerHTML=h;
 }
+/* ---------- MICROPHONE & CAMERA STEP (added 2026-10-04, Rob's request) ----------
+   Right after sign-in and before the voice setup, ask for the microphone and the camera, so the
+   first time Harmony listens (or takes a photo) is not interrupted by a browser pop-up.
+   - One tap asks for both together: a single system prompt on iPhone.
+   - Every track is stopped the moment the answer comes back. Nothing is recorded or kept.
+   - Skipped when both are already allowed, when the browser has no media API, once answered
+     in this browser session, or after "Don't ask again on this device".
+   - iPhone Safari usually forgets the grant between visits, so the step can return at the next
+     sign-in; the note says how to set the site to Allow.
+   Re-open: launch review > Microphone > "Microphone & camera access". */
+var PHG_PERM_KEY='phg_media_perm_v1',PHG_PERM_SESSION='phg_media_perm_session_v1';
+var PHGPERM={mic:'unknown',cam:'unknown',hasMic:true,hasCam:true,busy:false,touched:false,allOk:false};
+function phgPermSupported(){return !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);}
+function phgPermNeverSet(){try{return localStorage.getItem(PHG_PERM_KEY)==='never';}catch(e){return false;}}
+function phgPermSessionDone(){try{return sessionStorage.getItem(PHG_PERM_SESSION)==='1';}catch(e){return false;}}
+function phgPermOk(k){return k==='mic'?(!PHGPERM.hasMic||PHGPERM.mic==='granted'):(!PHGPERM.hasCam||PHGPERM.cam==='granted');}
+function phgPermNeeded(){
+  if(!phgPermSupported()||phgPermNeverSet()||phgPermSessionDone())return false;
+  return !(phgPermOk('mic')&&phgPermOk('cam'));
+}
+function phgPermSyncMic(){
+  if(typeof MIC==='undefined'||!MIC||MIC.stream)return;
+  if(PHGPERM.mic==='granted')MIC.state='granted';
+  else if(PHGPERM.mic==='denied')MIC.state='denied';
+}
+/* Read-only: asks the browser what it already knows. Never raises a prompt. */
+function phgPermProbe(){
+  if(!phgPermSupported())return Promise.resolve(PHGPERM);
+  function q(n){
+    try{
+      if(!navigator.permissions||!navigator.permissions.query)return Promise.resolve('unknown');
+      return navigator.permissions.query({name:n}).then(function(r){return (r&&r.state)||'unknown';},function(){return 'unknown';});
+    }catch(e){return Promise.resolve('unknown');}
+  }
+  var md=navigator.mediaDevices;
+  var dev=(md.enumerateDevices?md.enumerateDevices():Promise.resolve(null)).then(function(l){return l;},function(){return null;});
+  return Promise.all([q('microphone'),q('camera'),dev]).then(function(r){
+    /* a revocation shows as 'denied'; a 'prompt' never downgrades a grant made on this page */
+    if(r[0]!=='unknown'&&!(r[0]==='prompt'&&PHGPERM.mic==='granted'))PHGPERM.mic=r[0];
+    if(r[1]!=='unknown'&&!(r[1]==='prompt'&&PHGPERM.cam==='granted'))PHGPERM.cam=r[1];
+    var l=r[2]||[],a=false,v=false,i;
+    for(i=0;i<l.length;i++){if(l[i].kind==='audioinput')a=true;if(l[i].kind==='videoinput')v=true;}
+    /* only conclude "no camera" when the browser does list inputs (and vice versa) */
+    if(a&&!v)PHGPERM.hasCam=false;
+    if(v&&!a)PHGPERM.hasMic=false;
+    if(a&&v){PHGPERM.hasMic=true;PHGPERM.hasCam=true;}
+    phgPermSyncMic();
+    return PHGPERM;
+  }).catch(function(){return PHGPERM;});
+}
+function phgPermAsk(c){
+  return navigator.mediaDevices.getUserMedia(c).then(function(st){
+    try{st.getTracks().forEach(function(t){t.stop();});}catch(e){}
+    return 'granted';
+  },function(e){
+    var n=(e&&e.name)||'';
+    if(n==='NotAllowedError'||n==='SecurityError'||n==='PermissionDeniedError')return 'denied';
+    if(n==='NotFoundError'||n==='DevicesNotFoundError'||n==='OverconstrainedError')return 'missing';
+    return 'error';
+  });
+}
+function phgPermApply(k,res){
+  if(res==='granted')PHGPERM[k]='granted';
+  else if(res==='denied')PHGPERM[k]='denied';
+  else if(res==='missing'){if(k==='mic')PHGPERM.hasMic=false;else PHGPERM.hasCam=false;}
+  else if(PHGPERM[k]!=='granted')PHGPERM[k]='error';
+}
+function phgPermWant(){
+  return {mic:PHGPERM.hasMic&&PHGPERM.mic!=='granted',cam:PHGPERM.hasCam&&PHGPERM.cam!=='granted'};
+}
+function phgPermAllow(){
+  if(PHGPERM.busy||!phgPermSupported())return;
+  var w=phgPermWant(),cam={facingMode:'environment'},c={};
+  if(!w.mic&&!w.cam){phgPermAfter();return;}
+  if(w.mic)c.audio=true;
+  if(w.cam)c.video=cam;
+  PHGPERM.busy=true;PHGPERM.touched=true;phgLaunchGateDraw();
+  phgPermAsk(c).then(function(r){
+    if(!(w.mic&&w.cam)){phgPermApply(w.mic?'mic':'cam',r);return;}
+    if(r==='granted'){phgPermApply('mic','granted');phgPermApply('cam','granted');return;}
+    if(r==='denied'){
+      /* One refusal covers both. Read what the browser now records for each instead of
+         raising a second pop-up straight after "Don't Allow". */
+      return phgPermProbe().then(function(){
+        if(PHGPERM.mic!=='granted')PHGPERM.mic='denied';
+        if(PHGPERM.cam!=='granted')PHGPERM.cam='denied';
+      });
+    }
+    /* A missing or busy device fails the joint request: ask for each on its own. */
+    return phgPermAsk({audio:true}).then(function(a){
+      phgPermApply('mic',a);
+      return phgPermAsk({video:cam});
+    }).then(function(v){phgPermApply('cam',v);});
+  }).then(phgPermAfter,phgPermAfter);
+}
+function phgPermAfter(){
+  PHGPERM.busy=false;
+  phgPermSyncMic();
+  PHGPERM.allOk=(PHGPERM.hasMic||PHGPERM.hasCam)&&phgPermOk('mic')&&phgPermOk('cam');
+  if(PHG_LAUNCH.open&&PHG_LAUNCH.permOpen)phgLaunchGateDraw();
+  if(PHGPERM.allOk)setTimeout(function(){if(PHG_LAUNCH.open&&PHG_LAUNCH.permOpen)phgPermContinue();},700);
+}
+function phgPermContinue(never){
+  if(never){try{localStorage.setItem(PHG_PERM_KEY,'never');}catch(e){}}
+  try{sessionStorage.setItem(PHG_PERM_SESSION,'1');}catch(e){}
+  PHG_LAUNCH.permOpen=false;
+  if(!phgLaunchVoiceConfirmed())PHG_LAUNCH.voiceOpen=true;
+  phgLaunchGateDraw();
+}
+function phgPermReopen(){
+  try{localStorage.removeItem(PHG_PERM_KEY);sessionStorage.removeItem(PHG_PERM_SESSION);}catch(e){}
+  PHGPERM.allOk=false;PHGPERM.touched=false;
+  PHG_LAUNCH.permOpen=true;PHG_LAUNCH.micOpen=false;PHG_LAUNCH.voiceOpen=false;PHG_LAUNCH.conversationOpen=false;
+  phgLaunchGateDraw();
+  phgPermProbe().then(function(){if(PHG_LAUNCH.open&&PHG_LAUNCH.permOpen&&!PHGPERM.busy)phgLaunchGateDraw();});
+}
+function phgPermStatus(k){
+  var has=k==='mic'?PHGPERM.hasMic:PHGPERM.hasCam,st=PHGPERM[k];
+  if(!has)return ['Not found on this device',''];
+  if(st==='granted')return ['Allowed','ok'];
+  if(st==='denied')return ['Not allowed','bad'];
+  if(st==='error')return ['Could not be opened','bad'];
+  return ['Not allowed yet',''];
+}
+function phgPermDraw(g){
+  var E=phgAuthEsc,m=phgPermStatus('mic'),c=phgPermStatus('cam'),w=phgPermWant();
+  var blocked=PHGPERM.mic==='denied'||PHGPERM.cam==='denied'||PHGPERM.mic==='error'||PHGPERM.cam==='error';
+  var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var allOk=PHGPERM.allOk||((PHGPERM.hasMic||PHGPERM.hasCam)&&phgPermOk('mic')&&phgPermOk('cam'));
+  function row(label,st,note){
+    return '<div class="phgPermRow"><div class="phgLaunchMicState"><span class="'+st[1]+'"></span><div>'
+      +'<b>'+E(label)+' \u00b7 '+E(st[0])+'</b><small>'+E(note)+'</small></div></div></div>';
+  }
+  var ask=w.mic&&w.cam?'Allow microphone & camera':w.mic?'Allow microphone':w.cam?'Allow camera':'Continue';
+  var h='<div class="phgLaunchCard phgPermCard" role="dialog" aria-modal="true" aria-labelledby="phgPermTitle">'
+    +'<div class="phgLaunchKick">PERFECT HARMONY GROUP</div>'
+    +'<h1 id="phgPermTitle">Microphone &amp; camera</h1>'
+    +'<p>Harmony listens when you talk to her and uses the camera only when you ask for a photo. '
+    +'Allow both now so a browser pop-up doesn\u2019t interrupt her later. Nothing is recorded until you use a microphone or camera control.</p>'
+    +'<div class="phgPermRows" aria-live="polite">'
+    +row('Microphone',m,'For talking to Harmony')
+    +row('Camera',c,'For photos of menus, bottles and invoices')
+    +'</div>';
+  if(blocked){
+    h+='<div class="phgPermHelp"><b>Turned off for this site.</b> '
+      +(ios?'In Safari tap <b>aA</b> \u203a <b>Website Settings</b> and set Camera and Microphone to <b>Allow</b> '
+           +'(or Settings app \u203a Apps \u203a Safari \u203a Camera / Microphone). Then tap Try again.'
+           :'Click the icon at the left of the address bar, allow Camera and Microphone for this site, '
+           +'then tap Try again. Reload the page if it still says Not allowed.')
+      +'</div>';
+  }else if(ios&&!allOk){
+    h+='<div class="phgPermNote">iPhone Safari usually asks again on each visit. To stop that, tap <b>aA</b> \u203a '
+      +'Website Settings and set Camera and Microphone to Allow.</div>';
+  }
+  h+='<div class="phgLaunchActions phgPermActions">';
+  if(allOk){
+    h+='<button class="primary" onclick="phgPermContinue()">'+(phgLaunchVoiceConfirmed()?'Continue':'Continue to voice setup')+'</button>';
+  }else{
+    h+='<button onclick="phgPermContinue()"'+(PHGPERM.busy?' disabled':'')+'>Not now</button>'
+      +'<button class="primary" onclick="phgPermAllow()"'+(PHGPERM.busy?' disabled':'')+'>'
+      +E(PHGPERM.busy?'Waiting for your answer\u2026':blocked?'Try again':ask)+'</button>';
+  }
+  h+='</div>';
+  if(!allOk)h+='<div class="phgPermNever"><button onclick="phgPermContinue(true)">Don\u2019t ask again on this device</button></div>';
+  g.innerHTML=h+'</div>';
+}
+try{phgPermProbe();}catch(e){}
 /* ---------- INVITED-USER SIGN-IN (added 2026-10-01) ----------
    Before this, a person who had been invited signed up, signed in, and got one flat line:
    "This login is valid, but it is not assigned to a PHG account yet." No reason, no next step,
