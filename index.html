@@ -41733,7 +41733,7 @@ function stop(el){['pointerdown','pointermove','touchstart','touchmove','wheel']
 /* In beta the Harmony view is not A view, it is THE app: no 'close', no tools that
    lead to surfaces they do not have. */
 var PHG_BETA_PLUS=['attach','type','menu','paint','mnext','mclose','photo'];
-var PHG_BETA_GEAR=['rate','notes','chat','shortcut','voice','signout'];
+var PHG_BETA_GEAR=['rate','notes','chat','shortcut','theme','voice','signout'];
 /* Beta = Harmony + Atlas: menu-design items stay only while the server grants menu_studio.
    phgBetaTrimSheets is exported so phgAccessLoad and the Harmony view can actually call it
    (before this it was private to this closure and never ran). */
@@ -44359,31 +44359,544 @@ if(typeof G.agentAnswer==='function'){
      device by a fixed grammar and applied in the same frame (no network, no model).
      Anything else goes to Harmony as a normal question. Shown only when phg-access allows
      the Atlas; atlas.html re-checks server-side. Removing this block removes the feature. -->
+<style id="phgThemeCSS">
+/* App-wide light screen (Harmony gear menu > Light screen). Generated from the app's own dark
+   colours: neutral darks become light, light text becomes dark, accent colours are kept.
+   Harmony's own space (the particle field and her controls) stays dark by design. */
+html.phg-light{--bg:#f3f5f8;--panel:#ffffff;--panel2:#f7f9fb;--line:#d9e0e7;--line2:#c7d1db;--txt:#14202b;--dim:#4b5c6b;--faint:#7a8896;
+  --hud:#0e7490;--hud-dim:rgba(14,116,144,.35);--hud-faint:rgba(14,116,144,.12);--teal:#0e7490;color-scheme:light}
+html.phg-light body{background:var(--bg);color:var(--txt)}
+html.phg-light select option{background:#fff;color:#14202b}
+html.phg-light .appbar{background:rgba(242,244,246,.86)!important}
+html.phg-light .apptab{background:linear-gradient(160deg,#e0e4e9,#e7eaef)!important}
+html.phg-light .apptab.on{color:#121212!important}
+html.phg-light .apptab.on{background:linear-gradient(160deg,#d7dee5,#e2e7ec)!important}
+html.phg-light .side{background:linear-gradient(180deg,#e8ebef,#ebeff2)!important}
+html.phg-light .stsel{background:#e0e5ea!important}
+html.phg-light .stsel:hover{background:#dbe1e8!important}
+html.phg-light .nav:hover{background:#dee3e9!important}
+html.phg-light .nav.on{color:#121212!important}
+html.phg-light .navgrp:hover{background:#dee3e9!important}
+html.phg-light .hd{background:linear-gradient(135deg,#e1e6eb,#e8ebf0)!important;box-shadow:0 1px 0 rgba(31,31,31,.03) inset!important}
+html.phg-light h1{background:linear-gradient(180deg,#1f1f1f,#1a1f23)!important}
+html.phg-light .off{color:#3d1d1d!important}
+html.phg-light .card{box-shadow:0 1px 0 rgba(31,31,31,.03) inset,0 6px 18px rgba(0,0,0,.22)!important}
+html.phg-light .mlopt:hover{background:rgba(31,31,31,.04)!important}
+@media (max-width:600px){html.phg-light .mlscrim{background:rgba(250,250,250,.4)!important}}
+html.phg-light .mlerr{color:#3d1d1d!important}
+html.phg-light .mlcard .mlimg{background:#f3f5f9!important}
+html.phg-light .mlcard .mlimg .mlpg{background:rgba(250,250,250,.7)!important;color:#1f1f1f!important}
+html.phg-light .mlcard .mlnone{background:#eff2f5!important}
+html.phg-light .cview{background:rgba(247,248,251,.97)!important}
+html.phg-light .cview .cvimg img{background:#f3f5f9!important}
+html.phg-light .cvbtn{background:#e0e5ea!important;color:#3d3b36!important}
+html.phg-light .mlview{background:#f7f8fb!important}
+html.phg-light .mlvbar{background:#eff2f6!important}
+html.phg-light .mlvb{background:#e0e5ea!important;color:#3d3b36!important}
+html.phg-light .mlvscroll{background:#f3f5f9!important}
+html.phg-light .mlvimg{background:#1f1f1f!important}
+html.phg-light .mlcard .mlimg .mltall{background:rgba(250,250,250,.7)!important;color:#1f1f1f!important}
+html.phg-light .bar{background:#dbe0e7!important}
+html.phg-light td{border-bottom:1px solid #dee3e9!important;color:#292722!important}
+html.phg-light table thead th{background:#e2e7ed!important}
+html.phg-light .scroll::-webkit-scrollbar-thumb,html.phg-light .scrollsm::-webkit-scrollbar-thumb,html.phg-light .fopts::-webkit-scrollbar-thumb,html.phg-light .side::-webkit-scrollbar-thumb{background:#c8d0d7!important}
+html.phg-light .scroll::-webkit-scrollbar-thumb:hover,html.phg-light .scrollsm::-webkit-scrollbar-thumb:hover{background:#b5bfc8!important}
+html.phg-light .clbl{color:#3d3b36!important}
+html.phg-light .csort{background:#e7ebf0!important}
+html.phg-light .csort button:hover{background:#dbe0e7!important}
+html.phg-light .fbox{background:linear-gradient(160deg,#e2e7ed,#e8ebf1)!important}
+html.phg-light .fgrp{border-top:1px solid #dbe0e7!important}
+html.phg-light .ftog{color:#3d3b36!important}
+html.phg-light .chk{border:1px solid #b5bfc8!important}
+html.phg-light .chk.on:after{border:solid #f2f4f6!important}
+html.phg-light .chip:hover{color:#121212!important}
+html.phg-light .chip.clearall:hover{color:#3d1d1d!important}
+html.phg-light .btn{background:#e0e5ea!important;color:#3d3b36!important}
+html.phg-light .btn:hover{background:#d7dee4!important}
+html.phg-light .err{color:#3d1d1d!important}
+html.phg-light .mapwrap{background:#f2f4f6!important}
+html.phg-light #leafmap{background:#f2f4f6!important}
+html.phg-light .leaflet-container{background:#f2f4f6!important}
+html.phg-light .leaflet-popup-content-wrapper{background:#e1e6eb!important}
+html.phg-light .leaflet-popup-tip{background:#e1e6eb!important}
+html.phg-light .leaflet-control-zoom a{background:#e1e6eb!important}
+html.phg-light .leaflet-control-zoom a:hover{background:#d3dae1!important}
+html.phg-light .leaflet-control-attribution{background:rgba(242,244,246,.8)!important}
+html.phg-light .leaflet-tooltip{background:#e1e6eb!important}
+html.phg-light .mapleg{background:rgba(242,244,246,.9)!important}
+html.phg-light .popbtn{background:#d0d7df!important}
+html.phg-light .popbtn:hover{background:#c5ced6!important}
+html.phg-light .vpanel{background:#e8ebf1!important}
+html.phg-light .nodata{background:linear-gradient(160deg,#e2e7ed,#e8ebf1)!important}
+html.phg-light .md-sel{background:#e0e5ea!important}
+html.phg-light .md-client{background:rgba(29,20,41,.08)!important}
+html.phg-light .md-add{background:rgba(29,20,41,.08)!important}
+html.phg-light .mdf-btn{background:#e0e5ea!important}
+html.phg-light .mdf-btn.has{background:rgba(29,20,41,.08)!important}
+html.phg-light .mdf-pan{background:#e2e7ed!important}
+html.phg-light .mdf-act button{background:#dbe0e7!important}
+html.phg-light .mdf-srch{background:#e0e5ea!important}
+html.phg-light .mdf-opt:hover{background:#dbe0e7!important}
+html.phg-light .mdf-sel{background:#e0e5ea!important}
+html.phg-light .mdcstrip{background:#e7eaef!important}
+html.phg-light .mdcsel{background:#ebeff3!important}
+html.phg-light .mdcbtn{background:#ebeff3!important}
+html.phg-light .mdcbtn.on{color:#121212!important}
+html.phg-light .mdcpre{background:#ebeff3!important}
+html.phg-light .mdcpre.on{background:#e1ddec!important}
+html.phg-light .mdctab{background:#ebeff3!important}
+html.phg-light .mdctab.on{color:#121212!important}
+html.phg-light .mdcchip{background:#ebeff3!important}
+html.phg-light .mdcchip.on{color:#121212!important}
+html.phg-light .mdcwide{background:#ebeff3!important}
+html.phg-light .mdcin{background:#ebeff3!important}
+html.phg-light .mdcrow2 button{background:#ebeff3!important}
+html.phg-light .mdcrow2 button.del,html.phg-light .mdcprow button.del{border-color:#d9bcbc!important;background:#ebeff3!important}
+html.phg-light .mdcobs{background:#e7eaef!important}
+html.phg-light .mdcstale{background:#efe6df!important;border:1px solid #dac5b2!important}
+html.phg-light .mdclimit{background:#efe6df!important;border:1px solid #dac5b2!important}
+html.phg-light .mdclimit b{color:#352919!important}
+html.phg-light .mdcwarn{color:#1f252b!important;background:#e0e5eb!important;border:1px solid #c1cbd5!important;border-left:3px solid #1b1f22!important}
+html.phg-light .mdcfile.warn{background:#efe6df!important;border:1px solid #dac5b2!important}
+html.phg-light .mdcfile.msg{background:#e7eaef!important}
+html.phg-light .mdcrow2 button.on{color:#121212!important}
+html.phg-light .mdcro{background:#f0f2f6!important}
+html.phg-light .mdcunsaved{background:#efe6df!important;border:1px solid #dac5b2!important}
+html.phg-light .mdcro{background:#f0f2f6!important}
+html.phg-light .mdcunsaved{background:#efe6df!important;border:1px solid #dac5b2!important}
+html.phg-light .finfail{color:#3a1f1c!important;background:#edd9d9!important;border:1px solid #dab7b2!important}
+html.phg-light .finbad{background:#edd9d9!important}
+html.phg-light .finunk{background:#ede8df!important}
+html.phg-light .finwarn{background:#efe6df!important;border:1px solid #dac5b2!important}
+html.phg-light .mdcbrow.on{background:#e1ddec!important}
+html.phg-light .mdcbx{background:#ebeff3!important;border:1px solid #d9bcbc!important}
+html.phg-light .card{box-shadow:0 1px 0 rgba(31,31,31,.03) inset,0 8px 24px rgba(0,0,0,.28)!important}
+html.phg-light .card:hover{box-shadow:0 1px 0 rgba(31,31,31,.03) inset,0 8px 24px rgba(0,0,0,.28)!important}
+html.phg-light .apptab.on .tabdot{background:#e2f1ef!important}
+html.phg-light .nav:hover{background:rgba(31,31,31,.04)!important}
+html.phg-light .mdcin,html.phg-light .mdcsel,html.phg-light select,html.phg-light input[type=text],html.phg-light input[type=number],html.phg-light textarea{background:#ede8f3!important}
+html.phg-light .bar{background:#e1daea!important}
+html.phg-light .fintab tr:hover td{background:rgba(31,31,31,.03)!important}
+html.phg-light .err{color:#1f0f15!important}
+html.phg-light .finfail{color:#1f0f15!important}
+html.phg-light #fizz b{background:radial-gradient(circle at 32% 28%,rgba(31,31,31,.85),rgba(31,31,31,.12) 42%,transparent 62%)!important;border:1px solid rgba(31,31,31,.16)!important}
+html.phg-light .card{border:1px solid rgba(31,31,31,.10)!important;background:linear-gradient(145deg,rgba(213,199,228,.80),rgba(231,224,238,.92))!important}
+html.phg-light .card:hover{box-shadow:0 30px 70px rgba(0,0,0,.5),
+  inset 0 1px 0 rgba(31,31,31,.14),0 0 0 1px rgba(45,212,191,.35)!important}
+html.phg-light .big{background:linear-gradient(94deg,var(--teal),#1f1f1f 42%,var(--amber))!important}
+html.phg-light .bar{background:rgba(31,31,31,.06)!important}
+html.phg-light .bar>div:after,html.phg-light .bar span:after,html.phg-light .barfill:after{background:repeating-linear-gradient(115deg,rgba(31,31,31,.22) 0 9px,transparent 9px 18px)!important}
+html.phg-light #ptitle{background:linear-gradient(96deg,#1f1f1f,var(--teal) 55%,var(--amber))!important}
+html.phg-light .nScrim{background:radial-gradient(ellipse at 50% 50%,
+  rgba(248,246,251,.965) 0%, rgba(246,244,250,.945) 42%, rgba(244,242,249,.90) 100%)!important}
+html.phg-light .nPulse{fill:#121212!important}
+html.phg-light .nApp{background:rgba(237,232,244,.82)!important}
+html.phg-light .nSec{background:rgba(237,232,244,.82)!important}
+html.phg-light .nLeaf{color:#151021!important;background:rgba(237,232,244,.86)!important}
+html.phg-light .card{background:linear-gradient(160deg,rgba(225,230,241,.94),rgba(232,235,244,.97))!important}
+html.phg-light .big{background:linear-gradient(180deg,#1f1f1f,var(--hud) 55%,rgba(126,249,255,.55))!important}
+html.phg-light #ptitle{background:linear-gradient(96deg,#1f1f1f,var(--hud) 60%,var(--amber))!important}
+html.phg-light .mdcin,html.phg-light .mdcsel,html.phg-light select,html.phg-light input[type=text],html.phg-light input[type=number],html.phg-light textarea{background:rgba(243,246,249,.85)!important}
+html.phg-light .bar>div:after,html.phg-light .bar span:after,html.phg-light .barfill:after{background:repeating-linear-gradient(90deg,rgba(243,246,249,.55) 0 2px,transparent 2px 7px)!important}
+html.phg-light .nScrim{background:radial-gradient(ellipse at 50% 50%,rgba(248,249,252,.97) 0%,rgba(246,247,251,.95) 42%,rgba(243,245,249,.88) 100%),
+  repeating-linear-gradient(0deg,rgba(126,249,255,.045) 0 1px,transparent 1px 44px),
+  repeating-linear-gradient(90deg,rgba(126,249,255,.045) 0 1px,transparent 1px 44px)!important}
+html.phg-light .nApp{background:rgba(241,243,248,.9)!important}
+html.phg-light .nSec{background:rgba(241,243,248,.9)!important}
+html.phg-light .nLeaf{color:#151021!important;background:rgba(241,243,248,.92)!important}
+html.phg-light .nElec circle.hot{fill:#121212!important}
+html.phg-light .nNode{background:radial-gradient(circle at 50% 34%,rgba(31,31,31,.10),rgba(241,243,248,.94))!important}
+html.phg-light .nApp.on,html.phg-light .nSec.on,html.phg-light .nLeaf.on,html.phg-light .nNode.on{background:radial-gradient(circle at 50% 34%,rgba(31,31,31,.10),rgba(241,243,248,.94))!important}
+html.phg-light .nLeaf.on{color:#151021!important}
+html.phg-light .gate{background:#f3f5f9!important}
+html.phg-light .gateTitle{background:linear-gradient(96deg,#1f1f1f,var(--hud) 60%,var(--amber))!important}
+html.phg-light .gateCard{background:rgba(225,230,241,.85)!important}
+html.phg-light .hubCog{background:rgba(225,230,241,.9)!important}
+html.phg-light .hubMenu{background:rgba(236,239,246,.97)!important}
+html.phg-light .vBtn{background:rgba(236,239,246,.9)!important}
+html.phg-light .hubCog{background:rgba(225,230,241,.9)!important}
+html.phg-light .helpBtn{background:radial-gradient(circle at 50% 38%,
+    rgba(255,198,92,.18),rgba(241,243,248,.95))!important}
+html.phg-light .helpPanel{background:rgba(236,239,246,.98)!important}
+html.phg-light .agentPanel{background:rgba(236,239,246,.98)!important}
+html.phg-light .agName{background:linear-gradient(96deg,#1f1f1f,var(--hud) 60%,var(--amber))!important}
+html.phg-light .tourCard{background:rgba(225,230,241,.85)!important}
+html.phg-light body.plain:before{background:linear-gradient(160deg,#e8ebf4,#f3f5f9)!important}
+html.phg-light body.plain .card{background:#e1e6f1!important}
+html.phg-light .gateFoot{background:linear-gradient(180deg,rgba(243,245,249,0),#f3f5f9 38%)!important}
+html.phg-light .nSurge{stroke:#0c1819!important}
+html.phg-light .nSurge2{stroke:#1d180e!important}
+html.phg-light .nSurge3{stroke:#110c19!important}
+html.phg-light .flatBtn{background:rgba(236,239,246,.9)!important}
+html.phg-light #lxWrap{background:radial-gradient(ellipse at 50% 42%,#e5e8f2,#f5f6fa 70%)!important}
+html.phg-light #lxSkip{color:#3b4d65!important;background:rgba(236,239,246,.8)!important;border:1px solid #c8d0d7!important}
+html.phg-light #lxCount{color:#3b4d65!important}
+html.phg-light #preWrap{background:radial-gradient(ellipse at 50% 40%,#e5e9f3,#f6f7fb 72%)!important}
+html.phg-light #preQ{color:#121d26!important}
+html.phg-light #jsErr{color:#190c0e!important;background:rgba(235,214,219,.94)!important}
+html.phg-light #lxWrap{background:radial-gradient(ellipse at 38% 28%,rgba(216,212,235,.96),rgba(243,242,249,.98) 60%),
+  radial-gradient(ellipse at 78% 82%,rgba(217,227,237,.5),transparent 55%)!important}
+html.phg-light .notice{background:rgba(225,233,240,.7)!important;border:1px solid #b2ccda!important}
+html.phg-light .refBtn{background:rgba(236,239,246,.9)!important}
+html.phg-light #refAsk{background:rgba(246,247,251,.82)!important}
+html.phg-light .refCard{background:linear-gradient(180deg,rgba(229,226,241,.97),rgba(241,240,248,.98))!important;border:1px solid #bbaed8!important}
+html.phg-light .refQ{color:#100c19!important}
+html.phg-light .refSub{color:#4a4064!important}
+html.phg-light .refBtns button{color:#4a4064!important;border:1px solid #bbaed8!important}
+html.phg-light .refBtns .refYes{color:#100c19!important}
+html.phg-light #dockToggle{background:radial-gradient(circle at 50% 38%,
+    rgba(126,249,255,.13), rgba(241,243,248,.96))!important}
+html.phg-light #skipAsk{background:rgba(246,248,251,.82)!important}
+html.phg-light .v17AskCard{background:linear-gradient(145deg,rgba(223,215,232,.96),rgba(237,233,243,.96))!important}
+html.phg-light .v17AskRow input{background:#ede9f2!important}
+html.phg-light .v17WorkflowNow .bar{background:#ede9f2!important}
+@media(max-width:820px){html.phg-light .v17dock{background:#e8e3f0!important}}
+html.phg-light .v17ContextBar{background:rgba(237,233,242,.94)!important}
+html.phg-light .v17CtxChip{background:#ede9f2!important}
+html.phg-light .v17ContextAsk input{background:#f0edf4!important}
+html.phg-light .v17ScopeField input,html.phg-light .v17ScopeField select{background:#f0edf4!important}
+html.phg-light .cmdApproval{background:linear-gradient(180deg,rgba(245,196,81,.045),rgba(31,31,31,.01))!important}
+html.phg-light .cmdPresentChoice{background:rgba(233,236,244,.72)!important}
+html.phg-light #harmonySpecSplash .hsCard{background:linear-gradient(160deg,rgba(236,239,246,.92),rgba(235,234,245,.94))!important}
+html.phg-light #harmonySpecSplash .hsTitle{color:#18140d!important}
+html.phg-light #harmonySpecSplash .hsClose{background:rgba(236,239,246,.86)!important}
+html.phg-light #harmonySpecSplash .hsMeta div{background:rgba(233,237,244,.55)!important}
+html.phg-light #harmonySpecSplash .hsName{color:#16140f!important}
+html.phg-light #harmonySpecSplash .hsActions button{background:rgba(229,234,243,.84)!important}
+html.phg-light .finInboxCard{background:rgba(31,31,31,.015)!important}
+html.phg-light .v17Signal i{background:#7f8694!important;box-shadow:0 0 0 3px rgba(127,134,148,.08)!important}
+html.phg-light .v17StateBanner{background:rgba(31,31,31,.015)!important}
+html.phg-light .v17StateBanner.bad{color:#3c1d1d!important}
+html.phg-light .v17Attention{background:linear-gradient(180deg,rgba(31,31,31,.018),rgba(31,31,31,.008))!important}
+html.phg-light .v17AttCount.critical{color:#3c1d1d!important}
+html.phg-light .v17AttentionCard{background:rgba(31,31,31,.012)!important}
+html.phg-light .v17AttentionCard:hover{background:rgba(31,31,31,.02)!important}
+html.phg-light .v17AttDot{background:#1c1e22!important}
+html.phg-light .v17Onboard{background:linear-gradient(135deg,rgba(45,212,191,.055),rgba(31,31,31,.012))!important}
+html.phg-light .v17OnboardStep{background:rgba(250,250,250,.08)!important}
+html.phg-light .v17Empty{background:rgba(31,31,31,.01)!important}
+html.phg-light .v17SettingsTile{background:rgba(31,31,31,.012)!important}
+html.phg-light .mdrLibList{background:rgba(31,31,31,.01)!important}
+html.phg-light #phgDiag{background:rgba(248,249,251,.92)!important;color:#0e181d!important}
+html.phg-light .phgAuthGate{background:rgba(243,246,249,.96)!important;color:#0c1219!important}
+html.phg-light .phgAuthCard{background:#e7ecf3!important}
+html.phg-light .phgAuthCopy{color:#324256!important}
+html.phg-light .phgAuthLabel{color:#354a65!important}
+html.phg-light .phgAuthInput{border:1px solid #b3c4da!important;background:#f0f3f8!important;color:#0c1219!important}
+html.phg-light .phgAuthBtn{border:1px solid #9ab6ce!important;background:#d6e0eb!important;color:#0c1719!important}
+html.phg-light .phgAuthBtn.primary{background:#c7dbe4!important}
+html.phg-light .phgAuthMsg{color:#2d4157!important}
+html.phg-light .phgAuthMsg.err{color:#3c1d1d!important}
+html.phg-light .phgAuthTab{border:1px solid #b5c6db!important;background:#e9eef4!important;color:#354a65!important}
+html.phg-light .phgAuthTab.on{background:#dfe9f0!important}
+html.phg-light .phgAuthBadge{background:rgba(237,241,247,.90)!important;color:#0c1719!important}
+html.phg-light .appbar{background:rgba(242,244,246,.94)!important}
+html.phg-light .apptab:hover,html.phg-light .apptab.on{background:rgba(31,31,31,.045)!important}
+@media(max-width:1100px){html.phg-light .simpleNavBackdrop{background:rgba(250,250,250,.46)!important}}
+html.phg-light #harmonyComposer{background:rgba(239,242,247,.92)!important}
+html.phg-light .hcRow input{background:rgba(246,248,251,.76)!important}
+html.phg-light #phgConfirm{background:rgba(250,250,250,.56)!important}
+html.phg-light #phgConfirm .pcCard{border:1px solid rgba(31,31,31,.13)!important;background:#e9edf4!important}
+html.phg-light #phgConfirm .pcActions .danger{color:#301717!important}
+html.phg-light #harmonyToast{background:rgba(227,232,242,.95)!important}
+html.phg-light #harmonyToast.success{color:#172f2a!important}
+html.phg-light #harmonyApprovalStrip{background:rgba(246,242,236,.93)!important}
+html.phg-light .siteEntryGate,html.phg-light .publicMenuGate{background:radial-gradient(circle at 18% 15%,rgba(126,249,255,.08),transparent 34%),
+    radial-gradient(circle at 82% 84%,rgba(255,79,189,.07),transparent 32%),
+    #f4f5fa!important;color:#0c1219!important}
+html.phg-light .siteEntryCard,html.phg-light .publicSelectCard{background:rgba(237,240,246,.92)!important}
+html.phg-light .siteEntryCard>p,html.phg-light .publicSelectCard>p{color:#33465a!important}
+html.phg-light .siteEntryChoices>button,html.phg-light .publicAccountCard,html.phg-light .publicMenuCard{background:rgba(230,236,243,.78)!important;color:#0c1219!important}
+html.phg-light .siteEntryChoices>button:hover,html.phg-light .publicAccountCard:hover,html.phg-light .publicMenuCard:hover{background:rgba(220,229,238,.90)!important}
+html.phg-light .siteEntryChoices small{color:#3b5065!important}
+html.phg-light .publicAccountCard small{color:#3b5065!important}
+html.phg-light .publicMenuCard small{color:#3b5065!important}
+html.phg-light .publicSelectError{color:#331919!important}
+html.phg-light .publicSelectEmpty{color:#3b5065!important}
+html.phg-light .publicExperience{background:#f4f5fa!important;color:#0c1219!important}
+html.phg-light .publicMenuShell{background:radial-gradient(circle at 50% 34%,rgba(126,249,255,.07),transparent 26%),
+    radial-gradient(circle at 72% 58%,rgba(255,79,189,.055),transparent 24%),
+    linear-gradient(180deg,#f4f5fa,#f0f3f8 55%,#f4f5fa)!important}
+html.phg-light .publicMenuBeta{color:#425568!important}
+html.phg-light .publicMenuActions button{background:rgba(236,240,246,.72)!important;color:#122625!important}
+html.phg-light .publicBreadcrumb button{color:#3b5065!important}
+html.phg-light .publicBreadcrumb button:last-of-type{color:#0c1619!important}
+html.phg-light .publicNode{background:linear-gradient(150deg,rgba(228,234,242,.90),rgba(237,240,247,.78))!important;color:#0c1219!important}
+html.phg-light .publicNode.active{background:linear-gradient(150deg,rgba(206,223,231,.88),rgba(229,235,242,.92))!important}
+html.phg-light .publicNodeType{color:#5c7083!important}
+html.phg-light .publicNode small{color:#435568!important}
+html.phg-light .publicNodePrice,html.phg-light .publicNodeAmount{color:#0e1c1e!important}
+html.phg-light .publicInsight{background:rgba(239,242,247,.62)!important}
+html.phg-light .publicInsight p{color:#31414e!important}
+html.phg-light .publicInsightSub{color:#4d6073!important}
+html.phg-light .publicInsightMeta span{background:rgba(235,239,245,.52)!important}
+html.phg-light .publicInsightMeta small{color:#62798d!important}
+html.phg-light .publicInsightHint{color:#687e94!important}
+html.phg-light .mdcPubHeroActions button,html.phg-light .mdcPubTarget button,html.phg-light .mdcPubEditor button{background:rgba(31,31,31,.035)!important}
+html.phg-light .mdcPubTarget{background:rgba(31,31,31,.02)!important}
+html.phg-light .mdcPubSwitch{color:#4e5f71!important}
+html.phg-light .mdcPubEditor{background:rgba(241,244,248,.52)!important}
+html.phg-light .mdcPubEditor select,html.phg-light .mdcPubEditor input[type=number]{background:#ebeff5!important}
+html.phg-light .mdcPubMsg{color:#183230!important}
+html.phg-light .publicMenuActions button.on{color:#0c1919!important}
+html.phg-light .publicMenuShell.digital-view{background:linear-gradient(180deg,#f2f3f7,#edf0f4 55%,#f2f3f7)!important}
+html.phg-light .publicDigitalIntro{color:#435565!important}
+html.phg-light .publicDigitalSection{border-bottom:1px solid rgba(31,31,31,.08)!important}
+html.phg-light .publicDigitalSection.depth-1{border-top:1px solid rgba(31,31,31,.06)!important}
+html.phg-light .publicDigitalSectionHead p{color:#4e5f70!important}
+html.phg-light .publicDigitalItem{border-top:1px solid rgba(31,31,31,.055)!important}
+html.phg-light .publicDigitalItem p{color:#445563!important}
+html.phg-light .mdcPubQuick button{color:#244b49!important}
+html.phg-light #mdcPubOutput{background:rgba(248,249,251,.86)!important}
+html.phg-light .mdcPubOutputFrame{background:#eef2f7!important}
+html.phg-light .mdcPubOutputTop{background:#e9eef4!important}
+html.phg-light .mdcPubOutputTop small{color:#5a6e7f!important}
+html.phg-light .mdcPubOutputTop button{color:#0c1918!important}
+html.phg-light .mdcPubPaper{background:#d3d6d9!important}
+html.phg-light .mdcPubPaper img{background:#1f1f1f!important}
+html.phg-light .mdcDisplayScreen{background:#f4f5fa!important}
+html.phg-light .mdcDisplayContent{background:radial-gradient(circle at 75% 25%,rgba(126,249,255,.09),transparent 32%),linear-gradient(145deg,#f0f3f8,#e9edf4)!important}
+html.phg-light .mdcDisplayItem{border-bottom:1px solid rgba(31,31,31,.07)!important}
+html.phg-light .mdcDisplayItem span{color:#4e6171!important}
+html.phg-light .mdcEmbedBrowser{border:1px solid #c7d1db!important;background:#1f1f1f!important}
+html.phg-light .mdcEmbedBar{background:#1a2024!important}
+html.phg-light .mdcEmbedBar i{background:#1b1f22!important}
+html.phg-light .mdcEmbedBody{background:#f2f3f7!important;color:#0c1219!important}
+html.phg-light .mdcEmbedCode{background:#f2f5f9!important;color:#435668!important}
+html.phg-light .mdcPubNoLive{color:#435668!important}
+html.phg-light .publicAltLeaf{color:#647a8c!important}
+html.phg-light body.public-embed-light .publicMenuShell,html.phg-light body.public-embed-light .publicDigitalMenu{background:#292114!important}
+html.phg-light body.public-embed-light .publicDigitalSection{border-color:rgba(250,250,250,.12)!important}
+html.phg-light body.public-embed-light .publicDigitalItem{border-color:rgba(250,250,250,.08)!important}
+html.phg-light .mdcPubHistory{background:rgba(31,31,31,.018)!important}
+html.phg-light .mdcPubHistoryRow{border-top:1px solid rgba(31,31,31,.045)!important}
+html.phg-light .mdcPubVersionBadge{background:rgba(241,244,248,.58)!important}
+html.phg-light .mdcPubHistoryActions button{background:rgba(31,31,31,.025)!important}
+html.phg-light .mdcPubCompare{background:#eef2f7!important}
+html.phg-light .mdcPubCompareStats>div{border:1px solid rgba(31,31,31,.06)!important;background:rgba(31,31,31,.018)!important}
+html.phg-light .mdcPubCompareStats b{color:#0c1819!important}
+html.phg-light .mdcPubCompareGrid>div{border:1px solid rgba(31,31,31,.05)!important}
+html.phg-light .mdcPubCompareGrid span,html.phg-light .mdcPubCompareTargets span{color:#32484d!important}
+html.phg-light .mdcPubCompareTargets{border-top:1px solid rgba(31,31,31,.05)!important}
+html.phg-light .mdcPublicToggle,html.phg-light .mdcPublicComponents>label{border-top:1px solid rgba(31,31,31,.05)!important}
+html.phg-light .mdcPublicToggle input:not(:checked)~em,html.phg-light .mdcPublicComponents input:not(:checked)~em{color:#646d75!important}
+html.phg-light .publicSkipLink{background:#142629!important}
+html.phg-light .publicNode:focus-visible,html.phg-light .publicBreadcrumb button:focus-visible,html.phg-light .publicMenuActions button:focus-visible,html.phg-light .publicBack:focus-visible,html.phg-light .publicMenuCard:focus-visible,html.phg-light .publicAccountCard:focus-visible{outline:3px solid #1f1f1f!important}
+html.phg-light .mdcBetaCycleStats span{border:1px solid rgba(31,31,31,.055)!important;background:rgba(250,250,250,.12)!important}
+html.phg-light .mdcBetaCycleStats b{color:#0c1819!important}
+html.phg-light .mdcBetaCycle p{color:#415257!important}
+html.phg-light .mdcPhgConnection{background:linear-gradient(145deg,rgba(234,239,245,.94),rgba(236,238,246,.96))!important}
+html.phg-light .mdcPhgConnectionHead{border-bottom:1px solid rgba(31,31,31,.06)!important}
+html.phg-light .mdcPhgChoices section{border:1px solid rgba(31,31,31,.06)!important;background:rgba(31,31,31,.018)!important}
+html.phg-light .mdcPhgChoices input{background:#f1f4f8!important}
+html.phg-light .mdcPhgChoices button,html.phg-light .mdcPhgConnectionActions button{background:rgba(31,31,31,.025)!important}
+html.phg-light .mdcPhgChoices button.primary,html.phg-light .mdcPhgConnectionActions button.primary{color:#0c1819!important}
+html.phg-light .mdcPhgConnectionActions button.danger{color:#3c1d27!important}
+html.phg-light .mdcPhgStatusGrid>div{border:1px solid rgba(31,31,31,.055)!important;background:rgba(31,31,31,.016)!important}
+html.phg-light .mdcPhgVerifiedState{color:#2d404d!important}
+html.phg-light .mdcPhgConnMsg{color:#183230!important}
+html.phg-light .mdcPhgConnMsg.err{color:#341919!important}
+html.phg-light .quickStartCard{background:rgba(225,230,241,.72)!important}
+html.phg-light .helpSimpleList>div{background:rgba(31,31,31,.015)!important}
+html.phg-light .harmonyClearBtn{border:1px solid rgba(31,31,31,.13)!important;background:rgba(31,31,31,.035)!important}
+html.phg-light .harmonyMicBtn.processing{background:rgba(31,31,31,.025)!important}
+html.phg-light .menuGuideChoice{background:rgba(31,31,31,.025)!important}
+html.phg-light .menuGuideText{background:#f0f3f8!important}
+html.phg-light .menuEditDock{background:rgba(242,245,249,.95)!important}
+html.phg-light .menuEditTop>button{background:rgba(31,31,31,.025)!important}
+html.phg-light .menuEditDrawer,html.phg-light .menuFormatDrawer{border-top:1px solid rgba(31,31,31,.055)!important}
+html.phg-light .menuTreeRoot,html.phg-light .menuTreeQuick button,html.phg-light .menuTreeBranch button,html.phg-light .menuTreeSub button{border:1px solid rgba(31,31,31,.055)!important;background:rgba(31,31,31,.018)!important}
+html.phg-light .menuTreeBranch,html.phg-light .menuTreeSub{border:1px solid rgba(31,31,31,.05)!important}
+html.phg-light .menuTreeBranch>summary,html.phg-light .menuTreeSub>summary{background:rgba(31,31,31,.02)!important}
+html.phg-light .menuFormatBody input,html.phg-light .menuFormatBody select,html.phg-light .menuFormatBody textarea,html.phg-light .menuFormatGrid input,html.phg-light .menuFormatGrid select{background:#f1f4f8!important}
+html.phg-light .menuGuideInline{background:rgba(236,240,246,.96)!important}
+html.phg-light .menuGuideInlineHead{background:rgba(236,240,246,.98)!important;border-bottom:1px solid rgba(31,31,31,.055)!important}
+html.phg-light .menuGuideField input,html.phg-light .menuGuideField select{background:#f1f4f8!important}
+html.phg-light .menuGuidePresetRow button,html.phg-light .menuOrientation button{background:rgba(31,31,31,.02)!important}
+html.phg-light .menuResearchSummary>div{border:1px solid rgba(31,31,31,.055)!important;background:rgba(31,31,31,.015)!important}
+html.phg-light .menuGuideFormatGrid select,html.phg-light .menuGuideFormatGrid input{background:#f1f4f8!important}
+html.phg-light .menuPaperGrid button{background:rgba(31,31,31,.02)!important}
+html.phg-light body.phg-view-open .agentPanel.on{background:rgba(241,244,248,.90)!important}
+html.phg-light .harmonyVoicePrefs{background:rgba(241,244,248,.92)!important}
+html.phg-light .harmonyPrefRow button{border:1px solid rgba(31,31,31,.07)!important;background:rgba(31,31,31,.018)!important}
+html.phg-light .phgPrimaryModeToggle{background:rgba(241,244,248,.94)!important}
+html.phg-light .aiVoiceCard{background:rgba(31,31,31,.018)!important}
+html.phg-light .aiVoiceSectionHead{border-top:1px solid rgba(31,31,31,.06)!important}
+html.phg-light .aiMoodGrid button{background:rgba(31,31,31,.018)!important}
+html.phg-light .aiVoiceSlider{border:1px solid rgba(31,31,31,.055)!important;background:rgba(31,31,31,.012)!important}
+html.phg-light .aiVoiceCustom textarea{background:#f1f4f8!important}
+html.phg-light .aiVoiceFallback{border-top:1px solid rgba(31,31,31,.055)!important}
+html.phg-light .phgLaunchGate{background:rgba(245,247,250,.94)!important}
+html.phg-light .phgLaunchCard{background:linear-gradient(145deg,rgba(234,239,245,.98),rgba(238,240,247,.99))!important}
+html.phg-light .phgLaunchSetting{border:1px solid rgba(31,31,31,.055)!important;background:rgba(31,31,31,.015)!important}
+html.phg-light .phgLaunchStart{border:1px solid rgba(31,31,31,.055)!important}
+html.phg-light .phgLaunchDetail{background:rgba(242,245,249,.72)!important}
+html.phg-light .phgLaunchMicState>span{background:#818d9a!important;box-shadow:0 0 10px #818d9a!important}
+html.phg-light .phgLaunchError{color:#341919!important}
+html.phg-light .phgLaunchOptionRow button{background:rgba(31,31,31,.018)!important}
+html.phg-light .phgLocalVoiceTitle b{color:#0c1819!important}
+html.phg-light .phgLocalVoiceCopy{color:#405665!important}
+html.phg-light .phgLocalVoiceRow button,html.phg-light .phgLocalVoiceRow select{background:rgba(31,31,31,.035)!important;color:#0c1819!important}
+html.phg-light .phgLocalVoiceProgress{background:rgba(31,31,31,.06)!important}
+html.phg-light .phgLocalVoiceStatus{color:#51687a!important}
+html.phg-light #pmsStage{background:#f3f4f9!important;color:#0c1119!important}
+html.phg-light #pmsStage .pmsTitle span{color:#404d60!important}
+html.phg-light #pmsStage .pmsX{border:1px solid rgba(24,30,37,.3)!important;background:#dfe4f0!important;color:#0c1119!important}
+html.phg-light #pmsStage .pmsDots button{background:#b2bfd1!important}
+html.phg-light #pmsStage .pmsSay{color:#1b242f!important}
+html.phg-light #pmsStage .pmsBar button{border:1px solid rgba(24,30,37,.28)!important;background:#dfe4f0!important;color:#0c1119!important}
+html.phg-light #pmsStage .pmsTalk i{background:#142429!important}
+html.phg-light #pmsStage .pmsAsk input{border:1px solid rgba(24,30,37,.28)!important;background:#e9ecf4!important;color:#0c1119!important}
+html.phg-light #pmsStage .pmsAsk button{background:#cad4e4!important;color:#0c1119!important}
+html.phg-light .pmsSample{background:rgba(250,250,250,.55)!important;color:#121212!important}
+html.phg-light #pmsStage .pmsRef{border:1px solid rgba(24,30,37,.35)!important}
+html.phg-light #pmsStage .pmsRefN{color:#121212!important}
+html.phg-light #pmsStage .pmsRefX{background:rgba(250,250,250,.65)!important;color:#121212!important}
+html.phg-light #pmsStage .pmsRefAct{background:rgba(250,250,250,.62)!important}
+html.phg-light #pmsStage .pmsRefAct button{color:#121212!important}
+html.phg-light #pmsStage .pmsRefAct button+button{border-left:1px solid rgba(31,31,31,.25)!important}
+html.phg-light #pmsStage .pmsRefAdd{border:1px dashed rgba(24,30,37,.5)!important;color:#1b242f!important}
+html.phg-light #pmsStage .pmsPhoto{background:#e2e9f1!important}
+html.phg-light .t-noche .pmsCovText h1{color:#121212!important}
+html.phg-light .t-noche.pmsCover::after{background:linear-gradient(180deg,transparent 40%,rgba(250,250,250,.78) 80%)!important}
+html.phg-light .t-noche .pmsCovText{color:#121212!important}
+html.phg-light #hvxGear{background:radial-gradient(circle at 35% 30%,rgba(103,232,249,.16),rgba(242,243,249,.95) 62%)!important}
+html.phg-light #hvxGear::before,html.phg-light .hvxSheet::before,html.phg-light #hvxType::before,html.phg-light .hvxChip::before{background:conic-gradient(from 210deg,rgba(103,232,249,.85),rgba(167,139,250,.55),rgba(38,20,41,.7),rgba(103,232,249,.12) 62%,rgba(103,232,249,.85))!important}
+html.phg-light #hvxGear svg{stroke:#1b3538!important}
+html.phg-light #hvxGear[aria-expanded="true"] svg{stroke:#1b3538!important}
+html.phg-light .hvxSheet{background:radial-gradient(140% 90% at 0% 0%,rgba(103,232,249,.11),transparent 52%),radial-gradient(140% 90% at 100% 100%,rgba(38,20,41,.10),transparent 55%),rgba(242,243,249,.96)!important}
+html.phg-light .hvxSheet::after{background:rgba(31,31,31,.8)!important;box-shadow:-40px 8px 0 rgba(31,31,31,.35),-96px -4px 0 rgba(31,31,31,.25),-12px 30px 0 rgba(31,31,31,.3),-150px 14px 0 rgba(31,31,31,.2)!important}
+html.phg-light .hvxSheet button{color:#0c1219!important}
+html.phg-light .hvxSheet button b{color:#0c1219!important}
+html.phg-light .hvxSheet button small{color:#445268!important}
+html.phg-light .hvxIc{background:radial-gradient(circle at 35% 30%,rgba(103,232,249,.22),rgba(233,235,244,.95) 65%)!important}
+html.phg-light .hvxIc svg{stroke:#1b3538!important}
+html.phg-light .hvxSheet button.warm .hvxIc{background:radial-gradient(circle at 35% 30%,rgba(38,20,41,.22),rgba(233,235,244,.95) 65%)!important;box-shadow:inset 0 0 0 1px rgba(38,20,41,.3)!important}
+html.phg-light .hvxSheet button.warm .hvxIc svg{stroke:#1a0e1d!important}
+html.phg-light .hvxSheet hr{background:linear-gradient(90deg,transparent,rgba(103,232,249,.25),rgba(38,20,41,.2),transparent)!important}
+html.phg-light #hvxType{background:radial-gradient(120% 140% at 0% 0%,rgba(103,232,249,.10),transparent 50%),rgba(242,243,249,.96)!important}
+html.phg-light #hvxType input{color:#0c1219!important}
+html.phg-light #hvxType input::placeholder{color:#66768e!important}
+html.phg-light #hvxType .hvxClip svg{stroke:#1b3538!important}
+html.phg-light #hvxType .hvxSend{background:radial-gradient(circle,#f8f9fc 0 52%,#142429 57%,#67e8f9 61%,rgba(167,139,250,.5) 70%,transparent 76%)!important}
+html.phg-light #hvxType .hvxSend svg{stroke:#0c1519!important}
+html.phg-light #hvxPanel{color:#0e131a!important;background:radial-gradient(140% 70% at 0% 0%,rgba(103,232,249,.10),transparent 50%),radial-gradient(140% 70% at 100% 100%,rgba(38,20,41,.08),transparent 55%),rgba(242,243,249,.97)!important}
+html.phg-light .hvxPanelX{background:rgba(38,20,41,.08)!important}
+html.phg-light .hvxPanelX svg{stroke:#1a0e1d!important}
+html.phg-light .hvxEmpty{color:#445268!important}
+html.phg-light .hvxNote{border-bottom:1px solid rgba(24,30,37,.12)!important}
+html.phg-light .hvxNote.done .hvxNoteBody{color:#66768e!important}
+html.phg-light .hvxNoteMeta{color:#445268!important}
+html.phg-light .hvxNoteMeta .k-task{background:rgba(41,20,23,.14)!important;color:#381b1f!important}
+html.phg-light .hvxNoteMeta .k-idea{background:rgba(38,20,41,.14)!important;color:#311935!important}
+html.phg-light .hvxNoteBody{color:#0c1219!important}
+html.phg-light .hvxDel{color:#66768e!important}
+html.phg-light .hvxLead{color:#1b242f!important}
+html.phg-light .hvxBig{background:linear-gradient(90deg,#67e8f9,#a78bfa 60%,#261429)!important}
+html.phg-light .hvxCopy code{color:#0c1519!important}
+html.phg-light .hvxCopy button{color:#121212!important}
+html.phg-light .scPage{background:#fafafa!important;color:#121212!important}
+html.phg-light .scCard{background:#e4e4e6!important}
+html.phg-light .scCard.dim{color:#616166!important}
+html.phg-light .scIc.spk{box-shadow:inset 0 0 0 2px #99999c!important}
+html.phg-light .scIc.iff{background:#1e1e1f!important}
+html.phg-light .scIc.loop{background:#1e1e1f!important}
+html.phg-light .scRow{border-top:1px solid #cbcbcd!important}
+html.phg-light .scDim{color:#616166!important}
+html.phg-light .scField{background:#d6d6d7!important}
+html.phg-light .scField small{color:#616166!important}
+html.phg-light .scEq{color:#616166!important}
+html.phg-light .scVar,html.phg-light .scTok{background:#d6d6d7!important}
+html.phg-light .scField .scVar{background:#c9c9cb!important}
+html.phg-light .scChip em{color:#121212!important}
+html.phg-light .hvxSteps{color:#1b242f!important}
+html.phg-light .hvxSteps b{color:#0c1219!important}
+html.phg-light .hvxSteps code,html.phg-light .hvxLead code{color:#1b3538!important}
+html.phg-light .hvxKey{border-bottom:1px solid rgba(24,30,37,.12)!important}
+html.phg-light .hvxKey span{color:#445268!important}
+html.phg-light .hvxKey small{color:#445268!important}
+html.phg-light .hvxKey button{background:rgba(38,20,41,.12)!important;color:#1a0e1d!important}
+html.phg-light .hvxFine{color:#66768e!important}
+html.phg-light .hvxChip{background:rgba(242,243,249,.95)!important}
+html.phg-light .hvxChip.file span{color:#0e131a!important}
+html.phg-light .hvxChip .tag{color:#121212!important;background:rgba(250,250,250,.6)!important}
+html.phg-light .hvxChip .x{background:#e2e7f1!important;color:#0e131a!important}
+html.phg-light #hdPanel{color:#0e131a!important;background:radial-gradient(140% 70% at 0% 0%,rgba(103,232,249,.09),transparent 50%),radial-gradient(140% 70% at 100% 100%,rgba(38,20,41,.07),transparent 55%),rgba(242,243,249,.95)!important}
+html.phg-light .hdTitle{color:#0c1219!important}
+html.phg-light .hdX{background:rgba(38,20,41,.08)!important}
+html.phg-light .hdX svg{stroke:#1a0e1d!important}
+html.phg-light .hdMap{background:#f4f5fa!important}
+html.phg-light .hdMap .leaflet-control-attribution{background:rgba(242,243,249,.7)!important;color:#66768e!important}
+html.phg-light .hdMap .leaflet-control-zoom a{background:rgba(242,243,249,.9)!important;color:#1b3538!important}
+html.phg-light .hdPin i{background:#142729!important}
+html.phg-light .hdPin b{border:2px solid rgba(20,39,41,.9)!important}
+html.phg-light .hdMap .leaflet-popup-content-wrapper{background:rgba(242,243,249,.96)!important;color:#0e131a!important}
+html.phg-light .hdMap .leaflet-popup-tip{background:rgba(242,243,249,.96)!important}
+html.phg-light .hdMap .leaflet-popup-content b{color:#0c1219!important}
+html.phg-light .hdMap .leaflet-popup-content small{color:#404d60!important}
+html.phg-light .hdCard{background:rgba(242,243,249,.93)!important}
+html.phg-light .hdPlaceBody summary{color:#0e131a!important}
+html.phg-light .hdPlaceBody summary em{color:#404d60!important}
+html.phg-light .hdPlaceBody li{color:#0e131a!important}
+html.phg-light .hdPlaceBody li small{color:#404d60!important}
+html.phg-light .hdPlaceBody li b{color:#1b3538!important}
+html.phg-light .hdPlaceActs button.ghost{color:#1b3538!important}
+html.phg-light .hdFb button{border:1px solid rgba(31,31,31,.18)!important}
+html.phg-light .hdRows dt{color:#404d60!important}
+html.phg-light .hdRows dd{color:#0e131a!important}
+html.phg-light .hdChips span{color:#0e1c1e!important}
+html.phg-light .hdNote{color:#66768e!important}
+html.phg-light .hdSection h4{color:#404d60!important}
+html.phg-light .hdTile small{color:#404d60!important}
+html.phg-light .hdTile b{color:#0c1219!important}
+html.phg-light .hdBar .l{color:#0e131a!important}
+html.phg-light .hdBar .l small{color:#66768e!important}
+html.phg-light .hdBar .t{background:rgba(24,30,37,.10)!important}
+html.phg-light .hdBar .t i{background:linear-gradient(90deg,#22d3ee,#a78bfa 70%,#261429)!important}
+html.phg-light .hdBar .v{color:#0e1c1e!important}
+html.phg-light .hdLegend em{color:#404d60!important}
+html.phg-light .hdTable th{color:#404d60!important;background:rgba(242,243,249,.98)!important}
+html.phg-light .hdTable td{border-top:1px solid rgba(24,30,37,.09)!important;color:#0e131a!important}
+html.phg-light .hdRecipe{color:#0c1219!important;background:linear-gradient(135deg,rgba(38,20,41,.07),rgba(103,232,249,.05))!important;box-shadow:inset 0 0 0 1px rgba(38,20,41,.2)!important}
+html.phg-light .hdEmpty{color:#404d60!important}
+html.phg-light .hdCatItem h5{color:#0c1219!important}
+html.phg-light .hdCatItem p{color:#404d60!important}
+html.phg-light .hdCatItem button{color:#0e1c1e!important}
+html.phg-light .hdRefine{color:#0e1c1e!important}
+html.phg-light .hdRefine em{color:#404d60!important}
+html.phg-light .hdRefine button{color:#0e1c1e!important}
+
+</style>
 <style id="phgAtlasCSS">
 #phgViewSwitch{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:4500;display:none;
   padding:3px;border-radius:20px;background:rgba(5,10,18,.92);border:1px solid rgba(125,211,252,.45);box-shadow:0 6px 20px rgba(0,0,0,.45)}
 #phgViewSwitch.show{display:flex}
+body:has(#hvxGearMenu:not([hidden])) #phgViewSwitch,body:has(#hvxPlusMenu:not([hidden])) #phgViewSwitch{display:none!important}
 body.phg-view-open:not(.phg-atlas-mode) #phgViewSwitch{left:auto;right:14px;transform:none}
-body.phg-atlas-mode #phgViewSwitch{top:auto;left:auto;right:12px;transform:none;bottom:calc(env(safe-area-inset-bottom,0px) + 30vh + 22px)}
-@media (min-width:900px){body.phg-atlas-mode #phgView{transform:scale(.22)}#phgAtlasMini{width:22vw!important;height:22vh!important}
- body.phg-atlas-mode #phgViewSwitch{bottom:calc(22vh + 22px)}}
+body.phg-atlas-mode #phgViewSwitch{top:auto;left:auto;right:12px;transform:none;bottom:calc(env(safe-area-inset-bottom,0px) + 84px)}
 #phgViewSwitch button{border:0;background:transparent;color:#7dd3fc;height:32px;padding:0 16px;border-radius:16px;cursor:pointer;
   font:700 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
 #phgViewSwitch button[aria-pressed="true"]{background:#0e7490;color:#fff}
+html.phg-light #phgViewSwitch{background:rgba(255,255,255,.94);border-color:rgba(14,116,144,.4);box-shadow:0 6px 20px rgba(15,30,45,.18)}
+html.phg-light #phgViewSwitch button{color:#0e7490}html.phg-light #phgViewSwitch button[aria-pressed="true"]{color:#fff}
+html.phg-light #phgAtlasHeard{background:rgba(255,255,255,.95);color:#14202b;border-color:rgba(14,116,144,.3)}
 #phgAtlasLayer{position:fixed;inset:0;z-index:4300;background:#05070d;display:none}
 #phgAtlasLayer.show{display:block}
 #phgAtlasLayer iframe{border:0;width:100%;height:100%;display:block}
-body.phg-atlas-mode #phgView{transform:scale(.3);transform-origin:calc(100% - 12px) calc(100% - 12px - env(safe-area-inset-bottom,0px));
-  z-index:4400!important;border-radius:60px;overflow:hidden;box-shadow:0 0 0 3px rgba(34,211,238,.55),0 10px 40px rgba(0,0,0,.7);pointer-events:none;transition:transform .32s ease}
-body.phg-atlas-mode #phgView #hvxDock,body.phg-atlas-mode #phgView #hvxGear,body.phg-atlas-mode #phgView #hvxFloat,
-body.phg-atlas-mode #phgView .hvxSheet,body.phg-atlas-mode #phgView #hvxType,body.phg-atlas-mode #phgView #hvxAttach{visibility:hidden!important}
-body.phg-atlas-mode.phg-atlas-listening #phgView{box-shadow:0 0 0 6px rgba(34,211,238,.95),0 0 60px 10px rgba(34,211,238,.6),0 10px 40px rgba(0,0,0,.7)}
-#phgAtlasMini{position:fixed;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:4450;display:none;border:0;background:transparent;cursor:pointer;
-  width:30vw;height:30vh;border-radius:18px;-webkit-tap-highlight-color:transparent}
+/* Atlas view: the full Harmony view steps aside (kept alive, hidden); a small Harmony orb
+   floats bottom-right and gets smaller as you zoom in, so it never hides the map. */
+body.phg-atlas-mode #phgView{visibility:hidden!important;pointer-events:none!important}
+body.phg-atlas-mode #phgView *{visibility:hidden!important}
+#phgAtlasMini{--orb:56px;position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:4450;display:none;width:var(--orb);height:var(--orb);
+  padding:0;border:0;border-radius:50%;cursor:pointer;background:#05070d url(/img/harmony-orb.gif) center/cover no-repeat;opacity:.92;
+  box-shadow:0 2px 10px rgba(0,0,0,.55);transition:width .2s ease,height .2s ease,box-shadow .2s ease;-webkit-tap-highlight-color:transparent}
 body.phg-atlas-mode #phgAtlasMini{display:block}
-#phgAtlasMini span{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);white-space:nowrap;padding:4px 9px;border-radius:10px;background:rgba(5,10,18,.85);
-  color:#a5f3fc;font:700 9.5px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}
-#phgAtlasHeard{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 70px);transform:translateX(-50%);z-index:4460;max-width:min(60vw,560px);
+#phgAtlasMini span{display:none}
+body.phg-atlas-listening #phgAtlasMini{box-shadow:0 0 0 2px rgba(34,211,238,.9),0 0 14px 2px rgba(34,211,238,.55);animation:phgOrbPulse 1.6s ease-in-out infinite}
+#phgAtlasMini.thinking{background-image:url(/img/harmony-orb-thinking.gif)}
+@keyframes phgOrbPulse{50%{box-shadow:0 0 0 3px rgba(34,211,238,.5),0 0 22px 4px rgba(34,211,238,.35)}}
+@media (max-width:820px){body.phg-atlas-mode #phgAtlasMini{bottom:calc(var(--atlasSheet,0px) + 88px)}body.phg-atlas-mode #phgViewSwitch{bottom:calc(var(--atlasSheet,0px) + 150px)}body.phg-atlas-mode #phgAtlasHeard{bottom:calc(var(--atlasSheet,0px) + 14px)}}
+#phgAtlasHeard{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);z-index:4460;max-width:min(60vw,560px);
   display:none;padding:7px 14px;border-radius:14px;background:rgba(5,10,18,.9);border:1px solid rgba(125,211,252,.35);color:#e2e8f0;font:500 14px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-align:center;pointer-events:none}
 #phgAtlasHeard.show{display:block}
 </style>
@@ -44433,7 +44946,7 @@ function phgAtlasSet(on,fromTap){
     if(!l){
       l=document.createElement('div');l.id='phgAtlasLayer';
       var f=document.createElement('iframe');f.src='/atlas.html';f.title='PHG Atlas';f.setAttribute('allow','fullscreen');
-      f.onload=function(){var a=api();if(a&&a.preload)a.preload().catch(function(){});};
+      f.onload=function(){var a=api();if(a&&a.preload)a.preload().catch(function(){});watchZoom(f);};
       l.appendChild(f);stopAll(l);document.body.appendChild(l);
     }
     l.classList.add('show');ensureMini();
@@ -44449,6 +44962,25 @@ function phgAtlasSet(on,fromTap){
   resize();ensureSwitch();
 }
 function phgAtlasToggle(){phgAtlasSet(!isAtlas(),true);}
+/* ---- app-wide Light / Dark screen: one setting, stored on the device, Atlas follows it ---- */
+var THEME_KEY='phg_theme_v1';
+function phgThemeGet(){try{return localStorage.getItem(THEME_KEY)==='light'?'light':'dark';}catch(e){return 'dark';}}
+function phgThemeSet(t){var light=t==='light';document.documentElement.classList.toggle('phg-light',light);try{localStorage.setItem(THEME_KEY,light?'light':'dark');}catch(e){}
+  var A=api();if(A&&A.theme){try{A.theme(light?'light':'dark');}catch(e){}}themeRow();return{ok:true,said:light?'Light screen':'Dark screen'};}
+G.phgThemeSet=phgThemeSet;G.phgThemeGet=phgThemeGet;
+G.addEventListener('message',function(e){if(e.origin!==location.origin)return;var d=e.data||{};if(typeof d.phgAtlasSheet==='number')document.body.style.setProperty('--atlasSheet',Math.max(0,d.phgAtlasSheet|0)+'px');});
+var SUN='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/></svg>';
+var MOON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></svg>';
+function themeRow(){var gm=$('hvxGearMenu');if(!gm)return;var r=gm.querySelector('button[data-k="theme"]'),light=phgThemeGet()==='light';
+  if(!r){r=document.createElement('button');r.setAttribute('data-k','theme');var before=gm.querySelector('button[data-k="voice"]')||gm.querySelector('button[data-k="signout"]');
+    r.addEventListener('click',function(){phgThemeSet(phgThemeGet()==='light'?'dark':'light');});if(before)gm.insertBefore(r,before);else gm.appendChild(r);}
+  r.innerHTML='<i class="hvxIc">'+(light?MOON:SUN)+'</i><span><b>'+(light?'Dark screen':'Light screen')+'</b><small>Colour palette for the whole app</small></span>';}
+if(phgThemeGet()==='light')document.documentElement.classList.add('phg-light');
+/* orb size follows the map: 56 px at country zoom, down to 30 px at street level */
+function sizeOrb(z){var m=$('phgAtlasMini');if(!m||z==null)return;var top=innerWidth<=820?46:56,px=Math.round(Math.max(28,Math.min(top,top-(z-4)*2.4)));m.style.setProperty('--orb',px+'px');}
+function watchZoom(f){var tries=0;(function hook(){var w=null;try{w=f.contentWindow;}catch(e){}var mp=w&&w.__map;
+  if(mp&&typeof mp.on==='function'){sizeOrb(mp.getZoom());mp.on('zoom',function(){sizeOrb(mp.getZoom());});return;}
+  if(++tries<120)setTimeout(hook,250);})();}
 function addBadgeButton(){
   var badge=document.querySelector('.phgAuthBadge.show'),have=$('phgAtlasBadgeBtn');
   if(!phgAtlasAllowed()){if(have)have.remove();return;}
@@ -44494,6 +45026,7 @@ TGT.forEach(function(t){
   rx(t[1]+' (on|off)',function(m){return['layer',t[0],m[1]==='on'];},true);
   rx('turn '+t[1]+' (on|off)',function(m){return['layer',t[0],m[1]==='on'];},true);
 });
+rx('(?:switch to |use |go to |go |change to |make it |make the screen |turn on )?(light|dark|day|night|bright)(?: mode| theme| screen| ui| colou?rs?| palette)',function(m){return['theme',/light|day|bright/.test(m[1])?'light':'dark'];},true);
 rx('(?:switch to |use |show |change to |go |make it )?(?:the )?(midnight|dark|night|streets?|street map|light|grey|gray|light grey|light gray|satellite|aerial|green|blueprint)(?: map| mode| basemap| style| view)?',function(m){var w=m[1],n=/midnight|dark|night/.test(w)?'midnight':/street/.test(w)?'streets':/satellite|aerial/.test(w)?'sat':/green/.test(w)?'green':/blueprint/.test(w)?'blueprint':'grey';return['base',n];},true);
 rx('(?:close|exit|leave|hide) (?:the )?(?:atlas|map)|(?:back to |go to |open |show )?harmony(?: view)?|(?:switch|go) back',function(){return['view','harmony'];},true);
 rx('(?:stop listening|stop talking|mute|go to sleep|that\'?s all)',function(){return['stopVoice'];},true);
@@ -44531,13 +45064,15 @@ function run(acts,t0){
     var a=acts[i],r=null;
     if(a[0]==='view'){phgAtlasSet(a[1]==='atlas');said.push(a[1]==='atlas'?'Atlas':'Harmony');continue;}
     if(a[0]==='stopVoice'){voxStop();said.push('Stopped listening');continue;}
+    if(a[0]==='theme'){r=phgThemeSet(a[1]);said.push(r.said);continue;}
     if(!A||!A.ready()){heard('The map is still loading…');return;}
     if(a[0]==='zoom')r=A.zoom(a[1]);
     else if(a[0]==='zoomTo')r=A.zoomTo(a[1],a[2]);
     else if(a[0]==='pan')r=A.pan(a[1],a[2]);
     else if(a[0]==='reset')r=A.reset();
     else if(a[0]==='allOff')r=A.allOff();
-    else if(a[0]==='layer'){if(a[1]==='weather'){if(a[2]){A.layer('radar',true);r=A.layer('alerts',true);if(r&&r.ok)r.said='Weather on: radar + warnings';}else r=A.weatherOff();}else r=A.layer(a[1],a[2]);}
+    else if(a[0]==='layer'){if(a[1]==='weather')r=A.weather?A.weather(a[2]):(a[2]?A.layer('radar',true):A.weatherOff());else r=A.layer(a[1],a[2]);}
+    else if(a[0]==='theme')r=phgThemeSet(a[1]);
     else if(a[0]==='any'){r=A.layer(a[1],a[2]);if(!(r&&r.ok)&&a[2]){pending=A.place(a[1]);continue;}if(!(r&&r.ok)){var z=A.ask((a[2]?'show ':'hide ')+a[1]);if(z&&z.ok)said.push('Done');else miss.push(a[1]);continue;}}
     else if(a[0]==='base')r=A.base(a[1]);
     else if(a[0]==='place'){pending=A.place(a[1]);continue;}
@@ -44579,7 +45114,7 @@ function handle(text,final,t0){
    Harmony's own voice is used and commands are caught when her transcript arrives. */
 var VOX={on:false,rec:null,cons:{},paused:false,fallback:false,restartT:null,errs:0};
 function heard(t){var h=$('phgAtlasHeard');if(!h)return;h.textContent=t;h.classList.toggle('show',!!t);clearTimeout(heard._t);heard._t=setTimeout(function(){h.classList.remove('show');},2600);}
-function miniLabel(t){var s=document.querySelector('#phgAtlasMini span');if(s)s.textContent=t;}
+function miniLabel(t){var m=$('phgAtlasMini');if(m){m.title='Harmony: '+t;m.setAttribute('aria-label','Harmony: '+t);}}
 function speaking(){
   try{if(G.speechSynthesis&&speechSynthesis.speaking)return true;}catch(e){}
   var au=document.querySelectorAll('audio');for(var i=0;i<au.length;i++){if(!au[i].paused&&!au[i].ended)return true;}
@@ -44627,13 +45162,14 @@ function useFallback(msg){
 function voxPause(waitForHarmony){
   if(!VOX.on||VOX.fallback||!VOX.rec)return;
   VOX.paused=true;try{VOX.rec.abort();}catch(e){}
-  miniLabel('Harmony is answering…');
+  miniLabel('Harmony is answering…');var mo=$('phgAtlasMini');if(mo)mo.classList.add('thinking');
   var t0=Date.now(),started=false;
   clearInterval(VOX.waitT);
   VOX.waitT=setInterval(function(){
     var sp=speaking();if(sp)started=true;
     if((started&&!sp)||(!started&&Date.now()-t0>9000)||Date.now()-t0>30000){
       clearInterval(VOX.waitT);VOX.paused=false;
+      var mo2=$('phgAtlasMini');if(mo2)mo2.classList.remove('thinking');
       if(VOX.on&&VOX.rec){VOX.cons={};try{VOX.rec.start();}catch(e){}miniLabel('Listening…');}
     }
   },250);
@@ -44659,6 +45195,7 @@ if(G.PMS&&typeof G.PMS.hear==='function'){
   var _pmsHear=G.PMS.hear;
   G.PMS.hear=function(t){
     var q=String(t||'').trim();if(!q)return;
+    if(!isAtlas()){var pt=parse(q,false);if(pt.acts.length&&!pt.rest&&pt.acts.every(function(a){return a[0]==='theme';})){var tr=phgThemeSet(pt.acts[0][1]);harmonySay(tr.said);return;}}
     if(!isAtlas()&&OPEN_ATLAS.test(q)&&phgAtlasAllowed()){phgAtlasSet(true);var p0=parse(q.replace(OPEN_ATLAS,''),false);if(p0.acts.length)setTimeout(function(){run(p0.acts,performance.now());},1200);return;}
     if(isAtlas()){var p=handle(q,true);if(p.acts.length&&!(p.rest&&p.rest.split(' ').length>=2))return;if(p.acts.length)q=p.rest;
       var A0=api();if(A0&&A0.ready()){var z0=A0.ask(q);if(z0&&z0.ok){A0.ack('Done: '+q,null);return;}
@@ -44678,7 +45215,7 @@ function wrap(name,after){
   };
 }
 /* the Harmony page, the account bar and the access answer can arrive in any order */
-wrap('phgViewport',function(){setTimeout(phgAtlasRefresh,60);});
+wrap('phgViewport',function(){setTimeout(phgAtlasRefresh,60);setTimeout(themeRow,80);});
 wrap('phgAuthDraw',addBadgeButton);
 wrap('phgAccessLoad',phgAtlasRefresh);
 new MutationObserver(function(){ensureSwitch();}).observe(document.body,{childList:true});
