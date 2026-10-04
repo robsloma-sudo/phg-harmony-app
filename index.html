@@ -44353,79 +44353,324 @@ if(typeof G.agentAnswer==='function'){
 </script>
 
 
-<!-- DEV-0023: Atlas toggle. Harmony page: pill top-right. Admin view: "Atlas" in the account bar.
-     Opens /atlas.html (same origin, shares the PHG sign-in) full screen; the pill on top of it
-     closes it again. Shown only when phg-access allows it; atlas.html re-checks server-side.
-     Removing this block removes the feature. -->
+<!-- DEV-0023: Harmony <-> Atlas. Two top views, switched by the "Harmony | Atlas" control.
+     In Atlas, the Harmony view shrinks into the bottom-right corner and keeps listening:
+     map commands ("zoom in", "add cloud filters", "go to Austin") are recognised on the
+     device by a fixed grammar and applied in the same frame (no network, no model).
+     Anything else goes to Harmony as a normal question. Shown only when phg-access allows
+     the Atlas; atlas.html re-checks server-side. Removing this block removes the feature. -->
 <style id="phgAtlasCSS">
-#phgAtlasBtn,#phgAtlasClose{position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 14px);z-index:30;display:flex;align-items:center;gap:7px;
-  height:38px;padding:0 14px;border-radius:19px;border:1px solid rgba(125,211,252,.55);background:rgba(5,10,18,.9);color:#7dd3fc;
-  font:700 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent}
-#phgAtlasBtn i,#phgAtlasClose i{width:10px;height:10px;border-radius:50%;border:1.5px solid currentColor;box-sizing:border-box}
-#phgAtlasClose{background:#0e7490;border-color:#22d3ee;color:#fff}
-#phgAtlasClose i{background:#e0f7ff;border-color:#e0f7ff}
+#phgViewSwitch{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:4500;display:none;
+  padding:3px;border-radius:20px;background:rgba(5,10,18,.92);border:1px solid rgba(125,211,252,.45);box-shadow:0 6px 20px rgba(0,0,0,.45)}
+#phgViewSwitch.show{display:flex}
+body.phg-view-open:not(.phg-atlas-mode) #phgViewSwitch{left:auto;right:14px;transform:none}
+body.phg-atlas-mode #phgViewSwitch{top:auto;left:auto;right:12px;transform:none;bottom:calc(env(safe-area-inset-bottom,0px) + 30vh + 22px)}
+@media (min-width:900px){body.phg-atlas-mode #phgView{transform:scale(.22)}#phgAtlasMini{width:22vw!important;height:22vh!important}
+ body.phg-atlas-mode #phgViewSwitch{bottom:calc(22vh + 22px)}}
+#phgViewSwitch button{border:0;background:transparent;color:#7dd3fc;height:32px;padding:0 16px;border-radius:16px;cursor:pointer;
+  font:700 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+#phgViewSwitch button[aria-pressed="true"]{background:#0e7490;color:#fff}
 #phgAtlasLayer{position:fixed;inset:0;z-index:4300;background:#05070d;display:none}
 #phgAtlasLayer.show{display:block}
 #phgAtlasLayer iframe{border:0;width:100%;height:100%;display:block}
+body.phg-atlas-mode #phgView{transform:scale(.3);transform-origin:calc(100% - 12px) calc(100% - 12px - env(safe-area-inset-bottom,0px));
+  z-index:4400!important;border-radius:60px;overflow:hidden;box-shadow:0 0 0 3px rgba(34,211,238,.55),0 10px 40px rgba(0,0,0,.7);pointer-events:none;transition:transform .32s ease}
+body.phg-atlas-mode #phgView #hvxDock,body.phg-atlas-mode #phgView #hvxGear,body.phg-atlas-mode #phgView #hvxFloat,
+body.phg-atlas-mode #phgView .hvxSheet,body.phg-atlas-mode #phgView #hvxType,body.phg-atlas-mode #phgView #hvxAttach{visibility:hidden!important}
+body.phg-atlas-mode.phg-atlas-listening #phgView{box-shadow:0 0 0 6px rgba(34,211,238,.95),0 0 60px 10px rgba(34,211,238,.6),0 10px 40px rgba(0,0,0,.7)}
+#phgAtlasMini{position:fixed;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:4450;display:none;border:0;background:transparent;cursor:pointer;
+  width:30vw;height:30vh;border-radius:18px;-webkit-tap-highlight-color:transparent}
+body.phg-atlas-mode #phgAtlasMini{display:block}
+#phgAtlasMini span{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);white-space:nowrap;padding:4px 9px;border-radius:10px;background:rgba(5,10,18,.85);
+  color:#a5f3fc;font:700 9.5px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}
+#phgAtlasHeard{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 70px);transform:translateX(-50%);z-index:4460;max-width:min(60vw,560px);
+  display:none;padding:7px 14px;border-radius:14px;background:rgba(5,10,18,.9);border:1px solid rgba(125,211,252,.35);color:#e2e8f0;font:500 14px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-align:center;pointer-events:none}
+#phgAtlasHeard.show{display:block}
 </style>
 <script id="phgAtlas">
 (function(){
 'use strict';
+var G=window;
 function phgAtlasAllowed(){
   /* client courtesy only; atlas.html re-checks with phg-access before loading anything */
   return typeof PHGACCESS!=='undefined'&&!!PHGACCESS&&(PHGACCESS.view_mode==='developer'||(Array.isArray(PHGACCESS.surfaces)&&PHGACCESS.surfaces.indexOf('atlas')>=0));
 }
+function $(id){return document.getElementById(id);}
 function stopAll(el){['pointerdown','touchstart','click','keydown','wheel'].forEach(function(ev){el.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});}
-function layer(){return document.getElementById('phgAtlasLayer');}
-function isOpen(){var l=layer();return !!(l&&l.classList.contains('show'));}
-function sync(){
-  var on=isOpen(),b=document.getElementById('phgAtlasBtn');
-  if(b){b.setAttribute('aria-pressed',on?'true':'false');}
-  var k=document.getElementById('phgAtlasBadgeBtn');if(k)k.setAttribute('aria-pressed',on?'true':'false');
-}
-function phgAtlasSet(on){
-  if(on&&!phgAtlasAllowed())on=false;
-  var l=layer();
-  if(on&&!l){
-    l=document.createElement('div');l.id='phgAtlasLayer';
-    var f=document.createElement('iframe');f.src='/atlas.html';f.title='PHG Atlas';f.setAttribute('allow','fullscreen');l.appendChild(f);
-    var c=document.createElement('button');c.id='phgAtlasClose';c.type='button';c.setAttribute('aria-label','Close the Atlas map');
-    c.innerHTML='<i aria-hidden="true"></i><span>Atlas</span>';c.onclick=function(e){e.stopPropagation();phgAtlasSet(false);};
-    l.appendChild(c);stopAll(l);document.body.appendChild(l);
+function layer(){return $('phgAtlasLayer');}
+function isAtlas(){return document.body.classList.contains('phg-atlas-mode');}
+function api(){try{var f=layer()&&layer().querySelector('iframe');return f&&f.contentWindow&&f.contentWindow.PHGAtlas||null;}catch(e){return null;}}
+function resize(){try{G.dispatchEvent(new Event('resize'));}catch(e){}}
+
+/* ---------------- view switch: Harmony | Atlas ---------------- */
+function ensureSwitch(){
+  var s=$('phgViewSwitch');
+  if(!s){
+    s=document.createElement('div');s.id='phgViewSwitch';s.setAttribute('role','group');s.setAttribute('aria-label','Choose view');
+    s.innerHTML='<button type="button" data-v="harmony">Harmony</button><button type="button" data-v="atlas">Atlas</button>';
+    stopAll(s);
+    s.onclick=function(e){var b=e.target&&e.target.closest&&e.target.closest('button[data-v]');if(!b)return;var at=b.getAttribute('data-v')==='atlas';phgAtlasSet(at,true);if(!at&&!$('phgView')&&typeof G.phgViewport==='function'){try{G.phgViewport();}catch(_){}}};
+    document.body.appendChild(s);
   }
-  if(l)l.classList.toggle('show',!!on);
-  sync();
+  var show=phgAtlasAllowed()&&(isAtlas()||!!$('phgView'));
+  s.classList.toggle('show',show);
+  Array.prototype.forEach.call(s.querySelectorAll('button'),function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-v')==='atlas')===isAtlas()));});
+  var k=$('phgAtlasBadgeBtn');if(k)k.setAttribute('aria-pressed',String(isAtlas()));
 }
-function phgAtlasToggle(){phgAtlasSet(!isOpen());}
-function addViewButton(){
-  var view=document.getElementById('phgView'),have=document.getElementById('phgAtlasBtn');
-  if(!phgAtlasAllowed()){if(have)have.remove();return;}
-  if(!view||have)return;
-  var b=document.createElement('button');b.id='phgAtlasBtn';b.type='button';b.setAttribute('aria-pressed','false');b.setAttribute('aria-label','Open the Atlas map');
-  b.innerHTML='<i aria-hidden="true"></i><span>Atlas</span>';
-  ['pointerdown','touchstart'].forEach(function(ev){b.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
-  b.onclick=function(e){e.stopPropagation();phgAtlasToggle();};
-  view.appendChild(b);sync();
+function ensureMini(){
+  if($('phgAtlasMini'))return;
+  var m=document.createElement('button');m.id='phgAtlasMini';m.type='button';m.setAttribute('aria-label','Harmony: tap to talk to the map');
+  m.innerHTML='<span>Tap to talk</span>';stopAll(m);
+  m.onclick=function(e){e.stopPropagation();VOX.on?voxStop():voxStart(true);};
+  document.body.appendChild(m);
+  var h=document.createElement('div');h.id='phgAtlasHeard';h.setAttribute('aria-live','polite');document.body.appendChild(h);
 }
+function phgAtlasSet(on,fromTap){
+  if(on&&!phgAtlasAllowed())on=false;
+  if(on){
+    if(!$('phgView')&&typeof G.phgViewport==='function'){try{G.phgViewport();}catch(e){}}
+    var l=layer();
+    if(!l){
+      l=document.createElement('div');l.id='phgAtlasLayer';
+      var f=document.createElement('iframe');f.src='/atlas.html';f.title='PHG Atlas';f.setAttribute('allow','fullscreen');
+      f.onload=function(){var a=api();if(a&&a.preload)a.preload().catch(function(){});};
+      l.appendChild(f);stopAll(l);document.body.appendChild(l);
+    }
+    l.classList.add('show');ensureMini();
+    var wasTalking=!!(G.PMS&&G.PMS.talk);
+    if(wasTalking){try{G.PMS.toggleTalk();}catch(e){}}
+    document.body.classList.add('phg-atlas-mode');
+    if(wasTalking||fromTap)voxStart(!!fromTap);
+  }else{
+    voxStop();
+    document.body.classList.remove('phg-atlas-mode');
+    var l2=layer();if(l2)l2.classList.remove('show');
+  }
+  resize();ensureSwitch();
+}
+function phgAtlasToggle(){phgAtlasSet(!isAtlas(),true);}
 function addBadgeButton(){
-  var badge=document.querySelector('.phgAuthBadge.show'),have=document.getElementById('phgAtlasBadgeBtn');
+  var badge=document.querySelector('.phgAuthBadge.show'),have=$('phgAtlasBadgeBtn');
   if(!phgAtlasAllowed()){if(have)have.remove();return;}
   if(!badge||have)return;
   var b=document.createElement('button');b.id='phgAtlasBadgeBtn';b.type='button';b.textContent='Atlas';b.setAttribute('aria-pressed','false');
   b.onclick=function(e){e.stopPropagation();phgAtlasToggle();};
-  badge.insertBefore(b,badge.querySelector('button'));sync();
+  badge.insertBefore(b,badge.querySelector('button'));
 }
 function phgAtlasRefresh(){
-  try{addViewButton();}catch(e){}
   try{addBadgeButton();}catch(e){}
-  if(!phgAtlasAllowed()&&isOpen())phgAtlasSet(false);
-  try{if(typeof window.phgBetaTrimSheets==='function')window.phgBetaTrimSheets();}catch(e){}
+  if(!phgAtlasAllowed()&&isAtlas())phgAtlasSet(false);
+  try{ensureSwitch();}catch(e){}
+  try{if(typeof G.phgBetaTrimSheets==='function')G.phgBetaTrimSheets();}catch(e){}
 }
-window.phgAtlasToggle=phgAtlasToggle;window.phgAtlasSet=phgAtlasSet;window.phgAtlasRefresh=phgAtlasRefresh;
+
+/* ---------------- the command grammar (deterministic, no model) ----------------
+   parse(text) -> {acts:[...], rest:'unmatched words'}. Every act is a direct map call.
+   'quick' acts take no argument, so they may fire on a partial (interim) transcript the
+   moment the phrase is complete; place names wait for the final words. */
+var NUM={one:1,two:2,three:3,four:4,five:5,a:1,once:1,twice:2};
+var ON='(?:show|turn on|switch on|add|enable|display|put on|give me|bring up|open|start|i want|let me see|overlay)';
+var OFF='(?:hide|turn off|switch off|remove|disable|take off|close|clear|kill|drop|get rid of|no more|stop showing|lose)';
+var TGT=[
+  ['clouds','(?:the )?(?:cloud filters?|cloud cover|cloud layer|satellite clouds|ir satellite|infrared|clouds?)'],
+  ['radar','(?:the )?(?:precipitation|nexrad|doppler|radar|rain)'],
+  ['alerts','(?:the )?(?:weather )?(?:storm warnings|severe weather|watch boxes|warnings?|alerts?|watches)'],
+  ['cams','(?:the )?(?:traffic )?(?:cameras?|webcams?|cams?)'],
+  ['weather','(?:the )?(?:weather layers?|weather filters?|weather)']
+];
+var RX=[];
+function rx(re,fn,quick){RX.push({re:new RegExp('^(?:please |can you |could you |harmony |ok |okay |now )*'+re+'(?: please| now| for me)?(?=$|\\s)','i'),fn:fn,quick:!!quick});}
+rx('(?:zoom|go|move) (?:in|closer)(?: (a lot|way in|more|further|a little|a bit|(one|two|three|four|five|\\d) (?:levels?|times?|steps?)))?',function(m){var n=m[1]?/lot|way/.test(m[1])?3:/little|bit/.test(m[1])?.5:/more|further/.test(m[1])?1:+(NUM[m[2]]||m[2]):1;return['zoom',n];},true);
+rx('(?:zoom|go|move|pull) (?:out|back|further out)(?: (a lot|way out|more|a little|a bit|(one|two|three|four|five|\\d) (?:levels?|times?|steps?)))?',function(m){var n=m[1]?/lot|way/.test(m[1])?3:/little|bit/.test(m[1])?.5:/more/.test(m[1])?1:+(NUM[m[2]]||m[2]):1;return['zoom',-n];},true);
+rx('(?:closer|enhance|get closer|in more|zoom)',function(){return['zoom',1];},true);
+rx('(?:further|farther|back up|wider|zoom wider)',function(){return['zoom',-1];},true);
+rx('(?:zoom|go) (?:to |in to |into )?(street|block|neighbou?rhood|city|town|metro|county|state|region|country|national|nation) (?:level|view)',function(m){var z={street:16,block:15,neighborhood:14,neighbourhood:14,city:11.5,town:12,metro:10,county:9,state:6.5,region:5,country:3.6,national:3.6,nation:3.6}[m[1]];return['zoomTo',z,m[1]+' level'];},true);
+rx('(?:pan |move |go |scroll |shift |slide )?(?:the map )?(north|south|east|west|up|down|left|right)(?: (a lot|a little|a bit|more))?',function(m){return['pan',m[1],m[2]?/lot/.test(m[2])?.8:/little|bit/.test(m[2])?.2:.4:.4];},true);
+rx('(?:reset the map|reset the view|reset|start over|whole country|go home|show (?:me )?(?:the )?(?:whole )?(?:country|united states|usa|us|map))',function(){return['reset'];},true);
+rx('(?:turn |switch )?(?:everything|all layers|all the layers|all filters|all overlays) off|'+OFF+' (?:everything|all layers|all the layers|all filters|all overlays|the map)|clear the map',function(){return['allOff'];},true);
+TGT.forEach(function(t){
+  rx(ON+' '+t[1],function(){return['layer',t[0],true];},true);
+  rx(OFF+' '+t[1],function(){return['layer',t[0],false];},true);
+  rx(t[1]+' (on|off)',function(m){return['layer',t[0],m[1]==='on'];},true);
+  rx('turn '+t[1]+' (on|off)',function(m){return['layer',t[0],m[1]==='on'];},true);
+});
+rx('(?:switch to |use |show |change to |go |make it )?(?:the )?(midnight|dark|night|streets?|street map|light|grey|gray|light grey|light gray|satellite|aerial|green|blueprint)(?: map| mode| basemap| style| view)?',function(m){var w=m[1],n=/midnight|dark|night/.test(w)?'midnight':/street/.test(w)?'streets':/satellite|aerial/.test(w)?'sat':/green/.test(w)?'green':/blueprint/.test(w)?'blueprint':'grey';return['base',n];},true);
+rx('(?:close|exit|leave|hide) (?:the )?(?:atlas|map)|(?:back to |go to |open |show )?harmony(?: view)?|(?:switch|go) back',function(){return['view','harmony'];},true);
+rx('(?:stop listening|stop talking|mute|go to sleep|that\'?s all)',function(){return['stopVoice'];},true);
+rx('(?:go to|fly to|take me to|zoom to|zoom into|zoom in on|zoom in to|center on|centre on|jump to|navigate to|find|where is|on|over|to|at) (.+)',function(m){return['place',m[1]];},false);
+rx('show me (.+)',function(m){return['any',m[1],true];},false);
+rx(ON+' (.+)',function(m){return['any',m[1],true];},false);
+rx(OFF+' (.+)',function(m){return['any',m[1],false];},false);
+
+function clean(t){return String(t||'').toLowerCase().replace(/[“”"!?.;]/g,' ').replace(/\s+/g,' ').trim();}
+function parse(text,quickOnly){
+  var t=clean(text),acts=[],guard=0;
+  while(t&&guard++<8){
+    t=t.replace(/^(?:and then|and also|then|and|also|,)\s*/,'');if(!t)break;
+    var hit=null;
+    for(var i=0;i<RX.length;i++){var r=RX[i];if(quickOnly&&!r.quick)continue;var m=t.match(r.re);if(m&&(!hit||m[0].length>hit.m[0].length))hit={m:m,r:r};}
+    if(!hit)break;
+    /* a place can't swallow a following command: "go to austin and add radar" */
+    var a=hit.r.fn(hit.m);
+    if(a[0]==='place'){var p=a[1].split(/\s+(?:and then|and also|then|and)\s+(?=(?:zoom|show|hide|turn|add|remove|pan|move|go|switch|use|close|reset|clear)\b)/);a[1]=p[0];acts.push(a);t=p.slice(1).join(' and ');continue;}
+    if(a[0]==='any'){
+      /* "show radar and warnings" = two layers; "show menus and go to nyc" = a layer, then a command */
+      var parts=a[1].split(/\s*,\s*|\s+(?:and then|and also|then|and|plus)\s+/),j=0,restParts=[];
+      for(j=0;j<parts.length;j++){if(!parts[j])continue;if(j>0&&parse(parts[j],false).acts.length){restParts=parts.slice(j);break;}acts.push(['any',parts[j],a[2]]);}
+      t=restParts.join(' and ');continue;}
+    acts.push(a);t=t.slice(hit.m[0].length).trim();
+  }
+  return {acts:acts,rest:t};
+}
+G.phgAtlasParse=parse;
+
+/* ---------------- run acts against the map ---------------- */
+function run(acts,t0){
+  var A=api(),said=[],pending=null,miss=[];
+  for(var i=0;i<acts.length;i++){
+    var a=acts[i],r=null;
+    if(a[0]==='view'){phgAtlasSet(a[1]==='atlas');said.push(a[1]==='atlas'?'Atlas':'Harmony');continue;}
+    if(a[0]==='stopVoice'){voxStop();said.push('Stopped listening');continue;}
+    if(!A||!A.ready()){heard('The map is still loading…');return;}
+    if(a[0]==='zoom')r=A.zoom(a[1]);
+    else if(a[0]==='zoomTo')r=A.zoomTo(a[1],a[2]);
+    else if(a[0]==='pan')r=A.pan(a[1],a[2]);
+    else if(a[0]==='reset')r=A.reset();
+    else if(a[0]==='allOff')r=A.allOff();
+    else if(a[0]==='layer'){if(a[1]==='weather'){if(a[2]){A.layer('radar',true);r=A.layer('alerts',true);if(r&&r.ok)r.said='Weather on: radar + warnings';}else r=A.weatherOff();}else r=A.layer(a[1],a[2]);}
+    else if(a[0]==='any'){r=A.layer(a[1],a[2]);if(!(r&&r.ok)&&a[2]){pending=A.place(a[1]);continue;}if(!(r&&r.ok)){var z=A.ask((a[2]?'show ':'hide ')+a[1]);if(z&&z.ok)said.push('Done');else miss.push(a[1]);continue;}}
+    else if(a[0]==='base')r=A.base(a[1]);
+    else if(a[0]==='place'){pending=A.place(a[1]);continue;}
+    if(r&&r.ok)said.push(r.said);
+  }
+  var ms=performance.now()-t0;
+  try{(G.__phgAtlasLatency=G.__phgAtlasLatency||[]).push(+ms.toFixed(3));}catch(e){}
+  if(said.length&&A)A.ack(said.join(' · '),ms);
+  if(pending)pending.then(function(r){var A2=api();if(!A2)return;
+    if(r&&r.ok)A2.ack(r.said,performance.now()-t0);
+    else{A2.ack((r&&r.said)||'Place not found',null,true);if(r&&r.ambiguous)harmonySay(r.said);}
+  },function(){var A2=api();if(A2)A2.ack('Place list unavailable',null,true);});
+}
+function harmonySay(t){try{if(typeof G.agentSay==='function')G.agentSay(t);}catch(e){}}
+function toHarmony(text){
+  /* not a fixed map command: first the Atlas's own Ask parsers (venues, income, tequila,
+     weather dates and events), still local; only then Harmony (her planner and model) */
+  var A=api(),t0=performance.now();
+  if(isAtlas()&&A&&A.ready()){var r=A.ask(text);if(r&&r.ok){A.ack('Done: '+text,performance.now()-t0);return;}
+    /* a bare place name ("Springfield Illinois") flies there */
+    if(String(text).trim().split(/\s+/).length<=4){A.place(text).then(function(p){if(p&&p.ok)A.ack(p.said,performance.now()-t0);else if(p&&p.ambiguous){A.ack(p.said,null,true);harmonySay(p.said);}else sendHarmony(text);},function(){sendHarmony(text);});return;}}
+  sendHarmony(text);
+}
+function sendHarmony(text){
+  voxPause(true);
+  try{if(typeof G.harmonyAsk==='function')G.harmonyAsk(text);}catch(e){}
+}
+/* one entry for every path words take: live recognition, Harmony's own voice, typing */
+function handle(text,final,t0){
+  t0=t0||performance.now();
+  var p=parse(text,!final);
+  if(p.acts.length)run(p.acts,t0);
+  return p;
+}
+
+/* ---------------- voice: on-device live recognition (fast lane) ----------------
+   Words arrive while you are still speaking (interim results). A complete command fires
+   at once; place names fire when the phrase ends. If this browser has no live recogniser,
+   Harmony's own voice is used and commands are caught when her transcript arrives. */
+var VOX={on:false,rec:null,cons:{},paused:false,fallback:false,restartT:null,errs:0};
+function heard(t){var h=$('phgAtlasHeard');if(!h)return;h.textContent=t;h.classList.toggle('show',!!t);clearTimeout(heard._t);heard._t=setTimeout(function(){h.classList.remove('show');},2600);}
+function miniLabel(t){var s=document.querySelector('#phgAtlasMini span');if(s)s.textContent=t;}
+function speaking(){
+  try{if(G.speechSynthesis&&speechSynthesis.speaking)return true;}catch(e){}
+  var au=document.querySelectorAll('audio');for(var i=0;i<au.length;i++){if(!au[i].paused&&!au[i].ended)return true;}
+  return false;
+}
+function voxStart(gesture){
+  if(VOX.on)return;
+  var SR=G.SpeechRecognition||G.webkitSpeechRecognition;
+  VOX.on=true;VOX.errs=0;document.body.classList.add('phg-atlas-listening');miniLabel('Listening…');
+  if(!SR){useFallback('This browser has no live speech recognition, so Harmony\u2019s standard voice is used (slower).');return;}
+  var r;try{r=new SR();}catch(e){useFallback('Live speech recognition could not start; using Harmony\u2019s standard voice.');return;}
+  r.continuous=true;r.interimResults=true;r.lang='en-US';r.maxAlternatives=1;
+  r.onresult=function(e){
+    var t0=performance.now();
+    for(var i=e.resultIndex;i<e.results.length;i++){
+      var res=e.results[i],txt=res[0].transcript||'',done=VOX.cons[i]||0;
+      if(txt.length<done)done=VOX.cons[i]=txt.length;
+      var seg=txt.slice(done).trim();if(!seg)continue;
+      heard(txt.trim());
+      if(res.isFinal){
+        var p=handle(seg,true,t0);VOX.cons[i]=txt.length;
+        var rest=p.rest.replace(/^(?:um+|uh+|okay|ok|so|and|the)\b\s*/,'').trim();
+        if(rest&&rest.split(' ').length>=2)toHarmony(p.acts.length?rest:seg);
+      }else{
+        var q=parse(seg,true);
+        if(q.acts.length&&!q.rest){run(q.acts,t0);VOX.cons[i]=txt.length;}
+      }
+    }
+  };
+  r.onerror=function(e){
+    var code=e&&e.error;
+    if(code==='not-allowed'||code==='service-not-allowed'||code==='audio-capture'){VOX.rec=null;useFallback(gesture?'Live recognition is blocked here; using Harmony\u2019s standard voice.':'Tap Harmony (bottom right) to start talking to the map.');}
+    else if(code!=='no-speech'&&code!=='aborted'){VOX.errs++;}
+  };
+  r.onend=function(){VOX.cons={};if(VOX.on&&!VOX.fallback&&!VOX.paused&&VOX.rec===r&&VOX.errs<5){clearTimeout(VOX.restartT);VOX.restartT=setTimeout(function(){try{r.start();}catch(e){}},150);}};
+  VOX.rec=r;
+  try{r.start();}catch(e){useFallback('Tap Harmony (bottom right) to start talking to the map.');}
+}
+function useFallback(msg){
+  VOX.fallback=true;VOX.rec=null;
+  if(G.PMS&&typeof G.PMS.toggleTalk==='function'&&!G.PMS.talk){try{G.PMS.toggleTalk();}catch(e){}}
+  if(!(G.PMS&&G.PMS.talk)){VOX.on=false;document.body.classList.remove('phg-atlas-listening');miniLabel('Tap to talk');}
+  heard(msg);
+}
+function voxPause(waitForHarmony){
+  if(!VOX.on||VOX.fallback||!VOX.rec)return;
+  VOX.paused=true;try{VOX.rec.abort();}catch(e){}
+  miniLabel('Harmony is answering…');
+  var t0=Date.now(),started=false;
+  clearInterval(VOX.waitT);
+  VOX.waitT=setInterval(function(){
+    var sp=speaking();if(sp)started=true;
+    if((started&&!sp)||(!started&&Date.now()-t0>9000)||Date.now()-t0>30000){
+      clearInterval(VOX.waitT);VOX.paused=false;
+      if(VOX.on&&VOX.rec){VOX.cons={};try{VOX.rec.start();}catch(e){}miniLabel('Listening…');}
+    }
+  },250);
+}
+function voxStop(){
+  clearInterval(VOX.waitT);clearTimeout(VOX.restartT);
+  var r=VOX.rec;VOX.rec=null;VOX.on=false;VOX.paused=false;VOX.cons={};
+  if(r){try{r.abort();}catch(e){}}
+  if(VOX.fallback&&G.PMS&&G.PMS.talk){try{G.PMS.toggleTalk();}catch(e){}}
+  VOX.fallback=false;document.body.classList.remove('phg-atlas-listening');miniLabel('Tap to talk');
+}
+G.phgAtlasToggle=phgAtlasToggle;G.phgAtlasSet=phgAtlasSet;G.phgAtlasRefresh=phgAtlasRefresh;
+
+/* Harmony's own transcript path (fallback voice, typed text): map commands first while the
+   Atlas is open; "open the atlas" works from the Harmony view. */
+function phgMenuStudioAllowed(){
+  if(typeof PHGACCESS==='undefined'||!PHGACCESS||!Array.isArray(PHGACCESS.surfaces))return true; /* server decides; unknown = leave as is */
+  return PHGACCESS.surfaces.indexOf('menu_studio')>=0;
+}
+G.phgMenuStudioAllowed=phgMenuStudioAllowed;
+var OPEN_ATLAS=/^(?:please |harmony )?(?:open|show|go to|switch to|bring up)(?: me)? (?:the )?(?:atlas|map)(?: view)?\b/i;
+if(G.PMS&&typeof G.PMS.hear==='function'){
+  var _pmsHear=G.PMS.hear;
+  G.PMS.hear=function(t){
+    var q=String(t||'').trim();if(!q)return;
+    if(!isAtlas()&&OPEN_ATLAS.test(q)&&phgAtlasAllowed()){phgAtlasSet(true);var p0=parse(q.replace(OPEN_ATLAS,''),false);if(p0.acts.length)setTimeout(function(){run(p0.acts,performance.now());},1200);return;}
+    if(isAtlas()){var p=handle(q,true);if(p.acts.length&&!(p.rest&&p.rest.split(' ').length>=2))return;if(p.acts.length)q=p.rest;
+      var A0=api();if(A0&&A0.ready()){var z0=A0.ask(q);if(z0&&z0.ok){A0.ack('Done: '+q,null);return;}
+        if(q.split(/\s+/).length<=4){var self=this,qq=q;A0.place(qq).then(function(pl){if(pl&&pl.ok)A0.ack(pl.said,null);else if(pl&&pl.ambiguous){A0.ack(pl.said,null,true);harmonySay(pl.said);}else _pmsHear.call(self,qq);},function(){_pmsHear.call(self,qq);});return;}}}
+    if(!phgMenuStudioAllowed()&&!G.PMS.open){if(typeof G.harmonyAsk==='function')return G.harmonyAsk(q);return;}
+    return _pmsHear.call(this,q);
+  };
+}
 function wrap(name,after){
-  if(typeof window[name]!=='function')return;
-  var orig=window[name];
-  window[name]=function(){
+  if(typeof G[name]!=='function')return;
+  var orig=G[name];
+  G[name]=function(){
     var r=orig.apply(this,arguments);
     if(r&&typeof r.then==='function'){r.then(function(){setTimeout(after,0);},function(){setTimeout(after,0);});}
     else setTimeout(after,0);
@@ -44433,24 +44678,11 @@ function wrap(name,after){
   };
 }
 /* the Harmony page, the account bar and the access answer can arrive in any order */
-wrap('phgViewport',function(){addViewButton();setTimeout(phgAtlasRefresh,60);});
+wrap('phgViewport',function(){setTimeout(phgAtlasRefresh,60);});
 wrap('phgAuthDraw',addBadgeButton);
 wrap('phgAccessLoad',phgAtlasRefresh);
+new MutationObserver(function(){ensureSwitch();}).observe(document.body,{childList:true});
 setTimeout(phgAtlasRefresh,0);
-/* Beta: Harmony + Atlas only. When the server does not grant menu_studio, menu-design
-   requests go to Harmony as ordinary questions instead of opening Menu Studio. */
-function phgMenuStudioAllowed(){
-  if(typeof PHGACCESS==='undefined'||!PHGACCESS||!Array.isArray(PHGACCESS.surfaces))return true; /* server decides; unknown = leave as is */
-  return PHGACCESS.surfaces.indexOf('menu_studio')>=0;
-}
-window.phgMenuStudioAllowed=phgMenuStudioAllowed;
-if(window.PMS&&typeof window.PMS.hear==='function'){
-  var _pmsHear=window.PMS.hear;
-  window.PMS.hear=function(t){
-    if(!phgMenuStudioAllowed()&&!window.PMS.open){var q=String(t||'').trim();if(!q)return;if(typeof harmonyAsk==='function')return harmonyAsk(q);return;}
-    return _pmsHear.apply(this,arguments);
-  };
-}
 })();
 </script>
 
