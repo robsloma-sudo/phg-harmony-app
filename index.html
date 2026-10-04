@@ -41734,6 +41734,11 @@ function stop(el){['pointerdown','pointermove','touchstart','touchmove','wheel']
    lead to surfaces they do not have. */
 var PHG_BETA_PLUS=['attach','type','menu','paint','mnext','mclose','photo'];
 var PHG_BETA_GEAR=['rate','notes','chat','shortcut','voice','signout'];
+/* Beta = Harmony + Atlas: menu-design items stay only while the server grants menu_studio.
+   phgBetaTrimSheets is exported so phgAccessLoad and the Harmony view can actually call it
+   (before this it was private to this closure and never ran). */
+function phgBetaPlusKeys(){var ms=(typeof window.phgMenuStudioAllowed==='function')?window.phgMenuStudioAllowed():true;return ms?PHG_BETA_PLUS.slice():['attach','type'];}
+window.phgBetaTrimSheets=phgBetaTrimSheets;
 /* can_invite is computed by phg-access from the REAL membership role and survives
    view_as, so an owner previewing beta keeps this and a genuine tester never gets it. */
 function phgBetaGearKeys(){
@@ -41743,7 +41748,7 @@ function phgBetaGearKeys(){
 }
 function phgBetaTrimSheets(){
   if(!document.body.classList.contains('phg-mode-beta'))return;
-  [['hvxPlusMenu',PHG_BETA_PLUS],['hvxGearMenu',phgBetaGearKeys()]].forEach(function(pair){
+  [['hvxPlusMenu',phgBetaPlusKeys()],['hvxGearMenu',phgBetaGearKeys()]].forEach(function(pair){
     var m=document.getElementById(pair[0]); if(!m)return;
     var keep=pair[1];
     Array.prototype.slice.call(m.querySelectorAll('button[data-k]')).forEach(function(b){
@@ -44347,6 +44352,72 @@ if(typeof G.agentAnswer==='function'){
 })(typeof window!=='undefined'?window:this);
 </script>
 
+
+<!-- DEV-0023 phase 1: Atlas toggle on the Harmony page. Self-contained; opens /atlas.html
+     (same origin, so it shares the PHG sign-in) in a full-screen layer inside the Harmony view.
+     Tap Atlas again to close. Removing this block removes the feature. -->
+<style id="phgAtlasCSS">
+#phgAtlasBtn{position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 14px);z-index:30;display:flex;align-items:center;gap:7px;
+  height:38px;padding:0 14px;border-radius:19px;border:1px solid rgba(125,211,252,.55);background:rgba(5,10,18,.9);color:#7dd3fc;
+  font:700 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#phgAtlasBtn i{width:10px;height:10px;border-radius:50%;border:1.5px solid currentColor;box-sizing:border-box}
+#phgAtlasBtn[aria-pressed="true"]{background:#0e7490;border-color:#22d3ee;color:#fff}
+#phgAtlasBtn[aria-pressed="true"] i{background:#e0f7ff;border-color:#e0f7ff}
+#phgAtlasLayer{position:absolute;inset:0;z-index:29;background:#05070d;display:none}
+#phgAtlasLayer.show{display:block}
+#phgAtlasLayer iframe{border:0;width:100%;height:100%;display:block}
+</style>
+<script id="phgAtlas">
+(function(){
+'use strict';
+function layer(){return document.getElementById('phgAtlasLayer');}
+function phgAtlasSet(on){
+  var view=document.getElementById('phgView'),btn=document.getElementById('phgAtlasBtn');if(!view||!btn)return;
+  var l=layer();
+  if(on&&!l){l=document.createElement('div');l.id='phgAtlasLayer';
+    var f=document.createElement('iframe');f.src='/atlas.html';f.title='PHG Atlas';f.setAttribute('allow','fullscreen');l.appendChild(f);
+    ['pointerdown','touchstart','click','keydown'].forEach(function(ev){l.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
+    view.appendChild(l);}
+  if(l)l.classList.toggle('show',!!on);
+  btn.setAttribute('aria-pressed',on?'true':'false');
+  btn.setAttribute('aria-label',on?'Close the Atlas map':'Open the Atlas map');
+}
+function phgAtlasAllowed(){
+  /* client courtesy only; atlas.html re-checks with phg-access before loading anything */
+  return typeof PHGACCESS!=='undefined'&&!!PHGACCESS&&(PHGACCESS.view_mode==='developer'||(Array.isArray(PHGACCESS.surfaces)&&PHGACCESS.surfaces.indexOf('atlas')>=0));
+}
+function phgAtlasToggle(){var l=layer();if(!phgAtlasAllowed()){phgAtlasSet(false);return;}phgAtlasSet(!(l&&l.classList.contains('show')));}
+function addAtlasButton(){
+  var view=document.getElementById('phgView');if(!view||document.getElementById('phgAtlasBtn')||!phgAtlasAllowed())return;
+  var b=document.createElement('button');b.id='phgAtlasBtn';b.type='button';b.setAttribute('aria-pressed','false');b.setAttribute('aria-label','Open the Atlas map');
+  b.innerHTML='<i aria-hidden="true"></i><span>Atlas</span>';
+  ['pointerdown','touchstart'].forEach(function(ev){b.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
+  b.onclick=function(e){e.stopPropagation();phgAtlasToggle();};
+  view.appendChild(b);
+}
+window.phgAtlasToggle=phgAtlasToggle;window.phgAtlasSet=phgAtlasSet;
+/* Beta: Harmony + Atlas only. When the server does not grant menu_studio, menu-design
+   requests go to Harmony as ordinary questions instead of opening Menu Studio. */
+function phgMenuStudioAllowed(){
+  if(typeof PHGACCESS==='undefined'||!PHGACCESS||!Array.isArray(PHGACCESS.surfaces))return true; /* server decides; unknown = leave as is */
+  return PHGACCESS.surfaces.indexOf('menu_studio')>=0;
+}
+window.phgMenuStudioAllowed=phgMenuStudioAllowed;
+if(window.PMS&&typeof window.PMS.hear==='function'){
+  var _pmsHear=window.PMS.hear;
+  window.PMS.hear=function(t){
+    if(!phgMenuStudioAllowed()&&!window.PMS.open){var q=String(t||'').trim();if(!q)return;if(typeof harmonyAsk==='function')return harmonyAsk(q);return;}
+    return _pmsHear.apply(this,arguments);
+  };
+}
+if(typeof window.phgViewport==='function'){
+  var _vp=window.phgViewport;
+  window.phgViewport=function(){var r=_vp.apply(this,arguments);setTimeout(addAtlasButton,0);
+    setTimeout(function(){try{if(typeof window.phgBetaTrimSheets==='function')window.phgBetaTrimSheets();}catch(e){}},60);return r;};
+  try{phgViewport=window.phgViewport;}catch(e){}
+}
+})();
+</script>
 
 </body>
 </html>
