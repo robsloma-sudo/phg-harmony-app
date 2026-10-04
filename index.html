@@ -41326,7 +41326,7 @@ function listen(){
     if(lvl>on){T.heard+=dt;T.quiet=0;}else if(T.heard>250&&lvl<off){T.quiet+=dt;}else if(T.heard>250){T.quiet=Math.max(0,T.quiet-dt/2);}
     var _l=Math.min(1,lvl*8).toFixed(1);['pmsTalk','hvTalk'].forEach(function(id){var b=document.getElementById(id);if(b&&b._l!==_l){b._l=_l;b.style.setProperty('--lvl',_l);}});
     var elapsed=now-T.start;
-    if((T.heard>250&&T.quiet>1100)||elapsed>20000||(!T.heard&&elapsed>12000)){try{T.rec.stop();}catch(e){}return;}
+    if((T.heard>250&&T.quiet>(document.body.classList.contains('phg-atlas-mode')?450:1100))||elapsed>20000||(!T.heard&&elapsed>12000)){try{T.rec.stop();}catch(e){}return;}
     T.raf=requestAnimationFrame(vad);
   })();
 }
@@ -41351,7 +41351,7 @@ function afterReply(expect){
     if(sp){started=true;quietFor=0;return;}
     quietFor+=200;
     /* while she is only redrawing the menu (no answer to wait for), listen again right away */
-    var patience=!expect?600:PMS.open?(PMS.drafting&&!window.PHG_PENDING?700:9000):16000;
+    var patience=(!expect||window.__phgAtlasHandled)?400:PMS.open?(PMS.drafting&&!window.PHG_PENDING?700:9000):16000;
     if((started&&quietFor>=500)||(!started&&Date.now()-t0>patience)){clearInterval(T.wait);T.wait=null;listen();}
   },200);
 }
@@ -44360,19 +44360,33 @@ if(typeof G.agentAnswer==='function'){
      Anything else goes to Harmony as a normal question. Shown only when phg-access allows
      the Atlas; atlas.html re-checks server-side. Removing this block removes the feature. -->
 <style id="phgThemeCSS">
-/* App-wide Light screen (Harmony gear menu > Light screen).
-   The whole app flips: every dark background (including ones set in code) becomes light and
-   text becomes dark, with colours kept by rotating the hue back. Photos, video, map tiles and
-   the Atlas (which has its own light palette) are flipped back so they look natural. */
-html.phg-light{filter:invert(1) hue-rotate(180deg);background:#000}
-html.phg-light img,html.phg-light video,html.phg-light picture,html.phg-light iframe,html.phg-light svg image,
-html.phg-light .leaflet-tile-pane,html.phg-light .maplibregl-canvas,html.phg-light #phgAtlasMini,
-html.phg-light [style*="background-image:url"],html.phg-light [style*="background-image: url"]{filter:invert(1) hue-rotate(180deg)}
+/* App-wide Light screen (default; Harmony gear menu switches it). Each top-level part of the app
+   is flipped (dark backgrounds -> light, text -> dark, hues kept); photos, video and map tiles are
+   flipped back. The filter sits on body's children, not on <html>, so fixed panels keep measuring
+   from the screen (iPhone). The Atlas layer and its controls are not flipped: they have their own
+   light palette. */
+html.phg-light,html.phg-light body{background:#f3f5f8}
+html.phg-light body>*:not(#phgAtlasLayer):not(#phgAtlasMini):not(#phgViewSwitch):not(#phgAtlasSays):not(#phgAtlasHeard):not(script):not(style){filter:invert(1) hue-rotate(180deg)}
+html.phg-light body>*:not(#phgAtlasLayer) img,html.phg-light body>*:not(#phgAtlasLayer) video,html.phg-light body>*:not(#phgAtlasLayer) picture,
+html.phg-light body>*:not(#phgAtlasLayer) iframe,html.phg-light body>*:not(#phgAtlasLayer) .leaflet-tile-pane,html.phg-light body>*:not(#phgAtlasLayer) .maplibregl-canvas,
+html.phg-light body>*:not(#phgAtlasLayer) [style*="background-image:url"],html.phg-light body>*:not(#phgAtlasLayer) [style*="background-image: url"]{filter:invert(1) hue-rotate(180deg)}
+html.phg-light #phgViewSwitch{background:rgba(255,255,255,.9);border-color:rgba(14,116,144,.35);box-shadow:0 4px 14px rgba(15,30,45,.15)}
+html.phg-light #phgViewSwitch button{color:#0e7490}
+html.phg-light #phgViewSwitch button[aria-pressed="true"]{background:#0e7490;color:#fff}
+html.phg-light body.phg-atlas-mode #phgViewSwitch{background:rgba(255,255,255,.6)}
+html.phg-light #phgAtlasSays,html.phg-light #phgAtlasHeard{background:rgba(255,255,255,.78);color:#14202b;border-color:rgba(14,116,144,.3)}
 </style>
 <style id="phgAtlasCSS">
 #phgViewSwitch{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:4500;display:none;
   padding:3px;border-radius:20px;background:rgba(5,10,18,.92);border:1px solid rgba(125,211,252,.45);box-shadow:0 6px 20px rgba(0,0,0,.45)}
 #phgViewSwitch.show{display:flex}
+#phgViewSwitch{padding:2px;border-radius:14px}
+#phgViewSwitch button{height:22px;padding:0 9px;font-size:9px;letter-spacing:.1em;border-radius:11px}
+/* the existing "Viewing as Developer / Beta" pill, made small to match */
+#phgViewAs{padding:2px 4px 2px 8px!important;gap:5px!important;font-size:9.5px!important;left:8px!important;bottom:8px!important;box-shadow:0 3px 10px rgba(0,0,0,.25)!important}
+#phgViewAs button{padding:1px 7px!important;font-size:9.5px!important}
+@media (max-width:820px){#phgViewSwitch{padding:2px!important;border-radius:14px}
+ #phgViewSwitch button{height:19px!important;padding:0 7px!important;font-size:8px!important;letter-spacing:.06em!important;border-radius:10px}}
 body:has(#hvxGearMenu:not([hidden])) #phgViewSwitch,body:has(#hvxPlusMenu:not([hidden])) #phgViewSwitch{display:none!important}
 body.phg-view-open:not(.phg-atlas-mode) #phgViewSwitch{left:auto;right:14px;transform:none}
 body.phg-atlas-mode #phgViewSwitch{top:auto;left:auto;right:12px;transform:none;bottom:calc(env(safe-area-inset-bottom,0px) + 84px)}
@@ -44380,8 +44394,14 @@ body.phg-atlas-mode #phgViewSwitch{top:auto;left:auto;right:12px;transform:none;
   font:700 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
 #phgViewSwitch button[aria-pressed="true"]{background:#0e7490;color:#fff}
 
-#phgAtlasLayer{position:fixed;inset:0;z-index:4300;background:#05070d;display:none}
+#phgAtlasLayer{position:fixed;left:var(--phg-vvx,0px);top:var(--phg-vvy,0px);width:var(--phg-vvw,100vw);height:var(--phg-vvh,100dvh);z-index:4300;background:#05070d;display:none}
 #phgAtlasLayer.show{display:block}
+/* In Atlas view the map stays in front: Harmony's answer panels, chat and cards open behind it,
+   and her words show beside the orb instead. Only the orb, switch and captions sit above. */
+body.phg-atlas-mode #phgAtlasLayer{z-index:2147483000}
+body.phg-atlas-mode #phgAtlasMini{z-index:2147483003!important}
+body.phg-atlas-mode #phgViewSwitch{z-index:2147483004!important}
+body.phg-atlas-mode #phgAtlasSays,body.phg-atlas-mode #phgAtlasHeard{z-index:2147483002!important}
 #phgAtlasLayer iframe{border:0;width:100%;height:100%;display:block}
 /* Atlas view: the full Harmony view steps aside (kept alive, hidden); a small Harmony orb
    floats bottom-right and gets smaller as you zoom in, so it never hides the map. */
@@ -44417,7 +44437,7 @@ body.phg-atlas-mode #phgViewSwitch:hover,body.phg-atlas-mode #phgViewSwitch:acti
 /* Atlas view: compact switch. Desktop: switch above the orb, bottom-right.
    iPhone: orb + switch form the header row at the very top; the Atlas leaves room for it. */
 body.phg-atlas-mode #phgViewSwitch{padding:2px}
-body.phg-atlas-mode #phgViewSwitch button{height:24px;padding:0 10px;font-size:9.5px;letter-spacing:.12em}
+body.phg-atlas-mode #phgViewSwitch button{height:20px;padding:0 8px;font-size:8.5px;letter-spacing:.1em}
 @media (max-width:820px){
   body.phg-atlas-mode #phgAtlasMini{top:calc(env(safe-area-inset-top,0px) + 6px)!important;bottom:auto!important;left:10px;right:auto;width:30px!important;height:30px!important}
   body.phg-atlas-mode #phgViewSwitch{top:calc(env(safe-area-inset-top,0px) + 7px)!important;bottom:auto!important;left:48px!important;right:auto!important;transform:none!important}
@@ -44492,7 +44512,7 @@ function phgAtlasSet(on,fromTap){
 function phgAtlasToggle(){phgAtlasSet(!isAtlas(),true);}
 /* ---- app-wide Light / Dark screen: one setting, stored on the device, Atlas follows it ---- */
 var THEME_KEY='phg_theme_v1';
-function phgThemeGet(){try{return localStorage.getItem(THEME_KEY)==='light'?'light':'dark';}catch(e){return 'dark';}}
+function phgThemeGet(){try{return localStorage.getItem(THEME_KEY)==='dark'?'dark':'light';}catch(e){return 'light';}} /* light by default */
 function phgThemeSet(t){var light=t==='light';document.documentElement.classList.toggle('phg-light',light);try{localStorage.setItem(THEME_KEY,light?'light':'dark');}catch(e){}
   var A=api();if(A&&A.theme){try{A.theme(light?'light':'dark');}catch(e){}}themeRow();return{ok:true,said:light?'Light screen':'Dark screen'};}
 G.phgThemeSet=phgThemeSet;G.phgThemeGet=phgThemeGet;
@@ -44547,7 +44567,8 @@ function addBadgeButton(){
 }
 function phgAtlasRefresh(){
   try{addBadgeButton();}catch(e){}
-  if(!phgAtlasAllowed()&&isAtlas())phgAtlasSet(false);
+  /* close only on an explicit 'no' from the server; a reload in progress (no answer yet) must not snap the view back */
+  if(isAtlas()&&typeof PHGACCESS!=='undefined'&&PHGACCESS&&!phgAtlasAllowed())phgAtlasSet(false);
   try{ensureSwitch();}catch(e){}
   try{if(typeof G.phgBetaTrimSheets==='function')G.phgBetaTrimSheets();}catch(e){}
 }
@@ -44584,7 +44605,7 @@ TGT.forEach(function(t){
 });
 rx('(?:switch to |use |go to |go |change to |make it |make the screen |turn on )?(light|dark|day|night|bright)(?: mode| theme| screen| ui| colou?rs?| palette)',function(m){return['theme',/light|day|bright/.test(m[1])?'light':'dark'];},true);
 rx('(?:switch to |use |show |change to |go |make it )?(?:the )?(midnight|dark|night|streets?|street map|light|grey|gray|light grey|light gray|satellite|aerial|green|blueprint)(?: map| mode| basemap| style| view)?',function(m){var w=m[1],n=/midnight|dark|night/.test(w)?'midnight':/street/.test(w)?'streets':/satellite|aerial/.test(w)?'sat':/green/.test(w)?'green':/blueprint/.test(w)?'blueprint':'grey';return['base',n];},true);
-rx('(?:close|exit|leave|hide) (?:the )?(?:atlas|map)|(?:back to |go to |open |show )?harmony(?: view)?|(?:switch|go) back',function(){return['view','harmony'];},true);
+rx('(?:close|exit|leave|hide) (?:the )?(?:atlas|map)|(?:back to|go to|open|show|switch to) harmony(?: view)?|harmony view',function(){return['view','harmony'];},true);
 rx('(?:stop listening|stop talking|mute|go to sleep|that\'?s all)',function(){return['stopVoice'];},true);
 rx('(?:go to|fly to|take me to|zoom to|zoom into|zoom in on|zoom in to|center on|centre on|jump to|navigate to|find|where is|on|over|to|at) (.+)',function(m){return['place',m[1]];},false);
 rx('show me (.+)',function(m){return['any',m[1],true];},false);
@@ -44753,8 +44774,9 @@ if(G.PMS&&typeof G.PMS.hear==='function'){
     var q=String(t||'').trim();if(!q)return;
     if(!isAtlas()){var pt=parse(q,false);if(pt.acts.length&&!pt.rest&&pt.acts.every(function(a){return a[0]==='theme';})){var tr=phgThemeSet(pt.acts[0][1]);harmonySay(tr.said);return;}}
     if(!isAtlas()&&OPEN_ATLAS.test(q)&&phgAtlasAllowed()){phgAtlasSet(true);var p0=parse(q.replace(OPEN_ATLAS,''),false);if(p0.acts.length)setTimeout(function(){run(p0.acts,performance.now());},1200);return;}
-    if(isAtlas()){var p=handle(q,true);if(p.acts.length&&!(p.rest&&p.rest.split(' ').length>=2))return;if(p.acts.length)q=p.rest;
-      var A0=api();if(A0&&A0.ready()){var z0=A0.ask(q);if(z0&&z0.ok){A0.ack('Done: '+q,null);return;}
+    G.__phgAtlasHandled=false;
+    if(isAtlas()){var p=handle(q,true);if(p.acts.length&&!(p.rest&&p.rest.split(' ').length>=2)){G.__phgAtlasHandled=true;return;}if(p.acts.length)q=p.rest;
+      var A0=api();if(A0&&A0.ready()){var z0=A0.ask(q);if(z0&&z0.ok){G.__phgAtlasHandled=true;A0.ack('Done: '+q,null);return;}
         if(q.split(/\s+/).length<=4){var self=this,qq=q;A0.place(qq).then(function(pl){if(pl&&pl.ok)A0.ack(pl.said,null);else if(pl&&pl.ambiguous){A0.ack(pl.said,null,true);harmonySay(pl.said);}else _pmsHear.call(self,qq);},function(){_pmsHear.call(self,qq);});return;}}}
     if(!phgMenuStudioAllowed()&&!G.PMS.open){if(typeof G.harmonyAsk==='function')return G.harmonyAsk(q);return;}
     return _pmsHear.call(this,q);

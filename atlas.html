@@ -1525,14 +1525,16 @@ body.phg-light .wxal a{color:#0e7490!important}
 /* phone: the Filters & Layers sheet can be dragged to any height, or collapsed/expanded */
 #phgSheetBar{display:none}
 @media (max-width:820px){
-  .panel{height:var(--sheet,40vh)!important;transition:height .18s ease}
+  .panel{height:var(--sheet,32vh)!important;transition:height .2s ease}
   .panel.phg-drag{transition:none!important}
   .panel.phg-collapsed{overflow:hidden}
   .bm{bottom:calc(var(--sheet,40vh) + 10px)!important}
   .card{bottom:calc(var(--sheet,40vh) + 80px)!important}
   .wxbar{bottom:calc(var(--sheet,40vh) + 76px)!important}
   .activebar{top:138px!important}
-  #phgSheetBar{display:flex;align-items:center;justify-content:center;position:sticky;top:0;z-index:3;height:30px;margin:-4px 0 2px;touch-action:none;cursor:ns-resize;-webkit-user-select:none;user-select:none}
+  #phgSheetBar{display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:3;height:34px;touch-action:none;cursor:ns-resize;-webkit-user-select:none;user-select:none}
+  .panel .ph .ey,.panel .ph h1{touch-action:none;cursor:ns-resize}
+  .panel{max-height:calc(100% - 190px)}
   #phgSheetBar .grip{width:44px;height:5px;border-radius:3px;background:var(--line2);pointer-events:none}
   #phgSheetBtn{position:absolute;right:8px;top:2px;border:1px solid var(--line2);background:var(--panel2);color:var(--mut);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600}
 }
@@ -1671,45 +1673,56 @@ function theme(t,keepBase){var light=t==='light';if(light===document.body.classL
   if(!document.getElementById('phgWxPower')){var p=document.createElement('button');p.id='phgWxPower';p.className='tbtn glass';p.setAttribute('role','switch');p.title='Turn all weather layers on or off';
     p.onclick=function(e){e.stopPropagation();weather(!(wxOnIds().length>0));};top.insertBefore(p,wx);}
   wxBtn();setInterval(wxBtn,800);
-  var saved='dark';try{saved=localStorage.getItem(THEME)||'dark';}catch(e){}theme(saved,true);
+  var saved='light';try{saved=localStorage.getItem(THEME)==='dark'?'dark':'light';}catch(e){}theme(saved,true);
   /* light screen = light map underneath too (dark styles swap to Light grey; Satellite etc. stay) */
   if(saved==='light'){try{if(BASE==='midnight'||BASE==='blueprint')setBase('grey');}catch(e){}}
-  window.addEventListener('storage',function(e){if(e.key===THEME)theme(e.newValue==='light'?'light':'dark');});
+  window.addEventListener('storage',function(e){if(e.key===THEME)theme(e.newValue==='dark'?'dark':'light');});
 })();
 
-/* ---- phone bottom sheet: drag the bar to resize, button to collapse / expand ---- */
+/* ---- phone bottom sheet: drag the top of the panel (bar or title) to resize; button / tap the bar
+   to collapse or expand. Snaps to collapsed, small, half or tall; never covers the header. ---- */
 (function sheet(){
   var panel=document.getElementById('panel');if(!panel){setTimeout(sheet,200);return;}
-  var KEY='phgAtlasSheet.v1',MIN=58,root=document.documentElement;
+  var KEY='phgAtlasSheet.v2',MIN=58,root=document.documentElement;
   function phone(){return innerWidth<=820;}
-  function maxH(){return Math.round(innerHeight*0.9);}
-  var st={h:Math.round(innerHeight*0.4),open:Math.round(innerHeight*0.4),collapsed:false};
-  try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv){st.open=Math.round(sv.f*innerHeight)||st.open;st.collapsed=!!sv.c;}}catch(e){}
+  function H(){return (window.visualViewport&&visualViewport.height)||innerHeight;}
+  function maxH(){return Math.max(MIN+40,Math.round(H()-200));}           /* leave the header (orb, Ask, buttons, chips) visible */
+  function snaps(){var h=H();return[MIN,Math.round(h*.32),Math.round(h*.5),maxH()];}
+  var st={h:0,open:0,collapsed:false};
+  try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv){st.open=Math.round(sv.f*H());st.collapsed=!!sv.c;}}catch(e){}
+  if(!st.open)st.open=Math.round(H()*.32);
   var bar=document.createElement('div');bar.id='phgSheetBar';bar.innerHTML='<span class="grip"></span><button type="button" id="phgSheetBtn"></button>';
   panel.insertBefore(bar,panel.firstChild);
   var btn=bar.querySelector('#phgSheetBtn');
   function apply(h,save){
     h=Math.max(MIN,Math.min(maxH(),Math.round(h)));st.h=h;root.style.setProperty('--sheet',h+'px');
-    st.collapsed=h<=MIN+4;panel.classList.toggle('phg-collapsed',st.collapsed);
-    if(!st.collapsed)st.open=h;
-    btn.textContent=st.collapsed?'Expand ▴':'Collapse ▾';btn.setAttribute('aria-expanded',String(!st.collapsed));
-    try{if(typeof pad==='function')pad();}catch(e){}
+    st.collapsed=h<=MIN+4;panel.classList.toggle('phg-collapsed',st.collapsed);if(!st.collapsed)st.open=h;
+    btn.textContent=st.collapsed?'Expand \u25B4':'Collapse \u25BE';btn.setAttribute('aria-expanded',String(!st.collapsed));
     try{if(parent!==window)parent.postMessage({phgAtlasSheet:phone()?h:0},location.origin);}catch(e){}
-    if(save){try{localStorage.setItem(KEY,JSON.stringify({f:st.open/innerHeight,c:st.collapsed}));}catch(e){}}
+    if(save){try{localStorage.setItem(KEY,JSON.stringify({f:st.open/H(),c:st.collapsed}));}catch(e){}try{if(typeof pad==='function')pad();}catch(e){}}
   }
-  /* map padding follows the sheet instead of a fixed 52% */
   window.pad=function(){if(!window.map||!map.setPadding)return;if(phone()){map.setPadding({top:190,bottom:(panel.classList.contains('hide')?0:st.h)+20,left:10,right:60});}
     else map.setPadding({top:90,bottom:90,left:panel.classList.contains('hide')?20:390,right:70});};
-  btn.addEventListener('click',function(e){e.stopPropagation();apply(st.collapsed?Math.max(st.open,Math.round(innerHeight*0.4)):MIN,true);});
-  var drag=null;
-  bar.addEventListener('pointerdown',function(e){if(e.target===btn)return;drag={y:e.clientY,h:st.h};panel.classList.add('phg-drag');try{bar.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();});
-  bar.addEventListener('pointermove',function(e){if(!drag)return;apply(drag.h+(drag.y-e.clientY),false);});
-  function end(e){if(!drag)return;var moved=Math.abs(e.clientY-drag.y);drag=null;panel.classList.remove('phg-drag');
-    if(moved<4){apply(st.collapsed?st.open:MIN,true);return;} /* a tap on the bar toggles too */
-    if(st.h<MIN+50)apply(MIN,true);else apply(st.h,true);}
-  bar.addEventListener('pointerup',end);bar.addEventListener('pointercancel',end);
-  addEventListener('resize',function(){if(phone())apply(st.collapsed?MIN:st.open,false);else{root.style.removeProperty('--sheet');try{parent.postMessage({phgAtlasSheet:0},location.origin);}catch(e){}}});
-  if(phone())apply(st.collapsed?MIN:st.open,false);
+  btn.addEventListener('click',function(e){e.stopPropagation();apply(st.collapsed?Math.max(st.open,snaps()[1]):MIN,true);});
+  /* drag: bar or the title area (not tabs, search or buttons). Touch events first: on iPhone they
+     are the reliable ones inside a scrolling panel; mouse/pen use pointer events. */
+  var drag=null,raf=0,pending=null;
+  function isHandle(t){if(!t||t===btn||(t.closest&&t.closest('#phgSheetBtn,button,input,select,a,.tabs,.search,.prow')))return false;return !!(t.closest&&t.closest('#phgSheetBar,.ph'));}
+  function start(y){drag={y0:y,h0:st.h,y:y,t:performance.now(),v:0};panel.classList.add('phg-drag');}
+  function move(y){if(!drag)return;var now=performance.now();drag.v=(drag.y-y)/Math.max(1,now-drag.t);drag.y=y;drag.t=now;pending=drag.h0+(drag.y0-y);
+    if(!raf)raf=requestAnimationFrame(function(){raf=0;if(pending!=null)apply(pending,false);});}
+  function end(){if(!drag)return;if(raf){cancelAnimationFrame(raf);raf=0;}if(pending!=null){apply(pending,false);pending=null;}var moved=Math.abs(drag.y-drag.y0),v=Math.max(-3,Math.min(3,drag.v));drag=null;panel.classList.remove('phg-drag');
+    if(moved<6){apply(st.collapsed?Math.max(st.open,snaps()[1]):MIN,true);return;}
+    var S=snaps(),h=st.h+v*90,best=S[0];S.forEach(function(x){if(Math.abs(x-h)<Math.abs(best-h))best=x;});apply(best,true);}
+  panel.addEventListener('touchstart',function(e){if(!phone()||!isHandle(e.target)||e.touches.length!==1)return;start(e.touches[0].clientY);},{passive:true});
+  panel.addEventListener('touchmove',function(e){if(!drag)return;e.preventDefault();move(e.touches[0].clientY);},{passive:false});
+  panel.addEventListener('touchend',end);panel.addEventListener('touchcancel',end);
+  panel.addEventListener('pointerdown',function(e){if(e.pointerType==='touch'||!phone()||!isHandle(e.target))return;start(e.clientY);try{panel.setPointerCapture(e.pointerId);}catch(_){}});
+  panel.addEventListener('pointermove',function(e){if(e.pointerType==='touch'||!drag)return;move(e.clientY);});
+  panel.addEventListener('pointerup',function(e){if(e.pointerType==='touch')return;end();});
+  function fit(){if(phone())apply(st.collapsed?MIN:st.open,false);else{root.style.removeProperty('--sheet');try{parent.postMessage({phgAtlasSheet:0},location.origin);}catch(e){}}}
+  addEventListener('resize',fit);if(window.visualViewport)visualViewport.addEventListener('resize',fit);
+  fit();
 })();
 
 /* ---- third panel tab: Satellite (all basemaps, incl. satellite and blueprint) ---- */
