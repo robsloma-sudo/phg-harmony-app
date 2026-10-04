@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>PHG Atlas</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+/* PHG Atlas (DEV-0023, phase 1). Opened from the Harmony page's Atlas toggle.
+   Real data only: public weather (NWS/NOAA via IEM, NASA GIBS) and public government
+   traffic cameras (PHG camera relay, DEV-0021). PHG venue layers arrive in a later
+   deploy once the access-controlled venue endpoint exists. Nothing illustrative. */
+:root{--bg:#05070d;--panel:rgba(8,13,22,.94);--line:rgba(125,211,252,.28);--ink:#e2e8f0;--dim:#94a3b8;--acc:#7dd3fc;--ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.4 var(--ui);overflow:hidden}
+#map{position:absolute;inset:0}
+#gate{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;background:var(--bg);z-index:20}
+#gate b{display:block;font-size:18px;margin-bottom:6px}#gate span{color:var(--dim)}
+#panel{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:5;width:250px;max-width:calc(100vw - 24px);max-height:calc(100% - 120px);overflow:auto;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#panel h1{margin:0 0 8px;font:700 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+#panel h1 button{background:none;border:0;color:var(--dim);font-size:12px;cursor:pointer;padding:2px 4px}
+#panel.min .body{display:none}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid rgba(148,163,184,.12)}
+.row:first-child{border-top:0}
+.row label{flex:1;cursor:pointer}.row small{display:block;color:var(--dim);font-size:11px}
+.sw{position:relative;width:42px;height:24px;flex:none;border-radius:12px;background:#1e293b;border:1px solid #334155;cursor:pointer;transition:background .2s}
+.sw::after{content:'';position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#94a3b8;transition:transform .2s,background .2s}
+.sw[aria-checked="true"]{background:#0e7490;border-color:#22d3ee}.sw[aria-checked="true"]::after{transform:translateX(18px);background:#e0f7ff}
+.sub{padding:0 0 4px 10px}.sub .row{padding:5px 0;border:0}.sub[hidden]{display:none}
+.sub .sw{width:34px;height:20px}.sub .sw::after{width:14px;height:14px}.sub .sw[aria-checked="true"]::after{transform:translateX(14px)}
+select{width:100%;background:#0b1220;color:var(--ink);border:1px solid #334155;border-radius:8px;padding:6px}
+.note{color:var(--dim);font-size:11px;margin-top:8px}
+#legend{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px;font-size:11px;color:var(--dim)}#legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+#card{position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:6;width:340px;max-width:calc(100vw - 24px);max-height:70%;overflow:auto;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;display:none}
+#card.show{display:block}#card h3{margin:0 0 4px;font-size:16px}#card .meta{color:var(--dim);font-size:12px}
+#card .x{float:right;background:none;border:0;color:var(--dim);font-size:20px;cursor:pointer;line-height:1}
+#card img,#card video{width:100%;border-radius:8px;margin-top:8px;background:#000;display:block}
+#card .acts{display:flex;gap:8px;margin-top:8px}#card .acts button,#card .acts a{flex:1;text-align:center;background:#0e7490;color:#fff;border:0;border-radius:8px;padding:7px;font:600 12px var(--ui);cursor:pointer;text-decoration:none}
+#card .acts button[disabled]{background:#1e293b;color:var(--dim);cursor:default}
+#toast{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:8;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:80vw}
+#toast.show{opacity:1}
+@media (max-width:640px){#panel{width:220px}#card{left:12px;right:12px;width:auto}}
+</style>
+</head>
+<body>
+<div id="gate"><div><b>PHG Atlas</b><span id="gateMsg">Checking your PHG sign-in…</span></div></div>
+<div id="map"></div>
+<div id="panel" hidden>
+  <h1><span>PHG Atlas</span><button id="pmin" aria-label="Collapse panel">▾</button></h1>
+  <div class="body">
+    <div class="row"><label for="swWx">Weather<small>Radar, warnings, clouds</small></label><button class="sw" id="swWx" role="switch" aria-checked="false" aria-label="Weather on or off"></button></div>
+    <div class="sub" id="wxSub" hidden>
+      <div class="row"><label for="swRadar">Radar<small>NEXRAD, live, every 5 min</small></label><button class="sw" id="swRadar" role="switch" aria-checked="true" aria-label="Radar"></button></div>
+      <div class="row"><label for="swAlerts">Warnings &amp; watches<small>NWS, live</small></label><button class="sw" id="swAlerts" role="switch" aria-checked="true" aria-label="Warnings and watches"></button></div>
+      <div class="row"><label for="swClouds">Clouds<small>GOES-East infrared, live</small></label><button class="sw" id="swClouds" role="switch" aria-checked="false" aria-label="Clouds"></button></div>
+      <div id="legend"></div>
+    </div>
+    <div class="row"><label for="swCams">Traffic cameras<small>Public government cameras</small></label><button class="sw" id="swCams" role="switch" aria-checked="false" aria-label="Traffic cameras on or off"></button></div>
+    <div class="row" style="display:block"><label for="base">Basemap</label><select id="base"><option value="midnight">Midnight</option><option value="streets">Streets</option><option value="grey">Light grey</option></select></div>
+    <div class="note">PHG venues, licences and menus will be added here next, from live PHG data. Sources: NWS / NOAA via Iowa Environmental Mesonet, NASA GIBS, state DOTs.</div>
+  </div>
+</div>
+<div id="card"></div>
+<div id="toast"></div>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(function(){
+'use strict';
+var SB_URL='https://lqjtwabzmgjcufftuqvu.supabase.co',SB_KEY='sb_publishable_nifWfkBSGDpOAbQfmmofzw_C6CKy62T';
+var STORE='phg_auth_session_v1',PREF='phgAtlas.v1';
+var IEM='https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/',GIBS='https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/';
+var WWA='https://mapservices.weather.noaa.gov/eventdriven/rest/services/WWA/watch_warn_adv/MapServer/1/query?where=1%3D1&outFields=prod_type,phenom,sig,wfo,issuance,expiration,url&returnGeometry=true&geometryPrecision=3&maxAllowableOffset=0.01&f=geojson';
+var CAT={tornado:['Tornado','#ff2d55'],severe:['Severe thunderstorm','#ffb020'],flood:['Flood','#22c55e'],winter:['Winter & cold','#60a5fa'],heat:['Heat','#f97316'],wind:['Wind','#d6b37a'],fire:['Fire weather','#c2410c'],air:['Fog, smoke, dust, air','#94a3b8'],tropical:['Tropical','#c026d3'],marine:['Marine','#2dd4bf'],other:['Other','#cbd5e1']};
+var PH={TO:'tornado',SV:'severe',SQ:'severe',FF:'flood',FA:'flood',FL:'flood',HY:'flood',WS:'winter',WW:'winter',BZ:'winter',IS:'winter',LE:'winter',WC:'winter',EC:'winter',XC:'winter',FZ:'winter',FR:'winter',HZ:'winter',SN:'winter',ZR:'winter',HT:'heat',EH:'heat',XH:'heat',WI:'wind',HW:'wind',EW:'wind',LW:'wind',FW:'fire',RF:'fire',AQ:'air',AS:'air',DU:'air',DS:'air',FG:'air',ZF:'air',SM:'air',MH:'air',TR:'tropical',HU:'tropical',TY:'tropical',SS:'tropical',HI:'tropical',TI:'tropical',SC:'marine',SW:'marine',SE:'marine',SI:'marine',RB:'marine',GL:'marine',SR:'marine',HF:'marine',MA:'marine',UP:'marine',LO:'marine',BW:'marine',SU:'marine',RP:'marine',CF:'marine',LS:'marine',BH:'marine',MF:'marine',MS:'marine'};
+var SIG={W:'Warning',A:'Watch',Y:'Advisory',S:'Statement'};
+var $=function(id){return document.getElementById(id)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var S=(function(){try{return Object.assign({wx:false,radar:true,alerts:true,clouds:false,cams:false,base:'midnight',view:null},JSON.parse(localStorage.getItem(PREF)||'{}'))}catch(e){return{wx:false,radar:true,alerts:true,clouds:false,cams:false,base:'midnight',view:null}}})();
+function save(){try{localStorage.setItem(PREF,JSON.stringify(S))}catch(e){}}
+var tT;function toast(t){var el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(tT);tT=setTimeout(function(){el.classList.remove('show')},3500)}
+
+/* ---------- sign-in gate: nothing loads until the PHG session is verified ---------- */
+function session(){try{var x=JSON.parse(localStorage.getItem(STORE)||'null');return x&&x.access_token?x:null}catch(e){return null}}
+function deny(msg){$('gateMsg').textContent=msg;$('gate').style.display='flex';$('panel').hidden=true}
+var s=session();
+if(!s){deny('Sign in to PHG to open the Atlas.');return}
+/* Same rule as the app's Atlas button: the server's phg-access answer must grant the
+   'atlas' surface (developer view always has it). Fail closed on any error. */
+fetch(SB_URL+'/functions/v1/phg-access',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+s.access_token},body:JSON.stringify({op:'context'})})
+ .then(function(r){if(r.status===401)throw new Error('expired');return r.json()})
+ .then(function(j){var ok=j&&(j.view_mode==='developer'||(Array.isArray(j.surfaces)&&j.surfaces.indexOf('atlas')>=0));
+   if(!ok){deny('The Atlas is not switched on for your PHG account yet.');return}
+   $('gate').style.display='none';$('panel').hidden=false;start()})
+ .catch(function(e){deny(e&&e.message==='expired'?'Your PHG sign-in has expired. Close the Atlas and sign in again.':'Could not confirm your PHG access. Close the Atlas and try again.')});
+
+/* ---------- basemaps (OpenFreeMap, keyless) ---------- */
+var OFM='https://tiles.openfreemap.org/styles/',CACHE={};
+function getJSON(u){if(CACHE[u])return Promise.resolve(JSON.parse(CACHE[u]));return fetch(u).then(function(r){return r.text()}).then(function(t){CACHE[u]=t;return JSON.parse(t)})}
+function recolor(st,m){st.layers.forEach(function(l){var p=l.paint=l.paint||{};for(var i=0;i<m.length;i++){if(m[i][0].test(l.id)&&m[i][1].split('-')[0]===l.type){p[m[i][1]]=m[i][2];break}}});return st}
+function buildStyle(n){
+ if(n==='streets')return getJSON(OFM+'liberty');
+ if(n==='grey')return getJSON(OFM+'positron');
+ return getJSON(OFM+'positron').then(function(st){st=recolor(st,[[/^background$/,'background-color','#060a12'],[/^park/,'fill-color','#0a1a17'],[/wood/,'fill-color','#0a1915'],[/residential/,'fill-color','#080d16'],
+  [/^water$/,'fill-color','#081624'],[/waterway/,'line-color','#0d2236'],[/^building/,'fill-color','#0e1724'],[/motorway.*inner|major_inner/,'line-color','#1f4e63'],[/casing/,'line-color','#0b1824'],[/minor/,'line-color','#132232'],[/path/,'line-color','#101b28'],[/rail/,'line-color','#1a2836'],[/boundary/,'line-color','#2a5568'],[/aeroway/,'line-color','#14263a']]);
+  st.layers.forEach(function(l){if(l.type==='symbol'){l.paint=l.paint||{};l.paint['text-color']='#7f98a6';l.paint['text-halo-color']='#05070d';l.paint['text-halo-width']=1.2}});return st});
+}
+
+var map,ALERTS=null,alertsAt=0,radarTimer=null,camT=null,camReq=0,CAMS={};
+function bucket(min){return Math.floor(Date.now()/(min*60000))}
+function start(){
+ if(!window.maplibregl){deny('The map library did not load. Check the connection and try again.');return}
+ buildStyle(S.base).then(function(st){
+  map=new maplibregl.Map({container:'map',style:st,center:S.view?S.view.c:[-93.6,41.6],zoom:S.view?S.view.z:4,attributionControl:{compact:true},maxPitch:0});
+  map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');
+  map.on('style.load',addLayers);
+  map.on('moveend',function(){var c=map.getCenter();S.view={c:[+c.lng.toFixed(4),+c.lat.toFixed(4)],z:+map.getZoom().toFixed(2)};save();if(S.cams)loadCams()});
+  map.on('click',onClick);
+  ['alerts-fill','cams'].forEach(function(l){map.on('mouseenter',l,function(){map.getCanvas().style.cursor='pointer'});map.on('mouseleave',l,function(){map.getCanvas().style.cursor=''})});
+ }).catch(function(e){deny('The basemap could not load ('+(e.message||e)+').')});
+ wireUI();
+}
+function firstSymbol(){var ls=map.getStyle().layers;for(var i=0;i<ls.length;i++)if(ls[i].type==='symbol')return ls[i].id;return undefined}
+function addLayers(){
+ var below=firstSymbol();
+ map.addSource('clouds',{type:'raster',tiles:[GIBS+'GOES-East_ABI_Band13_Clean_Infrared/default/default/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png'],tileSize:256,maxzoom:6,bounds:[-155,-72,5,72],attribution:'Clouds: NOAA GOES-East via NASA GIBS'});
+ map.addLayer({id:'clouds',type:'raster',source:'clouds',paint:{'raster-opacity':.55},layout:{visibility:'none'}},below);
+ addRadar(below);
+ map.addSource('alerts',{type:'geojson',data:{type:'FeatureCollection',features:[]},attribution:'Alerts: NWS'});
+ map.addLayer({id:'alerts-fill',type:'fill',source:'alerts',paint:{'fill-color':['get','color'],'fill-opacity':['case',['==',['get','sig'],'W'],.32,.16]},layout:{visibility:'none'}},below);
+ map.addLayer({id:'alerts-line',type:'line',source:'alerts',paint:{'line-color':['get','color'],'line-width':['case',['==',['get','sig'],'W'],1.6,1],'line-dasharray':['case',['==',['get','sig'],'A'],['literal',[2,2]],['literal',[1,0]]]},layout:{visibility:'none'}},below);
+ map.addSource('cams',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+ map.addLayer({id:'cams',type:'circle',source:'cams',paint:{'circle-radius':['interpolate',['linear'],['zoom'],4,2.5,10,5,14,7],'circle-color':['case',['get','video'],'#22d3ee','#a78bfa'],'circle-stroke-color':'#05070d','circle-stroke-width':1},layout:{visibility:'none'}});
+ if(ALERTS)map.getSource('alerts').setData(ALERTS);
+ apply();
+}
+function addRadar(below){
+ if(map.getLayer('radar'))map.removeLayer('radar');if(map.getSource('radar'))map.removeSource('radar');
+ map.addSource('radar',{type:'raster',tiles:[IEM+'nexrad-n0q-900913/{z}/{x}/{y}.png?_='+bucket(5)],tileSize:256,maxzoom:9,attribution:'Radar: NWS NEXRAD via Iowa Environmental Mesonet'});
+ map.addLayer({id:'radar',type:'raster',source:'radar',paint:{'raster-opacity':.75},layout:{visibility:'none'}},below||(map.getLayer('alerts-fill')?'alerts-fill':undefined));
+}
+function vis(id,on){if(map&&map.getLayer(id))map.setLayoutProperty(id,'visibility',on?'visible':'none')}
+function apply(){
+ if(!map||!map.getLayer('cams'))return;
+ vis('radar',S.wx&&S.radar);vis('clouds',S.wx&&S.clouds);vis('alerts-fill',S.wx&&S.alerts);vis('alerts-line',S.wx&&S.alerts);vis('cams',S.cams);
+ clearInterval(radarTimer);
+ if(S.wx&&S.radar)radarTimer=setInterval(function(){if(!map.getLayer('radar'))return;addRadar(map.getLayer('alerts-fill')?'alerts-fill':firstSymbol());vis('radar',S.wx&&S.radar)},300000);
+ if(S.wx&&S.alerts&&(!ALERTS||Date.now()-alertsAt>120000))loadAlerts();
+ if(S.cams)loadCams();
+ legend();
+}
+function legend(){var el=$('legend');if(!(S.wx&&S.alerts&&ALERTS)){el.innerHTML='';return}
+ var seen={};ALERTS.features.forEach(function(f){seen[f.properties.cat]=(seen[f.properties.cat]||0)+1});
+ el.innerHTML=Object.keys(CAT).filter(function(k){return seen[k]}).map(function(k){return'<span><i style="background:'+CAT[k][1]+'"></i>'+CAT[k][0]+' '+seen[k]+'</span>'}).join('')}
+function loadAlerts(){toast('Loading live weather alerts…');alertsAt=Date.now();
+ fetch(WWA).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(d){
+  (d.features||[]).forEach(function(f){var p=f.properties||{},cat=PH[p.phenom]||'other';p.cat=cat;p.color=CAT[cat][1];p.sig=p.sig||''});
+  d.features=(d.features||[]).filter(function(f){return f.properties.cat!=='marine'});
+  ALERTS=d;if(map.getSource('alerts'))map.getSource('alerts').setData(d);legend();toast(d.features.length.toLocaleString()+' active weather alerts')})
+ .catch(function(e){alertsAt=0;toast('Weather alerts unavailable right now ('+(e.message||e)+')')})}
+function loadCams(){clearTimeout(camT);camT=setTimeout(fetchCams,250)}
+function fetchCams(){if(!map||!S.cams)return;var b=map.getBounds(),rq=++camReq;
+ fetch(SB_URL+'/rest/v1/rpc/phg_cams_in_view',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+SB_KEY},
+  body:JSON.stringify({p_west:b.getWest(),p_south:b.getSouth(),p_east:b.getEast(),p_north:b.getNorth(),p_limit:2000})})
+ .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(rows){if(rq!==camReq)return;CAMS={};
+  var fs=rows.map(function(r,i){var id=r.source+':'+r.source_id;CAMS[id]=r;return{type:'Feature',geometry:{type:'Point',coordinates:[r.lng,r.lat]},properties:{id:id,video:!!r.video_url}}});
+  map.getSource('cams').setData({type:'FeatureCollection',features:fs});
+  if(rows.length>=2000)toast('Showing 2,000 cameras in view. Zoom in to see every camera.');else if(!rows.length&&map.getZoom()>5)toast('No public cameras in this view yet.')})
+ .catch(function(e){toast('Camera list unavailable ('+(e.message||e)+')')})}
+function onClick(e){
+ var box=[[e.point.x-8,e.point.y-8],[e.point.x+8,e.point.y+8]];
+ var c=map.getLayer('cams')&&S.cams?map.queryRenderedFeatures(box,{layers:['cams']}):[];
+ if(c.length){showCam(CAMS[c[0].properties.id]);return}
+ var a=map.getLayer('alerts-fill')&&S.wx&&S.alerts?map.queryRenderedFeatures(e.point,{layers:['alerts-fill']}):[];
+ if(a.length){showAlerts(a);return}
+ hideCard();
+}
+function fmtT(v){if(!v)return'';var d=new Date(typeof v==='number'?v:String(v));return isNaN(d)?String(v):d.toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}
+function showAlerts(fs){var seen={},html='<button class="x" id="cx" aria-label="Close">×</button><h3>Weather alerts here</h3>';
+ fs.forEach(function(f){var p=f.properties,k=p.prod_type+p.issuance;if(seen[k])return;seen[k]=1;
+  html+='<div style="margin-top:8px;border-left:3px solid '+esc(p.color)+';padding-left:8px"><b>'+esc(p.prod_type||CAT[p.cat][0])+'</b><div class="meta">'+esc(SIG[p.sig]||'')+(p.wfo?' · NWS '+esc(p.wfo):'')+'</div><div class="meta">'+(p.issuance?'Issued '+esc(fmtT(p.issuance)):'')+(p.expiration?' · until '+esc(fmtT(p.expiration)):'')+'</div>'+(p.url&&/^https:\/\//.test(p.url)?'<div class="meta"><a style="color:var(--acc)" href="'+esc(p.url)+'" target="_blank" rel="noopener">Full NWS text</a></div>':'')+'</div>'});
+ $('card').innerHTML=html;$('card').classList.add('show');$('cx').onclick=hideCard}
+var camTimer=null;
+function showCam(r){if(!r)return;clearInterval(camTimer);
+ var bust=function(u){return u+(u.indexOf('?')<0?'?':'&')+'t='+Date.now()};
+ var safe=function(u){return u&&/^https?:\/\//.test(u)?u:''};var img=safe(r.image_url),vid=safe(r.video_url);
+ $('card').innerHTML='<button class="x" id="cx" aria-label="Close">×</button><h3>'+esc(r.name||'Traffic camera')+'</h3><div class="meta">'+esc(r.org||'')+(r.state?' · '+esc(r.state):'')+' · public government camera</div>'
+  +(img?'<img id="camimg" alt="Camera snapshot" src="'+esc(bust(img))+'">':'<div class="meta" style="margin-top:8px">No still image from this camera.</div>')
+  +'<video id="camvid" playsinline muted controls style="display:none"></video><div class="meta" id="camts">'+(img?'Live still · refreshes every 15 s':'')+'</div>'
+  +'<div class="acts">'+(vid?'<button id="camlive">▶ Live video</button>':'<button disabled>No live video</button>')+'</div>';
+ $('card').classList.add('show');$('cx').onclick=hideCard;
+ if(img)camTimer=setInterval(function(){var im=$('camimg');if(!im||!$('card').classList.contains('show')){clearInterval(camTimer);return}if($('camvid').style.display==='none')im.src=bust(img)},15000);
+ if($('camlive'))$('camlive').onclick=function(){var v=$('camvid'),im=$('camimg');if(im)im.style.display='none';v.style.display='block';$('camts').textContent='Connecting to live video…';
+  var off=function(why){$('camts').textContent='Stream offline right now ('+why+'). Showing the latest still.';v.style.display='none';if(im)im.style.display='block'};
+  var tmo=setTimeout(function(){if(v.readyState<2)off('no picture after 12 s')},12000);
+  v.onplaying=function(){clearTimeout(tmo);$('camts').textContent='▶ Live video · '+(r.org||'')};v.onerror=function(){clearTimeout(tmo);off('source error')};
+  if(v.canPlayType('application/vnd.apple.mpegurl')){v.src=vid;v.play().catch(function(){})}
+  else{var go=function(){if(!window.Hls||!Hls.isSupported()){clearTimeout(tmo);off('this browser cannot play the stream');return}var h=new Hls();h.on(Hls.Events.ERROR,function(ev,d){if(d.fatal){clearTimeout(tmo);off(d.details)}});h.loadSource(vid);h.attachMedia(v);v.play().catch(function(){})};
+   if(window.Hls)go();else{var sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js';sc.onload=go;sc.onerror=function(){clearTimeout(tmo);off('player did not load')};document.head.appendChild(sc)}}};
+}
+function hideCard(){clearInterval(camTimer);var v=$('camvid');if(v){try{v.pause();v.removeAttribute('src');v.load()}catch(e){}}$('card').classList.remove('show');$('card').innerHTML=''}
+function setSw(id,on){$(id).setAttribute('aria-checked',on?'true':'false')}
+function wireUI(){
+ var pairs={swWx:'wx',swRadar:'radar',swAlerts:'alerts',swClouds:'clouds',swCams:'cams'};
+ Object.keys(pairs).forEach(function(id){var k=pairs[id];setSw(id,S[k]);
+  var flip=function(){S[k]=!S[k];setSw(id,S[k]);if(k==='wx')$('wxSub').hidden=!S.wx;save();apply();if(k==='wx')toast(S.wx?'Weather on':'Weather off');if(k==='cams'&&!S.cams)hideCard()};
+  $(id).onclick=flip;var lab=document.querySelector('label[for="'+id+'"]');if(lab)lab.onclick=function(e){e.preventDefault();flip()}});
+ $('wxSub').hidden=!S.wx;
+ $('base').value=S.base;$('base').onchange=function(){S.base=this.value;save();buildStyle(S.base).then(function(st){map.setStyle(st,{diff:false})})};
+ $('pmin').onclick=function(){var p=$('panel');p.classList.toggle('min');this.textContent=p.classList.contains('min')?'▸':'▾'};
+ window.addEventListener('message',function(e){if(e.origin!==location.origin)return;var d=e.data||{};if(d.phgAtlas==='weather'&&typeof d.on==='boolean'&&S.wx!==d.on){$('swWx').click()}});
+}
+})();
+</script>
+</body>
+
+</html>
