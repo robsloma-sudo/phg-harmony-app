@@ -1,0 +1,2338 @@
+[
+ {
+  "glass_key": "libbey_9252_circa_nick_nora_5_5oz",
+  "name": "Libbey Reserve Circa Nick & Nora 5.5 oz",
+  "family": "nick_and_nora",
+  "manufacturer": "Libbey (Reserve by Libbey)",
+  "manufacturer_sku": "9252",
+  "capacity_ml": 162.7,
+  "height_mm": 152.4,
+  "rim_diameter_mm": 76.2,
+  "max_diameter_mm": 76.2,
+  "foot_diameter_mm": 66.7,
+  "wall_thickness_mm": 1.5,
+  "base_thickness_mm": 89.8,
+  "inner_profile": [
+   {
+    "r_mm": 0.0,
+    "h_mm": 0.0
+   },
+   {
+    "r_mm": 8.17,
+    "h_mm": 2.61
+   },
+   {
+    "r_mm": 11.94,
+    "h_mm": 5.22
+   },
+   {
+    "r_mm": 14.9,
+    "h_mm": 7.83
+   },
+   {
+    "r_mm": 17.4,
+    "h_mm": 10.44
+   },
+   {
+    "r_mm": 19.61,
+    "h_mm": 13.05
+   },
+   {
+    "r_mm": 21.58,
+    "h_mm": 15.66
+   },
+   {
+    "r_mm": 23.37,
+    "h_mm": 18.27
+   },
+   {
+    "r_mm": 25.0,
+    "h_mm": 20.88
+   },
+   {
+    "r_mm": 26.49,
+    "h_mm": 23.49
+   },
+   {
+    "r_mm": 27.86,
+    "h_mm": 26.1
+   },
+   {
+    "r_mm": 29.11,
+    "h_mm": 28.7
+   },
+   {
+    "r_mm": 30.25,
+    "h_mm": 31.31
+   },
+   {
+    "r_mm": 31.29,
+    "h_mm": 33.92
+   },
+   {
+    "r_mm": 32.22,
+    "h_mm": 36.53
+   },
+   {
+    "r_mm": 33.07,
+    "h_mm": 39.14
+   },
+   {
+    "r_mm": 33.82,
+    "h_mm": 41.75
+   },
+   {
+    "r_mm": 34.47,
+    "h_mm": 44.36
+   },
+   {
+    "r_mm": 35.04,
+    "h_mm": 46.97
+   },
+   {
+    "r_mm": 35.52,
+    "h_mm": 49.58
+   },
+   {
+    "r_mm": 35.91,
+    "h_mm": 52.19
+   },
+   {
+    "r_mm": 36.21,
+    "h_mm": 54.8
+   },
+   {
+    "r_mm": 36.43,
+    "h_mm": 57.41
+   },
+   {
+    "r_mm": 36.56,
+    "h_mm": 60.02
+   },
+   {
+    "r_mm": 36.6,
+    "h_mm": 62.63
+   }
+  ],
+  "fill_curve": [
+   {
+    "ml": 0.0,
+    "h_mm": 0.0
+   },
+   {
+    "ml": 5.0,
+    "h_mm": 10.8
+   },
+   {
+    "ml": 10.0,
+    "h_mm": 15.0
+   },
+   {
+    "ml": 15.0,
+    "h_mm": 18.22
+   },
+   {
+    "ml": 20.0,
+    "h_mm": 20.94
+   },
+   {
+    "ml": 25.0,
+    "h_mm": 23.34
+   },
+   {
+    "ml": 30.0,
+    "h_mm": 25.53
+   },
+   {
+    "ml": 35.0,
+    "h_mm": 27.55
+   },
+   {
+    "ml": 40.0,
+    "h_mm": 29.44
+   },
+   {
+    "ml": 45.0,
+    "h_mm": 31.23
+   },
+   {
+    "ml": 50.0,
+    "h_mm": 32.94
+   },
+   {
+    "ml": 55.0,
+    "h_mm": 34.57
+   },
+   {
+    "ml": 60.0,
+    "h_mm": 36.14
+   },
+   {
+    "ml": 65.0,
+    "h_mm": 37.67
+   },
+   {
+    "ml": 70.0,
+    "h_mm": 39.14
+   },
+   {
+    "ml": 75.0,
+    "h_mm": 40.58
+   },
+   {
+    "ml": 80.0,
+    "h_mm": 41.98
+   },
+   {
+    "ml": 85.0,
+    "h_mm": 43.36
+   },
+   {
+    "ml": 90.0,
+    "h_mm": 44.7
+   },
+   {
+    "ml": 95.0,
+    "h_mm": 46.02
+   },
+   {
+    "ml": 100.0,
+    "h_mm": 47.32
+   },
+   {
+    "ml": 105.0,
+    "h_mm": 48.61
+   },
+   {
+    "ml": 110.0,
+    "h_mm": 49.87
+   },
+   {
+    "ml": 115.0,
+    "h_mm": 51.13
+   },
+   {
+    "ml": 120.0,
+    "h_mm": 52.36
+   },
+   {
+    "ml": 125.0,
+    "h_mm": 53.59
+   },
+   {
+    "ml": 130.0,
+    "h_mm": 54.81
+   },
+   {
+    "ml": 135.0,
+    "h_mm": 56.02
+   },
+   {
+    "ml": 140.0,
+    "h_mm": 57.23
+   },
+   {
+    "ml": 145.0,
+    "h_mm": 58.42
+   },
+   {
+    "ml": 150.0,
+    "h_mm": 59.62
+   },
+   {
+    "ml": 155.0,
+    "h_mm": 60.81
+   },
+   {
+    "ml": 160.0,
+    "h_mm": 62.0
+   },
+   {
+    "ml": 162.7,
+    "h_mm": 62.63
+   }
+  ],
+  "source_url": "https://www.katom.com/634-9252.html",
+  "verification_status": "spec_sheet",
+  "fit": {
+   "param": "bowl_depth_mm",
+   "value_mm": 62.6,
+   "plausible_range_mm": [
+    35,
+    110
+   ],
+   "plausible": true,
+   "model_volume_ml": 162.7,
+   "template": "nick_nora"
+  },
+  "notes": "Dimensions from spec sheet (https://www.katom.com/634-9252.html; corroborated https://www.don.com/product/1159068). Capacity is brimful; Libbey states individual pieces may vary up to 5%. Inner profile is a 'nick_nora' template fitted by solving bowl_depth_mm=62.6 mm to match capacity; wall thickness 1.5 mm assumed. Stem+foot height implied 89.8 mm. Shape is a model, not a trace - upgrade to measured when the glass is in house."
+ },
+ {
+  "glass_key": "libbey_3055_perception_coupe_8_5oz",
+  "name": "Libbey Perception Cocktail Coupe 8.5 oz",
+  "family": "coupe",
+  "manufacturer": "Libbey",
+  "manufacturer_sku": "3055",
+  "capacity_ml": 251.4,
+  "height_mm": 152.4,
+  "rim_diameter_mm": 95.2,
+  "max_diameter_mm": 104.8,
+  "foot_diameter_mm": 76.2,
+  "wall_thickness_mm": 1.6,
+  "base_thickness_mm": 102.3,
+  "inner_profile": [
+   {
+    "r_mm": 0.0,
+    "h_mm": 0.0
+   },
+   {
+    "r_mm": 4.61,
+    "h_mm": 2.09
+   },
+   {
+    "r_mm": 9.18,
+    "h_mm": 4.18
+   },
+   {
+    "r_mm": 13.68,
+    "h_mm": 6.26
+   },
+   {
+    "r_mm": 18.06,
+    "h_mm": 8.35
+   },
+   {
+    "r_mm": 22.3,
+    "h_mm": 10.44
+   },
+   {
+    "r_mm": 26.35,
+    "h_mm": 12.53
+   },
+   {
+    "r_mm": 30.18,
+    "h_mm": 14.62
+   },
+   {
+    "r_mm": 33.76,
+    "h_mm": 16.71
+   },
+   {
+    "r_mm": 37.07,
+    "h_mm": 18.79
+   },
+   {
+    "r_mm": 40.07,
+    "h_mm": 20.88
+   },
+   {
+    "r_mm": 42.73,
+    "h_mm": 22.97
+   },
+   {
+    "r_mm": 45.05,
+    "h_mm": 25.06
+   },
+   {
+    "r_mm": 46.99,
+    "h_mm": 27.15
+   },
+   {
+    "r_mm": 48.55,
+    "h_mm": 29.24
+   },
+   {
+    "r_mm": 49.7,
+    "h_mm": 31.32
+   },
+   {
+    "r_mm": 50.44,
+    "h_mm": 33.41
+   },
+   {
+    "r_mm": 50.77,
+    "h_mm": 35.5
+   },
+   {
+    "r_mm": 50.62,
+    "h_mm": 37.59
+   },
+   {
+    "r_mm": 50.17,
+    "h_mm": 39.68
+   },
+   {
+    "r_mm": 49.56,
+    "h_mm": 41.76
+   },
+   {
+    "r_mm": 48.83,
+    "h_mm": 43.85
+   },
+   {
+    "r_mm": 47.98,
+    "h_mm": 45.94
+   },
+   {
+    "r_mm": 47.05,
+    "h_mm": 48.03
+   },
+   {
+    "r_mm": 46.02,
+    "h_mm": 50.12
+   }
+  ],
+  "fill_curve": [
+   {
+    "ml": 0.0,
+    "h_mm": 0.0
+   },
+   {
+    "ml": 5.0,
+    "h_mm": 10.05
+   },
+   {
+    "ml": 10.0,
+    "h_mm": 12.77
+   },
+   {
+    "ml": 15.0,
+    "h_mm": 14.71
+   },
+   {
+    "ml": 20.0,
+    "h_mm": 16.3
+   },
+   {
+    "ml": 25.0,
+    "h_mm": 17.66
+   },
+   {
+    "ml": 30.0,
+    "h_mm": 18.87
+   },
+   {
+    "ml": 35.0,
+    "h_mm": 19.97
+   },
+   {
+    "ml": 40.0,
+    "h_mm": 20.99
+   },
+   {
+    "ml": 45.0,
+    "h_mm": 21.95
+   },
+   {
+    "ml": 50.0,
+    "h_mm": 22.85
+   },
+   {
+    "ml": 55.0,
+    "h_mm": 23.71
+   },
+   {
+    "ml": 60.0,
+    "h_mm": 24.53
+   },
+   {
+    "ml": 65.0,
+    "h_mm": 25.32
+   },
+   {
+    "ml": 70.0,
+    "h_mm": 26.08
+   },
+   {
+    "ml": 75.0,
+    "h_mm": 26.83
+   },
+   {
+    "ml": 80.0,
+    "h_mm": 27.55
+   },
+   {
+    "ml": 85.0,
+    "h_mm": 28.25
+   },
+   {
+    "ml": 90.0,
+    "h_mm": 28.94
+   },
+   {
+    "ml": 95.0,
+    "h_mm": 29.61
+   },
+   {
+    "ml": 100.0,
+    "h_mm": 30.28
+   },
+   {
+    "ml": 105.0,
+    "h_mm": 30.93
+   },
+   {
+    "ml": 110.0,
+    "h_mm": 31.58
+   },
+   {
+    "ml": 115.0,
+    "h_mm": 32.22
+   },
+   {
+    "ml": 120.0,
+    "h_mm": 32.85
+   },
+   {
+    "ml": 125.0,
+    "h_mm": 33.48
+   },
+   {
+    "ml": 130.0,
+    "h_mm": 34.1
+   },
+   {
+    "ml": 135.0,
+    "h_mm": 34.72
+   },
+   {
+    "ml": 140.0,
+    "h_mm": 35.34
+   },
+   {
+    "ml": 145.0,
+    "h_mm": 35.96
+   },
+   {
+    "ml": 150.0,
+    "h_mm": 36.58
+   },
+   {
+    "ml": 155.0,
+    "h_mm": 37.2
+   },
+   {
+    "ml": 160.0,
+    "h_mm": 37.82
+   },
+   {
+    "ml": 165.0,
+    "h_mm": 38.44
+   },
+   {
+    "ml": 170.0,
+    "h_mm": 39.07
+   },
+   {
+    "ml": 175.0,
+    "h_mm": 39.7
+   },
+   {
+    "ml": 180.0,
+    "h_mm": 40.34
+   },
+   {
+    "ml": 185.0,
+    "h_mm": 40.98
+   },
+   {
+    "ml": 190.0,
+    "h_mm": 41.62
+   },
+   {
+    "ml": 195.0,
+    "h_mm": 42.27
+   },
+   {
+    "ml": 200.0,
+    "h_mm": 42.93
+   },
+   {
+    "ml": 205.0,
+    "h_mm": 43.59
+   },
+   {
+    "ml": 210.0,
+    "h_mm": 44.26
+   },
+   {
+    "ml": 215.0,
+    "h_mm": 44.93
+   },
+   {
+    "ml": 220.0,
+    "h_mm": 45.62
+   },
+   {
+    "ml": 225.0,
+    "h_mm": 46.31
+   },
+   {
+    "ml": 230.0,
+    "h_mm": 47.01
+   },
+   {
+    "ml": 235.0,
+    "h_mm": 47.72
+   },
+   {
+    "ml": 240.0,
+    "h_mm": 48.44
+   },
+   {
+    "ml": 245.0,
+    "h_mm": 49.17
+   },
+   {
+    "ml": 250.0,
+    "h_mm": 49.91
+   },
+   {
+    "ml": 251.4,
+    "h_mm": 50.12
+   }
+  ],
+  "source_url": "https://www.webstaurantstore.com/libbey-3055-perception-8-5-oz-cocktail-coupe-glass-case/5513055.html",
+  "verification_status": "spec_sheet",
+  "fit": {
+   "param": "bowl_depth_mm",
+   "value_mm": 50.1,
+   "plausible_range_mm": [
+    35,
+    110
+   ],
+   "plausible": true,
+   "model_volume_ml": 251.4,
+   "template": "coupe"
+  },
+  "notes": "Dimensions from spec sheet (https://www.webstaurantstore.com/libbey-3055-perception-8-5-oz-cocktail-coupe-glass-case/5513055.html; corroborated https://www.gofoodservice.com/p/libbey-3055). Capacity is brimful; Libbey states individual pieces may vary up to 5%. Inner profile is a 'coupe' template fitted by solving bowl_depth_mm=50.1 mm to match capacity; wall thickness 1.6 mm assumed. Stem+foot height implied 102.3 mm. Shape is a model, not a trace - upgrade to measured when the glass is in house."
+ },
+ {
+  "glass_key": "libbey_918cd_heavy_base_dof_13_5oz",
+  "name": "Libbey Heavy Base Double Old Fashioned 13.5 oz",
+  "family": "double_rocks",
+  "manufacturer": "Libbey",
+  "manufacturer_sku": "918CD",
+  "capacity_ml": 399.2,
+  "height_mm": 107.9,
+  "rim_diameter_mm": 85.7,
+  "max_diameter_mm": 85.7,
+  "foot_diameter_mm": 79.4,
+  "wall_thickness_mm": 2.5,
+  "base_thickness_mm": 23.5,
+  "inner_profile": [
+   {
+    "r_mm": 0,
+    "h_mm": 0.0
+   },
+   {
+    "r_mm": 37.19,
+    "h_mm": 0.0
+   },
+   {
+    "r_mm": 37.32,
+    "h_mm": 3.52
+   },
+   {
+    "r_mm": 37.45,
+    "h_mm": 7.04
+   },
+   {
+    "r_mm": 37.58,
+    "h_mm": 10.56
+   },
+   {
+    "r_mm": 37.72,
+    "h_mm": 14.08
+   },
+   {
+    "r_mm": 37.85,
+    "h_mm": 17.6
+   },
+   {
+    "r_mm": 37.98,
+    "h_mm": 21.12
+   },
+   {
+    "r_mm": 38.11,
+    "h_mm": 24.64
+   },
+   {
+    "r_mm": 38.25,
+    "h_mm": 28.16
+   },
+   {
+    "r_mm": 38.38,
+    "h_mm": 31.68
+   },
+   {
+    "r_mm": 38.51,
+    "h_mm": 35.2
+   },
+   {
+    "r_mm": 38.64,
+    "h_mm": 38.72
+   },
+   {
+    "r_mm": 38.77,
+    "h_mm": 42.24
+   },
+   {
+    "r_mm": 38.91,
+    "h_mm": 45.76
+   },
+   {
+    "r_mm": 39.04,
+    "h_mm": 49.28
+   },
+   {
+    "r_mm": 39.17,
+    "h_mm": 52.8
+   },
+   {
+    "r_mm": 39.3,
+    "h_mm": 56.32
+   },
+   {
+    "r_mm": 39.44,
+    "h_mm": 59.84
+   },
+   {
+    "r_mm": 39.57,
+    "h_mm": 63.36
+   },
+   {
+    "r_mm": 39.7,
+    "h_mm": 66.88
+   },
+   {
+    "r_mm": 39.83,
+    "h_mm": 70.4
+   },
+   {
+    "r_mm": 39.97,
+    "h_mm": 73.92
+   },
+   {
+    "r_mm": 40.1,
+    "h_mm": 77.44
+   },
+   {
+    "r_mm": 40.23,
+    "h_mm": 80.96
+   },
+   {
+    "r_mm": 40.36,
+    "h_mm": 84.48
+   }
+  ],
+  "fill_curve": [
+   {
+    "ml": 0.0,
+    "h_mm": 0.0
+   },
+   {
+    "ml": 5.0,
+    "h_mm": 1.15
+   },
+   {
+    "ml": 10.0,
+    "h_mm": 2.3
+   },
+   {
+    "ml": 15.0,
+    "h_mm": 3.44
+   },
+   {
+    "ml": 20.0,
+    "h_mm": 4.58
+   },
+   {
+    "ml": 25.0,
+    "h_mm": 5.72
+   },
+   {
+    "ml": 30.0,
+    "h_mm": 6.86
+   },
+   {
+    "ml": 35.0,
+    "h_mm": 7.99
+   },
+   {
+    "ml": 40.0,
+    "h_mm": 9.12
+   },
+   {
+    "ml": 45.0,
+    "h_mm": 10.25
+   },
+   {
+    "ml": 50.0,
+    "h_mm": 11.38
+   },
+   {
+    "ml": 55.0,
+    "h_mm": 12.5
+   },
+   {
+    "ml": 60.0,
+    "h_mm": 13.62
+   },
+   {
+    "ml": 65.0,
+    "h_mm": 14.74
+   },
+   {
+    "ml": 70.0,
+    "h_mm": 15.86
+   },
+   {
+    "ml": 75.0,
+    "h_mm": 16.97
+   },
+   {
+    "ml": 80.0,
+    "h_mm": 18.08
+   },
+   {
+    "ml": 85.0,
+    "h_mm": 19.19
+   },
+   {
+    "ml": 90.0,
+    "h_mm": 20.3
+   },
+   {
+    "ml": 95.0,
+    "h_mm": 21.4
+   },
+   {
+    "ml": 100.0,
+    "h_mm": 22.5
+   },
+   {
+    "ml": 105.0,
+    "h_mm": 23.6
+   },
+   {
+    "ml": 110.0,
+    "h_mm": 24.7
+   },
+   {
+    "ml": 115.0,
+    "h_mm": 25.79
+   },
+   {
+    "ml": 120.0,
+    "h_mm": 26.88
+   },
+   {
+    "ml": 125.0,
+    "h_mm": 27.97
+   },
+   {
+    "ml": 130.0,
+    "h_mm": 29.06
+   },
+   {
+    "ml": 135.0,
+    "h_mm": 30.15
+   },
+   {
+    "ml": 140.0,
+    "h_mm": 31.23
+   },
+   {
+    "ml": 145.0,
+    "h_mm": 32.31
+   },
+   {
+    "ml": 150.0,
+    "h_mm": 33.39
+   },
+   {
+    "ml": 155.0,
+    "h_mm": 34.46
+   },
+   {
+    "ml": 160.0,
+    "h_mm": 35.54
+   },
+   {
+    "ml": 165.0,
+    "h_mm": 36.61
+   },
+   {
+    "ml": 170.0,
+    "h_mm": 37.68
+   },
+   {
+    "ml": 175.0,
+    "h_mm": 38.74
+   },
+   {
+    "ml": 180.0,
+    "h_mm": 39.81
+   },
+   {
+    "ml": 185.0,
+    "h_mm": 40.87
+   },
+   {
+    "ml": 190.0,
+    "h_mm": 41.93
+   },
+   {
+    "ml": 195.0,
+    "h_mm": 42.99
+   },
+   {
+    "ml": 200.0,
+    "h_mm": 44.05
+   },
+   {
+    "ml": 205.0,
+    "h_mm": 45.1
+   },
+   {
+    "ml": 210.0,
+    "h_mm": 46.15
+   },
+   {
+    "ml": 215.0,
+    "h_mm": 47.2
+   },
+   {
+    "ml": 220.0,
+    "h_mm": 48.25
+   },
+   {
+    "ml": 225.0,
+    "h_mm": 49.29
+   },
+   {
+    "ml": 230.0,
+    "h_mm": 50.34
+   },
+   {
+    "ml": 235.0,
+    "h_mm": 51.38
+   },
+   {
+    "ml": 240.0,
+    "h_mm": 52.42
+   },
+   {
+    "ml": 245.0,
+    "h_mm": 53.45
+   },
+   {
+    "ml": 250.0,
+    "h_mm": 54.49
+   },
+   {
+    "ml": 255.0,
+    "h_mm": 55.52
+   },
+   {
+    "ml": 260.0,
+    "h_mm": 56.55
+   },
+   {
+    "ml": 265.0,
+    "h_mm": 57.58
+   },
+   {
+    "ml": 270.0,
+    "h_mm": 58.61
+   },
+   {
+    "ml": 275.0,
+    "h_mm": 59.63
+   },
+   {
+    "ml": 280.0,
+    "h_mm": 60.65
+   },
+   {
+    "ml": 285.0,
+    "h_mm": 61.68
+   },
+   {
+    "ml": 290.0,
+    "h_mm": 62.69
+   },
+   {
+    "ml": 295.0,
+    "h_mm": 63.71
+   },
+   {
+    "ml": 300.0,
+    "h_mm": 64.73
+   },
+   {
+    "ml": 305.0,
+    "h_mm": 65.74
+   },
+   {
+    "ml": 310.0,
+    "h_mm": 66.75
+   },
+   {
+    "ml": 315.0,
+    "h_mm": 67.76
+   },
+   {
+    "ml": 320.0,
+    "h_mm": 68.77
+   },
+   {
+    "ml": 325.0,
+    "h_mm": 69.77
+   },
+   {
+    "ml": 330.0,
+    "h_mm": 70.77
+   },
+   {
+    "ml": 335.0,
+    "h_mm": 71.78
+   },
+   {
+    "ml": 340.0,
+    "h_mm": 72.78
+   },
+   {
+    "ml": 345.0,
+    "h_mm": 73.77
+   },
+   {
+    "ml": 350.0,
+    "h_mm": 74.77
+   },
+   {
+    "ml": 355.0,
+    "h_mm": 75.76
+   },
+   {
+    "ml": 360.0,
+    "h_mm": 76.75
+   },
+   {
+    "ml": 365.0,
+    "h_mm": 77.74
+   },
+   {
+    "ml": 370.0,
+    "h_mm": 78.73
+   },
+   {
+    "ml": 375.0,
+    "h_mm": 79.72
+   },
+   {
+    "ml": 380.0,
+    "h_mm": 80.7
+   },
+   {
+    "ml": 385.0,
+    "h_mm": 81.69
+   },
+   {
+    "ml": 390.0,
+    "h_mm": 82.67
+   },
+   {
+    "ml": 395.0,
+    "h_mm": 83.65
+   },
+   {
+    "ml": 399.2,
+    "h_mm": 84.48
+   }
+  ],
+  "source_url": "https://www.restaurantsupply.com/libbey-918cd-heavy-base-13-5-oz-double-rocks-old-fashioned-glass",
+  "verification_status": "spec_sheet",
+  "fit": {
+   "param": "base_thickness_mm",
+   "value_mm": 23.5,
+   "plausible_range_mm": [
+    5,
+    25
+   ],
+   "plausible": true,
+   "model_volume_ml": 399.2,
+   "template": "tumbler"
+  },
+  "notes": "Dimensions from spec sheet (https://www.restaurantsupply.com/libbey-918cd-heavy-base-13-5-oz-double-rocks-old-fashioned-glass; corroborated https://shop.libbey.com/products/libbey-heavy-base-double-old-fashioned-glasses-13-5-ounce-set-of-12). Capacity is brimful; Libbey states individual pieces may vary up to 5%. Inner profile is a 'tumbler' template fitted by solving base_thickness_mm=23.5 mm to match capacity; wall thickness 2.5 mm assumed. Shape is a model, not a trace - upgrade to measured when the glass is in house."
+ },
+ {
+  "glass_key": "libbey_125_heavy_base_highball_9oz",
+  "name": "Libbey Heavy Base Highball 9 oz",
+  "family": "highball",
+  "manufacturer": "Libbey",
+  "manufacturer_sku": "125",
+  "capacity_ml": 266.2,
+  "height_mm": 120.6,
+  "rim_diameter_mm": 69.8,
+  "max_diameter_mm": 69.8,
+  "foot_diameter_mm": 57.1,
+  "wall_thickness_mm": 2.2,
+  "base_thickness_mm": 24.0,
+  "inner_profile": [
+   {
+    "r_mm": 0,
+    "h_mm": 0.0
+   },
+   {
+    "r_mm": 26.38,
+    "h_mm": 0.0
+   },
+   {
+    "r_mm": 26.64,
+    "h_mm": 4.03
+   },
+   {
+    "r_mm": 26.9,
+    "h_mm": 8.05
+   },
+   {
+    "r_mm": 27.17,
+    "h_mm": 12.08
+   },
+   {
+    "r_mm": 27.43,
+    "h_mm": 16.11
+   },
+   {
+    "r_mm": 27.7,
+    "h_mm": 20.14
+   },
+   {
+    "r_mm": 27.96,
+    "h_mm": 24.16
+   },
+   {
+    "r_mm": 28.23,
+    "h_mm": 28.19
+   },
+   {
+    "r_mm": 28.49,
+    "h_mm": 32.22
+   },
+   {
+    "r_mm": 28.76,
+    "h_mm": 36.24
+   },
+   {
+    "r_mm": 29.02,
+    "h_mm": 40.27
+   },
+   {
+    "r_mm": 29.29,
+    "h_mm": 44.3
+   },
+   {
+    "r_mm": 29.55,
+    "h_mm": 48.33
+   },
+   {
+    "r_mm": 29.81,
+    "h_mm": 52.35
+   },
+   {
+    "r_mm": 30.08,
+    "h_mm": 56.38
+   },
+   {
+    "r_mm": 30.34,
+    "h_mm": 60.41
+   },
+   {
+    "r_mm": 30.61,
+    "h_mm": 64.43
+   },
+   {
+    "r_mm": 30.87,
+    "h_mm": 68.46
+   },
+   {
+    "r_mm": 31.14,
+    "h_mm": 72.49
+   },
+   {
+    "r_mm": 31.4,
+    "h_mm": 76.52
+   },
+   {
+    "r_mm": 31.67,
+    "h_mm": 80.54
+   },
+   {
+    "r_mm": 31.93,
+    "h_mm": 84.57
+   },
+   {
+    "r_mm": 32.2,
+    "h_mm": 88.6
+   },
+   {
+    "r_mm": 32.46,
+    "h_mm": 92.63
+   },
+   {
+    "r_mm": 32.72,
+    "h_mm": 96.65
+   }
+  ],
+  "fill_curve": [
+   {
+    "ml": 0.0,
+    "h_mm": 0.0
+   },
+   {
+    "ml": 5.0,
+    "h_mm": 2.27
+   },
+   {
+    "ml": 10.0,
+    "h_mm": 4.52
+   },
+   {
+    "ml": 15.0,
+    "h_mm": 6.75
+   },
+   {
+    "ml": 20.0,
+    "h_mm": 8.95
+   },
+   {
+    "ml": 25.0,
+    "h_mm": 11.13
+   },
+   {
+    "ml": 30.0,
+    "h_mm": 13.28
+   },
+   {
+    "ml": 35.0,
+    "h_mm": 15.42
+   },
+   {
+    "ml": 40.0,
+    "h_mm": 17.53
+   },
+   {
+    "ml": 45.0,
+    "h_mm": 19.62
+   },
+   {
+    "ml": 50.0,
+    "h_mm": 21.69
+   },
+   {
+    "ml": 55.0,
+    "h_mm": 23.74
+   },
+   {
+    "ml": 60.0,
+    "h_mm": 25.77
+   },
+   {
+    "ml": 65.0,
+    "h_mm": 27.78
+   },
+   {
+    "ml": 70.0,
+    "h_mm": 29.77
+   },
+   {
+    "ml": 75.0,
+    "h_mm": 31.74
+   },
+   {
+    "ml": 80.0,
+    "h_mm": 33.7
+   },
+   {
+    "ml": 85.0,
+    "h_mm": 35.64
+   },
+   {
+    "ml": 90.0,
+    "h_mm": 37.56
+   },
+   {
+    "ml": 95.0,
+    "h_mm": 39.46
+   },
+   {
+    "ml": 100.0,
+    "h_mm": 41.35
+   },
+   {
+    "ml": 105.0,
+    "h_mm": 43.22
+   },
+   {
+    "ml": 110.0,
+    "h_mm": 45.08
+   },
+   {
+    "ml": 115.0,
+    "h_mm": 46.92
+   },
+   {
+    "ml": 120.0,
+    "h_mm": 48.75
+   },
+   {
+    "ml": 125.0,
+    "h_mm": 50.56
+   },
+   {
+    "ml": 130.0,
+    "h_mm": 52.36
+   },
+   {
+    "ml": 135.0,
+    "h_mm": 54.14
+   },
+   {
+    "ml": 140.0,
+    "h_mm": 55.91
+   },
+   {
+    "ml": 145.0,
+    "h_mm": 57.67
+   },
+   {
+    "ml": 150.0,
+    "h_mm": 59.41
+   },
+   {
+    "ml": 155.0,
+    "h_mm": 61.14
+   },
+   {
+    "ml": 160.0,
+    "h_mm": 62.86
+   },
+   {
+    "ml": 165.0,
+    "h_mm": 64.56
+   },
+   {
+    "ml": 170.0,
+    "h_mm": 66.25
+   },
+   {
+    "ml": 175.0,
+    "h_mm": 67.93
+   },
+   {
+    "ml": 180.0,
+    "h_mm": 69.6
+   },
+   {
+    "ml": 185.0,
+    "h_mm": 71.26
+   },
+   {
+    "ml": 190.0,
+    "h_mm": 72.9
+   },
+   {
+    "ml": 195.0,
+    "h_mm": 74.53
+   },
+   {
+    "ml": 200.0,
+    "h_mm": 76.16
+   },
+   {
+    "ml": 205.0,
+    "h_mm": 77.77
+   },
+   {
+    "ml": 210.0,
+    "h_mm": 79.37
+   },
+   {
+    "ml": 215.0,
+    "h_mm": 80.96
+   },
+   {
+    "ml": 220.0,
+    "h_mm": 82.54
+   },
+   {
+    "ml": 225.0,
+    "h_mm": 84.1
+   },
+   {
+    "ml": 230.0,
+    "h_mm": 85.66
+   },
+   {
+    "ml": 235.0,
+    "h_mm": 87.21
+   },
+   {
+    "ml": 240.0,
+    "h_mm": 88.75
+   },
+   {
+    "ml": 245.0,
+    "h_mm": 90.28
+   },
+   {
+    "ml": 250.0,
+    "h_mm": 91.8
+   },
+   {
+    "ml": 255.0,
+    "h_mm": 93.31
+   },
+   {
+    "ml": 260.0,
+    "h_mm": 94.81
+   },
+   {
+    "ml": 265.0,
+    "h_mm": 96.31
+   },
+   {
+    "ml": 266.2,
+    "h_mm": 96.65
+   }
+  ],
+  "source_url": "https://bargreen.com/products/LIB125",
+  "verification_status": "spec_sheet",
+  "fit": {
+   "param": "base_thickness_mm",
+   "value_mm": 24.0,
+   "plausible_range_mm": [
+    5,
+    25
+   ],
+   "plausible": true,
+   "model_volume_ml": 266.2,
+   "template": "tumbler"
+  },
+  "notes": "Dimensions from spec sheet (https://bargreen.com/products/LIB125; corroborated https://www.amazon.com/Libbey-Heavy-Ounce-Highball-Glass/dp/B00CHUKVYG). Capacity is brimful; Libbey states individual pieces may vary up to 5%. Inner profile is a 'tumbler' template fitted by solving base_thickness_mm=24.0 mm to match capacity; wall thickness 2.2 mm assumed. Shape is a model, not a trace - upgrade to measured when the glass is in house."
+ },
+ {
+  "glass_key": "libbey_2518_chicago_collins_10_5oz",
+  "name": "Libbey Chicago Tall Hi-Ball / Collins 10.5 oz",
+  "family": "collins",
+  "manufacturer": "Libbey",
+  "manufacturer_sku": "2518",
+  "capacity_ml": 310.5,
+  "height_mm": 168.3,
+  "rim_diameter_mm": 60.3,
+  "max_diameter_mm": 60.3,
+  "foot_diameter_mm": 54.0,
+  "wall_thickness_mm": 1.8,
+  "base_thickness_mm": 30.6,
+  "inner_profile": [
+   {
+    "r_mm": 0,
+    "h_mm": 0.0
+   },
+   {
+    "r_mm": 25.19,
+    "h_mm": 0.0
+   },
+   {
+    "r_mm": 25.32,
+    "h_mm": 5.74
+   },
+   {
+    "r_mm": 25.45,
+    "h_mm": 11.48
+   },
+   {
+    "r_mm": 25.58,
+    "h_mm": 17.21
+   },
+   {
+    "r_mm": 25.72,
+    "h_mm": 22.95
+   },
+   {
+    "r_mm": 25.85,
+    "h_mm": 28.69
+   },
+   {
+    "r_mm": 25.98,
+    "h_mm": 34.43
+   },
+   {
+    "r_mm": 26.11,
+    "h_mm": 40.17
+   },
+   {
+    "r_mm": 26.25,
+    "h_mm": 45.9
+   },
+   {
+    "r_mm": 26.38,
+    "h_mm": 51.64
+   },
+   {
+    "r_mm": 26.51,
+    "h_mm": 57.38
+   },
+   {
+    "r_mm": 26.64,
+    "h_mm": 63.12
+   },
+   {
+    "r_mm": 26.77,
+    "h_mm": 68.86
+   },
+   {
+    "r_mm": 26.91,
+    "h_mm": 74.59
+   },
+   {
+    "r_mm": 27.04,
+    "h_mm": 80.33
+   },
+   {
+    "r_mm": 27.17,
+    "h_mm": 86.07
+   },
+   {
+    "r_mm": 27.3,
+    "h_mm": 91.81
+   },
+   {
+    "r_mm": 27.44,
+    "h_mm": 97.55
+   },
+   {
+    "r_mm": 27.57,
+    "h_mm": 103.28
+   },
+   {
+    "r_mm": 27.7,
+    "h_mm": 109.02
+   },
+   {
+    "r_mm": 27.83,
+    "h_mm": 114.76
+   },
+   {
+    "r_mm": 27.97,
+    "h_mm": 120.5
+   },
+   {
+    "r_mm": 28.1,
+    "h_mm": 126.24
+   },
+   {
+    "r_mm": 28.23,
+    "h_mm": 131.97
+   },
+   {
+    "r_mm": 28.36,
+    "h_mm": 137.71
+   }
+  ],
+  "fill_curve": [
+   {
+    "ml": 0.0,
+    "h_mm": 0.0
+   },
+   {
+    "ml": 5.0,
+    "h_mm": 2.5
+   },
+   {
+    "ml": 10.0,
+    "h_mm": 4.99
+   },
+   {
+    "ml": 15.0,
+    "h_mm": 7.47
+   },
+   {
+    "ml": 20.0,
+    "h_mm": 9.94
+   },
+   {
+    "ml": 25.0,
+    "h_mm": 12.4
+   },
+   {
+    "ml": 30.0,
+    "h_mm": 14.85
+   },
+   {
+    "ml": 35.0,
+    "h_mm": 17.29
+   },
+   {
+    "ml": 40.0,
+    "h_mm": 19.71
+   },
+   {
+    "ml": 45.0,
+    "h_mm": 22.13
+   },
+   {
+    "ml": 50.0,
+    "h_mm": 24.53
+   },
+   {
+    "ml": 55.0,
+    "h_mm": 26.93
+   },
+   {
+    "ml": 60.0,
+    "h_mm": 29.31
+   },
+   {
+    "ml": 65.0,
+    "h_mm": 31.69
+   },
+   {
+    "ml": 70.0,
+    "h_mm": 34.05
+   },
+   {
+    "ml": 75.0,
+    "h_mm": 36.4
+   },
+   {
+    "ml": 80.0,
+    "h_mm": 38.75
+   },
+   {
+    "ml": 85.0,
+    "h_mm": 41.08
+   },
+   {
+    "ml": 90.0,
+    "h_mm": 43.41
+   },
+   {
+    "ml": 95.0,
+    "h_mm": 45.72
+   },
+   {
+    "ml": 100.0,
+    "h_mm": 48.03
+   },
+   {
+    "ml": 105.0,
+    "h_mm": 50.33
+   },
+   {
+    "ml": 110.0,
+    "h_mm": 52.62
+   },
+   {
+    "ml": 115.0,
+    "h_mm": 54.9
+   },
+   {
+    "ml": 120.0,
+    "h_mm": 57.17
+   },
+   {
+    "ml": 125.0,
+    "h_mm": 59.43
+   },
+   {
+    "ml": 130.0,
+    "h_mm": 61.68
+   },
+   {
+    "ml": 135.0,
+    "h_mm": 63.92
+   },
+   {
+    "ml": 140.0,
+    "h_mm": 66.16
+   },
+   {
+    "ml": 145.0,
+    "h_mm": 68.38
+   },
+   {
+    "ml": 150.0,
+    "h_mm": 70.6
+   },
+   {
+    "ml": 155.0,
+    "h_mm": 72.81
+   },
+   {
+    "ml": 160.0,
+    "h_mm": 75.01
+   },
+   {
+    "ml": 165.0,
+    "h_mm": 77.2
+   },
+   {
+    "ml": 170.0,
+    "h_mm": 79.39
+   },
+   {
+    "ml": 175.0,
+    "h_mm": 81.56
+   },
+   {
+    "ml": 180.0,
+    "h_mm": 83.73
+   },
+   {
+    "ml": 185.0,
+    "h_mm": 85.89
+   },
+   {
+    "ml": 190.0,
+    "h_mm": 88.04
+   },
+   {
+    "ml": 195.0,
+    "h_mm": 90.19
+   },
+   {
+    "ml": 200.0,
+    "h_mm": 92.33
+   },
+   {
+    "ml": 205.0,
+    "h_mm": 94.46
+   },
+   {
+    "ml": 210.0,
+    "h_mm": 96.58
+   },
+   {
+    "ml": 215.0,
+    "h_mm": 98.69
+   },
+   {
+    "ml": 220.0,
+    "h_mm": 100.8
+   },
+   {
+    "ml": 225.0,
+    "h_mm": 102.9
+   },
+   {
+    "ml": 230.0,
+    "h_mm": 104.99
+   },
+   {
+    "ml": 235.0,
+    "h_mm": 107.07
+   },
+   {
+    "ml": 240.0,
+    "h_mm": 109.15
+   },
+   {
+    "ml": 245.0,
+    "h_mm": 111.22
+   },
+   {
+    "ml": 250.0,
+    "h_mm": 113.28
+   },
+   {
+    "ml": 255.0,
+    "h_mm": 115.34
+   },
+   {
+    "ml": 260.0,
+    "h_mm": 117.39
+   },
+   {
+    "ml": 265.0,
+    "h_mm": 119.43
+   },
+   {
+    "ml": 270.0,
+    "h_mm": 121.46
+   },
+   {
+    "ml": 275.0,
+    "h_mm": 123.49
+   },
+   {
+    "ml": 280.0,
+    "h_mm": 125.52
+   },
+   {
+    "ml": 285.0,
+    "h_mm": 127.53
+   },
+   {
+    "ml": 290.0,
+    "h_mm": 129.54
+   },
+   {
+    "ml": 295.0,
+    "h_mm": 131.54
+   },
+   {
+    "ml": 300.0,
+    "h_mm": 133.54
+   },
+   {
+    "ml": 305.0,
+    "h_mm": 135.52
+   },
+   {
+    "ml": 310.0,
+    "h_mm": 137.51
+   },
+   {
+    "ml": 310.5,
+    "h_mm": 137.71
+   }
+  ],
+  "source_url": "https://www.katom.com/634-2518.html",
+  "verification_status": "unverified",
+  "fit": {
+   "param": "base_thickness_mm",
+   "value_mm": 30.6,
+   "plausible_range_mm": [
+    5,
+    25
+   ],
+   "plausible": false,
+   "model_volume_ml": 310.5,
+   "template": "tumbler"
+  },
+  "notes": "Dimensions from spec sheet (https://www.katom.com/634-2518.html). Capacity is brimful; Libbey states individual pieces may vary up to 5%. Inner profile is a 'tumbler' template fitted by solving base_thickness_mm=30.6 mm to match capacity; wall thickness 1.8 mm assumed. Shape is a model, not a trace - upgrade to measured when the glass is in house."
+ },
+ {
+  "glass_key": "libbey_1639ht_pint_mixing_16oz",
+  "name": "Libbey Restaurant Basics Pint / Mixing Glass 16 oz",
+  "family": "pint",
+  "manufacturer": "Libbey",
+  "manufacturer_sku": "1639HT",
+  "capacity_ml": 473.2,
+  "height_mm": 149.2,
+  "rim_diameter_mm": 88.9,
+  "max_diameter_mm": 88.9,
+  "foot_diameter_mm": 60.3,
+  "wall_thickness_mm": 2.4,
+  "base_thickness_mm": 27.3,
+  "inner_profile": [
+   {
+    "r_mm": 0,
+    "h_mm": 0.0
+   },
+   {
+    "r_mm": 27.76,
+    "h_mm": 0.0
+   },
+   {
+    "r_mm": 28.36,
+    "h_mm": 5.08
+   },
+   {
+    "r_mm": 28.95,
+    "h_mm": 10.16
+   },
+   {
+    "r_mm": 29.55,
+    "h_mm": 15.24
+   },
+   {
+    "r_mm": 30.14,
+    "h_mm": 20.32
+   },
+   {
+    "r_mm": 30.74,
+    "h_mm": 25.4
+   },
+   {
+    "r_mm": 31.33,
+    "h_mm": 30.48
+   },
+   {
+    "r_mm": 31.93,
+    "h_mm": 35.56
+   },
+   {
+    "r_mm": 32.52,
+    "h_mm": 40.64
+   },
+   {
+    "r_mm": 33.12,
+    "h_mm": 45.72
+   },
+   {
+    "r_mm": 33.72,
+    "h_mm": 50.8
+   },
+   {
+    "r_mm": 34.31,
+    "h_mm": 55.88
+   },
+   {
+    "r_mm": 34.91,
+    "h_mm": 60.96
+   },
+   {
+    "r_mm": 35.5,
+    "h_mm": 66.04
+   },
+   {
+    "r_mm": 36.1,
+    "h_mm": 71.12
+   },
+   {
+    "r_mm": 36.69,
+    "h_mm": 76.19
+   },
+   {
+    "r_mm": 37.29,
+    "h_mm": 81.27
+   },
+   {
+    "r_mm": 37.88,
+    "h_mm": 86.35
+   },
+   {
+    "r_mm": 38.48,
+    "h_mm": 91.43
+   },
+   {
+    "r_mm": 39.07,
+    "h_mm": 96.51
+   },
+   {
+    "r_mm": 39.67,
+    "h_mm": 101.59
+   },
+   {
+    "r_mm": 40.26,
+    "h_mm": 106.67
+   },
+   {
+    "r_mm": 40.86,
+    "h_mm": 111.75
+   },
+   {
+    "r_mm": 41.45,
+    "h_mm": 116.83
+   },
+   {
+    "r_mm": 42.05,
+    "h_mm": 121.91
+   }
+  ],
+  "fill_curve": [
+   {
+    "ml": 0.0,
+    "h_mm": 0.0
+   },
+   {
+    "ml": 5.0,
+    "h_mm": 2.05
+   },
+   {
+    "ml": 10.0,
+    "h_mm": 4.06
+   },
+   {
+    "ml": 15.0,
+    "h_mm": 6.04
+   },
+   {
+    "ml": 20.0,
+    "h_mm": 7.99
+   },
+   {
+    "ml": 25.0,
+    "h_mm": 9.9
+   },
+   {
+    "ml": 30.0,
+    "h_mm": 11.79
+   },
+   {
+    "ml": 35.0,
+    "h_mm": 13.65
+   },
+   {
+    "ml": 40.0,
+    "h_mm": 15.49
+   },
+   {
+    "ml": 45.0,
+    "h_mm": 17.29
+   },
+   {
+    "ml": 50.0,
+    "h_mm": 19.07
+   },
+   {
+    "ml": 55.0,
+    "h_mm": 20.83
+   },
+   {
+    "ml": 60.0,
+    "h_mm": 22.56
+   },
+   {
+    "ml": 65.0,
+    "h_mm": 24.27
+   },
+   {
+    "ml": 70.0,
+    "h_mm": 25.96
+   },
+   {
+    "ml": 75.0,
+    "h_mm": 27.63
+   },
+   {
+    "ml": 80.0,
+    "h_mm": 29.27
+   },
+   {
+    "ml": 85.0,
+    "h_mm": 30.9
+   },
+   {
+    "ml": 90.0,
+    "h_mm": 32.5
+   },
+   {
+    "ml": 95.0,
+    "h_mm": 34.09
+   },
+   {
+    "ml": 100.0,
+    "h_mm": 35.66
+   },
+   {
+    "ml": 105.0,
+    "h_mm": 37.21
+   },
+   {
+    "ml": 110.0,
+    "h_mm": 38.75
+   },
+   {
+    "ml": 115.0,
+    "h_mm": 40.26
+   },
+   {
+    "ml": 120.0,
+    "h_mm": 41.76
+   },
+   {
+    "ml": 125.0,
+    "h_mm": 43.25
+   },
+   {
+    "ml": 130.0,
+    "h_mm": 44.72
+   },
+   {
+    "ml": 135.0,
+    "h_mm": 46.17
+   },
+   {
+    "ml": 140.0,
+    "h_mm": 47.61
+   },
+   {
+    "ml": 145.0,
+    "h_mm": 49.03
+   },
+   {
+    "ml": 150.0,
+    "h_mm": 50.44
+   },
+   {
+    "ml": 155.0,
+    "h_mm": 51.84
+   },
+   {
+    "ml": 160.0,
+    "h_mm": 53.22
+   },
+   {
+    "ml": 165.0,
+    "h_mm": 54.59
+   },
+   {
+    "ml": 170.0,
+    "h_mm": 55.95
+   },
+   {
+    "ml": 175.0,
+    "h_mm": 57.3
+   },
+   {
+    "ml": 180.0,
+    "h_mm": 58.63
+   },
+   {
+    "ml": 185.0,
+    "h_mm": 59.95
+   },
+   {
+    "ml": 190.0,
+    "h_mm": 61.26
+   },
+   {
+    "ml": 195.0,
+    "h_mm": 62.56
+   },
+   {
+    "ml": 200.0,
+    "h_mm": 63.84
+   },
+   {
+    "ml": 205.0,
+    "h_mm": 65.12
+   },
+   {
+    "ml": 210.0,
+    "h_mm": 66.39
+   },
+   {
+    "ml": 215.0,
+    "h_mm": 67.64
+   },
+   {
+    "ml": 220.0,
+    "h_mm": 68.88
+   },
+   {
+    "ml": 225.0,
+    "h_mm": 70.12
+   },
+   {
+    "ml": 230.0,
+    "h_mm": 71.34
+   },
+   {
+    "ml": 235.0,
+    "h_mm": 72.56
+   },
+   {
+    "ml": 240.0,
+    "h_mm": 73.76
+   },
+   {
+    "ml": 245.0,
+    "h_mm": 74.96
+   },
+   {
+    "ml": 250.0,
+    "h_mm": 76.15
+   },
+   {
+    "ml": 255.0,
+    "h_mm": 77.32
+   },
+   {
+    "ml": 260.0,
+    "h_mm": 78.49
+   },
+   {
+    "ml": 265.0,
+    "h_mm": 79.65
+   },
+   {
+    "ml": 270.0,
+    "h_mm": 80.81
+   },
+   {
+    "ml": 275.0,
+    "h_mm": 81.95
+   },
+   {
+    "ml": 280.0,
+    "h_mm": 83.09
+   },
+   {
+    "ml": 285.0,
+    "h_mm": 84.21
+   },
+   {
+    "ml": 290.0,
+    "h_mm": 85.33
+   },
+   {
+    "ml": 295.0,
+    "h_mm": 86.45
+   },
+   {
+    "ml": 300.0,
+    "h_mm": 87.55
+   },
+   {
+    "ml": 305.0,
+    "h_mm": 88.65
+   },
+   {
+    "ml": 310.0,
+    "h_mm": 89.74
+   },
+   {
+    "ml": 315.0,
+    "h_mm": 90.82
+   },
+   {
+    "ml": 320.0,
+    "h_mm": 91.9
+   },
+   {
+    "ml": 325.0,
+    "h_mm": 92.96
+   },
+   {
+    "ml": 330.0,
+    "h_mm": 94.03
+   },
+   {
+    "ml": 335.0,
+    "h_mm": 95.08
+   },
+   {
+    "ml": 340.0,
+    "h_mm": 96.13
+   },
+   {
+    "ml": 345.0,
+    "h_mm": 97.17
+   },
+   {
+    "ml": 350.0,
+    "h_mm": 98.21
+   },
+   {
+    "ml": 355.0,
+    "h_mm": 99.23
+   },
+   {
+    "ml": 360.0,
+    "h_mm": 100.26
+   },
+   {
+    "ml": 365.0,
+    "h_mm": 101.27
+   },
+   {
+    "ml": 370.0,
+    "h_mm": 102.28
+   },
+   {
+    "ml": 375.0,
+    "h_mm": 103.29
+   },
+   {
+    "ml": 380.0,
+    "h_mm": 104.29
+   },
+   {
+    "ml": 385.0,
+    "h_mm": 105.28
+   },
+   {
+    "ml": 390.0,
+    "h_mm": 106.27
+   },
+   {
+    "ml": 395.0,
+    "h_mm": 107.25
+   },
+   {
+    "ml": 400.0,
+    "h_mm": 108.22
+   },
+   {
+    "ml": 405.0,
+    "h_mm": 109.19
+   },
+   {
+    "ml": 410.0,
+    "h_mm": 110.16
+   },
+   {
+    "ml": 415.0,
+    "h_mm": 111.12
+   },
+   {
+    "ml": 420.0,
+    "h_mm": 112.07
+   },
+   {
+    "ml": 425.0,
+    "h_mm": 113.02
+   },
+   {
+    "ml": 430.0,
+    "h_mm": 113.96
+   },
+   {
+    "ml": 435.0,
+    "h_mm": 114.9
+   },
+   {
+    "ml": 440.0,
+    "h_mm": 115.84
+   },
+   {
+    "ml": 445.0,
+    "h_mm": 116.77
+   },
+   {
+    "ml": 450.0,
+    "h_mm": 117.69
+   },
+   {
+    "ml": 455.0,
+    "h_mm": 118.61
+   },
+   {
+    "ml": 460.0,
+    "h_mm": 119.52
+   },
+   {
+    "ml": 465.0,
+    "h_mm": 120.43
+   },
+   {
+    "ml": 470.0,
+    "h_mm": 121.34
+   },
+   {
+    "ml": 473.2,
+    "h_mm": 121.91
+   }
+  ],
+  "source_url": "https://www.webstaurantstore.com/libbey-1639ht-restaurant-basics-16-oz-mixing-glass-case/5511639HT.html",
+  "verification_status": "unverified",
+  "fit": {
+   "param": "base_thickness_mm",
+   "value_mm": 27.3,
+   "plausible_range_mm": [
+    5,
+    25
+   ],
+   "plausible": false,
+   "model_volume_ml": 473.2,
+   "template": "tumbler"
+  },
+  "notes": "Dimensions from spec sheet (https://www.webstaurantstore.com/libbey-1639ht-restaurant-basics-16-oz-mixing-glass-case/5511639HT.html; corroborated https://eastbayrestaurantsupply.com/products/cck1639ht). Capacity is brimful; Libbey states individual pieces may vary up to 5%. Inner profile is a 'tumbler' template fitted by solving base_thickness_mm=27.3 mm to match capacity; wall thickness 2.4 mm assumed. Shape is a model, not a trace - upgrade to measured when the glass is in house."
+ }
+]

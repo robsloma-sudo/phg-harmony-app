@@ -1,0 +1,36 @@
+/* PHG Cocktail Design Studio — tab styles. Accent: amber (t5). Scoped under .cs */
+.apptab.t5{color:#c9802b}
+.cs{display:flex;flex-direction:column;gap:14px}
+.cs-banner{padding:8px 12px;border-radius:8px;background:#3a1f1f;color:#ffd7d7;font-size:13px}
+.cs-banner.demo{background:#3a321f;color:#ffe9b8}
+.cs-empty{padding:40px;text-align:center;opacity:.7}
+.cs-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.cs-head h2{margin:2px 0 0;font-size:22px}
+.cs-kick{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.6}
+.cs-sub{font-size:13px;opacity:.7}
+.cs-actions{display:flex;gap:8px;flex-wrap:wrap}
+.cs-grid{display:grid;grid-template-columns:minmax(320px,1.4fr) minmax(260px,1fr);gap:14px}
+.cs-stage{position:relative;background:radial-gradient(ellipse at 50% 30%,#3a3634 0%,#151312 70%);border-radius:14px;min-height:560px;overflow:hidden}
+#csCanvas{position:absolute;inset:0}
+#csCanvas canvas{display:block;width:100%!important;height:100%!important;cursor:grab}
+.cs-stage-note{position:absolute;left:12px;top:12px;display:flex;gap:6px}
+.cs-render{position:absolute;right:12px;bottom:12px;width:32%;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+.cs-badge{font-size:11px;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.12);color:#eee}
+.cs-badge.warn{background:#7a4b00;color:#fff3d6}
+.cs-panel,.cs-card{background:var(--card,#1d1b1a);border:1px solid var(--line,rgba(255,255,255,.08));border-radius:12px;padding:12px 14px}
+.cs-panel h3,.cs-card h3{margin:0 0 8px;font-size:14px}
+.cs-panel h4{margin:12px 0 6px;font-size:12px;opacity:.7;text-transform:uppercase;letter-spacing:.06em}
+.cs-row{display:grid;grid-template-columns:90px 1fr;align-items:center;gap:8px;margin:6px 0;font-size:13px}
+.cs-row select,.cs-row input[type=number]{width:100%}
+.cs-gar{display:grid;grid-template-columns:1.5fr 52px 1.2fr 28px;gap:6px;margin:4px 0}
+.cs-warn{margin-top:10px;padding:8px 10px;border-radius:8px;background:#3a321f;color:#ffe9b8;font-size:12px;line-height:1.5}
+.cs-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.cs-t{width:100%;border-collapse:collapse;font-size:13px}
+.cs-t th{text-align:left;font-weight:500;opacity:.6;padding:3px 0}
+.cs-t td{padding:3px 0;border-top:1px solid rgba(255,255,255,.06)}
+.cs-method{margin-top:8px;font-size:12px;opacity:.75}
+.cs-kv{display:flex;flex-direction:column;gap:4px}
+.cs-kvr{display:flex;justify-content:space-between;font-size:13px}
+.cs-pc.ok{color:#6fcf8e}.cs-pc.bad{color:#ff8a7a}.cs-pc.low{color:#ffd27a}
+.cs-mute{opacity:.55;font-size:12px}
+@media(max-width:900px){.cs-grid{grid-template-columns:1fr}.cs-stage{min-height:420px}}
