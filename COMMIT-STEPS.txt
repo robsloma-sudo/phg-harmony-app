@@ -1,0 +1,11 @@
+HOW TO COMMIT (on a computer, about 5 minutes)
+
+1. Unzip. You get: index.html, atlas.html, admin-nav.json, icons/, themes/.
+2. GitHub > robsloma-sudo/phg-harmony-app > Add file > Upload files.
+   BATCH 1: index.html, atlas.html, admin-nav.json, the icons folder, and the
+   themes folder WITHOUT its orb folder (drag the folders themselves).  > Commit.
+3. BATCH 2: the themes/orb folder (30 files).  > Commit.
+   (GitHub accepts at most 100 files per upload.)
+4. Tell Lead "committed".
+
+Paths must end up as /index.html, /admin-nav.json, /icons/..., /themes/orb/..., /themes/bg/... etc.

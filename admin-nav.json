@@ -1,0 +1,62 @@
+{
+  "_readme": [
+    "PHG admin menu (Brief 6). Edit names and grouping here; no code change needed.",
+    "groups[].label  = top menu name.  groups[].sections[].title = sub-heading (optional).",
+    "items are destination ids (see the list in the app: open the menu, type in Jump to).",
+    "An item can be a plain id, or {\"id\": \"fin.gl_current\", \"label\": \"New name\", \"desc\": \"one line\"}.",
+    "Anything you leave out still appears under 'More', so nothing becomes unreachable.",
+    "Access is decided by the server: items a person cannot use are hidden, whatever this file says."
+  ],
+  "version": 1,
+  "pinned": ["fin.mgmt_dashboard", "fin.mgmt_inbox", "acct.updates", "acct.people"],
+  "groups": [
+    { "id": "overview", "label": "Overview", "desc": "Daily administrative picture",
+      "sections": [
+        { "title": "", "items": [
+          {"id": "fin.mgmt_dashboard", "desc": "Today across the business"},
+          "fin.mgmt_inbox", "harmony.attention", "fin.mgmt_reports", "fin.mgmt_alerts",
+          "fin.mgmt_review", "fin.mgmt_window", "fin.mgmt_periods", "fin.mgmt_briefing", "fin.mgmt_history"
+        ]}
+      ]},
+    { "id": "market", "label": "Market & Pipelines", "desc": "Venues, menus and the data pipeline",
+      "sections": [
+        { "title": "Reporting", "items": ["dash.home", "dash.coverage", "dash.ALL", "dash.map"] },
+        { "title": "Beverages", "items": ["dash.cocktails", "dash.beer", "dash.wine", "dash.liquor", "dash.non_alcoholic", "dash.unclassified"] },
+        { "title": "Functions", "items": ["dash.competitors"] }
+      ]},
+    { "id": "financials", "label": "Financials", "desc": "Accounts, costs, labor and P&L",
+      "sections": [
+        { "title": "Accounts", "items": ["fin.gl_current", "fin.gl_add", "fin.gl_addcat", "fin.gl_bysect", "fin.acc_liquor", "fin.acc_beer", "fin.acc_wine", "fin.acc_na", "fin.acc_serv", "fin.acc_other"] },
+        { "title": "COGS", "items": ["fin.cogs_items", "fin.cogs_recipes", "fin.cogs_cost", "fin.cogs_var"] },
+        { "title": "Labor", "items": ["fin.lab_emp", "fin.lab_hourly", "fin.lab_salary", "fin.lab_reports"] },
+        { "title": "Rates & fees", "items": ["fin.rat_tax", "fin.rat_fees", "fin.exp_report", "fin.exp_add", "fin.exp_recurring"] },
+        { "title": "Invoices", "items": ["fin.inv_add", "fin.inv_current", "fin.inv_catalog", "fin.inv_deposits", "fin.inv_vendor", "fin.inv_gl"] },
+        { "title": "Sales", "items": ["fin.sal_week", "fin.sal_month", "fin.sal_period", "fin.sal_cat"] },
+        { "title": "Menu engineering", "items": ["fin.eng_overview", "fin.eng_items", "fin.eng_categories", "fin.eng_compare"] },
+        { "title": "P&L", "items": ["fin.pl_week", "fin.pl_vs", "fin.pl_forecast", "fin.pl_variance"] },
+        { "title": "Budgets", "items": ["fin.bud_sales", "fin.bud_cogs", "fin.bud_decl", "fin.bud_forecast", "fin.bud_labor", "fin.bud_opex"] }
+      ]},
+    { "id": "menus", "label": "Menus", "desc": "Menu Studio, recipes and operations",
+      "sections": [
+        { "title": "Menu Studio", "items": ["menu.own", "menu.template"] },
+        { "title": "Recipes & cocktails", "items": ["menu.recipes.library", "menu.recipes.drinks", "menu.recipes.fatwash", "menu.recipes.acid", "menu.recipes.batch", "menu.recipes.syrup", "menu.recipes.shrub", "menu.recipes.other"] },
+        { "title": "Operations", "items": ["menu.training", "menu.costing", "menu.inventory"] }
+      ]},
+    { "id": "people", "label": "People & Updates", "desc": "Invites, approvals and access",
+      "sections": [
+        { "title": "", "items": [
+          {"id": "acct.updates", "desc": "Proposals waiting for your decision"},
+          {"id": "acct.people", "desc": "Invite and manage people"},
+          "set.acc_users", "acct.viewas"
+        ]}
+      ]},
+    { "id": "settings", "label": "Settings", "desc": "Interface, voice and account",
+      "sections": [
+        { "title": "Interface", "items": ["app.theme", "set.int_launcher", "set.int_mode", "set.int_motion", "set.int_voice", "set.int_mic"] },
+        { "title": "System", "items": ["set.sys_status"] },
+        { "title": "Colour scheme", "items": ["set.col_theme", "set.col_accent", "set.col_contrast"] },
+        { "title": "Account", "items": ["set.acc_org", "set.acc_conn"] },
+        { "title": "Personal info", "items": ["set.per_profile", "set.per_presence", "set.per_privacy"] }
+      ]}
+  ]
+}

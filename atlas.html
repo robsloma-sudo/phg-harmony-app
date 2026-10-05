@@ -1463,6 +1463,15 @@ attach();
 #phgGate{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;background:#05070d;color:#e2e8f0;font:15px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 #phgGate b{display:block;font-size:18px;margin-bottom:6px}#phgGate span{color:#94a3b8}
 #phgGate.ok{display:none}
+/* locate me: button in the map controls + a blue dot */
+#phgLocBtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+#phgLocBtn.on{color:#0ea5e9}
+.phgMe{width:18px;height:18px;border-radius:50%;background:#0a84ff;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25),0 2px 8px rgba(0,0,0,.35);position:relative}
+.phgMe::after{content:"";position:absolute;inset:-9px;border-radius:50%;background:rgba(10,132,255,.28);animation:phgMePulse 2s ease-out infinite}
+@keyframes phgMePulse{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){.phgMe::after{animation:none}}
+.phgMe.pin{width:30px;height:30px;border:0;background:center/contain no-repeat;box-shadow:none}
+.phgMe.pin::after{inset:-6px}
 #phgAck{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);transform:translateX(-50%);z-index:2147482000;background:rgba(14,116,144,.96);color:#fff;border-radius:16px;
   padding:7px 14px;font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
 
@@ -1826,6 +1835,97 @@ function theme(t,keepBase){var light=t==='light';if(light===document.body.classL
   /* keep the open list in step with the map (filters, time bar) */
   var last='';setInterval(function(){if(!pop.classList.contains('show')||pop.querySelector('[data-t]')==null)return;var I=window.__phgWxImpact,sig=I?I.shown+':'+I.n:'0';if(sig!==last){last=sig;render();}},1000);
 })();
+/* ---------- LOCATE ME (added 2026-10-04) ----------
+   Uses the location choice registered on this device by the app's sign-in step
+   (localStorage phg_location_consent_v1; "once" = this browser session only).
+   - no choice / "Never allow": nothing is requested; the app's location card opens instead
+   - "while using" / "once": only when you tap Locate (or ask by voice); updates while the map is
+     visible, stops when the tab is hidden or you tap again
+   - "always": also starts by itself when the Atlas opens, but only if the browser has already
+     granted location (never a surprise pop-up), and never in the background
+   The position is shown on the map and kept in memory only; it is not stored or sent. */
+(function(){
+  var KEY='phg_location_consent_v1',ONCE='phg_location_once_v1',NOTICE='PHG-LOC-2026-10-04';
+  var L={watch:null,marker:null,on:false,pending:false,last:null,timer:null};
+  function consent(){
+    try{var r=JSON.parse(localStorage.getItem(KEY)||'null');if(!r||!r.choice||r.notice!==NOTICE)return null;
+      if(r.choice==='once'&&sessionStorage.getItem(ONCE)!=='1')return null;return r;}catch(e){return null;}
+  }
+  function btn(){return document.getElementById('phgLocBtn');}
+  function paint(){var b=btn();if(b){b.classList.toggle('on',L.on);b.setAttribute('aria-pressed',L.on?'true':'false');}}
+  function say(t){try{ack(t,null);}catch(e){}}
+  function dot(lng,lat){
+    if(!window.maplibregl||!map)return;
+    if(!L.marker){var el=document.createElement('div');el.className='phgMe';el.setAttribute('aria-label','Your location');
+      try{var lk=JSON.parse(localStorage.getItem('phg_look_v1')||'null');if(lk&&/^(midnight|aurora|ocean|ember|ivory)$/.test(lk.palette)){el.className='phgMe pin';el.style.backgroundImage='url(/themes/pins/'+lk.palette+'_primary.png)';}}catch(e){}
+      L.marker=new maplibregl.Marker({element:el}).setLngLat([lng,lat]).addTo(map);}
+    else L.marker.setLngLat([lng,lat]);
+  }
+  function stop(quiet){
+    if(L.watch!=null&&navigator.geolocation){try{navigator.geolocation.clearWatch(L.watch);}catch(e){}}
+    L.watch=null;if(L.timer){clearTimeout(L.timer);L.timer=null;}
+    if(L.marker){try{L.marker.remove();}catch(e){}L.marker=null;}
+    L.on=false;L.last=null;paint();if(!quiet)say('Location hidden');
+    return{ok:true,said:'Location hidden'};
+  }
+  function fail(e){
+    L.on=false;paint();
+    if(e&&e.code===1)say('Location is blocked for this site. iPhone: aA \u203a Website Settings \u203a Location \u203a Allow');
+    else say('Could not get your location right now');
+  }
+  function start(fly){
+    if(!navigator.geolocation){say('This browser has no location service');return{ok:false};}
+    L.on=true;paint();
+    var first=true;
+    var ok=function(p){
+      var c=p.coords;L.last=[c.longitude,c.latitude];dot(c.longitude,c.latitude);
+      if(first){first=false;
+        if(fly)map.flyTo({center:L.last,zoom:Math.max(map.getZoom(),14),duration:900});
+        say('You are here \u00b7 \u00b1'+Math.round(c.accuracy)+' m');}
+    };
+    navigator.geolocation.getCurrentPosition(ok,fail,{enableHighAccuracy:true,timeout:20000,maximumAge:30000});
+    try{L.watch=navigator.geolocation.watchPosition(ok,function(e){if(e&&e.code===1)fail(e);},{enableHighAccuracy:true,maximumAge:15000});}catch(e){}
+    /* "while using": a watch never outlives 15 minutes without a new tap */
+    L.timer=setTimeout(function(){if(L.on)stop(true);},15*60*1000);
+    return{ok:true,said:'Finding you'};
+  }
+  function locate(){
+    if(L.on)return stop();
+    var r=consent();
+    if(!r||r.choice==='never'){
+      L.pending=true;
+      try{if(window.parent&&window.parent!==window&&typeof window.parent.phgLocPrompt==='function'){window.parent.phgLocPrompt();return{ok:true,said:'Choose a location setting'};}}catch(e){}
+      L.pending=false;
+      say(r?'Location is set to Never allow on this device':'Choose a location setting in the app first');
+      return{ok:false};
+    }
+    return start(true);
+  }
+  /* a choice made in the app's card arrives here as a storage event */
+  window.addEventListener('storage',function(e){
+    if(e.key!==KEY&&e.key!==ONCE&&e.key!==null)return;
+    var r=consent();
+    if(!r||r.choice==='never'){if(L.on)stop(true);L.pending=false;return;}
+    if(L.pending){L.pending=false;start(true);}
+  });
+  document.addEventListener('visibilitychange',function(){if(document.hidden&&L.on)stop(true);});
+  function addBtn(){
+    var z=document.getElementById('zout');if(!z||btn())return;
+    var b=document.createElement('button');b.className='cbtn glass';b.id='phgLocBtn';b.type='button';
+    b.title='Show my location';b.setAttribute('aria-label','Show my location');b.setAttribute('aria-pressed','false');
+    b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>';
+    b.addEventListener('click',function(){locate();});
+    z.parentNode.insertBefore(b,z.nextSibling);
+  }
+  addBtn();
+  /* "always": start on open only when the browser has already said yes */
+  function auto(){
+    var r=consent();if(!r||r.choice!=='always'||L.on||!navigator.permissions||!navigator.permissions.query)return;
+    navigator.permissions.query({name:'geolocation'}).then(function(p){if(p&&p.state==='granted'&&!L.on)start(false);},function(){});
+  }
+  var tries=0;(function wait(){if(typeof map!=='undefined'&&map&&map.loaded&&map.loaded()){auto();return;}if(++tries<60)setTimeout(wait,500);})();
+  window.__phgLocate={locate:locate,stop:stop,state:function(){return{on:L.on,last:L.last?'set':null,consent:(consent()||{}).choice||null};}};
+})();
 window.PHGAtlas={
   ready:ready,ack:ack,preload:gaz,
   zoom:function(d){if(!ready())return{ok:false};var m=M();m.easeTo({zoom:Math.max(1,Math.min(19,m.getZoom()+d)),duration:280});return{ok:true,said:d>0?'Zoom in':'Zoom out'};},
@@ -1838,6 +1938,7 @@ window.PHGAtlas={
   place:function(q){if(!ready())return Promise.resolve({ok:false});return place(q);},
   weather:function(on){if(!ready())return{ok:false};return weather(on);},
   theme:function(t){return theme(t);},
+  locate:function(){if(!ready()||!window.__phgLocate)return{ok:false};return window.__phgLocate.locate();},
   /* everything else: the Atlas's own Ask Harmony parsers (venues, income, tequila, weather dates, events…) */
   ask:function(text){if(!ready())return{ok:false};var el=document.getElementById('ask');if(!el)return{ok:false};
     var before=hostState(),wxChanged=false;el.value=String(text||'');

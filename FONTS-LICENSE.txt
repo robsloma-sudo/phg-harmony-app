@@ -1,0 +1,1 @@
+Fonts in themes/fonts are from Google Fonts, SIL Open Font License 1.1: Cormorant Garamond, Space Grotesk, Nunito. https://openfontlicense.org
