@@ -46079,7 +46079,8 @@ html[data-pal="ivory"] .svOrb img{mix-blend-mode:multiply}
   function menu(){
     var books=[];try{books=MDR_BOOKS.slice();}catch(e){}
     var h='<div class="sv"><div class="svEye">Menu \u00b7 Studio</div><div class="svHead"><div class="svFeature">'+orb()+'<div><h1>Design, cost and <em>serve</em>.</h1><p>Start a menu with Harmony, open your workspace, or go straight to recipes, costing and inventory.</p></div></div>'
-      +'<div class="svTools"><button class="svChip on" data-act="menu:harmony">Design with Harmony</button><button class="svChip" data-act="nav:menu.own">Menu workspace</button></div></div>';
+      +'<div class="svTools"><button class="svChip on" id="svCgenChip" onclick="phgCocktailGenOpen()">Cocktail generator</button><button class="svChip" data-act="menu:harmony">Design with Harmony</button><button class="svChip" data-act="nav:menu.own">Menu workspace</button></div></div>';
+    h+='<div class="svCard tap" id="svCgenCard" style="margin-bottom:16px" onclick="phgCocktailGenOpen()"><div class="svEye">New \u00b7 Cocktail generator</div><h3 style="margin-top:6px">Create a cocktail</h3><p>Describe a drink idea and get a full recipe: spec, method, glass, garnish and why it works. Saved as a draft only.</p></div>';
     h+='<div class="svGrid three">'
       +tile('\u2726','Design with Harmony','Say what you want; she lays it out and you refine it by voice','Start','menu:harmony')
       +tile('\u25A6','Menu workspace','Your menus, sections and items','Open','nav:menu.own')
@@ -46090,7 +46091,6 @@ html[data-pal="ivory"] .svOrb img{mix-blend-mode:multiply}
       +'</div>';
     if(books.length){h+='<div class="svCard" style="margin-top:16px"><div class="svEye">Recipe books</div><h3 style="margin-top:6px">'+books.length+' books</h3><div class="svDest"><div class="chips">'
       +books.map(function(b){return '<button data-act="nav:menu.recipes.'+esc(b.k)+'">'+esc(b.label)+'</button>';}).join('')+'</div></div></div>';}
-    h+='<div class="svCard tap" id="svCgenCard" style="margin-top:16px" onclick="phgCocktailGenOpen()"><div class="svEye">New</div><h3 style="margin-top:6px">Cocktail generator</h3><p>Describe a drink idea and get a full candidate recipe: specs, method, glass, garnish and the reasoning. Saved as a draft only.</p></div>';
     h+='<div class="svNote">The full Menu Designer (print-ready PDF, live prices) arrives here when it ships; it plugs into this same view.</div></div>';
     return h;
   }
