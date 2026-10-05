@@ -1857,7 +1857,7 @@ function theme(t,keepBase){var light=t==='light';if(light===document.body.classL
   function dot(lng,lat){
     if(!window.maplibregl||!map)return;
     if(!L.marker){var el=document.createElement('div');el.className='phgMe';el.setAttribute('aria-label','Your location');
-      try{var lk=JSON.parse(localStorage.getItem('phg_look_v1')||'null');if(lk&&/^(midnight|aurora|ocean|ember|ivory)$/.test(lk.palette)){el.className='phgMe pin';el.style.backgroundImage='url(/themes/pins/'+lk.palette+'_primary.png)';}}catch(e){}
+      try{var lk=JSON.parse(localStorage.getItem('phg_look_v1')||'null');if(lk&&/^(midnight|aurora|ocean|ember|ivory)$/.test(lk.palette)){el.className='phgMe pin';el.style.backgroundImage='url(/hx-pin-'+lk.palette+'.png)';}}catch(e){}
       L.marker=new maplibregl.Marker({element:el}).setLngLat([lng,lat]).addTo(map);}
     else L.marker.setLngLat([lng,lat]);
   }
