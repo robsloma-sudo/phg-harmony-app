@@ -45704,6 +45704,7 @@ body.phg-launch-review-open #pvTop{visibility:hidden}
     {id:'atlas',label:'Atlas',allowed:function(){return typeof PHGACCESS!=='undefined'&&PHGACCESS&&(PHGACCESS.view_mode==='developer'||has('atlas'));}},
     {id:'financials',label:'Financials',short:'Finance',allowed:function(){return surf('fin');}},
     {id:'menu',label:'Menu',allowed:function(){return has('menu_library')&&has('menu_studio');}},
+    {id:'cocktail',label:'Cocktail',short:'Cocktail',allowed:function(){return !(typeof PHGACCESS!=='undefined'&&PHGACCESS&&PHGACCESS.view_mode==='beta');}},
     {id:'admin',label:'Admin',allowed:function(){return surf('dash')||surf('set');}}
   ];
   function leaveOverlays(){
@@ -46079,8 +46080,8 @@ html[data-pal="ivory"] .svOrb img{mix-blend-mode:multiply}
   function menu(){
     var books=[];try{books=MDR_BOOKS.slice();}catch(e){}
     var h='<div class="sv"><div class="svEye">Menu \u00b7 Studio</div><div class="svHead"><div class="svFeature">'+orb()+'<div><h1>Design, cost and <em>serve</em>.</h1><p>Start a menu with Harmony, open your workspace, or go straight to recipes, costing and inventory.</p></div></div>'
-      +'<div class="svTools"><button class="svChip on" id="svCgenChip" onclick="phgCocktailGenOpen()">Cocktail generator</button><button class="svChip" data-act="menu:harmony">Design with Harmony</button><button class="svChip" data-act="nav:menu.own">Menu workspace</button></div></div>';
-    h+='<div class="svCard tap" id="svCgenCard" style="margin-bottom:16px" onclick="phgCocktailGenOpen()"><div class="svEye">New \u00b7 Cocktail generator</div><h3 style="margin-top:6px">Create a cocktail</h3><p>Describe a drink idea and get a full recipe: spec, method, glass, garnish and why it works. Saved as a draft only.</p></div>';
+      +'<div class="svTools"><button class="svChip on" id="svCgenChip" data-act="view:cocktail">Cocktail</button><button class="svChip" data-act="menu:harmony">Design with Harmony</button><button class="svChip" data-act="nav:menu.own">Menu workspace</button></div></div>';
+    h+='<div class="svCard tap" id="svCgenCard" style="margin-bottom:16px" data-act="view:cocktail"><div class="svEye">New \u00b7 Cocktail</div><h3 style="margin-top:6px">Create a cocktail in 3D</h3><p>Describe a drink and see it built in its glass. Turn it, change the glass, ice and garnish.</p></div>';
     h+='<div class="svGrid three">'
       +tile('\u2726','Design with Harmony','Say what you want; she lays it out and you refine it by voice','Start','menu:harmony')
       +tile('\u25A6','Menu workspace','Your menus, sections and items','Open','nav:menu.own')
@@ -46113,106 +46114,326 @@ html[data-pal="ivory"] .svOrb img{mix-blend-mode:multiply}
   addEventListener('keydown',function(e){if(e.key==='Escape'&&ON&&LAYER&&!LAYER.hidden){var t=e.target&&e.target.tagName;if(t==='INPUT'||t==='SELECT')return;}});
 })();
 </script>
-<style id="phgCgenCSS">
-/* ===== COCKTAIL GENERATOR v1 (2026-10-05) ===== */
-#phgCgen{position:fixed;inset:0;z-index:99990;overflow:auto;-webkit-overflow-scrolling:touch;background:rgba(7,9,15,.9);backdrop-filter:blur(8px);
-  color:#eceadf;font:15px/1.55 Inter,-apple-system,BlinkMacSystemFont,sans-serif}
-#phgCgen[hidden]{display:none}
-html.phg-light #phgCgen{background:rgba(246,243,236,.96);color:#25241e}
-.cg{max-width:880px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 86px) 18px calc(env(safe-area-inset-bottom,0px) + 80px)}
-.cgTop{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.cgTop h2{margin:0;font-family:var(--look-display,Georgia,serif);font-weight:600;font-size:clamp(28px,4.4vw,44px);line-height:1.05}
-.cgX{border:1px solid currentColor;background:transparent;color:inherit;border-radius:999px;min-width:44px;min-height:44px;font-size:20px;cursor:pointer;opacity:.75}
-.cgSub{margin:6px 0 20px;opacity:.7;font-size:14px}
-.cgCard{border:1px solid rgba(127,127,127,.28);border-radius:16px;padding:18px;background:rgba(127,127,127,.07);margin-bottom:14px}
-.cgCard label{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.65;margin:0 0 6px}
-.cgCard textarea,.cgCard input,.cgCard select{width:100%;box-sizing:border-box;border:1px solid rgba(127,127,127,.35);border-radius:12px;background:rgba(127,127,127,.08);
-  color:inherit;font:inherit;font-size:16px;padding:12px}
-.cgCard textarea{min-height:96px;resize:vertical}
-.cgRow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-@media(max-width:620px){.cgRow{grid-template-columns:1fr}}
-.cgIdeas{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.cgIdeas button{border:1px solid rgba(127,127,127,.35);background:transparent;color:inherit;border-radius:999px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer;min-height:36px}
-.cgGo{margin-top:14px;width:100%;min-height:52px;border:0;border-radius:14px;font:inherit;font-size:16px;font-weight:600;cursor:pointer;
-  background:var(--look-acc,#d9b574);color:#16130b}
-.cgGo[disabled]{opacity:.55;cursor:default}
-.cgMsg{margin-top:10px;font-size:14px;opacity:.85}
-.cgMsg.err{color:#ff8a80;opacity:1}
-html.phg-light .cgMsg.err{color:#b3261e}
-.cgName{font-family:var(--look-display,Georgia,serif);font-weight:600;font-size:clamp(26px,4vw,38px);margin:2px 0 4px}
-.cgMeta{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
-.cgMeta span{font-size:12.5px;border:1px solid rgba(127,127,127,.35);border-radius:999px;padding:4px 10px}
-.cgSpec{width:100%;border-collapse:collapse;margin-top:8px}
-#phgCgen .cgSpec,#phgCgen .cgSpec tr,#phgCgen .cgSpec td{background:none!important;color:inherit!important;opacity:1!important;box-shadow:none!important}
-#phgCgen .cgSpec td{border:0!important;border-top:1px solid rgba(127,127,127,.22)!important;padding:9px 6px;vertical-align:top;font-size:15px}
-.cgSpec td.q{white-space:nowrap;font-variant-numeric:tabular-nums;width:1%;padding-right:14px;font-weight:600}
-.cgSpec small{display:block;opacity:.6}
-.cgList{margin:6px 0 0;padding-left:20px}
-.cgList li{margin:4px 0}
-.cgH{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.65;margin:16px 0 2px}
-.cgNote{font-size:12.5px;opacity:.65;margin-top:12px}
-.cgSpin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:cgS .8s linear infinite;vertical-align:-2px;margin-right:8px}
-@keyframes cgS{to{transform:rotate(360deg)}}
+<style id="phgC3dCSS">
+/* ===== COCKTAIL VIEW v1: 3D drink + generator (2026-10-05) ===== */
+#pvC3d{position:fixed;inset:0;z-index:4400;display:grid;grid-template-columns:minmax(0,1fr) 400px;color:#ecebe4;
+  background:radial-gradient(120% 90% at 30% 20%,#25303f 0%,#0d1118 55%,#07090d 100%);font:15px/1.5 Inter,-apple-system,BlinkMacSystemFont,sans-serif}
+#pvC3d[hidden]{display:none}
+html.phg-light #pvC3d{filter:none!important;color:#24231d;background:radial-gradient(120% 90% at 30% 20%,#ffffff 0%,#efece4 60%,#e2ddd1 100%)}
+.c3Stage{position:relative;min-height:0;touch-action:none;cursor:grab}
+.c3Stage:active{cursor:grabbing}
+.c3Stage canvas{display:block;width:100%!important;height:100%!important}
+.c3Hint{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);font-size:12px;opacity:.6;pointer-events:none;white-space:nowrap}
+.c3Title{position:absolute;left:24px;top:calc(env(safe-area-inset-top,0px) + 112px);pointer-events:none;max-width:60%}
+.c3Title b{display:block;font-family:var(--look-display,Georgia,serif);font-weight:600;font-size:clamp(26px,3.6vw,44px);line-height:1.05}
+.c3Title span{display:block;opacity:.7;font-size:13px;margin-top:6px}
+.c3Busy{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.8;pointer-events:none}
+.c3Busy[hidden]{display:none}
+.c3Panel{overflow:auto;-webkit-overflow-scrolling:touch;border-left:1px solid rgba(127,127,127,.22);background:rgba(127,127,127,.06);
+  padding:calc(env(safe-area-inset-top,0px) + 64px) 18px calc(env(safe-area-inset-bottom,0px) + 40px)}
+.c3Sec{margin-bottom:18px}
+.c3H{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.6;margin:0 0 8px}
+.c3Panel textarea,.c3Panel select,.c3Panel input[type=text]{width:100%;box-sizing:border-box;border:1px solid rgba(127,127,127,.35);border-radius:12px;
+  background:rgba(127,127,127,.08);color:inherit;font:inherit;font-size:16px;padding:10px 12px}
+.c3Panel textarea{min-height:76px;resize:vertical}
+.c3Chips{display:flex;flex-wrap:wrap;gap:6px}
+.c3Chips button,.c3Btn{border:1px solid rgba(127,127,127,.38);background:transparent;color:inherit;border-radius:999px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer;min-height:36px}
+.c3Chips button.on{border-color:var(--look-acc,#d9b574);color:var(--look-acc,#d9b574)}
+.c3Go{width:100%;min-height:50px;margin-top:10px;border:0;border-radius:14px;font:inherit;font-size:16px;font-weight:600;cursor:pointer;background:var(--look-acc,#d9b574);color:#16130b}
+.c3Go[disabled]{opacity:.55;cursor:default}
+.c3Grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.c3Grid label{display:block;font-size:12px;opacity:.65;margin-bottom:4px}
+.c3Grid input[type=color]{width:100%;height:42px;border:1px solid rgba(127,127,127,.35);border-radius:12px;background:transparent;padding:3px}
+.c3Grid input[type=range]{width:100%}
+.c3Msg{margin-top:8px;font-size:13.5px}
+.c3Msg.err{color:#ff8a80}
+html.phg-light .c3Msg.err{color:#b3261e}
+.c3Spec{width:100%;border-collapse:collapse}
+#pvC3d .c3Spec,#pvC3d .c3Spec tr,#pvC3d .c3Spec td{background:none!important;color:inherit!important;opacity:1!important;box-shadow:none!important}
+#pvC3d .c3Spec td{border:0!important;border-top:1px solid rgba(127,127,127,.22)!important;padding:7px 4px;vertical-align:top;font-size:14px}
+#pvC3d .c3Spec td.q{white-space:nowrap;width:1%;padding-right:12px;font-weight:600}
+.c3Spec small{display:block;opacity:.6}
+.c3List{margin:4px 0 0;padding-left:18px}
+.c3Note{font-size:12px;opacity:.6;margin-top:10px}
+.c3Spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:c3S .8s linear infinite;vertical-align:-2px;margin-right:8px}
+@keyframes c3S{to{transform:rotate(360deg)}}
+@media(max-width:900px){
+  #pvC3d{grid-template-columns:1fr;grid-template-rows:52vh minmax(0,1fr)}
+  .c3Panel{border-left:0;border-top:1px solid rgba(127,127,127,.22);padding:14px 14px calc(env(safe-area-inset-bottom,0px) + 120px)}
+  .c3Title{left:16px;top:calc(env(safe-area-inset-top,0px) + 66px)}
+  .c3Title b{font-size:26px}
+}
 </style>
-<script id="phgCgen-js">
-/* COCKTAIL GENERATOR v1 - calls phg-cocktail-develop (existing function) with the signed-in session.
-   Output is escaped before display. The backend saves each result as a DRAFT candidate (recipe_versions
-   status 'candidate'); nothing is published or added to a menu from here. */
+<script id="phgC3d-js">
+/* COCKTAIL VIEW v1. 3D: three.js r169 from jsDelivr, loaded the first time the view opens. The drink is
+   built on the device from parameters (glass family, fill, colour, ice, garnish). Generator: POST to
+   phg-cocktail-develop with the signed-in session; output is escaped before display. Nothing is
+   published; the backend stores generated recipes as draft candidates. */
 (function(){
-  var G=window,URL_='https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-cocktail-develop';
-  var ST={busy:false,res:null,err:''};
+  var G=window,GEN='https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-cocktail-develop';
+  var CDN='https://cdn.jsdelivr.net/npm/three@0.169.0/';
   function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-  function el(){var d=document.getElementById('phgCgen');if(d)return d;d=document.createElement('div');d.id='phgCgen';d.hidden=true;d.setAttribute('role','dialog');d.setAttribute('aria-label','Cocktail generator');document.body.appendChild(d);
-    d.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-cg]');if(!b)return;var a=b.getAttribute('data-cg');
-      if(a==='close')close();else if(a==='go')run();else if(a==='idea'){var t=d.querySelector('#cgBrief');if(t){t.value=b.textContent;t.focus();}}else if(a==='again'){ST.res=null;ST.err='';draw();}});
-    return d;}
-  var IDEAS=['A bright, low-ABV spritz for brunch','Smoky mezcal sour with a savoury edge','Autumn old fashioned with apple and spice','Tropical tiki drink with fresh pineapple','Zero-proof highball that still feels grown-up'];
-  var SPIRITS=['','Gin','Vodka','Rum','Tequila','Mezcal','Bourbon','Rye','Scotch','Brandy','Low / no alcohol'];
-  function form(){
-    var v=ST.form||{};
-    return '<div class="cgCard"><label for="cgBrief">Your idea</label><textarea id="cgBrief" placeholder="e.g. a refreshing gin drink for summer with cucumber">'+esc(v.brief||'')+'</textarea>'
-      +'<div class="cgIdeas">'+IDEAS.map(function(i){return '<button type="button" data-cg="idea">'+esc(i)+'</button>';}).join('')+'</div>'
-      +'<div class="cgRow"><div><label for="cgSpirit">Base spirit (optional)</label><select id="cgSpirit">'+SPIRITS.map(function(s){return '<option'+(s===(v.spirit||'')?' selected':'')+' value="'+esc(s)+'">'+esc(s||'Any')+'</option>';}).join('')+'</select></div>'
-      +'<div><label for="cgRef">Like this classic (optional)</label><input id="cgRef" placeholder="e.g. Daiquiri" value="'+esc(v.ref||'')+'"></div></div>'
-      +'<button class="cgGo" data-cg="go"'+(ST.busy?' disabled':'')+'>'+(ST.busy?'<span class="cgSpin"></span>Creating your cocktail… this can take up to a minute':'Generate cocktail')+'</button>'
-      +(ST.err?'<div class="cgMsg err">'+esc(ST.err)+'</div>':'')+'</div>';
+
+  /* ---------- glass shapes: inner bowl [r,h] in mm from the bowl floor; stem/foot for stemware ---------- */
+  var GL={
+    coupe:{n:'Coupe',stem:92,foot:38,base:4,b:[[0,0],[16,5],[30,12],[40,21],[47,31],[50,40]],cap:240},
+    nick_and_nora:{n:'Nick & Nora',stem:82,foot:33,base:4,b:[[0,0],[13,7],[23,18],[29,31],[32,46],[32,58]],cap:160},
+    martini:{n:'Martini',stem:88,foot:40,base:4,b:[[0,0],[12,10],[26,24],[40,38],[55,54]],cap:220},
+    rocks:{n:'Rocks',stem:0,foot:0,base:10,b:[[0,0],[38,0],[39,40],[41,78]],cap:300},
+    double_rocks:{n:'Double rocks',stem:0,foot:0,base:12,b:[[0,0],[42,0],[44,45],[46,86]],cap:400},
+    highball:{n:'Highball',stem:0,foot:0,base:12,b:[[0,0],[30,0],[32,70],[33,135]],cap:340},
+    collins:{n:'Collins',stem:0,foot:0,base:12,b:[[0,0],[27,0],[28,80],[29,160]],cap:360},
+    flute:{n:'Flute',stem:78,foot:35,base:4,b:[[0,0],[9,8],[16,36],[19,90],[18,170]],cap:180},
+    wine:{n:'Wine',stem:84,foot:40,base:4,b:[[0,0],[24,9],[38,36],[41,64],[35,112]],cap:450},
+    hurricane:{n:'Hurricane',stem:18,foot:38,base:6,b:[[0,0],[24,14],[37,58],[27,118],[39,190]],cap:440},
+    tiki:{n:'Tiki mug',stem:0,foot:0,base:10,b:[[0,0],[34,0],[39,70],[35,150]],cap:480,mat:'ceramic'},
+    mule_mug:{n:'Copper mug',stem:0,foot:0,base:6,b:[[0,0],[38,0],[42,46],[44,90]],cap:480,mat:'copper'},
+    julep_cup:{n:'Julep cup',stem:0,foot:0,base:6,b:[[0,0],[36,0],[40,50],[42,95]],cap:360,mat:'silver'}
+  };
+  var GLK=Object.keys(GL);
+  var GARN={none:'None',lime_wheel:'Lime wheel',lemon_wheel:'Lemon wheel',orange_wheel:'Orange wheel',lemon_peel:'Lemon twist',orange_peel:'Orange twist',
+    cherry:'Cherry',olive:'Olive',mint:'Mint sprig',cucumber:'Cucumber',coffee_beans:'Coffee beans'};
+  var ICE={none:'No ice',cubes:'Cubes',large:'Large cube',crushed:'Crushed'};
+  var PRESETS=[
+    {name:'Daiquiri',glass:'coupe',ice:'none',garnish:'lime_wheel',color:'#e9efc9',fill:0.82,clarity:0.55,spec:[['2 oz','White rum'],['0.75 oz','Fresh lime'],['0.75 oz','Simple syrup']],method:'Shake hard with ice, fine strain.'},
+    {name:'Old Fashioned',glass:'rocks',ice:'large',garnish:'orange_peel',color:'#b5651d',fill:0.62,clarity:0.85,spec:[['2 oz','Bourbon'],['1 tsp','Demerara syrup'],['2 dash','Aromatic bitters']],method:'Stir over a large cube.'},
+    {name:'Negroni',glass:'rocks',ice:'large',garnish:'orange_peel',color:'#b3172a',fill:0.6,clarity:0.8,spec:[['1 oz','Gin'],['1 oz','Campari'],['1 oz','Sweet vermouth']],method:'Stir, strain over a large cube.'},
+    {name:'Mojito',glass:'highball',ice:'crushed',garnish:'mint',color:'#e3f0d0',fill:0.85,clarity:0.7,spec:[['2 oz','White rum'],['0.75 oz','Fresh lime'],['0.5 oz','Simple syrup'],['8','Mint leaves'],['top','Soda']],method:'Muddle mint, build over crushed ice, top with soda.'},
+    {name:'Margarita',glass:'coupe',ice:'none',garnish:'lime_wheel',color:'#eef2c2',fill:0.8,clarity:0.6,spec:[['2 oz','Tequila blanco'],['0.75 oz','Orange liqueur'],['0.75 oz','Fresh lime']],method:'Shake, strain.'},
+    {name:'Espresso Martini',glass:'coupe',ice:'none',garnish:'coffee_beans',color:'#2a160c',fill:0.85,clarity:0,foam:true,spec:[['1.5 oz','Vodka'],['1 oz','Espresso'],['0.75 oz','Coffee liqueur']],method:'Shake hard, double strain.'},
+    {name:'Aperol Spritz',glass:'wine',ice:'cubes',garnish:'orange_wheel',color:'#f2622b',fill:0.62,clarity:0.75,spec:[['3 oz','Prosecco'],['2 oz','Aperol'],['1 oz','Soda']],method:'Build over ice.'},
+    {name:'Martini',glass:'martini',ice:'none',garnish:'olive',color:'#f4f4ec',fill:0.78,clarity:0.97,spec:[['2.5 oz','Gin'],['0.5 oz','Dry vermouth']],method:'Stir, strain.'},
+    {name:'Moscow Mule',glass:'mule_mug',ice:'cubes',garnish:'lime_wheel',color:'#efe8c8',fill:0.8,clarity:0.8,spec:[['2 oz','Vodka'],['0.5 oz','Fresh lime'],['4 oz','Ginger beer']],method:'Build over ice.'}
+  ];
+  var ST={cfg:Object.assign({},PRESETS[0]),busy:false,err:'',res:null,auto:true,three:null,ready:false,failed:false,running:false};
+
+  /* ---------- reading a generated recipe into scene parameters ---------- */
+  var COL=[[/espresso|coffee|cold brew|kahl/i,[42,22,12],0],[/cream|milk|egg|aquafaba|coconut cream|yogh?urt|horchata/i,[240,232,214],0],
+    [/campari|cranberry|grenadine|hibiscus|raspberry|strawberry|cherry liqueur|pomegranate/i,[184,22,40],.75],[/aperol/i,[242,98,43],.75],
+    [/blue cura/i,[30,110,220],.8],[/midori|melon liqueur|green chartreuse|matcha/i,[120,190,60],.7],[/pineapple|passion|mango|orange juice|grapefruit|peach|apricot/i,[250,196,80],.35],
+    [/lime|lemon|sour mix|yuzu/i,[232,236,196],.5],[/bourbon|whisk|rye|scotch|brandy|cognac|aged rum|dark rum|añejo|anejo|reposado|amaro|sweet vermouth|demerara/i,[178,98,32],.85],
+    [/ginger beer|ginger ale|cola/i,[200,150,90],.7],[/prosecco|champagne|sparkling|cava/i,[242,228,170],.9],[/tomato/i,[180,40,30],0],
+    [/gin|vodka|white rum|blanco|silver|mezcal|soda|tonic|water|dry vermouth|sake|pisco|cacha/i,[246,246,240],.97]];
+  function amt(i){var a=Number(i.amount);var u=String(i.unit||'').toLowerCase();if(!isFinite(a)||a<=0)return /top|splash/.test(u+' '+(i.notes||''))?1:.25;
+    if(/ml/.test(u))return a/30;if(/cl/.test(u))return a/3;if(/dash|drop/.test(u))return .03*a;if(/tsp|bar ?spoon/.test(u))return .17*a;if(/tbsp/.test(u))return .5*a;return a;}
+  function fromRecipe(c){
+    var ing=Array.isArray(c.ingredients)?c.ingredients:[],r=0,g=0,b=0,w=0,cl=0,vol=0,foam=false;
+    ing.forEach(function(i){var t=String(i.ingredient||'')+' '+String(i.notes||''),a=amt(i);vol+=a;
+      if(/egg white|aquafaba|foam/i.test(t))foam=true;
+      for(var k=0;k<COL.length;k++){if(COL[k][0].test(t)){var c2=COL[k][1],wt=a*(COL[k][2]<.5?2:1);r+=c2[0]*wt;g+=c2[1]*wt;b+=c2[2]*wt;w+=wt;cl+=COL[k][2]*wt;return;}}
+      r+=240*a*.3;g+=236*a*.3;b+=225*a*.3;w+=a*.3;cl+=.9*a*.3;});
+    var hex='#'+[r,g,b].map(function(x){x=Math.round(w?x/w:230);return ('0'+Math.max(0,Math.min(255,x)).toString(16)).slice(-2);}).join('');
+    var txt=[c.glassware,c.method,(c.targets||{}).service,c.build_family].join(' ').toLowerCase();
+    var glass='coupe';[['nick','nick_and_nora'],['martini','martini'],['cocktail glass','martini'],['double old','double_rocks'],['double rocks','double_rocks'],['old fashioned','rocks'],['rocks','rocks'],['lowball','rocks'],
+      ['highball','highball'],['collins','collins'],['flute','flute'],['wine','wine'],['spritz','wine'],['hurricane','hurricane'],['tiki','tiki'],['copper','mule_mug'],['mule','mule_mug'],['julep','julep_cup'],['coupe','coupe']]
+      .some(function(m){if(txt.indexOf(m[0])>=0){glass=m[1];return true;}return false;});
+    var ice=/large cube|big cube|king cube|single cube|large ice/.test(txt)?'large':/crushed|pebble/.test(txt)?'crushed':/over ice|on the rocks|fresh ice|built over|over cubes|build over|with ice and top|top with/.test(txt)||/highball|collins|rocks|mule|tiki|spritz/.test(glass)?'cubes':'none';
+    if(glass==='coupe'||glass==='martini'||glass==='nick_and_nora'||glass==='flute')ice='none';
+    var gt=String(c.garnish||'').toLowerCase(),garn='none';
+    [['cherry','cherry'],['olive','olive'],['mint','mint'],['cucumber','cucumber'],['coffee','coffee_beans'],['orange wheel','orange_wheel'],['orange slice','orange_wheel'],['lemon wheel','lemon_wheel'],
+     ['orange','orange_peel'],['lemon','lemon_peel'],['lime','lime_wheel'],['grapefruit','orange_peel']].some(function(m){if(gt.indexOf(m[0])>=0){garn=m[1];return true;}return false;});
+    var ml=vol*30*1.25,cap=GL[glass].cap;var cap0=cap,fill=Math.max(.45,Math.min(.9,ml/cap+(ice==='none'?0:.15)));
+    return {ml:Math.round(ml),name:c.recipe_name||'Your cocktail',glass:glass,ice:ice,garnish:garn,color:hex,clarity:w?Math.max(0,Math.min(1,cl/w)):.8,fill:fill,foam:foam};
   }
-  function result(r){
-    var c=r.candidate||{},ing=Array.isArray(c.ingredients)?c.ingredients:[],t=c.targets||{};
-    var h='<div class="cgCard"><div class="cgH">Candidate recipe · draft v'+esc(r.version||1)+'</div><div class="cgName">'+esc(c.recipe_name||'Untitled')+'</div>';
-    if(c.concept)h+='<div style="opacity:.85">'+esc(c.concept)+'</div>';
-    h+='<div class="cgMeta">'+[c.build_family,t.style&&t.style!==c.build_family?t.style:null,c.glassware&&('Glass: '+c.glassware),c.garnish&&('Garnish: '+c.garnish)].filter(Boolean).map(function(x){return '<span>'+esc(x)+'</span>';}).join('')+'</div>';
-    h+='<div class="cgH">Spec</div><table class="cgSpec">'+ing.map(function(i){var q=(i.amount!=null?i.amount:'')+(i.unit?' '+i.unit:'');
-      return '<tr><td class="q">'+esc(q||'—')+'</td><td>'+esc(i.ingredient)+(i.role||i.notes?'<small>'+esc([i.role,i.notes].filter(Boolean).join(' · '))+'</small>':'')+'</td></tr>';}).join('')+'</table>';
-    if(c.method)h+='<div class="cgH">Method</div><div>'+esc(c.method)+'</div>';
-    if(t.balance||t.service)h+='<div class="cgH">Balance &amp; service</div><div>'+esc([t.balance,t.service].filter(Boolean).join(' · '))+'</div>';
-    function list(title,a){a=Array.isArray(a)?a.filter(Boolean):[];return a.length?'<div class="cgH">'+title+'</div><ul class="cgList">'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'';}
-    h+=list('Why it works',c.rationale)+list('Questions to decide',c.questions)+list('Limits',c.limitations);
-    h+='<div class="cgNote">Saved as a draft candidate. It is not on any menu and has no costing yet. Bench-test before use.</div>';
-    h+='<button class="cgGo" data-cg="again">Create another</button></div>';
-    return h;
+
+  /* ---------- 3D ---------- */
+  var T=null,R=null,SC=null,CAM=null,GRP=null,ORB={th:.6,ph:1.25,d:4.2,tx:0,ty:.9},DRAG=null,LAST=0;
+  function loadThree(){
+    if(ST.three)return ST.three;
+    ST.three=import(CDN+'+esm').then(function(m){T=m;return import(CDN+'examples/jsm/environments/RoomEnvironment.js/+esm').then(function(e){return e;},function(){return null;});});
+    return ST.three;
   }
-  function draw(){var d=el();
-    d.innerHTML='<div class="cg"><div class="cgTop"><h2>Cocktail generator</h2><button class="cgX" data-cg="close" aria-label="Close">×</button></div>'
-      +'<div class="cgSub">Describe an idea. Harmony drafts a full recipe you can refine.</div>'+(ST.res?result(ST.res):form())+'</div>';}
+  function mm(v){return v*0.01;}
+  /* ---------- Libbey catalogue (phg.glassware via phg_glassware_catalog, signed-in users) ---------- */
+  var FAMMAP={pint:'highball',fizz:'highball',snifter:'wine',copita:'wine',shot:'rocks',other:'rocks'};
+  function libRow(k){var L=ST.lib||[];for(var i=0;i<L.length;i++)if(L[i].glass_key===k)return L[i];return null;}
+  function pickLib(fam,ml){var L=(ST.lib||[]).filter(function(r){return r.family===fam||(fam==='rocks'&&r.family==='double_rocks')||(fam==='double_rocks'&&r.family==='rocks');});
+    if(!L.length)return null;L.sort(function(a,b){return Math.abs((a.capacity_ml||0)-(ml||0))-Math.abs((b.capacity_ml||0)-(ml||0));});return L[0].glass_key;}
+  function outlineLib(row){
+    var base=Number(row.base_thickness_mm)||8,wall=Number(row.wall_thickness_mm)||1.8,fr=(Number(row.foot_diameter_mm)||60)/2;
+    var pts=(row.inner_profile||[]).map(function(e){return [Number(e.r_mm)||0,Number(e.h_mm)||0];}).filter(function(p){return isFinite(p[0])&&isFinite(p[1]);});
+    if(!pts.length||pts[0][0]!==0)pts.unshift([0,pts.length?pts[0][1]:0]);
+    var inner=pts.map(function(p){return [p[0],p[1]+base];}),out=[],stem=base>40;
+    if(stem){out.push([0,0],[fr,0],[fr,2.5],[fr*.32,5],[4.2,10],[3.4,base*.5],[4.2,base-8],[9,base-1.5]);}
+    else{var r0=(pts[1]?pts[1][0]:fr)+wall;out.push([0,0],[Math.max(fr-1,1),0],[fr,1.5],[r0,base]);}
+    inner.forEach(function(p,i){if(i===0)return;if(!stem&&i===1)return;out.push([p[0]+wall,p[1]]);});
+    var rim=inner[inner.length-1];out.push([rim[0]+wall*.5,rim[1]+.8]);
+    return {outer:out,inner:inner,bowlBase:base,rimH:rim[1],rimR:rim[0]};
+  }
+  function loadLib(){
+    if(ST.libLoading||ST.lib)return;var tok=(typeof phgAuthAccessToken==='function')?phgAuthAccessToken():null;if(!tok)return;ST.libLoading=true;
+    fetch('https://lqjtwabzmgjcufftuqvu.supabase.co/rest/v1/rpc/phg_glassware_catalog',{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:'{}'})
+      .then(function(r){return r.ok?r.json():[];}).then(function(j){ST.lib=Array.isArray(j)?j:[];},function(){ST.lib=[];})
+      .then(function(){ST.libLoading=false;if(ST.cfg&&!ST.cfg.libKey&&ST.cfg.libKey!==''){ST.cfg.libKey=pickLib(ST.cfg.glass,GL[ST.cfg.glass]&&GL[ST.cfg.glass].cap)||'';}build();drawPanel();});
+  }
+  function outline(k){ /* returns {outer:[[r,h]...], inner:[[r,h]...], bowlBase, rimH} in mm */
+    var g=GL[k],wall=g.mat?3:1.6,bb=g.stem?g.stem+g.base:g.base,inner=g.b.map(function(p){return [p[0],p[1]+bb];}),out=[];
+    if(g.stem){out.push([0,0],[g.foot,0],[g.foot,2.5],[g.foot*.35,5],[4.2,10],[3.6,g.stem*.5],[4.2,g.stem-4],[8,g.stem]);}
+    else{out.push([0,0],[g.b[1][0]+wall-1,0],[g.b[1][0]+wall,1.5]);}
+    inner.forEach(function(p,i){if(i===0&&g.stem)return;out.push([p[0]+wall,p[1]-(i===0?g.base:0)]);});
+    var rim=inner[inner.length-1];out.push([rim[0]+wall*.5,rim[1]+.8]);
+    return {outer:out,inner:inner,bowlBase:bb,rimH:rim[1],rimR:rim[0]};
+  }
+  function lathe(pts,seg){return new T.LatheGeometry(pts.map(function(p){return new T.Vector2(mm(Math.max(p[0],0.0001)),mm(p[1]));}),seg||96);}
+  function rAt(inner,h){for(var i=1;i<inner.length;i++){var a=inner[i-1],b=inner[i];if(h<=b[1]){var t=(h-a[1])/Math.max(b[1]-a[1],1e-6);return a[0]+(b[0]-a[0])*t;}}return inner[inner.length-1][0];}
+  function mat(kind,o){o=o||{};
+    if(kind==='glass')return new T.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:.04,transmission:1,thickness:.04,ior:1.5,transparent:true,opacity:1,side:T.DoubleSide,envMapIntensity:1.2,clearcoat:1,clearcoatRoughness:.05});
+    if(kind==='copper')return new T.MeshStandardMaterial({color:0xb87333,metalness:1,roughness:.28,side:T.DoubleSide});
+    if(kind==='silver')return new T.MeshStandardMaterial({color:0xdadada,metalness:1,roughness:.22,side:T.DoubleSide});
+    if(kind==='ceramic')return new T.MeshStandardMaterial({color:0x2f6b5a,metalness:0,roughness:.45,side:T.DoubleSide});
+    if(kind==='ice')return new T.MeshPhysicalMaterial({color:0xeef6ff,roughness:.12,transmission:.95,thickness:.2,ior:1.31,transparent:true});
+    return new T.MeshStandardMaterial(o);
+  }
+  function build(){
+    if(!T||!SC)return;
+    if(GRP){SC.remove(GRP);GRP.traverse(function(o){if(o.geometry)o.geometry.dispose();if(o.material&&o.material.dispose)o.material.dispose();});}
+    GRP=new T.Group();SC.add(GRP);
+    var c=ST.cfg,LR=c.libKey?libRow(c.libKey):null,g=LR?{}:(GL[c.glass]||GL.coupe),O=LR?outlineLib(LR):outline(c.glass);
+    var glass=new T.Mesh(lathe(O.outer),mat(g.mat||'glass'));GRP.add(glass);
+    var inGeo=lathe(O.inner);var inner=new T.Mesh(inGeo,mat(g.mat?g.mat:'glass'));if(!g.mat){inner.material.side=T.BackSide;}GRP.add(inner);
+    /* liquid up to the fill line */
+    var fillH=O.bowlBase+(O.rimH-O.bowlBase)*Math.max(.1,Math.min(.95,c.fill||.8)),pts=[];
+    O.inner.forEach(function(p){if(p[1]<fillH)pts.push([Math.max(p[0]-.4,0),p[1]+.3]);});pts.push([rAt(O.inner,fillH)-.4,fillH]);pts.push([0.0001,fillH]);
+    var col=new T.Color(c.color||'#e9efc9'),cl=c.clarity==null?.7:c.clarity;
+    var lm=new T.MeshPhysicalMaterial({color:col,roughness:cl>.3?.08:.5,transmission:cl*.92,thickness:.5,ior:1.34,attenuationColor:col,attenuationDistance:.25+cl*.8,transparent:true,opacity:cl>.3?.96:1});
+    var liq=new T.Mesh(lathe(pts),lm);GRP.add(liq);
+    if(c.foam){var fr=rAt(O.inner,fillH)-.6,f=new T.Mesh(new T.CylinderGeometry(mm(fr),mm(rAt(O.inner,fillH-6)-.6),mm(6),64),mat('std',{color:0xe8d9bf,roughness:.9}));f.position.y=mm(fillH-2.5);GRP.add(f);}
+    /* ice */
+    var rr=function(h){return rAt(O.inner,h);};
+    if(c.ice==='large'){var s2=Math.min(rr(O.bowlBase+30)*1.25,52),ic=new T.Mesh(new T.BoxGeometry(mm(s2),mm(s2),mm(s2)),mat('ice'));ic.position.set(0,mm(O.bowlBase+s2/2+1),0);ic.rotation.y=.4;GRP.add(ic);}
+    else if(c.ice==='cubes'||c.ice==='crushed'){
+      var sz=c.ice==='cubes'?24:9,n=0,seed=7,rnd=function(){seed=(seed*16807)%2147483647;return seed/2147483647;};
+      for(var h=O.bowlBase+sz/2;h<fillH+sz*.3&&n<(c.ice==='cubes'?14:90);h+=sz*.9){
+        var R0=Math.max(rr(h)-sz*.62,0),k=Math.max(1,Math.floor((2*Math.PI*Math.max(R0,1))/(sz*1.05)));
+        for(var j=0;j<k&&n<(c.ice==='cubes'?14:90);j++){var a=j/k*Math.PI*2+rnd()*.6,rad=R0*(k===1?0:1)*(.8+rnd()*.2);
+          var geo=c.ice==='cubes'?new T.BoxGeometry(mm(sz),mm(sz),mm(sz)):new T.IcosahedronGeometry(mm(sz*.6),0);
+          var m3=new T.Mesh(geo,mat('ice'));m3.position.set(mm(Math.cos(a)*rad),mm(h),mm(Math.sin(a)*rad));m3.rotation.set(rnd()*3,rnd()*3,rnd()*3);GRP.add(m3);n++;}
+      }
+    }
+    /* garnish */
+    var rimR=O.rimR,rimH=O.rimH,gk=c.garnish;
+    function wheel(colA,colB){var w=new T.Group(),r=18;var rind=new T.Mesh(new T.CylinderGeometry(mm(r),mm(r),mm(4),48),mat('std',{color:colA,roughness:.6}));
+      var pulp=new T.Mesh(new T.CylinderGeometry(mm(r-2.2),mm(r-2.2),mm(4.3),48),mat('std',{color:colB,roughness:.35,transparent:true,opacity:.92}));w.add(rind,pulp);
+      for(var i=0;i<10;i++){var s3=new T.Mesh(new T.BoxGeometry(mm(r-3),mm(4.5),mm(.7)),mat('std',{color:0xfaf6e8}));s3.rotation.y=i/10*Math.PI;w.add(s3);}
+      w.rotation.z=Math.PI/2;w.rotation.y=.2;w.position.set(mm(rimR),mm(rimH-4),0);return w;}
+    if(gk==='lime_wheel')GRP.add(wheel(0x4f8f2a,0xb8d66a));
+    if(gk==='lemon_wheel')GRP.add(wheel(0xe9c626,0xf6e68a));
+    if(gk==='orange_wheel')GRP.add(wheel(0xe8761c,0xf7a64a));
+    if(gk==='cucumber')GRP.add(wheel(0x2f5d2a,0xcfe6b8));
+    if(gk==='lemon_peel'||gk==='orange_peel'){var pts2=[];for(var i2=0;i2<=40;i2++){var t2=i2/40;pts2.push(new T.Vector3(mm(rimR+4+6*Math.cos(t2*9)),mm(rimH+8-t2*48),mm(6*Math.sin(t2*9))));}
+      var tube=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts2),80,mm(2.6),8,false),mat('std',{color:gk==='lemon_peel'?0xf0cf2a:0xee7a1e,roughness:.55}));GRP.add(tube);}
+    if(gk==='cherry'){var ch=new T.Mesh(new T.SphereGeometry(mm(9),32,24),mat('std',{color:0x6d0712,roughness:.25,metalness:.1}));ch.position.set(0,mm(O.bowlBase+9),0);GRP.add(ch);
+      var st=new T.Mesh(new T.CylinderGeometry(mm(.8),mm(.8),mm(26),8),mat('std',{color:0x3d2a12}));st.position.set(mm(3),mm(O.bowlBase+28),0);st.rotation.z=-.3;GRP.add(st);}
+    if(gk==='olive'){var pick=new T.Mesh(new T.CylinderGeometry(mm(.9),mm(.9),mm(rimH-O.bowlBase+20),8),mat('std',{color:0xd8c08a}));pick.position.set(mm(rimR*.3),mm((rimH+O.bowlBase)/2+8),0);pick.rotation.z=.35;GRP.add(pick);
+      for(var o2=0;o2<2;o2++){var ol=new T.Mesh(new T.SphereGeometry(mm(8),24,16),mat('std',{color:0x7a8f2e,roughness:.35}));ol.scale.set(1,1.3,1);ol.position.set(mm(rimR*.3-(o2*7+6)*Math.sin(.35)),mm(O.bowlBase+16+o2*15),0);GRP.add(ol);}}
+    if(gk==='mint'){for(var m4=0;m4<9;m4++){var lf=new T.Mesh(new T.SphereGeometry(mm(7),16,8),mat('std',{color:0x2f8a3a,roughness:.6}));lf.scale.set(1,.25,.55);var a4=m4*2.3;
+      lf.position.set(mm(Math.cos(a4)*(6+m4)),mm(rimH+6+m4*2.2),mm(Math.sin(a4)*(6+m4)));lf.rotation.set(Math.cos(a4),a4,.6);GRP.add(lf);}}
+    if(gk==='coffee_beans'){for(var b2=0;b2<3;b2++){var bn=new T.Mesh(new T.SphereGeometry(mm(4.5),16,12),mat('std',{color:0x2b170b,roughness:.4}));bn.scale.set(1,.6,1.35);bn.position.set(mm((b2-1)*9),mm(fillH+1.5),mm(b2===1?4:-2));GRP.add(bn);}}
+    /* frame the drink */
+    var top=Math.max(rimH+20,60);ORB.ty=mm(top*.5);ORB.d=Math.max(2.4,mm(top)*2.6);
+    var t=document.querySelector('#pvC3d .c3Title');if(t)t.innerHTML='<b>'+esc(c.name||'Cocktail')+'</b><span>'+esc(LR?(LR.name+(LR.sku?' (#'+LR.sku+')':'')):((GL[c.glass]||{}).n||''))+' \u00b7 '+esc(ICE[c.ice]||'')+(c.garnish&&c.garnish!=='none'?' \u00b7 '+esc(GARN[c.garnish]||''):'')+'</span>';
+    LAST=0;
+  }
+  function place(){if(!CAM)return;var o=ORB,d=o.d*Math.max(1,1.15/(CAM.aspect||1));CAM.position.set(o.tx+d*Math.sin(o.ph)*Math.sin(o.th),o.ty+d*Math.cos(o.ph),d*Math.sin(o.ph)*Math.cos(o.th));CAM.lookAt(o.tx,o.ty,0);}
+  function size(){var st=document.querySelector('#pvC3d .c3Stage');if(!st||!R)return;var w=st.clientWidth,h=st.clientHeight;if(!w||!h)return;R.setSize(w,h,false);CAM.aspect=w/h;CAM.updateProjectionMatrix();}
+  function loop(ts){if(!ST.running)return;requestAnimationFrame(loop);if(ST.auto&&!DRAG)ORB.th+=0.004;place();R.render(SC,CAM);}
+  function init3d(){
+    var st=document.querySelector('#pvC3d .c3Stage'),busy=document.querySelector('#pvC3d .c3Busy');
+    if(ST.ready){size();start();return;}
+    if(busy){busy.hidden=false;busy.textContent='Loading 3D\u2026';}
+    loadThree().then(function(env){
+      if(!T)throw new Error('3D did not load');
+      R=new T.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});R.setPixelRatio(Math.min(G.devicePixelRatio||1,2));
+      R.toneMapping=T.ACESFilmicToneMapping;R.outputColorSpace=T.SRGBColorSpace;st.insertBefore(R.domElement,st.firstChild);
+      SC=new T.Scene();CAM=new T.PerspectiveCamera(32,1,.05,60);
+      var pm=new T.PMREMGenerator(R);if(env&&env.RoomEnvironment){SC.environment=pm.fromScene(new env.RoomEnvironment(),.04).texture;}
+      SC.add(new T.HemisphereLight(0xffffff,0x444455,1.1));var dl=new T.DirectionalLight(0xffffff,2.2);dl.position.set(2,4,3);SC.add(dl);
+      var sc=document.createElement('canvas');sc.width=sc.height=128;var sx=sc.getContext('2d'),gr=sx.createRadialGradient(64,64,4,64,64,64);gr.addColorStop(0,'rgba(0,0,0,.45)');gr.addColorStop(1,'rgba(0,0,0,0)');sx.fillStyle=gr;sx.fillRect(0,0,128,128);var flo=new T.Mesh(new T.CircleGeometry(.75,48),new T.MeshBasicMaterial({map:new T.CanvasTexture(sc),transparent:true,depthWrite:false}));flo.rotation.x=-Math.PI/2;flo.position.y=-.001;SC.add(flo);
+      ST.ready=true;if(busy)busy.hidden=true;bind(st);size();build();start();
+    }).catch(function(){ST.failed=true;if(busy){busy.hidden=false;busy.textContent='3D could not load on this connection. The recipe still works.';}});
+  }
+  function start(){if(ST.running||!R)return;ST.running=true;requestAnimationFrame(loop);}
+  function stop(){ST.running=false;}
+  function bind(st){
+    var pts={},pinch=0;
+    st.addEventListener('pointerdown',function(e){pts[e.pointerId]=[e.clientX,e.clientY];DRAG=true;try{st.setPointerCapture(e.pointerId);}catch(x){}});
+    st.addEventListener('pointermove',function(e){var p=pts[e.pointerId];if(!p)return;var ids=Object.keys(pts);
+      if(ids.length===2){var a=pts[ids[0]],b=pts[ids[1]];pts[e.pointerId]=[e.clientX,e.clientY];var d=Math.hypot(pts[ids[0]][0]-pts[ids[1]][0],pts[ids[0]][1]-pts[ids[1]][1]);if(pinch)ORB.d=Math.max(1.2,Math.min(9,ORB.d*pinch/d));pinch=d;return;}
+      ORB.th-=(e.clientX-p[0])*.008;ORB.ph=Math.max(.35,Math.min(1.75,ORB.ph-(e.clientY-p[1])*.006));pts[e.pointerId]=[e.clientX,e.clientY];});
+    function up(e){delete pts[e.pointerId];pinch=0;if(!Object.keys(pts).length)DRAG=null;}
+    st.addEventListener('pointerup',up);st.addEventListener('pointercancel',up);
+    st.addEventListener('wheel',function(e){e.preventDefault();ORB.d=Math.max(1.2,Math.min(9,ORB.d*(1+e.deltaY*.001)));},{passive:false});
+    addEventListener('resize',size);
+  }
+
+  /* ---------- panel ---------- */
+  function glassSel(c){var L=ST.lib||[],h='<select id="c3Glass">';
+    if(L.length){h+='<optgroup label="Libbey catalogue ('+L.length+')">'+L.map(function(r){return '<option value="lib:'+esc(r.glass_key)+'"'+(c.libKey===r.glass_key?' selected':'')+'>'+esc(r.name)+(r.capacity_ml?' \u00b7 '+Math.round(r.capacity_ml)+' ml':'')+'</option>';}).join('')+'</optgroup>';}
+    h+='<optgroup label="Generic shapes">'+GLK.map(function(k){return '<option value="'+k+'"'+(!c.libKey&&c.glass===k?' selected':'')+'>'+esc(GL[k].n)+'</option>';}).join('')+'</optgroup></select>';
+    return h+(ST.libLoading?'<div class="c3Note">Loading the Libbey catalogue\u2026</div>':(L.length?'':'<div class="c3Note">Sign in to use the Libbey catalogue.</div>'));}
+  function sel(id,obj,v){return '<select id="'+id+'">'+Object.keys(obj).map(function(k){return '<option value="'+k+'"'+(k===v?' selected':'')+'>'+esc(typeof obj[k]==='string'?obj[k]:obj[k].n)+'</option>';}).join('')+'</select>';}
+  function recipeHTML(){
+    var r=ST.res;if(r&&r.candidate){var c=r.candidate,ing=Array.isArray(c.ingredients)?c.ingredients:[];
+      function list(t,a){a=Array.isArray(a)?a.filter(Boolean):[];return a.length?'<div class="c3H" style="margin-top:12px">'+t+'</div><ul class="c3List">'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'';}
+      return '<div class="c3Sec"><div class="c3H">Recipe \u00b7 draft v'+esc(r.version||1)+'</div>'+(c.concept?'<div style="opacity:.85;margin-bottom:6px">'+esc(c.concept)+'</div>':'')
+        +'<table class="c3Spec">'+ing.map(function(i){var q=(i.amount!=null?i.amount:'')+(i.unit?' '+i.unit:'');return '<tr><td class="q">'+esc(q||'\u2014')+'</td><td>'+esc(i.ingredient)+(i.role||i.notes?'<small>'+esc([i.role,i.notes].filter(Boolean).join(' \u00b7 '))+'</small>':'')+'</td></tr>';}).join('')+'</table>'
+        +(c.method?'<div class="c3H" style="margin-top:12px">Method</div><div>'+esc(c.method)+'</div>':'')
+        +list('Why it works',c.rationale)+list('Questions to decide',c.questions)
+        +'<div class="c3Note">Saved as a draft. Not on any menu and not costed. Bench-test before use.</div></div>';}
+    var p=ST.cfg;if(p.spec)return '<div class="c3Sec"><div class="c3H">Recipe</div><table class="c3Spec">'+p.spec.map(function(x){return '<tr><td class="q">'+esc(x[0])+'</td><td>'+esc(x[1])+'</td></tr>';}).join('')+'</table>'+(p.method?'<div style="margin-top:8px;opacity:.85">'+esc(p.method)+'</div>':'')+'</div>';
+    return '';
+  }
+  function panel(){
+    var c=ST.cfg,v=ST.form||{};
+    return '<div class="c3Sec"><div class="c3H">Create a cocktail</div><textarea id="c3Brief" placeholder="Describe a drink, e.g. a smoky mezcal sour with pineapple">'+esc(v.brief||'')+'</textarea>'
+      +'<button class="c3Go" data-c3="go"'+(ST.busy?' disabled':'')+'>'+(ST.busy?'<span class="c3Spin"></span>Creating\u2026 up to a minute':'Generate')+'</button>'
+      +(ST.err?'<div class="c3Msg err">'+esc(ST.err)+'</div>':'')+'</div>'
+      +'<div class="c3Sec"><div class="c3H">Or start from a classic</div><div class="c3Chips">'+PRESETS.map(function(p,i){return '<button data-c3="preset" data-i="'+i+'"'+(c.name===p.name&&!ST.res?' class="on"':'')+'>'+esc(p.name)+'</button>';}).join('')+'</div></div>'
+      +'<div class="c3Sec"><div class="c3H">Build it</div><div class="c3Grid">'
+      +'<div style="grid-column:1/-1"><label for="c3Glass">Glass</label>'+glassSel(c)+'</div><div><label for="c3Ice">Ice</label>'+sel('c3Ice',ICE,c.ice)+'</div>'
+      +'<div><label for="c3Garn">Garnish</label>'+sel('c3Garn',GARN,c.garnish)+'</div><div><label for="c3Col">Colour</label><input type="color" id="c3Col" value="'+esc(c.color)+'"></div>'
+      +'<div style="grid-column:1/-1"><label for="c3Fill">Fill</label><input type="range" id="c3Fill" min="20" max="95" value="'+Math.round((c.fill||.8)*100)+'"></div></div>'
+      +'<div class="c3Chips" style="margin-top:10px"><button data-c3="spin" class="'+(ST.auto?'on':'')+'">'+(ST.auto?'Spinning':'Spin')+'</button><button data-c3="reset">Reset view</button></div></div>'
+      +recipeHTML();
+  }
+  function drawPanel(){var p=document.querySelector('#pvC3d .c3Panel');if(p)p.innerHTML=panel();}
+  function layer(){
+    var d=document.getElementById('pvC3d');if(d)return d;
+    d=document.createElement('div');d.id='pvC3d';d.hidden=true;d.setAttribute('aria-label','Cocktail 3D view');
+    d.innerHTML='<div class="c3Stage"><div class="c3Title"></div><div class="c3Busy" hidden></div><div class="c3Hint">Drag to turn \u00b7 pinch or scroll to zoom</div></div><div class="c3Panel"></div>';
+    document.body.appendChild(d);
+    d.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-c3]');if(!b)return;var a=b.getAttribute('data-c3');
+      if(a==='go')run();
+      else if(a==='preset'){ST.res=null;ST.err='';ST.cfg=Object.assign({},PRESETS[+b.getAttribute('data-i')]);ST.cfg.libKey=pickLib(ST.cfg.glass,GL[ST.cfg.glass].cap)||'';build();drawPanel();}
+      else if(a==='spin'){ST.auto=!ST.auto;drawPanel();}
+      else if(a==='reset'){ORB.th=.6;ORB.ph=1.25;build();}});
+    d.addEventListener('input',function(e){var t=e.target,c=ST.cfg;
+      if(t.id==='c3Glass'){if(t.value.indexOf('lib:')===0){var rw=libRow(t.value.slice(4));c.libKey=rw?rw.glass_key:'';if(rw)c.glass=GL[rw.family]?rw.family:(FAMMAP[rw.family]||'highball');}else{c.glass=t.value;c.libKey='';}}else if(t.id==='c3Ice')c.ice=t.value;else if(t.id==='c3Garn')c.garnish=t.value;else if(t.id==='c3Col'){c.color=t.value;c.clarity=c.clarity==null?.7:c.clarity;}
+      else if(t.id==='c3Fill')c.fill=t.value/100;else return;build();});
+    return d;
+  }
   function run(){
-    if(ST.busy)return;var d=el(),b=(d.querySelector('#cgBrief')||{}).value||'';b=b.trim();
-    ST.form={brief:b,spirit:(d.querySelector('#cgSpirit')||{}).value||'',ref:((d.querySelector('#cgRef')||{}).value||'').trim()};
-    if(b.length<4){ST.err='Write a few words about the drink you want.';draw();return;}
-    var tok=(typeof phgAuthAccessToken==='function')?phgAuthAccessToken():null;
-    if(!tok){ST.err='Sign in first.';draw();return;}
-    ST.busy=true;ST.err='';draw();
-    var body={brief:b.slice(0,1500)};if(ST.form.spirit)body.base_spirit=ST.form.spirit;if(ST.form.ref)body.reference_cocktail=ST.form.ref.slice(0,120);
+    if(ST.busy)return;var b=((document.getElementById('c3Brief')||{}).value||'').trim();ST.form={brief:b};
+    if(b.length<4){ST.err='Write a few words about the drink you want.';drawPanel();return;}
+    var tok=(typeof phgAuthAccessToken==='function')?phgAuthAccessToken():null;if(!tok){ST.err='Sign in first.';drawPanel();return;}
+    ST.busy=true;ST.err='';drawPanel();
     var ctl=G.AbortController?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort();},90000);
-    fetch(URL_,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify(body),signal:ctl?ctl.signal:undefined})
+    fetch(GEN,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify({brief:b.slice(0,1500)}),signal:ctl?ctl.signal:undefined})
       .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j||!j.candidate)throw new Error(j&&j.error?(j.error==='generation failed'?'The generator is busy. Try again in a moment.':j.error):'HTTP '+r.status);return j;});})
-      .then(function(j){ST.res=j;},function(e){ST.err=(e&&e.name==='AbortError')?'That took too long. Try again.':'Could not create the cocktail: '+String(e&&e.message||e).slice(0,160);})
-      .then(function(){clearTimeout(tm);ST.busy=false;draw();});
+      .then(function(j){ST.res=j;ST.cfg=fromRecipe(j.candidate);ST.cfg.libKey=pickLib(ST.cfg.glass,ST.cfg.ml)||'';build();},
+            function(e){var m=String(e&&e.message||e);ST.err=(e&&e.name==='AbortError')?'That took too long. Try again.':/failed to fetch|load failed|networkerror/i.test(m)?'Could not reach the cocktail generator. Pick a classic below while it is fixed.':'Could not create the cocktail: '+m.slice(0,140);})
+      .then(function(){clearTimeout(tm);ST.busy=false;drawPanel();});
   }
-  function open(){var d=el();draw();d.hidden=false;setTimeout(function(){var t=d.querySelector('#cgBrief');if(t&&innerWidth>820)t.focus();},60);}
-  function close(){var d=document.getElementById('phgCgen');if(d)d.hidden=true;}
-  G.phgCocktailGenOpen=open;G.phgCocktailGenClose=close;
-  addEventListener('keydown',function(e){if(e.key==='Escape'){var d=document.getElementById('phgCgen');if(d&&!d.hidden)close();}});
+  function show(){var d=layer();d.hidden=false;drawPanel();init3d();loadLib();}
+  function hide(){var d=document.getElementById('pvC3d');if(d)d.hidden=true;stop();}
+  function reg(){if(!G.PHGViews||!G.PHGViews.register)return setTimeout(reg,300);
+    G.PHGViews.register({id:'cocktail',label:'Cocktail',short:'Cocktail',allowed:function(){return !(typeof PHGACCESS!=='undefined'&&PHGACCESS&&PHGACCESS.view_mode==='beta');},
+      load:function(){if(G.PHGViews.shell)try{G.PHGViews.shell();}catch(e){}show();},unload:hide,
+      isActive:function(){var d=document.getElementById('pvC3d');return !!(d&&!d.hidden);}});}
+  G.phgCocktailOpen=function(){if(G.PHGViews)G.PHGViews.go('cocktail',{from:'tap'});};
+  G.phgCocktailBuild=function(cfg){Object.assign(ST.cfg,cfg||{});build();};G.phgCocktailState=function(){return {lib:(ST.lib||[]).length,cfg:ST.cfg,ready:ST.ready,failed:ST.failed,running:ST.running,res:!!ST.res};};
+  G.phgCocktailFromRecipe=fromRecipe;
+  reg();
 })();
 </script>
 </body>
