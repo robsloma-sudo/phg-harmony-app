@@ -46155,6 +46155,7 @@ html.phg-light .c3Msg.err{color:#b3261e}
 .c3Spec small{display:block;opacity:.6}
 .c3List{margin:4px 0 0;padding-left:18px}
 .c3Note{font-size:12px;opacity:.6;margin-top:10px}
+.c3Img{display:block;width:100%;max-height:420px;object-fit:cover;border-radius:14px;margin:4px 0 2px;background:rgba(127,127,127,.12)}
 .c3Spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:c3S .8s linear infinite;vertical-align:-2px;margin-right:8px}
 @keyframes c3S{to{transform:rotate(360deg)}}
 @media(max-width:900px){
@@ -46170,7 +46171,7 @@ html.phg-light .c3Msg.err{color:#b3261e}
    phg-cocktail-develop with the signed-in session; output is escaped before display. Nothing is
    published; the backend stores generated recipes as draft candidates. */
 (function(){
-  var G=window,GEN='https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-cocktail-develop';
+  var G=window,SB='https://lqjtwabzmgjcufftuqvu.supabase.co',GEN=SB+'/functions/v1/cocktail';
   var CDN='https://cdn.jsdelivr.net/npm/three@0.169.0/';
   function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 
@@ -46250,10 +46251,11 @@ html.phg-light .c3Msg.err{color:#b3261e}
   function pickLib(fam,ml){var L=(ST.lib||[]).filter(function(r){return r.family===fam||(fam==='rocks'&&r.family==='double_rocks')||(fam==='double_rocks'&&r.family==='rocks');});
     if(!L.length)return null;L.sort(function(a,b){return Math.abs((a.capacity_ml||0)-(ml||0))-Math.abs((b.capacity_ml||0)-(ml||0));});return L[0].glass_key;}
   function outlineLib(row){
-    var base=Number(row.base_thickness_mm)||8,wall=Number(row.wall_thickness_mm)||1.8,fr=(Number(row.foot_diameter_mm)||60)/2;
+    var base=Number(row.base_thickness_mm)||8,wall=Number(row.wall_thickness_mm)||1.8,fd=Number(row.foot_diameter_mm);
     var pts=(row.inner_profile||[]).map(function(e){return [Number(e.r_mm)||0,Number(e.h_mm)||0];}).filter(function(p){return isFinite(p[0])&&isFinite(p[1]);});
     if(!pts.length||pts[0][0]!==0)pts.unshift([0,pts.length?pts[0][1]:0]);
     var inner=pts.map(function(p){return [p[0],p[1]+base];}),out=[],stem=base>40;
+    var rimR0=pts[pts.length-1][0],r1=pts[1]?pts[1][0]:rimR0,fr=fd>0?fd/2:(stem?Math.max(rimR0*.78,24):Math.max(r1+wall-1,10));
     if(stem){out.push([0,0],[fr,0],[fr,2.5],[fr*.32,5],[4.2,10],[3.4,base*.5],[4.2,base-8],[9,base-1.5]);}
     else{var r0=(pts[1]?pts[1][0]:fr)+wall;out.push([0,0],[Math.max(fr-1,1),0],[fr,1.5],[r0,base]);}
     inner.forEach(function(p,i){if(i===0)return;if(!stem&&i===1)return;out.push([p[0]+wall,p[1]]);});
@@ -46373,7 +46375,18 @@ html.phg-light .c3Msg.err{color:#b3261e}
     return h+(ST.libLoading?'<div class="c3Note">Loading the Libbey catalogue\u2026</div>':(L.length?'':'<div class="c3Note">Sign in to use the Libbey catalogue.</div>'));}
   function sel(id,obj,v){return '<select id="'+id+'">'+Object.keys(obj).map(function(k){return '<option value="'+k+'"'+(k===v?' selected':'')+'>'+esc(typeof obj[k]==='string'?obj[k]:obj[k].n)+'</option>';}).join('')+'</select>';}
   function recipeHTML(){
-    var r=ST.res;if(r&&r.candidate){var c=r.candidate,ing=Array.isArray(c.ingredients)?c.ingredients:[];
+    var r=ST.res;if(r&&r.drink){var d=r.drink,sp=Array.isArray(d.spec)?d.spec:[],al=Array.isArray(d.allergens)?d.allergens:[];
+      return '<div class="c3Sec"><div class="c3H">Recipe'+(ST.lastId?' \u00b7 say what to change, e.g. \u201cless sweet\u201d':'')+'</div>'
+        +(r.image_url?'<img class="c3Img" src="'+esc(r.image_url)+'" alt="Picture of '+esc(d.name||'the drink')+'">':'<div class="c3Note">No picture this time.</div>')
+        +(d.concept?'<div style="opacity:.85;margin:8px 0 6px">'+esc(d.concept)+'</div>':'')
+        +'<table class="c3Spec">'+sp.map(function(i){return '<tr><td class="q">'+esc(i.ml!=null?i.ml+' ml':'\u2014')+'</td><td>'+esc(i.ingredient)+'</td></tr>';}).join('')+'</table>'
+        +(d.method?'<div class="c3H" style="margin-top:12px">Method</div><div>'+esc(d.method)+'</div>':'')
+        +'<div class="c3H" style="margin-top:12px">Serve</div><div>'+esc([d.glass,d.ice,d.garnish].filter(Boolean).join(' \u00b7 '))+'</div>'
+        +(d.why_it_works?'<div class="c3H" style="margin-top:12px">Why it works</div><div>'+esc(d.why_it_works)+'</div>':'')
+        +'<div class="c3H" style="margin-top:12px">Allergens</div><div>'+esc(al.length?al.join(', '):'None listed')+'</div>'
+        +(d.abv_estimate!=null?'<div class="c3Note">About '+esc(d.abv_estimate)+'% ABV (estimate).</div>':'')
+        +'<div class="c3Note">Theoretical until bench-tested. Not on any menu and not costed.</div></div>';}
+    if(r&&r.candidate){var c=r.candidate,ing=Array.isArray(c.ingredients)?c.ingredients:[];
       function list(t,a){a=Array.isArray(a)?a.filter(Boolean):[];return a.length?'<div class="c3H" style="margin-top:12px">'+t+'</div><ul class="c3List">'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'';}
       return '<div class="c3Sec"><div class="c3H">Recipe \u00b7 draft v'+esc(r.version||1)+'</div>'+(c.concept?'<div style="opacity:.85;margin-bottom:6px">'+esc(c.concept)+'</div>':'')
         +'<table class="c3Spec">'+ing.map(function(i){var q=(i.amount!=null?i.amount:'')+(i.unit?' '+i.unit:'');return '<tr><td class="q">'+esc(q||'\u2014')+'</td><td>'+esc(i.ingredient)+(i.role||i.notes?'<small>'+esc([i.role,i.notes].filter(Boolean).join(' \u00b7 '))+'</small>':'')+'</td></tr>';}).join('')+'</table>'
@@ -46386,7 +46399,9 @@ html.phg-light .c3Msg.err{color:#b3261e}
   function panel(){
     var c=ST.cfg,v=ST.form||{};
     return '<div class="c3Sec"><div class="c3H">Create a cocktail</div><textarea id="c3Brief" placeholder="Describe a drink, e.g. a smoky mezcal sour with pineapple">'+esc(v.brief||'')+'</textarea>'
-      +'<button class="c3Go" data-c3="go"'+(ST.busy?' disabled':'')+'>'+(ST.busy?'<span class="c3Spin"></span>Creating\u2026 up to a minute':'Generate')+'</button>'
+      +'<div class="c3Chips" style="margin-top:8px"><button data-c3="photo" class="'+(ST.photo?'on':'')+'">'+(ST.photo?'Photo added \u2713':'Use a photo')+'</button>'+(ST.lastId?'<button data-c3="new">New drink</button>':'')+'</div>'
+      +'<input type="file" id="c3File" accept="image/*" capture="environment" hidden>'
+      +'<button class="c3Go" data-c3="go"'+(ST.busy?' disabled':'')+'>'+(ST.busy?'<span class="c3Spin"></span>'+esc(ST.busyMsg||'Creating\u2026'):(ST.lastId?'Change this drink':'Create'))+'</button>'
       +(ST.err?'<div class="c3Msg err">'+esc(ST.err)+'</div>':'')+'</div>'
       +'<div class="c3Sec"><div class="c3H">Or start from a classic</div><div class="c3Chips">'+PRESETS.map(function(p,i){return '<button data-c3="preset" data-i="'+i+'"'+(c.name===p.name&&!ST.res?' class="on"':'')+'>'+esc(p.name)+'</button>';}).join('')+'</div></div>'
       +'<div class="c3Sec"><div class="c3H">Build it</div><div class="c3Grid">'
@@ -46404,24 +46419,39 @@ html.phg-light .c3Msg.err{color:#b3261e}
     document.body.appendChild(d);
     d.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-c3]');if(!b)return;var a=b.getAttribute('data-c3');
       if(a==='go')run();
-      else if(a==='preset'){ST.res=null;ST.err='';ST.cfg=Object.assign({},PRESETS[+b.getAttribute('data-i')]);ST.cfg.libKey=pickLib(ST.cfg.glass,GL[ST.cfg.glass].cap)||'';build();drawPanel();}
+      else if(a==='photo'){if(ST.photo){ST.photo=null;drawPanel();}else{var f=document.getElementById('c3File');if(f)f.click();}}
+      else if(a==='new'){ST.lastId=null;ST.res=null;ST.photo=null;ST.err='';ST.form={brief:''};drawPanel();}
+      else if(a==='preset'){ST.res=null;ST.lastId=null;ST.err='';ST.cfg=Object.assign({},PRESETS[+b.getAttribute('data-i')]);ST.cfg.libKey=pickLib(ST.cfg.glass,GL[ST.cfg.glass].cap)||'';build();drawPanel();}
       else if(a==='spin'){ST.auto=!ST.auto;drawPanel();}
       else if(a==='reset'){ORB.th=.6;ORB.ph=1.25;build();}});
+    d.addEventListener('change',function(e){if(e.target&&e.target.id==='c3File'){var f=e.target.files&&e.target.files[0];if(f){if(f.size>12e6){ST.err='That photo is too large (12 MB max).';}else{ST.photo=f;ST.err='';}drawPanel();}}});
     d.addEventListener('input',function(e){var t=e.target,c=ST.cfg;
       if(t.id==='c3Glass'){if(t.value.indexOf('lib:')===0){var rw=libRow(t.value.slice(4));c.libKey=rw?rw.glass_key:'';if(rw)c.glass=GL[rw.family]?rw.family:(FAMMAP[rw.family]||'highball');}else{c.glass=t.value;c.libKey='';}}else if(t.id==='c3Ice')c.ice=t.value;else if(t.id==='c3Garn')c.garnish=t.value;else if(t.id==='c3Col'){c.color=t.value;c.clarity=c.clarity==null?.7:c.clarity;}
       else if(t.id==='c3Fill')c.fill=t.value/100;else return;build();});
     return d;
   }
+  function uidOf(tok){try{var p=tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');return JSON.parse(atob(p+'==='.slice((p.length+3)%4))).sub||null;}catch(e){return null;}}
+  function toCandidate(d){ /* the new drink shape -> what fromRecipe reads */
+    return {recipe_name:d.name,concept:d.concept,glassware:d.glass,garnish:d.garnish,method:[d.method,d.ice].filter(Boolean).join('. '),
+      targets:{service:d.ice||''},ingredients:(Array.isArray(d.spec)?d.spec:[]).map(function(i){return {ingredient:i.ingredient,amount:i.ml,unit:'ml'};})};}
+  function upload(tok,file){var uid=uidOf(tok);if(!uid)return Promise.reject(new Error('Sign in again to use a photo.'));
+    var ext=/png/i.test(file.type)?'png':'jpg',path=uid+'/'+(G.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now()))+'.'+ext;
+    return fetch(SB+'/storage/v1/object/cocktails/'+path,{method:'POST',headers:{apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok,'Content-Type':file.type||'image/jpeg','x-upsert':'false'},body:file})
+      .then(function(r){if(!r.ok)throw new Error('The photo could not be uploaded.');return path;});}
   function run(){
     if(ST.busy)return;var b=((document.getElementById('c3Brief')||{}).value||'').trim();ST.form={brief:b};
-    if(b.length<4){ST.err='Write a few words about the drink you want.';drawPanel();return;}
+    if(b.length<3&&!ST.photo){ST.err=ST.lastId?'Say what to change, e.g. "less sweet".':'Write a few words about the drink, or use a photo.';drawPanel();return;}
     var tok=(typeof phgAuthAccessToken==='function')?phgAuthAccessToken():null;if(!tok){ST.err='Sign in first.';drawPanel();return;}
-    ST.busy=true;ST.err='';drawPanel();
-    var ctl=G.AbortController?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort();},90000);
-    fetch(GEN,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify({brief:b.slice(0,1500)}),signal:ctl?ctl.signal:undefined})
-      .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j||!j.candidate)throw new Error(j&&j.error?(j.error==='generation failed'?'The generator is busy. Try again in a moment.':j.error):'HTTP '+r.status);return j;});})
-      .then(function(j){ST.res=j;ST.cfg=fromRecipe(j.candidate);ST.cfg.libKey=pickLib(ST.cfg.glass,ST.cfg.ml)||'';build();},
-            function(e){var m=String(e&&e.message||e);ST.err=(e&&e.name==='AbortError')?'That took too long. Try again.':/failed to fetch|load failed|networkerror/i.test(m)?'Could not reach the cocktail generator. Pick a classic below while it is fixed.':'Could not create the cocktail: '+m.slice(0,140);})
+    ST.busy=true;ST.err='';ST.busyMsg=ST.photo?'Sending your photo\u2026':'Creating your drink and its picture\u2026 up to a minute';drawPanel();
+    var ctl=G.AbortController?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort();},140000);
+    (ST.photo?upload(tok,ST.photo):Promise.resolve(null)).then(function(path){
+      if(path){ST.busyMsg='Creating your drink and its picture\u2026 up to a minute';drawPanel();}
+      var body={request:(b||'Make a cocktail inspired by this photo').slice(0,1500)};if(path)body.photo_path=path;if(ST.lastId)body.previous_id=ST.lastId;
+      return fetch(GEN,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify(body),signal:ctl?ctl.signal:undefined});})
+      .then(function(r){return r.text().then(function(t){var j=null;try{j=JSON.parse(t);}catch(e){}
+        if(!r.ok||!j||!j.drink)throw new Error(r.status===401?'Sign in again, then try once more.':(j&&j.error?'The drink service had a problem. Try again in a moment.':'HTTP '+r.status));return j;});})
+      .then(function(j){ST.res=j;ST.lastId=j.id||null;ST.photo=null;ST.form={brief:''};ST.cfg=fromRecipe(toCandidate(j.drink));ST.cfg.libKey=pickLib(ST.cfg.glass,ST.cfg.ml)||'';build();},
+            function(e){var m=String(e&&e.message||e);ST.err=(e&&e.name==='AbortError')?'That took too long. Try again.':/failed to fetch|load failed|networkerror/i.test(m)?'Could not reach the drink service. Pick a classic below and try again shortly.':m.slice(0,160);})
       .then(function(){clearTimeout(tm);ST.busy=false;drawPanel();});
   }
   function show(){var d=layer();d.hidden=false;drawPanel();init3d();loadLib();}
@@ -46431,7 +46461,7 @@ html.phg-light .c3Msg.err{color:#b3261e}
       load:function(){if(G.PHGViews.shell)try{G.PHGViews.shell();}catch(e){}show();},unload:hide,
       isActive:function(){var d=document.getElementById('pvC3d');return !!(d&&!d.hidden);}});}
   G.phgCocktailOpen=function(){if(G.PHGViews)G.PHGViews.go('cocktail',{from:'tap'});};
-  G.phgCocktailBuild=function(cfg){Object.assign(ST.cfg,cfg||{});build();};G.phgCocktailState=function(){return {lib:(ST.lib||[]).length,cfg:ST.cfg,ready:ST.ready,failed:ST.failed,running:ST.running,res:!!ST.res};};
+  G.phgCocktailBuild=function(cfg){Object.assign(ST.cfg,cfg||{});build();};G.phgCocktailState=function(){return {lastId:ST.lastId,lib:(ST.lib||[]).length,cfg:ST.cfg,ready:ST.ready,failed:ST.failed,running:ST.running,res:!!ST.res};};
   G.phgCocktailFromRecipe=fromRecipe;
   reg();
 })();
