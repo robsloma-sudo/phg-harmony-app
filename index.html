@@ -46141,6 +46141,12 @@ html.phg-light #pvC3d{filter:none!important;color:#24231d;background:radial-grad
 .c3Chips button.on{border-color:var(--look-acc,#d9b574);color:var(--look-acc,#d9b574)}
 .c3Go{width:100%;min-height:50px;margin-top:10px;border:0;border-radius:14px;font:inherit;font-size:16px;font-weight:600;cursor:pointer;background:var(--look-acc,#d9b574);color:#16130b}
 .c3Go[disabled]{opacity:.55;cursor:default}
+#pvC3d{color-scheme:dark}
+html.phg-light #pvC3d{color-scheme:light}
+#pvC3d select{background-color:#1a202a}
+#pvC3d select option,#pvC3d select optgroup{background:#1a202a;color:#ecebe4}
+html.phg-light #pvC3d select{background-color:#ffffff}
+html.phg-light #pvC3d select option,html.phg-light #pvC3d select optgroup{background:#ffffff;color:#24231d}
 .c3Grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .c3Grid label{display:block;font-size:12px;opacity:.65;margin-bottom:4px}
 .c3Grid input[type=color]{width:100%;height:42px;border:1px solid rgba(127,127,127,.35);border-radius:12px;background:transparent;padding:3px}
@@ -46399,7 +46405,7 @@ html.phg-light .c3Msg.err{color:#b3261e}
   function panel(){
     var c=ST.cfg,v=ST.form||{};
     return '<div class="c3Sec"><div class="c3H">Create a cocktail</div><textarea id="c3Brief" placeholder="Describe a drink, e.g. a smoky mezcal sour with pineapple">'+esc(v.brief||'')+'</textarea>'
-      +'<div class="c3Chips" style="margin-top:8px"><button data-c3="photo" class="'+(ST.photo?'on':'')+'">'+(ST.photo?'Photo added \u2713':'Use a photo')+'</button>'+(ST.lastId?'<button data-c3="new">New drink</button>':'')+'</div>'
+      +'<div class="c3Chips" style="margin-top:8px">'+(SR?'<button data-c3="talk" class="'+(ST.listening?'on':'')+'">'+(ST.listening?'Listening\u2026 tap to stop':'Talk')+'</button>':'')+'<button data-c3="photo" class="'+(ST.photo?'on':'')+'">'+(ST.photo?'Photo added \u2713':'Use a photo')+'</button>'+(ST.lastId?'<button data-c3="new">New drink</button>':'')+'</div>'
       +'<input type="file" id="c3File" accept="image/*" capture="environment" hidden>'
       +'<button class="c3Go" data-c3="go"'+(ST.busy?' disabled':'')+'>'+(ST.busy?'<span class="c3Spin"></span>'+esc(ST.busyMsg||'Creating\u2026'):(ST.lastId?'Change this drink':'Create'))+'</button>'
       +(ST.err?'<div class="c3Msg err">'+esc(ST.err)+'</div>':'')+'</div>'
@@ -46419,6 +46425,7 @@ html.phg-light .c3Msg.err{color:#b3261e}
     document.body.appendChild(d);
     d.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-c3]');if(!b)return;var a=b.getAttribute('data-c3');
       if(a==='go')run();
+      else if(a==='talk'){talk();}
       else if(a==='photo'){if(ST.photo){ST.photo=null;drawPanel();}else{var f=document.getElementById('c3File');if(f)f.click();}}
       else if(a==='new'){ST.lastId=null;ST.res=null;ST.photo=null;ST.err='';ST.form={brief:''};drawPanel();}
       else if(a==='preset'){ST.res=null;ST.lastId=null;ST.err='';ST.cfg=Object.assign({},PRESETS[+b.getAttribute('data-i')]);ST.cfg.libKey=pickLib(ST.cfg.glass,GL[ST.cfg.glass].cap)||'';build();drawPanel();}
@@ -46430,6 +46437,19 @@ html.phg-light .c3Msg.err{color:#b3261e}
       else if(t.id==='c3Fill')c.fill=t.value/100;else return;build();});
     return d;
   }
+  var SR=G.SpeechRecognition||G.webkitSpeechRecognition||null,REC=null;
+  function talk(){
+    if(!SR)return;if(REC){try{REC.stop();}catch(e){}return;}
+    REC=new SR();REC.lang=navigator.language||'en-US';REC.interimResults=true;REC.maxAlternatives=1;var fin='';
+    REC.onresult=function(e){var t='';for(var i=0;i<e.results.length;i++){t+=e.results[i][0].transcript;if(e.results[i].isFinal)fin=t;}var ta=document.getElementById('c3Brief');if(ta)ta.value=t;};
+    REC.onerror=function(e){ST.err=e&&e.error==='not-allowed'?'Microphone is blocked for this site. Allow it in Settings, or type instead.':'I did not catch that. Try again or type it.';};
+    REC.onend=function(){REC=null;ST.listening=false;var ta=document.getElementById('c3Brief'),t=(fin||(ta&&ta.value)||'').trim();drawPanel();
+      if(t.length>=3){var t2=document.getElementById('c3Brief');if(t2)t2.value=t;G.phgCocktailVoice(t,{from:'view'});}};
+    try{REC.start();ST.listening=true;ST.err='';drawPanel();var t3=document.getElementById('c3Brief');if(t3)t3.value='';}catch(e){REC=null;}
+  }
+  /* request a drink from outside the panel (Harmony words). Returns {ok, drink|error}. */
+  function request(text,opt){opt=opt||{};var d=layer();if(opt.fresh){ST.lastId=null;ST.res=null;}drawPanel();
+    var ta=document.getElementById('c3Brief');if(ta)ta.value=String(text||'').slice(0,1500);return run();}
   function uidOf(tok){try{var p=tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');return JSON.parse(atob(p+'==='.slice((p.length+3)%4))).sub||null;}catch(e){return null;}}
   function toCandidate(d){ /* the new drink shape -> what fromRecipe reads */
     return {recipe_name:d.name,concept:d.concept,glassware:d.glass,garnish:d.garnish,method:[d.method,d.ice].filter(Boolean).join('. '),
@@ -46439,20 +46459,21 @@ html.phg-light .c3Msg.err{color:#b3261e}
     return fetch(SB+'/storage/v1/object/cocktails/'+path,{method:'POST',headers:{apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok,'Content-Type':file.type||'image/jpeg','x-upsert':'false'},body:file})
       .then(function(r){if(!r.ok)throw new Error('The photo could not be uploaded.');return path;});}
   function run(){
-    if(ST.busy)return;var b=((document.getElementById('c3Brief')||{}).value||'').trim();ST.form={brief:b};
-    if(b.length<3&&!ST.photo){ST.err=ST.lastId?'Say what to change, e.g. "less sweet".':'Write a few words about the drink, or use a photo.';drawPanel();return;}
-    var tok=(typeof phgAuthAccessToken==='function')?phgAuthAccessToken():null;if(!tok){ST.err='Sign in first.';drawPanel();return;}
+    if(ST.busy)return Promise.resolve({ok:false,error:'busy'});var b=((document.getElementById('c3Brief')||{}).value||'').trim();ST.form={brief:b};
+    if(b.length<3&&!ST.photo){ST.err=ST.lastId?'Say what to change, e.g. "less sweet".':'Write a few words about the drink, or use a photo.';drawPanel();return Promise.resolve({ok:false,error:ST.err});}
+    var tok=(typeof phgAuthAccessToken==='function')?phgAuthAccessToken():null;if(!tok){ST.err='Sign in first.';drawPanel();return Promise.resolve({ok:false,error:ST.err});}
     ST.busy=true;ST.err='';ST.busyMsg=ST.photo?'Sending your photo\u2026':'Creating your drink and its picture\u2026 up to a minute';drawPanel();
     var ctl=G.AbortController?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort();},140000);
-    (ST.photo?upload(tok,ST.photo):Promise.resolve(null)).then(function(path){
+    var OUT={ok:false};
+    return (ST.photo?upload(tok,ST.photo):Promise.resolve(null)).then(function(path){
       if(path){ST.busyMsg='Creating your drink and its picture\u2026 up to a minute';drawPanel();}
       var body={request:(b||'Make a cocktail inspired by this photo').slice(0,1500)};if(path)body.photo_path=path;if(ST.lastId)body.previous_id=ST.lastId;
       return fetch(GEN,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify(body),signal:ctl?ctl.signal:undefined});})
       .then(function(r){return r.text().then(function(t){var j=null;try{j=JSON.parse(t);}catch(e){}
         if(!r.ok||!j||!j.drink)throw new Error(r.status===401?'Sign in again, then try once more.':(j&&j.error?'The drink service had a problem. Try again in a moment.':'HTTP '+r.status));return j;});})
-      .then(function(j){ST.res=j;ST.lastId=j.id||null;ST.photo=null;ST.form={brief:''};ST.cfg=fromRecipe(toCandidate(j.drink));ST.cfg.libKey=pickLib(ST.cfg.glass,ST.cfg.ml)||'';build();},
-            function(e){var m=String(e&&e.message||e);ST.err=(e&&e.name==='AbortError')?'That took too long. Try again.':/failed to fetch|load failed|networkerror/i.test(m)?'Could not reach the drink service. Pick a classic below and try again shortly.':m.slice(0,160);})
-      .then(function(){clearTimeout(tm);ST.busy=false;drawPanel();});
+      .then(function(j){OUT={ok:true,drink:j.drink,image_url:j.image_url};ST.lastAt=Date.now();ST.res=j;ST.lastId=j.id||null;ST.photo=null;ST.form={brief:''};ST.cfg=fromRecipe(toCandidate(j.drink));ST.cfg.libKey=pickLib(ST.cfg.glass,ST.cfg.ml)||'';build();},
+            function(e){var m=String(e&&e.message||e);ST.err=(e&&e.name==='AbortError')?'That took too long. Try again.':/failed to fetch|load failed|networkerror/i.test(m)?'Could not reach the drink service. Pick a classic below and try again shortly.':m.slice(0,160);OUT={ok:false,error:ST.err};})
+      .then(function(){clearTimeout(tm);ST.busy=false;drawPanel();return OUT;});
   }
   function show(){var d=layer();d.hidden=false;drawPanel();init3d();loadLib();}
   function hide(){var d=document.getElementById('pvC3d');if(d)d.hidden=true;stop();}
@@ -46461,9 +46482,62 @@ html.phg-light .c3Msg.err{color:#b3261e}
       load:function(){if(G.PHGViews.shell)try{G.PHGViews.shell();}catch(e){}show();},unload:hide,
       isActive:function(){var d=document.getElementById('pvC3d');return !!(d&&!d.hidden);}});}
   G.phgCocktailOpen=function(){if(G.PHGViews)G.PHGViews.go('cocktail',{from:'tap'});};
-  G.phgCocktailBuild=function(cfg){Object.assign(ST.cfg,cfg||{});build();};G.phgCocktailState=function(){return {lastId:ST.lastId,lib:(ST.lib||[]).length,cfg:ST.cfg,ready:ST.ready,failed:ST.failed,running:ST.running,res:!!ST.res};};
-  G.phgCocktailFromRecipe=fromRecipe;
+  G.phgCocktailBuild=function(cfg){Object.assign(ST.cfg,cfg||{});build();};G.phgCocktailState=function(){return {lastAt:ST.lastAt||0,busy:ST.busy,lastId:ST.lastId,lib:(ST.lib||[]).length,cfg:ST.cfg,ready:ST.ready,failed:ST.failed,running:ST.running,res:!!ST.res};};
+  G.phgCocktailFromRecipe=fromRecipe;G.phgCocktailRequest=request;G.phgCocktailNeedPhoto=function(msg){var d=layer();ST.err='';ST.form={brief:msg||''};ST.askPhoto=true;drawPanel();};
   reg();
+})();
+</script>
+<script id="phgCocktailVoice-js">
+/* HARMONY <-> COCKTAIL VIEW (2026-10-05). Words to Harmony (voice or typed) that ask for a drink open the Cocktail
+   view and build it: "make me a smoky mezcal sour", "design a cocktail inspired by autumn", "make it less sweet"
+   (edits the drink just made), "show that in 3D" (builds the recipe Harmony just gave in chat), "make a cocktail
+   from a photo". Detection is plain word matching on the device; data questions ("best-selling cocktails",
+   "price of a margarita") are left alone. Harmony replies in the chat with the result. */
+(function(){
+  var G=window;
+  var DATA=/\b(sales|sold|selling|sell|seller|price|prices|priced|cost|costs|cogs|menu|menus|venue|venues|bar|bars|restaurant|how many|list|top \d+|best[- ]?selling|report|average|avg|trend|map|where)\b/i;
+  var MAKE=/\b(make|create|design|invent|mix|craft|build|generate|come up with|dream up|whip up|concoct)\b\s+(?:me\s+|us\s+|up\s+|a\s+|an\s+|some\s+|something\s+|another\s+|new\s+){0,4}[^.?!]{0,60}?\b(cocktail|drink|mocktail|spritz|highball|sour|martini|margarita|negroni|daiquiri|old fashioned|punch)s?\b/i;
+  var EDIT=/^(?:(?:ok(?:ay)?|now|and|can you|could you|please|actually|hmm)[\s,]+)*(make it|make that|make this|try it|add|swap|replace|use|without|no |less|more|stronger|weaker|sweeter|drier|sourer|smokier|lighter|darker|change|put it in|serve it|garnish it|top it|turn it|give it)\b/i;
+  var THAT3D=/\b(show|render|build|make|see|visuali[sz]e|picture)\b[^.?!]{0,25}\b(that|this|it|the recipe)\b[^.?!]{0,25}\b(3d|3-d|three d|glass|picture|cocktail view)\b|\bin 3 ?d\b/i;
+  var PHOTO=/\b(photo|picture|camera|snap|image)\b/i;
+  function st(){return G.phgCocktailState?G.phgCocktailState():{};}
+  function recent(){var x=st();return !!(x.lastId&&Date.now()-(x.lastAt||0)<30*60*1000);}
+  function chatRecipe(){var c=(typeof AGENT!=='undefined'&&AGENT.chat)||[];
+    for(var i=c.length-1,n=0;i>=0&&n<10;i--,n++){var m=c[i];if(!m||m.who!=='agent')continue;var t=String(m.text||'');
+      var hits=(t.match(/\b(\d+(?:\.\d+)?\s?(oz|ml|cl|dash(?:es)?|tsp|barspoon)|shake|stir|strain|garnish|build over)\b/gi)||[]).length;if(hits>=3)return t.slice(0,1500);}
+    return null;}
+  function intent(q){var t=String(q||'').trim();if(t.length<3)return null;
+    if(THAT3D.test(t)&&!MAKE.test(t)){var r=chatRecipe();if(r)return {kind:'chat',request:'Build this cocktail exactly as written (keep the amounts): '+r};
+      if(/\b(cocktail|drink)\b/i.test(t))return {kind:'open'};}
+    if(recent()&&EDIT.test(t)&&!DATA.test(t))return {kind:'edit',request:t};
+    if(MAKE.test(t)&&!(DATA.test(t)&&!/\b(make|create|design|invent)\b/i.test(t))){
+      if(/\b(best|top)[- ](selling|sellers?)\b|\bhow many\b|\bprice of\b/i.test(t))return null;
+      return {kind:PHOTO.test(t)?'photo':'make',request:t};}
+    return null;}
+  function say(t){try{if(typeof agentSay==='function')agentSay(t);else if(G.agentSay)G.agentSay(t);}catch(e){}if(typeof AGENT!=='undefined')AGENT.thinking=false;}
+  function summary(d){if(!d)return 'Your drink is ready in the Cocktail view.';var al=Array.isArray(d.allergens)?d.allergens:[];
+    return (d.name||'Your drink')+(d.concept?': '+d.concept:'')+(d.abv_estimate!=null?' About '+d.abv_estimate+'% ABV.':'')+' Allergens: '+(al.length?al.join(', '):'none listed')+'. It is in the Cocktail view in 3D. Say "make it less sweet" or anything else to change it.';}
+  function go(it,opt){opt=opt||{};
+    if(!G.PHGViews||!G.phgCocktailRequest)return false;
+    if(st().busy){say('I am still making the last drink. One moment.');return true;}
+    if(opt.from!=='view')try{G.PHGViews.go('cocktail',{from:'voice'});}catch(e){}
+    if(it.kind==='open'){say('Here is the Cocktail view. Tell me a drink to make.');return true;}
+    if(it.kind==='photo'){if(G.phgCocktailNeedPhoto)G.phgCocktailNeedPhoto(it.request.replace(/\b(from|with|using)\s+(a|this|my)?\s*(photo|picture|image)\b/i,'').trim());
+      say('Tap "Use a photo", take or choose the picture, then tap Create. I will build the drink around it.');return true;}
+    if(opt.from!=='view')say(it.kind==='edit'?'Changing it now.':'Making it now. The recipe, a picture and the 3D drink take about a minute.');
+    G.phgCocktailRequest(it.request,{fresh:it.kind!=='edit'}).then(function(r){
+      if(r&&r.ok)say(summary(r.drink));else say('I could not make that drink just now. '+String((r&&r.error)||'').slice(0,140));});
+    return true;}
+  /* entry from the Cocktail view's Talk button: put the words in the conversation too */
+  G.phgCocktailVoice=function(t,opt){var it=recent()&&EDIT.test(t)?{kind:'edit',request:t}:intent(t)||{kind:recent()?'edit':'make',request:t};
+    try{if(typeof AGENT!=='undefined'&&AGENT.chat){AGENT.chat.push({who:'you',text:t});if(typeof agentDraw==='function')agentDraw();}}catch(e){}
+    return go(it,opt||{});};
+  G.phgCocktailIntent=intent;
+  function wrap(){if(typeof agentAnswer!=='function'){return setTimeout(wrap,400);}
+    if(agentAnswer.__cocktail)return;var _a=agentAnswer;
+    var f=function(q){var it=null;try{it=intent(q);}catch(e){it=null;}if(it&&go(it,{}))return;return _a.apply(this,arguments);};
+    f.__cocktail=true;agentAnswer=f;G.agentAnswer=f;}
+  wrap();
 })();
 </script>
 </body>
