@@ -45680,6 +45680,69 @@ html[data-nav="new"] .phgAuthBadge.phgAcctOpen{display:flex!important;flex-direc
 html[data-nav="new"] .phgAuthBadge.phgAcctOpen button{padding:9px 10px!important;border-radius:9px;text-align:left;min-height:36px}
 html[data-nav="new"] .phgAuthBadge.phgAcctOpen .acct{padding:4px 10px 6px;opacity:.75}
 html[data-nav="new"] #phgAtlasBadgeBtn{display:none!important}
+
+/* v12.3 (Rob): the admin menu is ONE button, top-left, level with the view bar (it mirrors the 3-line account
+   toggle top-right). Tapping it animates the icon and unfolds one full-width toolbar: Overview, Market & Pipeline,
+   Financials, Menus, People, Settings (+ search). Each opens a nested drop-down; tapping the button again folds it all.
+   The old second-row menu bar / iPhone Menu pill are hidden. "Viewing as" moved into the 3-line menu. */
+html[data-nav="new"] #pvMenuBar,html[data-nav="new"] #pvMenuPill,html[data-nav="new"] #pvTop .pvBrand,html[data-nav="new"] #phgViewAs{display:none!important}
+#pvMenuBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 4px);left:8px;z-index:2147483006;height:28px;min-width:28px;padding:0 10px 0 8px;border-radius:9px;
+  border:1px solid var(--line2,rgba(125,211,252,.35));background:rgba(5,10,18,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;gap:7px;
+  color:#cfefff;font:600 10px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background .25s ease,border-color .25s ease}
+#pvMenuBtn[hidden]{display:none}
+#pvMenuBtn .g{position:relative;display:block;width:12px;height:12px;flex:none;transition:transform .38s cubic-bezier(.2,.8,.2,1)}
+#pvMenuBtn .g i{position:absolute;width:4.5px;height:4.5px;border-radius:1.5px;background:#7feaff;transition:transform .38s cubic-bezier(.2,.8,.2,1),border-radius .38s ease}
+#pvMenuBtn .g i:nth-child(1){left:0;top:0}#pvMenuBtn .g i:nth-child(2){right:0;top:0}#pvMenuBtn .g i:nth-child(3){left:0;bottom:0}#pvMenuBtn .g i:nth-child(4){right:0;bottom:0}
+#pvMenuBtn[aria-expanded="true"]{background:rgba(127,234,255,.16);border-color:#7feaff}
+#pvMenuBtn[aria-expanded="true"] .g{transform:rotate(45deg)}
+#pvMenuBtn[aria-expanded="true"] .g i{border-radius:50%}
+#pvMenuBtn[aria-expanded="true"] .g i:nth-child(1){transform:translate(3.75px,0)}
+#pvMenuBtn[aria-expanded="true"] .g i:nth-child(2){transform:translate(0,3.75px)}
+#pvMenuBtn[aria-expanded="true"] .g i:nth-child(3){transform:translate(0,-3.75px)}
+#pvMenuBtn[aria-expanded="true"] .g i:nth-child(4){transform:translate(-3.75px,0)}
+#pvMenuBtn .pvBadge{position:absolute;top:-5px;right:-5px}
+#pvToolbar{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 38px);z-index:4650;display:flex;align-items:stretch;gap:2px;padding:4px 8px;
+  background:var(--panel,rgba(8,12,20,.94));border-top:1px solid var(--line2,rgba(125,211,252,.25));border-bottom:1px solid var(--line2,rgba(125,211,252,.25));
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,.28);overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  clip-path:inset(0 100% 0 0);opacity:0;visibility:hidden;pointer-events:none;
+  transition:clip-path .42s cubic-bezier(.2,.8,.2,1),opacity .25s ease,visibility 0s linear .42s}
+#pvToolbar::-webkit-scrollbar{display:none}
+#pvToolbar.open{clip-path:inset(0 0 0 0);opacity:1;visibility:visible;pointer-events:auto;transition:clip-path .42s cubic-bezier(.2,.8,.2,1),opacity .25s ease,visibility 0s}
+#pvToolbar>button{flex:1 1 0;min-width:max-content;border:0;background:transparent;color:var(--dim,#9fb3c8);font:inherit;font-size:13px;padding:8px 12px;border-radius:9px;cursor:pointer;
+  white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:6px;position:relative;opacity:0;transform:translateX(-14px);
+  transition:opacity .28s ease calc(var(--i,0)*40ms + 90ms),transform .28s ease calc(var(--i,0)*40ms + 90ms),background .2s,color .2s}
+#pvToolbar:not(.open)>button{transition-delay:0s}
+#pvToolbar.open>button{opacity:1;transform:none}
+#pvToolbar>button:hover,#pvToolbar>button[aria-expanded="true"]{color:var(--txt,#e9f4ff);background:rgba(127,234,255,.1)}
+#pvToolbar>button .ch{width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .2s;opacity:.7}
+#pvToolbar>button[aria-expanded="true"] .ch{transform:translateY(1px) rotate(-135deg)}
+#pvToolbar>button.pvTbSearch{flex:0 0 auto;min-width:40px}
+#pvDrop.pvNest[hidden]{display:none}
+#pvDrop.pvNest{display:block;min-width:260px;max-width:min(420px,96vw);padding:8px;animation:pvDropIn .22s ease-out}
+@keyframes pvDropIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.pvNest .pvSecH{display:flex!important;width:100%;align-items:center;justify-content:space-between!important;text-align:left!important;border:0;background:transparent;color:var(--faint,#7d8ea3);
+  font:700 9px/1 var(--font-mono,monospace);letter-spacing:.14em;text-transform:uppercase;padding:10px 9px;cursor:pointer;border-radius:8px;min-height:36px}
+.pvNest .pvSecH:hover{background:rgba(255,255,255,.04)}
+.pvNest .pvSecH .ch{flex:none;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .2s}
+.pvNest .pvSecH[aria-expanded="true"]{color:var(--hud,#7ef9ff)}
+.pvNest .pvSecH[aria-expanded="true"] .ch{transform:translateY(1px) rotate(-135deg)}
+.pvNest .pvSecB{display:grid;grid-template-rows:0fr;transition:grid-template-rows .25s ease}
+.pvNest .pvSecB>div{overflow:hidden;min-height:0;visibility:hidden;transition:visibility 0s linear .25s}
+.pvNest .pvSecB.open{grid-template-rows:1fr}
+.pvNest .pvSecB.open>div{visibility:visible;transition:visibility 0s}
+.pvNest .pvSecB .pvItem{padding-left:16px}
+html[data-nav="new"] .phgAuthBadge #phgAcctViewAs{display:flex!important;flex-direction:column;align-items:flex-start;gap:2px;border-top:1px solid rgba(127,127,127,.25)!important;margin-top:4px}
+#phgAcctViewAs span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
+#phgAcctViewAs b{font-weight:700}
+#phgAcctViewAs small{font-size:11px;opacity:.7}
+@media(max-width:820px){
+  #pvMenuBtn{width:28px;padding:0;justify-content:center}
+  #pvMenuBtn .l{display:none}
+  #pvToolbar{top:calc(env(safe-area-inset-top,0px) + 36px)}
+  #pvToolbar>button{flex:0 0 auto;padding:8px 10px}
+  #pvDrop.pvNest{left:8px!important;right:8px;max-width:none;width:auto;max-height:min(70vh,560px)}
+}
 </style>
 <script id="phgNav">
 /* ===== FIVE VIEWS + ADMIN MENU (Brief 6 / DEV-0028; built by the Lead 2026-10-05 from the agent's spec)
@@ -45830,6 +45893,13 @@ html[data-nav="new"] #phgAtlasBadgeBtn{display:none!important}
   function dropHTML(g){
     return g.sections.map(function(sec){return '<div class="pvSec" role="group">'+(sec.title?'<h4>'+esc(sec.title)+'</h4>':'')+sec.items.map(itemHTML).join('')+'</div>';}).join('');
   }
+  /* v12.3: a group as a nested list - each titled section folds open and shut (the first starts open) */
+  function nestHTML(g){
+    if(g.sections.length===1&&!g.sections[0].title)return g.sections[0].items.map(itemHTML).join('');
+    return g.sections.map(function(sec,i){var o=i===0;
+      return '<div class="pvSec" role="group"><button type="button" class="pvSecH" aria-expanded="'+o+'"><span>'+esc(sec.title||'More')+'</span><span class="ch" aria-hidden="true"></span></button>'
+        +'<div class="pvSecB'+(o?' open':'')+'"><div>'+sec.items.map(itemHTML).join('')+'</div></div></div>';}).join('');
+  }
   function quickHTML(){
     var D=dests(),pins=(CFG.pinned||[]).filter(function(id){return visible(D[id]);}),rec=RECENT.filter(function(id){return visible(D[id])&&pins.indexOf(id)<0;}).slice(0,4);
     if(!pins.length&&!rec.length)return '';
@@ -45842,22 +45912,26 @@ html[data-nav="new"] #phgAtlasBadgeBtn{display:none!important}
     return out.slice(0,24);
   }
   function drop(){var d=document.getElementById('pvDrop');if(!d){d=document.createElement('div');d.id='pvDrop';d.setAttribute('role','menu');d.hidden=true;document.body.appendChild(d);
-      d.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-id]');if(b)open(b.getAttribute('data-id'));});
+      d.addEventListener('click',function(e){var h=e.target.closest&&e.target.closest('.pvSecH');   /* v12.3: open / close a sub-section */
+        if(h){var o=h.getAttribute('aria-expanded')!=='true';h.setAttribute('aria-expanded',String(o));var bd=h.nextElementSibling;if(bd)bd.classList.toggle('open',o);return;}
+        var b=e.target.closest&&e.target.closest('[data-id]');if(b)open(b.getAttribute('data-id'));});
       d.addEventListener('keydown',menuKeys);}return d;}
   function showGroup(gid,btn){
     var d=drop(),gs=groups(),g=gs.filter(function(x){return x.id===gid;})[0];
+    var nest=!!(btn&&btn.closest&&btn.closest('#pvToolbar'));d.classList.toggle('pvNest',nest);   /* v12.3 */
     if(gid==='jump'){d.innerHTML='<input class="pvSearch" id="pvQ" placeholder="Jump to\u2026" aria-label="Jump to a page" autocomplete="off">'+quickHTML()+'<div id="pvHits" style="display:contents"></div>';}
-    else if(g)d.innerHTML=dropHTML(g);else return;
+    else if(g)d.innerHTML=nest?nestHTML(g):dropHTML(g);else return;
     openGroup=gid;d.hidden=false;
     var r=btn.getBoundingClientRect();d.style.top=Math.round(r.bottom+6)+'px';
-    d.style.left=Math.round(Math.max(8,Math.min(r.left,innerWidth-Math.min(860,innerWidth*0.96)-8)))+'px';
-    document.querySelectorAll('#pvMenuBar>button').forEach(function(b){b.setAttribute('aria-expanded',String(b.getAttribute('data-g')===gid));});
+    var dw=nest?Math.min(420,innerWidth*0.96):Math.min(860,innerWidth*0.96);
+    d.style.left=Math.round(Math.max(8,Math.min(r.left,innerWidth-dw-8)))+'px';
+    document.querySelectorAll('#pvMenuBar>button,#pvToolbar>button').forEach(function(b){b.setAttribute('aria-expanded',String(b.getAttribute('data-g')===gid));});
     if(gid==='jump'){var q=document.getElementById('pvQ');q.addEventListener('input',function(){document.getElementById('pvHits').innerHTML=searchHits(q.value).map(itemHTML).join('');});
       q.addEventListener('keydown',function(e){if(e.key==='Enter'){var f=d.querySelector('#pvHits [data-id]');if(f)open(f.getAttribute('data-id'));}});q.focus();}
     else{var f=d.querySelector('[data-id]');if(f)f.focus();}
   }
   function closeMenus(){var d=document.getElementById('pvDrop');if(d)d.hidden=true;openGroup=null;
-    document.querySelectorAll('#pvMenuBar>button').forEach(function(b){b.setAttribute('aria-expanded','false');});
+    document.querySelectorAll('#pvMenuBar>button,#pvToolbar>button').forEach(function(b){b.setAttribute('aria-expanded','false');});
     var s=document.getElementById('pvSheet');if(s&&!s.hidden){s.hidden=true;try{if(history.state&&history.state.pvSheet)history.back();}catch(e){}}}
   function menuKeys(e){
     var items=Array.prototype.slice.call(document.querySelectorAll('#pvDrop [data-id]'));var i=items.indexOf(document.activeElement);
@@ -45901,6 +45975,7 @@ html[data-nav="new"] #phgAtlasBadgeBtn{display:none!important}
       ['pointerdown','touchstart'].forEach(function(ev){bt.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
       document.body.appendChild(bt);}
     bt.hidden=!on;if(!on&&bt.getAttribute('aria-expanded')==='true')acctSet(false);
+    try{vaRow(bd,on);}catch(e){}   /* v12.3 */
   }
   document.addEventListener('click',function(e){var bd=document.querySelector('.phgAuthBadge.phgAcctOpen'),bt=document.getElementById('phgAcctBtn');if(!bd)return;
     if(bt&&bt.contains(e.target))return;
@@ -45908,6 +45983,45 @@ html[data-nav="new"] #phgAtlasBadgeBtn{display:none!important}
     acctSet(false);},true);
   document.addEventListener('keydown',function(e){if(e.key==='Escape')acctSet(false);});
   addEventListener('blur',function(){acctSet(false);});   /* a tap inside the Atlas frame (or another window) folds it away */
+  /* ---------- v12.3: the admin menu button (top-left) and its full-width toolbar ---------- */
+  var TBL={overview:'Overview',market:'Market & Pipeline',financials:'Financials',menus:'Menus',people:'People',settings:'Settings'};
+  function tbOpen(){var t=document.getElementById('pvToolbar');return !!(t&&t.classList.contains('open'));}
+  function tbSet(o){var t=document.getElementById('pvToolbar'),b=document.getElementById('pvMenuBtn');
+    if(t)t.classList.toggle('open',!!o);if(b)b.setAttribute('aria-expanded',String(!!o));if(!o)closeMenus();}
+  function tb(show,nb){
+    var b=document.getElementById('pvMenuBtn'),t=document.getElementById('pvToolbar');
+    if(!b){b=document.createElement('button');b.id='pvMenuBtn';b.type='button';b.setAttribute('aria-label','Admin menu');b.setAttribute('aria-expanded','false');b.setAttribute('aria-controls','pvToolbar');
+      b.addEventListener('click',function(e){e.stopPropagation();tbSet(!tbOpen());});
+      ['pointerdown','touchstart'].forEach(function(ev){b.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
+      document.body.appendChild(b);}
+    if(!t){t=document.createElement('div');t.id='pvToolbar';t.setAttribute('role','menubar');t.setAttribute('aria-label','Admin menu');
+      t.addEventListener('click',function(e){var x=e.target.closest&&e.target.closest('button[data-g]');if(!x)return;e.stopPropagation();var g=x.getAttribute('data-g');if(openGroup===g)closeMenus();else showGroup(g,x);});
+      t.addEventListener('keydown',function(e){var bs=Array.prototype.slice.call(t.querySelectorAll('button[data-g]')),i=bs.indexOf(document.activeElement);
+        if(e.key==='ArrowRight'&&bs.length){e.preventDefault();bs[(i+1)%bs.length].focus();}if(e.key==='ArrowLeft'&&bs.length){e.preventDefault();bs[(i-1+bs.length)%bs.length].focus();}
+        if(e.key==='ArrowDown'&&i>=0){e.preventDefault();showGroup(bs[i].getAttribute('data-g'),bs[i]);}});
+      document.body.appendChild(t);}
+    b.hidden=!show;if(!show&&tbOpen())tbSet(false);
+    b.innerHTML='<span class="g" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="l">Menu</span>'+(nb?'<span class="pvBadge">'+nb+'</span>':'');
+    t.innerHTML=show?groups().map(function(g,i){return '<button type="button" role="menuitem" aria-haspopup="true" aria-expanded="false" data-g="'+esc(g.id)+'" style="--i:'+i+'">'
+        +esc(TBL[g.id]||g.label)+(g.id==='people'&&nb?'<span class="pvBadge">'+nb+'</span>':'')+'<span class="ch" aria-hidden="true"></span></button>';}).join('')
+      +'<button type="button" class="pvTbSearch" data-g="jump" aria-label="Jump to a page (Ctrl K)" style="--i:7">\u2315</button>':'';
+  }
+  function jumpOpen(){if(!document.getElementById('pvToolbar'))return;tbSet(true);var j=document.querySelector('#pvToolbar [data-g="jump"]');if(j)showGroup('jump',j);}
+  document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;var d=document.getElementById('pvDrop');if(d&&!d.hidden)return;if(tbOpen())tbSet(false);});
+  /* v12.3: "Viewing as" lives in the 3-line menu (was a pill in the bottom-left corner). Same rule as phgViewAsDraw:
+     only for someone the server says is entitled to more than beta; switching reloads with ?view_as and the server decides. */
+  function vaRow(bd,on){
+    if(!bd)return;var ex=document.getElementById('phgAcctViewAs');
+    var A=typeof PHGACCESS!=='undefined'?PHGACCESS:null,ent=(A&&A.entitled_view_mode)||'none',now=(A&&A.view_mode)||'none';
+    var can=!!(on&&A&&Array.isArray(A.can_view_as)&&A.can_view_as.indexOf('beta')>=0&&ent!=='beta');
+    if(!can){if(ex)ex.remove();return;}
+    var beta=now==='beta',cap=function(x){return x.charAt(0).toUpperCase()+x.slice(1);};
+    var html='<span>Viewing as</span><b>'+esc(beta?'Beta':cap(ent))+'</b><small>Switch to '+esc(beta?cap(ent):'Beta')+'</small>';
+    if(!ex||ex.parentNode!==bd){if(ex)ex.remove();ex=document.createElement('button');ex.id='phgAcctViewAs';ex.type='button';
+      var role=bd.querySelector('.role');if(role&&role.nextSibling)bd.insertBefore(ex,role.nextSibling);else bd.appendChild(ex);}
+    if(ex.innerHTML!==html)ex.innerHTML=html;
+    ex.onclick=function(){if(typeof phgViewAsSet==='function')phgViewAsSet(beta?ent:'beta');};
+  }
   function paint(force){
     try{acct();}catch(e){}
     var auth=!!authed(),cur=current();
@@ -45937,6 +46051,7 @@ html[data-nav="new"] #phgAtlasBadgeBtn{display:none!important}
       var pill=document.getElementById('pvMenuPill');
       if(!pill){pill=document.createElement('button');pill.id='pvMenuPill';pill.type='button';pill.textContent='Menu';pill.addEventListener('click',openSheet);mb.parentNode.insertBefore(pill,mb.nextSibling);}
       pill.style.visibility=showMenu?'visible':'hidden';
+      tb(showMenu,b);   /* v12.3 */
     }
     /* the floating copy over Harmony and the Atlas */
     var fl=document.getElementById('phgViews');
@@ -45948,10 +46063,10 @@ html[data-nav="new"] #phgAtlasBadgeBtn{display:none!important}
   document.addEventListener('keydown',function(e){
     if(!authed())return;var cur=current();if(cur==='harmony'||cur==='atlas')return;
     var t=e.target&&e.target.tagName;var typing=t==='INPUT'||t==='TEXTAREA'||t==='SELECT'||(e.target&&e.target.isContentEditable);
-    if((e.key==='k'||e.key==='K')&&(e.metaKey||e.ctrlKey)){e.preventDefault();if(innerWidth<=820)openSheet();else{var j=document.querySelector('#pvMenuBar .pvJump');if(j)showGroup('jump',j);}}
-    else if(e.key==='/'&&!typing){e.preventDefault();if(innerWidth<=820)openSheet();else{var j2=document.querySelector('#pvMenuBar .pvJump');if(j2)showGroup('jump',j2);}}
+    if((e.key==='k'||e.key==='K')&&(e.metaKey||e.ctrlKey)){e.preventDefault();jumpOpen();}
+    else if(e.key==='/'&&!typing){e.preventDefault();jumpOpen();}
   });
-  document.addEventListener('click',function(e){var d=document.getElementById('pvDrop');if(!d||d.hidden)return;if(d.contains(e.target))return;var mb=document.getElementById('pvMenuBar');if(mb&&mb.contains(e.target))return;closeMenus();});
+  document.addEventListener('click',function(e){var d=document.getElementById('pvDrop');if(!d||d.hidden)return;if(d.contains(e.target))return;var mb=document.getElementById('pvMenuBar');if(mb&&mb.contains(e.target))return;var tb2=document.getElementById('pvToolbar');if(tb2&&tb2.contains(e.target))return;closeMenus();});
   addEventListener('resize',function(){closeMenus();paint(true);});
   setInterval(function(){paint(false);},400);
   setTimeout(function(){paint(true);},0);
