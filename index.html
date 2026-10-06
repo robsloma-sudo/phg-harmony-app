@@ -6492,6 +6492,7 @@ function siteEntryEnsure(){
 function siteEntryDraw(){
   siteEntryEnsure();
   var e=document.getElementById('siteEntryGate');
+  if(!SITE_MODE&&!phgChooserWanted())siteEntryModeSave('app');   /* v12.7: no chooser - everyone starts on the Harmony sign-in (?choose=1 shows it) */
   if(SITE_MODE){e.className='siteEntryGate hidden';e.innerHTML='';return;}
   e.className='siteEntryGate';
   e.innerHTML='<div class="siteEntryCard">'
@@ -6511,14 +6512,26 @@ function siteEntryDraw(){
    Purely how the screens look: what anyone can open is still decided by the server (phg-access). A device is
    remembered as a beta tester's after a beta sign-in, or by a link with ?beta=1 or ?invited=1. */
 var PHG_BETA_DEVICE_KEY='phg_beta_device_v1';
+/* v12.7 (Rob 2026-10-06: "beta users are seen all options for logging in. They should only see beta user login button,
+   not developer and not see website either"). The app cannot know who someone is before they sign in, so EVERYONE now
+   starts on the Harmony sign-in. The team reaches the team sign-in (and the website) through the small "Team sign-in"
+   link or a ?team=1 link, and a device a team login has used is remembered. What anyone can open after sign-in is
+   still decided by phg-access on the server; these screens are looks only. */
+var PHG_TEAM_DEVICE_KEY='phg_team_device_v1';
 function phgBetaLogin(){
   try{
     var q=new URLSearchParams(location.search||'');
+    if(q.get('team')==='1')sessionStorage.setItem('phg_beta_signin','0');
     if(q.get('beta')==='1'||q.get('invited')==='1')sessionStorage.setItem('phg_beta_signin','1');
-    if(sessionStorage.getItem('phg_beta_signin')==='0')return false;
-    return sessionStorage.getItem('phg_beta_signin')==='1'||localStorage.getItem(PHG_BETA_DEVICE_KEY)==='1';
-  }catch(e){return false;}
+    var s=sessionStorage.getItem('phg_beta_signin');
+    if(s==='0')return false;
+    if(s==='1')return true;
+    return localStorage.getItem(PHG_TEAM_DEVICE_KEY)!=='1';
+  }catch(e){return true;}
 }
+function phgChooserWanted(){try{return /[?&]choose=1\b/.test(location.search||'');}catch(e){return false;}}
+function phgAuthHarmonySignIn(){phgBetaLoginSet(true);PHGAUTH.mode='signin';PHGAUTH.error='';phgAuthDraw();}
+window.phgAuthHarmonySignIn=phgAuthHarmonySignIn;
 function phgBetaLoginSet(on){try{sessionStorage.setItem('phg_beta_signin',on?'1':'0');if(!on)localStorage.removeItem(PHG_BETA_DEVICE_KEY);}catch(e){}}
 function siteEntryBeta(){phgBetaLoginSet(true);siteEntryDeveloper();}
 function phgAuthTeamSignIn(){phgBetaLoginSet(false);PHGAUTH.mode='signin';phgAuthDraw();}
@@ -6541,7 +6554,7 @@ function siteEntryInit(){
      survives client-side; every signed-in mode comes from phgAccessLoad(). */
   if(saved==='public')SITE_MODE='public';
   else if(saved==='app'||saved==='developer')SITE_MODE='app';   /* legacy value downgraded */
-  if(!SITE_MODE&&phgBetaLogin())siteEntryModeSave('app');       /* v12.5: beta testers go straight to their sign-in */
+  if(!SITE_MODE&&phgBetaLogin()&&!phgChooserWanted())siteEntryModeSave('app');       /* v12.5: beta testers go straight to their sign-in (v12.7: ?choose=1 keeps the chooser) */
   siteEntryDraw();
   if(SITE_MODE==='public')publicCatalogLoad();
   else if(typeof phgAuthAccessToken==='function'&&phgAuthAccessToken()){
@@ -7121,8 +7134,17 @@ function phgAuthContinueSaved(){
   PHGAUTH.busy=true;phgAuthDraw();
   var exp=Number(PHGAUTH.session.expires_at||0)*1000;
   var p=(exp&&exp<Date.now()+60000)?phgAuthRefresh():Promise.resolve(PHGAUTH.session);
-  p.then(function(){return phgAuthBootstrap();}).catch(function(e){
-    phgAuthSaveSession(null);PHGAUTH.workspace=null;PHGAUTH.busy=false;PHGAUTH.returning=false;
+  p.then(function(){return phgAuthBootstrap();})
+  .catch(function(e){
+    /* an expired access token with a good refresh token: refresh once and try again */
+    if(e&&(e.status===401||/jwt|expired|login required|HTTP 401/i.test(String(e.message||'')))&&!PHGAUTH.retried&&PHGAUTH.session&&PHGAUTH.session.refresh_token){
+      PHGAUTH.retried=true;return phgAuthRefresh().then(function(){return phgAuthBootstrap();});}
+    throw e;})
+  .then(function(){PHGAUTH.auto=false;PHGAUTH.retried=false;},function(e){
+    var offline=!(e&&e.status)&&/fetch|network|load failed|offline|internet/i.test(String(e&&e.message||e));
+    PHGAUTH.auto=false;PHGAUTH.retried=false;PHGAUTH.workspace=null;PHGAUTH.busy=false;
+    if(offline){PHGAUTH.returning=true;PHGAUTH.error='Can\u2019t reach PHG right now. Check your connection, then tap Continue.';phgAuthDraw();return;}
+    phgAuthSaveSession(null);PHGAUTH.returning=false;
     PHGAUTH.error='That saved login is no longer valid. Sign in again.';
     phgAuthDraw();
   });
@@ -7161,12 +7183,13 @@ function phgAuthDraw(){
     g.className='phgAuthGate hidden';
     var a=PHGAUTH.workspace.account||{};
     b.className='phgAuthBadge show';
-    b.innerHTML='<span class="acct">'+phgAuthEsc(a.name||'PHG account')+'</span><span class="role">'+phgAuthEsc(a.role||'')+'</span>'+(typeof phgUpdBtnHTML==='function'?phgUpdBtnHTML(false):'')+'<button onclick="phgInvOpen()">People</button><button onclick="phgAuthSignOut()">Sign out</button>';
+    b.innerHTML='<span class="acct">'+phgAuthEsc(a.name||'PHG account')+'</span><span class="role">'+phgAuthEsc(a.role||'')+'</span>'+(typeof phgUpdBtnHTML==='function'?phgUpdBtnHTML(false):'')+(phgPeopleHidden()?'':'<button onclick="phgInvOpen()">People</button>')+'<button onclick="phgAuthSignOut()">Sign out</button>';
     return;
   }
 
   b.className='phgAuthBadge';b.innerHTML='';g.className='phgAuthGate';
 
+  if(PHGAUTH.auto&&PHGAUTH.busy){g.innerHTML=phgAuthSplashHTML();return;}
   if(typeof phgBetaLogin==='function'&&phgBetaLogin()){g.innerHTML=phgAuthBetaHTML();return;}
   if(PHGAUTH.returning&&PHGAUTH.session){
     var savedEmail=phgAuthSavedEmail();
@@ -7184,7 +7207,7 @@ function phgAuthDraw(){
 
   var signup=PHGAUTH.mode==='signup';
   g.innerHTML='<div class="phgAuthCard"><div class="phgAuthBrand">PERFECT HARMONY GROUP</div><h1 class="phgAuthTitle">'+(signup?'Create your login':'Sign in to PHG')+'</h1>'
-    +'<div class="phgAuthCopy">Choose the email you want first, then sign in. Saving a password in your browser can fill these fields, but PHG will not submit them until you press Sign in.</div>'
+    +'<div class="phgAuthCopy">Team sign-in for PHG staff and partners. You stay signed in on this device until you sign out.</div>'
     +'<div class="phgAuthTabs"><button class="phgAuthTab '+(!signup?'on':'')+'" onclick="phgAuthSetMode(\'signin\')">Sign in</button><button class="phgAuthTab '+(signup?'on':'')+'" onclick="phgAuthSetMode(\'signup\')">Create login</button></div>'
     +'<label class="phgAuthLabel">Email</label><input id="phgAuthEmail" class="phgAuthInput" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false">'
     +'<label class="phgAuthLabel">Password</label><input id="phgAuthPassword" class="phgAuthInput" type="password" autocomplete="'+(signup?'new-password':'current-password')+'">'
@@ -7192,9 +7215,18 @@ function phgAuthDraw(){
     +(!signup?'<button class="phgAuthBtn" onclick="phgAuthRecover()"'+(PHGAUTH.busy?' disabled':'')+'>Reset password</button>':'')+'</div>'
     +(PHGAUTH.error?'<div class="phgAuthMsg err">'+phgAuthEsc(PHGAUTH.error)+'</div>':'')
     +(PHGAUTH.message?'<div class="phgAuthMsg ok">'+phgAuthEsc(PHGAUTH.message)+'</div>':'')
+    +'<div class="phgBetaFoot">Testing Harmony? <button type="button" onclick="phgAuthHarmonySignIn()">Harmony sign-in</button> \u00b7 <button type="button" onclick="siteEntryPublic()">Show website</button></div>'
     +'</div>';
 }
 
+/* v12.7: beta testers do not see People unless the server says they may invite (phg-access still re-checks every call) */
+function phgPeopleHidden(){return typeof PHGACCESS!=='undefined'&&!!PHGACCESS&&PHGACCESS.view_mode==='beta'&&PHGACCESS.can_invite!==true;}
+function phgAuthSplashHTML(){
+  return '<div class="phgAuthCard phgAuthBeta" style="text-align:center"><div class="phgAuthBrand" style="justify-content:center">HARMONY</div>'
+    +'<h1 class="phgAuthTitle">Welcome back</h1><div class="phgAuthCopy">'+phgAuthEsc(phgAuthSavedEmail()||'Signing you in')+'</div>'
+    +'<div aria-hidden="true" style="width:34px;height:34px;margin:14px auto 4px;border-radius:50%;border:3px solid rgba(125,211,252,.25);border-top-color:#7dd3fc;animation:phgSpin .9s linear infinite"></div>'
+    +'<div class="phgAuthCopy" role="status">Opening Harmony\u2026</div></div>';
+}
 function phgAuthBetaHTML(){
   var E=phgAuthEsc,busy=PHGAUTH.busy;
   var head='<div class="phgAuthCard phgAuthBeta"><div class="phgAuthBrand">HARMONY <span class="phgBetaPill">BETA</span></div>';
@@ -7207,7 +7239,7 @@ function phgAuthBetaHTML(){
       +'<button class="phgAuthBtn phgUseAnother" onclick="phgAuthUseAnother()"'+(busy?' disabled':'')+'>Use a different email</button>'+msg+foot;
   }
   return head+'<h1 class="phgAuthTitle">Sign in to Harmony</h1>'
-    +'<div class="phgAuthCopy">Thanks for testing Harmony. Use the email your invite was sent to and the password you chose.</div>'
+    +'<div class="phgAuthCopy">Thanks for testing Harmony. Use the email your invite was sent to and the password you chose. You only do this once: Harmony keeps you signed in on this device.</div>'
     +'<label class="phgAuthLabel">Email</label><input id="phgAuthEmail" class="phgAuthInput" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false">'
     +'<label class="phgAuthLabel">Password</label><input id="phgAuthPassword" class="phgAuthInput" type="password" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')phgAuthLogin()">'
     +'<div class="phgAuthRow"><button class="phgAuthBtn primary" onclick="phgAuthLogin()"'+(busy?' disabled':'')+'>'+(busy?'Signing in\u2026':'Sign in')+'</button>'
@@ -7237,6 +7269,16 @@ function phgAuthRefresh(){
   var s=PHGAUTH.session;if(!s||!s.refresh_token)return Promise.reject(new Error('no refresh session'));
   return phgAuthApi('/token?grant_type=refresh_token',{refresh_token:s.refresh_token},null).then(function(j){phgAuthSaveSession(j);return j;});
 }
+/* v12.7 KEEP THE LOGIN ALIVE. The access token lasts about an hour and nothing renewed it while the app was open, so
+   calls began failing after an hour. Refresh 10 minutes before it expires: every 4 minutes, and whenever the app comes
+   back to the foreground. A failed refresh leaves the session alone (the next open retries). */
+function phgAuthKeepAlive(){
+  var s=PHGAUTH.session;if(!s||!s.refresh_token||PHGAUTH.refreshing||PHGAUTH.busy)return;
+  var exp=Number(s.expires_at||0)*1000;if(!exp||exp-Date.now()>10*60000)return;
+  PHGAUTH.refreshing=true;
+  phgAuthRefresh().catch(function(e){if(window.console)console.warn('PHG token refresh',e&&e.message);}).then(function(){PHGAUTH.refreshing=false;});
+}
+try{setInterval(phgAuthKeepAlive,4*60000);document.addEventListener('visibilitychange',function(){if(!document.hidden)phgAuthKeepAlive();});window.addEventListener('focus',phgAuthKeepAlive);}catch(e){}
 
 var PHG_LAUNCH_VOICE_KEY='phg_ai_voice_confirmed_v1';
 var PHG_LAUNCH={
@@ -7286,7 +7328,33 @@ function phgLaunchEnsure(){
   }
   return g;
 }
+/* v12.7 FIRST TIME ONLY (Rob: "only have to do that the first time"). Once a device has finished the intro and the
+   launch review, later sign-ins go straight into Harmony (or the last start view). Shown again if the voice was never
+   confirmed, the Home Screen or location step is still due, or with ?setup=1 / ?tour=1. Settings stay reachable from
+   the launch review card and Settings. */
+var PHG_LAUNCH_DONE_KEY='phg_launch_done_v1',PHG_TOUR_KEY='phg_tour_seen_v1';
+function phgLaunchSavedStart(){try{return localStorage.getItem(PHG_LAUNCH_DONE_KEY)==='administrative'?'administrative':'harmony';}catch(e){return 'harmony';}}
+function phgLaunchFastOK(){
+  try{if(!localStorage.getItem(PHG_LAUNCH_DONE_KEY)||!localStorage.getItem(PHG_TOUR_KEY))return false;}catch(e){return false;}
+  if(/[?&](setup|tour)=1\b/.test(location.search||''))return false;
+  if(!phgLaunchVoiceConfirmed())return false;
+  try{if(phgHomeNeeded())return false;}catch(e){}
+  try{if(phgLocNeeded())return false;}catch(e){}
+  return true;
+}
+function phgLaunchEnterNow(target){
+  if(typeof flowRememberDone==='function'){try{flowRememberDone();}catch(e){}}
+  var beta=typeof PHGACCESS!=='undefined'&&PHGACCESS&&PHGACCESS.view_mode==='beta';
+  if(target==='administrative'&&!beta){
+    if(typeof phgPrimaryView==='function')phgPrimaryView('administrative');
+    else{if(typeof FIN!=='undefined')FIN.page='mgmt_dashboard';if(typeof setApp==='function')setApp('fin');}
+  }else{
+    if(typeof phgPrimaryView==='function')phgPrimaryView('viewport');
+    else if(typeof phgViewport==='function')phgViewport();
+  }
+}
 function phgLaunchGateOpen(){
+  if(phgLaunchFastOK()){PHG_LAUNCH.open=false;phgLaunchEnterNow(phgLaunchSavedStart());return;}
   PHG_LAUNCH.open=true;PHG_LAUNCH.homeSeen=false;
   PHG_LAUNCH.error='';
   PHG_LAUNCH.startView='harmony';
@@ -7469,22 +7537,129 @@ function phgLaunchGateStart(){
   PHG_LAUNCH.error='';
   if(typeof flowRememberDone==='function')flowRememberDone();
   var target=PHG_LAUNCH.startView;
+  try{localStorage.setItem(PHG_LAUNCH_DONE_KEY,target);if(!localStorage.getItem(PHG_TOUR_KEY))localStorage.setItem(PHG_TOUR_KEY,'done');}catch(e){}
   phgLaunchGateClose();
-  if(target==='administrative'){
-    if(typeof phgPrimaryView==='function')phgPrimaryView('administrative');
-    else{if(typeof FIN!=='undefined')FIN.page='mgmt_dashboard';if(typeof setApp==='function')setApp('fin');}
-  }else{
-    if(typeof phgPrimaryView==='function')phgPrimaryView('viewport');
-    else if(typeof phgViewport==='function')phgViewport();
-  }
+  phgLaunchEnterNow(target);
 }
 function phgLaunchSettingsCard(label,value,note,action,actionLabel){
   return '<div class="phgLaunchSetting"><div><span>'+phgAuthEsc(label)+'</span><b>'+phgAuthEsc(value)+'</b>'
     +(note?'<small>'+phgAuthEsc(note)+'</small>':'')+'</div>'
     +(action?'<button onclick="'+action+'">'+phgAuthEsc(actionLabel||'Change')+'</button>':'')+'</div>';
 }
+/* v12.7 INTRO TOUR (Rob: "a setup prompt on what the five or six main views are with Harmony, Atlas, and all that ...
+   really sexy state of the art prompt at the beginning where people can skip all of it with the click of the button
+   further upon clicking on Harmony and go into the app"). First launch on a device only. Shows ONLY the views this login
+   may open (from phg-access surfaces), plus keeping Harmony on the Home Screen / desktop. "Skip intro" and "Enter Harmony"
+   both go straight into the app (the default voice is kept; everything stays changeable later). Its styles are injected
+   here so no shared stylesheet changes. Watch again: launch review > Intro tour, or ?tour=1. */
+var PHGTOUR={i:0,off:false,forced:/[?&]tour=1\b/.test(location.search||''),x0:null};
+function phgTourNeeded(){if(PHGTOUR.off)return false;if(PHGTOUR.forced)return true;try{return !localStorage.getItem(PHG_TOUR_KEY);}catch(e){return false;}}
+function phgTourMay(s){return typeof phgMay==='function'&&phgMay(s);}
+function phgTourIsDesktop(){try{return phgHomeOS()==='other';}catch(e){return true;}}
+function phgTourSlides(){
+  var dev=typeof PHGACCESS!=='undefined'&&PHGACCESS&&PHGACCESS.view_mode==='developer';
+  var s=[{k:'hello',accent:'#7ef9ff',kick:'WELCOME',title:'Meet Harmony',sub:'Your bar and restaurant partner. Say what you need, out loud or typed, and she builds it with you.'}];
+  s.push({k:'harmony',accent:'#7ef9ff',kick:'VIEW',title:'Harmony',sub:'The heart of the app. Ask anything about your business and she answers, shows her work and remembers your notes.',tries:['What sold best last weekend?','Log: order more limes','Plan Friday\u2019s specials']});
+  if(phgTourMay('atlas'))s.push({k:'atlas',accent:'#5eead4',kick:'VIEW',title:'Atlas',sub:'A live map of your market: venues, competitors, what they pour and what they charge, around you.',tries:['Show cocktail bars near me','Who sells mezcal downtown?']});
+  if(phgTourMay('menu_studio')||phgTourMay('menu_library'))s.push({k:'menu',accent:'#f5a623',kick:'VIEW',title:'Menu Studio',sub:'Harmony interviews you, then designs and paints a complete menu from your words and photos. Change direction any time.',tries:['Make a menu for a candlelit wine bar','Make it Gothic','Design it from my photos']});
+  if(phgTourMay('cocktail'))s.push({k:'cocktail',accent:'#ff7ab6',kick:'VIEW',title:'Cocktail 3D',sub:'Design a drink with Harmony, then see it built in real glassware you can spin, with a recipe card to share.',tries:['Make me a smoky mezcal sour','Build it in 3D']});
+  if(phgTourMay('financial'))s.push({k:'fin',accent:'#a3e635',kick:'VIEW',title:'Financials',sub:'Sales, costs and margins in plain numbers, with Harmony to explain what moved and why.',tries:['How were margins this month?','What is my best-selling drink?']});
+  if(dev||phgTourMay('settings'))s.push({k:'admin',accent:'#b98bff',kick:'VIEW',title:'Admin',sub:'People, approvals, pipelines and settings for the whole platform. Only team logins see this.'});
+  var installed=false;try{installed=phgHomeStandalone();}catch(e){}
+  if(!installed)s.push(phgTourIsDesktop()
+    ?{k:'install',accent:'#7dd3fc',kick:'TIP',title:'Keep Harmony one click away',sub:'Install Harmony like an app so it opens in its own window and stays signed in.',install:'desktop'}
+    :{k:'install',accent:'#7dd3fc',kick:'TIP',title:'Put Harmony on your Home Screen',sub:'Opens like an app, full screen, and keeps you signed in. It takes ten seconds.',install:'phone'});
+  s.push({k:'go',accent:'#7ef9ff',kick:'READY',title:'You\u2019re all set',sub:'Tap Enter Harmony and start talking. You can change your voice, look and settings any time.'});
+  return s;
+}
+var PHG_TOUR_ICON={
+  hello:'<circle cx="60" cy="60" r="18"/><path d="M60 14v14M60 92v14M14 60h14M92 60h14M28 28l10 10M82 82l10 10M92 28L82 38M38 82L28 92"/>',
+  harmony:'<circle cx="60" cy="60" r="16"/><ellipse cx="60" cy="60" rx="44" ry="16"/><ellipse cx="60" cy="60" rx="44" ry="16" transform="rotate(60 60 60)"/><ellipse cx="60" cy="60" rx="44" ry="16" transform="rotate(120 60 60)"/>',
+  atlas:'<circle cx="60" cy="60" r="40"/><path d="M20 60h80M60 20c-16 18-16 62 0 80M60 20c16 18 16 62 0 80"/><path d="M78 40c0 9-10 18-10 18s-10-9-10-18a10 10 0 0 1 20 0z"/>',
+  menu:'<rect x="30" y="16" width="60" height="88" rx="6"/><path d="M40 70h40M40 80h30M40 90h36"/><path d="M38 58l12-16 10 10 8-8 14 14z"/><circle cx="72" cy="32" r="5"/>',
+  cocktail:'<path d="M28 26h64L60 62z"/><path d="M60 62v32M44 98h32"/><circle cx="82" cy="22" r="8"/><path d="M40 36h40"/>',
+  fin:'<path d="M18 100h84"/><rect x="26" y="70" width="12" height="30"/><rect x="46" y="54" width="12" height="46"/><rect x="66" y="40" width="12" height="60"/><path d="M24 54l22-18 18 10 30-26"/>',
+  admin:'<rect x="20" y="20" width="34" height="34" rx="6"/><rect x="66" y="20" width="34" height="34" rx="6"/><rect x="20" y="66" width="34" height="34" rx="6"/><circle cx="83" cy="83" r="17"/>',
+  install:'<rect x="38" y="14" width="44" height="92" rx="9"/><path d="M60 36v34M48 58l12 12 12-12"/><path d="M52 96h16"/>',
+  go:'<path d="M30 62l20 20 42-44"/><circle cx="60" cy="60" r="46"/>'
+};
+function phgTourCSS(){
+  if(document.getElementById('phgTourCSS'))return;
+  var st=document.createElement('style');st.id='phgTourCSS';
+  st.textContent='@keyframes phgSpin{to{transform:rotate(360deg)}}'
+   +'@keyframes phgTourDrift{0%{transform:translate3d(-6%,-4%,0) scale(1)}50%{transform:translate3d(6%,4%,0) scale(1.15)}100%{transform:translate3d(-6%,-4%,0) scale(1)}}'
+   +'@keyframes phgTourIn{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}'
+   +'@keyframes phgTourDraw{from{stroke-dashoffset:420}to{stroke-dashoffset:0}}'
+   +'@keyframes phgTourOrbit{to{transform:rotate(360deg)}}'
+   +'@keyframes phgTourFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}'
+   +'.phgTour{position:fixed;inset:0;z-index:2147483000;overflow:hidden;background:#04060c;color:#eef6ff;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;display:flex;flex-direction:column;touch-action:pan-y}'
+   +'.phgTourSky{position:absolute;inset:-25%;background:radial-gradient(40% 35% at 30% 30%,var(--a) 0,transparent 60%),radial-gradient(35% 30% at 75% 65%,var(--b) 0,transparent 62%),radial-gradient(30% 30% at 60% 20%,rgba(255,255,255,.06) 0,transparent 60%);opacity:.55;filter:saturate(130%);animation:phgTourDrift 18s ease-in-out infinite}'
+   +'.phgTourGrain{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);mix-blend-mode:screen;pointer-events:none}'
+   +'.phgTourTop{position:relative;display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 8px}'
+   +'.phgTourBars{flex:1;display:flex;gap:5px}.phgTourBars i{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;position:relative}'
+   +'.phgTourBars i.on:after,.phgTourBars i.done:after{content:"";position:absolute;inset:0;background:var(--a);transform-origin:left}.phgTourBars i.on:after{animation:phgTourFill .6s ease-out both}'
+   +'.phgTourSkip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#eef6ff;border-radius:999px;padding:8px 14px;font:600 13px Inter,sans-serif;cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}'
+   +'.phgTourStage{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 26px;text-align:center;animation:phgTourIn .55s cubic-bezier(.2,.8,.2,1) both}'
+   +'.phgTourArt{position:relative;width:min(46vw,210px);height:min(46vw,210px);margin-bottom:22px}'
+   +'.phgTourArt:before,.phgTourArt:after{content:"";position:absolute;inset:-14%;border-radius:50%;border:1px dashed var(--a);opacity:.35;animation:phgTourOrbit 24s linear infinite}.phgTourArt:after{inset:-28%;opacity:.16;animation-duration:40s;animation-direction:reverse}'
+   +'.phgTourArt svg{width:100%;height:100%;fill:none;stroke:var(--a);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 18px var(--a))}'
+   +'.phgTourArt svg *{stroke-dasharray:420;animation:phgTourDraw 1.6s cubic-bezier(.3,.7,.2,1) both}'
+   +'.phgTourKick{font:600 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.32em;color:var(--a);margin-bottom:12px}'
+   +'.phgTourTitle{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(40px,9vw,76px);line-height:.98;letter-spacing:-.01em;margin:0 0 14px;background:linear-gradient(180deg,#fff,rgba(255,255,255,.72));-webkit-background-clip:text;background-clip:text;color:transparent}'
+   +'.phgTourSub{max-width:520px;font-size:clamp(15px,3.6vw,18px);line-height:1.55;color:rgba(230,240,255,.78);margin:0 auto}'
+   +'.phgTourTries{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:20px;max-width:560px}'
+   +'.phgTourTries span{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);border-radius:999px;padding:8px 13px;font-size:13px;color:#eef6ff;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}'
+   +'.phgTourTries span:before{content:"\\201C";opacity:.55}.phgTourTries span:after{content:"\\201D";opacity:.55}'
+   +'.phgTourHow{margin-top:16px;font-size:13.5px;line-height:1.6;color:rgba(230,240,255,.7);max-width:440px}'
+   +'.phgTourBtn2{margin-top:16px;background:transparent;border:1.5px solid var(--a);color:var(--a);border-radius:999px;padding:11px 20px;font:600 14px Inter,sans-serif;cursor:pointer}'
+   +'.phgTourNav{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px calc(env(safe-area-inset-bottom,0px) + 22px)}'
+   +'.phgTourBack{background:none;border:0;color:rgba(230,240,255,.65);font:600 14px Inter,sans-serif;padding:12px 6px;cursor:pointer;min-width:60px;text-align:left}'
+   +'.phgTourNext{margin-left:auto;background:var(--a);color:#04121a;border:0;border-radius:999px;padding:15px 26px;font:700 15px Inter,sans-serif;cursor:pointer;box-shadow:0 10px 40px -8px var(--a)}'
+   +'.phgTourNext.go{padding:16px 30px;font-size:16px}'
+   +'@media (prefers-reduced-motion:reduce){.phgTour *,.phgTour *:before,.phgTour *:after,.phgTourSky{animation:none!important}}';
+  document.head.appendChild(st);
+}
+function phgTourDraw(g){
+  phgTourCSS();
+  var s=phgTourSlides();if(PHGTOUR.i>=s.length)PHGTOUR.i=s.length-1;if(PHGTOUR.i<0)PHGTOUR.i=0;
+  var c=s[PHGTOUR.i],last=PHGTOUR.i===s.length-1,E=phgAuthEsc;
+  var bars='';for(var i=0;i<s.length;i++)bars+='<i class="'+(i<PHGTOUR.i?'done':i===PHGTOUR.i?'on':'')+'"></i>';
+  var extra='';
+  if(c.tries)extra+='<div class="phgTourTries">'+c.tries.map(function(t){return '<span>'+E(t)+'</span>';}).join('')+'</div>';
+  if(c.install==='phone')extra+='<button class="phgTourBtn2" onclick="phgTourHome()">Show me how</button>';
+  if(c.install==='desktop'){
+    var ua=navigator.userAgent||'',safari=/Safari/.test(ua)&&!/Chrome|Chromium|Edg/.test(ua);
+    if(typeof PHGHOME!=='undefined'&&PHGHOME.evt)extra+='<button class="phgTourBtn2" onclick="phgTourInstall()">Install Harmony</button>';
+    extra+='<div class="phgTourHow">'+(safari?'In Safari on a Mac: <b>File \u203a Add to Dock</b>.':(/Edg/.test(ua)?'In Edge: <b>\u2026 menu \u203a Apps \u203a Install this site as an app</b>.':'In Chrome: the <b>install icon</b> at the right of the address bar, or <b>\u22ee \u203a Cast, save and share \u203a Install</b>.'))+'</div>';
+  }
+  var b2=c.accent==='#7ef9ff'?'#b98bff':'#7ef9ff';
+  g.innerHTML='<div class="phgTour" id="phgTour" style="--a:'+c.accent+';--b:'+b2+'" role="dialog" aria-modal="true" aria-label="Harmony intro">'
+    +'<div class="phgTourSky"></div><div class="phgTourGrain"></div>'
+    +'<div class="phgTourTop"><div class="phgTourBars">'+bars+'</div><button class="phgTourSkip" onclick="phgTourFinish(\'skip\')">Skip intro</button></div>'
+    +'<div class="phgTourStage" key="'+PHGTOUR.i+'"><div class="phgTourArt"><svg viewBox="0 0 120 120" aria-hidden="true">'+(PHG_TOUR_ICON[c.k]||PHG_TOUR_ICON.hello)+'</svg></div>'
+      +'<div class="phgTourKick">'+E(c.kick)+'</div><h1 class="phgTourTitle">'+E(c.title)+'</h1><p class="phgTourSub">'+E(c.sub)+'</p>'+extra+'</div>'
+    +'<div class="phgTourNav">'+(PHGTOUR.i>0?'<button class="phgTourBack" onclick="phgTourGo(-1)">Back</button>':'<span class="phgTourBack"></span>')
+      +(last?'<button class="phgTourNext go" onclick="phgTourFinish(\'enter\')">Enter Harmony</button>':'<button class="phgTourNext" onclick="phgTourGo(1)">Next</button>')+'</div></div>';
+  var t=document.getElementById('phgTour');
+  if(t){t.addEventListener('pointerdown',function(e){PHGTOUR.x0=e.clientX;});
+    t.addEventListener('pointerup',function(e){if(PHGTOUR.x0==null)return;var dx=e.clientX-PHGTOUR.x0;PHGTOUR.x0=null;if(Math.abs(dx)>60)phgTourGo(dx<0?1:-1);});}
+}
+function phgTourGo(d){PHGTOUR.i+=d;phgLaunchGateDraw();}
+function phgTourHome(){PHG_LAUNCH.homeOpen=true;PHG_LAUNCH.homeReturn='';phgLaunchGateDraw();}
+function phgTourInstall(){try{phgHomeInstall();}catch(e){}setTimeout(phgLaunchGateDraw,300);}
+function phgTourFinish(how){
+  try{localStorage.setItem(PHG_TOUR_KEY,how||'done');if(!localStorage.getItem(PHG_LAUNCH_DONE_KEY))localStorage.setItem(PHG_LAUNCH_DONE_KEY,'harmony');}catch(e){}
+  PHGTOUR.off=true;PHGTOUR.forced=false;
+  if(!phgLaunchVoiceConfirmed())phgLaunchVoiceConfirm();   /* skipping keeps the default voice; change it any time */
+  phgLaunchGateClose();
+  phgLaunchEnterNow(PHG_LAUNCH.startView==='administrative'?'administrative':'harmony');
+}
+function phgTourOpen(){PHGTOUR.off=false;PHGTOUR.forced=true;PHGTOUR.i=0;if(!PHG_LAUNCH.open){PHG_LAUNCH.open=true;document.body.classList.add('phg-launch-review-open');}phgLaunchGateDraw();}
+window.phgTourGo=phgTourGo;window.phgTourFinish=phgTourFinish;window.phgTourHome=phgTourHome;window.phgTourInstall=phgTourInstall;window.phgTourOpen=phgTourOpen;
+document.addEventListener('keydown',function(e){if(!document.getElementById('phgTour'))return;if(e.key==='ArrowRight')phgTourGo(1);else if(e.key==='ArrowLeft')phgTourGo(-1);else if(e.key==='Escape')phgTourFinish('skip');});
 function phgLaunchGateDraw(){
   if(!PHG_LAUNCH.open)return;
+  if(!PHG_LAUNCH.homeOpen&&phgTourNeeded()){try{phgTourDraw(phgLaunchEnsure());return;}catch(te){PHGTOUR.off=true;if(window.console)console.error('PHG intro tour failed',te);}}
   if(!PHG_LAUNCH.homeOpen&&!PHG_LAUNCH.homeSeen&&!PHGPERM.busy&&!PHGPERM.touched&&phgHomeNeeded()){PHG_LAUNCH.homeOpen=true;PHG_LAUNCH.homeSeen=true;}
   if(PHG_LAUNCH.homeOpen){try{phgHomeDraw(phgLaunchEnsure());return;}catch(he){PHG_LAUNCH.homeOpen=false;if(window.console)console.error('PHG home screen step failed',he);}}
   if(PHG_LAUNCH.permOpen){
@@ -7512,6 +7687,7 @@ function phgLaunchGateDraw(){
       +(beta?'':phgLaunchSettingsCard('Interface',mode,'Responsive layout','', ''))
       +(phgHomeOS()!=='other'?phgLaunchSettingsCard('Home Screen',phgHomeStandalone()?'Added':'Not added',phgHomeStandalone()?'Running from the Harmony icon':'Keeps your sign-in and settings on this phone','phgHomeOpen(\'review\')','How to add'):'')
       +(typeof phgLookName==='function'?phgLaunchSettingsCard('Look',phgLookName(),'Style and colour','PHG_LAUNCH.lookOpen=true;PHG_LAUNCH.lookReturn=\'review\';phgLaunchGateDraw()','Change'):'')
+      +phgLaunchSettingsCard('Intro tour','The main views','A quick look at what each view does','phgTourOpen()','Watch')
     +'</div>'
     +(beta?'':'<div class="phgLaunchStart"><span>Start in</span><div>'
       +'<button class="'+(PHG_LAUNCH.startView==='harmony'?'on':'')+'" onclick="phgLaunchStartView(\'harmony\')">Harmony</button>'
@@ -7981,6 +8157,10 @@ function phgAuthInit(){
   PHGAUTH.returning=!!(PHGAUTH.session&&PHGAUTH.session.access_token);
   PHGAUTH.workspace=null;
   PHGAUTH.busy=false;
+  /* v12.7 (Rob: "users able to save login data and only have to do that the first time"): a saved login on this device
+     signs straight back in, refreshing the token when needed. Sign out ends it. The server still decides access on every
+     open (bootstrap + phg-access), so nothing is unlocked by the saved session itself. */
+  if(PHGAUTH.returning){try{siteEntryModeSave('app');siteEntryDraw();}catch(e){}PHGAUTH.auto=true;phgAuthContinueSaved();return;}
   phgAuthDraw();
   /* Deliberate login: a persisted Supabase session is only a saved option.
      It never auto-bootstraps into the developer workspace. */
@@ -8038,7 +8218,7 @@ function phgAccessLoad(){
     .then(function(j){
       PHGACCESS=j||null;
       SITE_MODE=(j&&j.view_mode)||'none';
-      try{ if(j&&!j.viewing_as){ if(j.view_mode==='beta')localStorage.setItem(PHG_BETA_DEVICE_KEY,'1'); else if(j.view_mode==='developer'||j.view_mode==='user'){localStorage.removeItem(PHG_BETA_DEVICE_KEY);sessionStorage.removeItem('phg_beta_signin');} } }catch(e){}
+      try{ if(j&&!j.viewing_as){ if(j.view_mode==='beta'){localStorage.setItem(PHG_BETA_DEVICE_KEY,'1');localStorage.removeItem(PHG_TEAM_DEVICE_KEY);} else if(j.view_mode==='developer'||j.view_mode==='user'){localStorage.removeItem(PHG_BETA_DEVICE_KEY);sessionStorage.removeItem('phg_beta_signin');localStorage.setItem(PHG_TEAM_DEVICE_KEY,'1');} } }catch(e){}
       try{ if(typeof PHG_LAUNCH!=='undefined'&&PHG_LAUNCH.open&&typeof phgLaunchGateDraw==='function') setTimeout(phgLaunchGateDraw,0); }catch(e){}
       /* the answer only matters if the interface obeys it immediately */
       try{
@@ -41309,10 +41489,28 @@ function concept(c){
   if(/brew|beer|pub|tap/.test(t))return 'a craft brewery taproom world: hops, barley, copper kettles, a pint glass';
   return 'a craft cocktail bar world: citrus, herbs, ice, a single elegant cocktail glass';
 }
+/* v12.6 ARTWORK FROM THE OWNER'S WORDS (Rob 2026-10-06: "the menu designs are coming out wayyy too simple with no
+   artwork, just text" ... "paintings and pages get painted automatically based on the words from the brief").
+   Order: 1) the painting instruction Claude wrote for this look (phg-menu-brief v2 design.art), 2) one built here
+   from the brief's own words, 3) the old concept line (no brief). The owner's art notes ("remove the moon", "more
+   stained glass") ride on top until the next new look. Text is never painted (phg-menu-art adds its no-text rule). */
+var FRAME={cover:'Vertical poster artwork for the cover of a drinks menu. Fill the page; leave a calm, uncluttered area in the lower third for a title to be placed later.',
+  page:'Vertical decorative artwork for the menu pages of a drinks menu: a rich painted band or frame, calm and low-detail where text will sit beside it.'};
+function briefArt(d,where){
+  var b=PMS.brief||{},q=function(k,l){var v=String(b[k]||'').trim();return v?l+' "'+v.slice(0,220)+'". ':'';};
+  return FRAME[where]+' '+q('venue','The place:')+q('place','Where:')+q('feeling','The feeling, in the owner\u2019s words:')+q('story','The story:')
+    +q('abstract_ideas','Abstract ideas to paint:')+q('imagery','What it should show:')+q('design_references','Art and design world:')
+    +q('materials_textures','Materials and textures:')+q('colors_want','Colours:')
+    +(String(b.colors_avoid||'').trim()?'Avoid these colours: '+String(b.colors_avoid).slice(0,120)+'. ':'')
+    +'Palette '+[d.pal.art1,d.pal.art2,d.pal.art3,d.pal.accent].join(', ')+'. Style: '+d.style+'.';
+}
 function artPrompt(d,c,where){
+  var note=((PMS.ov.artNote?' Change requested by the owner: '+PMS.ov.artNote+'.':'')+(PMS.ov.subject&&PMS.ov.subjectSet?' Subject: '+PMS.ov.subject+'.':'')).slice(0,200);
+  if(d.art&&d.art[where])return (FRAME[where]+' '+d.art[where]).slice(0,1580)+note;
+  if(typeof briefHas==='function'&&briefHas())return briefArt(d,where).slice(0,1580)+note;
   return (where==='cover'?'Vertical poster artwork for the cover of a drinks menu. ':'Vertical decorative artwork band for a drinks menu page. ')
     +'Subject: '+concept(c)+'. Style: '+d.style+'. '
-    +(where==='cover'?'Leave a calm, uncluttered area in the lower third for a title to be placed later.':'Keep the composition calm and low-detail so text can sit beside it.');
+    +(where==='cover'?'Leave a calm, uncluttered area in the lower third for a title to be placed later.':'Keep the composition calm and low-detail so text can sit beside it.')+note;
 }
 
 /* ---------- procedural fallback art --------------------------------------- */
@@ -41437,7 +41635,7 @@ function ensureStage(){
     +'<div class="pmsBar">'
       +'<button onclick="PMS.cmd(\'back\')" aria-label="Previous design">◀</button>'
       +'<button id="pmsTalk" class="pmsTalk" onclick="PMS.toggleTalk()"><i></i><span>Talk</span></button>'
-      +'<button onclick="PMS.cmd(\'paint it\')" id="pmsPaint">Paint art</button>'
+      +'<button onclick="PMS.cmd(\'paint it\')" id="pmsPaint">Repaint art</button>'
       +'<button onclick="PMS.cmd(\'next\')" aria-label="Next design">▶</button>'
     +'</div>'
     +'<form class="pmsAsk" onsubmit="event.preventDefault();var i=this.q;if(i.value.trim()){PMS.hear(i.value.trim());i.value=\'\';}">'
@@ -41527,6 +41725,8 @@ function stageCommand(q){
     if(!PMS.refs.length)return 'Add a photo first with the Photo button next to the text box.';
     var ri=refIndex(s),onPages=/\b(page|pages|inside|menu pages)\b/.test(s)&&!/\b(cover|splash)\b/.test(s);
     useRef(ri,onPages?'page':'cover');return 'Using your photo '+(onPages?'on the menu pages':'as the splash page art')+'.';}
+  if(PMS.refs.length&&/\b(photos?|pictures?|images?|these|them|this one)\b/.test(s)&&/\b(design|redesign|look|style|menu|inspired|inspiration|based|from|like|use|feel|vibe|correlate)\b/.test(s)&&!/\b(cover|splash|colou?rs?|clear|remove|delete)\b/.test(s)){
+    newLook('Build the look from the owner\u2019s reference photos ('+Math.min(4,PMS.refs.length)+' attached). Owner said: '+q);return null;}
   if(/^(undo|undo (that|it|the last (change|edit))|revert( that)?|put it back|never ?mind|scratch that|take that back)$/.test(s)){
     if(!PMS.hist||!PMS.hist.length)return 'There is no menu change to undo.';
     PMS.content=PMS.hist.pop();PMS.changed=null;PMS.page=Math.min(PMS.page,pages().length-1);render();return 'Undone. Back to the last version.';}
@@ -41536,6 +41736,14 @@ function stageCommand(q){
      &&!/\b(add|remove|drop|swap|replace|to the menu|on the menu|from the menu|into the menu)\b/.test(s)){draftMenu(q,true);return null;}
   if(/\b(new|different|another|fresh|other)\s+(look|style|design|vibe|feel|aesthetic)\b|\b(make it|make the menu|should) (look|feel) (more |less |like )|\bredesign\b|\bdesign (it|this|the menu) (again|differently)\b/.test(s)){newLook(q);return null;}
   if(/\b(classic|built-?in|original|standard|stock) (looks|designs|styles)\b/.test(s)){PMS.look=-1;PMS.page=0;render();return 'The built-in looks. '+current().name+'. Say next to go through them.';}
+  /* v12.6 art notes: "remove the moon from the painting", "more stained glass in the art", "add candles to the artwork".
+     The art is a painting, so a note means a repaint of the cover and pages with that change. */
+  if(/\b(artwork|paintings?|illustrations?|art(?! ?(deco|nouveau)))\b/.test(s)&&/\b(add|remove|without|no more|less|more|change|replace|swap|put|take|instead|darker|lighter|brighter|bigger|smaller|show)\b/.test(s)
+     &&!/\b(drinks?|cocktails?|prices?|beers?|wines?|photos?)\b/.test(s)){
+    PMS.ov.artNote=String(q).trim().slice(0,180);
+    if(!signedIn())return 'Sign in to PHG first, and I can repaint the artwork.';
+    repaintAll();return PMS.painting&&PMS.autoNext?'Got it. I will repaint with that change as soon as the current painting finishes.':'Repainting the artwork with that change. This takes about a minute.';
+  }
   /* 18.49.27: anything about the drinks themselves is a content edit, even if it
      contains a design word ("add a dark rum drink", "no, make the paloma 14") */
   if(!/\b(splash|cover|front page|title|subtitle|tagline|paint)\b/.test(s)&&contentish(s))return false;
@@ -41547,7 +41755,7 @@ function stageCommand(q){
     PMS.page=0;render();return 'Here is the splash page.';
   }
   if(/\b(paint|illustrat|artwork)/.test(s)){
-    m=s.match(/\b(?:of|with|showing)\b (.+)$/);if(m)PMS.ov.subject=tidy(m[1]);
+    m=s.match(/\b(?:of|with|showing)\b (.+)$/);if(m){PMS.ov.subject=tidy(m[1]);PMS.ov.subjectSet=true;}
     paint();return m?'Painting '+PMS.ov.subject+'. This takes about half a minute.':'Painting the artwork for this design. This takes about half a minute.';
   }
   if(/\b(new|different|another|fresh|whole new|other)\s+(menu|drink menu|cocktail menu|set of drinks|lineup|list of drinks|drinks)\b|\b(start over|redo the menu|rewrite (it|the menu))\b/.test(s)){draftMenu(q,true);return null;}
@@ -41574,8 +41782,16 @@ function stageCommand(q){
   if(/\b(use|load) (my|the) (menu|current menu|studio menu)\b/.test(s)){PMS.content=loadContent();PMS.page=0;render();return PMS.content.sample?'There is no menu open in Menu Studio yet, so I am still using the sample cantina menu.':'Loaded '+PMS.content.title+' from Menu Studio.';}
   if((m=s.match(/\b(?:menu )?for (?:an? |the )?(.+)$/))&&MENU_INTENT.test(s)){PMS.ov.title=PMS.ov.title||null;PMS.ov.subject=tidy(m[1]);}
   if(MENU_INTENT.test(s)){startDesigns(q);return null;}
+  /* v12.6 DESIGN FEEDBACK (Rob: "if someone doesn't like it and says scrap it or change it ... drastic design and
+     concept changes and opposite directions going from contemporary to Gothic or everything in between").
+     Anything about the look, style or feel goes to Claude (phg-menu-brief look mode) WITH the current look, which
+     judges the size of the change (tweak / new direction / opposite / named style), may update the brief so later
+     looks follow it, and writes new art that is painted automatically. Drinks and prices stay content edits. */
+  if(PMS.open&&(DESIGN_REJECT.test(s)||DESIGN_FEEL.test(s))){newLook(q);return null;}
   return false;
 }
+var DESIGN_REJECT=/\b(scrap|hate|ugly|terrible|awful|boring|bland|too (plain|simple|basic|busy|cluttered|dark|light|bright|loud|quiet|modern|old|cheap)|(do ?n[o']?t|don'?t|do not) (like|love) (it|this|that|the (look|design|style))|not (feeling it|my style|right)|opposite|completely different|totally different|something else entirely|start the design over)\b/;
+var DESIGN_FEEL=/\b(gothic|renaissance|baroque|rococo|bauhaus|art deco|deco|art nouveau|nouveau|victorian|medieval|byzantine|mid-?century|modernist|modern|contemporary|minimal(ist)?|maximal(ist)?|brutalist|futuristic|retro|vintage|rustic|industrial|elegant|playful|luxur(y|ious)|grunge|punk|psychedelic|tropical|nautical|western|japanese|scandinavian|swiss|editorial|ornate|whimsical|moody|romantic|edgy|classy|sleek|look|looks|feel|vibe|style|aesthetic|mood|layout)\b/;
 /* content vs design: verbs that change dishes, prices, or a named item on the menu */
 var DESIGN_WORDS=/^(noche|night|light|dark|darker|lighter|garden|swiss|solstice|letterpress|cover|splash|title|page|pages|photo|design|style|color|colour|accent|bigger|smaller|serif|modern|classic|bold)$/;
 function itemWords(){
@@ -41663,7 +41879,7 @@ function interviewStep(answer){
   if(PMS.asking)return;
   if(!tok||PMS.svcDown)return localStep(a);
   PMS.asking=true;document.body.classList.add('pms-drafting');
-  fetch(BRIEF_URL,{method:'POST',headers:briefHeaders(tok),body:JSON.stringify({mode:'interview',brief:PMS.brief,answer:a,recent:chatHistory(12),asked:PMS.asked})})
+  fetch(BRIEF_URL,{method:'POST',headers:briefHeaders(tok),body:JSON.stringify({mode:'interview',brief:PMS.brief,answer:a,recent:chatHistory(12),asked:PMS.asked,images:refImages()})})
     .then(readJ('say'))
     .then(function(j){
       if(j.brief&&typeof j.brief==='object')PMS.brief=j.brief;briefSave();PMS.asked++;
@@ -41722,8 +41938,8 @@ function menuCall(instruction,fresh,tok){
     return fetch(MENU_BRAIN,{method:'POST',headers:H,body:JSON.stringify({mode:'menu',
       prompt:(instruction+briefLine).slice(0,2000),
       recent:chatHistory(fresh?6:10).concat(knowledgeTurns(v)),current:fresh?null:toManifest(PMS.content),used_looks:usedLooks()})}).then(readJ('menu'));});}
-  if(!fresh||!briefHas())return brain();
-  return fetch(BRIEF_URL,{method:'POST',headers:H,body:JSON.stringify({mode:'design',brief:PMS.brief,prompt:instruction,recent:chatHistory(14),used_looks:usedLooks()})})
+  if(!fresh||(!briefHas()&&!PMS.refs.length))return brain();
+  return fetch(BRIEF_URL,{method:'POST',headers:H,body:JSON.stringify({mode:'design',brief:PMS.brief,prompt:instruction,recent:chatHistory(14),used_looks:usedLooks(),images:refImages()})})
     .then(readJ('menu')).then(function(j){PMS.knowledge=j.knowledge||[];return j;},function(e){if(window.console)console.warn('menu brief design -> menu brain',e);return brain();});
 }
 function lookCall(direction,tok){
@@ -41732,8 +41948,8 @@ function lookCall(direction,tok){
     return fetch(MENU_BRAIN,{method:'POST',headers:H,body:JSON.stringify({mode:'design',
       prompt:((direction||'A new look.')+(briefHas()?' DESIGN BRIEF from the owner (build the look from it; turn art movements and abstract ideas into concrete choices): '+briefText(PMS.brief):'')).slice(0,600),
       current:toManifest(PMS.content),used_looks:usedLooks(),recent:chatHistory(2).concat(knowledgeTurns(v,290,6))})}).then(readJ('design'));});}
-  if(!briefHas())return brain();
-  return fetch(BRIEF_URL,{method:'POST',headers:H,body:JSON.stringify({mode:'look',brief:PMS.brief,prompt:direction||'',current:toManifest(PMS.content),used_looks:usedLooks(),recent:chatHistory(8)})})
+  if(!briefHas()&&!PMS.refs.length)return brain();
+  return fetch(BRIEF_URL,{method:'POST',headers:H,body:JSON.stringify({mode:'look',brief:PMS.brief,prompt:direction||'',current:toManifest(PMS.content),current_look:currentLook(),used_looks:usedLooks(),recent:chatHistory(8),images:refImages()})})
     .then(readJ('design')).then(function(j){PMS.knowledge=j.knowledge||[];return j;},function(e){if(window.console)console.warn('menu brief look -> menu brain',e);return brain();});
 }
 PMS.briefReset=function(){PMS.brief={};briefSave();};
@@ -41775,7 +41991,8 @@ function lookFrom(ds){
   return {id:lay,key:'look'+Date.now().toString(36)+PMS.looks.length,custom:true,name:String(ds.name||'New look').slice(0,40),
     df:ds.display_font?"'"+ds.display_font+"',"+(serifish.test(ds.display_font)?'Georgia,serif':'system-ui,sans-serif'):base.df,
     bf:ds.body_font?"'"+ds.body_font+"',"+(serifish.test(ds.body_font)?'Georgia,serif':'system-ui,sans-serif'):base.bf,
-    pal:pal,thesis:String(ds.thesis||'').slice(0,300),style:String(ds.art_style||base.style).slice(0,400)};
+    pal:pal,thesis:String(ds.thesis||'').slice(0,300),style:String(ds.art_style||base.style).slice(0,400),
+    art:(ds.art&&typeof ds.art==='object'&&(ds.art.cover||ds.art.page))?{cover:String(ds.art.cover||ds.art.page).slice(0,1500),page:String(ds.art.page||ds.art.cover).slice(0,1500)}:null};
 }
 /* hard gate from the design knowledge base: text must stay readable whatever palette comes back */
 function lum(h){var c=hexToRgb(h).map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);});return .2126*c[0]+.7152*c[1]+.0722*c[2];}
@@ -41787,6 +42004,8 @@ function guardContrast(p){
   if(cr(p.ink,p.bg)<4.5&&cr(p.paper,p.bg)<1.5)p.bg=mix(p.bg,p.paper,.5);
   return p;
 }
+function currentLook(){var d=current();if(!d)return null;var f=function(x){return String(x||'').split(',')[0].replace(/'/g,'').trim();};
+  return {name:d.name,layout:d.id,thesis:d.thesis||'',palette:palette(d),display_font:f(PMS.ov.df||d.df),body_font:f(PMS.ov.bf||d.bf),art_style:d.style,art:d.art||null};}
 function usedLooks(){return PMS.looks.map(function(l){return l.name+' ('+l.id+', '+l.pal.bg+'/'+l.pal.accent+', '+String(l.df).split(',')[0]+')';});}
 function addLook(ds){var l=lookFrom(ds);if(!l)return null;PMS.looks.push(l);PMS.look=PMS.looks.length-1;PMS.variant=0;PMS.page=0;return l;}
 function newLook(direction){
@@ -41795,7 +42014,10 @@ function newLook(direction){
   if(PMS.designing){talkSay('Still designing the last one.');return;}
   PMS.designing=true;document.body.classList.add('pms-drafting');talkSay('Designing a new look.');
   lookCall(direction,tok)
-  .then(function(j){var l=addLook(j.design);render();talkSay(j.reply||('Here is '+(l?l.name:'a new look')+'.'));})
+  .then(function(j){
+    if(j.brief_update&&typeof j.brief_update==='object'){Object.keys(j.brief_update).forEach(function(k){var v=String(j.brief_update[k]||'').trim();if(v)PMS.brief[k]=v;});briefSave();}
+    PMS.ov.artNote='';PMS.ov.subjectSet=false;
+    var l=addLook(j.design);render();talkSay(j.reply||('Here is '+(l?l.name:'a new look')+'.'));if(l)autoPaint(l);})
   .catch(function(e){PMS.look=-1;next();talkSay('I could not design a new look just now, so here is '+current().name+'.');if(window.console)console.warn('newLook',e);})
   .then(function(){PMS.designing=false;document.body.classList.remove('pms-drafting');});
 }
@@ -41809,7 +42031,7 @@ function draftMenu(instruction,fresh){
     PMS.queue=(PMS.queue||[]).concat(instruction);talkSay(PMS.queue.length>1?'Got those, coming up.':'Got it, that is next.');return;
   }
   PMS.drafting=true;document.body.classList.add('pms-drafting');
-  if(fresh)say(PMS.open?'Writing a new menu for you.':'Give me a moment, I am drafting the menu from what we talked about.');
+  if(fresh)say((PMS.open?'Writing a new menu for you.':'Give me a moment, I am drafting the menu from what we talked about.')+(PMS.refs.length?' I am designing it from your '+(PMS.refs.length>1?PMS.refs.length+' photos':'photo')+'.':''));
   menuCall(instruction,fresh,tok)
   .then(function(j){
     if(j.changed===false&&!fresh){talkSay(j.reply||'Okay.');return;}
@@ -41829,7 +42051,7 @@ function draftMenu(instruction,fresh){
       PMS.ov={subject:c.concept||''};PMS.variant=0;PMS.art={};
       var ix=DIRS.map(function(d){return d.id;}).indexOf({solstice:'solstice',garden:'garden',noche:'noche',swiss:'swiss',letterpress:'letterpress'}[j.menu.style_hint]||'solstice');
       PMS.dir=ix<0?0:ix;
-      if(!addLook(j.menu.design))PMS.look=-1;
+      PMS.autoLook=addLook(j.menu.design);if(!PMS.autoLook)PMS.look=-1;
     }else if(c.concept)PMS.ov.subject=c.concept;
     if(PMS.changed){
       /* show the page where the first change landed */
@@ -41838,7 +42060,9 @@ function draftMenu(instruction,fresh){
       clearTimeout(PMS._chT);PMS._chT=setTimeout(function(){PMS.changed=null;},3600);
     }
     if(!PMS.open)openStage();else render();
-    talkSay((j.reply||'Here it is.')+(fresh?' Say next for another look, new menu for different drinks, or tell me what to change.':''));
+    var al=fresh?PMS.autoLook:null;PMS.autoLook=null;
+    talkSay((j.reply||'Here it is.')+(fresh?(al?' I am painting the artwork now.':'')+' Say next for another look, scrap it or make it Gothic to change direction, or tell me what to change.':''));
+    if(al)autoPaint(al);
   })
   .catch(function(e){talkSay('I could not '+(fresh?'draft':'change')+' the menu just now: '+(e&&e.message||e));})
   .then(function(){
@@ -41856,11 +42080,14 @@ function refIndex(s){var m=s.match(/\b(first|second|third|fourth|last|1|2|3|4)\b
    pull a palette from a 40x40 sample (most-saturated mid-tones first). */
 function loadRef(file){
   return new Promise(function(res,rej){
-    var url=URL.createObjectURL(file),img=new Image();
+    var isData=typeof file==='string',url=isData?file:URL.createObjectURL(file),img=new Image();
     img.onload=function(){
       var k=Math.min(1,1280/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.round(img.naturalWidth*k),h=Math.round(img.naturalHeight*k);
       var c=document.createElement('canvas');c.width=w;c.height=h;var x=c.getContext('2d');x.drawImage(img,0,0,w,h);
       var data=c.toDataURL('image/jpeg',.86);
+      /* v12.6: a 768px copy is what Claude sees (interview, design, looks); the painter keeps the 1280px one */
+      var ks=Math.min(1,768/Math.max(w,h)),cs=document.createElement('canvas');cs.width=Math.round(w*ks);cs.height=Math.round(h*ks);
+      cs.getContext('2d').drawImage(c,0,0,cs.width,cs.height);var small=cs.toDataURL('image/jpeg',.8);
       var t=document.createElement('canvas');t.width=40;t.height=40;var tx=t.getContext('2d');tx.drawImage(img,0,0,40,40);
       var px=tx.getImageData(0,0,40,40).data,bins={};
       for(var i=0;i<px.length;i+=4){var r=px[i],g=px[i+1],b=px[i+2],key=(r>>5)+','+(g>>5)+','+(b>>5);var e=bins[key]||(bins[key]={n:0,r:0,g:0,b:0});e.n++;e.r+=r;e.g+=g;e.b+=b;}
@@ -41869,7 +42096,7 @@ function loadRef(file){
       var vivid=cols.filter(function(q){return q.sat>.35&&q.lum>50&&q.lum<200;}).sort(function(a,b){return (b.sat*Math.sqrt(b.n))-(a.sat*Math.sqrt(a.n));});
       var dark=cols.filter(function(q){return q.lum<70;})[0],light=cols.filter(function(q){return q.lum>200;})[0];
       URL.revokeObjectURL(url);
-      res({name:file.name||'photo',data:data,pal:{accent:(vivid[0]||cols[0]).hex,art1:(vivid[1]||cols[1]||cols[0]).hex,art2:(vivid[2]||cols[2]||cols[0]).hex,dark:dark&&dark.hex,light:light&&light.hex}});
+      res({name:isData?'photo':(file.name||'photo'),data:data,small:small,pal:{accent:(vivid[0]||cols[0]).hex,art1:(vivid[1]||cols[1]||cols[0]).hex,art2:(vivid[2]||cols[2]||cols[0]).hex,dark:dark&&dark.hex,light:light&&light.hex}});
     };
     img.onerror=function(){URL.revokeObjectURL(url);rej(new Error('unreadable image'));};
     img.src=url;
@@ -41883,10 +42110,20 @@ function addFiles(list){
   Promise.all(files.map(function(f){return loadRef(f).catch(function(){return null;});})).then(function(rs){
     rs=rs.filter(Boolean);if(!rs.length){say('I could not open those photos.');return;}
     PMS.refs=PMS.refs.concat(rs);
-    if(PMS.open){render();say('Got '+(rs.length>1?rs.length+' photos':'your photo')+'. Say paint it and I will paint from '+(PMS.refs.length>1?'them':'it')+', use my photo as the cover, or match the photo colours.');}
+    if(PMS.open){render();say('Got '+(rs.length>1?rs.length+' photos':'your photo')+'. Say design it from my photos for a new look built from '+(PMS.refs.length>1?'them':'it')+', use my photo as the cover, or match the photo colours.');}
     else say('Got '+(rs.length>1?rs.length+' photos':'your photo')+'. Tell me about the menu, then say make the menu, and I will use '+(PMS.refs.length>1?'them':'it')+' for the look.');
   });
 }
+/* v12.6: photos attached in the Harmony conversation become Menu Studio reference photos when the request is about
+   a menu or its design (Rob: "Photos should correlate to menu design if prompted"). */
+function addRefData(list){
+  var room=Math.max(0,6-PMS.refs.length);
+  list=(list||[]).filter(function(d){return typeof d==='string'&&/^data:image\//.test(d);}).slice(0,room);
+  return Promise.all(list.map(function(d){return loadRef(d).catch(function(){return null;});}))
+    .then(function(rs){rs=rs.filter(Boolean);PMS.refs=PMS.refs.concat(rs);if(PMS.open)render();return rs.length;});
+}
+PMS.addRefData=addRefData;
+function refImages(){return PMS.refs.slice(0,4).map(function(r){return r.small||r.data;});}
 function useRef(i,where){
   var r=PMS.refs[i];if(!r)return;var d=current();
   PMS.art[(d.key||d.id)+':'+where+':'+PMS.variant]=r.data;
@@ -41914,29 +42151,54 @@ PMS.matchColors=function(i){matchColors(i);say('Matched the colours to photo '+(
 PMS.removeRef=function(i){PMS.refs.splice(i,1);render();};
 
 /* ---------- painting ------------------------------------------------------- */
-function paint(){
-  if(PMS.painting){say('I am still painting the last one.');return;}
+function paintOne(d,where,quality){
   var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
-  if(!tok){say('Sign in to PHG first, and I can paint the artwork.');return;}
-  var d=current(),c=PMS.content,where=PMS.page===0?'cover':'page';
-  var key=(d.key||d.id)+':'+where+':'+PMS.variant;
-  PMS.painting=true;var b=document.getElementById('pmsPaint');if(b){b.textContent='Painting…';b.disabled=true;}
-  document.body.classList.add('pms-painting');
-  fetch(ART_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
-    body:JSON.stringify({prompt:artPrompt(d,c,where)+(PMS.refs.length?' Take the subject, palette and mood from the reference photos.':''),size:'1024x1536',quality:'medium',
+  if(!tok)return Promise.reject(new Error('Sign in to PHG first'));
+  var v=PMS.variant,key=(d.key||d.id)+':'+where+':'+v;
+  return fetch(ART_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
+    body:JSON.stringify({prompt:artPrompt(d,PMS.content,where)+(PMS.refs.length?' Take the subject, palette and mood from the reference photos.':''),size:'1024x1536',quality:quality||'medium',
       refs:PMS.refs.slice(0,4).map(function(r){return r.data;})})})
   .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.image)throw new Error(j.detail||j.error||('HTTP '+r.status));return j;});})
   .then(function(j){
     PMS.art[key]=j.image;
-    if(where==='cover'&&!PMS.art[(d.key||d.id)+':page:'+PMS.variant])PMS.art[(d.key||d.id)+':page:'+PMS.variant]=j.image;
-    render();say(j.refs?'Done, painted from your '+(j.refs>1?j.refs+' photos':'photo')+'. How is that?':'Done. How is that?');
-  })
-  .catch(function(e){
-    var msg=String(e&&e.message||e);
-    say(/404|not found|Failed to fetch/i.test(msg)?'The painting service is not switched on yet. The design still works with drawn art.':'Painting failed: '+msg);
-  })
-  .then(function(){PMS.painting=false;document.body.classList.remove('pms-painting');var b=document.getElementById('pmsPaint');if(b){b.textContent='Paint art';b.disabled=false;}});
+    if(where==='cover'&&!PMS.art[(d.key||d.id)+':page:'+v])PMS.art[(d.key||d.id)+':page:'+v]=j.image;
+    render();return j;
+  });
 }
+function paintBusy(on,auto){
+  PMS.painting=on;var b=document.getElementById('pmsPaint');if(b){b.textContent=on?'Painting\u2026':'Repaint art';b.disabled=on;}
+  document.body.classList.toggle('pms-painting',!!(on&&!auto));document.body.classList.toggle('pms-autopaint',!!(on&&auto));
+}
+function paintFail(e){
+  var msg=String(e&&e.message||e);
+  say(/404|not found|Failed to fetch/i.test(msg)?'The painting service is not switched on yet. The design still works with drawn art.':'Painting failed: '+msg);
+}
+function quiet(t){var s=document.getElementById('pmsSay');if(s){s.textContent=t;s.classList.add('show');clearTimeout(say._t);say._t=setTimeout(function(){s.classList.remove('show');},5000);}}
+/* "paint it": repaint the art for the page on screen */
+function paint(){
+  if(PMS.painting){say('I am still painting the last one.');return;}
+  if(!signedIn()){say('Sign in to PHG first, and I can paint the artwork.');return;}
+  var d=current(),where=PMS.page===0?'cover':'page';
+  paintBusy(true,false);
+  paintOne(d,where,'high')
+  .then(function(j){say(j.refs?'Done, painted from your '+(j.refs>1?j.refs+' photos':'photo')+'. How is that?':'Done. How is that?');})
+  .catch(paintFail)
+  .then(function(){paintBusy(false);var n=PMS.autoNext;PMS.autoNext=null;if(n)autoPaint(n,true);});
+}
+/* v12.6: every new look paints itself, cover first and then the pages, from the owner's brief words. A request
+   for another look while painting queues it and skips the old look's page art. Signed in only; one at a time. */
+function autoPaint(d,force){
+  if(!d||(!d.custom&&!force)||!signedIn())return;
+  if(PMS.painting){PMS.autoNext=d;return;}
+  paintBusy(true,true);quiet('Painting the artwork for '+d.name+' from your brief\u2026');
+  paintOne(d,'cover','high')
+  .then(function(){if(PMS.autoNext)return;quiet('Cover painted. Painting the pages\u2026');return paintOne(d,'page','high');})
+  .then(function(){if(!PMS.autoNext)quiet('The artwork for '+d.name+' is done.');})
+  .catch(paintFail)
+  .then(function(){paintBusy(false,true);var n=PMS.autoNext;PMS.autoNext=null;if(n&&n!==d)autoPaint(n,true);});
+}
+function repaintAll(){autoPaint(current(),true);}
+PMS.autoPaint=autoPaint;
 
 /* ---------- hands-free talk loop ------------------------------------------ */
 var T={stream:null,ctx:null,an:null,data:null,rec:null,chunks:[],state:'off',heard:0,quiet:0,start:0,raf:null,wait:null};
@@ -42158,6 +42420,7 @@ if(typeof agentHeard==='function'){
   var _heard=agentHeard;
   agentHeard=function(text){
     var q=String(text||'');
+    if(typeof window.phgPhotoRoute==='function'&&window.phgPhotoRoute(q))return;
     var noteish=/^(?:(?:hey|ok|okay)?,?\s*harmony[,.]?\s*)?(?:log|note|jot|remind me|what did i log)\b/i.test(q);
     if(PMS.interviewing&&!PMS.open&&!noteish){AGENT.chat.push({who:'you',text:q});if(typeof agentDraw==='function')agentDraw();interviewStep(q);return;}
     /* "build it" right after Harmony offered to make the menu */
@@ -43010,11 +43273,35 @@ if(typeof agentSay==='function'){
   window.agentSay=agentSay;
 }
 
+/* v12.6 PHOTOS -> MENU STUDIO (Rob: "Harmony conversations are still not drawing renderings from photos for the menu
+   studio. Photos should correlate to menu design if prompted."). When photos or a video are attached and the request
+   is about a menu or its design, or Menu Studio is open, interviewing or drafting, the photos (video: 3 stills) go to
+   Menu Studio as reference photos: Claude sees them in the interview, the design and every look, and the painter
+   paints from them. Anything else ("what is in this photo?") still goes to the attachment reader. */
+var PHOTO_MENU=/\bmenus?\b|\b(design|redesign|look|style|vibe|mood|aesthetic|cover|artwork|paint|inspired|inspiration|based on|correlate)\b/i;
+function photoMenuIntent(q){
+  if(!window.PMS||!ATT.some(function(a){return a.kind==='image'||a.kind==='video';}))return false;
+  if(ATT.some(function(a){return a.busy;}))return false;
+  return !!(PMS.open||PMS.interviewing||PMS.drafting||PHOTO_MENU.test(q||''));
+}
+function photosToStudio(){
+  var imgs=[];ATT.forEach(function(a){if(a.kind==='image'&&a.data)imgs.push(a.data);else if(a.kind==='video'&&a.frames)imgs=imgs.concat(a.frames.slice(0,3));});
+  ATT=ATT.filter(function(a){return a.kind!=='image'&&a.kind!=='video';});renderAttach();
+  var i=document.getElementById('hvxIn');if(i&&!ATT.length)i.placeholder='Message Harmony\u2026';
+  return (PMS.addRefData?PMS.addRefData(imgs):Promise.resolve(0)).then(function(n){
+    if(n&&typeof AGENT!=='undefined'&&AGENT.chat){AGENT.chat.push({who:'agent',text:'Got '+(n>1?'your '+n+' photos':'your photo')+'. I will design the menu from '+(n>1?'them':'it')+'.'});if(typeof agentDraw==='function')agentDraw();}
+    return n;});
+}
 /* Anything typed or spoken while attachments are waiting goes with them. */
 function hookHear(){
   if(!window.PMS||PMS._attHooked)return;PMS._attHooked=true;
   var _hear=PMS.hear;
-  PMS.hear=function(t){if(ATT.length&&!PMS.open)return askWithAttachments(String(t||'').trim());return _hear.apply(this,arguments);};
+  function route(q){return photosToStudio().then(function(){
+    var q2=q;if(!PMS.open&&!PMS.interviewing&&!PMS.drafting&&!/\bmenus?\b/i.test(q))q2='Make a menu from my photos'+(q?': '+q:'');
+    _hear.call(PMS,q2||'Design the menu from my photos');});}
+  window.phgPhotoRoute=function(q){q=String(q||'').trim();if(!ATT.length||!photoMenuIntent(q))return false;route(q);return true;};
+  PMS.hear=function(t){var q=String(t||'').trim();if(ATT.length&&photoMenuIntent(q)){route(q);return;}
+    if(ATT.length&&!PMS.open)return askWithAttachments(q);return _hear.apply(this,arguments);};
 }
 function closeView(){if(typeof window.phgViewportClose==='function')window.phgViewportClose();}
 function build(){
@@ -43091,7 +43378,7 @@ function build(){
   file.onchange=function(){if(window.PMS&&file.files&&file.files.length)PMS.addFiles(file.files);file.value='';};
   ty.onsubmit=function(e){
     e.preventDefault();var i=ty.querySelector('#hvxIn'),q=i.value.trim();closeType();if(!q&&!ATT.length)return;i.value='';
-    if(ATT.length){askWithAttachments(q);return;}
+    if(ATT.length){if(window.phgPhotoRoute&&window.phgPhotoRoute(q))return;askWithAttachments(q);return;}
     if(window.PMS)PMS.hear(q);else if(typeof harmonyAsk==='function')harmonyAsk(q);
   };
   ty.querySelector('#hvxIn').addEventListener('blur',function(){setTimeout(function(){if(!ty.contains(document.activeElement)&&!ATT.length)closeType();},150);});
