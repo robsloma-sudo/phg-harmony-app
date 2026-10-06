@@ -8004,8 +8004,18 @@ function phgInvCall(body){
   return fetch(PHG_ACCESS_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+tok},body:JSON.stringify(body||{})})
     .then(function(r){return r.json().catch(function(){return {};}).then(function(j){
       if(!r.ok||j.ok===false){var e=new Error((j&&j.error)||('HTTP '+r.status));e.reason=j&&j.reason;e.status=r.status;throw e;}
+      if(j&&j.invite&&j.invite.ok===false){var e2=new Error(String(j.invite.reason||'refused'));e2.reason=j.invite.reason;throw e2;}  /* v12.2: the database said no */
       return j;});});
 }
+/* v12.2: plain words for every reason the server can refuse an invite */
+function phgInvWhy(e,email){var r=e&&e.reason;
+  return r==='not_permitted'?'You do not have permission to invite people to this account.'
+    :(r==='bad_email'||r==='invalid_email')?'That does not look like a valid email address.'
+    :r==='already_a_member'?((email||'They')+' already has access to this account. Ask them to reopen the app.')
+    :r==='invalid_role'?'The server does not accept that role yet. Choose Viewer, Admin or Owner.'
+    :r==='tier_exceeds_account_subscription'?'That package is above this account\u2019s subscription. Choose a lower package.'
+    :r==='invalid_tier'?'That package is not set up on the server.'
+    :('The invite was not created: '+((e&&e.message)||String(e)));}
 function phgInvStyles(){
   if(document.getElementById('phgInvCss'))return;
   var s=document.createElement('style');s.id='phgInvCss';
@@ -8033,7 +8043,8 @@ function phgInvStyles(){
    +'.phgInvTag.accepted{color:#8fb389;border-color:rgba(92,114,89,.55)}'
    +'.phgInvTag.expired,.phgInvTag.revoked{color:#c98a84;border-color:rgba(190,60,50,.45)}'
    +'.phgInvRev{background:none;border:1px solid rgba(247,244,238,.2);color:#c7c3b8;border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap}'
-   +'.phgInvEmpty{color:#9a978e;font-size:13.5px;padding:8px 0}';
+   +'.phgInvEmpty{color:#9a978e;font-size:13.5px;padding:8px 0}'
+   +'.phgInvRow[hidden]{display:none}.phgInvAgainB{color:#e3c766;border-color:rgba(201,162,39,.55)}';
   document.head.appendChild(s);
 }
 function phgInvOpen(){
@@ -8054,11 +8065,12 @@ function phgInvDraw(){
   }else{
     body='<label class="phgInvL">Email address</label>'
       +'<input id="phgInvEmail" class="phgInvI" type="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="name@restaurant.com">'
-      +'<div class="phgInvRow">'
+      +'<label class="phgInvL">Access</label><select id="phgInvAccess" class="phgInvS" onchange="phgInvAccessShow()">'
+        +'<option value="beta"'+(PHGINV.access!=='full'?' selected':'')+'>Beta tester (Harmony + Atlas)</option>'
+        +'<option value="full"'+(PHGINV.access==='full'?' selected':'')+'>Full access (role + package)</option></select>'
+      +'<div class="phgInvRow" id="phgInvFull"'+(PHGINV.access==='full'?'':' hidden')+'>'
         +'<div><label class="phgInvL">Role</label><select id="phgInvRole" class="phgInvS">'
           +'<option value="viewer">Viewer — read only</option>'
-          +'<option value="staff">Staff</option>'
-          +'<option value="manager">Manager</option>'
           +'<option value="admin">Admin — can invite others</option>'
           +'<option value="owner">Owner</option></select></div>'
         +'<div><label class="phgInvL">Package</label><select id="phgInvTier" class="phgInvS">'
@@ -8075,16 +8087,36 @@ function phgInvDraw(){
     +'<div class="phgInvSub">An invite can only be claimed by that exact address once its email is confirmed, so a typo never becomes someone else\u2019s access. Effective access is the lesser of the package here and the account subscription.</div>'
     +body+'</div>';
 }
+/* v12.2 (Rob): invited people were stuck - a revoked or expired invite had no way back, and this screen could not
+   give beta access at all. Now: pick Beta tester or Full access, and every revoked / expired invite has "Invite again"
+   with the same access. Someone who already has a login gets it the next time they open the app (phg-access claims
+   live invites on every sign-in), so nobody waits on a second email. */
+function phgInvAccessShow(){var a=document.getElementById('phgInvAccess'),f=document.getElementById('phgInvFull');PHGINV.access=a?a.value:'beta';if(f)f.hidden=PHGINV.access!=='full';}
+function phgInvDone(email,j){
+  return (j&&j.email_status==='existing_user_no_email_sent')
+    ? email+' already has a login, so there is no email to wait for. Ask them to reopen the app (or tap \u201cCheck again\u201d) and they are in.'
+    : (j&&j.email_status==='failed')
+    ? 'Access is ready for '+email+', but the email did not send. Ask them to sign up at this site with that exact address.'
+    : 'Invite sent to '+email+'. They are in as soon as they sign up with that address and confirm it.';}
+function phgInvAgain(ix){
+  var i=(PHGINV.items||[])[ix];if(!i)return;var acct=phgInvAccount();if(!acct)return;
+  PHGINV.busy=true;PHGINV.err='';PHGINV.msg='';phgInvDraw();
+  var body=i.is_beta?{op:'invite',account_id:acct,email:i.email,beta:true,display_name:i.display_name||''}
+                    :{op:'invite',account_id:acct,email:i.email,role:i.role||'viewer',tier:i.package_tier||'well',display_name:i.display_name||''};
+  phgInvCall(body).then(function(j){PHGINV.busy=false;PHGINV.msg=phgInvDone(i.email,j);phgInvDraw();phgInvLoad();})
+    .catch(function(e){PHGINV.busy=false;PHGINV.err=phgInvWhy(e,i.email);phgInvDraw();});
+}
 function phgInvListHTML(E){
   if(PHGINV.items===null)return '<div class="phgInvEmpty">Loading invites\u2026</div>';
   if(!PHGINV.items.length)return '<div class="phgInvEmpty">Nobody has been invited yet.</div>';
-  return PHGINV.items.map(function(i){
+  return PHGINV.items.map(function(i,ix){
     var state=i.expired?'expired':String(i.status||'pending');
     return '<div class="phgInvItem"><div style="flex:1;min-width:0"><b>'+E(i.email)+'</b>'
-      +'<div class="phgInvMeta">'+E(i.role||'viewer')+(i.package_tier?' \u00b7 '+E(i.package_tier):'')
+      +'<div class="phgInvMeta">'+(i.is_beta?'Beta tester':E(i.role||'viewer')+(i.package_tier?' \u00b7 '+E(i.package_tier):''))
       +(i.expires_at?' \u00b7 '+(i.expired?'expired ':'expires ')+new Date(i.expires_at).toLocaleDateString():'')+'</div></div>'
       +'<span class="phgInvTag '+E(state)+'">'+E(state)+'</span>'
       +(state==='pending'?'<button class="phgInvRev" onclick="phgInvRevoke(\''+E(i.id)+'\')">Cancel</button>':'')
+      +((state==='revoked'||state==='expired')?'<button class="phgInvRev phgInvAgainB" onclick="phgInvAgain('+ix+')"'+(PHGINV.busy?' disabled':'')+'>Invite again</button>':'')
       +'</div>';
   }).join('');
 }
@@ -8104,20 +8136,18 @@ function phgInvSend(){
   var acct=phgInvAccount();if(!acct)return;
   var email=((document.getElementById('phgInvEmail')||{}).value||'').trim();
   if(!email){PHGINV.err='Enter an email address.';PHGINV.msg='';phgInvDraw();return;}
+  var access=((document.getElementById('phgInvAccess')||{}).value||'beta');PHGINV.access=access;
   var role=((document.getElementById('phgInvRole')||{}).value||'viewer');
   var tier=((document.getElementById('phgInvTier')||{}).value||'well');
   var name=((document.getElementById('phgInvName')||{}).value||'').trim();
   PHGINV.busy=true;PHGINV.err='';PHGINV.msg='';phgInvDraw();
-  phgInvCall({op:'invite',account_id:acct,email:email,role:role,tier:tier,display_name:name}).then(function(){
-    PHGINV.busy=false;PHGINV.msg='Invited '+email+'. They get access once they sign up with that address and confirm it.';
+  phgInvCall(access==='beta'?{op:'invite',account_id:acct,email:email,beta:true,display_name:name}:{op:'invite',account_id:acct,email:email,role:role,tier:tier,display_name:name}).then(function(j){
+    PHGINV.busy=false;PHGINV.msg=phgInvDone(email,j);
     var f=document.getElementById('phgInvEmail');if(f)f.value='';
     phgInvDraw();phgInvLoad();
   }).catch(function(e){
     PHGINV.busy=false;
-    PHGINV.err=(e.reason==='not_permitted')
-      ? 'You do not have permission to invite people to this account.'
-      : (e.reason==='bad_email') ? 'That does not look like a valid email address.'
-      : (e.message||String(e));
+    PHGINV.err=phgInvWhy(e,email);
     phgInvDraw();
   });
 }
@@ -46218,6 +46248,27 @@ html.phg-light .c3Msg.err{color:#b3261e}
 .c3List{margin:4px 0 0;padding-left:18px}
 .c3Note{font-size:12px;opacity:.6;margin-top:10px}
 .c3Img{display:block;width:100%;max-height:420px;object-fit:cover;border-radius:14px;margin:4px 0 2px;background:rgba(127,127,127,.12)}
+/* v12.2 (Rob): smaller controls, more room for the drink */
+#pvC3d{grid-template-columns:minmax(0,1fr) 330px;font-size:13.5px}
+.c3Panel{padding:calc(env(safe-area-inset-top,0px) + 76px) 12px calc(env(safe-area-inset-bottom,0px) + 28px)}
+.c3Sec{margin-bottom:12px}
+.c3H{font-size:10px;margin:0 0 5px}
+.c3Panel textarea,.c3Panel select,.c3Panel input[type=text]{font-size:13px;padding:5px 8px;border-radius:8px}
+.c3Panel select{height:30px}
+.c3Panel textarea{min-height:48px}
+.c3Chips{gap:4px}
+.c3Chips button,.c3Btn{padding:3px 9px;font-size:12px;min-height:28px}
+.c3Go{min-height:36px;font-size:14px;border-radius:10px;margin-top:8px}
+.c3Grid{gap:6px}
+.c3Grid label{font-size:10.5px;margin-bottom:2px}
+.c3Grid input[type=color]{height:28px;border-radius:8px}
+.c3Note{font-size:11.5px}
+.c3GlassName{font-size:11.5px;opacity:.7;margin-top:5px;line-height:1.35}
+.c3Spec td{padding:2px 0;font-size:13px}
+.c3Title{top:calc(env(safe-area-inset-top,0px) + 84px)}
+.c3Title b{font-size:clamp(20px,2.6vw,30px)}
+.c3Hint{font-size:11px;bottom:8px}
+@media (pointer:coarse){.c3Panel textarea,.c3Panel select,.c3Panel input[type=text]{font-size:16px}}  /* iPhone zooms the page on smaller text boxes */
 .c3Snaps{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .c3Snaps span{position:relative;width:64px;height:64px;border-radius:10px;background:rgba(127,127,127,.12);overflow:hidden}
 .c3Snaps img{width:100%;height:100%;object-fit:contain}
@@ -46229,6 +46280,13 @@ html.phg-light .c3Msg.err{color:#b3261e}
   .c3Panel{border-left:0;border-top:1px solid rgba(127,127,127,.22);padding:14px 14px calc(env(safe-area-inset-bottom,0px) + 40px)}
   .c3Title{left:16px;top:calc(env(safe-area-inset-top,0px) + 80px)}
   .c3Title b{font-size:26px}
+}
+/* v12.2: phone sizes - placed after the original phone rules so they win */
+@media(max-width:900px){
+  #pvC3d{grid-template-rows:62vh minmax(0,1fr)}
+  .c3Title{left:14px;top:calc(env(safe-area-inset-top,0px) + 72px)}
+  .c3Title b{font-size:22px}
+  .c3Panel{padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 28px)}
 }
 </style>
 <script id="phgC3d-js">
@@ -46464,7 +46522,7 @@ html.phg-light .c3Msg.err{color:#b3261e}
     ST.fit=fitCheck(O);
     /* frame the drink */
     var top=Math.max(rimH+20,60);ORB.ty=mm(top*.5);ORB.d=Math.max(2.4,mm(top)*2.6);
-    var t=document.querySelector('#pvC3d .c3Title');if(t)t.innerHTML='<b>'+esc(c.name||'Cocktail')+'</b><span>'+esc(LR?(LR.name+(LR.sku?' (#'+LR.sku+')':'')):((GL[c.glass]||{}).n||''))+' \u00b7 '+esc(ICE[c.ice]||'')+(c.garnish&&c.garnish!=='none'?' \u00b7 '+esc(GARN[c.garnish]||''):'')+'</span>';
+    var t=document.querySelector('#pvC3d .c3Title');if(t)t.innerHTML='<b>'+esc(c.name||'Cocktail')+'</b>';   /* v12.2: the glass model is shown in the panel, not over the drink */
     LAST=0;
   }
   function place(){if(!CAM)return;var o=ORB,d=o.d*Math.max(1,1.15/(CAM.aspect||1));CAM.position.set(o.tx+d*Math.sin(o.ph)*Math.sin(o.th),o.ty+d*Math.cos(o.ph),d*Math.sin(o.ph)*Math.cos(o.th));CAM.lookAt(o.tx,o.ty,0);}
@@ -46500,9 +46558,24 @@ html.phg-light .c3Msg.err{color:#b3261e}
   }
 
   /* ---------- panel ---------- */
-  function glassSel(c){var L=ST.lib||[],h='<select id="c3Glass">';
-    if(L.length){h+='<optgroup label="Libbey catalogue ('+L.length+')">'+L.map(function(r){return '<option value="lib:'+esc(r.glass_key)+'"'+(c.libKey===r.glass_key?' selected':'')+'>'+esc(r.name)+(r.capacity_ml?' \u00b7 '+Math.round(r.capacity_ml)+' ml':'')+'</option>';}).join('')+'</optgroup>';}
-    h+='<optgroup label="Generic shapes">'+GLK.map(function(k){return '<option value="'+k+'"'+(!c.libKey&&c.glass===k?' selected':'')+'>'+esc(GL[k].n)+'</option>';}).join('')+'</optgroup></select>';
+  /* v12.2 (Rob): one dropdown per kind of glass - pick the type, then any Libbey model of that type (smallest first).
+     The model name and number sit here, under the dropdowns, instead of over the drink. */
+  var FAMS=[['coupe','Coupe'],['nick_and_nora','Nick & Nora'],['martini','Martini'],['rocks','Rocks'],['double_rocks','Double rocks'],['highball','Highball'],
+    ['collins','Collins'],['pint','Pint'],['flute','Flute'],['wine','Wine'],['snifter','Snifter'],['hurricane','Hurricane'],['shot','Shot'],['tiki','Tiki mug'],
+    ['mule_mug','Copper mug'],['julep_cup','Julep cup'],['other','Other']];
+  function LRcur(){var c=ST.cfg||{};return c.libKey?libRow(c.libKey):null;}
+  function curFam(c){var LR=c.libKey?libRow(c.libKey):null;return LR?LR.family:c.glass;}
+  function shortName(r){return String(r.name||'').replace(/^Libbey\s+/i,'');}
+  function famModels(f){return (ST.lib||[]).filter(function(r){return r.family===f;}).sort(function(a,b){return (a.capacity_ml||0)-(b.capacity_ml||0);});}
+  function glassSel(c){var L=ST.lib||[],fam=curFam(c),cnt={};L.forEach(function(r){cnt[r.family]=(cnt[r.family]||0)+1;});
+    var h='<div class="c3Grid"><div><label for="c3Fam">Glass type</label><select id="c3Fam">'
+      +FAMS.filter(function(f){return cnt[f[0]]||GL[f[0]];}).map(function(f){return '<option value="'+f[0]+'"'+(f[0]===fam?' selected':'')+'>'+esc(f[1])+(cnt[f[0]]?' ('+cnt[f[0]]+')':'')+'</option>';}).join('')+'</select></div>'
+      +'<div><label for="c3Glass">Glass</label><select id="c3Glass">'
+      +(GL[fam]?'<option value="'+fam+'"'+(!c.libKey?' selected':'')+'>Standard '+esc(GL[fam].n.toLowerCase())+'</option>':'')
+      +famModels(fam).map(function(r){return '<option value="lib:'+esc(r.glass_key)+'"'+(c.libKey===r.glass_key?' selected':'')+'>'+esc(shortName(r))+(r.capacity_ml?' \u00b7 '+Math.round(r.capacity_ml)+' ml':'')+'</option>';}).join('')
+      +'</select></div></div>';
+    var LR=c.libKey?libRow(c.libKey):null;
+    h+='<div class="c3GlassName">'+esc(LR?(LR.name+(LR.sku?' \u00b7 model #'+LR.sku:'')+(LR.capacity_ml?' \u00b7 '+Math.round(LR.capacity_ml)+' ml':'')):('Standard '+((GL[c.glass]||{}).n||'glass').toLowerCase()))+'</div>';
     return h+(ST.libLoading?'<div class="c3Note">Loading the Libbey catalogue\u2026</div>':(L.length?'':'<div class="c3Note">Sign in to use the Libbey catalogue.</div>'));}
   function sel(id,obj,v){return '<select id="'+id+'">'+Object.keys(obj).map(function(k){return '<option value="'+k+'"'+(k===v?' selected':'')+'>'+esc(typeof obj[k]==='string'?obj[k]:obj[k].n)+'</option>';}).join('')+'</select>';}
   function recipeHTML(){
@@ -46536,7 +46609,7 @@ html.phg-light .c3Msg.err{color:#b3261e}
       +(ST.err?'<div class="c3Msg err">'+esc(ST.err)+'</div>':'')+'</div>'
       +'<div class="c3Sec"><div class="c3H">Or start from a classic</div><div class="c3Chips">'+PRESETS.map(function(p,i){return '<button data-c3="preset" data-i="'+i+'"'+(c.name===p.name&&!ST.res?' class="on"':'')+'>'+esc(p.name)+'</button>';}).join('')+'</div></div>'
       +'<div class="c3Sec"><div class="c3H">Build it</div><div class="c3Grid">'
-      +'<div style="grid-column:1/-1"><label for="c3Glass">Glass</label>'+glassSel(c)+'</div><div><label for="c3Ice">Ice</label>'+sel('c3Ice',ICE,c.ice)+'</div>'
+      +'<div style="grid-column:1/-1">'+glassSel(c)+'</div><div><label for="c3Ice">Ice</label>'+sel('c3Ice',ICE,c.ice)+'</div>'
       +'<div><label for="c3Garn">Garnish</label>'+sel('c3Garn',GARN,c.garnish)+'</div><div><label for="c3Col">Colour</label><input type="color" id="c3Col" value="'+esc(c.color)+'"></div>'
       +'<div style="grid-column:1/-1"><label for="c3Fill">Fill</label><input type="range" id="c3Fill" min="20" max="95" value="'+Math.round((c.fill||.8)*100)+'"></div></div>'
       +'<div class="c3Chips" style="margin-top:10px"><button data-c3="spin" class="'+(ST.auto?'on':'')+'">'+(ST.auto?'Spinning':'Spin')+'</button><button data-c3="reset">Reset view</button></div></div>'
@@ -46594,8 +46667,12 @@ html.phg-light .c3Msg.err{color:#b3261e}
       else if(a==='reset'){ORB.th=.6;ORB.ph=1.25;build();}});
     d.addEventListener('change',function(e){if(e.target&&e.target.id==='c3File'){var f=e.target.files&&e.target.files[0];if(f){if(f.size>12e6){ST.err='That photo is too large (12 MB max).';}else{ST.photo=f;ST.err='';}drawPanel();}}});
     d.addEventListener('input',function(e){var t=e.target,c=ST.cfg;
+      if(t.id==='c3Fam'){var f=t.value,cap=(LRcur()||{}).capacity_ml||((GL[c.glass]||{}).cap)||300,M=famModels(f);
+        var best=M.slice().sort(function(a,b){return Math.abs((a.capacity_ml||0)-cap)-Math.abs((b.capacity_ml||0)-cap);})[0];
+        if(GL[f]&&!best){c.glass=f;c.libKey='';}else if(best){c.libKey=best.glass_key;c.glass=GL[f]?f:(FAMMAP[f]||'highball');}else{c.glass=GL[f]?f:'highball';c.libKey='';}
+        build();drawPanel();return;}
       if(t.id==='c3Glass'){if(t.value.indexOf('lib:')===0){var rw=libRow(t.value.slice(4));c.libKey=rw?rw.glass_key:'';if(rw)c.glass=GL[rw.family]?rw.family:(FAMMAP[rw.family]||'highball');}else{c.glass=t.value;c.libKey='';}}else if(t.id==='c3Ice')c.ice=t.value;else if(t.id==='c3Garn')c.garnish=t.value;else if(t.id==='c3Col'){c.color=t.value;c.clarity=c.clarity==null?.7:c.clarity;}
-      else if(t.id==='c3Fill')c.fill=t.value/100;else return;build();});
+      else if(t.id==='c3Fill')c.fill=t.value/100;else return;build();if(t.id==='c3Glass')drawPanel();});
     return d;
   }
   var SR=G.SpeechRecognition||G.webkitSpeechRecognition||null,REC=null;
