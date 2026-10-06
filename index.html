@@ -5468,6 +5468,26 @@ button,.phgAuthGate,.phgAuthCard,.phgLaunchGate,.agentPanel,#phgView{
 }
 .phgLaunchCard>h1{margin:7px 0 5px;color:var(--txt);font-size:28px;line-height:1.05}
 .phgLaunchCard>p{margin:0 0 13px;color:var(--dim);font-size:10px;line-height:1.5}
+/* v12.4: Add Harmony to the Home Screen walk-through (launch gate) */
+.phgHomeCard>p{font-size:12px!important}
+.phgHomeTabs{display:flex;gap:6px;margin:0 0 12px}
+.phgHomeTabs button{flex:1;height:36px;border-radius:999px;border:1px solid rgba(126,249,255,.25);background:transparent;color:var(--txt);font:600 13px/1 var(--font-ui);cursor:pointer}
+.phgHomeTabs button.on{background:rgba(103,232,249,.16);border-color:#67e8f9}
+.phgHomeSteps{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.phgHomeSteps li{display:flex;gap:12px;align-items:center;padding:10px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid rgba(126,249,255,.1)}
+.phgHomeShot{flex:0 0 96px;width:96px;height:176px}
+.phgHomeSteps li>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.phgHomeSteps span{font:700 9px/1 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;color:#67e8f9}
+.phgHomeSteps b{font:600 15px/1.25 var(--font-ui);color:var(--txt)}
+.phgHomeSteps small{font:400 12.5px/1.45 var(--font-ui);color:var(--dim)}
+.phgHomeSteps small b{font-size:12.5px}
+.phgHomeQuick{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:rgba(103,232,249,.08);font-size:13px;color:var(--txt);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.phgHomeQuick.ok{background:rgba(52,211,153,.12)}
+.phgHomeQuick button{height:34px;padding:0 14px;border-radius:999px;border:0;cursor:pointer;font:600 13px var(--font-ui);color:#021018;background:linear-gradient(90deg,#67e8f9,#a78bfa)}
+.phgHomeNote{margin:10px 2px 0;font-size:11px;color:var(--dim)}
+@media(min-width:700px){.phgHomeSteps{grid-template-columns:1fr 1fr}}
+/* the step pictures are "photos": the Light screen flips them back like images */
+html.phg-light .phgHomeShot{filter:invert(1) hue-rotate(180deg)}
 .phgLaunchSettings{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .phgLaunchSetting{
   min-width:0;padding:10px;border:1px solid rgba(255,255,255,.055);
@@ -7178,6 +7198,7 @@ var PHG_LAUNCH={
   micOpen:false,
   conversationOpen:false,
   permOpen:false,
+  homeOpen:false,
   lookOpen:false,
   startView:'harmony',
   error:''
@@ -7219,7 +7240,7 @@ function phgLaunchEnsure(){
   return g;
 }
 function phgLaunchGateOpen(){
-  PHG_LAUNCH.open=true;
+  PHG_LAUNCH.open=true;PHG_LAUNCH.homeSeen=false;
   PHG_LAUNCH.error='';
   PHG_LAUNCH.startView='harmony';
   PHG_LAUNCH.voiceOpen=!phgLaunchVoiceConfirmed();
@@ -7257,10 +7278,114 @@ function phgLaunchGateOpen(){
   }catch(pe){}
 }
 function phgLaunchGateClose(){
-  PHG_LAUNCH.open=false;PHG_LAUNCH.voiceOpen=false;PHG_LAUNCH.micOpen=false;PHG_LAUNCH.conversationOpen=false;PHG_LAUNCH.permOpen=false;PHG_LAUNCH.permReturn='';PHG_LAUNCH.lookOpen=false;PHG_LAUNCH.lookReturn='';
+  PHG_LAUNCH.open=false;PHG_LAUNCH.homeOpen=false;PHG_LAUNCH.homeReturn='';PHG_LAUNCH.voiceOpen=false;PHG_LAUNCH.micOpen=false;PHG_LAUNCH.conversationOpen=false;PHG_LAUNCH.permOpen=false;PHG_LAUNCH.permReturn='';PHG_LAUNCH.lookOpen=false;PHG_LAUNCH.lookReturn='';
   document.body.classList.remove('phg-launch-review-open');
   var g=document.getElementById('phgLaunchGate');
   if(g&&g.parentNode)g.parentNode.removeChild(g);
+}
+/* ---------- ADD HARMONY TO THE HOME SCREEN (v12.4, Rob 2026-10-06) ----------
+   A picture walk-through, iPhone and Android separately, shown when a beta tester (or anyone arriving
+   from an invite link) signs in on a phone that is not already running Harmony from its Home Screen icon.
+   Why it matters: an installed Harmony keeps its sign-in, voice and settings with the icon (Safari can
+   clear a website's saved data after a week without a visit; a Home Screen web app is not cleared that way).
+   "Not now" hides it for this session; "I've added it" / "Don't show again" stop it on this device.
+   Re-open any time from the launch review ("Home Screen" card). Nothing is sent anywhere. */
+var PHG_HOME_KEY='phg_home_install_v1',PHG_HOME_SESSION='phg_home_install_session_v1';
+var PHGHOME={tab:null,evt:null,installed:false};
+try{window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();PHGHOME.evt=e;if(PHG_LAUNCH.open&&PHG_LAUNCH.homeOpen)phgLaunchGateDraw();});
+  window.addEventListener('appinstalled',function(){PHGHOME.installed=true;PHGHOME.evt=null;try{localStorage.setItem(PHG_HOME_KEY,'done');}catch(e){}if(PHG_LAUNCH.open&&PHG_LAUNCH.homeOpen)phgLaunchGateDraw();});}catch(e){}
+function phgHomeStandalone(){try{return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}catch(e){return false;}}
+function phgHomeOS(){var u=navigator.userAgent||'';
+  if(/iPad|iPhone|iPod/.test(u)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))return 'ios';
+  if(/Android/i.test(u))return 'android';return 'other';}
+function phgHomeIsBeta(){try{return (typeof PHGACCESS!=='undefined'&&PHGACCESS&&PHGACCESS.view_mode==='beta')||document.body.classList.contains('phg-mode-beta');}catch(e){return false;}}
+function phgHomeInvited(){try{if(/[?&]invited=1\b/.test(location.search))sessionStorage.setItem('phg_home_invited','1');return sessionStorage.getItem('phg_home_invited')==='1';}catch(e){return false;}}
+function phgHomeNeeded(){
+  if(phgHomeStandalone()||phgHomeOS()==='other')return false;
+  try{if(localStorage.getItem(PHG_HOME_KEY))return false;if(sessionStorage.getItem(PHG_HOME_SESSION)==='1')return false;}catch(e){}
+  return phgHomeIsBeta()||phgHomeInvited();
+}
+function phgHomeOpen(ret){PHG_LAUNCH.homeOpen=true;PHG_LAUNCH.homeReturn=ret||'';
+  if(!PHG_LAUNCH.open){PHG_LAUNCH.open=true;PHG_LAUNCH.homeReturn='close';document.body.classList.add('phg-launch-review-open');}
+  phgLaunchGateDraw();}
+function phgHomeDone(how){
+  try{if(how==='later')sessionStorage.setItem(PHG_HOME_SESSION,'1');else localStorage.setItem(PHG_HOME_KEY,how||'done');}catch(e){}
+  PHG_LAUNCH.homeOpen=false;
+  if(PHG_LAUNCH.homeReturn==='close'){PHG_LAUNCH.homeReturn='';phgLaunchGateClose();return;}
+  PHG_LAUNCH.homeReturn='';phgLaunchGateDraw();}
+function phgHomeTab(t){PHGHOME.tab=t;phgLaunchGateDraw();}
+function phgHomeInstall(){var e=PHGHOME.evt;if(!e)return;PHGHOME.evt=null;
+  try{e.prompt();(e.userChoice||Promise.resolve({})).then(function(c){if(c&&c.outcome==='accepted')phgHomeDone('done');else phgLaunchGateDraw();});}catch(x){phgLaunchGateDraw();}}
+window.phgHomeOpen=phgHomeOpen;
+/* ---- the pictures: drawn phone screens, one per step ---- */
+function phgHomePhone(inner,dark){
+  return '<svg class="phgHomeShot" viewBox="0 0 120 220" role="img" aria-hidden="true">'
+    +'<rect x="2" y="2" width="116" height="216" rx="18" fill="#0b1220" stroke="#334155" stroke-width="2"/>'
+    +'<rect x="8" y="10" width="104" height="200" rx="12" fill="'+(dark?'#111827':'#f8fafc')+'"/>'
+    +'<rect x="44" y="13" width="32" height="7" rx="3.5" fill="#0b1220"/>'+inner+'</svg>';
+}
+function phgHomeRing(cx,cy,r){return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="#f472b6" stroke-width="2.4"><animate attributeName="r" values="'+r+';'+(r+3)+';'+r+'" dur="1.6s" repeatCount="indefinite"/></circle>';}
+function phgHomeHi(x,y,w,h){return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="4" fill="none" stroke="#f472b6" stroke-width="2.2"><animate attributeName="opacity" values="1;.35;1" dur="1.6s" repeatCount="indefinite"/></rect>';}
+function phgHomePage(){/* the Harmony page in the browser */
+  return '<rect x="8" y="24" width="104" height="150" fill="#05070d"/><circle cx="60" cy="92" r="26" fill="none" stroke="#67e8f9" stroke-width="1.4" opacity=".8"/>'
+    +'<circle cx="60" cy="92" r="9" fill="#010208" stroke="#e0f7ff" stroke-width="1.6"/><text x="60" y="140" fill="#a5f3fc" font-size="7" text-anchor="middle" font-family="sans-serif">Harmony</text>';}
+function phgHomeIcon(x,y,on){return '<rect x="'+x+'" y="'+y+'" width="18" height="18" rx="5" fill="'+(on?'#05070d':'#cbd5e1')+'"'+(on?' stroke="#67e8f9" stroke-width="1"':'')+'/>'
+    +(on?'<circle cx="'+(x+9)+'" cy="'+(y+9)+'" r="4" fill="#010208" stroke="#e0f7ff" stroke-width="1.2"/>':'');}
+function phgHomeGrid(){var s='',i,j;for(i=0;i<4;i++)for(j=0;j<4;j++){var on=(i===2&&j===1);s+=phgHomeIcon(16+j*24,40+i*30,on);}
+  return s+'<text x="49" y="138" fill="#0f172a" font-size="6" text-anchor="middle" font-family="sans-serif">Harmony</text>'+phgHomeRing(49,109,14);}
+var PHG_HOME_STEPS={
+  ios:[
+    ['Open your invite in <b>Safari</b>','Tap the link in your invite email. If it opened in another app, tap its menu and choose <b>Open in Safari</b>.',
+      function(){return phgHomePhone('<rect x="8" y="10" width="104" height="14" fill="#e2e8f0"/><text x="60" y="20" font-size="6" text-anchor="middle" fill="#334155" font-family="sans-serif">prismatic-rugelach…</text>'+phgHomePage()+'<rect x="8" y="176" width="104" height="34" fill="#e2e8f0"/>');}],
+    ['Tap the <b>Share</b> button','The square with an arrow pointing up, in the bar at the bottom of Safari. (On iPad it is at the top right.) If you don\u2019t see the bar, scroll up a little.',
+      function(){return phgHomePhone(phgHomePage()+'<rect x="8" y="176" width="104" height="34" fill="#e2e8f0"/>'
+        +'<path d="M20 192l4-4 4 4M24 188v10M36 194h10M86 186h8v10h-8zM100 186h8v10h-8z" stroke="#64748b" stroke-width="1.4" fill="none"/>'
+        +'<path d="M55 191h-4v11h18v-11h-4M60 183v12M56 187l4-4 4 4" stroke="#0a84ff" stroke-width="1.8" fill="none" stroke-linecap="round"/>'+phgHomeRing(60,192,13));}],
+    ['Choose <b>Add to Home Screen</b>','Scroll down the list that slides up and tap <b>Add to Home Screen</b> (the square with a +).',
+      function(){var r='<rect x="8" y="24" width="104" height="186" fill="#cbd5e1"/><rect x="12" y="70" width="96" height="136" rx="9" fill="#f8fafc"/>',L=['Copy','Add to Reading List','Add Bookmark','Add to Home Screen','Find on Page'],i;
+        for(i=0;i<L.length;i++){r+='<text x="20" y="'+(92+i*22)+'" font-size="6.5" fill="#0f172a" font-family="sans-serif">'+L[i]+'</text><line x1="16" y1="'+(98+i*22)+'" x2="104" y2="'+(98+i*22)+'" stroke="#e2e8f0"/>';}
+        r+='<rect x="92" y="152" width="9" height="9" rx="2" fill="none" stroke="#0f172a"/><path d="M96.5 154v5M94 156.5h5" stroke="#0f172a"/>';
+        return phgHomePhone(r+phgHomeHi(14,145,92,20));}],
+    ['Tap <b>Add</b>','Keep the name <b>Harmony</b> and tap <b>Add</b> at the top right.',
+      function(){return phgHomePhone('<rect x="8" y="24" width="104" height="186" fill="#f1f5f9"/><text x="18" y="38" font-size="6.5" fill="#0a84ff" font-family="sans-serif">Cancel</text>'
+        +'<text x="60" y="38" font-size="6.5" fill="#0f172a" text-anchor="middle" font-weight="bold" font-family="sans-serif">Add to Home Screen</text><text x="100" y="38" font-size="7" fill="#0a84ff" font-weight="bold" text-anchor="end" font-family="sans-serif">Add</text>'
+        +'<rect x="14" y="50" width="92" height="30" rx="6" fill="#fff"/>'+phgHomeIcon(20,56,true)+'<text x="44" y="68" font-size="7" fill="#0f172a" font-family="sans-serif">Harmony</text>'+phgHomeHi(84,29,22,13));}],
+    ['Open Harmony from its icon','Go to your Home Screen and tap <b>Harmony</b>. Sign in once there; from then on your sign-in, voice and settings stay with the icon. When Harmony asks for the microphone, tap <b>Allow</b>.',
+      function(){return phgHomePhone('<rect x="8" y="24" width="104" height="186" fill="#e0e7ff"/>'+phgHomeGrid());}]
+  ],
+  android:[
+    ['Open your invite in <b>Chrome</b>','Tap the link in your invite email. If it opened somewhere else, choose <b>Open in Chrome</b>.',
+      function(){return phgHomePhone('<rect x="8" y="10" width="104" height="14" fill="#e2e8f0"/><text x="56" y="20" font-size="6" text-anchor="middle" fill="#334155" font-family="sans-serif">prismatic-rugelach…</text>'+phgHomePage());}],
+    ['Tap the <b>\u22ee</b> menu','The three dots at the top right of Chrome.',
+      function(){return phgHomePhone('<rect x="8" y="10" width="104" height="14" fill="#e2e8f0"/><text x="52" y="20" font-size="6" text-anchor="middle" fill="#334155" font-family="sans-serif">prismatic-rugelach…</text>'
+        +'<circle cx="105" cy="13.5" r="1.2" fill="#0f172a"/><circle cx="105" cy="17" r="1.2" fill="#0f172a"/><circle cx="105" cy="20.5" r="1.2" fill="#0f172a"/>'+phgHomePage()+phgHomeRing(105,17,8));}],
+    ['Choose <b>Add to Home screen</b>','In the menu, tap <b>Add to Home screen</b>. On some phones it says <b>Install app</b> instead.',
+      function(){var r=phgHomePage()+'<rect x="46" y="22" width="62" height="118" rx="5" fill="#fff" stroke="#cbd5e1"/>',L=['New tab','Bookmarks','History','Share\u2026','Add to Home screen','Settings'],i;
+        for(i=0;i<L.length;i++)r+='<text x="52" y="'+(38+i*18)+'" font-size="6" fill="#0f172a" font-family="sans-serif">'+L[i]+'</text>';
+        return phgHomePhone(r+phgHomeHi(48,99,58,14));}],
+    ['Tap <b>Install</b> (or <b>Add</b>)','Confirm in the box that appears. If asked, choose <b>Install</b> rather than <b>Create shortcut</b>.',
+      function(){return phgHomePhone(phgHomePage()+'<rect x="8" y="24" width="104" height="186" fill="#000" opacity=".45"/><rect x="16" y="80" width="88" height="58" rx="8" fill="#fff"/>'
+        +'<text x="24" y="96" font-size="7" font-weight="bold" fill="#0f172a" font-family="sans-serif">Install app</text>'+phgHomeIcon(24,102,true)+'<text x="48" y="114" font-size="6.5" fill="#0f172a" font-family="sans-serif">Harmony</text>'
+        +'<text x="64" y="132" font-size="6.5" fill="#1a73e8" font-family="sans-serif">Cancel</text><text x="96" y="132" font-size="6.5" fill="#1a73e8" font-weight="bold" text-anchor="end" font-family="sans-serif">Install</text>'+phgHomeHi(80,124,20,12));}],
+    ['Open Harmony from its icon','Find <b>Harmony</b> on your Home screen (or in your app list) and tap it. Sign in once there. When Harmony asks for the microphone, tap <b>Allow</b> (choose <b>While using the app</b> if offered).',
+      function(){return phgHomePhone('<rect x="8" y="24" width="104" height="186" fill="#dcfce7"/>'+phgHomeGrid());}]
+  ]
+};
+function phgHomeDraw(g){
+  var os=PHGHOME.tab||(phgHomeOS()==='android'?'android':'ios'),st=PHG_HOME_STEPS[os],h,i;
+  h='<div class="phgLaunchCard phgHomeCard" role="dialog" aria-modal="true" aria-labelledby="phgHomeTitle"><div class="phgLaunchKick">PERFECT HARMONY GROUP \u00b7 SET UP</div>'
+    +'<h1 id="phgHomeTitle">Put Harmony on your Home Screen</h1>'
+    +'<p>Do this once. Harmony then opens like an app, full screen, and keeps your sign-in, voice and settings on this phone.</p>'
+    +'<div class="phgHomeTabs" role="tablist"><button role="tab" aria-selected="'+(os==='ios')+'" class="'+(os==='ios'?'on':'')+'" onclick="phgHomeTab(\'ios\')">iPhone &amp; iPad</button>'
+    +'<button role="tab" aria-selected="'+(os==='android')+'" class="'+(os==='android'?'on':'')+'" onclick="phgHomeTab(\'android\')">Android</button></div>';
+  if(os==='android'&&PHGHOME.evt)h+='<div class="phgHomeQuick"><b>Quickest:</b> tap <button class="primary" onclick="phgHomeInstall()">Install Harmony</button> and confirm. Or follow the steps below.</div>';
+  if(phgHomeStandalone()||PHGHOME.installed)h+='<div class="phgHomeQuick ok">Harmony is already on your Home Screen \u2713</div>';
+  h+='<ol class="phgHomeSteps">';
+  for(i=0;i<st.length;i++)h+='<li>'+st[i][2]()+'<div><span>Step '+(i+1)+'</span><b>'+st[i][0]+'</b><small>'+st[i][1]+'</small></div></li>';
+  h+='</ol><div class="phgHomeNote">Pictures are a guide; the exact look of your phone may differ slightly.</div>'
+    +'<div class="phgLaunchActions phgPermActions"><button onclick="phgHomeDone(\'later\')">Not now</button><button onclick="phgHomeDone(\'never\')">Don\u2019t show again</button>'
+    +'<button class="primary" onclick="phgHomeDone(\'done\')">I\u2019ve added it</button></div></div>';
+  g.innerHTML=h;
 }
 function phgLaunchVoiceToggle(){
   PHG_LAUNCH.voiceOpen=!PHG_LAUNCH.voiceOpen;PHG_LAUNCH.micOpen=false;PHG_LAUNCH.conversationOpen=false;phgLaunchGateDraw();
@@ -7313,6 +7438,8 @@ function phgLaunchSettingsCard(label,value,note,action,actionLabel){
 }
 function phgLaunchGateDraw(){
   if(!PHG_LAUNCH.open)return;
+  if(!PHG_LAUNCH.homeOpen&&!PHG_LAUNCH.homeSeen&&!PHGPERM.busy&&!PHGPERM.touched&&phgHomeNeeded()){PHG_LAUNCH.homeOpen=true;PHG_LAUNCH.homeSeen=true;}
+  if(PHG_LAUNCH.homeOpen){try{phgHomeDraw(phgLaunchEnsure());return;}catch(he){PHG_LAUNCH.homeOpen=false;if(window.console)console.error('PHG home screen step failed',he);}}
   if(PHG_LAUNCH.permOpen){
     try{phgPermDraw(phgLaunchEnsure());return;}
     catch(pe){PHG_LAUNCH.permOpen=false;if(window.console)console.error('PHG permission step failed',pe);}
@@ -7334,6 +7461,7 @@ function phgLaunchGateDraw(){
       +phgLaunchSettingsCard('Conversation',c.style,c.output,'phgLaunchConversationToggle()','Change')
       +phgLaunchSettingsCard('Microphone',phgLaunchMicStatus(),(typeof MIC!=='undefined'&&MIC.state==='denied')?'Permission blocked':'Used for Harmony dictation','phgLaunchMicTogglePanel()','Microphone')
       +phgLaunchSettingsCard('Interface',mode,'Responsive layout','', '')
+      +(phgHomeOS()!=='other'?phgLaunchSettingsCard('Home Screen',phgHomeStandalone()?'Added':'Not added',phgHomeStandalone()?'Running from the Harmony icon':'Keeps your sign-in and settings on this phone','phgHomeOpen(\'review\')','How to add'):'')
       +(typeof phgLookName==='function'?phgLaunchSettingsCard('Look',phgLookName(),'Style and colour','PHG_LAUNCH.lookOpen=true;PHG_LAUNCH.lookReturn=\'review\';phgLaunchGateDraw()','Change'):'')
     +'</div>'
     +'<div class="phgLaunchStart"><span>Start in</span><div>'
@@ -7870,6 +7998,7 @@ function phgAccessLoad(){
       try{ if(typeof phgApplySurfaceVisibility==='function') phgApplySurfaceVisibility(); }catch(e){}
       try{ if(typeof phgViewAsDraw==='function') phgViewAsDraw(); }catch(e){}
       try{ if(typeof phgBetaTrimSheets==='function') phgBetaTrimSheets(); }catch(e){}
+      try{ if(PHG_LAUNCH.open&&!PHG_LAUNCH.homeSeen&&typeof phgHomeNeeded==='function'&&phgHomeNeeded()) phgLaunchGateDraw(); }catch(e){}
       try{ if(typeof APP!=='undefined'&&APP&&typeof phgSurfaceAllowed==='function'&&!phgSurfaceAllowed(APP)&&typeof setApp==='function') setApp('harmony'); }catch(e){}
       return j;
     })
@@ -41881,9 +42010,9 @@ body.phg-view-open .phgPrimaryModeToggle,
 body.phg-view-open #harmonyApprovalStrip:not(.show),
 body.phg-view-open #jsErr,
 body.phg-view-open #harmonyWorkFloat:has(.harmonyFloatPrompt){display:none!important}
-#hvxFloat{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;width:min(88vw,620px);
-  max-height:calc(10 * 1.45em);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;
-  font:500 clamp(19px,5vw,26px)/1.45 var(--font-ui);color:#f8fafc;text-align:center;pointer-events:none;
+#hvxFloat{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 64px);transform:translateX(-50%);z-index:4;width:min(88vw,620px);
+  max-height:calc(8 * 1.45em);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;
+  font:500 clamp(17px,4.4vw,21px)/1.45 var(--font-ui);color:#f8fafc;text-align:left;pointer-events:none;
   text-shadow:0 2px 18px rgba(0,0,0,.95),0 0 3px rgba(0,0,0,.9);
   opacity:0;transition:opacity .6s ease}
 #hvxFloat.clip{-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 2.2em);mask-image:linear-gradient(180deg,transparent 0,#000 2.2em)}
@@ -41891,7 +42020,11 @@ body.phg-view-open #harmonyWorkFloat:has(.harmonyFloatPrompt){display:none!impor
 #phgView .phgNodeStage{transition:opacity .6s ease}
 body.hvx-reading #phgView .phgNodeStage{opacity:.38}
 #hvxFloat.show{opacity:1}
-#hvxFloat .you{font-size:.62em;color:#94a3b8;margin-bottom:.7em;letter-spacing:.01em}
+#hvxFloat .you{font-size:1em;color:#cbd5e1;margin-bottom:.45em;letter-spacing:.01em}
+/* v12.4: transcript at the top of the screen - "Me:" then the prompt, "Harmony:" then her reply, one size */
+#hvxFloat .hvxWho{font-weight:700}
+#hvxFloat .you .hvxWho{color:#94a3b8}
+#hvxFloat .hvxSays .hvxWho{color:#67e8f9}
 #hvxFloat .her::after{content:'';display:inline-block;width:.45em;height:1em;margin-left:.08em;vertical-align:-.12em;background:#7dd3fc;opacity:0}
 #hvxFloat.typing .her::after{opacity:.85;animation:hvxCaret 1s steps(2) infinite}
 #hvxFloat.waiting .her::before{content:'\2022\2009\2022\2009\2022';color:#67e8f9;letter-spacing:.2em;animation:hvxWait 1.2s ease-in-out infinite}
@@ -42122,6 +42255,15 @@ body.hvx-asking #hvxAttach .hvxChip{animation:hvxPulseChip 1.2s ease-in-out infi
 body.hvx-typing #hvxDock,body.hvx-typing #hvxGear{visibility:hidden}
 body.hvx-chat #hvxAttach{display:none}
 body.hvx-chat #hvxDock,body.hvx-chat #hvxFloat,body.hvx-chat #hvxGear{display:none}
+/* v12.4: "Build <drink> in 3D" - the approval offer at the end of designing a drink with Harmony */
+#hvx3d{position:absolute;left:50%;transform:translateX(-50%);z-index:6;bottom:calc(var(--hvx-dock,0px) + env(safe-area-inset-bottom,0px) + 176px);
+  display:flex;align-items:center;gap:6px;padding:5px;border-radius:999px;max-width:calc(100vw - 24px);font-family:var(--font-ui);
+  background:rgba(5,7,16,.94);box-shadow:inset 0 0 0 1px rgba(103,232,249,.35),0 10px 30px rgba(0,0,0,.5),0 0 22px rgba(34,211,238,.15);animation:hvxSheetIn .22s cubic-bezier(.2,.8,.3,1)}
+#hvx3d button{border:0;cursor:pointer;border-radius:999px;font:600 13.5px/1 var(--font-ui);height:36px;padding:0 14px;white-space:nowrap}
+#hvx3d .go{color:#021018;background:linear-gradient(90deg,#67e8f9,#a78bfa 60%,#f0abfc);overflow:hidden;text-overflow:ellipsis;min-width:0}
+#hvx3d .x{color:#cbd5e1;background:rgba(148,163,184,.12)}
+body.hvx-data #hvx3d{bottom:calc(var(--hvx-dock,0px) + env(safe-area-inset-bottom,0px) + 128px)}
+body.hvx-chat #hvx3d,body.hvx-typing #hvx3d,body.phg-atlas-mode #hvx3d,body.pms-open #hvx3d{display:none}
 </style>
 <script id="phgViewSimpleV1">
 (function(){
@@ -42788,8 +42930,8 @@ function voiceStarted(){
 function floatReply(text,you){
   var el=document.getElementById('hvxFloat');if(!el||!text)return;
   clearInterval(F.timer);clearTimeout(F.hold);
-  el.innerHTML=(you?'<div class="you"></div>':'')+'<div class="her"></div>';
-  if(you)el.querySelector('.you').textContent=you;
+  el.innerHTML=(you?'<div class="you"><b class="hvxWho">Me: </b><span class="yt"></span></div>':'')+'<div class="hvxSays"><b class="hvxWho">Harmony: </b><span class="her"></span></div>';
+  if(you)el.querySelector('.you .yt').textContent=you;
   var her=el.querySelector('.her'),n=text.length;
   el.classList.add('show','typing');el._clip=false;el.classList.remove('clip');reading(true);
   function clip(){var over=el.scrollHeight>el.clientHeight+2;if(over!==el._clip){el._clip=over;el.classList.toggle('clip',over);}}
@@ -42836,7 +42978,7 @@ function reading(on){var c=document.body.classList;if(c.contains('hvx-reading')!
 function showYou(q){
   var el=document.getElementById('hvxFloat');if(!el)return;
   clearInterval(F.timer);clearTimeout(F.hold);
-  el.innerHTML='<div class="you"></div><div class="her"></div>';el.querySelector('.you').textContent=q;
+  el.innerHTML='<div class="you"><b class="hvxWho">Me: </b><span class="yt"></span></div><div class="hvxSays"><b class="hvxWho">Harmony: </b><span class="her"></span></div>';el.querySelector('.you .yt').textContent=q;
   el.classList.add('show','typing');el.classList.remove('clip');el._clip=false;reading(true);
 }
 function onChat(){
@@ -45832,7 +45974,7 @@ html[data-nav="new"] .phgAuthBadge #phgAcctViewAs{display:flex!important;flex-di
     {id:'atlas',label:'Atlas',allowed:function(){return typeof PHGACCESS!=='undefined'&&PHGACCESS&&(PHGACCESS.view_mode==='developer'||has('atlas'));}},
     {id:'financials',label:'Financials',short:'Finance',allowed:function(){return surf('fin');}},
     {id:'menu',label:'Menu',allowed:function(){return has('menu_library')&&has('menu_studio');}},
-    {id:'cocktail',label:'Cocktail',short:'Cocktail',allowed:function(){return !(typeof PHGACCESS!=='undefined'&&PHGACCESS&&PHGACCESS.view_mode==='beta');}},
+    {id:'cocktail',label:'Cocktail',short:'Cocktail',allowed:function(){return typeof PHGACCESS!=='undefined'&&!!PHGACCESS&&(PHGACCESS.view_mode!=='beta'||(Array.isArray(PHGACCESS.surfaces)&&PHGACCESS.surfaces.indexOf('cocktail')>=0));}},
     {id:'admin',label:'Admin',allowed:function(){return surf('dash')||surf('set');}}
   ];
   function leaveOverlays(){
@@ -46831,7 +46973,7 @@ html.phg-light .c3Msg.err{color:#b3261e}
   function show(){var d=layer();d.hidden=false;drawPanel();init3d();loadLib();}
   function hide(){var d=document.getElementById('pvC3d');if(d)d.hidden=true;stop();}
   function reg(){if(!G.PHGViews||!G.PHGViews.register)return setTimeout(reg,300);
-    G.PHGViews.register({id:'cocktail',label:'Cocktail',short:'Cocktail',allowed:function(){return !(typeof PHGACCESS!=='undefined'&&PHGACCESS&&PHGACCESS.view_mode==='beta');},
+    G.PHGViews.register({id:'cocktail',label:'Cocktail',short:'Cocktail',allowed:function(){return typeof PHGACCESS!=='undefined'&&!!PHGACCESS&&(PHGACCESS.view_mode!=='beta'||(Array.isArray(PHGACCESS.surfaces)&&PHGACCESS.surfaces.indexOf('cocktail')>=0));},
       load:function(){if(G.PHGViews.shell)try{G.PHGViews.shell();}catch(e){}show();},unload:hide,
       isActive:function(){var d=document.getElementById('pvC3d');return !!(d&&!d.hidden);}});}
   G.phgCocktailOpen=function(){if(G.PHGViews)G.PHGViews.go('cocktail',{from:'tap'});};
@@ -46886,10 +47028,57 @@ html.phg-light .c3Msg.err{color:#b3261e}
     try{if(typeof AGENT!=='undefined'&&AGENT.chat){AGENT.chat.push({who:'you',text:t});if(typeof agentDraw==='function')agentDraw();}}catch(e){}
     return go(it,opt||{});};
   G.phgCocktailIntent=intent;
+  /* v12.4 (Rob 2026-10-06): IN THE HARMONY VIEW NOTHING SWITCHES VIEW ON ITS OWN. The drink is designed in the
+     conversation (Harmony's normal brain), and only at the end does it become a 3D cocktail, after an explicit yes
+     to Harmony's question or a tap on "Build in 3D". Other views and the Cocktail view's Talk button are unchanged. */
+  var WANT3D=/\b(3 ?-?d|three[- ]?d|cocktail view)\b/i;
+  var YES=/^\s*(?:(?:ok(?:ay)?|alright|great|perfect|yes|yeah|yep|yup|sure|please|absolutely|definitely|approve[ds]?|go ahead|go for it|do it|let'?s do it|let'?s go|sounds good|build it|make it|turn it|render it|send it)\b[\s,.!]*)+/i;
+  var NO=/\b(no|nope|nah|not now|not yet|later|cancel|never ?mind|don'?t|stop|wait|hold on)\b/i;
+  var HV={offer:null,asked:null,view:null};
+  function inHV(){try{return document.body.classList.contains('phg-view-open')&&!!document.getElementById('phgView')&&!(G.PHGViews&&G.PHGViews.current()==='cocktail');}catch(e){return false;}}
+  /* v12.4: beta sees the Cocktail view only when the server grants the 'cocktail' surface */
+  function can3d(){return !!(G.PHGViews&&G.phgCocktailRequest)&&typeof PHGACCESS!=='undefined'&&!!PHGACCESS&&(PHGACCESS.view_mode!=='beta'||(Array.isArray(PHGACCESS.surfaces)&&PHGACCESS.surfaces.indexOf('cocktail')>=0));}
+  function isRecipe(t){return (String(t||'').match(/\b(\d+(?:\.\d+)?\s?(?:oz|ml|cl)|ounces?|dash(?:es)?|barspoons?|shake|shaken|stir|stirred|strain|garnish(?:ed)?|build over|top (?:it )?with)\b/gi)||[]).length>=3;}
+  function nameOf(t){var m=String(t||'').match(/\b(?:[Cc]all(?:ed)? it|[Nn]ame it|[Ii]t'?s called|[Ww]e'?ll call it|named|[Tt]his is|[Hh]ere is|[Hh]ere'?s|[Mm]eet|[Ii]ntroducing)\s+(?:the\s+)?["\u201c']?([A-Z][\w'\u2019&-]*(?:\s+[A-Z][\w'\u2019&-]*){0,4})/);return m?m[1]:'';}
+  function approve(t){var m=t.match(YES);if(NO.test(t))return false;if(WANT3D.test(t))return true;if(!m)return false;
+    var rest=t.slice(m[0].length).replace(/[.!?,\s]+$/,'');return rest===''||/^(?:(?:it|that|this|one|now|please|for me|the drink|the cocktail|in 3 ?d)\s*)+$/i.test(rest);}
+  function chip(){var v=document.getElementById('phgView'),c=document.getElementById('hvx3d');
+    if(!HV.offer||!v||!can3d()){if(c)c.remove();return;}
+    if(!c){c=document.createElement('div');c.id='hvx3d';c.setAttribute('role','group');c.setAttribute('aria-label','Turn this drink into a 3D cocktail');
+      c.innerHTML='<button type="button" class="go"></button><button type="button" class="x" aria-label="Not now">Not now</button>';
+      c.querySelector('.go').addEventListener('click',function(e){e.stopPropagation();build();});
+      c.querySelector('.x').addEventListener('click',function(e){e.stopPropagation();HV.offer=null;HV.asked=null;chip();});
+      ['pointerdown','touchstart'].forEach(function(ev){c.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
+      v.appendChild(c);}
+    var t=HV.offer.title;c.querySelector('.go').textContent='Build '+(t==='this drink'?t:'the '+t)+' in 3D';}
+  function offer(text){var lv=HV.view&&Date.now()-HV.view.at<8000?HV.view.title:'';
+    HV.offer={spec:String(text).slice(0,1500),title:(nameOf(text)||lv||'this drink').slice(0,40),at:Date.now()};chip();}
+  function build(){var o=HV.offer;HV.asked=null;HV.offer=null;chip();if(!o)return;
+    go({kind:'chat',request:'Build this cocktail exactly as written (keep the amounts): '+o.spec},{});}
+  /* returns true (handled), a string (pass these words on to Harmony) or false (pass unchanged) */
+  function hv(q){var t=String(q||'').trim(),a=HV.asked;HV.asked=null;
+    if(a){if(approve(t)){if(a.kind==='open')go({kind:'open'},{});else if(a.kind==='photo')go({kind:'photo',request:a.request},{});else{HV.offer=a.offer||HV.offer;build();}return true;}
+      if(NO.test(t)&&t.split(/\s+/).length<=6){say('Okay, it stays here. Say "build it in 3D" whenever you are ready.');return true;}}
+    if(!WANT3D.test(t))return false;
+    if(!can3d()){say('The 3D Cocktail view is not part of your access yet. I can keep working on the recipe with you here.');return true;}
+    if(MAKE.test(t)&&!THAT3D.test(t.replace(/\b(?:in|as)\s+(?:a\s+)?(?:3 ?-?d|three[- ]?d)\b/gi,''))){
+      var plain=t.replace(/\s*\b(?:in|as)\s+(?:a\s+)?(?:3 ?-?d|three[- ]?d)\b/gi,'').replace(/\b(?:3 ?-?d|three[- ]?d)\s+/gi,'').replace(/\s{2,}/g,' ').trim();
+      if(PHOTO.test(plain)){HV.asked={kind:'photo',request:plain};say('A drink from a photo is made in the 3D Cocktail view. Want me to open it there?');return true;}
+      return plain||false;}
+    var o=HV.offer&&Date.now()-HV.offer.at<60*60*1000?HV.offer:null;
+    if(!o){var r=chatRecipe();if(r)o={spec:r,title:(nameOf(r)||'this drink').slice(0,40),at:Date.now()};}
+    if(o){HV.offer=o;HV.asked={kind:'build',offer:o};chip();say('Want me to turn '+(o.title==='this drink'?'this drink':'the '+o.title)+' into a 3D cocktail? Say yes, or tap Build in 3D.');return true;}
+    HV.asked={kind:'open'};say('We have no recipe yet. Tell me what you would like and we will design it here first, or say yes to open the empty 3D Cocktail view.');return true;}
   function wrap(){if(typeof agentAnswer!=='function'){return setTimeout(wrap,400);}
     if(agentAnswer.__cocktail)return;var _a=agentAnswer;
-    var f=function(q){var it=null;try{it=intent(q);}catch(e){it=null;}if(it&&go(it,{}))return;return _a.apply(this,arguments);};
-    f.__cocktail=true;agentAnswer=f;G.agentAnswer=f;}
+    var f=function(q){
+      if(inHV()){var h=false;try{h=hv(q);}catch(e){h=false;}if(h===true){if(typeof AGENT!=='undefined')AGENT.thinking=false;return;}
+        if(typeof h==='string')return _a.call(this,h);return _a.apply(this,arguments);}
+      var it=null;try{it=intent(q);}catch(e){it=null;}if(it&&go(it,{}))return;return _a.apply(this,arguments);};
+    f.__cocktail=true;agentAnswer=f;G.agentAnswer=f;
+    /* a recipe in Harmony's reply (Harmony view) puts the "Build in 3D" offer on screen; nothing is built until tapped or approved */
+    if(typeof agentSay==='function'&&!agentSay.__c3d){var _s=agentSay;var s2=function(t){var r=_s.apply(this,arguments);try{if(inHV()&&isRecipe(t))offer(t);}catch(e){}return r;};s2.__c3d=true;agentSay=s2;G.agentSay=s2;}
+    if(typeof G.harmonyDataShow==='function'&&!G.harmonyDataShow.__c3d){var _d=G.harmonyDataShow;var d2=function(v){try{if(v&&v.type==='recipe'&&v.title)HV.view={title:String(v.title),at:Date.now()};}catch(e){}return _d.apply(this,arguments);};d2.__c3d=true;G.harmonyDataShow=d2;}}
   wrap();
 })();
 </script>

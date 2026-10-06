@@ -1542,11 +1542,13 @@ body.phg-light .wxal a{color:#0e7490!important}
   .card{bottom:calc(var(--sheet,40vh) + 80px)!important}
   .wxbar{bottom:calc(var(--sheet,40vh) + 76px)!important}
   .activebar{top:138px!important}
-  #phgSheetBar{display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:3;height:34px;touch-action:none;cursor:ns-resize;-webkit-user-select:none;user-select:none}
+  #phgSheetBar{display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:3;height:68px;touch-action:none;cursor:ns-resize;-webkit-user-select:none;user-select:none}
   .panel .ph .ey,.panel .ph h1{touch-action:none;cursor:ns-resize}
   .panel{max-height:calc(100% - 190px)}
-  #phgSheetBar .grip{width:44px;height:5px;border-radius:3px;background:var(--line2);pointer-events:none}
-  #phgSheetBtn{position:absolute;right:8px;top:2px;border:1px solid var(--line2);background:var(--panel2);color:var(--mut);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600}
+  #phgSheetBar .grip{width:88px;height:10px;border-radius:5px;background:var(--line2);pointer-events:none}
+  /* v12.4 (Rob): the drag handle is twice the size (68 px bar, 88x10 grip) so it is easy to grab */
+  #phgSheetBar:active .grip{background:var(--mut)}
+  #phgSheetBtn{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:1px solid var(--line2);background:var(--panel2);color:var(--mut);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600}
 }
 
 /* ---- iPhone layout: one header, one bottom stack, nothing overlapping ----
@@ -1750,7 +1752,7 @@ function theme(t,keepBase){var light=t==='light';if(light===document.body.classL
    to collapse or expand. Snaps to collapsed, small, half or tall; never covers the header. ---- */
 (function sheet(){
   var panel=document.getElementById('panel');if(!panel){setTimeout(sheet,200);return;}
-  var KEY='phgAtlasSheet.v2',MIN=58,root=document.documentElement;
+  var KEY='phgAtlasSheet.v2',MIN=92,root=document.documentElement;
   function phone(){return innerWidth<=820;}
   function H(){return (window.visualViewport&&visualViewport.height)||innerHeight;}
   function maxH(){return Math.max(MIN+40,Math.round(H()-200));}           /* leave the header (orb, Ask, buttons, chips) visible */
