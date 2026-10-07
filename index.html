@@ -7212,6 +7212,7 @@ function phgAuthDraw(){
     +'<form id="phgAuthForm" method="post" action="#" autocomplete="on" onsubmit="event.preventDefault();'+(signup?'phgAuthSignup()':'phgAuthLogin()')+';return false;">'
     +'<label class="phgAuthLabel" for="phgAuthEmail">Email</label><input id="phgAuthEmail" name="email" class="phgAuthInput" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required value="'+phgAuthEsc(signup?'':phgAuthLastEmail())+'">'
     +'<label class="phgAuthLabel" for="phgAuthPassword">Password</label><input id="phgAuthPassword" name="password" class="phgAuthInput" type="password" autocomplete="'+(signup?'new-password':'current-password')+'" required>'
+    +(signup?'':phgAuthSavedPwHTML())
     +(signup?'':phgAuthRememberHTML())
     +'<div class="phgAuthRow"><button type="submit" class="phgAuthBtn primary"'+(PHGAUTH.busy?' disabled':'')+'>'+(PHGAUTH.busy?'Working…':(signup?'Create login':'Sign in'))+'</button>'
     +(!signup?'<button type="button" class="phgAuthBtn" onclick="phgAuthRecover()"'+(PHGAUTH.busy?' disabled':'')+'>Reset password</button>':'')+'</div></form>'
@@ -7221,6 +7222,35 @@ function phgAuthDraw(){
     +'</div>';
 }
 
+/* v12.9: "Use saved password" - asks the device's password manager. Chrome / Edge / Android: the Credential
+   Management API returns the saved login and signs in (the user tapped the button). iPhone / iPad / Safari have
+   no such API: the button focuses the right box so the keyboard shows the saved login (Face ID / Touch ID).
+   PHG never stores the password; after a successful sign-in the device is asked to save it. */
+function phgAuthSavedPwHTML(){
+  return '<button type="button" class="phgAuthBtn phgSavedPw" onclick="phgAuthUseSaved()" style="width:100%;margin:10px 0 0;display:flex;align-items:center;justify-content:center;gap:8px">'
+    +'<span aria-hidden="true">\ud83d\udd11</span> Use saved password</button><div id="phgSavedPwHint" class="phgAuthCopy" role="status" style="font-size:12.5px;margin:6px 0 0;display:none"></div>';
+}
+function phgAuthSavedHint(){
+  var e=document.getElementById('phgAuthEmail'),p=document.getElementById('phgAuthPassword'),h=document.getElementById('phgSavedPwHint');
+  var t=(e&&!e.value)?e:p;try{if(t)t.focus();}catch(_){}
+  if(h){h.style.display='block';h.textContent=/iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent)&&!window.PasswordCredential
+    ?'Tap your saved login (\ud83d\udd11 or your email) above the keyboard; Face ID or Touch ID fills it in. Then tap Sign in.'
+    :'Pick your saved login from the list your browser shows, then tap Sign in. Nothing saved yet? Sign in once and let the device save it.';}
+}
+function phgAuthUseSaved(){
+  var e=document.getElementById('phgAuthEmail'),p=document.getElementById('phgAuthPassword');
+  if(window.PasswordCredential&&navigator.credentials&&navigator.credentials.get){
+    navigator.credentials.get({password:true,mediation:'optional'}).then(function(c){
+      if(c&&c.password&&e&&p){e.value=c.id||e.value;p.value=c.password;phgAuthLogin();}else phgAuthSavedHint();
+    },function(){phgAuthSavedHint();});
+    return;
+  }
+  phgAuthSavedHint();
+}
+function phgAuthOfferSave(c){
+  try{if(window.PasswordCredential&&navigator.credentials&&navigator.credentials.store&&c&&c.email&&c.password)
+    navigator.credentials.store(new PasswordCredential({id:c.email,password:c.password,name:c.email})).catch(function(){});}catch(_){}
+}
 /* v12.7 revised: remember the EMAIL on this device (the password is saved by the browser / phone, never by PHG) */
 var PHG_LAST_EMAIL_KEY='phg_last_email_v1',PHG_REMEMBER_KEY='phg_remember_email_v1';
 function phgAuthRememberOn(){if(typeof PHGAUTH.remember==='boolean')return PHGAUTH.remember;try{return localStorage.getItem(PHG_REMEMBER_KEY)!=='0';}catch(e){return true;}}
@@ -7258,6 +7288,7 @@ function phgAuthBetaHTML(){
     +'<form id="phgAuthForm" method="post" action="#" autocomplete="on" onsubmit="event.preventDefault();phgAuthLogin();return false;">'
     +'<label class="phgAuthLabel" for="phgAuthEmail">Email</label><input id="phgAuthEmail" name="email" class="phgAuthInput" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required value="'+E(phgAuthLastEmail())+'">'
     +'<label class="phgAuthLabel" for="phgAuthPassword">Password</label><input id="phgAuthPassword" name="password" class="phgAuthInput" type="password" autocomplete="current-password" required>'
+    +phgAuthSavedPwHTML()
     +phgAuthRememberHTML()
     +'<div class="phgAuthRow"><button type="submit" class="phgAuthBtn primary"'+(busy?' disabled':'')+'>'+(busy?'Signing in\u2026':'Sign in')+'</button>'
     +'<button type="button" class="phgAuthBtn" onclick="phgAuthRecover()"'+(busy?' disabled':'')+'>Forgot password?</button></div></form>'
@@ -7267,8 +7298,9 @@ function phgAuthCredentials(){return {email:((document.getElementById('phgAuthEm
 function phgAuthLogin(){
   var rb=document.getElementById('phgAuthRemember');if(rb)PHGAUTH.remember=!!rb.checked;   /* read before the form redraws */
   var c=phgAuthCredentials();if(!c.email||!c.password){PHGAUTH.error='Enter your email and password.';phgAuthDraw();return;}
-  PHGAUTH.busy=true;PHGAUTH.error='';PHGAUTH.returning=false;phgAuthDraw();
-  phgAuthApi('/token?grant_type=password',c,null).then(function(j){phgAuthRememberEmail(c.email);phgAuthSaveSession(j);return phgAuthBootstrap();}).catch(function(e){PHGAUTH.busy=false;PHGAUTH.error=e.message||String(e);phgAuthDraw();});
+  PHGAUTH.busy=true;PHGAUTH.error='';PHGAUTH.returning=false;
+  var sb=document.querySelector('#phgAuthForm button[type="submit"]');if(sb){sb.disabled=true;sb.textContent='Signing in\u2026';}else phgAuthDraw();
+  phgAuthApi('/token?grant_type=password',c,null).then(function(j){phgAuthRememberEmail(c.email);phgAuthOfferSave(c);phgAuthSaveSession(j);return phgAuthBootstrap();}).catch(function(e){PHGAUTH.busy=false;PHGAUTH.error=e.message||String(e);phgAuthDraw();});
 }
 function phgAuthSignup(){
   var c=phgAuthCredentials();if(!c.email||!c.password){PHGAUTH.error='Enter an email and password.';phgAuthDraw();return;}
@@ -24038,7 +24070,8 @@ function harmonyVoiceUpload(blob,targetId,nonce){
       'Content-Type':mime,
       'x-audio-filename':'harmony.'+ext,
       'x-context':(window.harmonyHearingContext?harmonyHearingContext():''),
-      'x-account':(window.phgHearAccount?phgHearAccount():'')
+      'x-account':(window.phgHearAccount?phgHearAccount():''),
+      'x-mode':(window.phgHearMode?phgHearMode():'')
     },
     body:blob
   }).then(function(r){
@@ -41756,6 +41789,7 @@ function pageHTML(d,p,c,pg,idx){
 }
 function current(){if(PMS.look>=0&&PMS.looks[PMS.look])return PMS.looks[PMS.look];return DIRS[PMS.dir%DIRS.length];}
 function pages(){
+  if(PMS.ag&&PMS.ag.chosen&&PMS.ag.view)return agentPages();
   var d=current(),p=palette(d),c=PMS.content,out=[coverHTML(d,p,c)];
   paginate(c).forEach(function(pg,i){out.push(pageHTML(d,p,c,pg,i));});
   return out;
@@ -41823,14 +41857,16 @@ function render(){
   if(PMS.page>=PMS.designs.length)PMS.page=PMS.designs.length-1;
   sc.innerHTML=PMS.designs[PMS.page];
   var d=current();
-  el.querySelector('#pmsInfo').textContent=d.name+(PMS.variant?' · v'+(PMS.variant+1):'')+' · '+(PMS.page===0?'Cover':'Page '+PMS.page)+' of '+(PMS.designs.length-1)+(PMS.content.sample?' · sample':'');
+  var dn=(PMS.ag&&PMS.ag.chosen&&PMS.ag.view)?PMS.ag.view.name:d.name;
+  el.querySelector('#pmsInfo').textContent=dn+(PMS.variant?' · v'+(PMS.variant+1):'')+' · '+(PMS.page===0?'Cover':'Page '+PMS.page)+' of '+(PMS.designs.length-1)+(PMS.content.sample?' · sample':'');
   var dots='';for(var i=0;i<PMS.designs.length;i++)dots+='<button class="'+(i===PMS.page?'on':'')+'" aria-label="'+(i?'Page '+i:'Cover')+'" onclick="PMS.go('+i+')"></button>';
   el.querySelector('#pmsDots').innerHTML=dots;
-  var i2=el.querySelector('#pmsInfo2');if(i2)i2.textContent=d.name+(PMS.variant?' · v'+(PMS.variant+1):'')+' · '+(PMS.page===0?'Cover':'p.'+PMS.page);
+  var i2=el.querySelector('#pmsInfo2');if(i2)i2.textContent=dn+(PMS.variant?' · v'+(PMS.variant+1):'')+' · '+(PMS.page===0?'Cover':'p.'+PMS.page);
   el.classList.toggle('has-refs',PMS.refs.length>0);
   renderRefs();
   fit();
   requestAnimationFrame(autofit);
+  if(PMS.ag&&PMS.ag.chosen)setTimeout(agCheck,60);
 }
 function fit(){
   var v=document.getElementById('pmsView'),sc=document.getElementById('pmsScaler');
@@ -42180,6 +42216,8 @@ function newLook(direction){
   .then(function(){PMS.designing=false;document.body.classList.remove('pms-drafting');});
 }
 function draftMenu(instruction,fresh){
+  if(!fresh&&agentChosen()){agentChange(instruction);return;}
+  if(fresh&&PMS.ag){PMS.ag.busy=false;clearTimeout(PMS.ag._t);PMS.ag=null;}
   var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
   if(!tok){PMS.content=JSON.parse(JSON.stringify(SAMPLE));PMS.page=0;openStage();say('Sign in to PHG and I can draft your menu from our conversation. For now, here is the sample cantina menu.');return;}
   /* 18.49.27: keep talking while she redraws; edits said meanwhile queue up and
@@ -42219,8 +42257,9 @@ function draftMenu(instruction,fresh){
     }
     if(!PMS.open)openStage();else render();
     var al=fresh?PMS.autoLook:null;PMS.autoLook=null;
-    talkSay((j.reply||'Here it is.')+(fresh?(al?' I am painting the artwork now.':'')+' Say next for another look, scrap it or make it Gothic to change direction, or tell me what to change.':''));
-    if(al)autoPaint(al);
+    var useAg=fresh&&agentOn()&&!(PMS.content&&PMS.content.sample);
+    talkSay((j.reply||'Here it is.')+(useAg?' This is a quick draft. Your designer is making the real design now; I will show you the directions in a few minutes.':fresh?(al?' I am painting the artwork now.':'')+' Say next for another look, scrap it or make it Gothic to change direction, or tell me what to change.':''));
+    if(useAg)agentBegin();else if(al)autoPaint(al);
   })
   .catch(function(e){talkSay('I could not '+(fresh?'draft':'change')+' the menu just now: '+(e&&e.message||e));})
   .then(function(){
@@ -42491,7 +42530,7 @@ function transcribe(blob){
   var tok=phgAuthAccessToken(),mime=blob.type||'audio/webm';
   var ext=mime.indexOf('mp4')>=0?'m4a':mime.indexOf('ogg')>=0?'ogg':'webm';
   fetch(typeof MDC_SPEECH_URL!=='undefined'?MDC_SPEECH_URL:FN+'phg-speech-transcribe',{method:'POST',
-    headers:{apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok,'Content-Type':mime,'x-audio-filename':'harmony.'+ext,'x-context':(window.harmonyHearingContext?harmonyHearingContext():''),'x-account':(window.phgHearAccount?phgHearAccount():'')},body:blob})
+    headers:{apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok,'Content-Type':mime,'x-audio-filename':'harmony.'+ext,'x-context':(window.harmonyHearingContext?harmonyHearingContext():''),'x-account':(window.phgHearAccount?phgHearAccount():''),'x-mode':(window.phgHearMode?phgHearMode():'')},body:blob})
   .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok)throw new Error(j.detail||j.error||('HTTP '+r.status));return j;});})
   .then(function(j){var t=String(j.text||'').trim();if(!t){afterReply(false);return;}if(window.phgHeard)phgHeard(j);PMS.hear(t);afterReply(true);})
   .catch(function(e){if(!PMS.talk)return;say('I did not catch that.');afterReply(true);});
@@ -42542,6 +42581,7 @@ PMS.cmd=function(q){PMS.hear(q);};
 /* One utterance can mix design and content: "make it darker and add a mezcal
    sour". Design clauses act now; content clauses go to Harmony as one edit. */
 function studioInput(q){
+  if(agentChosen()&&!/^(close|exit|done|that'?s all)\b|\b(stop listening|stop talking|mute)\b|\babv\b|\b(add|upload|attach|clear|remove|delete) (a |some |my |the |all )?(photo|picture|image|reference)s?\b/i.test(q)){agentChange(q);return;}
   var parts=String(q).replace(/([.!?;])\s+/g,'$1\u0001').replace(/,?\s+(?:and then|and also|then also|and after that)\s+/gi,'\u0001').split('\u0001')
     .map(function(x){return x.trim();}).filter(Boolean);
   if(parts.length<2){
@@ -42559,6 +42599,224 @@ function studioInput(q){
   if(content.length)draftMenu(content.join('. '),false);
   if(said.length)say(said.join(' '));
 }
+/* ===== v12.10: THE GRAPHIC DESIGNER (Rob's Claude agent) DESIGNS THE MENU =====
+   Flow: brief -> menu content drafted (as before) -> a quick template preview shows at once -> the designer agent
+   (phg-menu-designer agent_start) designs 2-3 concepts (cover + page 1, real HTML pages) -> the owner picks one ->
+   the agent designs every page (stage finish) -> artwork painted from the agent's art direction (phg-menu-art) ->
+   every later change goes to the SAME agent session (stage revise), after the content is updated the usual way.
+   Pages render in sandboxed iframes (no scripts). Every item name and price on a page is checked against the menu
+   content after it renders; anything missing or overflowing goes back to the designer once, automatically.
+   ?designer=off (or localStorage phg_designer_off=1) keeps the old template designer. */
+var DSG_URL=FN+'phg-menu-designer';
+PMS.ag=null;
+function agentOn(){try{if(/[?&]designer=off\b/.test(location.search)||localStorage.getItem('phg_designer_off')==='1')return false;}catch(e){}return signedIn();}
+function agentChosen(){return !!(PMS.ag&&PMS.ag.chosen);}
+function agHeaders(){return {'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+phgAuthAccessToken()};}
+function agCall(body){
+  return fetch(DSG_URL,{method:'POST',headers:agHeaders(),body:JSON.stringify(body)})
+    .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok)throw new Error(j.detail||j.error||('HTTP '+r.status));return j;});});
+}
+/* the fixed page split the designer must respect (same split the app uses) */
+function agPages(c){
+  var out=[{kind:'cover',index:0,sections:[]}];
+  paginate(c).forEach(function(pg,i){out.push({kind:'menu',index:i+1,sections:pg.secs.map(function(s){return {name:s.s,items:s.items.map(function(it){return {name:it.n,price:it.p||'',desc:it.d||'',ingredients:it.i||'',serve:it.g||''};})};})});});
+  out.forEach(function(p){p.total=out.length;});
+  return out;
+}
+function agCss(){
+  if(document.getElementById('pmsAgCSS'))return;var s=document.createElement('style');s.id='pmsAgCSS';
+  s.textContent=[
+'.pmsAgPg{width:850px;height:1100px;border:0;display:block;background:#fff}',
+'#pmsAgBox{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 52px);transform:translateX(-50%);z-index:4550;pointer-events:auto;width:min(560px,calc(100% - 24px));background:rgba(12,14,20,.86);color:#f1eff7;border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:14px 16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font:14px/1.45 Inter,-apple-system,sans-serif;box-shadow:0 18px 50px rgba(0,0,0,.35)}',
+'#pmsAgBox .t{display:flex;gap:12px;align-items:center}',
+'#pmsAgBox .orb{width:34px;height:34px;border-radius:50%;flex:0 0 auto;background:conic-gradient(from 0deg,var(--look-acc,#8fd3ff),var(--look-acc2,#c79bff),var(--look-acc,#8fd3ff));animation:pmsAgSpin 2.4s linear infinite;mask:radial-gradient(circle,transparent 42%,#000 44%);-webkit-mask:radial-gradient(circle,transparent 42%,#000 44%)}',
+'@keyframes pmsAgSpin{to{transform:rotate(360deg)}}',
+'#pmsAgBox b{display:block;font-size:15px}',
+'#pmsAgBox small{color:#b9b7c6}',
+'#pmsAgBox .steps{display:flex;gap:6px;margin-top:10px}',
+'#pmsAgBox .steps i{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.14)}',
+'#pmsAgBox .steps i.on{background:linear-gradient(90deg,var(--look-acc,#8fd3ff),var(--look-acc2,#c79bff))}',
+'#pmsAgBox button{margin-top:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:inherit;border-radius:999px;padding:6px 14px;font:inherit;cursor:pointer}',
+'#pmsAgPick{position:fixed;inset:0;z-index:4560;pointer-events:auto;background:rgba(6,7,10,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 58px) 16px 30px;color:#f1eff7;font:14px/1.45 Inter,-apple-system,sans-serif}',
+'#pmsAgPick h2{margin:0 0 4px;font-size:22px;color:#fff;text-align:center}',
+'#pmsAgPick .sub{color:#b9b7c6;text-align:center;margin:0 0 16px}',
+'#pmsAgPick .row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}',
+'#pmsAgPick .cc{width:min(420px,100%);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:12px;animation:pmsAgIn .35s ease both}',
+'@keyframes pmsAgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}',
+'#pmsAgPick .pv{display:flex;gap:8px}',
+'#pmsAgPick .pv div{width:calc(50% - 4px);aspect-ratio:850/1100;overflow:hidden;border-radius:8px;position:relative;background:#222}',
+'#pmsAgPick .pv iframe{position:absolute;left:0;top:0;width:850px;height:1100px;border:0;transform-origin:0 0;pointer-events:none}',
+'#pmsAgPick h3{margin:10px 0 2px;font-size:17px;color:#fff}',
+'#pmsAgPick p{margin:0;color:#c9c7d4;font-size:13px}',
+'#pmsAgPick .go{margin-top:10px;width:100%;border:0;border-radius:999px;padding:10px;font:600 15px Inter,sans-serif;cursor:pointer;color:#0b0d12;background:linear-gradient(135deg,var(--look-acc,#8fd3ff),var(--look-acc2,#c79bff))}',
+'#pmsAgPick .more{display:block;margin:18px auto 0;border:1px solid rgba(255,255,255,.25);background:none;color:#fff;border-radius:999px;padding:8px 18px;font:inherit;cursor:pointer}',
+'#pmsAgWarn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 52px);left:50%;transform:translateX(-50%);z-index:4555;pointer-events:none;background:#fff4dc;color:#6b4800;border:1px solid #f0cf86;border-radius:999px;padding:5px 12px;font:13px Inter,sans-serif}'
+  ].join('\n');document.head.appendChild(s);
+}
+function fontLinks(fonts){
+  return (fonts||[]).filter(function(f){return /^[A-Za-z0-9 ]{2,40}$/.test(f);}).map(function(f){var q=f.replace(/ /g,'+');
+    return '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family='+q+'&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family='+q+':wght@400;700&display=swap">';}).join('');
+}
+function cssUrl(u){return u?'url("'+String(u).replace(/["\\\n]/g,'')+'")':'none';}
+function srcdoc(concept,page,art){
+  art=art||{};var cov=art.cover||art.page||'',pg=art.page||art.cover||'';
+  return '<!doctype html><html><head><meta charset="utf-8">'+fontLinks(concept.fonts)
+    +'<sty'+'le>html,body{margin:0;width:850px;height:1100px;overflow:hidden;background:'+((concept.palette||{}).bg||'#fff')+'}:root{--art-cover:'+cssUrl(cov)+';--art-page:'+cssUrl(pg)+'}</sty'+'le></head><body>'+page.html+'</body></html>';
+}
+function frame(concept,page,art,cls){return '<iframe class="'+(cls||'pmsAgPg')+'" sandbox="allow-same-origin" referrerpolicy="no-referrer" title="'+esc(concept.name+' page '+page.index)+'" srcdoc="'+esc(srcdoc(concept,page,art))+'"></iframe>';}
+/* stage pages when the designer's concept is chosen */
+function agentPages(){
+  var v=PMS.ag.view,list=(v.pages||[]).slice().sort(function(a,b){return a.index-b.index;});
+  return list.map(function(p){return frame(v,p,PMS.ag.art);});
+}
+function agBox(html){
+  agCss();
+  var b=document.getElementById('pmsAgBox');
+  if(!html){if(b)b.remove();return;}
+  if(!b){b=document.createElement('div');b.id='pmsAgBox';b.setAttribute('role','status');document.body.appendChild(b);}
+  b.innerHTML=html;
+}
+var AGSTAGE={reading:['Reading your brief','and your design library'],sketching:['Sketching ideas','trying directions for your menu'],designing:['Designing the pages','type, grid, colour and art direction'],checking:['Checking every page','fit, legibility and every name and price']};
+function agProgress(st){
+  var order=['reading','sketching','designing','checking'],i=Math.max(0,order.indexOf(st)),m=AGSTAGE[order[i]];
+  var secs=Math.round((Date.now()-PMS.ag.t0)/1000),mm=Math.floor(secs/60),ss=('0'+secs%60).slice(-2);
+  agBox('<div class="t"><span class="orb" aria-hidden="true"></span><div><b>'+esc(PMS.ag.label||m[0])+'</b><small>'+esc(m[1])+' \u00b7 '+mm+':'+ss+'</small></div></div>'
+    +'<div class="steps">'+order.map(function(x,k){return '<i class="'+(k<=i?'on':'')+'"></i>';}).join('')+'</div>'
+    +'<button type="button" onclick="PMS.agentStop()">Stop</button>');
+}
+function agStart(body,label){
+  PMS.ag=PMS.ag||{};PMS.ag.t0=Date.now();PMS.ag.label=label;PMS.ag.busy=true;PMS.ag.stage=body.stage;
+  agProgress('reading');
+  return agCall(body).then(function(j){
+    if(j.status==='busy'){PMS.ag.busy=false;agBox(null);say('The designer is still finishing the last change; I will send this right after.');PMS.ag.pending=body;return;}
+    PMS.ag.session=j.session_id;PMS.ag.since=j.sent_at;agPoll();
+  },agFail);
+}
+function agPoll(){
+  clearTimeout(PMS.ag._t);
+  if(!PMS.ag||!PMS.ag.busy)return;
+  if(Date.now()-PMS.ag.t0>20*60*1000){agFail(new Error('took too long'));return;}
+  PMS.ag._t=setTimeout(function(){
+    if(!PMS.ag||!PMS.ag.busy)return;
+    agCall({op:'agent_poll',session_id:PMS.ag.session,since:PMS.ag.since}).then(function(j){
+      if(!PMS.ag||!PMS.ag.busy)return;
+      if(j.done&&j.result){agDone(j.result);return;}
+      if(j.error){agFail(new Error(j.problems&&j.problems.length?(/rate/i.test(j.problems.join(' '))?'the designer is at capacity right now':'the designer stopped'):'the design came back unreadable'));return;}
+      agProgress(j.stage);agPoll();
+    },function(e){PMS.ag.misses=(PMS.ag.misses||0)+1;if(PMS.ag.misses>4){agFail(e);return;}agPoll();});
+  },PMS.ag.session?5000:1500);
+}
+function agFail(e){
+  if(!PMS.ag)return;PMS.ag.busy=false;agBox(null);
+  var msg=String(e&&e.message||e);
+  agBox('<div class="t"><span>\u26a0\ufe0f</span><div><b>The designer couldn\u2019t finish</b><small>'+esc(msg)+'. The quick design stays on screen.</small></div></div><button type="button" onclick="PMS.agentRetry()">Try again</button> <button type="button" onclick="PMS.agentDismiss()">Close</button>');
+}
+function agDone(res){
+  PMS.ag.busy=false;agBox(null);
+  var stage=PMS.ag.stage;
+  if(stage==='concepts'){PMS.ag.concepts=res.concepts||[];if(!PMS.ag.concepts.length){agFail(new Error('no designs came back'));return;}agPick(res.reply);return;}
+  var c=(res.concepts||[])[0];if(!c){agFail(new Error('no design came back'));return;}
+  var keepArt=PMS.ag.view&&PMS.ag.view.name===c.name;
+  PMS.ag.view=c;PMS.ag.chosen=true;PMS.ag.checked={};
+  if(!keepArt||!PMS.ag.art||!PMS.ag.art.cover)agPaint(c);
+  render();
+  talkSay(res.reply||(stage==='finish'?'Here is the full menu.':'Done. How is that?'));
+  if(PMS.ag.pending){var p=PMS.ag.pending;PMS.ag.pending=null;agStart(p,'Making your change');}
+  else if(PMS.ag.queue){var q=PMS.ag.queue;PMS.ag.queue='';agentChange(q);}
+}
+/* concept chooser */
+function agPick(reply){
+  agCss();
+  var o=document.getElementById('pmsAgPick');if(!o){o=document.createElement('div');o.id='pmsAgPick';o.setAttribute('role','dialog');o.setAttribute('aria-label','Choose a design');document.body.appendChild(o);}
+  var cs=PMS.ag.concepts;
+  o.innerHTML='<h2>Pick a direction</h2><p class="sub">'+esc(reply||('Your designer made '+cs.length+' directions.'))+' Artwork is painted after you choose.</p><div class="row">'
+    +cs.map(function(c,i){var ps=(c.pages||[]).slice(0,2);
+      return '<div class="cc" style="animation-delay:'+(i*80)+'ms"><div class="pv">'+ps.map(function(p){return '<div>'+frame(c,p,null,'pmsAgThumb')+'</div>';}).join('')+'</div>'
+        +'<h3>'+esc(c.name)+'</h3><p>'+esc(c.thesis||'')+'</p><button class="go" type="button" onclick="PMS.agentChoose('+i+')">Choose this</button></div>';}).join('')
+    +'</div><button class="more" type="button" onclick="PMS.agentMore()">Show me something different</button>';
+  requestAnimationFrame(function(){Array.prototype.forEach.call(o.querySelectorAll('.pv div'),function(d){var f=d.querySelector('iframe');if(f)f.style.transform='scale('+(d.clientWidth/850)+')';});});
+  talkSay((reply||'Your designer has some directions for you.')+' Pick the one you like.');
+}
+function agClosePick(){var o=document.getElementById('pmsAgPick');if(o)o.remove();}
+PMS.agentChoose=function(i){
+  var c=PMS.ag&&PMS.ag.concepts&&PMS.ag.concepts[i];if(!c)return;
+  agClosePick();PMS.ag.view=c;PMS.ag.chosen=true;PMS.ag.art={};PMS.page=0;render();agPaint(c);
+  var pages=agPages(PMS.content);
+  if(pages.length>2)agStart({op:'agent_send',session_id:PMS.ag.session,stage:'finish',concept_name:c.name,menu:{title:PMS.content.title,sub:PMS.content.sub||''},pages:pages,brief:PMS.brief},'Designing every page of '+c.name);
+  else talkSay('Great choice. Tell me anything you want changed.');
+};
+PMS.agentMore=function(){
+  agClosePick();
+  agStart({op:'agent_send',session_id:PMS.ag.session,stage:'concepts',n:3,avoid:(PMS.ag.concepts||[]).map(function(c){return c.name;}),menu:{title:PMS.content.title,sub:PMS.content.sub||''},pages:agPages(PMS.content).slice(0,2),brief:PMS.brief},'Trying new directions');
+};
+PMS.agentStop=function(){if(!PMS.ag)return;PMS.ag.busy=false;clearTimeout(PMS.ag._t);agBox(null);say('Stopped. The current design stays.');};
+PMS.agentRetry=function(){agBox(null);if(PMS.ag&&PMS.ag.lastBody)agStart(PMS.ag.lastBody,PMS.ag.label||'Designing');};
+PMS.agentDismiss=function(){agBox(null);};
+/* artwork from the designer's art direction */
+function agPaint(c){
+  if(!signedIn()||!c||!c.art)return;
+  var mine=c;PMS.ag.art=PMS.ag.art||{};
+  function one(where){
+    var prompt=(FRAME[where]+' '+(c.art[where]||c.art.cover||'')).slice(0,1580)+(PMS.refs.length?' Take the subject, palette and mood from the reference photos.':'');
+    return fetch(ART_URL,{method:'POST',headers:agHeaders(),body:JSON.stringify({prompt:prompt,size:'1024x1536',quality:'high',refs:PMS.refs.slice(0,4).map(function(r){return r.data;})})})
+      .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.image)throw new Error(j.detail||j.error||('HTTP '+r.status));return j.image;});})
+      .then(function(img){if(PMS.ag&&PMS.ag.view===mine){PMS.ag.art[where]=img;render();}});
+  }
+  quiet('Painting the artwork for '+c.name+'\u2026');
+  one('cover').then(function(){if(PMS.ag&&PMS.ag.view===mine){quiet('Cover painted. Painting the pages\u2026');return one('page');}})
+    .then(function(){if(PMS.ag&&PMS.ag.view===mine)quiet('The artwork is done.');},function(e){paintFail(e);});
+}
+/* a change from the owner: update the content the usual way, then the designer redraws in the same session */
+function agentChange(q){
+  var tok=phgAuthAccessToken();if(!tok)return;
+  if(PMS.ag.busy){PMS.ag.queue=(PMS.ag.queue?PMS.ag.queue+'. Also: ':'')+q;talkSay('Got it, that is next.');return;}
+  talkSay('On it.');
+  menuCall(q,false,tok).then(function(j){
+    if(j&&j.changed!==false&&j.menu){var c=fromDraft(j.menu);if(c.sections&&c.sections.length)PMS.content=c;}
+  },function(){}).then(function(){
+    var body={op:'agent_send',session_id:PMS.ag.session,stage:'revise',instruction:q,page_index:PMS.page,menu:{title:PMS.content.title,sub:PMS.content.sub||''},pages:agPages(PMS.content),brief:PMS.brief};
+    PMS.ag.lastBody=body;agStart(body,'Making your change');
+  });
+}
+/* after a page renders: every name and price present? nothing spilling off the page? */
+function agCheck(){
+  if(!agentChosen()||PMS.ag.busy)return;
+  var f=document.querySelector('#pmsScaler iframe.pmsAgPg');if(!f)return;
+  var go=function(){
+    try{
+      var d=f.contentDocument;if(!d||!d.body)return;
+      var idx=PMS.page,page=agPages(PMS.content)[idx];if(!page||page.kind!=='menu')return;
+      var key=PMS.ag.view.name+':'+idx+':'+(PMS.ag.view.pages.length);if(PMS.ag.checked[key])return;PMS.ag.checked[key]=1;
+      var t=' '+(d.body.innerText||'').replace(/\s+/g,' ').toLowerCase()+' ',miss=[];
+      var rx=function(x){return String(x).toLowerCase().replace(/\s+/g,' ').trim().replace(/[.*+?^${}()|[\]\\]/g,'\\$&');};
+      var count=function(x){var m=t.match(new RegExp('(^|[^a-z0-9\u00c0-\u024f])'+rx(x)+'(?=[^a-z0-9\u00c0-\u024f]|$)','g'));return m?m.length:0;};
+      var names=[];page.sections.forEach(function(s){s.items.forEach(function(it){names.push(String(it.name));});});
+      page.sections.forEach(function(s){s.items.forEach(function(it){
+        var n=String(it.name),have=count(n);
+        names.forEach(function(m){if(m!==n&&m.toLowerCase().indexOf(n.toLowerCase())>=0)have-=count(m);});
+        if(have<1){miss.push(it.name);return;}
+        var pr=String(it.price||'').split('/')[0].trim();
+        if(pr&&!new RegExp('(^|[^0-9.])'+rx(pr)+'(?![0-9])').test(t))miss.push(it.name+' (price)');
+      });});
+      var pg=d.querySelector('.pg'),over=pg&&(pg.scrollHeight>1104||pg.scrollWidth>854);
+      if(!miss.length&&!over)return;
+      var w=document.getElementById('pmsAgWarn');
+      if(!w){w=document.createElement('div');w.id='pmsAgWarn';document.body.appendChild(w);}
+      if(w){w.textContent='\u26a0\ufe0f '+(miss.length?miss.length+' item'+(miss.length>1?'s':'')+' missing':'Text runs off the page')+' \u2014 the designer is fixing it';setTimeout(function(){if(w.parentNode)w.remove();},6000);}
+      agentChange('Fix page '+idx+': '+(miss.length?'these items are missing or have the wrong price: '+miss.slice(0,12).join(', ')+'. ':'')+(over?'content overflows the 850x1100 page; tighten so everything fits. ':'')+'Keep the design otherwise.');
+    }catch(e){}
+  };
+  if(f.contentDocument&&f.contentDocument.readyState==='complete'&&f.contentDocument.body&&f.contentDocument.body.childNodes.length)setTimeout(go,900);else f.addEventListener('load',function(){setTimeout(go,900);},{once:true});
+}
+/* the brief is done and the content is drafted: hand it to the designer */
+function agentBegin(){
+  if(!agentOn()||!PMS.content||PMS.content.sample&&!PMS.content.title)return false;
+  PMS.ag={concepts:[],chosen:false,art:{},checked:{}};
+  var body={op:'agent_start',stage:'concepts',n:3,menu:{title:PMS.content.title,sub:PMS.content.sub||''},pages:agPages(PMS.content),brief:PMS.brief,images:refImages().slice(0,2)};
+  PMS.ag.lastBody=body;agStart(body,'Your designer is on it');
+  return true;
+}
+PMS.agentBegin=agentBegin;PMS.agentState=function(){return PMS.ag?{busy:!!PMS.ag.busy,chosen:!!PMS.ag.chosen,stage:PMS.ag.stage,session:PMS.ag.session||null,concepts:(PMS.ag.concepts||[]).length,view:PMS.ag.view?PMS.ag.view.name:null}:null;};
 PMS.input=studioInput;
 PMS.hear=function(text){
   var q=String(text||'').trim();if(!q)return;
@@ -44324,6 +44582,8 @@ window.harmonyHearingContext=hearingContext;
    this project taught Harmony before. What it changed is shown briefly, and anything it was unsure about
    goes to Harmony with the words, so she can ask "Did you mean ...?" instead of guessing. */
 function phgHearAccount(){try{return PHGAUTH.workspace&&PHGAUTH.workspace.account&&PHGAUTH.workspace.account.id||'';}catch(e){return '';}}
+/* v12.10: 'command' while Menu Studio's stage or the Workflows view is open (speech keeps next / back / delete as said) */
+function phgHearMode(){try{if(document.getElementById('pmsStage'))return 'command';if(window.PHGViews&&typeof PHGViews.current==='function'&&PHGViews.current()==='workflows')return 'command';}catch(e){}return '';}
 function phgHeard(j){
   window.PHG_HEARD={at:Date.now(),text:String(j&&j.text||''),heard:String(j&&j.heard||''),fixes:(j&&j.fixes)||[],unsure:(j&&j.unsure)||[]};
   try{var f=window.PHG_HEARD.fixes.filter(function(x){return x&&x.meant;});
@@ -44336,7 +44596,7 @@ function phgHeardFor(q){
   window.PHG_HEARD=null;
   return {heard:h.heard.slice(0,400),fixes:h.fixes.slice(0,6),unsure:h.unsure.slice(0,4)};
 }
-window.phgHearAccount=phgHearAccount;window.phgHeard=phgHeard;window.phgHeardFor=phgHeardFor;
+window.phgHearAccount=phgHearAccount;window.phgHearMode=phgHearMode;window.phgHeard=phgHeard;window.phgHeardFor=phgHeardFor;
 window.harmonyUI={run:run,exec:exec,help:showHelp,targets:function(){return targets().map(function(t){return t.label;});},commands:function(){return CMDS.map(function(c){return {group:c.g,examples:c.ex};});}};
 
 /* Commands are checked first on every path words take into Harmony. */
@@ -45563,7 +45823,7 @@ if(typeof G.agentAnswer==='function'){
    from the screen (iPhone). The Atlas layer and its controls are not flipped: they have their own
    light palette. */
 html.phg-light,html.phg-light body{background:#f3f5f8}
-html.phg-light body>*:not(#phgAtlasLayer):not(#phgAtlasMini):not(#phgViewSwitch):not(#phgAtlasSays):not(#phgAtlasHeard):not(script):not(style){filter:invert(1) hue-rotate(180deg)}
+html.phg-light body>*:not(#phgAtlasLayer):not(#phgAtlasMini):not(#phgViewSwitch):not(#phgAtlasSays):not(#phgAtlasHeard):not(#pvFlow):not(#pvFlowEd):not(#pvFlowWz):not(#pmsAgPick):not(#pmsAgBox):not(#pmsAgWarn):not(script):not(style){filter:invert(1) hue-rotate(180deg)}
 html.phg-light body>*:not(#phgAtlasLayer) img,html.phg-light body>*:not(#phgAtlasLayer) video,html.phg-light body>*:not(#phgAtlasLayer) picture,
 html.phg-light body>*:not(#phgAtlasLayer) iframe,html.phg-light body>*:not(#phgAtlasLayer) .leaflet-tile-pane,html.phg-light body>*:not(#phgAtlasLayer) .maplibregl-canvas,
 html.phg-light body>*:not(#phgAtlasLayer) [style*="background-image:url"],html.phg-light body>*:not(#phgAtlasLayer) [style*="background-image: url"]{filter:invert(1) hue-rotate(180deg)}
@@ -47128,139 +47388,149 @@ html[data-pal="ivory"] .svOrb img{mix-blend-mode:multiply}
   reg('menu','Menu',null,function(){return has('menu_library')&&has('menu_studio');});
   addEventListener('keydown',function(e){if(e.key==='Escape'&&ON&&LAYER&&!LAYER.hidden){var t=e.target&&e.target.tagName;if(t==='INPUT'||t==='SELECT')return;}});
 })();
-/* ===== WORKFLOWS VIEW v1 (v12.8, 2026-10-06) =====
-   Top view bar: Harmony · Atlas · Finance · Menu · Cocktail · WORKFLOWS · Admin.
-   "When this happens -> if these are true -> then do this." Presets for restaurants and bars plus a
-   builder (trigger, conditions with field / operator / value, actions, who it is for).
-   STEP 1 = app only: workflows are saved on this device as drafts. Only actions that already exist in
-   the app run today (Design with Harmony, Harmony prompt). Notifications, texts, the order guide,
-   invoice matching and shift checks need the server step (tables + checker + manager approval),
-   and every card says so. Nothing here sends a message or changes data on the server.
-   Styles are injected from JS (no new style tag). Access: same rule as Cocktail (beta needs the
-   'workflows' surface). The server still decides everything. */
+/* ===== WORKFLOWS VIEW v2 (v12.9, 2026-10-06) =====
+   Two sides:
+     TEAM  (everyone)      big emoji buttons for live workflows -> guided steps (e.g. Missing ingredient:
+                           which recipe -> what's missing -> how bad -> send) -> animated flow chart of what
+                           happens next; live board of open items; inbox.
+     SETUP (owner / admin) presets + builder (when / if / then), publish / pause, who sees it, preview as team.
+   Server: public.phg_wf_* functions (PROPOSED_workflows_server_v1.sql). If they are not there yet the view
+   runs in PREVIEW mode on this device and says so on every screen; nothing is sent to anyone.
+   The server decides who may set up, publish, start or move a workflow; hiding Setup here is courtesy only.
+   Styles injected from JS (no new style tag). Classes wf-*, layer #pvFlow, sheets #pvFlowEd / #pvFlowWz. */
 (function(){
   var G=window;if(!G.PHGViews)return;
-  var KEY='phg_workflows_v1';
-  var FL={on:false,tab:'presets',cat:'all',q:'',edit:null,msg:''};
+  var SB='https://lqjtwabzmgjcufftuqvu.supabase.co';
+  var LKEY='phg_workflows_v2',RKEY='phg_workflow_runs_v2';
+  var FL={on:false,side:'team',tab:'presets',cat:'all',q:'',edit:null,msg:'',server:null,me:null,list:[],runs:[],inbox:[],preps:null,busy:false,inboxOpen:false};
   function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function uid(){return 'wf_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
   function clone(o){return JSON.parse(JSON.stringify(o));}
+  function acct(){try{return (typeof PHGACCESS!=='undefined'&&PHGACCESS&&PHGACCESS.active_account_id)||(PHGAUTH.workspace&&PHGAUTH.workspace.account&&PHGAUTH.workspace.account.id)||null;}catch(e){return null;}}
+  function firstName(){try{var w=PHGAUTH.workspace||{},u=w.user||{};var n=u.display_name||u.name||String(u.email||(typeof phgAuthSavedEmail==='function'?phgAuthSavedEmail():'')).split('@')[0];n=String(n||'').split(/[ ._-]/)[0];return n?n.charAt(0).toUpperCase()+n.slice(1):'';}catch(e){return '';}}
+  function ago(t){var s=Math.max(0,(Date.now()-new Date(t).getTime())/1000);return s<60?'just now':s<3600?Math.round(s/60)+' min ago':s<86400?Math.round(s/3600)+' h ago':Math.round(s/86400)+' d ago';}
+
+  /* ---------- server ---------- */
+  function rpc(name,args){
+    var tok=(typeof phgAuthAccessToken==='function')?phgAuthAccessToken():null;
+    if(!tok)return Promise.reject(Object.assign(new Error('Sign in again'),{status:401}));
+    return fetch(SB+'/rest/v1/rpc/'+name,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},body:JSON.stringify(args||{})})
+      .then(function(r){return r.text().then(function(t){var j=null;try{j=t?JSON.parse(t):null;}catch(e){}
+        if(!r.ok){var e=new Error((j&&(j.message||j.hint))||('HTTP '+r.status));e.status=r.status;e.code=j&&j.code;throw e;}return j;});});
+  }
+  function missingFn(e){return e&&(e.status===404||e.code==='PGRST202'||e.code==='42883');}
+  function localRole(){try{if(typeof PHGACCESS!=='undefined'&&PHGACCESS&&PHGACCESS.view_mode==='developer')return 'owner';var r=PHGAUTH.workspace&&PHGAUTH.workspace.account&&PHGAUTH.workspace.account.role;return r||'viewer';}catch(e){return 'viewer';}}
+  function canSetup(){return FL.server?!!(FL.me&&FL.me.can_setup):/^(owner|admin)$/.test(localRole());}
+  function connect(){
+    var a=acct();
+    if(!a){FL.server=false;return Promise.resolve();}
+    return rpc('phg_wf_me',{p_account:a}).then(function(m){FL.server=true;FL.me=m||{};},function(e){FL.server=missingFn(e)?false:FL.server===null?false:FL.server;FL.err=missingFn(e)?'':e.message;});
+  }
+  function refresh(){
+    var a=acct();
+    if(!FL.server){FL.list=lget(LKEY);FL.runs=lget(RKEY);FL.inbox=[];return Promise.resolve();}
+    return Promise.all([rpc('phg_wf_list',{p_account:a}),rpc('phg_wf_runs',{p_account:a,p_limit:30}),rpc('phg_wf_inbox',{p_account:a})])
+      .then(function(r){FL.list=r[0]||[];FL.runs=r[1]||[];FL.inbox=r[2]||[];},function(e){FL.msg='Could not load: '+e.message;});
+  }
+  function lget(k){try{var x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x:[];}catch(e){return [];}}
+  function lset(k,v){try{localStorage.setItem(k,JSON.stringify(v.slice(0,200)));}catch(e){}}
+  function api(op,a){
+    var A=acct();
+    if(FL.server){
+      if(op==='save')return rpc('phg_wf_save',{p_account:A,p_id:a.id&&!/^wf_/.test(a.id)?a.id:null,p_name:a.name,p_kind:a.kind||'custom',p_emoji:a.emoji||'\u2699\ufe0f',p_definition:defOf(a),p_audience:a.audience||{who:'team'}});
+      if(op==='status')return rpc('phg_wf_set_status',{p_account:A,p_id:a.id,p_status:a.status});
+      if(op==='delete')return rpc('phg_wf_delete',{p_account:A,p_id:a.id});
+      if(op==='start')return rpc('phg_wf_start',{p_account:A,p_workflow:a.id,p_inputs:a.inputs});
+      if(op==='step')return rpc('phg_wf_step',{p_account:A,p_run:a.id,p_step:a.step});
+      if(op==='read')return rpc('phg_wf_inbox_read',{p_account:A,p_ids:null});
+    }
+    var L=lget(LKEY),R=lget(RKEY);
+    if(op==='save'){var w=fromDef(a);if(!w.id)w.id=uid();w.status=w.status||'draft';L=L.filter(function(x){return x.id!==w.id;});L.unshift(w);lset(LKEY,L);return Promise.resolve({ok:true,id:w.id});}
+    if(op==='status'){L.forEach(function(x){if(x.id===a.id)x.status=a.status;});lset(LKEY,L);return Promise.resolve({ok:true});}
+    if(op==='delete'){lset(LKEY,L.filter(function(x){return x.id!==a.id;}));return Promise.resolve({ok:true});}
+    if(op==='start'){var w2=L.filter(function(x){return x.id===a.id;})[0]||a.w;var run={id:uid(),workflow_id:a.id,name:w2.name,emoji:w2.emoji,kind:w2.kind,inputs:a.inputs,status:'open',steps:[{step:'reported',at:new Date().toISOString()}],by:firstName()||'You',mine:true,created_at:new Date().toISOString(),preview:true};R.unshift(run);lset(RKEY,R);return Promise.resolve({ok:true,run_id:run.id,notified:0,preview:true});}
+    if(op==='step'){R.forEach(function(x){if(x.id===a.id){x.status=a.step;x.steps.push({step:a.step,at:new Date().toISOString()});}});lset(RKEY,R);return Promise.resolve({ok:true});}
+    return Promise.resolve({ok:true});
+  }
+  function defOf(w){return {when:w.when,conds:w.conds||[],acts:w.acts||[],any:!!w.any,sub:w.sub||'',cat:w.cat||'',chain:w.chain||null,who:w.who||'team',person:w.person||'',role:w.role||''};}
+  function fromDef(x){var d=x.definition||x;var w={id:x.id,name:x.name,kind:x.kind||'custom',emoji:x.emoji||'\u2699\ufe0f',status:x.status||'draft',audience:x.audience||{who:d.who||'team'},
+      when:d.when||'manual',conds:d.conds||[],acts:d.acts||[],any:!!d.any,sub:d.sub||'',cat:d.cat||'prep',chain:d.chain||null,who:d.who||((x.audience||{}).who)||'team',person:d.person||'',role:d.role||''};return w;}
 
   /* ---------- catalogues ---------- */
   var CATS=[['all','All'],['prep','Prep & stock'],['order','Ordering & invoices'],['staff','Staff & shifts'],['menu','Menu & design'],['open','Open & close'],['guest','Guests & service'],['safety','Safety & upkeep']];
-  /* field types: person, clock, text, num, day, time */
-  var F={
-    employee:{l:'Employee',t:'person'},role:{l:'Role',t:'text'},clock_in:{l:'Clock-in',t:'clock'},
-    item:{l:'Item',t:'text'},prep:{l:'Prep item',t:'text'},vendor:{l:'Vendor',t:'text'},
-    amount:{l:'Invoice total ($)',t:'num'},price_change:{l:'Price change (%)',t:'num'},on_order:{l:'Item is on the order guide',t:'bool'},
-    party:{l:'Party size',t:'num'},day:{l:'Day',t:'day'},time:{l:'Time',t:'time'},variance:{l:'Count variance (%)',t:'num'},
-    temp:{l:'Temperature (\u00b0F)',t:'num'},note:{l:'Note',t:'text'},hours:{l:'Hours this week',t:'num'}
-  };
-  var OPS={
-    person:[['is','is'],['not','is not'],['any','is anyone']],
-    clock:[['empty','is empty'],['notempty','is not empty'],['late','is late by more than (min)']],
-    text:[['is','is'],['has','contains'],['empty','is empty'],['notempty','is not empty']],
-    num:[['gt','is more than'],['lt','is less than'],['eq','equals']],
-    bool:[['yes','is yes'],['no','is no']],
-    day:[['is','is'],['not','is not']],time:[['after','is after'],['before','is before']]
-  };
+  var F={employee:{l:'Employee',t:'person'},role:{l:'Role',t:'text'},clock_in:{l:'Clock-in',t:'clock'},item:{l:'Item',t:'text'},prep:{l:'Recipe',t:'text'},vendor:{l:'Vendor',t:'text'},
+    amount:{l:'Invoice total ($)',t:'num'},price_change:{l:'Price change (%)',t:'num'},on_order:{l:'Item is on the order guide',t:'bool'},party:{l:'Party size',t:'num'},day:{l:'Day',t:'day'},
+    time:{l:'Time',t:'time'},variance:{l:'Count variance (%)',t:'num'},temp:{l:'Temperature (\u00b0F)',t:'num'},note:{l:'Note',t:'text'},hours:{l:'Hours this week',t:'num'},how:{l:'How bad',t:'text'}};
+  var OPS={person:[['is','is'],['not','is not'],['any','is anyone']],clock:[['empty','is empty'],['notempty','is not empty'],['late','is late by more than (min)']],
+    text:[['is','is'],['has','contains'],['empty','is empty'],['notempty','is not empty']],num:[['gt','is more than'],['lt','is less than'],['eq','equals']],
+    bool:[['yes','is yes'],['no','is no']],day:[['is','is'],['not','is not']],time:[['after','is after'],['before','is before']]};
   var NOVAL={any:1,empty:1,notempty:1,yes:1,no:1};
-  var T={
-    manual:{l:'Someone taps Run',f:['note'],live:true},
-    prep_missing:{l:'An ingredient is missing during prep',f:['item','prep','employee','on_order']},
-    item_86:{l:'An item is marked out (86)',f:['item','employee']},
-    order_added:{l:'An item is added to the order guide',f:['item','vendor']},
-    invoice_in:{l:'An invoice photo is processed',f:['item','vendor','amount','price_change']},
-    shift_start:{l:'A scheduled shift starts',f:['employee','role','clock_in','day']},
-    hours:{l:'Hours are added up',f:['employee','role','hours']},
-    daily:{l:'Every day at a set time',f:['day','time']},
-    count_done:{l:'An inventory count is finished',f:['item','variance']},
-    menu_design:{l:'Menu \u2192 Design with Harmony is tapped',f:[],live:true},
-    price_edit:{l:'A menu price is changed',f:['item','price_change','employee']},
-    temp_log:{l:'A temperature log is due or entered',f:['item','temp','time']},
-    guest_issue:{l:'A guest issue is logged',f:['note','employee']},
-    booking:{l:'A large party is booked',f:['party','day','time']},
-    broken:{l:'Equipment is reported broken',f:['item','note']}
-  };
-  var A={
-    menu_studio:{l:'Start Menu Studio with Harmony',to:0,msg:0,live:true},
-    harmony:{l:'Open Harmony with a prompt',to:0,msg:1,live:true,ph:'What Harmony should start with'},
-    notify_mgr:{l:'Notify the on-duty manager',to:0,msg:1},
-    notify_person:{l:'Notify a person',to:1,msg:1,toPh:'Name'},
-    notify_role:{l:'Notify everyone in a role',to:1,msg:1,toPh:'Role, e.g. Bar team'},
-    notify_shift:{l:'Notify whoever is on shift',to:0,msg:1},
-    text:{l:'Send a text',to:1,msg:1,toPh:'Name, or "the employee"'},
-    order_add:{l:'Add the item to the order guide',to:0,msg:0},
-    order_ask:{l:'Ask the manager to add it to the order',to:0,msg:0},
-    task:{l:'Create a task',to:1,msg:1,toPh:'Assign to (optional)'},
-    checklist:{l:'Open a checklist',to:0,msg:1,ph:'Checklist name'},
-    approve:{l:'Ask a manager to approve',to:0,msg:1},
-    resume:{l:'Tell the prepper it\u2019s back in stock',to:0,msg:1},
-    log:{l:'Write it to the log',to:0,msg:1}
-  };
+  var T={manual:{l:'Someone taps it',f:['note'],live:true},prep_missing:{l:'Someone reports a missing ingredient',f:['item','prep','how','employee','on_order'],team:true},
+    item_86:{l:'Someone marks an item out (86)',f:['item','employee'],team:true},order_added:{l:'An item is added to the order guide',f:['item','vendor']},
+    invoice_in:{l:'An invoice photo is processed',f:['item','vendor','amount','price_change']},shift_start:{l:'A scheduled shift starts',f:['employee','role','clock_in','day']},
+    running_late:{l:'Someone says they\u2019re running late',f:['employee','note'],team:true},hours:{l:'Hours are added up',f:['employee','role','hours']},
+    daily:{l:'Every day at a set time',f:['day','time']},count_done:{l:'An inventory count is finished',f:['item','variance']},menu_design:{l:'Menu \u2192 Design with Harmony is tapped',f:[],live:true},
+    price_edit:{l:'A menu price is changed',f:['item','price_change','employee']},temp_log:{l:'Someone logs a temperature',f:['item','temp','time'],team:true},
+    guest_issue:{l:'Someone logs a guest issue',f:['note','employee'],team:true},booking:{l:'A large party is booked',f:['party','day','time']},broken:{l:'Someone reports broken equipment',f:['item','note'],team:true}};
+  var A={menu_studio:{l:'Start Menu Studio with Harmony',live:true},harmony:{l:'Open Harmony with a prompt',msg:1,live:true,ph:'What Harmony should start with'},
+    notify_mgr:{l:'Notify the managers',msg:1,srv:true},notify_person:{l:'Notify a person',to:1,msg:1,toPh:'Name'},notify_role:{l:'Notify everyone in a role',to:1,msg:1,toPh:'Role, e.g. Bar team'},
+    notify_shift:{l:'Notify whoever is on shift',msg:1},text:{l:'Send a text',to:1,msg:1,toPh:'Name, or "the employee"'},order_add:{l:'Add the item to the order guide',srv:true},
+    order_ask:{l:'Ask the manager to order it',srv:true},task:{l:'Create a task',to:1,msg:1,toPh:'Assign to (optional)'},checklist:{l:'Open a checklist',msg:1,ph:'Checklist name'},
+    approve:{l:'Ask a manager to approve',msg:1},resume:{l:'Tell the reporter it\u2019s back in',srv:true},log:{l:'Write it to the log',msg:1}};
   function c(f,o,v){return{f:f,o:o,v:v==null?'':v};}
   function a(t,to,msg){return{t:t,to:to||'',msg:msg||''};}
-  /* presets: id, cat, icon, name, sub, when, if[], then[], chain (optional steps shown as a flow) */
   var PRE=[
-    {id:'p_prep_out',cat:'prep',ic:'\u2697',name:'Missing an ingredient during prep',sub:'"I\u2019m prepping ginger syrup but the ginger is out." The manager hears about it and can add it to the order.',
-      when:'prep_missing',conds:[c('on_order','no')],acts:[a('notify_mgr','','{item} is out \u2014 {employee} can\u2019t finish {prep}.'),a('order_ask')],
-      chain:['Prep cook reports it','Manager is notified','Added to the order guide','Invoice photo shows it arrived','On-duty team told it\u2019s back','Prep finishes']},
-    {id:'p_back_in',cat:'order',ic:'\u2709',name:'It came in: close the loop',sub:'When an invoice shows a missing item arrived, tell whoever is on shift so the prep can finish.',
-      when:'invoice_in',conds:[c('item','has','ginger')],acts:[a('notify_shift','','{item} came in on the {vendor} invoice. You can finish {prep}.'),a('resume')]},
-    {id:'p_86',cat:'prep',ic:'\u2298',name:'86 an item',sub:'Mark something out; the floor and the bar find out at once, and it goes on the order guide.',
-      when:'item_86',conds:[],acts:[a('notify_role','Floor and bar','{item} is 86\u2019d.'),a('order_add')]},
-    {id:'p_par',cat:'prep',ic:'\u2630',name:'Morning prep list',sub:'Each morning, build the prep list from what\u2019s below par and give it to the opening cook.',
-      when:'daily',conds:[c('time','after','08:00')],acts:[a('task','Opening cook','Prep list for today'),a('checklist','','Morning prep')]},
-    {id:'p_order',cat:'order',ic:'\u2611',name:'Add to the order guide',sub:'Anything added to the order guide is grouped by vendor for the next order.',
-      when:'order_added',conds:[],acts:[a('log','','{item} added for {vendor}.')]},
-    {id:'p_price',cat:'order',ic:'\u2197',name:'Invoice price jump',sub:'If a price on an invoice goes up more than 5%, tell the manager before it hits your margins.',
-      when:'invoice_in',conds:[c('price_change','gt','5')],acts:[a('notify_mgr','','{item} from {vendor} is up {price_change}%.')]},
-    {id:'p_late',cat:'staff',ic:'\u23F0',name:'Didn\u2019t clock in',sub:'If Jacob\u2019s shift has started and he hasn\u2019t clocked in after 10 minutes, text him and tell the manager.',
-      when:'shift_start',conds:[c('employee','is','Jacob'),c('clock_in','late','10')],acts:[a('text','the employee','Hey {employee}, your shift started at {start}. Are you on the way?'),a('notify_mgr','','{employee} hasn\u2019t clocked in.')]},
-    {id:'p_ot',cat:'staff',ic:'\u231B',name:'Overtime coming',sub:'Warn the manager when anyone passes 36 hours in the week.',
-      when:'hours',conds:[c('hours','gt','36')],acts:[a('notify_mgr','','{employee} is at {hours} hours this week.')]},
-    {id:'p_menu',cat:'menu',ic:'\u2726',name:'Design a menu with Harmony',sub:'Menu \u2192 Design with Harmony takes you to Harmony with a simple "make a menu" start.',
-      when:'menu_design',conds:[],acts:[a('menu_studio')]},
-    {id:'p_cocktail',cat:'menu',ic:'\u2741',name:'New cocktail idea',sub:'Start Harmony on a new drink: she asks for the spirit, the mood and the price point.',
-      when:'manual',conds:[],acts:[a('harmony','','Let\u2019s create a new cocktail for the menu.')]},
-    {id:'p_menu_price',cat:'menu',ic:'$',name:'Menu price change needs approval',sub:'Any price change on the menu goes to a manager before it\u2019s printed.',
-      when:'price_edit',conds:[],acts:[a('approve','','{employee} changed {item} by {price_change}%.')]},
-    {id:'p_open',cat:'open',ic:'\u2600',name:'Opening checklist',sub:'At opening time, the opener gets the checklist; the manager sees anything skipped.',
-      when:'daily',conds:[c('time','after','10:00')],acts:[a('checklist','','Opening'),a('notify_mgr','','Opening checklist: {skipped} skipped.')]},
-    {id:'p_close',cat:'open',ic:'\u263E',name:'Closing checklist + cash count',sub:'At close, the closer runs the checklist and enters the cash count.',
-      when:'daily',conds:[c('time','after','23:00')],acts:[a('checklist','','Closing and cash count')]},
-    {id:'p_count',cat:'prep',ic:'\u2696',name:'Count variance',sub:'When a count comes in more than 10% off, tell the manager which items.',
-      when:'count_done',conds:[c('variance','gt','10')],acts:[a('notify_mgr','','{item} counted {variance}% off.')]},
-    {id:'p_guest',cat:'guest',ic:'\u2691',name:'Guest issue',sub:'Log a guest issue and the manager on duty is told right away.',
-      when:'guest_issue',conds:[],acts:[a('notify_mgr','','Guest issue from {employee}: {note}'),a('log')]},
-    {id:'p_party',cat:'guest',ic:'\u2637',name:'Large party heads-up',sub:'A party of 12 or more booked: the kitchen and bar get a prep heads-up.',
-      when:'booking',conds:[c('party','gt','11')],acts:[a('notify_role','Kitchen and bar','Party of {party} on {day} at {time}.')]},
-    {id:'p_temp',cat:'safety',ic:'\u2744',name:'Fridge temperature',sub:'If a cooler reads above 41\u00b0F, tell the manager and start the log.',
-      when:'temp_log',conds:[c('temp','gt','41')],acts:[a('notify_mgr','','{item} is at {temp}\u00b0F.'),a('log')]},
-    {id:'p_broken',cat:'safety',ic:'\u2692',name:'Broken equipment',sub:'Report it once; the manager gets it with the note, and a task is created to fix it.',
-      when:'broken',conds:[],acts:[a('notify_mgr','','{item} is broken: {note}'),a('task','Manager','Fix {item}')]}
+    {id:'p_prep_out',kind:'missing',cat:'prep',emoji:'\ud83d\udea8',name:'Missing ingredient',sub:'Pick the recipe, tap what\u2019s missing, done. The manager is told and can order it with one tap.',
+      when:'prep_missing',conds:[],acts:[a('notify_mgr'),a('order_ask'),a('resume')],chain:['\ud83e\uddd1\u200d\ud83c\udf73 Reported','\ud83d\udce3 Manager told','\ud83d\uded2 Ordered','\ud83d\udce6 Arrived','\u2705 Back to prep']},
+    {id:'p_86',kind:'report',cat:'prep',emoji:'\ud83d\udeab',name:'86 an item',sub:'Mark something out; managers know at once and can put it on the order.',when:'item_86',conds:[],acts:[a('notify_mgr'),a('order_ask')]},
+    {id:'p_late_me',kind:'report',cat:'staff',emoji:'\ud83c\udfc3',name:'Running late',sub:'Tell your manager you\u2019re on the way and when you\u2019ll be in.',when:'running_late',conds:[],acts:[a('notify_mgr')]},
+    {id:'p_temp',kind:'report',cat:'safety',emoji:'\ud83e\uddca',name:'Fridge too warm',sub:'Log the temperature; anything above 41\u00b0F goes straight to the manager.',when:'temp_log',conds:[c('temp','gt','41')],acts:[a('notify_mgr'),a('log')]},
+    {id:'p_broken',kind:'report',cat:'safety',emoji:'\ud83d\udee0\ufe0f',name:'Something broke',sub:'Say what broke; the manager gets it with your note.',when:'broken',conds:[],acts:[a('notify_mgr'),a('task','Manager','Fix it')]},
+    {id:'p_guest',kind:'report',cat:'guest',emoji:'\ud83d\ude4b',name:'Guest issue',sub:'Log it in a few words and the manager on duty is told right away.',when:'guest_issue',conds:[],acts:[a('notify_mgr'),a('log')]},
+    {id:'p_back_in',kind:'auto',cat:'order',emoji:'\ud83d\udce6',name:'It came in: close the loop',sub:'When an invoice shows a missing item arrived, tell whoever reported it so the prep can finish.',when:'invoice_in',conds:[c('item','has','ginger')],acts:[a('notify_shift'),a('resume')]},
+    {id:'p_price',kind:'auto',cat:'order',emoji:'\ud83d\udcb8',name:'Invoice price jump',sub:'If a price on an invoice goes up more than 5%, tell the manager.',when:'invoice_in',conds:[c('price_change','gt','5')],acts:[a('notify_mgr')]},
+    {id:'p_late',kind:'auto',cat:'staff',emoji:'\u23f0',name:'Didn\u2019t clock in',sub:'If Jacob\u2019s shift has started and he hasn\u2019t clocked in after 10 minutes, text him and tell the manager.',when:'shift_start',conds:[c('employee','is','Jacob'),c('clock_in','late','10')],acts:[a('text','the employee','Hey {employee}, your shift started at {start}. On the way?'),a('notify_mgr')]},
+    {id:'p_ot',kind:'auto',cat:'staff',emoji:'\u231b',name:'Overtime coming',sub:'Warn the manager when anyone passes 36 hours in the week.',when:'hours',conds:[c('hours','gt','36')],acts:[a('notify_mgr')]},
+    {id:'p_par',kind:'auto',cat:'prep',emoji:'\ud83d\udccb',name:'Morning prep list',sub:'Each morning, the prep list from what\u2019s below par goes to the opening cook.',when:'daily',conds:[c('time','after','08:00')],acts:[a('task','Opening cook','Prep list for today'),a('checklist','','Morning prep')]},
+    {id:'p_count',kind:'auto',cat:'prep',emoji:'\u2696\ufe0f',name:'Count variance',sub:'When a count comes in more than 10% off, tell the manager which items.',when:'count_done',conds:[c('variance','gt','10')],acts:[a('notify_mgr')]},
+    {id:'p_menu',kind:'launch',cat:'menu',emoji:'\u2728',name:'Design a menu with Harmony',sub:'Takes you to Harmony with a simple \u201cmake a menu\u201d start.',when:'menu_design',conds:[],acts:[a('menu_studio')]},
+    {id:'p_cocktail',kind:'launch',cat:'menu',emoji:'\ud83c\udf78',name:'New cocktail idea',sub:'Harmony starts on a new drink: spirit, mood and price point.',when:'manual',conds:[],acts:[a('harmony','','Let\u2019s create a new cocktail for the menu.')]},
+    {id:'p_menu_price',kind:'auto',cat:'menu',emoji:'\ud83d\udcb2',name:'Menu price change needs approval',sub:'Any price change on the menu goes to a manager before it\u2019s printed.',when:'price_edit',conds:[],acts:[a('approve')]},
+    {id:'p_open',kind:'auto',cat:'open',emoji:'\u2600\ufe0f',name:'Opening checklist',sub:'At opening, the opener gets the checklist; the manager sees anything skipped.',when:'daily',conds:[c('time','after','10:00')],acts:[a('checklist','','Opening'),a('notify_mgr')]},
+    {id:'p_close',kind:'auto',cat:'open',emoji:'\ud83c\udf19',name:'Closing checklist + cash count',sub:'At close, the closer runs the checklist and enters the cash count.',when:'daily',conds:[c('time','after','23:00')],acts:[a('checklist','','Closing and cash count')]},
+    {id:'p_party',kind:'auto',cat:'guest',emoji:'\ud83c\udf89',name:'Large party heads-up',sub:'A party of 12 or more: kitchen and bar get a prep heads-up.',when:'booking',conds:[c('party','gt','11')],acts:[a('notify_role','Kitchen and bar','Party of {party} on {day} at {time}.')]}
   ];
+  /* recipes snapshot (house preps, phg_mix) - replaced by phg_wf_preps() once the server step is on */
+  var PREPS=[['Simple syrup (1:1)',['white sugar','water']],['Rich simple syrup (2:1)',['white sugar','water']],['Demerara syrup (2:1)',['demerara sugar','water']],
+    ['Honey syrup (1:1)',['honey','water']],['Honey-ginger syrup',['fresh ginger','honey','water']],['Ginger syrup, blender method',['fresh ginger','sugar','boiling water']],
+    ['Ginger juice syrup (1:1)',['fresh ginger juice','caster sugar']],['Cinnamon syrup',['cinnamon sticks','water','white sugar']],['Vanilla syrup',['simple syrup','vanilla bean']],
+    ['Grenadine',['pomegranate juice','sugar','pomegranate molasses','orange blossom water','vodka']],['Orgeat, blender method',['almonds','salt','hot water','sugar']],
+    ['Passion fruit syrup',['passion fruit pulp','sugar','water']],['Raspberry syrup',['fresh raspberries','sugar','water']],['Black tea syrup',['sugar','hot water','black tea bags']],
+    ['Lime cordial',['sugar','hot water','fresh lime juice','lime peel','citric acid']],['Oleo saccharum (lemon)',['superfine sugar','lemon peel']],
+    ['Super juice, lime',['lime peels','citric acid','malic acid','water','fresh lime juice']],['Saline solution (20%)',['salt','hot water']],['Agave syrup (1:1)',['agave nectar','water']],
+    ['Porchlight citrus-ginger syrup',['lemon zest','lime zest','water','sugar','ginger','salt','lime juice','lemon juice','citric acid','malic acid']]];
+  var EMO=[[/ginger/,'\ud83e\udeda'],[/lime/,'\ud83c\udf48'],[/lemon/,'\ud83c\udf4b'],[/orange|citrus/,'\ud83c\udf4a'],[/honey|agave/,'\ud83c\udf6f'],[/sugar|syrup/,'\ud83c\udf6c'],[/water/,'\ud83d\udca7'],
+    [/salt|saline/,'\ud83e\uddc2'],[/raspberr|berr/,'\ud83c\udf53'],[/pomegranate|cherry/,'\ud83c\udf52'],[/passion|pineapple/,'\ud83c\udf4d'],[/almond|nut/,'\ud83e\udd5c'],[/tea/,'\ud83c\udf75'],
+    [/coffee|bean/,'\u2615'],[/cinnamon|clove|spice|pepper|anise/,'\ud83c\udf36\ufe0f'],[/mint|herb|basil/,'\ud83c\udf3f'],[/milk|cream/,'\ud83e\udd5b'],[/egg/,'\ud83e\udd5a'],[/coconut/,'\ud83e\udd65'],
+    [/vodka|rum|gin\b|bourbon|whisk|brandy|tequila|mezcal|liqueur/,'\ud83e\udd43'],[/acid/,'\ud83e\uddea'],[/vanilla/,'\ud83c\udf3c']];
+  function emo(s){s=String(s||'').toLowerCase();for(var i=0;i<EMO.length;i++)if(EMO[i][0].test(s))return EMO[i][1];return '\ud83e\uddfa';}
 
-  /* ---------- storage (this device, step 1) ---------- */
-  function mine(){try{var x=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(x)?x:[];}catch(e){return [];}}
-  function saveMine(l){try{localStorage.setItem(KEY,JSON.stringify(l.slice(0,200)));}catch(e){}}
-
-  /* ---------- logic ---------- */
-  function isLive(w){if(!T[w.when]||!T[w.when].live)return false;return (w.acts||[]).length>0&&(w.acts||[]).every(function(x){return A[x.t]&&A[x.t].live;});}
+  function isLaunch(w){return (w.acts||[]).length>0&&(w.acts||[]).every(function(x){return A[x.t]&&A[x.t].live;});}
+  function isTeam(w){return w.kind==='missing'||w.kind==='report'||(T[w.when]&&T[w.when].team)||isLaunch(w);}
   function opsFor(f){return OPS[(F[f]||{}).t||'text'];}
   function opLabel(f,o){var l=opsFor(f).filter(function(x){return x[0]===o;})[0];return l?l[1]:o;}
   function sentence(w){
     var s='When '+String((T[w.when]||{l:'something happens'}).l).replace(/^./,function(m){return m.toLowerCase();});
     var cs=(w.conds||[]).filter(function(x){return x.f;});
-    if(cs.length)s+=', if '+cs.map(function(x){var fl=(F[x.f]||{l:x.f}).l.toLowerCase();return fl+' '+opLabel(x.f,x.o)+(NOVAL[x.o]?'':' '+(x.v||'\u2026'));}).join(w.any?' or ':' and ');
+    if(cs.length)s+=', if '+cs.map(function(x){return (F[x.f]||{l:x.f}).l.toLowerCase()+' '+opLabel(x.f,x.o)+(NOVAL[x.o]?'':' '+(x.v||'\u2026'));}).join(w.any?' or ':' and ');
     var as=(w.acts||[]).filter(function(x){return A[x.t];});
     s+=as.length?', then '+as.map(function(x){var d=A[x.t].l.replace(/^./,function(m){return m.toLowerCase();});if(A[x.t].to&&x.to)d+=' ('+x.to+')';return d;}).join(', then '):', then \u2026';
-    if(w.who==='employee'&&w.person)s+='. For '+w.person;else if(w.who==='team')s+='. For the team';else if(w.who==='me')s+='. Just for me';
+    var au=w.audience||{who:w.who||'team'};
+    s+=au.who==='person'&&(au.name||w.person)?'. Shown to '+(au.name||w.person):au.who==='role'&&au.role?'. Shown to '+au.role+'s':'. Shown to the whole team';
     return s+'.';
   }
-  function run(w){
-    var x=(w.acts||[])[0];if(!x)return;
-    hide();
+  function launch(w){
+    var x=(w.acts||[])[0];if(!x)return;hide();
     if(x.t==='menu_studio'){G.PHGViews.go('harmony',{from:'tap'});setTimeout(function(){var b=document.querySelector('#hvxPlusMenu [data-k="menu"]');if(b)b.click();else if(typeof harmonyAsk==='function')harmonyAsk('Let\u2019s make a menu.');},900);return;}
     if(x.t==='harmony'){G.PHGViews.go('harmony',{from:'tap'});setTimeout(function(){if(typeof harmonyAsk==='function')harmonyAsk(x.msg||w.name);},900);}
   }
@@ -47271,79 +47541,258 @@ html[data-pal="ivory"] .svOrb img{mix-blend-mode:multiply}
     s.textContent=[
 '#pvFlow{position:fixed;inset:0;z-index:4400;overflow:auto;-webkit-overflow-scrolling:touch;color:#eceaf2;background:radial-gradient(120% 90% at 20% 0%,#1d2433 0%,#0c0f16 60%,#07080c 100%);font:15px/1.5 Inter,-apple-system,BlinkMacSystemFont,sans-serif;--ac:var(--look-acc,#8fd3ff);--ac2:var(--look-acc2,#c79bff)}',
 '#pvFlow[hidden]{display:none}',
-'#pvFlow .wf-fw{max-width:1180px;margin:0 auto;padding:78px 22px 60px}',
+'#pvFlow .wf-fw{max-width:1180px;margin:0 auto;padding:74px 20px 70px}',
+'#pvFlow .wf-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}',
 '#pvFlow .wf-eye{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ac)}',
-'#pvFlow h1{font:600 clamp(26px,4vw,40px)/1.1 var(--look-display,inherit);margin:6px 0 6px}',
+'#pvFlow h1{font:600 clamp(26px,4vw,40px)/1.1 var(--look-display,inherit);margin:4px 0 4px}',
 '#pvFlow .wf-lead{color:#b9b7c6;max-width:720px;margin:0}',
-'#pvFlow .wf-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:20px 0 12px}',
+'#pvFlow .wf-side{display:inline-flex;background:rgba(255,255,255,.07);border-radius:999px;padding:4px;gap:4px}',
+'#pvFlow .wf-side button{border:0;background:none;color:#cfcdd9;padding:8px 16px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer;font-weight:600}',
+'#pvFlow .wf-side button[aria-pressed="true"]{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#0b0d12}',
+'#pvFlow .wf-bell{position:relative;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);border-radius:999px;width:42px;height:42px;font-size:20px;cursor:pointer;color:inherit}',
+'#pvFlow .wf-bell b{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:#ff4d5e;color:#fff;font-size:11px;line-height:18px;padding:0 4px;animation:wfPop .5s ease}',
+'#pvFlow .wf-banner{margin:14px 0 0;padding:10px 14px;border-radius:14px;background:rgba(243,200,107,.12);border:1px solid rgba(243,200,107,.35);color:#f6d98c;font-size:13.5px}',
+'#pvFlow .wf-banner.ok{background:rgba(94,224,160,.1);border-color:rgba(94,224,160,.35);color:#8ff0bf}',
+'#pvFlow .wf-h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#9a98a8;margin:26px 0 10px}',
+'#pvFlow .wf-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}',
+'#pvFlow .wf-tile{position:relative;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:18px 14px 14px;text-align:left;cursor:pointer;color:inherit;font:inherit;min-height:138px;display:flex;flex-direction:column;gap:6px;overflow:hidden;background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.02));transition:transform .15s ease;animation:wfIn .4s ease both}',
+'#pvFlow .wf-tile:active{transform:scale(.97)}',
+'#pvFlow .wf-tile .wf-big{font-size:42px;line-height:1;display:inline-block;animation:wfBob 2.6s ease-in-out infinite;transform-origin:50% 90%}',
+'#pvFlow .wf-tile.hot .wf-big{animation:wfAlarm 1.4s ease-in-out infinite}',
+'#pvFlow .wf-tile.hot{background:linear-gradient(160deg,rgba(255,77,94,.22),rgba(255,77,94,.04));border-color:rgba(255,77,94,.4)}',
+'#pvFlow .wf-tile.warn{background:linear-gradient(160deg,rgba(243,200,107,.2),rgba(243,200,107,.03));border-color:rgba(243,200,107,.35)}',
+'#pvFlow .wf-tile.cool{background:linear-gradient(160deg,rgba(143,211,255,.2),rgba(143,211,255,.03));border-color:rgba(143,211,255,.35)}',
+'#pvFlow .wf-tile.fun{background:linear-gradient(160deg,color-mix(in srgb,var(--ac2) 28%,transparent),rgba(255,255,255,.02))}',
+'#pvFlow .wf-tile h3{margin:6px 0 0;font-size:16px}',
+'#pvFlow .wf-tile p{margin:0;font-size:12.5px;color:#b9b7c6;line-height:1.35}',
+'#pvFlow .wf-tile .wf-glow{position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%);animation:wfGlow 4s ease-in-out infinite}',
+'@keyframes wfIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}',
+'@keyframes wfBob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-4deg)}}',
+'@keyframes wfAlarm{0%,100%{transform:rotate(0) scale(1)}10%{transform:rotate(-14deg) scale(1.08)}20%{transform:rotate(12deg) scale(1.08)}30%{transform:rotate(-8deg)}40%{transform:rotate(0)}}',
+'@keyframes wfGlow{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}',
+'@keyframes wfPop{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}',
+'@keyframes wfFlow{to{background-position:28px 0}}',
+'@keyframes wfPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ac) 60%,transparent)}100%{box-shadow:0 0 0 14px transparent}}',
+'@keyframes wfBurst{0%{opacity:0;transform:translate(0,0) scale(.4)}20%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) scale(1.2) rotate(var(--r))}}',
+'#pvFlow .wf-board{display:grid;gap:12px}',
+'#pvFlow .wf-run{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);border-radius:20px;padding:14px;animation:wfIn .35s ease both}',
+'#pvFlow .wf-run .wf-rh{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}',
+'#pvFlow .wf-run .wf-rt{font-weight:600;font-size:15px}',
+'#pvFlow .wf-run .wf-rs{font-size:12.5px;color:#9a98a8}',
+'.wf-chart{display:flex;align-items:center;gap:0;margin-top:12px;overflow-x:auto;padding:6px 2px 4px;scrollbar-width:none}',
+'.wf-chart::-webkit-scrollbar{display:none}',
+'.wf-node{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;width:84px;text-align:center}',
+'.wf-node i{font-style:normal;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.14);filter:grayscale(.85);opacity:.6;transition:all .3s}',
+'.wf-node span{font-size:11.5px;line-height:1.2;color:#9a98a8}',
+'.wf-node.done i{filter:none;opacity:1;background:color-mix(in srgb,var(--ac) 22%,transparent);border-color:var(--ac)}',
+'.wf-node.now i{filter:none;opacity:1;border-color:var(--ac);animation:wfPulse 1.4s ease-out infinite}',
+'.wf-node.now span,.wf-node.done span{color:#e6e4ee}',
+'.wf-link{flex:1 0 18px;min-width:18px;height:3px;border-radius:2px;margin-top:-20px;background:rgba(255,255,255,.12)}',
+'.wf-link.on{background:repeating-linear-gradient(90deg,var(--ac) 0 8px,transparent 8px 14px);background-size:28px 3px;animation:wfFlow .8s linear infinite}',
+'#pvFlow .wf-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}',
+'#pvFlow .wf-btn,#pvFlowWz .wf-btn,#pvFlowEd .wf-btn{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#eceaf2;border-radius:999px;padding:8px 16px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}',
+'#pvFlow .wf-btn.wf-pri,#pvFlowWz .wf-btn.wf-pri,#pvFlowEd .wf-btn.wf-pri{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#0b0d12;border:0;font-weight:600}',
+'#pvFlow .wf-btn.wf-sm{padding:5px 12px;font-size:13px}',
+'#pvFlow .wf-btn:disabled,#pvFlowWz .wf-btn:disabled{opacity:.45;cursor:default}',
+'#pvFlow .wf-empty{color:#b9b7c6;text-align:center;padding:26px;border:1px dashed rgba(255,255,255,.15);border-radius:18px}',
+'#pvFlow .wf-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0 12px}',
 '#pvFlow .wf-tabs{display:flex;gap:4px;background:rgba(255,255,255,.06);border-radius:999px;padding:4px}',
 '#pvFlow .wf-tabs button{border:0;background:none;color:#cfcdd9;padding:7px 14px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer}',
 '#pvFlow .wf-tabs button[aria-pressed="true"]{background:var(--ac);color:#0b0d12;font-weight:600}',
-'#pvFlow input,#pvFlow select,#pvFlow textarea{font:inherit;font-size:16px;color:#eceaf2;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;min-width:0}',
-'#pvFlow select option{color:#111;background:#fff}',
 '#pvFlow .wf-q{flex:1 1 200px}',
-'#pvFlow .wf-btn{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#eceaf2;border-radius:999px;padding:8px 16px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}',
-'#pvFlow .wf-btn.wf-pri{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#0b0d12;border:0;font-weight:600}',
-'#pvFlow .wf-btn:disabled{opacity:.45;cursor:default}',
 '#pvFlow .wf-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}',
 '#pvFlow .wf-chips button{flex:0 0 auto;border:1px solid rgba(255,255,255,.14);background:none;color:#cfcdd9;border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}',
 '#pvFlow .wf-chips button[aria-pressed="true"]{border-color:var(--ac);color:var(--ac)}',
 '#pvFlow .wf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:14px}',
-'#pvFlow .wf-card{position:relative;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px;animation:pvfIn .35s ease both}',
-'@keyframes pvfIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}',
+'#pvFlow .wf-card{position:relative;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px;animation:wfIn .35s ease both}',
 '#pvFlow .wf-card h3{margin:0;font-size:17px;line-height:1.25}',
 '#pvFlow .wf-card p{margin:0;color:#b9b7c6;font-size:14px}',
-'#pvFlow .wf-ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:linear-gradient(135deg,color-mix(in srgb,var(--ac) 30%,transparent),color-mix(in srgb,var(--ac2) 25%,transparent))}',
+'#pvFlow .wf-ic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:24px;background:rgba(255,255,255,.07);flex:0 0 auto}',
 '#pvFlow .wf-hd{display:flex;gap:12px;align-items:flex-start}',
-'#pvFlow .wf-badge{display:inline-block;font-size:11px;letter-spacing:.04em;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.2);color:#cfcdd9}',
+'#pvFlow .wf-badge{display:inline-block;font-size:11px;letter-spacing:.04em;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.2);color:#cfcdd9;margin:4px 4px 0 0}',
 '#pvFlow .wf-badge.wf-live{border-color:#5ee0a0;color:#5ee0a0}',
+'#pvFlow .wf-badge.wf-paused{border-color:#f3c86b;color:#f3c86b}',
 '#pvFlow .wf-rule{font-size:13px;color:#d9d7e3;background:rgba(0,0,0,.22);border-radius:12px;padding:8px 10px;display:grid;gap:3px}',
 '#pvFlow .wf-rule b{color:var(--ac);font-weight:600;font-size:11px;letter-spacing:.12em;margin-right:6px}',
-'#pvFlow .wf-chain{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:12px;color:#b9b7c6}',
-'#pvFlow .wf-chain span{background:rgba(255,255,255,.06);border-radius:8px;padding:2px 7px}',
-'#pvFlow .wf-chain i{color:var(--ac);font-style:normal}',
-'#pvFlow .wf-acts{display:flex;gap:8px;margin-top:auto;flex-wrap:wrap}',
-'#pvFlow .wf-empty{margin-top:30px;color:#b9b7c6;text-align:center;padding:30px;border:1px dashed rgba(255,255,255,.15);border-radius:18px}',
 '#pvFlow .wf-note{margin-top:22px;font-size:13px;color:#9a98a8}',
 '#pvFlow .wf-msg{margin:10px 0 0;color:#5ee0a0;font-size:14px}',
-'#pvFlowEd{position:fixed;inset:0;z-index:4450;background:rgba(4,5,8,.66);display:grid;place-items:center;padding:16px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}',
-'#pvFlowEd .wf-ed{width:min(760px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#121621;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:20px;animation:pvfIn .25s ease both}',
+'#pvFlow .wf-inbox{margin-top:14px;border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:6px;animation:wfIn .25s ease both}',
+'#pvFlow .wf-in{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:12px}',
+'#pvFlow .wf-in.new{background:color-mix(in srgb,var(--ac) 10%,transparent)}',
+'#pvFlow .wf-in .e{font-size:22px}',
+'#pvFlow .wf-in .t{font-weight:600;font-size:14px}',
+'#pvFlow .wf-in .b{font-size:13px;color:#b9b7c6}',
+'#pvFlowWz,#pvFlowEd{position:fixed;inset:0;z-index:4450;background:rgba(4,5,8,.66);display:grid;place-items:center;padding:16px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#eceaf2;font:15px/1.5 Inter,-apple-system,BlinkMacSystemFont,sans-serif;--ac:var(--look-acc,#8fd3ff);--ac2:var(--look-acc2,#c79bff)}',
+'#pvFlowWz .wf-ed,#pvFlowEd .wf-ed{position:relative;width:min(640px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#121621;border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:22px;animation:wfIn .25s ease both}',
+'#pvFlowEd .wf-ed{width:min(760px,100%)}',
+'#pvFlowWz .wf-dots{display:flex;gap:6px;margin-bottom:14px}',
+'#pvFlowWz .wf-dots i{height:5px;flex:1;border-radius:3px;background:rgba(255,255,255,.12)}',
+'#pvFlowWz .wf-dots i.on{background:linear-gradient(90deg,var(--ac),var(--ac2))}',
+'#pvFlowWz .wf-q2{font:600 22px/1.25 var(--look-display,inherit);margin:0 0 4px}',
+'#pvFlowWz .wf-sub{color:#9a98a8;font-size:13.5px;margin:0 0 14px}',
+'#pvFlowWz .wf-list{display:grid;gap:8px;max-height:46vh;overflow:auto;padding:2px}',
+'#pvFlowWz .wf-opt{display:flex;gap:12px;align-items:center;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:14px;padding:12px;cursor:pointer;color:inherit;font:inherit;text-align:left;width:100%}',
+'#pvFlowWz .wf-opt:active{transform:scale(.99)}',
+'#pvFlowWz .wf-opt .e{font-size:24px}',
+'#pvFlowWz .wf-opt small{display:block;color:#9a98a8;font-size:12px}',
+'#pvFlowWz .wf-chipsel{display:flex;flex-wrap:wrap;gap:10px}',
+'#pvFlowWz .wf-chipsel button{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:inherit;border-radius:16px;padding:12px 14px;font:inherit;font-size:15px;cursor:pointer;display:flex;gap:8px;align-items:center;animation:wfIn .3s ease both}',
+'#pvFlowWz .wf-chipsel button[aria-pressed="true"]{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 18%,transparent)}',
+'#pvFlowWz .wf-chipsel .e{font-size:22px}',
+'#pvFlowWz .wf-how{display:grid;grid-template-columns:1fr 1fr;gap:10px}',
+'#pvFlowWz .wf-how button{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:inherit;border-radius:18px;padding:18px 10px;font:inherit;font-size:15px;cursor:pointer}',
+'#pvFlowWz .wf-how button .e{display:block;font-size:34px;margin-bottom:4px}',
+'#pvFlowWz .wf-how button[aria-pressed="true"]{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 18%,transparent)}',
+'#pvFlowWz .wf-foot,#pvFlowEd .wf-foot{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:18px}',
+'#pvFlowWz .wf-x{position:absolute;top:12px;right:14px;border:0;background:none;color:#9a98a8;font-size:24px;cursor:pointer}',
+'#pvFlowWz .wf-sum{padding:14px;border-radius:16px;background:rgba(255,255,255,.05);font-size:15px}',
+'#pvFlowWz .wf-sum b{font-size:18px}',
+'#pvFlowWz .wf-done{text-align:center;padding:10px 0 4px;position:relative}',
+'#pvFlowWz .wf-done .e{font-size:64px;display:inline-block;animation:wfPop .6s ease}',
+'#pvFlowWz .wf-burst{position:absolute;left:50%;top:40px;font-size:22px;pointer-events:none;animation:wfBurst 1.2s ease-out forwards}',
+'#pvFlowWz .wf-warn{margin-top:12px;font-size:13px;color:#f3c86b}',
 '#pvFlowEd h2{margin:0 0 12px;font-size:20px}',
 '#pvFlowEd .wf-sec{margin-top:16px}',
 '#pvFlowEd .wf-lab{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ac);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px}',
 '#pvFlowEd .wf-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}',
 '#pvFlowEd .wf-row>*{flex:1 1 150px}',
-'#pvFlowEd .wf-row .wf-x{flex:0 0 auto;border:0;background:none;color:#9a98a8;font-size:20px;cursor:pointer;padding:0 6px}',
+'#pvFlowEd .wf-row .wf-xx{flex:0 0 auto;border:0;background:none;color:#9a98a8;font-size:20px;cursor:pointer;padding:0 6px}',
 '#pvFlowEd .wf-add{border:1px dashed rgba(255,255,255,.22);background:none;color:#cfcdd9;border-radius:10px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}',
 '#pvFlowEd .wf-sum{margin-top:16px;padding:12px;border-radius:12px;background:rgba(255,255,255,.05);font-size:14px;color:#e6e4ee}',
 '#pvFlowEd .wf-warn{margin-top:10px;font-size:13px;color:#f3c86b}',
-'#pvFlowEd .wf-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}',
-'#pvFlowEd .wf-seg{display:flex;gap:4px;flex-wrap:wrap}',
+'#pvFlowEd .wf-seg,#pvFlow .wf-seg{display:flex;gap:4px;flex-wrap:wrap}',
 '#pvFlowEd .wf-seg button{border:1px solid rgba(255,255,255,.16);background:none;color:#cfcdd9;border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}',
 '#pvFlowEd .wf-seg button[aria-pressed="true"]{border-color:var(--ac);color:var(--ac)}',
-'@media (max-width:640px){#pvFlow .wf-fw{padding:70px 14px 50px}#pvFlow .wf-grid{grid-template-columns:1fr}#pvFlowEd{padding:0;place-items:end stretch}#pvFlowEd .wf-ed{border-radius:20px 20px 0 0;max-height:92vh}}',
-'html.phg-light #pvFlow,html.phg-light #pvFlowEd{filter:invert(1) hue-rotate(180deg)!important}',
-'#pvFlow h1,#pvFlow h2,#pvFlow h3,#pvFlowEd h2,#pvFlow p{color:inherit;text-align:left;text-transform:none;letter-spacing:normal;background:none;border:0;padding:0}',
-'#pvFlow button,#pvFlowEd button{text-transform:none;letter-spacing:normal;box-shadow:none;min-height:0;width:auto}',
-'#pvFlow .wf-card::before,#pvFlow .wf-card::after{content:none!important}',
-'#pvFlow h1,#pvFlow h2,#pvFlow h3,#pvFlowEd h2{-webkit-text-fill-color:currentColor!important;background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;text-shadow:none!important;color:#f2f0f8!important}',
-'#pvFlow input,#pvFlow select,#pvFlowEd input,#pvFlowEd select{font:16px/1.3 Inter,-apple-system,BlinkMacSystemFont,sans-serif!important;letter-spacing:normal!important;text-transform:none!important;color:#eceaf2!important;-webkit-text-fill-color:#eceaf2!important;background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:10px!important;padding:9px 10px!important;height:auto!important;min-height:40px!important;box-shadow:none!important;width:auto}',
+'#pvFlowEd .wf-emo{width:64px!important;flex:0 0 64px!important;text-align:center;font-size:22px!important}',
+'@media (max-width:640px){#pvFlow .wf-fw{padding:68px 14px 60px}#pvFlow .wf-grid{grid-template-columns:1fr}#pvFlow .wf-tiles{grid-template-columns:1fr 1fr}#pvFlowWz,#pvFlowEd{padding:0;place-items:end stretch}#pvFlowWz .wf-ed,#pvFlowEd .wf-ed{border-radius:24px 24px 0 0;max-height:92vh}}',
+'@media (prefers-reduced-motion:reduce){#pvFlow *,#pvFlowWz *{animation:none!important}}',
+'html.phg-light #pvFlow,html.phg-light #pvFlowEd,html.phg-light #pvFlowWz{filter:none!important}',
+'html.phg-light #pvFlow{color:#1b1d24;background:radial-gradient(120% 90% at 20% 0%,#ffffff 0%,#f3f4f8 60%,#eceef4 100%)}',
+'html.phg-light #pvFlowWz,html.phg-light #pvFlowEd{color:#1b1d24;background:rgba(20,22,30,.32)}',
+'html.phg-light #pvFlowWz .wf-ed,html.phg-light #pvFlowEd .wf-ed{background:#fff;border-color:rgba(0,0,0,.08);box-shadow:0 20px 60px rgba(0,0,0,.18)}',
+'html.phg-light #pvFlow h1,html.phg-light #pvFlow h3,html.phg-light #pvFlowEd h2,html.phg-light #pvFlowWz h2,html.phg-light #pvFlowWz h3{color:#15171d!important}',
+'html.phg-light #pvFlow .wf-lead,html.phg-light #pvFlow .wf-tile p,html.phg-light #pvFlow .wf-card p,html.phg-light #pvFlow .wf-rs,html.phg-light #pvFlowWz .wf-sub,html.phg-light #pvFlow .wf-in .b,html.phg-light #pvFlow .wf-note,html.phg-light #pvFlow .wf-h2,html.phg-light .wf-node span,html.phg-light #pvFlowWz .wf-opt small{color:#5b6070}',
+'html.phg-light #pvFlow .wf-tile,html.phg-light #pvFlow .wf-card,html.phg-light #pvFlow .wf-run,html.phg-light #pvFlow .wf-inbox,html.phg-light #pvFlowWz .wf-opt,html.phg-light #pvFlowWz .wf-chipsel button,html.phg-light #pvFlowWz .wf-how button{background-color:#fff;border-color:rgba(0,0,0,.09);box-shadow:0 4px 14px rgba(20,22,30,.05)}',
+'html.phg-light #pvFlow .wf-tile{background-image:none}',
+'html.phg-light #pvFlow .wf-tile.hot{background:linear-gradient(160deg,#ffe3e6,#fff 75%);border-color:#ffb3bb}',
+'html.phg-light #pvFlow .wf-tile.warn{background:linear-gradient(160deg,#fff1d6,#fff 75%);border-color:#f3d48f}',
+'html.phg-light #pvFlow .wf-tile.cool{background:linear-gradient(160deg,#ddf1ff,#fff 75%);border-color:#a9d8f5}',
+'html.phg-light #pvFlow .wf-tile.fun{background:linear-gradient(160deg,#efe4ff,#fff 75%);border-color:#d5c2f7}',
+'html.phg-light #pvFlow .wf-tile .wf-glow{background:radial-gradient(circle,rgba(255,255,255,.9),transparent 70%)}',
+'html.phg-light #pvFlow .wf-rule,html.phg-light #pvFlowWz .wf-sum,html.phg-light #pvFlowEd .wf-sum{background:#f3f4f8;color:#2a2d36}',
+'html.phg-light .wf-node i{background:#f1f2f6;border-color:rgba(0,0,0,.12)}',
+'html.phg-light .wf-node.now span,html.phg-light .wf-node.done span{color:#1b1d24}',
+'html.phg-light .wf-link{background:rgba(0,0,0,.1)}',
+'html.phg-light #pvFlow .wf-btn,html.phg-light #pvFlowWz .wf-btn,html.phg-light #pvFlowEd .wf-btn,html.phg-light #pvFlow .wf-bell{color:#1b1d24;border-color:rgba(0,0,0,.14);background:#fff}',
+'html.phg-light #pvFlow .wf-btn.wf-pri,html.phg-light #pvFlowWz .wf-btn.wf-pri,html.phg-light #pvFlowEd .wf-btn.wf-pri{color:#0b0d12;font-weight:700;background:linear-gradient(135deg,var(--ac),var(--ac2));box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}',
+'html.phg-light #pvFlow .wf-side,html.phg-light #pvFlow .wf-tabs{background:rgba(0,0,0,.05)}',
+'html.phg-light #pvFlow .wf-side button,html.phg-light #pvFlow .wf-tabs button,html.phg-light #pvFlow .wf-chips button,html.phg-light #pvFlowEd .wf-seg button,html.phg-light #pvFlowEd .wf-add{color:#2a2d36;border-color:rgba(0,0,0,.14)}',
+'html.phg-light #pvFlow .wf-side button[aria-pressed="true"],html.phg-light #pvFlow .wf-tabs button[aria-pressed="true"]{color:#0b0d12;font-weight:700}',
+'html.phg-light #pvFlow .wf-badge{color:#3a3e4a;border-color:rgba(0,0,0,.16)}',
+'html.phg-light #pvFlow .wf-badge.wf-live{color:#0f8a52;border-color:#5ec795}',
+'html.phg-light #pvFlow .wf-banner{background:#fff4dc;border-color:#f0cf86;color:#7a5200}',
+'html.phg-light #pvFlowWz .wf-warn,html.phg-light #pvFlowEd .wf-warn{color:#8a5a00}',
+'html.phg-light #pvFlow .wf-msg{color:#0f8a52}',
+'html.phg-light #pvFlow .wf-empty{color:#5b6070;border-color:rgba(0,0,0,.15)}',
+'html.phg-light #pvFlowWz .wf-dots i{background:rgba(0,0,0,.1)}',
+'html.phg-light #pvFlow input,html.phg-light #pvFlow select,html.phg-light #pvFlowEd input,html.phg-light #pvFlowEd select,html.phg-light #pvFlowWz input,html.phg-light #pvFlowWz textarea{color:#1b1d24!important;-webkit-text-fill-color:#1b1d24!important;background-color:#fff!important;border-color:rgba(0,0,0,.16)!important}',
+'html.phg-light #pvFlow select,html.phg-light #pvFlowEd select{background-image:linear-gradient(45deg,transparent 50%,#5b6070 50%),linear-gradient(135deg,#5b6070 50%,transparent 50%)!important}',
+'html.phg-light #pvFlowWz .wf-x,html.phg-light #pvFlowEd .wf-xx{color:#6b7080}',
+'#pvFlow h1,#pvFlow h2,#pvFlow h3,#pvFlowEd h2,#pvFlow p,#pvFlowWz h2,#pvFlowWz p,#pvFlowWz h3{color:inherit;text-align:left;text-transform:none;letter-spacing:normal;background:none;border:0;padding:0}',
+'#pvFlow h1,#pvFlow h3,#pvFlowEd h2,#pvFlowWz h2,#pvFlowWz h3{-webkit-text-fill-color:currentColor!important;background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;text-shadow:none!important;color:#f2f0f8!important}',
+'#pvFlow button,#pvFlowEd button,#pvFlowWz button{text-transform:none;letter-spacing:normal;box-shadow:none;min-height:0}',
+'#pvFlow .wf-card::before,#pvFlow .wf-card::after,#pvFlow .wf-tile::before,#pvFlow .wf-tile::after{content:none!important}',
+'#pvFlow input,#pvFlow select,#pvFlowEd input,#pvFlowEd select,#pvFlowWz input,#pvFlowWz textarea{font:16px/1.3 Inter,-apple-system,BlinkMacSystemFont,sans-serif!important;letter-spacing:normal!important;text-transform:none!important;color:#eceaf2!important;-webkit-text-fill-color:#eceaf2!important;background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:12px!important;padding:10px 12px!important;height:auto!important;min-height:42px!important;box-shadow:none!important;min-width:0}',
+'#pvFlowWz input,#pvFlowWz textarea{width:100%;box-sizing:border-box}',
 '#pvFlow select,#pvFlowEd select{-webkit-appearance:none!important;appearance:none!important;padding-right:30px!important;background-image:linear-gradient(45deg,transparent 50%,#cfcdd9 50%),linear-gradient(135deg,#cfcdd9 50%,transparent 50%)!important;background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%!important;background-size:5px 5px!important;background-repeat:no-repeat!important}',
 '#pvFlowEd select option,#pvFlow select option{color:#111!important;-webkit-text-fill-color:#111!important;background:#fff!important}',
-'#pvFlow input::placeholder,#pvFlowEd input::placeholder{color:#8f8d9c!important;-webkit-text-fill-color:#8f8d9c!important}',
+'#pvFlow input::placeholder,#pvFlowEd input::placeholder,#pvFlowWz input::placeholder,#pvFlowWz textarea::placeholder{color:#8f8d9c!important;-webkit-text-fill-color:#8f8d9c!important}',
 '@media (max-width:820px){#phgViews{max-width:calc(100vw - 104px)}#phgViews .pvSwitch{display:flex;max-width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}#phgViews .pvSwitch::-webkit-scrollbar{display:none}#phgViews .pvSwitch button{flex:0 0 auto}}'
-].join('\n');
+    ].join('\n');
     document.head.appendChild(s);
   }
 
-  /* ---------- library ---------- */
+  /* ---------- flow chart ---------- */
+  var STEPS=[['reported','\ud83e\uddd1\u200d\ud83c\udf73','Reported'],['seen','\ud83d\udc40','Manager saw it'],['ordered','\ud83d\uded2','On the order'],['received','\ud83d\udce6','Came in'],['done','\u2705','Back to prep']];
+  var RSTEPS=[['reported','\ud83d\udce3','Reported'],['seen','\ud83d\udc40','Manager saw it'],['done','\u2705','Handled']];
+  function chart(steps,cur){
+    var idx=-1;steps.forEach(function(s,i){if(s[0]===cur)idx=i;});if(cur==='open')idx=0;
+    return '<div class="wf-chart" role="img" aria-label="Progress: '+esc((steps[Math.max(idx,0)]||[])[2]||'')+'">'+steps.map(function(s,i){
+      var st=i<idx?'done':i===idx?(i===steps.length-1?'done':'now'):'';
+      return (i?'<div class="wf-link'+(i<=idx?' on':'')+'"></div>':'')+'<div class="wf-node '+st+'"><i>'+s[1]+'</i><span>'+esc(s[2])+'</span></div>';}).join('')+'</div>';
+  }
+
+  /* ---------- layer ---------- */
   var LAYER=null;
   function layer(){
     if(LAYER)return LAYER;css();
     LAYER=document.createElement('div');LAYER.id='pvFlow';LAYER.hidden=true;LAYER.setAttribute('role','main');document.body.appendChild(LAYER);
     LAYER.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-f]');if(t)act(t.getAttribute('data-f'),t);});
-    LAYER.addEventListener('input',function(e){if(e.target&&e.target.id==='pvfQ'){FL.q=e.target.value;grid();}});
+    LAYER.addEventListener('input',function(e){if(e.target&&e.target.id==='pvfQ'){FL.q=e.target.value;setupGrid();}});
     return LAYER;
+  }
+  function tone(w){var e=w.emoji||'';return w.kind==='missing'||/\ud83d\udea8|\ud83d\udeab/.test(e)?'hot':/\ud83e\uddca/.test(e)?'cool':isLaunch(w)?'fun':'warn';}
+  function liveList(){
+    var l=(FL.list||[]).map(fromDef).filter(function(w){return w.status==='published'&&isTeam(w);});
+    return l;
+  }
+  function banner(){
+    if(FL.server)return '';
+    return '<div class="wf-banner">\ud83d\udc40 <b>Preview mode.</b> The workflow server isn\u2019t switched on yet, so this runs on this device only and nothing is sent to anyone.'+(canSetup()?' Publishing here is a preview too.':'')+'</div>';
+  }
+  function draw(){
+    var L=layer(),setup=FL.side==='setup'&&canSetup();
+    var unread=(FL.inbox||[]).filter(function(n){return !n.read;}).length;
+    var h='<div class="wf-fw"><div class="wf-top"><div><div class="wf-eye">Workflows</div><h1>'+(setup?'Set up workflows':'Hey'+(firstName()?' '+esc(firstName()):'')+' \ud83d\udc4b What\u2019s up?')+'</h1>'
+      +'<p class="wf-lead">'+(setup?'Build the \u201cwhen this happens, do that\u201d rules, then publish them. Published ones appear on the Team side as buttons.':'Tap what\u2019s happening. Harmony walks you through it and the right person is told.')+'</p></div>'
+      +'<div style="display:flex;gap:10px;align-items:center">'+(canSetup()?'<div class="wf-side" role="tablist"><button data-f="side:team" aria-pressed="'+!setup+'">\ud83c\udfc3 Team</button><button data-f="side:setup" aria-pressed="'+setup+'">\ud83d\udee0\ufe0f Setup</button></div>':'')
+      +(FL.server?'<button class="wf-bell" data-f="inbox" aria-label="Inbox, '+unread+' new">\ud83d\udd14'+(unread?'<b>'+unread+'</b>':'')+'</button>':'')+'</div></div>'+banner()
+      +(FL.msg?'<p class="wf-msg">'+esc(FL.msg)+'</p>':'');
+    if(FL.inboxOpen&&FL.server)h+=inboxHTML();
+    h+=setup?setupHTML():teamHTML();
+    L.innerHTML=h+'</div>';
+    if(setup)setupGrid();
+  }
+  function inboxHTML(){
+    var l=FL.inbox||[];
+    return '<div class="wf-inbox">'+(l.length?l.map(function(n){return '<div class="wf-in'+(n.read?'':' new')+'"><span class="e">'+esc(n.emoji||'\ud83d\udd14')+'</span><div><div class="t">'+esc(n.title)+'</div><div class="b">'+esc(n.body||'')+' \u00b7 '+esc(ago(n.created_at))+'</div></div></div>';}).join('')
+      :'<div class="wf-in"><span class="e">\ud83d\udced</span><div><div class="t">Nothing yet</div><div class="b">When someone reports something, or your report moves along, it shows up here.</div></div></div>')+'</div>';
+  }
+  function teamHTML(){
+    var live=liveList(),preview=false;
+    if(!live.length&&!FL.server){live=PRE.filter(isTeam).map(function(p){var w=clone(p);w.status='published';w.preview=true;return w;});preview=true;}
+    var h='<div class="wf-h2">'+(preview?'Starter buttons (preview)':'Tap to start')+'</div>';
+    h+=live.length?'<div class="wf-tiles">'+live.map(function(w,i){return '<button class="wf-tile '+tone(w)+'" style="animation-delay:'+(i*45)+'ms" data-f="start:'+esc(w.id)+'"><span class="wf-glow"></span><span class="wf-big">'+esc(w.emoji)+'</span><h3>'+esc(w.name)+'</h3><p>'+esc(w.sub||'')+'</p></button>';}).join('')+'</div>'
+      :'<div class="wf-empty">No live workflows yet.'+(canSetup()?' Open <b>Setup</b> and publish one: they show up here as big buttons for your team.':' Your manager hasn\u2019t published any yet.')+'</div>';
+    var runs=(FL.runs||[]).slice(0,12);
+    h+='<div class="wf-h2">'+(canSetup()?'Live board':'Your reports')+'</div>';
+    h+=runs.length?'<div class="wf-board">'+runs.map(runHTML).join('')+'</div>':'<div class="wf-empty">\ud83c\udf3f All quiet. Nothing open right now.</div>';
+    return h;
+  }
+  function runHTML(r){
+    var miss=r.kind==='missing'||(r.inputs&&r.inputs.ingredient),inp=r.inputs||{};
+    var title=miss?(emo(inp.ingredient)+' '+cap(inp.ingredient||'Something')+' '+(inp.how==='low'?'is running low':'is out')):((r.emoji||'')+' '+(r.name||'Report'));
+    var sub=(r.by?esc(r.by)+' \u00b7 ':'')+(inp.recipe?'for '+esc(inp.recipe)+' \u00b7 ':'')+(inp.item&&!miss?esc(inp.item)+' \u00b7 ':'')+(inp.note?'\u201c'+esc(inp.note)+'\u201d \u00b7 ':'')+esc(ago(r.created_at))+(r.preview?' \u00b7 preview':'');
+    var steps=miss?STEPS:RSTEPS,next=nextStep(r,steps);
+    return '<div class="wf-run"><div class="wf-rh"><div><div class="wf-rt">'+esc(title)+'</div><div class="wf-rs">'+sub+'</div></div>'
+      +(canSetup()&&next&&r.status!=='done'&&r.status!=='cancelled'?'<div class="wf-acts" style="margin:0">'+next.map(function(s){return '<button class="wf-btn wf-sm'+(s===next[0]?' wf-pri':'')+'" data-f="step:'+esc(r.id)+':'+s[0]+'">'+s[1]+' '+esc(s[3]||s[2])+'</button>';}).join('')+'</div>':'')+'</div>'
+      +chart(steps,r.status==='open'?'reported':r.status)+'</div>';
+  }
+  function nextStep(r,steps){
+    var order=steps.map(function(s){return s[0];}),i=Math.max(0,order.indexOf(r.status==='open'?'reported':r.status));
+    var nx=steps.slice(i+1,i+3).map(function(s){return [s[0],s[1],s[2],{seen:'Got it',ordered:'Ordered',received:'It came in',done:'Done'}[s[0]]];});
+    return nx.length?nx:null;
+  }
+  function cap(s){s=String(s||'');return s.charAt(0).toUpperCase()+s.slice(1);}
+
+  /* ---------- setup side ---------- */
+  function setupHTML(){
+    return '<div class="wf-bar"><div class="wf-tabs" role="tablist">'
+      +[['presets','Presets'],['mine','Our workflows']].map(function(t){return '<button data-f="tab:'+t[0]+'" aria-pressed="'+(FL.tab===t[0])+'">'+t[1]+'</button>';}).join('')
+      +'</div><input id="pvfQ" class="wf-q" type="search" placeholder="Search workflows" value="'+esc(FL.q)+'" aria-label="Search workflows"><button class="wf-btn wf-pri" data-f="new">+ New workflow</button><button class="wf-btn" data-f="side:team">\ud83d\udc40 Preview as team</button></div>'
+      +'<div class="wf-chips">'+CATS.map(function(k){return '<button data-f="cat:'+k[0]+'" aria-pressed="'+(FL.cat===k[0])+'">'+k[1]+'</button>';}).join('')+'</div>'
+      +'<div class="wf-grid" id="pvfGrid"></div>'
+      +'<p class="wf-note">Publish = live for the people you chose; Pause = hidden but kept. Only owners and admins can set up or publish, and the server checks it on every change. Texts need a texting service (not connected yet): until then, people are told in the app.</p>';
   }
   function ruleHTML(w){
     var cs=(w.conds||[]).filter(function(x){return x.f;});
@@ -47351,59 +47800,49 @@ html[data-pal="ivory"] .svOrb img{mix-blend-mode:multiply}
       +(cs.length?'<div><b>IF</b>'+esc(cs.map(function(x){return (F[x.f]||{l:x.f}).l+' '+opLabel(x.f,x.o)+(NOVAL[x.o]?'':' '+x.v);}).join(w.any?' or ':' and '))+'</div>':'')
       +'<div><b>THEN</b>'+esc((w.acts||[]).map(function(x){return (A[x.t]||{l:x.t}).l+(x.to?' ('+x.to+')':'');}).join(' \u2192 '))+'</div></div>';
   }
-  function cardHTML(w,isMine,i){
-    var live=isLive(w);
-    return '<div class="wf-card" style="animation-delay:'+Math.min(i*30,400)+'ms"><div class="wf-hd"><div class="wf-ic">'+esc(w.ic||'\u2699')+'</div><div><h3>'+esc(w.name)+'</h3>'
-      +'<span class="wf-badge'+(live?' wf-live':'')+'">'+(live?'Works now':'Needs the server step')+'</span>'
-      +(isMine?' <span class="wf-badge">'+(w.who==='employee'&&w.person?'For '+esc(w.person):w.who==='team'?'Team':'Me')+' \u00b7 draft</span>':'')+'</div></div>'
+  function cardHTML(w,ours,i){
+    var st=w.status||'draft',au=w.audience||{who:'team'};
+    var badge=ours?'<span class="wf-badge '+(st==='published'?'wf-live':st==='paused'?'wf-paused':'')+'">'+(st==='published'?'\ud83d\udfe2 Live':st==='paused'?'\u23f8\ufe0f Paused':'\ud83d\udcdd Draft')+'</span><span class="wf-badge">'+(au.who==='person'?'\ud83d\udc64 '+esc(au.name||'One person'):au.who==='role'?'\ud83d\udc65 '+esc(au.role||'A role'):'\ud83d\udc65 Whole team')+'</span>'
+      :'<span class="wf-badge">'+(isTeam(w)?'\ud83c\udfc3 Team button':'\u2699\ufe0f Runs on its own')+'</span>';
+    var needs=(w.acts||[]).some(function(x){return A[x.t]&&!A[x.t].live&&!A[x.t].srv;});
+    return '<div class="wf-card" style="animation-delay:'+Math.min(i*30,400)+'ms"><div class="wf-hd"><div class="wf-ic">'+esc(w.emoji||'\u2699\ufe0f')+'</div><div><h3>'+esc(w.name)+'</h3>'+badge+'</div></div>'
       +(w.sub?'<p>'+esc(w.sub)+'</p>':'')+ruleHTML(w)
-      +(w.chain?'<div class="wf-chain">'+w.chain.map(function(s){return '<span>'+esc(s)+'</span>';}).join('<i>\u2192</i>')+'</div>':'')
-      +'<div class="wf-acts">'+(live?'<button class="wf-btn wf-pri" data-f="run:'+esc(w.id)+'">Run</button>':'')
-      +'<button class="wf-btn'+(live?'':' wf-pri')+'" data-f="'+(isMine?'edit':'use')+':'+esc(w.id)+'">'+(isMine?'Edit':'Use this')+'</button>'
-      +(isMine?'<button class="wf-btn" data-f="del:'+esc(w.id)+'">Delete</button>':'')+'</div></div>';
+      +(w.chain?chart(w.chain.map(function(s,k){var p=s.split(' ');return [String(k),p.shift(),p.join(' ')];}),'zz'):'')
+      +(needs?'<div style="font-size:12px;color:#f3c86b">Some steps (texts, tasks, checklists, schedules, invoices) aren\u2019t automated yet.</div>':'')
+      +'<div class="wf-acts">'+(ours
+        ?(st==='published'?'<button class="wf-btn" data-f="status:'+esc(w.id)+':paused">\u23f8\ufe0f Pause</button>':'<button class="wf-btn wf-pri" data-f="status:'+esc(w.id)+':published">\ud83d\ude80 Publish</button>')
+          +'<button class="wf-btn" data-f="edit:'+esc(w.id)+'">Edit</button><button class="wf-btn" data-f="del:'+esc(w.id)+'">Delete</button>'
+        :'<button class="wf-btn wf-pri" data-f="use:'+esc(w.id)+'">Use this</button>'+(isLaunch(w)?'<button class="wf-btn" data-f="launch:'+esc(w.id)+'">Run</button>':''))+'</div></div>';
   }
-  function match(w){
-    if(FL.cat!=='all'&&w.cat!==FL.cat)return false;
-    var q=FL.q.trim().toLowerCase();if(!q)return true;
-    return (w.name+' '+(w.sub||'')+' '+sentence(w)).toLowerCase().indexOf(q)>=0;
-  }
-  function grid(){
+  function setupGrid(){
     var g=LAYER&&LAYER.querySelector('#pvfGrid');if(!g)return;
-    if(FL.tab==='approvals'){g.innerHTML='<div class="wf-empty" style="grid-column:1/-1">Nothing waiting.<br>When the server step is on, workflows your team builds land here for a manager to approve, with filters by person, role and type.</div>';return;}
-    var list=FL.tab==='mine'?mine():PRE,isM=FL.tab==='mine';
-    var l=list.filter(match);
-    g.innerHTML=l.length?l.map(function(w,i){return cardHTML(w,isM,i);}).join(''):
-      '<div class="wf-empty" style="grid-column:1/-1">'+(isM?'No workflows of your own yet. Start from a preset (Use this) or build one.':'No presets match.')+'</div>';
+    var ours=FL.tab==='mine',list=ours?(FL.list||[]).map(fromDef):PRE;
+    var q=FL.q.trim().toLowerCase();
+    var l=list.filter(function(w){if(FL.cat!=='all'&&w.cat!==FL.cat)return false;return !q||(w.name+' '+(w.sub||'')+' '+sentence(w)).toLowerCase().indexOf(q)>=0;});
+    g.innerHTML=l.length?l.map(function(w,i){return cardHTML(w,ours,i);}).join(''):'<div class="wf-empty" style="grid-column:1/-1">'+(ours?'No workflows yet. Start from a preset (Use this) or build one.':'No presets match.')+'</div>';
   }
-  function draw(){
-    var L=layer();
-    L.innerHTML='<div class="wf-fw"><div class="wf-eye">Workflows</div><h1>When this happens, do that.</h1>'
-      +'<p class="wf-lead">Pick a ready-made workflow or build your own: what starts it, the conditions, and what happens next. Set it up for yourself, your team, or one person.</p>'
-      +'<div class="wf-bar"><div class="wf-tabs" role="tablist">'
-      +[['presets','Presets'],['mine','My workflows'],['approvals','Approvals']].map(function(t){return '<button data-f="tab:'+t[0]+'" aria-pressed="'+(FL.tab===t[0])+'">'+t[1]+'</button>';}).join('')
-      +'</div><input id="pvfQ" class="wf-q" type="search" placeholder="Search workflows" value="'+esc(FL.q)+'" aria-label="Search workflows"><button class="wf-btn wf-pri" data-f="new">+ New workflow</button></div>'
-      +'<div class="wf-chips">'+CATS.map(function(k){return '<button data-f="cat:'+k[0]+'" aria-pressed="'+(FL.cat===k[0])+'">'+k[1]+'</button>';}).join('')+'</div>'
-      +(FL.msg?'<p class="wf-msg">'+esc(FL.msg)+'</p>':'')
-      +'<div class="wf-grid" id="pvfGrid"></div>'
-      +'<p class="wf-note">Step 1: your workflows are saved on this device as drafts. "Works now" ones run today. The rest (notifications, texts, the order guide, invoice photos, clock-ins) switch on with the server step, after a manager approves each workflow.</p></div>';
-    grid();
-  }
-  function find(id){return PRE.filter(function(w){return w.id===id;})[0]||mine().filter(function(w){return w.id===id;})[0];}
-  function act(a,el){
-    var p=a.split(':'),k=p[0],v=p.slice(1).join(':');FL.msg='';
+  function findPre(id){return PRE.filter(function(w){return w.id===id;})[0];}
+  function findOurs(id){return (FL.list||[]).map(fromDef).filter(function(w){return w.id===id;})[0];}
+  function act(k0,el){
+    var p=k0.split(':'),k=p[0],v=p[1];FL.msg='';
+    if(k==='side'){FL.side=v;FL.inboxOpen=false;draw();return;}
     if(k==='tab'){FL.tab=v;draw();return;}
     if(k==='cat'){FL.cat=v;draw();return;}
-    if(k==='new'){openEd({id:null,name:'',ic:'\u2699',cat:'prep',when:'manual',conds:[],acts:[a0()],who:'me',person:''});return;}
-    if(k==='use'){var w=find(v);if(!w)return;var e=clone(w);e.from=w.id;e.id=null;delete e.chain;e.who=e.who||'team';openEd(e);return;}
-    if(k==='edit'){var w2=find(v);if(w2)openEd(clone(w2));return;}
-    if(k==='del'){if(!confirm('Delete this workflow from this device?'))return;saveMine(mine().filter(function(w){return w.id!==v;}));FL.msg='Deleted.';draw();return;}
-    if(k==='run'){var w3=find(v);if(w3&&isLive(w3))run(w3);return;}
+    if(k==='inbox'){FL.inboxOpen=!FL.inboxOpen;draw();if(FL.inboxOpen&&FL.server&&(FL.inbox||[]).some(function(n){return !n.read;}))api('read',{}).then(function(){(FL.inbox||[]).forEach(function(n){n.read=true;});});return;}
+    if(k==='new'){openEd({id:null,name:'',emoji:'\u2699\ufe0f',kind:'report',cat:'prep',when:'manual',conds:[],acts:[{t:'notify_mgr',to:'',msg:''}],audience:{who:'team'}});return;}
+    if(k==='use'){var w=findPre(v);if(!w)return;var e=clone(w);e.id=null;e.audience={who:'team'};openEd(e);return;}
+    if(k==='edit'){var w2=findOurs(v);if(w2)openEd(clone(w2));return;}
+    if(k==='launch'){var w3=findPre(v)||findOurs(v);if(w3)launch(w3);return;}
+    if(k==='del'){if(!confirm('Delete this workflow?'))return;work(api('delete',{id:v}),'Deleted.');return;}
+    if(k==='status'){work(api('status',{id:v,status:p[2]}),p[2]==='published'?'\ud83d\ude80 Published. It\u2019s on the Team side now.':'\u23f8\ufe0f Paused.');return;}
+    if(k==='step'){work(api('step',{id:v,step:p[2]}),'');return;}
+    if(k==='start'){var w4=liveList().filter(function(x){return x.id===v;})[0]||(!FL.server&&findPre(v));if(!w4)return;if(isLaunch(w4)){launch(w4);return;}openWz(w4);return;}
   }
-  function a0(){return{t:'notify_mgr',to:'',msg:''};}
+  function work(pr,ok){FL.busy=true;pr.then(function(){FL.msg=ok;return refresh();},function(e){FL.msg='\u26a0\ufe0f '+e.message;}).then(function(){FL.busy=false;draw();});}
 
-  /* ---------- builder ---------- */
+  /* ---------- builder (setup) ---------- */
   function openEd(w){FL.edit=w;var d=document.getElementById('pvFlowEd');if(!d){d=document.createElement('div');d.id='pvFlowEd';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
-      d.addEventListener('click',function(e){if(e.target===d){closeEd();return;}var t=e.target.closest&&e.target.closest('[data-e]');if(t)edAct(t.getAttribute('data-e'),t);});
+      d.addEventListener('click',function(e){if(e.target===d){closeEd();return;}var t=e.target.closest&&e.target.closest('[data-e]');if(t)edAct(t.getAttribute('data-e'));});
       d.addEventListener('change',function(e){var t=e.target;if(t&&t.tagName==='SELECT'&&t.getAttribute('data-c'))edChg(t.getAttribute('data-c'),t.value,true);});
       d.addEventListener('input',function(e){var t=e.target;if(t&&t.getAttribute('data-c')&&t.tagName!=='SELECT')edChg(t.getAttribute('data-c'),t.value,false);});
       document.body.appendChild(d);}
@@ -47412,71 +47851,159 @@ html[data-pal="ivory"] .svOrb img{mix-blend-mode:multiply}
   function sel(dc,opts,cur){return '<select data-c="'+dc+'">'+opts.map(function(o){return '<option value="'+esc(o[0])+'"'+(o[0]===cur?' selected':'')+'>'+esc(o[1])+'</option>';}).join('')+'</select>';}
   function edDraw(){
     var d=document.getElementById('pvFlowEd'),w=FL.edit;if(!d||!w)return;
-    var tf=(T[w.when]||{f:[]}).f,fields=tf.length?tf:Object.keys(F);
+    var tf=(T[w.when]||{f:[]}).f,fields=tf.length?tf:Object.keys(F),au=w.audience||{who:'team'};
     var h='<div class="wf-ed"><h2>'+(w.id?'Edit workflow':'New workflow')+'</h2>'
-      +'<div class="wf-row"><input id="pvfName" data-c="name" placeholder="Name, e.g. Ginger is out" value="'+esc(w.name)+'" aria-label="Name">'
+      +'<div class="wf-row"><input class="wf-emo" data-c="emoji" value="'+esc(w.emoji||'')+'" aria-label="Emoji" maxlength="4"><input id="pvfName" data-c="name" placeholder="Name, e.g. Missing ingredient" value="'+esc(w.name)+'" aria-label="Name">'
       +sel('cat',CATS.slice(1),w.cat)+'</div>'
+      +'<div class="wf-row"><input data-c="sub" placeholder="One line your team sees on the button" value="'+esc(w.sub||'')+'" aria-label="Description"></div>'
       +'<div class="wf-sec"><div class="wf-lab">When</div>'+sel('when',Object.keys(T).map(function(k){return [k,T[k].l];}),w.when)+'</div>'
       +'<div class="wf-sec"><div class="wf-lab"><span>If</span>'+((w.conds||[]).length>1?'<span class="wf-seg"><button data-e="all" aria-pressed="'+!w.any+'">all are true</button><button data-e="any" aria-pressed="'+!!w.any+'">any is true</button></span>':'')+'</div>';
     (w.conds||[]).forEach(function(x,i){
-      var ops=opsFor(x.f);
-      h+='<div class="wf-row">'+sel('cf:'+i,fields.concat(fields.indexOf(x.f)<0&&x.f?[x.f]:[]).map(function(k){return [k,(F[k]||{l:k}).l];}),x.f)+sel('co:'+i,ops,x.o)
+      h+='<div class="wf-row">'+sel('cf:'+i,fields.concat(fields.indexOf(x.f)<0&&x.f?[x.f]:[]).map(function(k){return [k,(F[k]||{l:k}).l];}),x.f)+sel('co:'+i,opsFor(x.f),x.o)
         +(NOVAL[x.o]?'':'<input data-c="cv:'+i+'" value="'+esc(x.v)+'" placeholder="'+(F[x.f]&&F[x.f].t==='person'?'Name, e.g. Jacob':F[x.f]&&F[x.f].t==='time'?'e.g. 17:00':'Value')+'" aria-label="Value">')
-        +'<button class="wf-x" data-e="cdel:'+i+'" aria-label="Remove condition">\u00d7</button></div>';});
-    h+='<button class="wf-add" data-e="cadd">+ Add a condition</button>'+(tf.length?'':'<span style="font-size:12px;color:#9a98a8;margin-left:8px">(this trigger has no fields to check)</span>')+'</div>';
+        +'<button class="wf-xx" data-e="cdel:'+i+'" aria-label="Remove condition">\u00d7</button></div>';});
+    h+='<button class="wf-add" data-e="cadd">+ Add a condition</button></div>';
     h+='<div class="wf-sec"><div class="wf-lab">Then</div>';
     (w.acts||[]).forEach(function(x,i){var D=A[x.t]||{};
-      h+='<div class="wf-row">'+sel('at:'+i,Object.keys(A).map(function(k){return [k,A[k].l+(A[k].live?'':' *')];}),x.t)
+      h+='<div class="wf-row">'+sel('at:'+i,Object.keys(A).map(function(k){return [k,A[k].l+(A[k].live||A[k].srv?'':' *')];}),x.t)
         +(D.to?'<input data-c="ato:'+i+'" value="'+esc(x.to)+'" placeholder="'+esc(D.toPh||'Who')+'" aria-label="Who">':'')
-        +(D.msg?'<input data-c="amsg:'+i+'" value="'+esc(x.msg)+'" placeholder="'+esc(D.ph||'Message (use {employee}, {item}\u2026)')+'" aria-label="Message">':'')
-        +'<button class="wf-x" data-e="adel:'+i+'" aria-label="Remove step">\u00d7</button></div>';});
+        +(D.msg?'<input data-c="amsg:'+i+'" value="'+esc(x.msg)+'" placeholder="'+esc(D.ph||'Message (optional)')+'" aria-label="Message">':'')
+        +'<button class="wf-xx" data-e="adel:'+i+'" aria-label="Remove step">\u00d7</button></div>';});
     h+='<button class="wf-add" data-e="aadd">+ Add a step</button></div>';
-    h+='<div class="wf-sec"><div class="wf-lab">Who it\u2019s for</div><div class="wf-seg">'
-      +[['me','Just me'],['team','My team'],['employee','One person']].map(function(o){return '<button data-e="who:'+o[0]+'" aria-pressed="'+(w.who===o[0])+'">'+o[1]+'</button>';}).join('')+'</div>'
-      +(w.who==='employee'?'<div class="wf-row" style="margin-top:8px"><input data-c="person" value="'+esc(w.person||'')+'" placeholder="Employee name" aria-label="Employee name"></div>':'')+'</div>';
+    h+='<div class="wf-sec"><div class="wf-lab">Who sees it</div><div class="wf-seg">'
+      +[['team','\ud83d\udc65 Whole team'],['role','A role'],['person','One person']].map(function(o){return '<button data-e="who:'+o[0]+'" aria-pressed="'+(au.who===o[0])+'">'+o[1]+'</button>';}).join('')+'</div>'
+      +(au.who==='role'?'<div class="wf-row" style="margin-top:8px">'+sel('role',[['editor','Editors'],['viewer','Viewers'],['admin','Admins']],au.role||'editor')+'</div>':'')
+      +(au.who==='person'?'<div class="wf-row" style="margin-top:8px"><input data-c="person" value="'+esc(au.name||'')+'" placeholder="Employee name" aria-label="Employee name"></div>':'')+'</div>';
     h+='<div class="wf-sum" id="pvfSum">'+esc(sentence(w))+'</div>';
-    h+=isLive(w)?'<div class="wf-warn" style="color:#5ee0a0">This one works now: Run starts it.</div>':'<div class="wf-warn">* Steps marked * switch on with the server step. Until then this is saved as a draft on this device and does not send anything.</div>';
-    h+='<div class="wf-foot"><button class="wf-btn" data-e="cancel">Cancel</button>'+(isLive(w)?'<button class="wf-btn" data-e="runnow">Run now</button>':'')+'<button class="wf-btn wf-pri" data-e="save">Save draft</button></div></div>';
+    h+='<div class="wf-warn">Steps marked * aren\u2019t automated yet; they\u2019re kept with the workflow.'+(FL.server?'':' Preview mode: saved on this device only.')+'</div>';
+    h+='<div class="wf-foot"><button class="wf-btn" data-e="cancel">Cancel</button><span style="display:flex;gap:8px"><button class="wf-btn" data-e="save:draft">Save draft</button><button class="wf-btn wf-pri" data-e="save:published">\ud83d\ude80 Save & publish</button></span></div></div>';
     d.innerHTML=h;
   }
   function edChg(k,v,redraw){
-    var w=FL.edit;if(!w)return;var p=k.split(':'),i=+p[1];
-    if(k==='name')w.name=v;else if(k==='cat')w.cat=v;else if(k==='person')w.person=v;
-    else if(k==='when'){w.when=v;var tf=(T[v]||{f:[]}).f;w.conds=(w.conds||[]).filter(function(x){return tf.indexOf(x.f)>=0;});}
+    var w=FL.edit;if(!w)return;var p=k.split(':'),i=+p[1];w.audience=w.audience||{who:'team'};
+    if(k==='name')w.name=v;else if(k==='cat')w.cat=v;else if(k==='emoji')w.emoji=v;else if(k==='sub')w.sub=v;else if(k==='person')w.audience.name=v;else if(k==='role')w.audience.role=v;
+    else if(k==='when'){w.when=v;var tf=(T[v]||{f:[]}).f;w.conds=(w.conds||[]).filter(function(x){return tf.indexOf(x.f)>=0;});if(v==='prep_missing')w.kind='missing';else if(T[v]&&T[v].team)w.kind='report';else w.kind=w.kind==='missing'?'report':(w.kind||'auto');}
     else if(p[0]==='cf'){w.conds[i].f=v;w.conds[i].o=opsFor(v)[0][0];w.conds[i].v='';}
     else if(p[0]==='co')w.conds[i].o=v;else if(p[0]==='cv')w.conds[i].v=v;
-    else if(p[0]==='at'){w.acts[i].t=v;}else if(p[0]==='ato')w.acts[i].to=v;else if(p[0]==='amsg')w.acts[i].msg=v;
+    else if(p[0]==='at')w.acts[i].t=v;else if(p[0]==='ato')w.acts[i].to=v;else if(p[0]==='amsg')w.acts[i].msg=v;
     if(redraw)edDraw();else{var s=document.getElementById('pvfSum');if(s)s.textContent=sentence(w);}
   }
   function edAct(k){
     var w=FL.edit;if(!w)return;var p=k.split(':');
     if(k==='cancel'){closeEd();return;}
-    if(k==='all'){w.any=false;}else if(k==='any'){w.any=true;}
+    if(k==='all')w.any=false;else if(k==='any')w.any=true;
     else if(k==='cadd'){var tf=(T[w.when]||{f:[]}).f,f0=tf[0]||'note';w.conds=(w.conds||[]).concat([{f:f0,o:opsFor(f0)[0][0],v:''}]);}
-    else if(p[0]==='cdel'){w.conds.splice(+p[1],1);}
-    else if(k==='aadd'){w.acts=(w.acts||[]).concat([a0()]);}
-    else if(p[0]==='adel'){w.acts.splice(+p[1],1);}
-    else if(p[0]==='who'){w.who=p[1];}
-    else if(k==='runnow'){if(isLive(w)){closeEd();run(w);}return;}
-    else if(k==='save'){
+    else if(p[0]==='cdel')w.conds.splice(+p[1],1);
+    else if(k==='aadd')w.acts=(w.acts||[]).concat([{t:'notify_mgr',to:'',msg:''}]);
+    else if(p[0]==='adel')w.acts.splice(+p[1],1);
+    else if(p[0]==='who'){w.audience={who:p[1],role:p[1]==='role'?'editor':'',name:''};}
+    else if(p[0]==='save'){
       if(!String(w.name||'').trim()){var n=document.getElementById('pvfName');if(n){n.focus();n.style.borderColor='#f3c86b';}return;}
-      if(!(w.acts||[]).length){return;}
-      var l=mine();if(!w.id){w.id=uid();w.created=new Date().toISOString();l.unshift(w);}else{l=l.map(function(x){return x.id===w.id?w:x;});if(!l.some(function(x){return x.id===w.id;}))l.unshift(w);}
-      w.updated=new Date().toISOString();w.status='draft';saveMine(l);closeEd();FL.tab='mine';FL.msg='Saved \u201c'+w.name+'\u201d as a draft on this device.';draw();return;}
+      if(!(w.acts||[]).length)return;
+      if(T[w.when]&&T[w.when].team&&w.kind!=='missing')w.kind=w.when==='prep_missing'?'missing':'report';
+      var pub=p[1]==='published',nm=w.name;
+      api('save',w).then(function(r){var id=(r&&r.id)||w.id;return pub?api('status',{id:id,status:'published'}):null;})
+        .then(function(){closeEd();FL.side='setup';FL.tab='mine';FL.msg=pub?'\ud83d\ude80 \u201c'+nm+'\u201d is live on the Team side.':'\ud83d\udcdd Saved \u201c'+nm+'\u201d as a draft.';return refresh();},
+              function(e){FL.msg='\u26a0\ufe0f '+e.message;closeEd();})
+        .then(function(){draw();});return;}
     edDraw();
   }
 
+  /* ---------- guided steps (team) ---------- */
+  var WZ=null;
+  function openWz(w){
+    WZ={w:w,step:0,in:{},q:''};
+    if(w.kind==='missing'&&!FL.preps&&FL.server)rpc('phg_wf_preps',{}).then(function(l){if(Array.isArray(l)&&l.length){FL.preps=l.map(function(x){return [x.name,(x.ingredients||[]).map(function(s){return String(s).split(',')[0];})];});wzDraw();}},function(){});
+    var d=document.getElementById('pvFlowWz');if(!d){d=document.createElement('div');d.id='pvFlowWz';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+      d.addEventListener('click',function(e){if(e.target===d){closeWz();return;}var t=e.target.closest&&e.target.closest('[data-z]');if(t)wzAct(t.getAttribute('data-z'),t);});
+      d.addEventListener('input',function(e){var t=e.target;if(!t||!WZ)return;if(t.id==='wzQ'){WZ.q=t.value;wzList();}else if(t.getAttribute('data-zi')){WZ.in[t.getAttribute('data-zi')]=t.value;}});
+      document.body.appendChild(d);}
+    wzDraw();
+  }
+  function closeWz(){var d=document.getElementById('pvFlowWz');if(d)d.remove();WZ=null;}
+  function wzPages(){var w=WZ.w;if(w.kind==='missing')return ['recipe','ingredient','how','review','done'];return ['detail','review','done'];}
+  function preps(){return FL.preps||PREPS;}
+  function wzList(){
+    var box=document.getElementById('wzList');if(!box)return;var q=WZ.q.trim().toLowerCase();
+    var l=preps().filter(function(r){return !q||r[0].toLowerCase().indexOf(q)>=0||r[1].join(' ').toLowerCase().indexOf(q)>=0;}).slice(0,40);
+    box.innerHTML=l.map(function(r){return '<button class="wf-opt" data-z="recipe:'+esc(r[0])+'"><span class="e">'+emo(r[1][0]||r[0])+'</span><span>'+esc(r[0])+'<small>'+esc(r[1].slice(0,5).join(' \u00b7 '))+'</small></span></button>';}).join('')
+      +'<button class="wf-opt" data-z="recipe:"><span class="e">\ud83e\uddfa</span><span>Not a recipe, just an item<small>Type what\u2019s missing on the next step</small></span></button>';
+  }
+  function wzDraw(){
+    var d=document.getElementById('pvFlowWz');if(!d||!WZ)return;var w=WZ.w,pg=wzPages(),cur=pg[WZ.step],I=WZ.in;
+    var h='<div class="wf-ed"><button class="wf-x" data-z="close" aria-label="Close">\u00d7</button>'
+      +(cur!=='done'?'<div class="wf-dots">'+pg.slice(0,-1).map(function(x,i){return '<i class="'+(i<=WZ.step?'on':'')+'"></i>';}).join('')+'</div>':'');
+    if(cur==='recipe'){
+      h+='<h2 class="wf-q2">'+esc(w.emoji)+' What were you making?</h2><p class="wf-sub">Pick the recipe. Search by name or ingredient.</p>'
+        +'<input id="wzQ" type="search" placeholder="Search, e.g. ginger" value="'+esc(WZ.q)+'" autocomplete="off" style="margin-bottom:10px"><div class="wf-list" id="wzList"></div>';
+    }else if(cur==='ingredient'){
+      var r=preps().filter(function(x){return x[0]===I.recipe;})[0],ings=r?r[1]:[];
+      h+='<h2 class="wf-q2">What\u2019s missing?</h2><p class="wf-sub">'+(I.recipe?'For <b>'+esc(I.recipe)+'</b>. Tap it.':'Type what you\u2019re out of.')+'</p>'
+        +(ings.length?'<div class="wf-chipsel">'+ings.map(function(g,i){return '<button style="animation-delay:'+(i*40)+'ms" data-z="ing:'+esc(g)+'" aria-pressed="'+(I.ingredient===g)+'"><span class="e">'+emo(g)+'</span>'+esc(cap(g))+'</button>';}).join('')+'</div>':'')
+        +'<div style="margin-top:12px"><input data-zi="ingredient" placeholder="'+(ings.length?'Something else?':'e.g. ginger')+'" value="'+esc(ings.indexOf(I.ingredient)<0?(I.ingredient||''):'')+'" autocomplete="off"></div>';
+    }else if(cur==='how'){
+      h+='<h2 class="wf-q2">'+emo(I.ingredient)+' How bad is it?</h2><p class="wf-sub">'+esc(cap(I.ingredient))+(I.recipe?' \u00b7 '+esc(I.recipe):'')+'</p>'
+        +'<div class="wf-how"><button data-z="how:out" aria-pressed="'+(I.how==='out')+'"><span class="e">\ud83d\udd34</span>All out</button><button data-z="how:low" aria-pressed="'+(I.how==='low')+'"><span class="e">\ud83d\udfe1</span>Running low</button></div>'
+        +'<div style="margin-top:12px"><input data-zi="note" placeholder="Anything to add? (optional)" value="'+esc(I.note||'')+'"></div>';
+    }else if(cur==='detail'){
+      var tf=(T[w.when]||{f:[]}).f;
+      h+='<h2 class="wf-q2">'+esc(w.emoji)+' '+esc(w.name)+'</h2><p class="wf-sub">'+esc(w.sub||'')+'</p>'
+        +(tf.indexOf('item')>=0?'<div style="margin-bottom:10px"><input data-zi="item" placeholder="'+(w.when==='temp_log'?'Which fridge or cooler?':w.when==='broken'?'What broke?':'Which item?')+'" value="'+esc(I.item||'')+'"></div>':'')
+        +(tf.indexOf('temp')>=0?'<div style="margin-bottom:10px"><input data-zi="temp" inputmode="decimal" placeholder="Temperature (\u00b0F)" value="'+esc(I.temp||'')+'"></div>':'')
+        +'<textarea data-zi="note" rows="3" placeholder="'+(w.when==='running_late'?'When will you be in?':'A few words (optional)')+'">'+esc(I.note||'')+'</textarea>';
+    }else if(cur==='review'){
+      var miss=w.kind==='missing';
+      h+='<h2 class="wf-q2">Ready to send?</h2>'
+        +'<div class="wf-sum">'+(miss?'<b>'+emo(I.ingredient)+' '+esc(cap(I.ingredient))+' '+(I.how==='low'?'is running low':'is out')+'</b><br>'+(I.recipe?'Can\u2019t finish '+esc(I.recipe):''):'<b>'+esc(w.emoji)+' '+esc(w.name)+'</b><br>'+esc([I.item,I.temp?I.temp+'\u00b0F':'',I.note].filter(Boolean).join(' \u00b7 ')))
+        +(miss&&I.note?'<br>\u201c'+esc(I.note)+'\u201d':'')+'</div>'
+        +'<p class="wf-sub" style="margin:14px 0 0">What happens next:</p>'+chart(miss?STEPS:RSTEPS,'reported')
+        +(FL.server?'':'<div class="wf-warn">\ud83d\udc40 Preview: this stays on this device. Nobody is told until the workflow server is switched on.</div>');
+    }else if(cur==='done'){
+      var bursts='',em=['\ud83c\udf89','\u2728','\ud83d\udce3','\ud83d\ude4c','\u2b50','\ud83d\udcab'];
+      for(var b=0;b<14;b++){var ang=b/14*Math.PI*2,rad=90+Math.random()*60;bursts+='<span class="wf-burst" style="--x:'+Math.round(Math.cos(ang)*rad)+'px;--y:'+Math.round(Math.sin(ang)*rad*0.7)+'px;--r:'+Math.round(Math.random()*360-180)+'deg;animation-delay:'+(b*25)+'ms">'+em[b%em.length]+'</span>';}
+      h+='<div class="wf-done">'+bursts+'<span class="e">'+(WZ.res&&WZ.res.preview?'\ud83d\udc40':'\ud83d\udce3')+'</span><h2 class="wf-q2" style="text-align:center;margin-top:8px">'
+        +(WZ.res&&WZ.res.preview?'Saved as a preview':WZ.res&&WZ.res.notified?'Sent! '+(WZ.res.notified===1?'Your manager has it.':WZ.res.notified+' managers have it.'):'Sent!')+'</h2>'
+        +'<p class="wf-sub" style="text-align:center">'+(WZ.res&&WZ.res.preview?'Nobody was told: the workflow server isn\u2019t on yet.':'You\u2019ll get a \ud83d\udd14 when it moves along.')+'</p></div>';
+    }
+    var canNext=cur==='recipe'?false:cur==='ingredient'?!!String(I.ingredient||'').trim():cur==='how'?!!I.how:cur==='detail'?true:false;
+    h+='<div class="wf-foot">'+(cur==='done'?'<span></span><button class="wf-btn wf-pri" data-z="close">Done</button>'
+      :(WZ.step?'<button class="wf-btn" data-z="back">\u2190 Back</button>':'<button class="wf-btn" data-z="close">Cancel</button>')
+       +(cur==='review'?'<button class="wf-btn wf-pri" data-z="send"'+(WZ.sending?' disabled':'')+'>'+(WZ.sending?'Sending\u2026':(FL.server?'Send '+esc(w.emoji):'Save preview'))+'</button>'
+        :cur==='recipe'?'<span></span>':'<button class="wf-btn wf-pri" data-z="next"'+(canNext?'':' disabled')+'>Next \u2192</button>'))+'</div></div>';
+    d.innerHTML=h;
+    if(cur==='recipe')wzList();
+  }
+  function wzAct(k){
+    if(!WZ)return;var p=k.split(':'),c=p[0],v=p.slice(1).join(':');
+    if(c==='close'){closeWz();if(WZ===null&&FL.on)draw();return;}
+    if(c==='back'){WZ.step=Math.max(0,WZ.step-1);wzDraw();return;}
+    if(c==='next'){WZ.step++;wzDraw();return;}
+    if(c==='recipe'){WZ.in.recipe=v;WZ.in.ingredient='';WZ.step++;wzDraw();return;}
+    if(c==='ing'){WZ.in.ingredient=v;WZ.step++;wzDraw();return;}
+    if(c==='how'){WZ.in.how=v;wzDraw();return;}
+    if(c==='send'){
+      var inp={};Object.keys(WZ.in).forEach(function(x){var s=String(WZ.in[x]||'').trim();if(s)inp[x]=s.slice(0,300);});
+      WZ.sending=true;wzDraw();
+      api('start',{id:WZ.w.id,inputs:inp,w:WZ.w}).then(function(r){if(!WZ)return;WZ.res=r||{};if(!FL.server)WZ.res.preview=true;WZ.sending=false;WZ.step=wzPages().length-1;wzDraw();return refresh();},
+        function(e){if(!WZ)return;WZ.sending=false;wzDraw();var d=document.querySelector('#pvFlowWz .wf-foot');if(d)d.insertAdjacentHTML('beforebegin','<div class="wf-warn">\u26a0\ufe0f '+esc(e.message)+'</div>');})
+        .then(function(){if(FL.on)draw();});
+      return;}
+  }
+
   /* ---------- view plumbing ---------- */
-  function show(){if(G.PHGViews.shell)G.PHGViews.shell();FL.on=true;var L=layer();draw();L.hidden=false;L.scrollTop=0;}
-  function hide(){FL.on=false;closeEd();if(LAYER)LAYER.hidden=true;}
+  function show(){if(G.PHGViews.shell)G.PHGViews.shell();FL.on=true;var L=layer();L.hidden=false;L.scrollTop=0;draw();
+    var go=FL.server===null?connect():Promise.resolve();go.then(refresh).then(function(){if(FL.on)draw();});}
+  function hide(){FL.on=false;closeEd();closeWz();if(LAYER)LAYER.hidden=true;}
   function allowed(){return typeof PHGACCESS!=='undefined'&&!!PHGACCESS&&(PHGACCESS.view_mode!=='beta'||(Array.isArray(PHGACCESS.surfaces)&&PHGACCESS.surfaces.indexOf('workflows')>=0));}
   G.PHGViews.register({id:'workflows',label:'Workflows',short:'Flows',allowed:allowed,
     load:function(){show();},unload:function(){hide();},isActive:function(){return FL.on&&!!LAYER&&!LAYER.hidden;}});
   function barFit(){try{var b=document.querySelector('#phgViews .pvSwitch button[aria-pressed="true"]');if(b&&b.parentElement.scrollWidth>b.parentElement.clientWidth)b.scrollIntoView({block:'nearest',inline:'center'});}catch(e){}}
   css();document.addEventListener('click',function(e){if(e.target&&e.target.closest&&e.target.closest('#phgViews button[data-pv]'))setTimeout(barFit,150);},true);setTimeout(barFit,2500);
   G.phgWorkflowsOpen=function(){G.PHGViews.go('workflows',{from:'tap'});};
-  G.phgWorkflowsPresets=function(){return PRE.map(function(w){return{id:w.id,name:w.name,live:isLive(w),sentence:sentence(w)};});};
-  addEventListener('keydown',function(e){if(e.key==='Escape'&&document.getElementById('pvFlowEd')){closeEd();}});
+  G.phgWorkflowsState=function(){return {server:FL.server,side:FL.side,canSetup:canSetup(),live:liveList().length,runs:(FL.runs||[]).length};};
+  addEventListener('keydown',function(e){if(e.key==='Escape'){if(document.getElementById('pvFlowWz'))closeWz();else if(document.getElementById('pvFlowEd'))closeEd();}});
+  /* one-time: move v1 device drafts into v2 (as drafts) */
+  try{if(!localStorage.getItem(LKEY)){var old=JSON.parse(localStorage.getItem('phg_workflows_v1')||'[]');if(Array.isArray(old)&&old.length)lset(LKEY,old.map(function(o){var w=fromDef(o);w.emoji=o.ic||'\u2699\ufe0f';w.status='draft';w.audience={who:o.who==='employee'?'person':'team',name:o.person||''};return w;}));}}catch(e){}
 })();
 </script>
 <style id="phgC3dCSS">
@@ -48329,6 +48856,171 @@ G.phgCardOpen=function(data){if(!data)return;var same=CD.data&&CD.data.name===da
 G.phgCardState=function(){return {open:!!($('pvCard')&&!$('pvCard').hidden),layout:CD.layout,w:CD.canvas?CD.canvas.width:0,h:CD.canvas?CD.canvas.height:0,imgs:CD.imgs.length,snaps:CD.data?CD.data.snaps.length:0};};
 G.phgCardRender=render;G.phgCardPdf=function(){return blobOf('image/jpeg',.92).then(function(b){return b.arrayBuffer();}).then(function(ab){return pdfOf(new Uint8Array(ab),CD.canvas.width,CD.canvas.height);});};
 G.phgCardSet=function(o){Object.assign(CD,o||{});side();return render();};
+})();
+
+/* ===== v12.10 BETA LOGBOOK (feedback button -> Harmony -> phg.beta_feedback) ===== */
+/* v12.10 BETA LOGBOOK - client. Self-contained; defines only window.phgFeedback*. Wraps (outermost, re-checked)
+   PMS.hear, agentHeard and agentSay so that while a feedback conversation is open every spoken or typed line goes
+   to phg-beta-feedback, and late replies from whatever Harmony was doing are held (shown silently afterwards).
+   Nothing is written without the tester's yes to Harmony's read-back; the server enforces that too. */
+(function(){
+var G=window,FB_URL='https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-beta-feedback',BK='phg_beta_fb_pending_v1';
+var FB=G.PHGFB={active:false,phase:'clarify',transcript:[],draft:{},ctx:null,session:null,busy:false,own:false,held:[],startedTalk:false,restoreTalk:false,errors:[],lastId:null};
+/* styles injected from JS so the page keeps its style/script tag counts */
+function css(){if(document.getElementById('phgBetaFbCSS'))return;var s=document.createElement('style');s.id='phgBetaFbCSS';s.textContent="/* v12.10 BETA LOGBOOK (Rob 2026-10-07): a tiny feedback button bottom-left on every view, beta testers + developer only.\n   Tap -> Harmony stops, the Harmony view opens, she asks for feedback, talks it through by voice, reads it back,\n   and on a yes it is logged to phg.beta_feedback (phg-beta-feedback). Same size and glass as the 3-line button. */\n#phgFbBtn{position:fixed;left:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);z-index:2147483005;width:28px;height:28px;padding:0;\n  border-radius:9px;border:1px solid var(--line2,rgba(125,211,252,.35));background:rgba(5,10,18,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);\n  display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;color:#7feaff}\n#phgFbBtn[hidden]{display:none}\n#phgFbBtn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}\n#phgFbBtn:active{transform:scale(.92)}\n#phgFbBtn.on{color:#fda4af;border-color:rgba(253,164,175,.7);box-shadow:0 0 0 0 rgba(244,114,182,.55);animation:phgFbPulse 1.6s ease-out infinite}\n@keyframes phgFbPulse{70%{box-shadow:0 0 0 9px rgba(244,114,182,0)}100%{box-shadow:0 0 0 0 rgba(244,114,182,0)}}\n#phgFbBar{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 46px);z-index:2147483004;\n  display:flex;align-items:center;gap:8px;flex-wrap:nowrap;justify-content:center;width:max-content;max-width:min(96vw,680px);padding:7px 8px 7px 12px;border-radius:16px;\n  background:rgba(8,10,20,.9);border:1px solid rgba(253,164,175,.45);box-shadow:0 10px 30px rgba(0,0,0,.45);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);\n  color:#f1f5f9;font:500 12px/1.3 var(--font-ui,Inter,-apple-system,BlinkMacSystemFont,sans-serif)}\n#phgFbBar[hidden]{display:none}\n#phgFbBar .fbDot{width:8px;height:8px;border-radius:50%;background:#fb7185;box-shadow:0 0 8px #fb7185;flex:none;animation:phgFbBlink 1.2s ease-in-out infinite}\n#phgFbBar.done .fbDot{background:#4ade80;box-shadow:0 0 8px #4ade80;animation:none}\n@keyframes phgFbBlink{50%{opacity:.35}}\n#phgFbBar b{font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:10.5px;color:#fda4af}\n#phgFbBar.done b{color:#86efac}\n#phgFbBar.done form,#phgFbBar.done .fbX{display:none}\n#phgFbBar .fbSt{color:#cbd5e1;min-width:0}\n#phgFbBar form{display:flex;gap:6px;flex:1 1 180px;min-width:150px}\n@media (max-width:620px){#phgFbBar{flex-wrap:wrap}}\n#phgFbBar input{flex:1;min-width:0;font:inherit;font-size:16px;color:#f1f5f9;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:5px 9px}\n#phgFbBar button{font:inherit;font-size:12px;color:#f1f5f9;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:5px 11px;cursor:pointer;white-space:nowrap}\n#phgFbBar button.fbX{color:#fda4af;border-color:rgba(253,164,175,.45)}\nhtml.phg-light #phgFbBtn,html.phg-light #phgFbBar{filter:none}\nbody.phg-fb-on #hvxFloat{top:var(--phg-fb-top,110px)}";(document.head||document.documentElement).appendChild(s);}
+var OPEN_Q='What feedback would you like to leave for the development team?';
+addEventListener('error',function(e){try{FB.errors.push(String(e&&e.message||'error').slice(0,200));if(FB.errors.length>5)FB.errors.shift();}catch(_){}});
+function $(id){return document.getElementById(id);}
+function tok(){try{return typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;}catch(e){return null;}}
+function access(){return typeof PHGACCESS!=='undefined'&&PHGACCESS?PHGACCESS:null;}
+function allowed(){var A=access();return !!(tok()&&A&&(A.view_mode==='beta'||A.view_mode==='developer'));}
+function speaking(){try{if(typeof PHG_AI_AUDIO!=='undefined'&&(PHG_AI_AUDIO.busy||PHG_AI_AUDIO.playing))return true;if(G.speechSynthesis&&speechSynthesis.speaking)return true;if(G.PHG_ENV&&PHG_ENV.speaking&&PHG_ENV.speaking())return true;}catch(e){}return false;}
+function hush(){try{if(typeof harmonyAIStop==='function')harmonyAIStop();}catch(e){}try{if(typeof phgLocalVoiceStop==='function')phgLocalVoiceStop();}catch(e){}
+  try{if(G.speechSynthesis)speechSynthesis.cancel();}catch(e){}try{if(G.PHG_ENV&&PHG_ENV.stop)PHG_ENV.stop();}catch(e){}}
+function save(){try{if(FB.active&&FB.transcript.some(function(m){return m.role==='user';}))localStorage.setItem(BK,JSON.stringify({session:FB.session,phase:FB.phase,transcript:FB.transcript,draft:FB.draft,ctx:FB.ctx,at:Date.now()}));}catch(e){}}
+function clearBk(){try{localStorage.removeItem(BK);}catch(e){}}
+function loadBk(){try{var b=JSON.parse(localStorage.getItem(BK)||'null');if(b&&b.session&&Date.now()-b.at<7*864e5)return b;}catch(e){}return null;}
+function sid(){return 'fb-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);}
+/* where the tester was, captured the moment they tapped (before the view changes) */
+function capture(){
+  var A=access()||{},c={};
+  try{c.view=G.PHGViews&&PHGViews.current?PHGViews.current():null;}catch(e){}
+  try{c.app=typeof APP!=='undefined'?APP:null;}catch(e){}
+  try{if(typeof FIN!=='undefined'&&FIN&&c.app==='fin')c.page=FIN.page||null;}catch(e){}
+  try{if(typeof MD!=='undefined'&&MD&&c.app==='menu')c.page=(c.page?c.page+' / ':'')+'menu:'+MD.view;}catch(e){}
+  try{c.screen_title=(($('ptitle')||{}).textContent||'').trim().slice(0,120)||null;}catch(e){}
+  try{if(G.PMS)c.menu_studio={open:!!PMS.open,interviewing:!!PMS.interviewing,drafting:!!PMS.drafting,talk:!!PMS.talk};}catch(e){}
+  try{var fl=$('pvFlow');c.overlay=document.body.classList.contains('phg-atlas-mode')?'atlas':(fl&&!fl.hidden?'workflows':null);}catch(e){}
+  try{c.recent_chat=(typeof AGENT!=='undefined'&&AGENT.chat?AGENT.chat.slice(-6):[]).map(function(m){return {who:m.who==='you'?'tester':'harmony',text:String(m.text||'').replace(/<[^>]+>/g,' ').slice(0,400)};});}catch(e){c.recent_chat=[];}
+  c.harmony_was_busy=!!G.PHG_PENDING||speaking();
+  try{var ws=typeof PHGAUTH!=='undefined'&&PHGAUTH.workspace&&PHGAUTH.workspace.account;if(ws){c.account_id=ws.id||null;c.account_name=ws.name||null;}}catch(e){}
+  c.view_mode=A.view_mode||null;c.url=location.pathname+location.search.replace(/([?&](?:token|code|access_token)=)[^&]+/gi,'$1…')+location.hash;
+  c.device={ua:navigator.userAgent.slice(0,240),w:innerWidth,h:innerHeight,dpr:G.devicePixelRatio||1,standalone:!!(navigator.standalone||(G.matchMedia&&matchMedia('(display-mode: standalone)').matches)),
+    online:navigator.onLine,lang:navigator.language,tz:(function(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone;}catch(e){return null;}})()};
+  c.js_errors=FB.errors.slice();c.widget='1';c.tapped_at=new Date().toISOString();
+  return c;
+}
+/* ---------- UI ---------- */
+var ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10H10l-4.5 3.5V15.5H4z"/><path d="M8.5 10.5h7M8.5 13h4"/></svg>';
+function btn(){var b=$('phgFbBtn');if(b)return b;b=document.createElement('button');b.id='phgFbBtn';b.type='button';b.hidden=true;
+  b.setAttribute('aria-label','Leave feedback for the PHG team');b.title='Feedback for the team';b.innerHTML=ICON;
+  b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();G.phgFeedbackStart();});
+  ['pointerdown','touchstart'].forEach(function(ev){b.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
+  document.body.appendChild(b);return b;}
+function bar(){var d=$('phgFbBar');if(d)return d;d=document.createElement('div');d.id='phgFbBar';d.hidden=true;d.setAttribute('role','status');d.setAttribute('aria-live','polite');
+  d.innerHTML='<span class="fbDot"></span><b>Feedback for the team</b><span class="fbSt"></span><form><input type="text" enterkeyhint="send" autocomplete="off" placeholder="Or type here\u2026" aria-label="Type your feedback"><button type="submit">Send</button></form><button type="button" class="fbX">Cancel</button>';
+  d.querySelector('form').addEventListener('submit',function(e){e.preventDefault();var i=d.querySelector('input'),q=i.value.trim();if(!q)return;i.value='';input(q);});
+  d.querySelector('.fbX').addEventListener('click',function(e){e.stopPropagation();cancel();});
+  ['pointerdown','touchstart','wheel','keydown'].forEach(function(ev){d.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
+  document.body.appendChild(d);return d;}
+function status(){
+  var d=$('phgFbBar');if(!d||d.hidden||d.classList.contains('done'))return;
+  var t=$('hvTalk'),c=t?t.className:'',s;
+  if(FB.busy)s='Harmony is thinking\u2026';else if(/listening/.test(c))s='Listening\u2026';else if(/speaking/.test(c)||speaking())s='Harmony is speaking\u2026';
+  else if(!$('phgView'))s='Paused \u00b7 tap the feedback button to continue';else s=FB.phase==='confirm'||FB.phase==='confirm_raw'?'Say yes to log it, or correct me':'Talk or type';
+  var st=d.querySelector('.fbSt');if(st.textContent!==s)st.textContent=s;
+}
+function paint(){
+  document.body.classList.toggle('phg-fb-on',FB.active);
+  try{var _d=$('phgFbBar');if(FB.active&&_d&&!_d.hidden){var _v=Math.round(_d.getBoundingClientRect().bottom+10)+'px';if(document.body.style.getPropertyValue('--phg-fb-top')!==_v)document.body.style.setProperty('--phg-fb-top',_v);}}catch(e){}
+  var b=btn(),ok=allowed()&&!document.body.classList.contains('phg-launch-review-open');
+  b.hidden=!ok&&!FB.active;b.classList.toggle('on',FB.active);b.setAttribute('aria-pressed',String(FB.active));
+  if(FB.active)wrapAll();status();
+}
+/* ---------- Harmony talks / listens ---------- */
+function harmonySay(text){
+  FB.transcript.push({role:'harmony',text:text,at:new Date().toISOString()});save();
+  FB.own=true;try{if(typeof agentSay==='function')agentSay(text);}catch(e){}FB.own=false;
+}
+function whenQuiet(fn,max){var t0=Date.now();(function w(){if(!speaking()||Date.now()-t0>(max||12000))return fn();setTimeout(w,200);})();}
+function startMic(){
+  if(!FB.active||!G.PMS||typeof PMS.toggleTalk!=='function')return;
+  if(!PMS.talk){FB.startedTalk=true;try{PMS.toggleTalk();}catch(e){}}
+}
+function ensureHarmony(cb){
+  try{if(G.PHGViews&&PHGViews.go){if(PHGViews.current()!=='harmony'||!$('phgView'))PHGViews.go('harmony',{from:'feedback'});}
+      else if(!$('phgView')&&typeof phgViewport==='function')phgViewport();}catch(e){}
+  var t0=Date.now();(function w(){if($('phgView')||Date.now()-t0>4000)return setTimeout(cb,350);setTimeout(w,100);})();
+}
+/* ---------- the conversation ---------- */
+G.phgFeedbackStart=function(){
+  if(!allowed()&&!FB.active)return;
+  hush();
+  /* if hands-free talk is running, pause it so she does not hear herself ask; it restarts after the question */
+  try{if(G.PMS&&PMS.talk){FB.restoreTalk=true;PMS.toggleTalk();}}catch(e){}
+  var resume=FB.active;
+  if(!resume){
+    var bk=loadBk();
+    FB.active=true;FB.busy=false;FB.held=[];FB.startedTalk=false;
+    if(bk){FB.session=bk.session;FB.phase=bk.phase||'clarify';FB.transcript=bk.transcript||[];FB.draft=bk.draft||{};FB.ctx=bk.ctx||capture();FB.resumed=true;}
+    else{FB.session=sid();FB.phase='clarify';FB.transcript=[];FB.draft={};FB.ctx=capture();FB.resumed=false;}
+  }
+  wrapAll();paint();
+  var d=bar();d.classList.remove('done');d.hidden=false;paint();
+  ensureHarmony(function(){
+    if(!FB.active)return;
+    if(!resume){
+      if(FB.resumed)harmonySay('Let\u2019s finish the feedback you started. '+(FB.phase==='confirm'?'Shall I log it as we had it? Say yes, or tell me what to change.':'Carry on whenever you\u2019re ready.'));
+      else harmonySay(OPEN_Q);
+    }
+    whenQuiet(startMic,12000);
+  });
+};
+function input(text){
+  var q=String(text||'').trim();if(!q||!FB.active)return;
+  FB.transcript.push({role:'user',text:q,at:new Date().toISOString()});save();
+  try{if(typeof AGENT!=='undefined'&&AGENT.chat){AGENT.chat.push({who:'you',text:q});if(typeof agentDraw==='function')agentDraw();}}catch(e){}
+  send();
+}
+function send(){
+  if(FB.busy)return;var t=tok();
+  if(!t){harmonySay('You need to be signed in for me to log feedback. I\u2019ve kept your words on this device.');return;}
+  FB.busy=true;G.PHG_PENDING=true;status();
+  var body={mode:'turn',session:FB.session,phase:FB.phase,transcript:FB.transcript,draft:FB.draft,context:FB.ctx};
+  var ctl=G.AbortController?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort();},30000);
+  fetch(FB_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+t},body:JSON.stringify(body),signal:ctl?ctl.signal:undefined})
+    .then(function(r){return r.json().catch(function(){return {};}).then(function(j){j._status=r.status;return j;});})
+    .then(function(j){
+      clearTimeout(tm);FB.busy=false;G.PHG_PENDING=false;
+      if(j.draft&&typeof j.draft==='object'&&Object.keys(j.draft).length)FB.draft=j.draft;
+      if(j.phase&&j.phase!=='done')FB.phase=j.phase;
+      if(j._status===401||j._status===403){harmonySay(j._status===403?'The feedback logbook is only switched on for beta testers.':'Your sign-in has expired. Sign in again and tap the feedback button; I\u2019ve kept your words.');finish('error');return;}
+      if(!j.say){harmonySay('I couldn\u2019t reach the team logbook just now. I\u2019ve kept your words on this device; tap the feedback button again to retry.');finish('error');return;}
+      harmonySay(j.say);
+      if(j.action==='saved'){FB.lastId=j.id;finish('saved',j.id);}
+      else if(j.action==='cancelled')finish('cancelled');
+    })
+    .catch(function(){clearTimeout(tm);FB.busy=false;G.PHG_PENDING=false;
+      harmonySay('I couldn\u2019t reach the team logbook just now. I\u2019ve kept your words on this device; tap the feedback button again to retry.');finish('error');});
+}
+function cancel(){if(!FB.active)return;hush();harmonySay('Okay, nothing was logged. Tap the feedback button any time.');finish('cancelled');}
+function finish(kind,id){
+  var keep=kind==='error';
+  if(!keep)clearBk();else save();
+  FB.active=false;FB.busy=false;
+  var d=$('phgFbBar');
+  if(d){if(kind==='saved'){d.classList.add('done');d.querySelector('b').textContent='Logged';d.querySelector('.fbSt').textContent='Entry '+id+' \u00b7 thank you';}
+    setTimeout(function(){if(!FB.active&&d){d.hidden=true;d.classList.remove('done');d.querySelector('b').textContent='Feedback for the team';}},kind==='saved'?4200:1800);}
+  /* replies that arrived from whatever she was doing before go into the conversation, silently */
+  var held=FB.held.splice(0);
+  if(held.length){try{held.forEach(function(t){AGENT.chat.push({who:'agent',text:t});});if(typeof agentDraw==='function')agentDraw();}catch(e){}}
+  var started=FB.startedTalk,restore=FB.restoreTalk;FB.startedTalk=false;FB.restoreTalk=false;
+  whenQuiet(function(){
+    try{if(G.PMS&&PMS.talk&&started&&!restore&&!FB.active)PMS.toggleTalk();
+        else if(G.PMS&&!PMS.talk&&restore&&!FB.active)PMS.toggleTalk();}catch(e){}
+  },15000);
+  paint();
+}
+G.phgFeedbackCancel=cancel;
+/* ---------- interception (outermost; re-applied if another layer re-wraps later) ---------- */
+function wrapAll(){
+  if(G.PMS&&typeof PMS.hear==='function'&&!PMS.hear._fb){var h=PMS.hear;PMS.hear=function(t){if(FB.active){input(t);return;}return h.apply(this,arguments);};PMS.hear._fb=1;}
+  if(typeof G.agentHeard==='function'&&!G.agentHeard._fb){var a=G.agentHeard;G.agentHeard=function(t){if(FB.active){input(t);return;}return a.apply(this,arguments);};G.agentHeard._fb=1;}
+  if(typeof G.agentSay==='function'&&!G.agentSay._fb){var s=G.agentSay;G.agentSay=function(t){if(FB.active&&!FB.own){FB.held.push(String(t||''));return;}return s.apply(this,arguments);};G.agentSay._fb=1;}
+}
+G.phgFeedbackState=function(){return {active:FB.active,phase:FB.phase,turns:FB.transcript.length,busy:FB.busy,held:FB.held.length,lastId:FB.lastId,session:FB.session,button:!!($('phgFbBtn')&&!$('phgFbBtn').hidden)};};
+function boot(){if(!document.body)return setTimeout(boot,50);css();wrapAll();paint();setInterval(function(){try{paint();}catch(e){}},500);}
+boot();
 })();
 </script>
 </body>
