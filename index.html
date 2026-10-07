@@ -7172,6 +7172,7 @@ function phgAuthEnsureDom(){
 function phgAuthSetMode(m){PHGAUTH.mode=m;PHGAUTH.error='';PHGAUTH.message='';phgAuthDraw();}
 function phgAuthDraw(){
   phgAuthEnsureDom();var g=document.getElementById('phgAuthGate'),b=document.getElementById('phgAuthBadge');
+  if(PHGAUTH.auto&&!PHGAUTH.busy)PHGAUTH.auto=false;   /* v12.12: the sign-in splash ends when nothing is loading */
   if(PHGAUTH.setPw){ g.className='phgAuthGate'; g.innerHTML=phgAuthSetPwHTML(); b.className='phgAuthBadge'; b.innerHTML=''; return; }
   if(PHGAUTH.noAccess){ g.className='phgAuthGate'; g.innerHTML=phgNoAccessHTML(PHGAUTH.noAccess); b.className='phgAuthBadge'; b.innerHTML=''; return; }
   if(typeof phgIsAppMode==='function'&&!phgIsAppMode()){
@@ -7234,7 +7235,7 @@ function phgAuthSavedHint(){
   var e=document.getElementById('phgAuthEmail'),p=document.getElementById('phgAuthPassword'),h=document.getElementById('phgSavedPwHint');
   var t=(e&&!e.value)?e:p;try{if(t)t.focus();}catch(_){}
   if(h){h.style.display='block';h.textContent=/iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent)&&!window.PasswordCredential
-    ?'Tap your saved login (\ud83d\udd11 or your email) above the keyboard; Face ID or Touch ID fills it in. Then tap Sign in.'
+    ?'Tap your saved login (\ud83d\udd11 or your email) above the keyboard; Face ID or Touch ID fills it in. Then tap Sign in. Nothing there? Sign in with your password once and tap Save Password when Safari asks.'
     :'Pick your saved login from the list your browser shows, then tap Sign in. Nothing saved yet? Sign in once and let the device save it.';}
 }
 function phgAuthUseSaved(){
@@ -7300,7 +7301,10 @@ function phgAuthLogin(){
   var c=phgAuthCredentials();if(!c.email||!c.password){PHGAUTH.error='Enter your email and password.';phgAuthDraw();return;}
   PHGAUTH.busy=true;PHGAUTH.error='';PHGAUTH.returning=false;
   var sb=document.querySelector('#phgAuthForm button[type="submit"]');if(sb){sb.disabled=true;sb.textContent='Signing in\u2026';}else phgAuthDraw();
-  phgAuthApi('/token?grant_type=password',c,null).then(function(j){phgAuthRememberEmail(c.email);phgAuthOfferSave(c);phgAuthSaveSession(j);return phgAuthBootstrap();}).catch(function(e){PHGAUTH.busy=false;PHGAUTH.error=e.message||String(e);phgAuthDraw();});
+  /* v12.12 (Rob: "save password ... doesn't recall anything"): once the password is accepted the form is replaced by the
+     "Opening Harmony" splash instead of being redrawn empty while the workspace loads. Safari / iCloud Keychain treat an
+     empty login form coming back as a failed sign-in and never offer Save Password, so nothing was ever saved to recall. */
+  phgAuthApi('/token?grant_type=password',c,null).then(function(j){phgAuthRememberEmail(c.email);phgAuthOfferSave(c);phgAuthSaveSession(j);PHGAUTH.auto=true;return phgAuthBootstrap();}).catch(function(e){PHGAUTH.auto=false;PHGAUTH.busy=false;PHGAUTH.error=e.message||String(e);phgAuthDraw();});
 }
 function phgAuthSignup(){
   var c=phgAuthCredentials();if(!c.email||!c.password){PHGAUTH.error='Enter an email and password.';phgAuthDraw();return;}
