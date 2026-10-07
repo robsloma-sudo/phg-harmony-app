@@ -48091,9 +48091,19 @@ html.phg-light .c3Msg.err{color:#b3261e}
   .c3Title{left:16px;top:calc(env(safe-area-inset-top,0px) + 80px)}
   .c3Title b{font-size:26px}
 }
+/* v12.13 (Rob): iPhone - the drink gets 70% of the screen and the whole panel is drawn 28% smaller (one zoom, so every
+   label, chip, box and button shrinks together). Text boxes would make iPhone zoom in when tapped, so the page's
+   viewport gets maximum-scale=1 while this view is open on a phone (pinch-zoom still works on iOS). */
+@media(max-width:820px){
+  #pvC3d{grid-template-rows:70vh minmax(0,1fr)!important}
+  #pvC3d .c3Panel{zoom:.72}
+  .c3Title b{font-size:16px!important}
+  .c3Title{top:calc(env(safe-area-inset-top,0px) + 40px)!important}
+  .c3Hint{font-size:9px!important}
+}
 /* v12.2: phone sizes - placed after the original phone rules so they win */
 @media(max-width:900px){
-  #pvC3d{grid-template-rows:62vh minmax(0,1fr)}
+  #pvC3d{grid-template-rows:70vh minmax(0,1fr)}
   .c3Title{left:14px;top:calc(env(safe-area-inset-top,0px) + 72px)}
   .c3Title b{font-size:22px}
   .c3Panel{padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 28px)}
@@ -48540,6 +48550,10 @@ html.phg-light .c3Msg.err{color:#b3261e}
       load:function(){if(G.PHGViews.shell)try{G.PHGViews.shell();}catch(e){}show();},unload:hide,
       isActive:function(){var d=document.getElementById('pvC3d');return !!(d&&!d.hidden);}});}
   G.phgCocktailOpen=function(){if(G.PHGViews)G.PHGViews.go('cocktail',{from:'tap'});};
+  /* v12.13: no auto-zoom into text boxes while the Cocktail view is open on a phone */
+  (function(){var mv=document.querySelector('meta[name="viewport"]');if(!mv)return;var base=mv.getAttribute('content')||'';
+    setInterval(function(){var d=document.getElementById('pvC3d'),on=!!(d&&d.getClientRects().length&&getComputedStyle(d).display!=='none'&&getComputedStyle(d).visibility!=='hidden'&&innerWidth<=820);
+      var want=on?base.replace(/,?\s*maximum-scale=[^,]*/,'')+',maximum-scale=1':base;if(mv.getAttribute('content')!==want)mv.setAttribute('content',want);},500);})();
   G.phgCocktailBuild=function(cfg){Object.assign(ST.cfg,cfg||{});build();};G.phgCocktailState=function(){return {fit:ST.fit||null,lastAt:ST.lastAt||0,busy:ST.busy,lastId:ST.lastId,lib:(ST.lib||[]).length,cfg:ST.cfg,ready:ST.ready,failed:ST.failed,running:ST.running,res:!!ST.res};};
   G.phgCocktailCardData=cardData;G.phgCocktailSnap=snap;G.phgCocktailFromRecipe=fromRecipe;G.phgCocktailRequest=request;G.phgCocktailNeedPhoto=function(msg){var d=layer();ST.err='';ST.form={brief:msg||''};ST.askPhoto=true;drawPanel();};
   reg();
