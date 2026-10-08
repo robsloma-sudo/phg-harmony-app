@@ -42822,8 +42822,21 @@ function agentBegin(){
 }
 PMS.agentBegin=agentBegin;PMS.agentState=function(){return PMS.ag?{busy:!!PMS.ag.busy,chosen:!!PMS.ag.chosen,stage:PMS.ag.stage,session:PMS.ag.session||null,concepts:(PMS.ag.concepts||[]).length,view:PMS.ag.view?PMS.ag.view.name:null}:null;};
 PMS.input=studioInput;
+/* v12.14 HARMONY FIRST: a question for Harmony (data, venues, prices, recipes, anything not about this menu)
+   or "leave the menu" is never swallowed by the menu interview or the open studio. The brief is kept, so
+   "make a menu" picks it up again. */
+var HARMONY_Q=/^(?:(?:hey|ok|okay|so|and|um|uh|wait|actually)[,.!]?\s+)*(?:harmony[,.!]?\s+)?(?:how (?:many|much|do (?:i|you|we) make|is|are|did|does|was|were)|what(?:'s|s| is| are| was| were| does| do| did)|where(?:'s| is| are| do| can)?|which|who(?:'s| is| are)?|when|why|show me|pull (?:up|in)|bring up|find|list|give me|tell me|compare|look up|search|map|zoom|can you (?:show|pull|find|tell|look|give|list|compare|get|check|map)|could you (?:show|pull|find|tell|look|give|list|compare|get|check|map)|i (?:want|need) (?:to (?:see|know)|the (?:numbers|data|sales|report)))\b/i;
+var MENU_TALK=/\b(menus?|design|designs|designer|look|looks|font|fonts|type|lettering|colou?rs?|palette|accent|cover|page|pages|style|feel|vibe|brief|concept|concepts|layout|art|artwork|paint|logo|title|subtitle|suggest|recommend|you think|options|examples|you mean)\b/i;
+var LEAVE_MENU=/\b(?:stop|exit|leave|close|quit|pause|cancel|get out of|done with)\b[^.]{0,20}\b(?:menu|studio|design(?:ing|er)?|interview)\b|\bback to harmony\b|\bforget (?:about )?the menu\b/i;
+function harmonyTurn(q){q=String(q||'');return LEAVE_MENU.test(q)||(HARMONY_Q.test(q)&&!MENU_TALK.test(q));}
+function leaveMenuFor(q){
+  PMS.interviewing=false;PMS.confirmOld=false;PMS.asking=false;try{briefSave();}catch(e){}
+  if(PMS.open&&(LEAVE_MENU.test(q)||!PMS.drafting)){try{PMS.close();}catch(e){}}
+}
+PMS.harmonyTurn=harmonyTurn;
 PMS.hear=function(text){
   var q=String(text||'').trim();if(!q)return;
+  if((PMS.interviewing||PMS.open||PMS.drafting)&&harmonyTurn(q)){leaveMenuFor(q);if(typeof harmonyAsk==='function')harmonyAsk(q);return;}
   if(PMS.interviewing&&!PMS.open){try{if(typeof AGENT!=='undefined'&&AGENT.chat){AGENT.chat.push({who:'you',text:q});if(typeof agentDraw==='function')agentDraw();}}catch(e){}interviewStep(q);return;}
   var busy=PMS.open||PMS.drafting;
   if(!busy&&!MENU_INTENT.test(q)){if(typeof harmonyAsk==='function')harmonyAsk(q);return;}
@@ -42842,6 +42855,7 @@ if(typeof agentHeard==='function'){
     var q=String(text||'');
     if(typeof window.phgPhotoRoute==='function'&&window.phgPhotoRoute(q))return;
     var noteish=/^(?:(?:hey|ok|okay)?,?\s*harmony[,.]?\s*)?(?:log|note|jot|remind me|what did i log)\b/i.test(q);
+    if((PMS.interviewing||PMS.open||PMS.drafting)&&harmonyTurn(q)){leaveMenuFor(q);return _heard.apply(this,arguments);}
     if(PMS.interviewing&&!PMS.open&&!noteish){AGENT.chat.push({who:'you',text:q});if(typeof agentDraw==='function')agentDraw();interviewStep(q);return;}
     /* "build it" right after Harmony offered to make the menu */
     if(!PMS.open&&/^(?:(?:ok(?:ay)?|yes|yeah|yep|sure|great|perfect|sounds good|let'?s do it)[,.!]*\s*)?(?:go ahead and\s+)?(?:build|make|draft|do|create) (?:it|that|this|the menu|that menu)\b/i.test(q)){
