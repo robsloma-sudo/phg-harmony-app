@@ -23,3 +23,143 @@
   to = "/__not_found__"
   status = 404
   force = true
+
+[[redirects]]
+  from = "/render-worker/*"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+# 2026-10-09 (Rob: "give me a small settings file"): notes, SQL and scripts at the repo root are for the team,
+# not the public site. Each is listed by name (and URL-encoded where it has spaces or symbols).
+[[redirects]]
+  from = "/AGENT_PROMPT.md"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/AGENT_PROMPT.txt"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/CHANGELOG.md"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/COMMIT-STEPS.txt"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/README.md"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/README.txt"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/01_beta_surfaces.sql (server · needs yes).sql"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/01_beta_surfaces.sql%20%28server%20%C2%B7%20needs%20yes%29.sql"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/02_recipe_book_fixes.sql (server · needs yes on C, D, E).sql"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/02_recipe_book_fixes.sql%20%28server%20%C2%B7%20needs%20yes%20on%20C%2C%20D%2C%20E%29.sql"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/05_move_kennedy.sql (tested, ready).sql"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/05_move_kennedy.sql%20%28tested%2C%20ready%29.sql"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/PROPOSED_abv_menu_and_build_sync.sql"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/PROPOSED_cocktail_build_method.sql"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/garnish_catalogue_v1.sql"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/glassware_seed_v1.sql"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/build_glassware_seed.py"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/phg_bar_math.py"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/phg_drink_builder.py"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/pull_libbey_catalogue.py"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/trace_and_calibrate.py"
+  to = "/__not_found__"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/trace_glass.py"
+  to = "/__not_found__"
+  status = 404
+  force = true

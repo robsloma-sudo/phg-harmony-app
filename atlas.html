@@ -7,16 +7,19 @@
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <style>
 :root{
-  --bg:#05070d;--panel:rgba(9,14,22,.84);--panel2:rgba(13,20,31,.94);--line:rgba(140,210,230,.14);--line2:rgba(140,210,230,.28);
-  --tx:#e8f2f6;--mut:#8ea4b0;--dim:#5d727d;--cy:#22d3ee;--amb:#f5b54a;--vio:#a78bfa;--grn:#34d399;--pink:#ff3d7f;
+  --bg:var(--lk-g1);--panel:rgba(9,14,22,.84);--panel2:rgba(13,20,31,.94);--line:rgba(140,210,230,.14);--line2:rgba(140,210,230,.28);
+  --tx:var(--lk-tx0);--mut:var(--lk-mut0);--dim:#5d727d;--cy:#22d3ee;--amb:var(--lk-amb);--vio:var(--lk-vio);--grn:var(--lk-grn);--pink:var(--lk-pink);
   --r8:8px;--r12:12px;--r16:16px;--r999:999px;
   --ui:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,monospace;--disp:"Iowan Old Style","Palatino Linotype",Georgia,serif;
   --spring:cubic-bezier(.34,1.56,.64,1);--ease:cubic-bezier(.22,1,.36,1);
+  /* LOOK v2: literal families as variables (defaults = the literals; a brand look sets them on <body>) */
+  --lk-cy-rgb:34,211,238;--lk-sky-rgb:56,189,248;--lk-sky:#38bdf8;--lk-amb-rgb:245,181,74;--lk-amb:#f5b54a;--lk-sat:#f59e0b;--lk-vio-rgb:167,139,250;--lk-vio:#a78bfa;--lk-vio3:#c4b5fd;--lk-pink:#ff3d7f;--lk-cyd:#0e7490;--lk-cyl:#bff6ff;--lk-cyl2:#dffaff;--lk-grn-rgb:52,211,153;--lk-grn:#34d399;--lk-ground-rgb:15,30,45;--lk-g1:#05070d;--lk-slate1:#94a3b8;--lk-slate2:#e2e8f0;--lk-slate3:#cbd5e1;--lk-light-bg:#eef2f5;--lk-light-tx:#0f1b24;--lk-light-mut:#475a66;--lk-light-dim:#6b7f8a;--lk-light-cy:#0891b2;--lk-blue:#60a5fa;--lk-tx0:#e8f2f6;--lk-mut0:#8ea4b0;
 }
+.th-brand{background:linear-gradient(135deg,var(--bg) 0 45%,var(--cy) 100%)}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:var(--ui);-webkit-font-smoothing:antialiased;overflow:hidden}
 button{font:inherit;color:inherit;cursor:pointer}
 #map{position:fixed;inset:0}
-.maplibregl-ctrl-attrib{background:rgba(9,14,22,.6)!important;color:#8ea4b0!important;font-size:10px}
+.maplibregl-ctrl-attrib{background:rgba(9,14,22,.6)!important;color:var(--lk-mut0)!important;font-size:10px}
 .maplibregl-ctrl-attrib a{color:#a9c4cf!important}
 #fade{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0;background-size:cover;transition:opacity .9s var(--ease)}
 .glass{background:var(--panel);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border:1px solid var(--line2);box-shadow:0 12px 40px rgba(0,0,0,.35)}
@@ -24,13 +27,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 .top{position:fixed;top:14px;left:392px;right:70px;display:flex;gap:8px;align-items:center;z-index:5;pointer-events:none}
 .top>*{pointer-events:auto}
 .ask{flex:1;display:flex;align-items:center;gap:10px;border-radius:var(--r999);padding:6px 6px 6px 12px;min-width:0}
-.orb{width:24px;height:24px;border-radius:50%;flex:none;background:conic-gradient(from 0deg,#22d3ee,#a78bfa,#ff3d7f,#f5b54a,#22d3ee);filter:blur(.3px);position:relative;animation:spin 6s linear infinite}
+.orb{width:24px;height:24px;border-radius:50%;flex:none;background:conic-gradient(from 0deg,#22d3ee,var(--lk-vio),var(--lk-pink),var(--lk-amb),#22d3ee);filter:blur(.3px);position:relative;animation:spin 6s linear infinite}
 .orb::after{content:"";position:absolute;inset:3px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#e9feff,#123044 70%)}
 .ask.busy .orb{animation-duration:1.1s}
 @keyframes spin{to{transform:rotate(360deg)}}
 .ask input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--tx);font-size:14px}
 .ask input::placeholder{color:var(--dim)}
-.ask button{border:0;background:linear-gradient(135deg,rgba(34,211,238,.25),rgba(167,139,250,.25));color:#dffaff;border-radius:var(--r999);padding:7px 14px;font-size:12px;font-weight:600}
+.ask button{border:0;background:linear-gradient(135deg,rgba(var(--lk-cy-rgb),.25),rgba(var(--lk-vio-rgb),.25));color:var(--lk-cyl2);border-radius:var(--r999);padding:7px 14px;font-size:12px;font-weight:600}
 .tbtn{border-radius:var(--r999);padding:9px 13px;font-size:12px;color:var(--mut);white-space:nowrap;transition:all .2s var(--ease)}
 .tbtn:hover{color:var(--tx);transform:translateY(-1px)}
 .activebar{position:fixed;top:62px;left:392px;right:70px;z-index:4;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
@@ -45,7 +48,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ctrls{position:fixed;right:14px;top:14px;z-index:5;display:flex;flex-direction:column;gap:6px}
 .cbtn{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:16px;color:var(--tx);transition:transform .2s var(--spring),background .2s}
 .cbtn:hover{transform:scale(1.06)}
-.cbtn.on{background:rgba(34,211,238,.22);border-color:rgba(34,211,238,.6);color:#bff6ff}
+.cbtn.on{background:rgba(var(--lk-cy-rgb),.22);border-color:rgba(var(--lk-cy-rgb),.6);color:var(--lk-cyl)}
 .cbtn small{font-size:10px;font-weight:700;letter-spacing:.04em}
 /* basemap picker */
 .bm{position:fixed;right:14px;bottom:14px;z-index:5;border-radius:var(--r16);padding:8px;display:flex;gap:8px;align-items:flex-end}
@@ -53,8 +56,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .bmt:hover{transform:translateY(-3px)}
 .bmt span{display:block;height:46px;border-radius:10px;margin-bottom:5px;border:2px solid transparent;transition:border-color .2s,box-shadow .2s;position:relative;overflow:hidden}
 .bmt.on{color:var(--tx)}
-.bmt.on span{border-color:var(--cy);box-shadow:0 0 0 3px rgba(34,211,238,.25)}
-.th-mid{background:radial-gradient(circle at 70% 30%,#16324a,#05070d 70%)}
+.bmt.on span{border-color:var(--cy);box-shadow:0 0 0 3px rgba(var(--lk-cy-rgb),.25)}
+.th-mid{background:radial-gradient(circle at 70% 30%,#16324a,var(--lk-g1) 70%)}
 .th-mid::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(35deg,transparent 0 9px,rgba(94,230,240,.18) 9px 10px)}
 .th-str{background:#f2efe9}.th-str::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 45%,#fcd986 45% 52%,transparent 52%),linear-gradient(0deg,transparent 60%,#fff 60% 66%,transparent 66%),radial-gradient(circle at 25% 75%,#c8e6b4 0 10px,transparent 11px),linear-gradient(160deg,transparent 70%,#a8cbe8 70%)}
 .th-grey{background:#f2f3f3}.th-grey::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 40%,#fff 40% 46%,transparent 46%),linear-gradient(0deg,transparent 30%,#e0e2e3 30% 34%,transparent 34%),linear-gradient(160deg,transparent 72%,#d6dee3 72%)}
@@ -72,7 +75,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .search kbd{font-family:var(--mono);font-size:10px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
 .prow{display:flex;gap:6px;margin-top:10px}
 .pbtn{flex:1;border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:var(--r8);padding:7px 0;font-size:12px;color:var(--mut);transition:all .2s var(--ease)}
-.pbtn:hover{color:var(--tx);border-color:var(--line2);background:rgba(34,211,238,.07)}
+.pbtn:hover{color:var(--tx);border-color:var(--line2);background:rgba(var(--lk-cy-rgb),.07)}
 .pbtn:active{transform:scale(.96)}
 .presets{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--line);scrollbar-width:none}
 .presets::-webkit-scrollbar{display:none}
@@ -89,7 +92,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .gt small{display:block;font-size:11px;color:var(--mut);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gacts{display:flex;gap:2px}
 .gacts button{border:0;background:none;font-size:10px;color:var(--dim);padding:4px 6px;border-radius:6px;letter-spacing:.04em}
-.gacts button:hover{color:var(--cy);background:rgba(34,211,238,.08)}
+.gacts button:hover{color:var(--cy);background:rgba(var(--lk-cy-rgb),.08)}
 .car{color:var(--dim);transition:transform .3s var(--ease);font-size:11px;width:14px;text-align:center}
 .grp.open>.gh .car{transform:rotate(90deg)}
 .gbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease)}
@@ -98,7 +101,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .grp.open>.gbody>div{padding-bottom:8px}
 .cb{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line2);display:grid;place-items:center;flex:none;transition:all .25s var(--spring)}
 .cb.on{border-color:var(--c,var(--cy));background:var(--c,var(--cy));transform:scale(1.04)}
-.cb.on::after{content:"";width:9px;height:5px;border-left:2px solid #05070d;border-bottom:2px solid #05070d;transform:rotate(-45deg) translate(1px,-1px)}
+.cb.on::after{content:"";width:9px;height:5px;border-left:2px solid var(--lk-g1);border-bottom:2px solid var(--lk-g1);transform:rotate(-45deg) translate(1px,-1px)}
 .cb.mix{border-color:var(--c,var(--cy))}.cb.mix::after{content:"";width:8px;height:2px;background:var(--c,var(--cy));border-radius:2px}
 .lay{border-radius:var(--r8);margin-top:4px;background:rgba(255,255,255,.02);border:1px solid transparent;transition:background .25s,border-color .25s}
 .lay.on{border-color:var(--line);background:rgba(255,255,255,.04)}
@@ -109,35 +112,35 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ln b{font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .ln small{display:block;font-size:10.5px;color:var(--dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .badge{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;padding:2px 5px;border-radius:4px;font-weight:600}
-.b-live{color:var(--grn);background:rgba(52,211,153,.12)}.b-part{color:var(--amb);background:rgba(245,181,74,.12)}
-.b-none{color:var(--dim);background:rgba(255,255,255,.05)}.b-prop{color:var(--vio);background:rgba(167,139,250,.14)}
+.b-live{color:var(--grn);background:rgba(var(--lk-grn-rgb),.12)}.b-part{color:var(--amb);background:rgba(var(--lk-amb-rgb),.12)}
+.b-none{color:var(--dim);background:rgba(255,255,255,.05)}.b-prop{color:var(--vio);background:rgba(var(--lk-vio-rgb),.14)}
 .lcount{font-family:var(--mono);font-size:10.5px;color:var(--mut)}
 .lmore{border:0;background:none;color:var(--dim);font-size:13px;padding:2px 4px;transition:transform .3s var(--ease)}
 .lay.exp .lmore{transform:rotate(90deg)}
 .lbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease)}
 .lbody>div{overflow:hidden;padding:0 10px 0 29px}
 .lay.exp .lbody{grid-template-rows:1fr}.lay.exp .lbody>div{padding-bottom:12px}
-.note{font-size:11px;line-height:1.45;color:var(--mut);background:rgba(245,181,74,.06);border-left:2px solid rgba(245,181,74,.5);padding:7px 9px;border-radius:0 6px 6px 0;margin:4px 0 8px}
-.lay.subl{margin-left:16px;border-left:2px solid rgba(34,211,238,.25);border-radius:0 8px 8px 0}
+.note{font-size:11px;line-height:1.45;color:var(--mut);background:rgba(var(--lk-amb-rgb),.06);border-left:2px solid rgba(var(--lk-amb-rgb),.5);padding:7px 9px;border-radius:0 6px 6px 0;margin:4px 0 8px}
+.lay.subl{margin-left:16px;border-left:2px solid rgba(var(--lk-cy-rgb),.25);border-radius:0 8px 8px 0}
 .refine{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;color:var(--dim);margin:10px 0 2px 18px}
-.warn{font-size:11px;color:#ffd08a;background:rgba(245,181,74,.08);border:1px solid rgba(245,181,74,.3);border-radius:8px;padding:6px 8px;margin-top:6px}
-.warn a{color:#bff6ff;cursor:pointer;text-decoration:underline}
+.warn{font-size:11px;color:#ffd08a;background:rgba(var(--lk-amb-rgb),.08);border:1px solid rgba(var(--lk-amb-rgb),.3);border-radius:8px;padding:6px 8px;margin-top:6px}
+.warn a{color:var(--lk-cyl);cursor:pointer;text-decoration:underline}
 .chip[disabled]{cursor:not-allowed}
 .camimg{width:100%;border-radius:10px;margin-top:8px;background:#000;min-height:120px;object-fit:cover}
 .tabs{display:flex;gap:4px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:3px;margin:8px 0 10px}
 .tabs button{flex:1;border:0;background:none;color:var(--mut);padding:7px 0;border-radius:8px;font-size:12.5px;font-weight:600;transition:all .25s var(--ease)}
-.tabs button.on{background:rgba(34,211,238,.16);color:#dffaff}
-.tabs button.on[data-tab=layers]{background:rgba(167,139,250,.2);color:#ece6ff}
+.tabs button.on{background:rgba(var(--lk-cy-rgb),.16);color:var(--lk-cyl2)}
+.tabs button.on[data-tab=layers]{background:rgba(var(--lk-vio-rgb),.2);color:#ece6ff}
 .secth{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;color:var(--dim);margin:6px 4px 2px}
-.ovc{border:1px solid rgba(167,139,250,.22);background:linear-gradient(180deg,rgba(167,139,250,.06),rgba(167,139,250,.02));border-radius:12px;margin:8px 0;overflow:hidden}
-.ovc.on{border-color:rgba(167,139,250,.55);box-shadow:0 0 0 1px rgba(167,139,250,.15) inset}
+.ovc{border:1px solid rgba(var(--lk-vio-rgb),.22);background:linear-gradient(180deg,rgba(var(--lk-vio-rgb),.06),rgba(var(--lk-vio-rgb),.02));border-radius:12px;margin:8px 0;overflow:hidden}
+.ovc.on{border-color:rgba(var(--lk-vio-rgb),.55);box-shadow:0 0 0 1px rgba(var(--lk-vio-rgb),.15) inset}
 .ovh{display:flex;align-items:center;gap:10px;padding:10px 10px 6px 10px}
 .eye{width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:rgba(255,255,255,.03);display:grid;place-items:center;font-size:15px;color:var(--mut);flex:none;transition:all .25s var(--spring)}
-.ovc.on .eye{background:rgba(167,139,250,.28);border-color:rgba(167,139,250,.7);color:#fff}
+.ovc.on .eye{background:rgba(var(--lk-vio-rgb),.28);border-color:rgba(var(--lk-vio-rgb),.7);color:#fff}
 .ramp{height:6px;border-radius:3px;margin:0 10px 8px 54px}
 .ovrow{display:flex;align-items:center;gap:8px;padding:0 10px 10px 54px;font-size:10px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
-.ovrow input{flex:1;accent-color:#a78bfa}
-.achip.ov{border-style:dashed;border-color:rgba(167,139,250,.5)}
+.ovrow input{flex:1;accent-color:var(--lk-vio)}
+.achip.ov{border-style:dashed;border-color:rgba(var(--lk-vio-rgb),.5)}
 .tp-type{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;padding:3px 8px;border-radius:999px;margin-bottom:6px}
 .tp-chips{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
 .tp-chip{font-family:var(--mono);font-size:9px;letter-spacing:.12em;padding:3px 7px;border-radius:5px;background:rgba(255,255,255,.06);color:var(--mut)}
@@ -159,17 +162,17 @@ body.tp .legend{opacity:0;pointer-events:none;transform:translateY(10px)}
 .chip:active{transform:scale(.92)}
 .chip em{font-style:normal;font-family:var(--mono);font-size:9.5px;color:var(--dim)}
 .chip i{width:8px;height:8px;border-radius:50%;display:inline-block}
-.chip.on{color:#05070d;background:var(--c,var(--cy));border-color:transparent}
+.chip.on{color:var(--lk-g1);background:var(--c,var(--cy));border-color:transparent}
 .chip.on em{color:rgba(5,7,13,.6)}.chip.on i{box-shadow:0 0 0 1.5px rgba(5,7,13,.6)}
 .chip.na{opacity:.45}
 .seg{display:flex;border:1px solid var(--line);border-radius:var(--r8);overflow:hidden}
 .seg button{flex:1;border:0;background:none;padding:6px 4px;font-size:11.5px;color:var(--mut);transition:all .2s}
-.seg button.on{background:rgba(34,211,238,.16);color:#bff6ff}
+.seg button.on{background:rgba(var(--lk-cy-rgb),.16);color:var(--lk-cyl)}
 .rng{position:relative;height:26px}
 .rng input{position:absolute;inset:0;width:100%;-webkit-appearance:none;appearance:none;background:none;pointer-events:none;margin:0}
-.rng input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:16px;height:16px;border-radius:50%;background:#e8f2f6;border:3px solid var(--c,var(--cy));cursor:pointer;margin-top:-6px;transition:transform .2s var(--spring)}
+.rng input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:16px;height:16px;border-radius:50%;background:var(--lk-tx0);border:3px solid var(--c,var(--cy));cursor:pointer;margin-top:-6px;transition:transform .2s var(--spring)}
 .rng input::-webkit-slider-thumb:active{transform:scale(1.25)}
-.rng input::-moz-range-thumb{pointer-events:auto;width:12px;height:12px;border-radius:50%;background:#e8f2f6;border:3px solid var(--c,var(--cy))}
+.rng input::-moz-range-thumb{pointer-events:auto;width:12px;height:12px;border-radius:50%;background:var(--lk-tx0);border:3px solid var(--c,var(--cy))}
 .rng input::-webkit-slider-runnable-track{height:4px;background:transparent}
 .rtrack{position:absolute;left:0;right:0;top:11px;height:4px;border-radius:4px;background:rgba(255,255,255,.08)}
 .rfill{position:absolute;top:11px;height:4px;border-radius:4px;background:var(--c,var(--cy))}
@@ -177,12 +180,12 @@ body.tp .legend{opacity:0;pointer-events:none;transform:translateY(10px)}
 .tog{display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:3px 0;cursor:pointer}
 .sw2{width:34px;height:20px;border-radius:10px;background:rgba(255,255,255,.1);position:relative;transition:background .25s;flex:none}
 .sw2::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#cfdde3;transition:transform .35s var(--spring)}
-.sw2.on{background:var(--c,var(--cy))}.sw2.on::after{transform:translateX(14px);background:#05070d}
+.sw2.on{background:var(--c,var(--cy))}.sw2.on::after{transform:translateX(14px);background:var(--lk-g1)}
 .sel,.txt{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:var(--r8);color:var(--tx);padding:7px 9px;font-size:12px;outline:0}
 .opac{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:10px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
 .opac input{flex:1;accent-color:var(--cy)}
 .opac button{border:1px solid var(--line);background:none;border-radius:6px;font-size:10px;color:var(--mut);padding:3px 7px;text-transform:none}
-.sub{margin-top:10px;border:1px dashed rgba(34,211,238,.32);border-radius:var(--r8);padding:8px 10px;background:rgba(34,211,238,.03);animation:pop .35s var(--spring)}
+.sub{margin-top:10px;border:1px dashed rgba(var(--lk-cy-rgb),.32);border-radius:var(--r8);padding:8px 10px;background:rgba(var(--lk-cy-rgb),.03);animation:pop .35s var(--spring)}
 .sub .fl{color:var(--cy)}
 .hidden{display:none!important}
 /* legend & stats */
@@ -207,8 +210,8 @@ body.tp .legend{opacity:0;pointer-events:none;transform:translateY(10px)}
 .card .kv b{display:block;font-size:14px}.card .kv span{font-size:9.5px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
 .card .acts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .card .acts a,.card .acts button{display:block;text-align:center;text-decoration:none;border:1px solid var(--line2);background:rgba(255,255,255,.04);border-radius:10px;padding:8px 6px;font-size:12px;color:var(--tx);transition:all .2s var(--ease)}
-.card .acts a:hover,.card .acts button:hover{background:rgba(34,211,238,.12);transform:translateY(-1px)}
-.card .acts .pri{background:linear-gradient(135deg,rgba(34,211,238,.3),rgba(167,139,250,.3));border-color:transparent}
+.card .acts a:hover,.card .acts button:hover{background:rgba(var(--lk-cy-rgb),.12);transform:translateY(-1px)}
+.card .acts .pri{background:linear-gradient(135deg,rgba(var(--lk-cy-rgb),.3),rgba(var(--lk-vio-rgb),.3));border-color:transparent}
 .card .real{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.14em;padding:2px 6px;border-radius:4px;margin-top:6px}
 /* tooltip, toast, loader */
 .tip{position:fixed;z-index:9;pointer-events:none;border-radius:var(--r8);padding:8px 10px;font-size:11.5px;max-width:240px;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s}
@@ -216,7 +219,7 @@ body.tp .legend{opacity:0;pointer-events:none;transform:translateY(10px)}
 .tip b{display:block;font-size:12.5px;margin-bottom:2px}.tip span{color:var(--mut);display:block}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(24px) scale(.96);opacity:0;z-index:10;border-radius:var(--r999);padding:9px 10px 9px 16px;font-size:12.5px;display:flex;gap:12px;align-items:center;transition:all .45s var(--spring);pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%);pointer-events:auto}
-.toast button{border:0;background:rgba(34,211,238,.16);color:#bff6ff;border-radius:var(--r999);padding:5px 11px;font-size:11.5px}
+.toast button{border:0;background:rgba(var(--lk-cy-rgb),.16);color:var(--lk-cyl);border-radius:var(--r999);padding:5px 11px;font-size:11.5px}
 .loader{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:var(--bg);transition:opacity .8s var(--ease)}
 .loader.done{opacity:0;pointer-events:none}
 .loader div{text-align:center}.loader .orb{width:54px;height:54px;margin:0 auto 14px}.loader p{font-family:var(--mono);font-size:10px;letter-spacing:.3em;color:var(--mut)}
@@ -569,6 +572,8 @@ var DARK_BASE={midnight:1,sat:1,blueprint:1};
 function getJSON(u){if(STYLE_CACHE[u])return Promise.resolve(JSON.parse(STYLE_CACHE[u]));return fetch(u).then(function(r){return r.text()}).then(function(t){STYLE_CACHE[u]=t;return JSON.parse(t)})}
 function recolor(s,map){s.layers.forEach(function(l){var id=l.id,p=l.paint=l.paint||{};for(var i=0;i<map.length;i++){var m=map[i];if(m[0].test(id)&&m[1].split('-')[0]===l.type){p[m[1]]=m[2];break}}});return s}
 function buildStyle(name){
+ if(name==='brand'){var bm=window.__phgBrandMap;if(!bm)return getJSON(OFM+'positron');return getJSON(OFM+'positron').then(function(s){s=recolor(s,[[/^background$/,'background-color',bm.background],[/^park/,'fill-color',bm.park],[/wood/,'fill-color',bm.wood],[/residential/,'fill-color',bm.residential],[/^water$/,'fill-color',bm.water],[/waterway/,'line-color',bm.waterway],[/^building/,'fill-color',bm.building],[/motorway.*inner|major_inner/,'line-color',bm.major],[/casing/,'line-color',bm.casing],[/minor/,'line-color',bm.minor],[/path/,'line-color',bm.path],[/rail/,'line-color',bm.rail],[/boundary/,'line-color',bm.boundary],[/aeroway/,'line-color',bm.aeroway]]);
+   s.layers.forEach(function(l){if(l.type==='symbol'){l.paint=l.paint||{};l.paint['text-color']=bm.text;l.paint['text-halo-color']=bm.halo;l.paint['text-halo-width']=1.2}if(l.type==='line'&&/subtle/.test(l.id))l.paint['line-color']=bm.subtle});return s});}
  if(name==='streets')return getJSON(OFM+'liberty');
  if(name==='grey')return getJSON(OFM+'positron');
  if(name==='green')return getJSON(OFM+'positron').then(function(s){return recolor(s,[
@@ -956,18 +961,18 @@ renderBM();renderPresets();renderPanel();renderActive();
 .wxhead{display:flex;align-items:center;gap:8px;margin:4px 2px 8px}
 .wxhead b{font-family:var(--disp);font-weight:400;font-size:19px}
 .wxhead .badge{margin-left:auto}
-.wxtop{border:1px solid rgba(56,189,248,.28);background:linear-gradient(180deg,rgba(56,189,248,.08),rgba(56,189,248,.02));border-radius:12px;padding:10px;margin-bottom:8px}
+.wxtop{border:1px solid rgba(var(--lk-sky-rgb),.28);background:linear-gradient(180deg,rgba(var(--lk-sky-rgb),.08),rgba(var(--lk-sky-rgb),.02));border-radius:12px;padding:10px;margin-bottom:8px}
 .wxtop .fl{margin-bottom:4px}
 .wxnow{display:flex;align-items:center;gap:8px;font-size:12px}
 .wxnow b{font-size:13px}
-.wxnow .dot{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:wxpulse 1.6s infinite}
-.wxnow .dot.h{background:#f5b54a;animation:none}
-@keyframes wxpulse{70%{box-shadow:0 0 0 7px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.wxnow .dot{width:8px;height:8px;border-radius:50%;background:var(--lk-grn);box-shadow:0 0 0 0 rgba(var(--lk-grn-rgb),.6);animation:wxpulse 1.6s infinite}
+.wxnow .dot.h{background:var(--lk-amb);animation:none}
+@keyframes wxpulse{70%{box-shadow:0 0 0 7px rgba(var(--lk-grn-rgb),0)}100%{box-shadow:0 0 0 0 rgba(var(--lk-grn-rgb),0)}}
 .wxgt{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;color:#7dd3fc;margin:12px 4px 2px}
-.wxc{border-color:rgba(56,189,248,.2);background:linear-gradient(180deg,rgba(56,189,248,.05),rgba(56,189,248,.015))}
-.wxc.on{border-color:rgba(56,189,248,.6);box-shadow:0 0 0 1px rgba(56,189,248,.14) inset}
-.wxc.on .eye{background:rgba(56,189,248,.28);border-color:rgba(56,189,248,.75);color:#fff}
-.wxc .ovrow input{accent-color:#38bdf8}
+.wxc{border-color:rgba(var(--lk-sky-rgb),.2);background:linear-gradient(180deg,rgba(var(--lk-sky-rgb),.05),rgba(var(--lk-sky-rgb),.015))}
+.wxc.on{border-color:rgba(var(--lk-sky-rgb),.6);box-shadow:0 0 0 1px rgba(var(--lk-sky-rgb),.14) inset}
+.wxc.on .eye{background:rgba(var(--lk-sky-rgb),.28);border-color:rgba(var(--lk-sky-rgb),.75);color:#fff}
+.wxc .ovrow input{accent-color:var(--lk-sky)}
 .wxc.na{opacity:.62}
 .wxc .ln small.warnt{color:#ffd08a}
 .wxc .lbody>div{padding:0 10px 0 54px}
@@ -978,26 +983,26 @@ renderBM();renderPresets();renderPanel();renderActive();
 .wxsw i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 .wximp{border:1px dashed rgba(255,107,107,.45);background:rgba(255,107,107,.06);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:11.5px}
 .wximp b{font-size:16px;margin-right:4px}
-.wximp a{color:#bff6ff;cursor:pointer;text-decoration:underline;margin-right:8px}
+.wximp a{color:var(--lk-cyl);cursor:pointer;text-decoration:underline;margin-right:8px}
 .wxsrc{font-size:10.5px;line-height:1.5;color:var(--dim);margin:10px 4px}
 .wxsrc b{color:var(--mut);font-weight:600}
 .wxev{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .wxev button{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:999px;padding:4px 9px;font-size:10.5px;color:var(--mut)}
-.wxev button:hover{color:var(--tx);border-color:rgba(56,189,248,.5)}
-.wxbtn{border:1px solid rgba(56,189,248,.45)!important;color:#bff6ff!important}
+.wxev button:hover{color:var(--tx);border-color:rgba(var(--lk-sky-rgb),.5)}
+.wxbtn{border:1px solid rgba(var(--lk-sky-rgb),.45)!important;color:var(--lk-cyl)!important}
 /* time bar */
 .wxbar{position:fixed;left:392px;bottom:80px;z-index:6;border-radius:16px;padding:8px 10px;width:min(640px,calc(100% - 900px));min-width:470px;font-size:12px;transition:opacity .3s,transform .35s var(--ease)}
 .wxbar.hidden{display:block!important;opacity:0;transform:translateY(16px);pointer-events:none}
 .wxb-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .wxb-row+.wxb-row{margin-top:7px}
 .wxbar .seg{flex:none}.wxbar .seg button{padding:5px 10px;font-size:11.5px}
-.wxb-play{width:34px;height:30px;border-radius:9px;border:1px solid rgba(56,189,248,.5);background:rgba(56,189,248,.16);color:#dffaff;font-size:13px}
+.wxb-play{width:34px;height:30px;border-radius:9px;border:1px solid rgba(var(--lk-sky-rgb),.5);background:rgba(var(--lk-sky-rgb),.16);color:var(--lk-cyl2);font-size:13px}
 .wxb-time{flex:1;min-width:0;line-height:1.15}.wxb-time b{display:block;font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wxb-time small{color:var(--mut);font-size:10.5px}
 .wxbar input[type=date],.wxbar input[type=time],.wxbar select{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;color:var(--tx);padding:4px 6px;font-size:11.5px;color-scheme:dark}
 .wxbar .sb{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:7px;padding:4px 7px;font-size:11px;color:var(--mut)}
 .wxbar .sb:hover{color:var(--tx);border-color:var(--line2)}
 .wxbar .x{border:0;background:rgba(255,255,255,.07);width:24px;height:24px;border-radius:50%;color:var(--mut)}
-.wxbar input[type=range]{flex:1;accent-color:#38bdf8;min-width:120px}
+.wxbar input[type=range]{flex:1;accent-color:var(--lk-sky);min-width:120px}
 .wxticks{font-family:var(--mono);font-size:9.5px;color:var(--dim);white-space:nowrap}
 .wxload{font-family:var(--mono);font-size:9.5px;color:#7dd3fc;letter-spacing:.1em}
 /* card bits */
@@ -1005,10 +1010,10 @@ renderBM();renderPresets();renderPanel();renderActive();
 .wxtbl td,.wxtbl th{padding:4px 3px;border-bottom:1px solid rgba(255,255,255,.05);text-align:right}
 .wxtbl th{color:var(--mut);font-weight:500;font-size:10px;letter-spacing:.06em}
 .wxtbl td:first-child,.wxtbl th:first-child{text-align:left}
-.wxtbl tr.cur td{color:#bff6ff;font-weight:600}
-.wxal{border-left:3px solid var(--c,#94a3b8);padding:5px 8px;margin:6px 0;background:rgba(255,255,255,.03);border-radius:0 8px 8px 0;font-size:11.5px}
+.wxtbl tr.cur td{color:var(--lk-cyl);font-weight:600}
+.wxal{border-left:3px solid var(--c,var(--lk-slate1));padding:5px 8px;margin:6px 0;background:rgba(255,255,255,.03);border-radius:0 8px 8px 0;font-size:11.5px}
 .wxal b{display:block;font-size:12.5px}.wxal span{color:var(--mut)}
-.wxal a{color:#bff6ff}
+.wxal a{color:var(--lk-cyl)}
 .wxper{display:grid;grid-template-columns:auto 1fr auto;gap:2px 8px;font-size:11.5px;margin-top:6px}
 .wxper span{color:var(--mut)}
 @media (max-width:820px){.wxbar{left:10px;right:62px;width:auto;min-width:0;bottom:calc(52vh + 76px)}}
@@ -1460,8 +1465,8 @@ attach();
      This block adds: the PHG sign-in gate, and window.PHGAtlas, the command surface the
      app's Harmony drives by voice (direct calls, no network, no model). -->
 <style id="phgAppCSS">
-#phgGate{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;background:#05070d;color:#e2e8f0;font:15px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
-#phgGate b{display:block;font-size:18px;margin-bottom:6px}#phgGate span{color:#94a3b8}
+#phgGate{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;background:var(--lk-g1);color:var(--lk-slate2);font:15px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+#phgGate b{display:block;font-size:18px;margin-bottom:6px}#phgGate span{color:var(--lk-slate1)}
 #phgGate.ok{display:none}
 /* locate me: button in the map controls + a blue dot */
 #phgLocBtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
@@ -1477,60 +1482,60 @@ attach();
 
 /* readable dropdowns: the option list follows the theme instead of white-on-white */
 select,.sel{color-scheme:dark}
-select option,select optgroup{background:#0d141f;color:#e8f2f6}
+select option,select optgroup{background:#0d141f;color:var(--lk-tx0)}
 body.phg-light select,body.phg-light .sel{color-scheme:light}
-body.phg-light select option,body.phg-light select optgroup{background:#ffffff;color:#0f1b24}
+body.phg-light select option,body.phg-light select optgroup{background:#ffffff;color:var(--lk-light-tx)}
 /* light palette */
-body.phg-light{--bg:#eef2f5;--panel:rgba(255,255,255,.88);--panel2:rgba(255,255,255,.96);--line:rgba(15,40,60,.12);--line2:rgba(15,40,60,.24);--tx:#0f1b24;--mut:#475a66;--dim:#6b7f8a;--cy:#0891b2}
-body.phg-light .glass{box-shadow:0 10px 30px rgba(15,30,45,.14)}
-#phgWxPower[aria-pressed="true"]{color:#fff;background:#0e7490;border-color:#22d3ee}
-body.phg-light .maplibregl-ctrl-attrib{background:rgba(255,255,255,.6)!important;color:#475a66!important}
+body.phg-light{--bg:var(--lk-light-bg);--panel:rgba(255,255,255,.88);--panel2:rgba(255,255,255,.96);--line:rgba(15,40,60,.12);--line2:rgba(15,40,60,.24);--tx:var(--lk-light-tx);--mut:var(--lk-light-mut);--dim:var(--lk-light-dim);--cy:var(--lk-light-cy)}
+body.phg-light .glass{box-shadow:0 10px 30px rgba(var(--lk-ground-rgb),.14)}
+#phgWxPower[aria-pressed="true"]{color:#fff;background:var(--lk-cyd);border-color:#22d3ee}
+body.phg-light .maplibregl-ctrl-attrib{background:rgba(255,255,255,.6)!important;color:var(--lk-light-mut)!important}
 body.phg-light .maplibregl-ctrl-attrib a{color:#334e5c!important}
-body.phg-light .ask button{color:#0e7490!important}
-body.phg-light .achip button{background:rgba(15,30,45,0.112)!important}
-body.phg-light .cbtn.on{color:#0e7490!important}
-body.phg-light .search{background:rgba(15,30,45,0.064)!important}
-body.phg-light .pbtn{background:rgba(15,30,45,0.048)!important}
-body.phg-light .preset{background:rgba(15,30,45,0.048)!important}
-body.phg-light .grp{background:rgba(15,30,45,0.024)!important}
-body.phg-light .gh:hover{background:rgba(15,30,45,0.032)!important}
-body.phg-light .cb.on::after{border-left:2px solid #eef2f5!important;border-bottom:2px solid #eef2f5!important}
-body.phg-light .lay{background:rgba(15,30,45,0.032)!important}
-body.phg-light .lay.on{background:rgba(15,30,45,0.064)!important}
-body.phg-light .b-none{background:rgba(15,30,45,0.08)!important}
-body.phg-light .warn a{color:#0e7490!important}
-body.phg-light .tabs{background:rgba(15,30,45,0.064)!important}
-body.phg-light .tabs button.on{color:#0e7490!important}
-body.phg-light .eye{background:rgba(15,30,45,0.048)!important}
-body.phg-light .tp-chip{background:rgba(15,30,45,0.096)!important}
-body.phg-light .bar{background:rgba(15,30,45,0.112)!important}
-body.phg-light .kvl{border-bottom:1px solid rgba(15,30,45,0.08)!important}
-body.phg-light .near:hover{background:rgba(15,30,45,0.08)!important}
-body.phg-light .note.none{background:rgba(15,30,45,0.048)!important}
-body.phg-light .chip{background:rgba(15,30,45,0.032)!important}
-body.phg-light .chip.on{color:#eef2f5!important}
+body.phg-light .ask button{color:var(--lk-cyd)!important}
+body.phg-light .achip button{background:rgba(var(--lk-ground-rgb),0.112)!important}
+body.phg-light .cbtn.on{color:var(--lk-cyd)!important}
+body.phg-light .search{background:rgba(var(--lk-ground-rgb),0.064)!important}
+body.phg-light .pbtn{background:rgba(var(--lk-ground-rgb),0.048)!important}
+body.phg-light .preset{background:rgba(var(--lk-ground-rgb),0.048)!important}
+body.phg-light .grp{background:rgba(var(--lk-ground-rgb),0.024)!important}
+body.phg-light .gh:hover{background:rgba(var(--lk-ground-rgb),0.032)!important}
+body.phg-light .cb.on::after{border-left:2px solid var(--lk-light-bg)!important;border-bottom:2px solid var(--lk-light-bg)!important}
+body.phg-light .lay{background:rgba(var(--lk-ground-rgb),0.032)!important}
+body.phg-light .lay.on{background:rgba(var(--lk-ground-rgb),0.064)!important}
+body.phg-light .b-none{background:rgba(var(--lk-ground-rgb),0.08)!important}
+body.phg-light .warn a{color:var(--lk-cyd)!important}
+body.phg-light .tabs{background:rgba(var(--lk-ground-rgb),0.064)!important}
+body.phg-light .tabs button.on{color:var(--lk-cyd)!important}
+body.phg-light .eye{background:rgba(var(--lk-ground-rgb),0.048)!important}
+body.phg-light .tp-chip{background:rgba(var(--lk-ground-rgb),0.096)!important}
+body.phg-light .bar{background:rgba(var(--lk-ground-rgb),0.112)!important}
+body.phg-light .kvl{border-bottom:1px solid rgba(var(--lk-ground-rgb),0.08)!important}
+body.phg-light .near:hover{background:rgba(var(--lk-ground-rgb),0.08)!important}
+body.phg-light .note.none{background:rgba(var(--lk-ground-rgb),0.048)!important}
+body.phg-light .chip{background:rgba(var(--lk-ground-rgb),0.032)!important}
+body.phg-light .chip.on{color:var(--lk-light-bg)!important}
 body.phg-light .chip.on em{color:rgba(240,244,247,.6)!important}
 body.phg-light .chip.on i{box-shadow:0 0 0 1.5px rgba(240,244,247,.6)!important}
-body.phg-light .seg button.on{color:#0e7490!important}
-body.phg-light .rtrack{background:rgba(15,30,45,0.128)!important}
-body.phg-light .sw2{background:rgba(15,30,45,0.16)!important}
-body.phg-light .sw2.on::after{background:#eef2f5!important}
-body.phg-light .sel,body.phg-light .txt{background:rgba(15,30,45,0.064)!important}
-body.phg-light .card .x{background:rgba(15,30,45,0.112)!important}
-body.phg-light .card .kv div{background:rgba(15,30,45,0.064)!important}
-body.phg-light .card .acts a,body.phg-light .card .acts button{background:rgba(15,30,45,0.064)!important}
-body.phg-light .toast button{color:#0e7490!important}
-body.phg-light .wximp a{color:#0e7490!important}
-body.phg-light .wxev button{background:rgba(15,30,45,0.048)!important}
-body.phg-light .wxbtn{color:#0e7490!important}
-body.phg-light .wxb-play{color:#0e7490!important}
-body.phg-light .wxbar input[type=date],body.phg-light .wxbar input[type=time],body.phg-light .wxbar select{background:rgba(15,30,45,0.08)!important}
-body.phg-light .wxbar .sb{background:rgba(15,30,45,0.048)!important}
-body.phg-light .wxbar .x{background:rgba(15,30,45,0.112)!important}
-body.phg-light .wxtbl td,body.phg-light .wxtbl th{border-bottom:1px solid rgba(15,30,45,0.08)!important}
-body.phg-light .wxtbl tr.cur td{color:#0e7490!important}
-body.phg-light .wxal{background:rgba(15,30,45,0.048)!important}
-body.phg-light .wxal a{color:#0e7490!important}
+body.phg-light .seg button.on{color:var(--lk-cyd)!important}
+body.phg-light .rtrack{background:rgba(var(--lk-ground-rgb),0.128)!important}
+body.phg-light .sw2{background:rgba(var(--lk-ground-rgb),0.16)!important}
+body.phg-light .sw2.on::after{background:var(--lk-light-bg)!important}
+body.phg-light .sel,body.phg-light .txt{background:rgba(var(--lk-ground-rgb),0.064)!important}
+body.phg-light .card .x{background:rgba(var(--lk-ground-rgb),0.112)!important}
+body.phg-light .card .kv div{background:rgba(var(--lk-ground-rgb),0.064)!important}
+body.phg-light .card .acts a,body.phg-light .card .acts button{background:rgba(var(--lk-ground-rgb),0.064)!important}
+body.phg-light .toast button{color:var(--lk-cyd)!important}
+body.phg-light .wximp a{color:var(--lk-cyd)!important}
+body.phg-light .wxev button{background:rgba(var(--lk-ground-rgb),0.048)!important}
+body.phg-light .wxbtn{color:var(--lk-cyd)!important}
+body.phg-light .wxb-play{color:var(--lk-cyd)!important}
+body.phg-light .wxbar input[type=date],body.phg-light .wxbar input[type=time],body.phg-light .wxbar select{background:rgba(var(--lk-ground-rgb),0.08)!important}
+body.phg-light .wxbar .sb{background:rgba(var(--lk-ground-rgb),0.048)!important}
+body.phg-light .wxbar .x{background:rgba(var(--lk-ground-rgb),0.112)!important}
+body.phg-light .wxtbl td,body.phg-light .wxtbl th{border-bottom:1px solid rgba(var(--lk-ground-rgb),0.08)!important}
+body.phg-light .wxtbl tr.cur td{color:var(--lk-cyd)!important}
+body.phg-light .wxal{background:rgba(var(--lk-ground-rgb),0.048)!important}
+body.phg-light .wxal a{color:var(--lk-cyd)!important}
 
 /* phone: the Filters & Layers sheet can be dragged to any height, or collapsed/expanded */
 #phgSheetBar{display:none}
@@ -1577,7 +1582,7 @@ body.phg-light .wxal a{color:#0e7490!important}
 
 /* map styles live in the panel's third tab (Filters | Layers | Satellite); no floating strip */
 .bm{display:none!important}
-.tabs button.on[data-tab=views]{background:rgba(245,181,74,.18);color:#fff3dc}
+.tabs button.on[data-tab=views]{background:rgba(var(--lk-amb-rgb),.18);color:#fff3dc}
 body.phg-light .tabs button.on[data-tab=views]{color:#9a5b00!important}
 #phgViews{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:4px 2px 14px}
 #phgViews .bmt{width:auto!important;display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px;border-radius:12px;border:1px solid var(--line);background:none;color:var(--mut);font-size:11.5px}
@@ -1599,11 +1604,11 @@ body.phg-light .tabs button.on[data-tab=views]{color:#9a5b00!important}
 #phgWxPop .hd button{border:0;background:none;color:var(--mut);font-size:18px;line-height:1;padding:2px 6px}
 #phgWxPop .tb{display:flex;gap:4px;padding:0 10px}
 #phgWxPop .tb button{flex:1;border:1px solid var(--line);background:none;color:var(--mut);border-radius:8px;padding:5px 0;font-size:11.5px;font-weight:600}
-#phgWxPop .tb button.on{background:rgba(34,211,238,.16);color:var(--tx);border-color:var(--cy)}
+#phgWxPop .tb button.on{background:rgba(var(--lk-cy-rgb),.16);color:var(--tx);border-color:var(--cy)}
 #phgWxPop .ex{padding:8px 12px;font-size:11.5px;line-height:1.4;color:var(--mut);border-bottom:1px solid var(--line)}
 #phgWxPop .ls{overflow-y:auto;padding:4px 6px 10px}
 #phgWxPop .it{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;border:0;background:none;color:var(--tx);padding:7px 6px;border-radius:8px;font-size:12px}
-#phgWxPop .it:hover,#phgWxPop .it:active{background:rgba(34,211,238,.10)}
+#phgWxPop .it:hover,#phgWxPop .it:active{background:rgba(var(--lk-cy-rgb),.10)}
 #phgWxPop .it i{flex:none;width:10px;height:10px;border-radius:3px;margin-top:3px}
 #phgWxPop .it span{flex:1;min-width:0}
 #phgWxPop .it small{display:block;color:var(--mut);font-size:10.5px;margin-top:1px}
@@ -1977,6 +1982,392 @@ window.PHGAtlas={
     var changed=wxChanged||hostState()!==before;el.value='';
     return{ok:changed,said:changed?'Done':''};}
 };
+})();
+</script>
+
+<script id="phgAtlasLook">
+/* ===== LOOK v2 (2026-10-09): the Atlas follows a brand look. Same engine as index.html; reads phg_look_v1 (same origin),
+   sets its own token names on <body> (so they beat body.phg-light), light/dark from the background, and a 'Brand' base
+   map tinted from the palette. Presets and the five built-in base maps are untouched. ===== */
+/* PHG Change Look — colour engine (change-look v1.2: whole-app token set, categorical hues, Atlas + map tints)
+   Pure functions, no DOM. sRGB <-> OKLCH, WCAG 2.x contrast, role derivation, auto-fix.
+   Evidence: WCAG 2.2 §1.4.3 / §1.4.11 (technical_standard); CSS Color 4 OKLCH (technical_standard);
+   Ottosson 2020 OKLab (practitioner_reference). */
+(function (root) {
+  'use strict';
+  var C = {};
+
+  /* ---------- hex / rgb ---------- */
+  C.parseHex = function (s) {
+    s = String(s || '').trim().replace(/^#/, '');
+    if (/^[0-9a-f]{3}$/i.test(s)) s = s.replace(/./g, '$&$&');
+    if (!/^[0-9a-f]{6}$/i.test(s)) return null;
+    var n = parseInt(s, 16);
+    return { r: n >> 16 & 255, g: n >> 8 & 255, b: n & 255 };
+  };
+  C.toHex = function (c) {
+    var f = function (v) { v = Math.max(0, Math.min(255, Math.round(v))); return (v < 16 ? '0' : '') + v.toString(16); };
+    return '#' + f(c.r) + f(c.g) + f(c.b);
+  };
+  C.clamp255 = function (v) { v = Number(v); if (isNaN(v)) return 0; return Math.max(0, Math.min(255, Math.round(v))); };
+
+  /* ---------- rgb <-> hsl / hsv (for the wheel and bars) ---------- */
+  C.rgbToHsl = function (c) {
+    var r = c.r / 255, g = c.g / 255, b = c.b / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    var h = 0, s = 0, l = (mx + mn) / 2, d = mx - mn;
+    if (d) {
+      s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+      if (mx === r) h = (g - b) / d + (g < b ? 6 : 0); else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4;
+      h *= 60;
+    }
+    return { h: h, s: s * 100, l: l * 100 };
+  };
+  C.hslToRgb = function (o) {
+    var h = ((o.h % 360) + 360) % 360, s = o.s / 100, l = o.l / 100;
+    var c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2, r, g, b;
+    if (h < 60) { r = c; g = x; b = 0; } else if (h < 120) { r = x; g = c; b = 0; } else if (h < 180) { r = 0; g = c; b = x; }
+    else if (h < 240) { r = 0; g = x; b = c; } else if (h < 300) { r = x; g = 0; b = c; } else { r = c; g = 0; b = x; }
+    return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 };
+  };
+  C.rgbToHsv = function (c) {
+    var r = c.r / 255, g = c.g / 255, b = c.b / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, h = 0;
+    if (d) { if (mx === r) h = (g - b) / d + (g < b ? 6 : 0); else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h *= 60; }
+    return { h: h, s: mx ? d / mx * 100 : 0, v: mx * 100 };
+  };
+  C.hsvToRgb = function (o) {
+    var h = ((o.h % 360) + 360) % 360, s = o.s / 100, v = o.v / 100;
+    var c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c, r, g, b;
+    if (h < 60) { r = c; g = x; b = 0; } else if (h < 120) { r = x; g = c; b = 0; } else if (h < 180) { r = 0; g = c; b = x; }
+    else if (h < 240) { r = 0; g = x; b = c; } else if (h < 300) { r = x; g = 0; b = c; } else { r = c; g = 0; b = x; }
+    return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 };
+  };
+
+  /* ---------- sRGB <-> OKLCH (Ottosson 2020; CSS Color 4) ---------- */
+  function lin(v) { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+  function gam(v) { v = Math.max(0, Math.min(1, v)); return 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055); }
+  C.rgbToOklch = function (c) {
+    var r = lin(c.r), g = lin(c.g), b = lin(c.b);
+    var l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+    var m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+    var s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    var L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s;
+    var A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
+    var B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+    var Cc = Math.sqrt(A * A + B * B), H = Math.atan2(B, A) * 180 / Math.PI; if (H < 0) H += 360;
+    return { L: L, C: Cc, h: H };
+  };
+  C.oklchToRgbRaw = function (o) {
+    var hr = o.h * Math.PI / 180, A = o.C * Math.cos(hr), B = o.C * Math.sin(hr);
+    var l = o.L + 0.3963377774 * A + 0.2158037573 * B;
+    var m = o.L - 0.1055613458 * A - 0.0638541728 * B;
+    var s = o.L - 0.0894841775 * A - 1.2914855480 * B;
+    l = l * l * l; m = m * m * m; s = s * s * s;
+    return {
+      r: 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+      g: -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+      b: -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+    };
+  };
+  C.inGamut = function (o) { var c = C.oklchToRgbRaw(o), e = 0.0005; return c.r >= -e && c.r <= 1 + e && c.g >= -e && c.g <= 1 + e && c.b >= -e && c.b <= 1 + e; };
+  /* gamut-map by reducing chroma (keeps L and h, like CSS Color 4's intent for OKLCH) */
+  C.oklchToRgb = function (o) {
+    var t = { L: Math.max(0, Math.min(1, o.L)), C: Math.max(0, o.C), h: o.h };
+    if (!C.inGamut(t)) { var lo = 0, hi = t.C; for (var i = 0; i < 24; i++) { var mid = (lo + hi) / 2; t.C = mid; if (C.inGamut(t)) lo = mid; else hi = mid; } t.C = lo; }
+    var c = C.oklchToRgbRaw(t);
+    return { r: gam(c.r), g: gam(c.g), b: gam(c.b) };
+  };
+
+  /* ---------- WCAG 2.x contrast ---------- */
+  C.luminance = function (c) { return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b); };
+  C.contrast = function (a, b) { var la = C.luminance(a), lb = C.luminance(b), hi = Math.max(la, lb), lo = Math.min(la, lb); return (hi + 0.05) / (lo + 0.05); };
+  var WHITE = { r: 255, g: 255, b: 255 }, BLACK = { r: 0, g: 0, b: 0 };
+  /* "light" = dark text reaches more contrast than light text on this ground (crossover is ~0.18 luminance) */
+  C.isLight = function (c) { return C.contrast(BLACK, c) > C.contrast(WHITE, c); };
+  C.maxContrast = function (c) { return Math.max(C.contrast(BLACK, c), C.contrast(WHITE, c)); };
+
+  /* ---------- derivation ----------
+     Find a foreground with the SAME hue/chroma family as `tint`, at the lightness that first reaches `target`
+     contrast against `bg`, moving AWAY from the background's lightness. Returns rgb or null. */
+  C.reachContrast = function (fg, bg, target, opts) {
+    opts = opts || {};
+    var o = C.rgbToOklch(fg), bgo = C.rgbToOklch(bg);
+    if (C.contrast(fg, bg) >= target) return { r: fg.r, g: fg.g, b: fg.b };
+    var dir = (opts.dir || (bgo.L > 0.5 ? -1 : 1)); /* darker on light grounds, lighter on dark */
+    var maxC = typeof opts.maxC === 'number' ? opts.maxC : o.C;
+    var best = null;
+    for (var i = 1; i <= 100; i++) {
+      var L = o.L + dir * i * 0.01; if (L < 0 || L > 1) break;
+      var cand = C.oklchToRgb({ L: L, C: maxC, h: o.h });
+      if (C.contrast(cand, bg) >= target) { best = cand; break; }
+    }
+    if (!best && !opts.noFlip) { /* try the other direction */
+      for (var j = 1; j <= 100; j++) {
+        var L2 = o.L - dir * j * 0.01; if (L2 < 0 || L2 > 1) break;
+        var cand2 = C.oklchToRgb({ L: L2, C: maxC, h: o.h });
+        if (C.contrast(cand2, bg) >= target) { best = cand2; break; }
+      }
+    }
+    return best;
+  };
+  /* a neutral tinted with the ground's hue (so text never looks pasted on), at the FIRST lightness that
+     reaches `target` contrast when walking away from the ground. Gives a real hierarchy: 12:1 / 7:1 / 4.5:1. */
+  C.tintedNeutral = function (ground, target, chroma, dir) {
+    var go = C.rgbToOklch(ground), ch = chroma == null ? 0.02 : chroma;
+    dir = dir || (C.isLight(ground) ? -1 : 1); /* the caller fixes the direction from the BACKGROUND so panels never flip it */
+    for (var i = 0; i <= 100; i++) {
+      var L = go.L + dir * i * 0.01; if (L < 0 || L > 1) break;
+      var cand = C.oklchToRgb({ L: L, C: ch, h: go.h });
+      if (C.contrast(cand, ground) >= target) return cand;
+    }
+    return dir > 0 ? WHITE : BLACK;
+  };
+  C.mix = function (a, b, t) { return { r: a.r + (b.r - a.r) * t, g: a.g + (b.g - a.g) * t, b: a.b + (b.b - a.b) * t }; };
+  C.shiftL = function (c, dL, cMul) { var o = C.rgbToOklch(c); return C.oklchToRgb({ L: o.L + dL, C: o.C * (cMul == null ? 1 : cMul), h: o.h }); };
+  C.alpha = function (c, a) { return 'rgba(' + Math.round(c.r) + ',' + Math.round(c.g) + ',' + Math.round(c.b) + ',' + a + ')'; };
+
+  /* ---------- the role model ----------
+     slots: [{name, hex}] (1..5). roles: {bg, border, line, dot, fx, acc: slotIndex, text: 'auto'|slotIndex}
+     Everything that carries words is DERIVED to a readable tone (hue kept, lightness moved). The brand colour
+     itself is used untouched wherever contrast does not apply (borders, lines, dots, effects, fills).
+     Returns {tokens, field, pairs, adjusted, gate, resolved, light} */
+  C.TARGETS = { text: 4.5, textStrong: 7, textFaint: 4.5, ui: 3, accText: 4.5 };
+  C.derive = function (slots, roles) {
+    function slot(i) { var s = slots[i]; return s && C.parseHex(s.hex) || null; }
+    var bg = slot(roles.bg) || C.parseHex('#090d18');
+    var border = slot(roles.border) || C.mix(bg, WHITE, 0.22);
+    var line = slot(roles.line) || border;
+    var dot = slot(roles.dot) || line;
+    var fx = slot(roles.fx) || dot;
+    var acc = slot(roles.acc) || dot;
+    var light = C.isLight(bg);
+    var panel = C.shiftL(bg, light ? -0.025 : 0.035, 1);
+    var panel2 = C.shiftL(bg, light ? -0.05 : 0.065, 1);
+    var worst = panel2; /* text sits on panels too; panel2 is the ground closest to the text */
+    var dir = light ? -1 : 1; /* text direction is decided by the BACKGROUND, then checked on the worst ground */
+    var adjusted = [];
+    var textSlot = (roles.text !== 'auto' && roles.text != null) ? slot(roles.text) : null;
+    var txt;
+    if (textSlot) { txt = C.reachContrast(textSlot, worst, C.TARGETS.textStrong, { maxC: Math.min(0.1, C.rgbToOklch(textSlot).C), dir: dir }) || C.tintedNeutral(worst, 12, null, dir); if (C.toHex(txt) !== C.toHex(textSlot)) adjusted.push('text'); }
+    else txt = C.tintedNeutral(worst, 12, null, dir);
+    var dim = C.tintedNeutral(worst, C.TARGETS.textStrong, 0.03, dir);
+    var faint = C.tintedNeutral(worst, C.TARGETS.textFaint, 0.035, dir);
+    var accText = C.reachContrast(acc, worst, C.TARGETS.accText, { dir: dir }) || txt; if (C.toHex(accText) !== C.toHex(acc)) adjusted.push('acc');
+    var accUi = C.reachContrast(acc, bg, C.TARGETS.ui, { dir: dir }) || acc;
+    var accOn = C.isLight(acc) ? BLACK : WHITE; /* label on a solid accent button: the better of black/white, always >= 4.5:1 */
+    /* semantic text tones (Studio tags, alerts): fixed hues, lightness moved to >= 4.5:1 on the lighter panel.
+       Same rule as the accent: meaning stays, legibility is guaranteed on light and dark brand grounds. */
+    var SEM = { crit: '#ff99a5', warn: '#e9bb75', ok: '#84d7b1' }, semText = {};
+    Object.keys(SEM).forEach(function (k) { var s = C.parseHex(SEM[k]); semText[k] = C.reachContrast(s, worst, C.TARGETS.text, { dir: dir }) || s; });
+    var tokens = {
+      '--bg': C.toHex(bg), '--panel': C.toHex(panel), '--panel2': C.toHex(panel2),
+      '--line': C.alpha(border, 0.55), '--line2': C.toHex(border),
+      '--txt': C.toHex(txt), '--dim': C.toHex(dim), '--faint': C.toHex(faint),
+      '--hud': C.toHex(accText), '--hud-dim': C.alpha(fx, 0.30), '--hud-faint': C.alpha(fx, 0.12),
+      '--look-acc': C.toHex(acc), '--look-acc2': C.toHex(line), '--teal': C.toHex(accText), '--blue': C.toHex(line),
+      '--acc': C.toHex(acc), '--acc-text': C.toHex(accText), '--acc-ui': C.toHex(accUi),
+      '--fx-line': C.toHex(line), '--fx-dot': C.toHex(dot), '--fx-glow': C.toHex(fx),
+      '--focus': C.toHex(accUi), '--acc-on': C.toHex(accOn),
+      '--sem-crit-text': C.toHex(semText.crit), '--sem-warn-text': C.toHex(semText.warn), '--sem-ok-text': C.toHex(semText.ok)
+    };
+    var field = [C.toHex(dot), C.toHex(line), C.toHex(acc), C.toHex(fx), C.toHex(C.mix(dot, bg, 0.45))]; /* LK1..LK5: core, rim, accent, alt, dust */
+    var pairs = [
+      { key: 'text_bg', label: 'Text on background', fg: txt, bg: bg, min: C.TARGETS.text, kind: 'gate' },
+      { key: 'text_panel', label: 'Text on panel', fg: txt, bg: panel2, min: C.TARGETS.text, kind: 'gate' },
+      { key: 'dim_bg', label: 'Muted text on panel', fg: dim, bg: panel2, min: C.TARGETS.text, kind: 'gate' },
+      { key: 'faint_bg', label: 'Faint labels on panel', fg: faint, bg: panel2, min: C.TARGETS.text, kind: 'gate' },
+      { key: 'acctext_bg', label: 'Accent text on panel', fg: accText, bg: panel2, min: C.TARGETS.accText, kind: 'gate' },
+      { key: 'focus_bg', label: 'Focus ring on background', fg: accUi, bg: bg, min: C.TARGETS.ui, kind: 'gate' },
+      { key: 'btn_label', label: 'Button label on accent', fg: accOn, bg: acc, min: C.TARGETS.text, kind: 'gate' },
+      { key: 'sem_crit', label: 'Critical tag text on panel', fg: semText.crit, bg: panel2, min: C.TARGETS.text, kind: 'gate' },
+      { key: 'sem_warn', label: 'Warning tag text on panel', fg: semText.warn, bg: panel2, min: C.TARGETS.text, kind: 'gate' },
+      { key: 'sem_ok', label: 'OK tag text on panel', fg: semText.ok, bg: panel2, min: C.TARGETS.text, kind: 'gate' },
+      { key: 'acc_bg', label: 'Accent (raw) as a control colour', fg: acc, bg: bg, min: C.TARGETS.ui, kind: 'advice' },
+      { key: 'border_bg', label: 'Borders on background', fg: border, bg: bg, min: C.TARGETS.ui, kind: 'advice' },
+      { key: 'dot_bg', label: 'Dots on background', fg: dot, bg: bg, min: C.TARGETS.ui, kind: 'advice' },
+      { key: 'line_bg', label: 'Lines on background', fg: line, bg: bg, min: 1.5, kind: 'advice' }
+    ].map(function (p) { p.ratio = C.contrast(p.fg, p.bg); p.pass = p.ratio >= p.min; return p; });
+    var failures = pairs.filter(function (p) { return p.kind === 'gate' && !p.pass; }).map(function (p) { return p.key; });
+    return { tokens: tokens, field: field, pairs: pairs, adjusted: adjusted, light: light,
+             gate: { pass: failures.length === 0, failures: failures },
+             resolved: { bg: bg, border: border, line: line, dot: dot, fx: fx, acc: acc, txt: txt, accText: accText, panel2: panel2 } };
+  };
+
+  /* Auto-fix. The only thing the derivation cannot rescue is a MID-TONE background (no text colour can reach
+     4.5:1 on it). Push the background's lightness outward (hue and chroma kept) until black-or-white text
+     reaches 7.5:1 on the lighter panel, so muted text at 7:1 is possible. `dir` = +1 lighter, -1 darker,
+     default = the way the colour already leans. Returns {slots, changed:[slotIndex], direction} */
+  C.autoFix = function (slots, roles, dir) {
+    var out = slots.map(function (s) { return { name: s.name, hex: s.hex }; });
+    var changed = [];
+    if (!out[roles.bg]) return { slots: out, changed: changed };
+    var b = C.parseHex(out[roles.bg].hex), bo = C.rgbToOklch(b);
+    var dirB = dir || (bo.L > 0.5 ? 1 : -1), moved = false;
+    for (var k = 0; k < 100; k++) {
+      var light = C.isLight(b), p2 = C.shiftL(b, light ? -0.05 : 0.065, 1);
+      if (C.maxContrast(p2) >= 7.5) break;
+      bo.L += dirB * 0.01; if (bo.L < 0 || bo.L > 1) break; b = C.oklchToRgb(bo); moved = true;
+    }
+    if (moved) { out[roles.bg].hex = C.toHex(b); changed.push(roles.bg); }
+    return { slots: out, changed: changed, direction: dirB };
+  };
+  C.needsFix = function (slots, roles) { var d = C.derive(slots, roles); return !d.gate.pass; };
+
+
+  /* ---------- v1.2: categorical hues ----------
+     n distinguishable colours for layer chips, tags, charts: the brand's own non-background colours first
+     (hue-distinct, >= 3:1 against the background with lightness moved if needed), then OKLCH hue rotations of
+     the accent at the accent's lightness and chroma. A non-colour cue (label, icon, pattern) is still required
+     wherever the category matters (WCAG 1.4.1); this only guarantees the colours are tellable apart. */
+  C.hueDist = function (a, b) { var d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
+  C.categorical = function (slots, roles, n) {
+    var d = C.derive(slots, roles), R = d.resolved, bg = R.bg, dir = d.light ? -1 : 1, out = [], hues = [];
+    function take(c) {
+      if (!c) return; var o = C.rgbToOklch(c); if (o.C < 0.03) return; /* neutrals are not categories */
+      for (var i = 0; i < hues.length; i++) if (C.hueDist(hues[i], o.h) < 28) return;
+      var ok = C.reachContrast(c, bg, C.TARGETS.ui, { dir: dir, maxC: o.C }) || c;
+      out.push(ok); hues.push(o.h);
+    }
+    [R.acc, R.line, R.fx, R.dot, R.border].forEach(take);
+    var ao = C.rgbToOklch(R.acc), steps = [150, 210, 75, 285, 30, 330, 110, 250], k = 0;
+    while (out.length < n && k < steps.length) {
+      var h = (ao.h + steps[k++]) % 360, cand = C.oklchToRgb({ L: Math.max(0.55, Math.min(0.8, ao.L)), C: Math.max(0.09, Math.min(ao.C, 0.16)), h: h });
+      take(cand);
+    }
+    while (out.length < n) out.push(out[out.length - 1] || R.acc);
+    return out.slice(0, n);
+  };
+  C.rgbTriplet = function (c) { return Math.round(c.r) + ',' + Math.round(c.g) + ',' + Math.round(c.b); };
+
+  /* ---------- v1.2: the whole app ----------
+     Everything derive() gives, plus: the literal families used across index.html as --lk-* variables (each has the
+     original literal as its stylesheet default, so presets render byte-identical; only a custom look sets them),
+     categorical accents for --amber/--violet/--magenta/--blue/--purple/--teal, the Atlas token set, and a tinted
+     base map. Returns {tokens, atlas, map, cats, catsText, derive}. */
+  C.deriveApp = function (slots, roles) {
+    var d = C.derive(slots, roles), R = d.resolved, bg = R.bg, light = d.light, dir = light ? -1 : 1, worst = R.panel2;
+    var cats = C.categorical(slots, roles, 5);
+    var catsText = cats.map(function (c) { return C.reachContrast(c, worst, C.TARGETS.text, { dir: dir }) || R.txt; });
+    var panel = C.parseHex(d.tokens['--panel']), panel2 = C.parseHex(d.tokens['--panel2']);
+    var txt = R.txt, dim = C.parseHex(d.tokens['--dim']), faint = C.parseHex(d.tokens['--faint']);
+    var t = {};
+    Object.keys(d.tokens).forEach(function (k) { t[k] = d.tokens[k]; });
+    /* role tokens the app already has, now fully covered */
+    /* legacy accent roles take the categorical colour nearest their own hue (amber ~85, blue ~255, violet ~300, magenta ~350 in OKLCH),
+       skipping the accent itself so they stay distinguishable from it; a brand without such a hue gets the nearest available */
+    function nearest(h) { var best = 1, bd = 999; for (var i = 1; i < cats.length; i++) { var dd = C.hueDist(C.rgbToOklch(cats[i]).h, h); if (dd < bd) { bd = dd; best = i; } } return best; }
+    var iA = nearest(85), iB = nearest(255), iV = nearest(300), iM = nearest(350);
+    t['--amber'] = C.toHex(catsText[iA]); t['--blue'] = C.toHex(catsText[iB]); t['--violet'] = C.toHex(catsText[iV]); t['--purple'] = C.toHex(cats[iV]);
+    t['--magenta'] = C.toHex(catsText[iM]); t['--teal'] = t['--acc-text'];
+    cats = [cats[0], cats[iA], cats[iV], cats[iM], cats[iB]]; catsText = [catsText[0], catsText[iA], catsText[iV], catsText[iM], catsText[iB]];
+    t['--a'] = t['--acc-text']; t['--ac'] = t['--acc'];
+    /* literal families (exact literal defaults live in :root; a custom look overrides them here) */
+    var ACC = C.rgbTriplet(R.acc), ACCT = C.rgbTriplet(R.accText);
+    ['cyan', 'cyan2', 'cyan5'].forEach(function (k) { t['--lk-' + k + '-rgb'] = ACC; });
+    ['cyan', 'cyan2', 'cyan3', 'cyan4', 'cyan5', 'cyan6', 'cyan7'].forEach(function (k) { t['--lk-' + k] = t['--acc-text']; });
+    t['--lk-teal'] = t['--acc-text']; t['--lk-teal-rgb'] = ACC;
+    t['--lk-amber'] = t['--amber']; t['--lk-amber-rgb'] = C.rgbTriplet(cats[1]); t['--lk-amber2'] = t['--amber']; t['--lk-amber2-rgb'] = C.rgbTriplet(cats[1]); t['--lk-amber3'] = t['--amber']; t['--lk-amber4'] = t['--amber'];
+    t['--lk-violet'] = t['--violet']; t['--lk-violet-rgb'] = C.rgbTriplet(cats[2]); t['--lk-violet2'] = t['--violet']; t['--lk-violet2-rgb'] = C.rgbTriplet(cats[2]); t['--lk-violet3'] = t['--violet'];
+    t['--lk-magenta'] = t['--magenta']; t['--lk-magenta-rgb'] = C.rgbTriplet(cats[3]); t['--lk-magenta2'] = t['--magenta']; t['--lk-magenta2-rgb'] = C.rgbTriplet(cats[3]); t['--lk-magenta3'] = t['--magenta'];
+    t['--lk-blue'] = t['--blue']; t['--lk-blue-rgb'] = C.rgbTriplet(cats[1]); t['--lk-blue2'] = t['--blue'];
+    t['--lk-ink-rgb'] = C.rgbTriplet(txt);
+    t['--lk-on-acc'] = t['--acc-on']; t['--lk-on-acc2'] = t['--acc-on']; t['--lk-on-acc3'] = t['--acc-on']; t['--lk-on-acc4'] = t['--acc-on'];
+    ['--lk-err1', '--lk-err2', '--lk-err3', '--lk-err4', '--lk-err5', '--lk-crit1'].forEach(function (k) { t[k] = t['--sem-crit-text']; });
+    t['--lk-ok1'] = t['--sem-ok-text']; t['--lk-ok2'] = t['--sem-ok-text']; t['--lk-warn1'] = t['--sem-warn-text'];
+    /* long tail: inks, muted, tints, alerts, edges, grounds */
+    ['--lk-ink1', '--lk-ink2', '--lk-ink3', '--lk-ink4', '--lk-ink5'].forEach(function (k) { t[k] = t['--txt']; });
+    ['--lk-ink6', '--lk-ink7', '--lk-ink8', '--lk-ink9', '--lk-cyan8', '--lk-cyan9', '--lk-teal2', '--lk-blue3'].forEach(function (k) { t[k] = t['--acc-text']; });
+    ['--lk-mut1', '--lk-mut2', '--lk-mut3', '--lk-mut4', '--lk-mut5', '--lk-mut6', '--lk-mut7', '--lk-mut8'].forEach(function (k) { t[k] = t['--dim']; });
+    t['--lk-warm1'] = t['--amber']; t['--lk-warm2'] = t['--amber']; t['--lk-vio4'] = t['--violet']; t['--lk-vio5'] = t['--violet']; t['--lk-mag4'] = t['--magenta']; t['--lk-mag5'] = t['--magenta'];
+    ['--lk-err6', '--lk-err7', '--lk-err8', '--lk-err9'].forEach(function (k) { t[k] = t['--sem-crit-text']; });
+    t['--lk-edge1'] = t['--line2']; t['--lk-g5'] = C.toHex(panel); t['--lk-g6'] = C.toHex(panel2); t['--lk-g7'] = C.toHex(bg); t['--lk-g8'] = C.toHex(panel); t['--lk-g9'] = C.toHex(bg);
+    ['ground', 'ground2', 'ground3', 'ground4', 'ground5', 'ground6', 'ground7', 'ground8', 'ground9'].forEach(function (k, i) { t['--lk-' + k + '-rgb'] = C.rgbTriplet(i < 3 ? bg : panel); });
+    t['--lk-g1'] = C.toHex(bg); t['--lk-g2'] = C.toHex(bg); t['--lk-g3'] = C.toHex(panel); t['--lk-g4'] = C.toHex(panel2); t['--lk-g5'] = C.toHex(bg); t['--lk-g6'] = C.toHex(bg); t['--lk-g7'] = C.toHex(bg); t['--lk-g8'] = C.toHex(panel); t['--lk-g9'] = C.toHex(panel2);
+    t['--lk-slate1'] = C.toHex(faint); t['--lk-slate2'] = C.toHex(txt); t['--lk-slate3'] = C.toHex(dim); t['--lk-slate4'] = C.toHex(faint); t['--lk-slate5'] = C.toHex(faint); t['--lk-slate6'] = C.toHex(panel2);
+    t['--lk-ground-light'] = C.toHex(bg); t['--lk-ground-light2'] = C.toHex(panel);
+    for (var i = 0; i < 5; i++) { t['--cat-' + (i + 1)] = C.toHex(cats[i]); t['--cat-' + (i + 1) + '-text'] = C.toHex(catsText[i]); }
+    /* Atlas: its own names, same roles */
+    var atlas = {
+      '--bg': t['--bg'], '--panel': C.alpha(panel, 0.86), '--panel2': C.alpha(panel2, 0.95),
+      '--line': C.alpha(R.border, 0.22), '--line2': C.alpha(R.border, 0.45),
+      '--tx': t['--txt'], '--mut': t['--dim'], '--dim': t['--faint'],
+      '--cy': t['--acc-text'], '--amb': t['--amber'], '--vio': t['--violet'], '--grn': t['--sem-ok-text'], '--pink': t['--magenta'],
+      '--lk-cy-rgb': ACC, '--lk-sky': t['--acc-text'], '--lk-sky-rgb': ACC, '--lk-amb': t['--amber'], '--lk-amb-rgb': C.rgbTriplet(cats[1]),
+      '--lk-vio': t['--violet'], '--lk-vio-rgb': C.rgbTriplet(cats[2]), '--lk-pink': t['--magenta'], '--lk-cyd': t['--acc-text'],
+      '--lk-cyl': t['--acc-text'], '--lk-cyl2': t['--acc-text'], '--lk-grn': t['--sem-ok-text'], '--lk-grn-rgb': C.rgbTriplet(C.parseHex(t['--sem-ok-text'])),
+      '--lk-ground-rgb': C.rgbTriplet(panel), '--lk-g1': t['--bg'], '--lk-slate1': t['--faint'], '--lk-slate2': t['--txt'], '--lk-slate3': t['--dim'],
+      '--lk-light-bg': t['--bg'], '--lk-light-tx': t['--txt'], '--lk-light-mut': t['--dim'], '--lk-light-dim': t['--faint'], '--lk-light-cy': t['--acc-text'],
+      '--lk-light-panel-rgb': C.rgbTriplet(panel), '--lk-light-ink-rgb': C.rgbTriplet(txt), '--lk-sat': t['--amber'],
+      '--lk-blue': t['--blue'], '--lk-blue2': t['--blue'], '--lk-cyan-pale': t['--acc-text'], '--lk-cyan-pale2': t['--acc-text']
+    };
+    /* base map tint: the brand hue carried into land, water, roads and labels */
+    function mix(a, b, k) { return C.toHex(C.mix(a, b, k)); }
+    var ok = C.parseHex(t['--sem-ok-text']);
+    var map = {
+      background: C.toHex(bg), park: mix(bg, ok, light ? 0.10 : 0.08), wood: mix(bg, ok, light ? 0.14 : 0.11), residential: C.toHex(C.shiftL(bg, light ? -0.015 : 0.012)),
+      water: mix(bg, R.line, light ? 0.24 : 0.18), waterway: mix(bg, R.line, light ? 0.34 : 0.30), building: C.toHex(panel2),
+      major: mix(bg, R.border, light ? 0.55 : 0.38), casing: mix(bg, R.border, 0.18), minor: mix(bg, R.border, light ? 0.30 : 0.22), path: mix(bg, R.border, 0.16),
+      rail: mix(bg, dim, 0.25), boundary: mix(bg, R.acc, 0.45), aeroway: mix(bg, R.border, 0.2), subtle: mix(bg, R.border, 0.2),
+      text: C.toHex(dim), halo: C.toHex(bg)
+    };
+    return { tokens: t, atlas: atlas, map: map, cats: cats.map(C.toHex), catsText: catsText.map(C.toHex), derive: d };
+  };
+
+
+  /* ---------- v1.2: exact pre-inversion for the app's light screen ----------
+     The app's light mode is `filter: invert(1) hue-rotate(180deg)` over the whole page. Both are affine maps on sRGB,
+     so displayed = H · (1 − c). To make a token DISPLAY as t, store c = 1 − H⁻¹ · t (clamped). Reachable colours come out
+     exact; unreachable ones are clamped and the error is reported by C.preInvertError. */
+  var H180 = [[-0.574, 1.430, 0.144], [0.426, 0.430, 0.144], [0.426, 1.430, -0.856]];
+  function inv3(m) { var a = m[0][0], b = m[0][1], c = m[0][2], d = m[1][0], e = m[1][1], f = m[1][2], g = m[2][0], h = m[2][1], i = m[2][2];
+    var A = e * i - f * h, B = -(d * i - f * g), Cc = d * h - e * g, det = a * A + b * B + c * Cc;
+    return [[A / det, -(b * i - c * h) / det, (b * f - c * e) / det], [B / det, (a * i - c * g) / det, -(a * f - c * d) / det], [Cc / det, -(a * h - b * g) / det, (a * e - b * d) / det]]; }
+  var H180I = inv3(H180);
+  function mul(m, v) { return [m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2], m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2], m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2]]; }
+  C.preInvertExact = function (t) { var v = mul(H180I, [t.r / 255, t.g / 255, t.b / 255]); var cl = function (x) { return Math.max(0, Math.min(255, Math.round((1 - x) * 255))); }; return { r: cl(v[0]), g: cl(v[1]), b: cl(v[2]) }; };
+  C.forwardInvert = function (c) { var v = mul(H180, [1 - c.r / 255, 1 - c.g / 255, 1 - c.b / 255]); var cl = function (x) { return Math.max(0, Math.min(255, Math.round(x * 255))); }; return { r: cl(v[0]), g: cl(v[1]), b: cl(v[2]) }; };
+  C.preInvertError = function (t) { var shown = C.forwardInvert(C.preInvertExact(t)); return Math.max(Math.abs(shown.r - t.r), Math.abs(shown.g - t.g), Math.abs(shown.b - t.b)); };
+  /* pre-invert any token value: '#rrggbb', 'r,g,b' or 'rgba(r,g,b,a)'; anything else is returned unchanged */
+  C.preInvertToken = function (val) {
+    val = String(val);
+    var m = val.match(/^#([0-9a-f]{6})$/i); if (m) return C.toHex(C.preInvertExact(C.parseHex(val)));
+    m = val.match(/^(\d+),(\d+),(\d+)$/); if (m) return C.rgbTriplet(C.preInvertExact({ r: +m[1], g: +m[2], b: +m[3] }));
+    m = val.match(/^rgba\((\d+),(\d+),(\d+),([\d.]+)\)$/); if (m) { var p = C.preInvertExact({ r: +m[1], g: +m[2], b: +m[3] }); return 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',' + m[4] + ')'; }
+    return val;
+  };
+
+  C.fmtRatio = function (r) { return (Math.round(r * 100) / 100).toFixed(2) + ':1'; };
+  C.grade = function (ratio, min, large) { /* label never relies on colour alone */
+    if (ratio >= 7) return 'AAA'; if (ratio >= 4.5) return 'AA'; if (ratio >= 3) return large ? 'AA large' : (min <= 3 ? 'OK' : 'Fail'); return 'Fail';
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = C; else root.PHGLookColor = C;
+})(typeof window !== 'undefined' ? window : this);
+
+(function(){
+  var KEY='phg_look_v1',APPLIED=[],userBase=false,brandAdded=false;
+  function look(){try{var j=JSON.parse(localStorage.getItem(KEY)||'null');if(j&&j.palette==='custom'&&j.custom&&Array.isArray(j.custom.slots)&&j.custom.roles)return j;}catch(e){}return null;}
+  try{var _sb=setBase;setBase=function(n){userBase=true;return _sb(n);};}catch(e){}
+  var tries=0;
+  function ensureBrandBase(){
+    if(typeof map==='undefined'||!map||!map.setStyle){if(tries++<60)setTimeout(ensureBrandBase,250);return;}
+    if(BASE!=='brand'&&!userBase){try{_sb('brand');}catch(e){}}
+  }
+  window.phgAtlasLookApply=function(){
+    var l=look(),b=document.body;
+    APPLIED.forEach(function(k){b.style.removeProperty(k);});APPLIED=[];
+    if(!l){window.__phgBrandMap=null;if(typeof DARK_BASE!=='undefined')delete DARK_BASE.brand;return;}
+    var a=PHGLookColor.deriveApp(l.custom.slots,l.custom.roles);
+    Object.keys(a.atlas).forEach(function(k){b.style.setProperty(k,a.atlas[k]);APPLIED.push(k);});
+    b.classList.toggle('phg-light',!!a.derive.light);
+    window.__phgBrandMap=a.map;
+    if(typeof DARK_BASE!=='undefined'){if(a.derive.light)delete DARK_BASE.brand;else DARK_BASE.brand=1;}
+    if(typeof BASEMAPS!=='undefined'&&!brandAdded){BASEMAPS.unshift(['brand','Brand','th-brand']);brandAdded=true;}
+    try{if(typeof renderBM==='function')renderBM();}catch(e){}
+    if(!userBase)ensureBrandBase();
+    if(BASE==='brand'&&typeof map!=='undefined'&&map&&map.setStyle){try{_sb('brand');}catch(e){}}
+  };
+  window.addEventListener('storage',function(e){if(e.key===KEY){userBase=false;phgAtlasLookApply();}});
+  phgAtlasLookApply();
 })();
 </script>
 
