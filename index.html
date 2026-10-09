@@ -43636,6 +43636,23 @@ function phgFillerStart(){
 }
 window.phgFillerStart=phgFillerStart;window.phgFillerStop=phgFillerStop;
 
+/* v12.15: what a Harmony reply does to the screen, shared by a normal turn and by "different answer" (phgPF) */
+var TURN_URL='https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-harmony-turn';
+function harmonyApplyReply(j){
+    HCONV.ctx=j.context||'';HCONV.at=Date.now();
+    if(j.voice_first&&window.phgPrevoiceSet)phgPrevoiceSet(j.voice_first,j.speak);
+    if(j.menu_lookup&&typeof harmonyFindMenu==='function'){harmonyFindMenu(j.menu_lookup);return;}
+    if(j.view&&window.harmonyDataShow)window.harmonyDataShow(j.view);
+    /* 18.49.44: a reply may drive the screen: actions:[{action:'filter.set'|'filter.clear'|'sort.set'|'page.go'|'page.size'|'data.refine'|'map.fit'|any harmonyUI action,...}].
+       Each runs quietly (the reply's own speak says what happened); unknown actions are ignored. */
+    if(Array.isArray(j.actions)&&window.harmonyUI&&typeof window.harmonyUI.exec==='function')j.actions.slice(0,12).forEach(function(a){
+      if(!a||typeof a!=='object'||typeof a.action!=='string')return;
+      try{var b={};for(var k in a)b[k]=a[k];if(b.quiet==null)b.quiet=true;window.harmonyUI.exec(b);}catch(e){if(window.console)console.warn('harmony action',a&&a.action,e);}
+    });
+    if(typeof agentSay==='function')agentSay(j.speak);
+    if(j.next==='end')HCONV.ctx='';
+}
+window.harmonyApplyReply=harmonyApplyReply;
 var HCONV={ctx:'',at:0};
 function harmonyConverse(q){
   var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
@@ -43646,24 +43663,16 @@ function harmonyConverse(q){
   if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('Harmony · thinking…');
   phgFillerStart();
   var tz='America/Chicago';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||tz;}catch(e){}
-  fetch(INBOX_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
-    body:JSON.stringify({text:q,context:HCONV.ctx||'',surface:'app',account_id:acct,tz:tz,hear:(window.phgHeardFor?phgHeardFor(q):null),tts:(window.phgServerVoiceSettings?phgServerVoiceSettings():null)})})
-    .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.speak)throw new Error(j.error||('HTTP '+r.status));return j;});})
-    .then(function(j){
-      HCONV.ctx=j.context||'';HCONV.at=Date.now();
-      if(j.voice_first&&window.phgPrevoiceSet)phgPrevoiceSet(j.voice_first,j.speak);
-      if(j.menu_lookup&&typeof harmonyFindMenu==='function'){harmonyFindMenu(j.menu_lookup);return;}
-      if(j.view&&window.harmonyDataShow)window.harmonyDataShow(j.view);
-      /* 18.49.44: a reply may drive the screen: actions:[{action:'filter.set'|'filter.clear'|'sort.set'|'page.go'|'page.size'|'data.refine'|'map.fit'|any harmonyUI action,...}].
-         Each runs quietly (the reply's own speak says what happened); unknown actions are ignored. */
-      if(Array.isArray(j.actions)&&window.harmonyUI&&typeof window.harmonyUI.exec==='function')j.actions.slice(0,12).forEach(function(a){
-        if(!a||typeof a!=='object'||typeof a.action!=='string')return;
-        try{var b={};for(var k in a)b[k]=a[k];if(b.quiet==null)b.quiet=true;window.harmonyUI.exec(b);}catch(e){if(window.console)console.warn('harmony action',a&&a.action,e);}
-      });
-      if(typeof agentSay==='function')agentSay(j.speak);
-      if(j.next==='end')HCONV.ctx='';
-    })
-    .catch(function(e){if(window.console)console.warn('harmonyConverse',e);harmonyChat(q);})
+  /* v12.15 (PHG-207): every Harmony-view prompt goes through phg-harmony-turn: it is logged before it runs and answered
+     by the same inbox, with a request id made here so the per-prompt feedback button shows the moment she starts replying. */
+  var rid=(window.phgPF&&phgPF.begin)?phgPF.begin(q):null;
+  fetch(TURN_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
+    body:JSON.stringify({action:'ask',request_id:rid,text:q,context:HCONV.ctx||'',surface:'harmony',account_id:acct,tz:tz,hear:(window.phgHeardFor?phgHeardFor(q):null),tts:(window.phgServerVoiceSettings?phgServerVoiceSettings():null)})})
+    .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.speak){var er=new Error(j.error||('HTTP '+r.status));er.j=j;throw er;}return j;});})
+    .then(function(j){if(window.phgPF)phgPF.done(rid,j);harmonyApplyReply(j);})
+    .catch(function(e){if(window.console)console.warn('harmonyConverse',e);if(window.phgPF)phgPF.fail(rid);
+      if(e&&e.j&&e.j.error==='log_failed'&&e.j.speak){if(typeof agentSay==='function')agentSay(e.j.speak);return;}
+      harmonyChat(q);})
     .then(function(){phgFillerStop();window.PHG_PENDING=false;if(typeof AGENT!=='undefined')AGENT.thinking=false;if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('');});
 }
 window.harmonyConverse=harmonyConverse;
@@ -49052,6 +49061,109 @@ function wrapAll(){
 }
 G.phgFeedbackState=function(){return {active:FB.active,phase:FB.phase,turns:FB.transcript.length,busy:FB.busy,held:FB.held.length,lastId:FB.lastId,session:FB.session,button:!!($('phgFbBtn')&&!$('phgFbBtn').hidden)};};
 function boot(){if(!document.body)return setTimeout(boot,50);css();wrapAll();paint();setInterval(function(){try{paint();}catch(e){}},500);}
+boot();
+})();
+/* ===== v12.15 PER-PROMPT FEEDBACK (Rob 2026-10-09, PHG-207) =====
+   A button at the top of the Harmony view, tied to the prompt she is answering. It appears the moment she starts
+   replying (the prompt already has a request id and is logged by phg-harmony-turn before it runs).
+   Tap it: "How was this answer?" 1-10 (1 bad, 10 good, optional) and "Would you like a different answer?".
+   A different answer is its own prompt with its own button, so it can go back and forth any number of times.
+   Replaces the beta logbook button (hidden here; its code is untouched). Self-contained; defines only window.phgPF*. */
+(function(){
+var G=window,TURN='https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-harmony-turn';
+var PF=G.phgPF={items:[],cur:null,busy:false,open:false};
+function $(id){return document.getElementById(id);}
+function uuid(){try{if(G.crypto&&crypto.randomUUID)return crypto.randomUUID();}catch(e){}
+  var b=new Uint8Array(16);crypto.getRandomValues(b);b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;
+  var h=[].map.call(b,function(x){return (x+256).toString(16).slice(1);}).join('');
+  return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);}
+function tok(){try{return typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;}catch(e){return null;}}
+function acct(){try{return PHGAUTH.workspace&&PHGAUTH.workspace.account&&PHGAUTH.workspace.account.id||null;}catch(e){return null;}}
+function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function post(body){var t=tok();if(!t)return Promise.reject(new Error('signed_out'));
+  return fetch(TURN,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+t},body:JSON.stringify(body)})
+    .then(function(r){return r.json().catch(function(){return {};}).then(function(j){j._status=r.status;j._ok=r.ok;return j;});});}
+function css(){if($('phgPFcss'))return;var s=document.createElement('style');s.id='phgPFcss';s.textContent=
+ '#phgFbBtn{display:none!important}'
++'#phgPFBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:50%;transform:translateX(-50%);z-index:99970;display:flex;align-items:center;gap:8px;'
++'background:rgba(14,17,24,.86);color:#eceadf;border:1px solid rgba(201,162,39,.55);border-radius:999px;padding:8px 14px;font:600 13.5px/1.2 -apple-system,system-ui,sans-serif;'
++'box-shadow:0 8px 24px rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);cursor:pointer;max-width:calc(100vw - 32px);white-space:nowrap}'
++'#phgPFBtn[hidden]{display:none}#phgPFBtn .pfStar{color:#e3c766}#phgPFBtn .pfSub{color:#9a978e;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42vw}'
++'#phgPFBtn.pfDone{border-color:rgba(92,114,89,.7)}'
++'#phgPF{position:fixed;inset:0;z-index:99985;background:rgba(5,7,13,.6);display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 56px) 14px 20px}'
++'#phgPF[hidden]{display:none}'
++'#phgPF .pfCard{width:100%;max-width:520px;background:#0e1118;border:1px solid rgba(247,244,238,.14);border-radius:16px;padding:18px;color:#eceadf;font:15px/1.5 -apple-system,system-ui,sans-serif;box-shadow:0 30px 70px rgba(0,0,0,.6)}'
++'#phgPF h3{margin:0 0 2px;font-size:18px;font-weight:600}#phgPF .pfQ{color:#9a978e;font-size:13.5px;margin-bottom:14px;max-height:3.2em;overflow:hidden}'
++'#phgPF .pfNums{display:grid;grid-template-columns:repeat(10,1fr);gap:5px}'
++'#phgPF .pfNums button{background:#070910;border:1px solid rgba(247,244,238,.18);color:#eceadf;border-radius:9px;padding:10px 0;font-size:15px;font-weight:600;cursor:pointer}'
++'#phgPF .pfNums button.on{background:#c9a227;color:#1a1405;border-color:#c9a227}'
++'#phgPF .pfEnds{display:flex;justify-content:space-between;color:#9a978e;font-size:12px;margin:5px 2px 12px}'
++'#phgPF textarea{width:100%;box-sizing:border-box;background:#070910;border:1px solid rgba(247,244,238,.16);color:#eceadf;border-radius:9px;padding:9px 11px;font:14px/1.4 inherit;min-height:44px;resize:vertical}'
++'#phgPF .pfMsg{min-height:20px;font-size:13px;color:#8fb389;margin:8px 0 2px}'
++'#phgPF .pfDiff{margin-top:8px;width:100%;background:#c9a227;color:#1a1405;border:0;border-radius:999px;padding:12px;font-size:15px;font-weight:600;cursor:pointer}'
++'#phgPF .pfDiff[disabled]{opacity:.55}'
++'#phgPF .pfClose{margin-top:8px;width:100%;background:none;color:#c7c3b8;border:1px solid rgba(247,244,238,.2);border-radius:999px;padding:10px;font-size:14px;cursor:pointer}';
+ document.head.appendChild(s);}
+function stopEv(el){['pointerdown','touchstart','wheel','keydown'].forEach(function(ev){el.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});}
+function btn(){var b=$('phgPFBtn');if(b)return b;b=document.createElement('button');b.id='phgPFBtn';b.type='button';b.hidden=true;
+  b.setAttribute('aria-label','Rate this answer or ask for a different one');
+  b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openSheet();});stopEv(b);document.body.appendChild(b);return b;}
+function sheet(){var d=$('phgPF');if(d)return d;d=document.createElement('div');d.id='phgPF';d.hidden=true;
+  d.innerHTML='<div class="pfCard" role="dialog" aria-label="Feedback on this answer"><h3>How was this answer?</h3><div class="pfQ"></div>'
+   +'<div class="pfNums">'+[1,2,3,4,5,6,7,8,9,10].map(function(n){return '<button type="button" data-n="'+n+'">'+n+'</button>';}).join('')+'</div>'
+   +'<div class="pfEnds"><span>1 = bad</span><span>10 = good</span></div>'
+   +'<textarea class="pfNote" placeholder="What was wrong, or what do you want instead? (optional)" aria-label="Optional note"></textarea>'
+   +'<div class="pfMsg" role="status" aria-live="polite"></div>'
+   +'<button type="button" class="pfDiff">Would you like a different answer?</button>'
+   +'<button type="button" class="pfClose">Close</button></div>';
+  d.addEventListener('click',function(e){
+    if(e.target===d)return closeSheet();
+    var n=e.target.closest&&e.target.closest('[data-n]');if(n)return rate(+n.getAttribute('data-n'));
+    if(e.target.closest&&e.target.closest('.pfDiff'))return different();
+    if(e.target.closest&&e.target.closest('.pfClose'))return closeSheet();});
+  stopEv(d);document.body.appendChild(d);return d;}
+function openSheet(){var it=PF.cur;if(!it)return;var d=sheet();PF.open=true;d.hidden=false;
+  d.querySelector('.pfQ').textContent='You asked: '+it.q+(it.attempt>1?'  \u00b7  answer '+it.attempt:'');
+  [].forEach.call(d.querySelectorAll('[data-n]'),function(b){b.classList.toggle('on',+b.getAttribute('data-n')===it.score);});
+  d.querySelector('.pfNote').value=it.note||'';
+  d.querySelector('.pfMsg').textContent=it.score?'Saved: '+it.score+' out of 10':(it.state==='replying'?'She is still answering. You can rate it now or when she finishes.':'');
+  d.querySelector('.pfDiff').disabled=PF.busy;}
+function closeSheet(){var d=$('phgPF');if(d){var it=PF.cur,n=d.querySelector('.pfNote');if(it&&n)it.note=n.value;d.hidden=true;}PF.open=false;paint();}
+function rate(n){var it=PF.cur,d=sheet();if(!it)return;it.score=n;it.note=d.querySelector('.pfNote').value;
+  [].forEach.call(d.querySelectorAll('[data-n]'),function(b){b.classList.toggle('on',+b.getAttribute('data-n')===n);});
+  var m=d.querySelector('.pfMsg');m.style.color='#9a978e';m.textContent='Saving\u2026';
+  post({action:'feedback',request_id:it.rid,score:n,note:it.note||'',account_id:acct()}).then(function(j){
+    if(j&&j.ok){m.style.color='#8fb389';m.textContent='Saved: '+n+' out of 10'+(n<=5?'. Want a different answer? Tap below.':'. Thank you.');paint();}
+    else{m.style.color='#c98a84';m.textContent=j&&j.error==='interaction_not_found'?'That question was not recorded, so it cannot be rated.':'That didn\u2019t save. Try again.';}
+  }).catch(function(){m.style.color='#c98a84';m.textContent='That didn\u2019t save. Try again.';});}
+function different(){var it=PF.cur;if(!it||PF.busy)return;var d=sheet(),note=d.querySelector('.pfNote').value.trim();it.note=note;
+  PF.busy=true;closeSheet();
+  var nrid=uuid(),nx={rid:nrid,q:it.q,attempt:(it.attempt||1)+1,state:'replying',score:null,note:'',of:it.rid};PF.items.push(nx);PF.cur=nx;paint();
+  try{if(typeof AGENT!=='undefined'&&AGENT.chat){AGENT.chat.push({who:'you',text:'A different answer, please.'+(note?' '+note:'')});if(typeof agentDraw==='function')agentDraw();}}catch(e){}
+  G.PHG_PENDING=true;try{if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('Harmony \u00b7 finding a different answer\u2026');}catch(e){}
+  try{if(typeof phgFillerStart==='function')phgFillerStart();}catch(e){}
+  var tz='America/Chicago';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||tz;}catch(e){}
+  post({action:'different',request_id:it.rid,new_request_id:nrid,note:note,account_id:acct(),tz:tz,surface:'harmony',
+        tts:(G.phgServerVoiceSettings?phgServerVoiceSettings():null)})
+    .then(function(j){
+      if(!j||!j._ok||!j.speak){nx.state='failed';if(typeof agentSay==='function')agentSay((j&&j.speak)||'I couldn\u2019t get a different answer just now. Try again.');return;}
+      nx.state='answered';nx.iid=j.interaction_id;
+      if(typeof G.harmonyApplyReply==='function')G.harmonyApplyReply(j);else if(typeof agentSay==='function')agentSay(j.speak);
+    })
+    .catch(function(){nx.state='failed';if(typeof agentSay==='function')agentSay('I couldn\u2019t get a different answer just now. Try again.');})
+    .then(function(){PF.busy=false;G.PHG_PENDING=false;try{if(typeof phgFillerStop==='function')phgFillerStop();}catch(e){}
+      try{if(typeof AGENT!=='undefined')AGENT.thinking=false;if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('');}catch(e){}paint();});}
+PF.begin=function(q){var it={rid:uuid(),q:String(q||'').slice(0,300),attempt:1,state:'replying',score:null,note:''};PF.items.push(it);if(PF.items.length>50)PF.items.shift();PF.cur=it;paint();return it.rid;};
+PF.done=function(rid,j){PF.items.forEach(function(it){if(it.rid===rid){it.state='answered';it.iid=j&&j.interaction_id;}});paint();};
+PF.fail=function(rid){PF.items.forEach(function(it){if(it.rid===rid)it.state='failed';});paint();};
+function paint(){
+  var b=btn(),it=PF.cur,on=!!(it&&tok()&&document.body.classList.contains('phg-view-open')&&!document.body.classList.contains('phg-launch-review-open'));
+  if(b.hidden===on)b.hidden=!on;if(!on)return;
+  var lab=PF.busy?'Finding a different answer\u2026':it.score?'Rated '+it.score+'/10 \u00b7 Different answer':'Rate \u00b7 Different answer';
+  var html='<span class="pfStar">\u2605</span><span>'+esc(lab)+'</span>'+(it.attempt>1?'<span class="pfSub">#'+it.attempt+'</span>':'');
+  if(b._h!==html){b.innerHTML=html;b._h=html;}b.classList.toggle('pfDone',!!it.score);}
+G.phgPFState=function(){var it=PF.cur;return {items:PF.items.length,cur:it?{rid:it.rid,q:it.q,attempt:it.attempt,state:it.state,score:it.score}:null,busy:PF.busy,open:PF.open,button:!!($('phgPFBtn')&&!$('phgPFBtn').hidden)};};
+function boot(){if(!document.body||!document.head)return setTimeout(boot,50);css();paint();setInterval(function(){try{paint();}catch(e){}},500);}
 boot();
 })();
 </script>
