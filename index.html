@@ -43667,7 +43667,7 @@ function harmonyConverse(q){
      by the same inbox, with a request id made here so the per-prompt feedback button shows the moment she starts replying. */
   var rid=(window.phgPF&&phgPF.begin)?phgPF.begin(q):null;
   fetch(TURN_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
-    body:JSON.stringify({action:'ask',request_id:rid,text:q,context:HCONV.ctx||'',surface:'harmony',account_id:acct,tz:tz,hear:(window.phgHeardFor?phgHeardFor(q):null),tts:(window.phgServerVoiceSettings?phgServerVoiceSettings():null)})})
+    body:JSON.stringify({action:'ask',request_id:rid,views:['image'],text:q,context:HCONV.ctx||'',surface:'harmony',account_id:acct,tz:tz,hear:(window.phgHeardFor?phgHeardFor(q):null),tts:(window.phgServerVoiceSettings?phgServerVoiceSettings():null)})})
     .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.speak){var er=new Error(j.error||('HTTP '+r.status));er.j=j;throw er;}return j;});})
     .then(function(j){if(window.phgPF)phgPF.done(rid,j);harmonyApplyReply(j);})
     .catch(function(e){if(window.console)console.warn('harmonyConverse',e);if(window.phgPF)phgPF.fail(rid);
@@ -44082,7 +44082,7 @@ var IC={
   menu:svg('<path d="M7 3.5h10v17H7z"/><path d="M9.5 8h5M9.5 11.5h5M9.5 15h3"/>'),
   x:svg('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>')
 };
-var KIND={place:'Place',map:'Map',bars:'Ranking',donut:'Share',table:'Table',tiles:'Numbers',dashboard:'Dashboard',profile:'Profile',recipe:'Recipe',empty:'',catalog:'Catalog'};
+var KIND={place:'Place',map:'Map',bars:'Ranking',donut:'Share',table:'Table',tiles:'Numbers',dashboard:'Dashboard',profile:'Profile',recipe:'Recipe',empty:'',catalog:'Catalog',image:'Illustration'};
 var PAL=['#22d3ee','#a78bfa','#f0abfc','#fbbf24','#34d399','#60a5fa','#fb7185','#f59e0b','#94a3b8'];
 
 /* ---------- containers ---------- */
@@ -44153,6 +44153,8 @@ function show(view,opt){
   else if(t==='profile')h=(view.badge?'<div><span class="hdBadge">'+esc(view.badge)+'</span></div>':'')+rowsHTML(view.rows)+tilesHTML(view.tiles)+(view.donut?sec(view.donut.title,donutHTML(view.donut)):'');
   else if(t==='recipe')h=(view.spec?'<div class="hdRecipe">'+esc(view.spec)+'</div>':'')+rowsHTML(view.rows)+tilesHTML(view.tiles);
   else if(t==='place')h='<div class="hdCard hdPlace" style="position:static;max-height:none">'+placeHTML(view)+'</div>';
+  /* v12.16 (PHG-209/211): an illustration Harmony made, with Save as PNG / JPEG / PDF. Only signed links from PHG's own storage. */
+  else if(t==='image')h=(/^https:\/\/lqjtwabzmgjcufftuqvu\.supabase\.co\/storage\/v1\/object\/sign\//.test(String(view.url||''))?'<figure style="margin:0"><img src="'+esc(view.url)+'" alt="'+esc(view.title||'Illustration')+'" style="display:block;width:100%;height:auto;border-radius:12px" loading="eager">'+'<figcaption style="margin-top:8px;font-size:12.5px;opacity:.75">'+esc(view.note||'An illustration made by Harmony, not a photo.')+' <a href="'+esc(view.url)+'" target="_blank" rel="noopener" style="color:inherit">Open full size</a></figcaption>'+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><span style="font-size:12.5px;opacity:.75">Save as</span><button type="button" data-dl="png" style="padding:6px 12px;border-radius:999px;border:1px solid currentColor;background:none;color:inherit;font:600 12.5px/1 inherit;cursor:pointer;opacity:.9">PNG</button><button type="button" data-dl="jpeg" style="padding:6px 12px;border-radius:999px;border:1px solid currentColor;background:none;color:inherit;font:600 12.5px/1 inherit;cursor:pointer;opacity:.9">JPEG</button><button type="button" data-dl="pdf" style="padding:6px 12px;border-radius:999px;border:1px solid currentColor;background:none;color:inherit;font:600 12.5px/1 inherit;cursor:pointer;opacity:.9">PDF</button></div></figure>':'<div class="hdEmpty">The picture could not be shown.</div>');
   else if(t==='catalog')h=catalogHTML();
   else h='<div class="hdEmpty">'+esc(view.title||'Nothing to show')+'</div>';
   if(view._refine)h=refineBarHTML(view._refine)+h;
@@ -44162,8 +44164,41 @@ function show(view,opt){
     fbLog({kind:'user_flagged',user_text:HD.lastQ||'',view_title:view.title||'',source:view.query&&view.query.source||t,params:view.query&&view.query.params||null,reply_text:(b.innerText||'').slice(0,600)});};
   if(view._refine)wireRefineBar(b);
   if(t==='place')wirePlace(b,view);
+  if(t==='image')wireImage(b,view);
   if(t==='catalog')b.querySelectorAll('[data-ask]').forEach(function(el){el.onclick=function(e){e.stopPropagation();ask(el.getAttribute('data-ask'));};});
 }
+/* v12.16 (PHG-211): save an illustration as PNG, JPEG or PDF. The master is fetched once when the picture is shown
+   (PHG storage sends CORS headers), so a tap converts it immediately on the device: canvas -> PNG / JPEG, and a one-page
+   PDF that embeds the JPEG. iPhone / iPad get the share sheet (Save Image / Save to Files); elsewhere it downloads. */
+var HDIMG={url:'',blob:null};
+function imgName(view,ext){return (String(view.title||'harmony-illustration').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60)||'harmony-illustration')+'.'+ext;}
+function imgMaster(view){if(HDIMG.url===view.url&&HDIMG.blob)return Promise.resolve(HDIMG.blob);
+  return fetch(view.url,{mode:'cors'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.blob();}).then(function(b){HDIMG.url=view.url;HDIMG.blob=b;return b;});}
+function imgCanvas(blob){return new Promise(function(res,rej){var u=URL.createObjectURL(blob),im=new Image();
+  im.onload=function(){var c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0);URL.revokeObjectURL(u);res(c);};
+  im.onerror=function(){URL.revokeObjectURL(u);rej(new Error('decode'));};im.src=u;});}
+function imgPdf(jpg,w,h){var enc=new TextEncoder(),parts=[],len=0,offs=[];function add(x){var u=typeof x==='string'?enc.encode(x):x;parts.push(u);len+=u.length;}
+  var W=(w*72/150).toFixed(2),H=(h*72/150).toFixed(2),content='q '+W+' 0 0 '+H+' 0 0 cm /Im0 Do Q';
+  add('%PDF-1.4\n');
+  offs[1]=len;add('1 0 obj <</Type/Catalog/Pages 2 0 R>> endobj\n');
+  offs[2]=len;add('2 0 obj <</Type/Pages/Kids[3 0 R]/Count 1>> endobj\n');
+  offs[3]=len;add('3 0 obj <</Type/Page/Parent 2 0 R/MediaBox[0 0 '+W+' '+H+']/Resources<</XObject<</Im0 4 0 R>>>>/Contents 5 0 R>> endobj\n');
+  offs[4]=len;add('4 0 obj <</Type/XObject/Subtype/Image/Width '+w+'/Height '+h+'/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length '+jpg.length+'>> stream\n');add(jpg);add('\nendstream endobj\n');
+  offs[5]=len;add('5 0 obj <</Length '+content.length+'>> stream\n'+content+'\nendstream endobj\n');
+  var x=len,xr='xref\n0 6\n0000000000 65535 f \n';for(var i=1;i<=5;i++)xr+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+  add(xr+'trailer <</Size 6/Root 1 0 R>>\nstartxref\n'+x+'\n%%EOF');return new Blob(parts,{type:'application/pdf'});}
+function imgSave(blob,name){var f=null;try{f=new File([blob],name,{type:blob.type});}catch(e){}
+  if(f&&navigator.canShare&&navigator.canShare({files:[f]}))return navigator.share({files:[f],title:name}).catch(function(e){if(e&&e.name==='AbortError')return;dl();});
+  dl();function dl(){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},4000);}}
+function wireImage(root,view){imgMaster(view).catch(function(){});
+  root.querySelectorAll('[data-dl]').forEach(function(el){el.onclick=function(e){e.stopPropagation();var k=el.getAttribute('data-dl'),lab=el.textContent;el.disabled=true;el.textContent='\u2026';
+    imgMaster(view).then(function(b){
+      if(k==='png'&&b.type==='image/png')return {blob:b};
+      return imgCanvas(b).then(function(c){return new Promise(function(res){c.toBlob(function(o){res({blob:o,w:c.width,h:c.height});},k==='png'?'image/png':'image/jpeg',0.95);});});})
+    .then(function(r){if(k==='pdf')return r.blob.arrayBuffer().then(function(ab){return imgPdf(new Uint8Array(ab),r.w,r.h);});return r.blob;})
+    .then(function(blob){return imgSave(blob,imgName(view,k==='jpeg'?'jpg':k));})
+    .catch(function(){el.textContent='Try again';setTimeout(function(){el.textContent=lab;},2500);})
+    .then(function(){el.disabled=false;if(el.textContent==='\u2026')el.textContent=lab;});};});}
 /* 18.49.44: the voice-filter strip above a refined view: what is applied, paging, and Clear */
 function refineBarHTML(r){
   return '<div class="hdRefine"><span class="t">'+esc(r.note||'')+'</span>'+(r.pages>1?'<button type="button" data-rf="prev" aria-label="Previous page"'+(r.page<=1?' disabled':'')+'>&#8249;</button><em>'+r.page+' / '+r.pages+'</em><button type="button" data-rf="next" aria-label="Next page"'+(r.page>=r.pages?' disabled':'')+'>&#8250;</button>':'')+(r.clear?'<button type="button" data-rf="clear">Clear</button>':'')+'</div>';
@@ -49143,7 +49178,7 @@ function different(){var it=PF.cur;if(!it||PF.busy)return;var d=sheet(),note=d.q
   G.PHG_PENDING=true;try{if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('Harmony \u00b7 finding a different answer\u2026');}catch(e){}
   try{if(typeof phgFillerStart==='function')phgFillerStart();}catch(e){}
   var tz='America/Chicago';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||tz;}catch(e){}
-  post({action:'different',request_id:it.rid,new_request_id:nrid,note:note,account_id:acct(),tz:tz,surface:'harmony',
+  post({action:'different',request_id:it.rid,new_request_id:nrid,views:['image'],note:note,account_id:acct(),tz:tz,surface:'harmony',
         tts:(G.phgServerVoiceSettings?phgServerVoiceSettings():null)})
     .then(function(j){
       if(!j||!j._ok||!j.speak){nx.state='failed';if(typeof agentSay==='function')agentSay((j&&j.speak)||'I couldn\u2019t get a different answer just now. Try again.');return;}
