@@ -7212,7 +7212,7 @@ function phgAuthDraw(){
   g.innerHTML='<div class="phgAuthCard"><div class="phgAuthBrand">PERFECT HARMONY GROUP</div><h1 class="phgAuthTitle">'+(signup?'Create your login':'Sign in to PHG')+'</h1>'
     +'<div class="phgAuthCopy">Team sign-in for PHG staff and partners.</div>'
     +'<div class="phgAuthTabs"><button class="phgAuthTab '+(!signup?'on':'')+'" onclick="phgAuthSetMode(\'signin\')">Sign in</button><button class="phgAuthTab '+(signup?'on':'')+'" onclick="phgAuthSetMode(\'signup\')">Create login</button></div>'
-    +'<form id="phgAuthForm" method="post" action="#" autocomplete="on" onsubmit="event.preventDefault();'+(signup?'phgAuthSignup()':'phgAuthLogin()')+';return false;">'
+    +phgPkBtnHTML()+'<form id="phgAuthForm" method="post" action="#" autocomplete="on" onsubmit="event.preventDefault();'+(signup?'phgAuthSignup()':'phgAuthLogin()')+';return false;">'
     +'<label class="phgAuthLabel" for="phgAuthEmail">Email</label><input id="phgAuthEmail" name="email" class="phgAuthInput" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required value="'+phgAuthEsc(signup?'':phgAuthLastEmail())+'">'
     +'<label class="phgAuthLabel" for="phgAuthPassword">Password</label><input id="phgAuthPassword" name="password" class="phgAuthInput" type="password" autocomplete="'+(signup?'new-password':'current-password')+'" required>'
     +(signup?'':phgAuthSavedPwHTML())
@@ -7240,6 +7240,141 @@ function phgAuthSavedHint(){
     ?'Tap your saved login (\ud83d\udd11 or your email) above the keyboard; Face ID or Touch ID fills it in. Then tap Sign in. Nothing there? Sign in with your password once and tap Save Password when Safari asks.'
     :'Pick your saved login from the list your browser shows, then tap Sign in. Nothing saved yet? Sign in once and let the device save it.';}
 }
+/* v12.22 FACE ID SIGN-IN (passkeys; Rob 2026-10-10 "Face ID is ready to roll out").
+   Supabase passkeys are bound to ONE domain (relying party): the production site. Elsewhere (beta, previews) the button
+   is not shown. Rob's v12.7 rule still holds: the app never enters on its own - Face ID is the person's deliberate sign-in
+   each time, exactly like typing the password. The server still decides access on every open (bootstrap + phg-access).
+   Set up: after a password sign-in on a device that can do it, Harmony offers "Use Face ID next time?" once; it can also be
+   turned on any time from the 3-line menu (Face ID). The passkey lives in the person's iCloud Keychain / Google Password
+   Manager; PHG stores only the public key (Supabase Auth). The challenge is fetched BEFORE the tap so Safari keeps the tap
+   as the gesture that opens Face ID. */
+var PHG_PK_RP='prismatic-rugelach-777e48.netlify.app',PHG_PK_KEY='phg_passkey_v1';
+var PHGPK={auth:null,reg:null,offerShown:false,busy:false};
+function phgPkSupported(){
+  try{return !!(window.PublicKeyCredential&&navigator.credentials&&navigator.credentials.get&&navigator.credentials.create&&window.isSecureContext)
+    &&(location.hostname===PHG_PK_RP||location.hostname.slice(-(PHG_PK_RP.length+1))==='.'+PHG_PK_RP);}catch(e){return false;}
+}
+function phgPkApple(){return /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent||'');}
+function phgPkLabel(){return phgPkApple()?'Face ID':'passkey';}
+function phgPkB2U(s){s=String(s||'').replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer;}
+function phgPkU2B(buf){if(!buf)return undefined;var u=new Uint8Array(buf),s='';for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function phgPkState(){try{return JSON.parse(localStorage.getItem(PHG_PK_KEY)||'{}')||{};}catch(e){return {};}}
+function phgPkSetState(email,v){try{var s=phgPkState();s[String(email||'').toLowerCase()]=v;localStorage.setItem(PHG_PK_KEY,JSON.stringify(s));}catch(e){}}
+function phgPkFresh(x){return !!(x&&x.o&&Date.now()-x.at<240000);}
+function phgPkPrefetchAuth(){
+  if(!phgPkSupported()||phgPkFresh(PHGPK.auth)||PHGPK.authLoading)return;
+  PHGPK.authLoading=true;
+  phgAuthApi('/passkeys/authentication/options',{},null).then(function(o){PHGPK.auth={o:o,at:Date.now()};},function(){}).then(function(){PHGPK.authLoading=false;});
+}
+function phgPkBtnHTML(){
+  if(!phgPkSupported()||PHGAUTH.mode==='signup')return '';
+  setTimeout(phgPkPrefetchAuth,0);
+  return '<button type="button" id="phgPkSignIn" class="phgAuthBtn primary" onclick="phgPkSignIn()"'+(PHGAUTH.busy?' disabled':'')
+    +' style="width:100%;margin:12px 0 4px;display:flex;align-items:center;justify-content:center;gap:9px">'
+    +'<span aria-hidden="true">'+(phgPkApple()?'\ud83d\ude42':'\ud83d\udd10')+'</span> Sign in with '+phgPkLabel()+'</button>'
+    +'<div class="phgAuthCopy" style="font-size:12px;margin:2px 0 6px;opacity:.75;text-align:center">or use your email and password</div>';
+}
+function phgPkErr(e){
+  var n=e&&e.name,m=String(e&&e.message||e||'');
+  if(n==='NotAllowedError'||n==='AbortError')return phgPkLabel()+' was cancelled or timed out. Tap Sign in with '+phgPkLabel()+' again, or use your password.';
+  if(/credential_not_found|not.found|webauthn_credential/i.test(m))return 'This '+phgPkLabel()+' isn\u2019t set up for Harmony yet. Sign in with your password once, then turn on '+phgPkLabel()+'.';
+  if(/challenge/i.test(m))return 'That took too long. Tap Sign in with '+phgPkLabel()+' again.';
+  if(/email_not_confirmed|banned/i.test(m))return 'This login can\u2019t sign in yet. Use your email and password.';
+  return m||'Sign-in failed.';
+}
+function phgPkSignIn(){
+  if(PHGAUTH.busy||PHGPK.busy)return;
+  var rb=document.getElementById('phgAuthRemember');if(rb)PHGAUTH.remember=!!rb.checked;
+  var pre=phgPkFresh(PHGPK.auth)?PHGPK.auth.o:null;PHGPK.auth=null;PHGPK.busy=true;
+  var ceremony=function(o){
+    var op=(o&&o.options)||{};
+    var pk={challenge:phgPkB2U(op.challenge),timeout:op.timeout||300000,userVerification:op.userVerification||'preferred'};
+    if(op.rpId)pk.rpId=op.rpId;
+    if(op.allowCredentials&&op.allowCredentials.length)pk.allowCredentials=op.allowCredentials.map(function(c){return {type:'public-key',id:phgPkB2U(c.id),transports:c.transports};});
+    return navigator.credentials.get({publicKey:pk}).then(function(cred){
+      if(!cred)throw new Error('cancelled');var r=cred.response;
+      PHGAUTH.busy=true;PHGAUTH.auto=true;PHGAUTH.error='';PHGAUTH.message='';phgAuthDraw();
+      return phgAuthApi('/passkeys/authentication/verify',{challenge_id:o.challenge_id,credential:{id:cred.id,rawId:phgPkU2B(cred.rawId),type:'public-key',
+        response:{authenticatorData:phgPkU2B(r.authenticatorData),clientDataJSON:phgPkU2B(r.clientDataJSON),signature:phgPkU2B(r.signature),userHandle:r.userHandle?phgPkU2B(r.userHandle):undefined},
+        clientExtensionResults:(cred.getClientExtensionResults?cred.getClientExtensionResults():{}),authenticatorAttachment:cred.authenticatorAttachment||undefined}},null);
+    });
+  };
+  /* with a pre-fetched challenge the Face ID sheet opens inside this tap (Safari needs that) */
+  var p=pre?ceremony(pre):phgAuthApi('/passkeys/authentication/options',{},null).then(ceremony);
+  p.then(function(j){
+    PHGPK.busy=false;
+    if(!j||!j.access_token)throw new Error('No login came back. Use your password.');
+    phgAuthSaveSession(j);var em=phgAuthSavedEmail();if(em){phgAuthRememberEmail(em);phgPkSetState(em,'on');}
+    PHGAUTH.pkUsed=true;PHGAUTH.auto=true;
+    return phgAuthBootstrap();
+  }).catch(function(e){PHGPK.busy=false;PHGAUTH.auto=false;PHGAUTH.busy=false;PHGAUTH.error=phgPkErr(e);phgAuthDraw();});
+}
+/* ---- set up (register) ---- */
+function phgPkPrefetchReg(){
+  var tok=phgAuthAccessToken();if(!tok||!phgPkSupported()||phgPkFresh(PHGPK.reg)||PHGPK.regLoading)return Promise.resolve(PHGPK.reg&&PHGPK.reg.o);
+  PHGPK.regLoading=true;
+  return phgAuthApi('/passkeys/registration/options',{},tok).then(function(o){PHGPK.reg={o:o,at:Date.now()};PHGPK.regLoading=false;return o;},function(e){PHGPK.regLoading=false;PHGPK.regErr=e;return null;});
+}
+function phgPkRegister(done){
+  var tok=phgAuthAccessToken();if(!tok)return;
+  var em=phgAuthSavedEmail()||phgAuthLastEmail();
+  var pre=phgPkFresh(PHGPK.reg)?PHGPK.reg.o:null;PHGPK.reg=null;
+  var ceremony=function(o){
+    var op=(o&&o.options)||{};
+    var pk={},k;for(k in op)if(Object.prototype.hasOwnProperty.call(op,k))pk[k]=op[k];
+    pk.challenge=phgPkB2U(op.challenge);pk.user={id:phgPkB2U(op.user&&op.user.id),name:(op.user&&op.user.name)||em,displayName:(op.user&&op.user.displayName)||em};
+    if(op.excludeCredentials&&op.excludeCredentials.length)pk.excludeCredentials=op.excludeCredentials.map(function(c){return {type:'public-key',id:phgPkB2U(c.id),transports:c.transports};});
+    else delete pk.excludeCredentials;
+    return navigator.credentials.create({publicKey:pk}).then(function(cred){
+      if(!cred)throw new Error('cancelled');var r=cred.response;
+      return phgAuthApi('/passkeys/registration/verify',{challenge_id:o.challenge_id,credential:{id:cred.id,rawId:phgPkU2B(cred.rawId),type:'public-key',
+        response:{attestationObject:phgPkU2B(r.attestationObject),clientDataJSON:phgPkU2B(r.clientDataJSON),transports:(r.getTransports?r.getTransports():undefined)},
+        clientExtensionResults:(cred.getClientExtensionResults?cred.getClientExtensionResults():{}),authenticatorAttachment:cred.authenticatorAttachment||undefined}},phgAuthAccessToken()||tok);
+    });
+  };
+  var p=pre?ceremony(pre):phgAuthApi('/passkeys/registration/options',{},tok).then(ceremony);
+  p.then(function(){phgPkSetState(em,'on');done&&done(true,phgPkLabel()+' is on. Next time, tap Sign in with '+phgPkLabel()+'.');},
+    function(e){var n=e&&e.name,m=String(e&&e.message||'');
+      if(n==='InvalidStateError'||/credential_exists|already/i.test(m)){phgPkSetState(em,'on');done&&done(true,phgPkLabel()+' is already set up on this device.');return;}
+      done&&done(false,(n==='NotAllowedError'||n==='AbortError')?'Not turned on. You can turn on '+phgPkLabel()+' later from the 3-line menu.':(m||'Could not turn on '+phgPkLabel()+'.'));});
+}
+function phgPkCard(title,body,yes,no){
+  var d=document.getElementById('phgPkCard');if(d)d.remove();
+  d=document.createElement('div');d.id='phgPkCard';d.setAttribute('role','dialog');d.setAttribute('aria-label',title);
+  d.style.cssText='position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2147483000;width:min(92vw,380px);'
+    +'background:rgba(15,23,42,.96);color:#e2e8f0;border:1px solid rgba(125,211,252,.35);border-radius:18px;padding:16px 16px 14px;box-shadow:0 18px 50px rgba(0,0,0,.45);font:15px/1.4 system-ui,-apple-system,sans-serif';
+  d.innerHTML='<div style="font-weight:700;font-size:16px;margin:0 0 4px">'+phgAuthEsc(title)+'</div><div class="pkBody" style="opacity:.85;margin:0 0 12px">'+phgAuthEsc(body)+'</div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end">'+(no?'<button type="button" class="pkNo" style="padding:9px 14px;border-radius:12px;border:1px solid rgba(148,163,184,.4);background:transparent;color:#e2e8f0;font:inherit">'+phgAuthEsc(no)+'</button>':'')
+    +(yes?'<button type="button" class="pkYes" style="padding:9px 14px;border-radius:12px;border:0;background:#7dd3fc;color:#0f172a;font:inherit;font-weight:700">'+phgAuthEsc(yes)+'</button>':'')+'</div>';
+  document.body.appendChild(d);return d;
+}
+function phgPkAsk(fromMenu){
+  if(!phgPkSupported()||!phgAuthAccessToken())return;
+  var em=phgAuthSavedEmail()||phgAuthLastEmail();
+  phgPkPrefetchReg().then(function(o){
+    if(!o){if(fromMenu)phgPkNote('Could not reach sign-in settings. Try again in a moment.');return;}
+    var d=phgPkCard('Use '+phgPkLabel()+' next time?','Sign in to Harmony with '+phgPkLabel()+' instead of typing your password. You can still use your password any time.','Turn on '+phgPkLabel(),'Not now');
+    d.querySelector('.pkYes').onclick=function(){var b=this;b.disabled=true;b.textContent='Waiting for '+phgPkLabel()+'\u2026';
+      phgPkRegister(function(ok,msg){d.remove();phgPkNote(msg);});};
+    d.querySelector('.pkNo').onclick=function(){d.remove();if(!fromMenu)phgPkSetState(em,'no');};
+  });
+}
+function phgPkNote(msg){var d=phgPkCard(phgPkLabel(),msg,'OK',null);d.querySelector('.pkYes').onclick=function(){d.remove();};setTimeout(function(){try{d.remove();}catch(e){}},9000);}
+/* offered once per login per device, after a PASSWORD sign-in that reached the workspace */
+function phgPkOfferSoon(){
+  if(PHGPK.offerShown||PHGAUTH.pkUsed||!phgPkSupported())return;
+  var em=(phgAuthSavedEmail()||'').toLowerCase();if(!em||phgPkState()[em])return;
+  PHGPK.offerShown=true;
+  setTimeout(function(){if(PHGAUTH.workspace&&phgAuthAccessToken())phgPkAsk(false);},2500);
+}
+/* "Face ID" row in the 3-line account menu (production only) */
+setInterval(function(){try{var bd=document.querySelector('.phgAuthBadge.phgAcctOpen'),ex=document.getElementById('phgAcctPk');
+  if(!bd||!phgAuthAccessToken()||!phgPkSupported()){return;}
+  if(!ex||ex.parentNode!==bd){if(ex)ex.remove();ex=document.createElement('button');ex.id='phgAcctPk';ex.type='button';
+    var on=phgPkState()[(phgAuthSavedEmail()||'').toLowerCase()]==='on';ex.textContent=on?phgPkLabel()+' \u2713':'Turn on '+phgPkLabel();
+    ex.onclick=function(e){e.stopPropagation();try{var t=document.getElementById('phgAcctBtn');if(t&&t.getAttribute('aria-expanded')==='true')t.click();}catch(_){}phgPkAsk(true);};
+    var f=document.getElementById('phgAcctFiles'),role=bd.querySelector('.role');
+    if(f&&f.parentNode===bd&&f.nextSibling)bd.insertBefore(ex,f.nextSibling);else if(role&&role.nextSibling)bd.insertBefore(ex,role.nextSibling);else bd.appendChild(ex);}}catch(e){}},600);
 function phgAuthUseSaved(){
   var e=document.getElementById('phgAuthEmail'),p=document.getElementById('phgAuthPassword');
   if(window.PasswordCredential&&navigator.credentials&&navigator.credentials.get){
@@ -7288,7 +7423,7 @@ function phgAuthBetaHTML(){
   }
   return head+'<h1 class="phgAuthTitle">Sign in to Harmony</h1>'
     +'<div class="phgAuthCopy">Thanks for testing Harmony. Use the email your invite was sent to and the password you chose.</div>'
-    +'<form id="phgAuthForm" method="post" action="#" autocomplete="on" onsubmit="event.preventDefault();phgAuthLogin();return false;">'
+    +phgPkBtnHTML()+'<form id="phgAuthForm" method="post" action="#" autocomplete="on" onsubmit="event.preventDefault();phgAuthLogin();return false;">'
     +'<label class="phgAuthLabel" for="phgAuthEmail">Email</label><input id="phgAuthEmail" name="email" class="phgAuthInput" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required value="'+E(phgAuthLastEmail())+'">'
     +'<label class="phgAuthLabel" for="phgAuthPassword">Password</label><input id="phgAuthPassword" name="password" class="phgAuthInput" type="password" autocomplete="current-password" required>'
     +phgAuthSavedPwHTML()
@@ -7306,7 +7441,8 @@ function phgAuthLogin(){
   /* v12.12 (Rob: "save password ... doesn't recall anything"): once the password is accepted the form is replaced by the
      "Opening Harmony" splash instead of being redrawn empty while the workspace loads. Safari / iCloud Keychain treat an
      empty login form coming back as a failed sign-in and never offer Save Password, so nothing was ever saved to recall. */
-  phgAuthApi('/token?grant_type=password',c,null).then(function(j){phgAuthRememberEmail(c.email);phgAuthOfferSave(c);phgAuthSaveSession(j);PHGAUTH.auto=true;return phgAuthBootstrap();}).catch(function(e){PHGAUTH.auto=false;PHGAUTH.busy=false;PHGAUTH.error=e.message||String(e);phgAuthDraw();});
+  PHGAUTH.pkUsed=false;
+  phgAuthApi('/token?grant_type=password',c,null).then(function(j){phgAuthRememberEmail(c.email);phgAuthOfferSave(c);phgAuthSaveSession(j);PHGAUTH.auto=true;return phgAuthBootstrap().then(function(r){try{phgPkOfferSoon();}catch(_){}return r;});}).catch(function(e){PHGAUTH.auto=false;PHGAUTH.busy=false;PHGAUTH.error=e.message||String(e);phgAuthDraw();});
 }
 function phgAuthSignup(){
   var c=phgAuthCredentials();if(!c.email||!c.password){PHGAUTH.error='Enter an email and password.';phgAuthDraw();return;}
@@ -42152,7 +42288,9 @@ function anyArt(){for(var k in PMS.art)return true;return false;}
 function next(){if(PMS.look>=0){if(PMS.look<PMS.looks.length-1){PMS.look++;PMS.variant=0;PMS.page=0;render();return true;}return false;}PMS.dir++;if(PMS.dir%DIRS.length===0)PMS.variant++;PMS.page=0;render();return true;}
 function prev(){if(PMS.look>=0){if(PMS.look>0){PMS.look--;PMS.variant=0;PMS.page=0;}return render();}if(PMS.dir===0&&PMS.variant===0)return render();PMS.dir--;if(PMS.dir<0){PMS.dir=DIRS.length-1;PMS.variant=Math.max(0,PMS.variant-1);}PMS.page=0;render();}
 function saveCurrent(){
-  PMS.saved.push({dir:current().id,look:current().custom?current():null,variant:PMS.variant,ov:JSON.parse(JSON.stringify(PMS.ov)),title:PMS.ov.title||PMS.content.title,at:new Date().toISOString()});
+  /* v12.21: the menu itself is kept with the design, so it can be reopened (from My files) on any device */
+  PMS.saved.push({dir:current().id,look:current().custom?current():null,variant:PMS.variant,ov:JSON.parse(JSON.stringify(PMS.ov)),title:PMS.ov.title||PMS.content.title,at:new Date().toISOString(),
+    content:PMS.content?JSON.parse(JSON.stringify(PMS.content)):null});
   try{localStorage.setItem('phg_pms_saved_v1',JSON.stringify(PMS.saved.slice(-30)));}catch(e){}
 }
 /* 18.49.26: the Menu Studio shows the menu from the CONVERSATION.
@@ -42708,6 +42846,13 @@ function openStage(){
   render();
 }
 PMS.open_=openStage;
+/* v12.21: reopen a saved design (My files). Older saves have no menu content and reopen with the menu that is open now. */
+PMS.openSaved=function(it){if(!it||typeof it!=='object')return openStage();
+  try{if(it.content&&typeof it.content==='object'&&Array.isArray(it.content.sections))PMS.content=JSON.parse(JSON.stringify(it.content));}catch(e){}
+  PMS.ov=it.ov&&typeof it.ov==='object'?JSON.parse(JSON.stringify(it.ov)):{};
+  if(it.look&&typeof it.look==='object'){PMS.looks.push(it.look);PMS.look=PMS.looks.length-1;}
+  else{PMS.look=-1;var di=-1;for(var i=0;i<DIRS.length;i++)if(DIRS[i].id===it.dir){di=i;break;}if(di>=0)PMS.dir=di;}
+  PMS.variant=+it.variant||0;PMS.page=0;openStage();};
 PMS.close=function(){
   stopTalk();PMS.open=false;
   var el=document.getElementById('pmsStage');if(el)el.remove();
@@ -43817,6 +43962,8 @@ window.phgPicWithPhoto=function(q){q=String(q||'');
 function harmonyConverse(q,opt){
   var tok=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;
   if(!tok){if(typeof agentSay==='function')agentSay('Sign in to PHG so I can talk with you.');return;}
+  /* v12.21: "open my files" and "the second one" (while choosing a menu) are answered on the device */
+  try{if(window.phgFilesIntent&&window.phgFilesIntent(q))return;if(window.phgMenuPick&&window.phgMenuPick(q))return;}catch(e){}
   if(Date.now()-HCONV.at>20*60*1000)HCONV.ctx='';
   var acct=null;try{acct=PHGAUTH.workspace&&PHGAUTH.workspace.account&&PHGAUTH.workspace.account.id||null;}catch(e){}
   window.PHG_PENDING=true;
@@ -43829,7 +43976,7 @@ function harmonyConverse(q,opt){
   var refs=phgRefsFor(q,opt);if(refs&&rid)window.PHG_RID_REFS[rid]=refs;
   if(refs&&typeof harmonyComposerStatus==='function')harmonyComposerStatus('Harmony \u00b7 painting from your photo\u2026');
   fetch(TURN_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tok},
-    body:JSON.stringify({action:'ask',request_id:rid,views:['image'],refs:refs||undefined,text:q,context:HCONV.ctx||'',surface:'harmony',account_id:acct,tz:tz,hear:(window.phgHeardFor?phgHeardFor(q):null),tts:(window.phgServerVoiceSettings?phgServerVoiceSettings():null)})})
+    body:JSON.stringify({action:'ask',request_id:rid,views:['image','menu_pages'],menu_ctx:(window.phgMenuCtx?window.phgMenuCtx():null)||undefined,refs:refs||undefined,text:q,context:HCONV.ctx||'',surface:'harmony',account_id:acct,tz:tz,hear:(window.phgHeardFor?phgHeardFor(q):null),tts:(window.phgServerVoiceSettings?phgServerVoiceSettings():null)})})
     .then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.speak){var er=new Error(j.error||('HTTP '+r.status));er.j=j;throw er;}return j;});})
     .then(function(j){if(window.phgPF)phgPF.done(rid,j);if(j&&j.view&&j.view.type==='image')window.PHG_LAST_IMAGE_AT=Date.now();harmonyApplyReply(j);})
     .catch(function(e){if(window.console)console.warn('harmonyConverse',e);if(window.phgPF)phgPF.fail(rid);
@@ -44248,7 +44395,7 @@ var IC={
   menu:svg('<path d="M7 3.5h10v17H7z"/><path d="M9.5 8h5M9.5 11.5h5M9.5 15h3"/>'),
   x:svg('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>')
 };
-var KIND={place:'Place',map:'Map',bars:'Ranking',donut:'Share',table:'Table',tiles:'Numbers',dashboard:'Dashboard',profile:'Profile',recipe:'Recipe',empty:'',catalog:'Catalog',image:'Illustration'};
+var KIND={menu_pages:'Menu',menu_choices:'Menus',menu_places:'Menus',place:'Place',map:'Map',bars:'Ranking',donut:'Share',table:'Table',tiles:'Numbers',dashboard:'Dashboard',profile:'Profile',recipe:'Recipe',empty:'',catalog:'Catalog',image:'Illustration'};
 var PAL=['#22d3ee','#a78bfa','#f0abfc','#fbbf24','#34d399','#60a5fa','#fb7185','#f59e0b','#94a3b8'];
 
 /* ---------- containers ---------- */
@@ -44321,6 +44468,9 @@ function show(view,opt){
   else if(t==='place')h='<div class="hdCard hdPlace" style="position:static;max-height:none">'+placeHTML(view)+'</div>';
   /* v12.16 (PHG-209/211): an illustration Harmony made, with Save as PNG / JPEG / PDF. Only signed links from PHG's own storage. */
   else if(t==='image')h=(/^https:\/\/lqjtwabzmgjcufftuqvu\.supabase\.co\/storage\/v1\/object\/sign\//.test(String(view.url||''))?'<figure style="margin:0"><img src="'+esc(view.url)+'" alt="'+esc(view.title||'Illustration')+'" style="display:block;width:100%;height:auto;border-radius:12px" loading="eager">'+'<figcaption style="margin-top:8px;font-size:12.5px;opacity:.75">'+esc(view.note||'An illustration made by Harmony, not a photo.')+' <a href="'+esc(view.url)+'" target="_blank" rel="noopener" style="color:inherit">Open full size</a></figcaption>'+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><span style="font-size:12.5px;opacity:.75">Save as</span><button type="button" data-dl="png" style="padding:6px 12px;border-radius:999px;border:1px solid currentColor;background:none;color:inherit;font:600 12.5px/1 inherit;cursor:pointer;opacity:.9">PNG</button><button type="button" data-dl="jpeg" style="padding:6px 12px;border-radius:999px;border:1px solid currentColor;background:none;color:inherit;font:600 12.5px/1 inherit;cursor:pointer;opacity:.9">JPEG</button><button type="button" data-dl="pdf" style="padding:6px 12px;border-radius:999px;border:1px solid currentColor;background:none;color:inherit;font:600 12.5px/1 inherit;cursor:pointer;opacity:.9">PDF</button></div></figure>':'<div class="hdEmpty">The picture could not be shown.</div>');
+  else if(t==='menu_pages')h=menuPagesHTML(view);
+  else if(t==='menu_choices')h=menuChoicesHTML(view);
+  else if(t==='menu_places')h=menuPlacesHTML(view);
   else if(t==='catalog')h=catalogHTML();
   else h='<div class="hdEmpty">'+esc(view.title||'Nothing to show')+'</div>';
   if(view._refine)h=refineBarHTML(view._refine)+h;
@@ -44331,8 +44481,60 @@ function show(view,opt){
   if(view._refine)wireRefineBar(b);
   if(t==='place')wirePlace(b,view);
   if(t==='image')wireImage(b,view);
+  if(/^menu_(pages|choices|places)$/.test(t)){HD.menuAt=Date.now();wireMenu(b,view);}
   if(t==='catalog')b.querySelectorAll('[data-ask]').forEach(function(el){el.onclick=function(e){e.stopPropagation();ask(el.getAttribute('data-ask'));};});
 }
+/* v12.21 (Rob: "pull up this state, this city, this restaurant, show me their menu ... an actual image of the menu we have rendered"):
+   menu_pages = the venue's own menu page images (signed links from PHG storage only), one at a time with arrows, swipe and
+   thumbnails; menu_choices = venues to pick from; menu_places = a state's cities. A tap (or saying "the second one" / a name)
+   opens it through phg-menu-pages with the person's own login. */
+var MENU_OK=/^https:\/\/lqjtwabzmgjcufftuqvu\.supabase\.co\/storage\/v1\/object\/sign\/phg-menu-assets\//;
+var MENU_BTN='style="padding:7px 14px;border-radius:999px;border:1px solid currentColor;background:none;color:inherit;font:600 13px/1 inherit;cursor:pointer"';
+function menuPagesHTML(v){var pg=(v.pages||[]).filter(function(p){return MENU_OK.test(String(p&&p.url||''));});
+  if(!pg.length)return '<div class="hdEmpty">The menu pages could not be shown.</div>';
+  var head=(v.badge||v.street)?'<div style="margin-bottom:8px">'+(v.badge?'<span class="hdBadge">'+esc(v.badge)+'</span> ':'')+(v.street?'<span style="font-size:12.5px;opacity:.75">'+esc(v.street)+'</span>':'')+'</div>':'';
+  return head+'<div data-mp-wrap style="position:relative;background:#fff;border-radius:12px;overflow:hidden;touch-action:pan-y"><img data-mp-img src="'+esc(pg[0].url)+'" alt="'+esc((v.title||'Menu')+' page 1')+'" style="display:block;width:100%;height:auto" loading="eager"></div>'
+   +'<div style="display:flex;gap:8px;align-items:center;justify-content:center;margin:10px 0 6px"><button type="button" data-mp="-1" aria-label="Previous page" '+MENU_BTN+'>\u2039</button><span data-mp-n style="font-size:13px;min-width:64px;text-align:center">1 / '+pg.length+'</span><button type="button" data-mp="1" aria-label="Next page" '+MENU_BTN+'>\u203a</button>'
+   +'<a data-mp-open href="'+esc(pg[0].url)+'" target="_blank" rel="noopener" style="color:inherit;font-size:12.5px;margin-left:6px">Full size</a></div>'
+   +(pg.length>1?'<div style="display:flex;gap:6px;overflow-x:auto;padding:4px 0 6px">'+pg.map(function(p,i){return '<button type="button" data-mp-go="'+i+'" aria-label="Page '+(i+1)+'" style="flex:none;width:54px;height:72px;padding:0;border-radius:6px;border:2px solid '+(i?'transparent':'currentColor')+';background:#fff;overflow:hidden;cursor:pointer"><img src="'+esc(p.url)+'" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:top"></button>';}).join('')+'</div>':'')
+   +'<div style="font-size:12px;opacity:.7;margin-top:4px">'+esc(v.note||'')+(v.total_pages&&v.total_pages>pg.length?' Showing '+pg.length+' of '+v.total_pages+' pages, drinks first.':'')+'</div>';}
+function menuChoicesHTML(v){var c=v.choices||[];if(!c.length)return '<div class="hdEmpty">No venues to show.</div>';
+  return '<div class="hdList">'+c.map(function(x,i){return '<button type="button" data-mv="'+i+'" style="display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid rgba(148,163,184,.18);color:inherit;padding:10px 2px;cursor:pointer;font:inherit"><span style="flex:none;width:24px;opacity:.6;font-size:12px">'+(i+1)+'</span><span style="flex:1;min-width:0"><b style="display:block">'+esc(x.venue)+'</b><small style="opacity:.7">'+esc([x.street,[x.city,x.state].filter(Boolean).join(', ')].filter(Boolean).join(' \u00b7 '))+'</small></span><small style="opacity:.7;white-space:nowrap">'+(+x.pages||0)+' pages</small></button>';}).join('')+'</div>';}
+function menuPlacesHTML(v){var c=v.items||[];if(!c.length)return '<div class="hdEmpty">No cities to show.</div>';
+  return '<div style="display:flex;flex-wrap:wrap;gap:8px">'+c.map(function(x,i){return '<button type="button" data-mc="'+i+'" '+MENU_BTN+'>'+esc(x.city)+' <span style="opacity:.65;font-weight:500">'+(+x.venues||0)+'</span></button>';}).join('')+'</div>';}
+function menuCall(body,say){var tk=typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;if(!tk){if(typeof agentSay==='function')agentSay('Sign in to see menus.');return Promise.resolve();}
+  if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('Harmony \u00b7 opening the menu\u2026');
+  return fetch('https://lqjtwabzmgjcufftuqvu.supabase.co/functions/v1/phg-menu-pages',{method:'POST',headers:{'Content-Type':'application/json',apikey:(typeof KEY!=='undefined'?KEY:''),Authorization:'Bearer '+tk},body:JSON.stringify(body)})
+    .then(function(r){return r.json().catch(function(){return {};});}).then(function(j){if(j&&j.view)show(j.view);if(say!==false&&typeof agentSay==='function')agentSay((j&&j.speak)||'I couldn\u2019t open that menu just now.');})
+    .catch(function(){if(typeof agentSay==='function')agentSay('I couldn\u2019t open that menu just now. Try again.');})
+    .then(function(){if(typeof harmonyComposerStatus==='function')harmonyComposerStatus('');});}
+function wireMenu(b,v){
+  if(v.type==='menu_pages'){var pg=(v.pages||[]).filter(function(p){return MENU_OK.test(String(p&&p.url||''));}),i=0;
+    var go=function(n){if(!pg.length)return;i=(n+pg.length)%pg.length;var im=b.querySelector('[data-mp-img]');if(im){im.src=pg[i].url;im.alt=(v.title||'Menu')+' page '+(i+1);}
+      var nn=b.querySelector('[data-mp-n]');if(nn)nn.textContent=(i+1)+' / '+pg.length;var a=b.querySelector('[data-mp-open]');if(a)a.href=pg[i].url;
+      [].forEach.call(b.querySelectorAll('[data-mp-go]'),function(t){t.style.borderColor=(+t.getAttribute('data-mp-go')===i)?'currentColor':'transparent';});};
+    [].forEach.call(b.querySelectorAll('[data-mp]'),function(x){x.onclick=function(e){e.stopPropagation();go(i+(+x.getAttribute('data-mp')));};});
+    [].forEach.call(b.querySelectorAll('[data-mp-go]'),function(x){x.onclick=function(e){e.stopPropagation();go(+x.getAttribute('data-mp-go'));};});
+    var w=b.querySelector('[data-mp-wrap]'),sx=null;if(w){w.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});
+      w.addEventListener('touchend',function(e){if(sx==null)return;var dx=e.changedTouches[0].clientX-sx;sx=null;if(Math.abs(dx)>45)go(i+(dx<0?1:-1));},{passive:true});}
+    HD.menuGo=go;return;}
+  if(v.type==='menu_choices')[].forEach.call(b.querySelectorAll('[data-mv]'),function(x){x.onclick=function(e){e.stopPropagation();var c=(v.choices||[])[+x.getAttribute('data-mv')];if(c)menuCall({op:'pages',account_id:c.account_id});};});
+  if(v.type==='menu_places')[].forEach.call(b.querySelectorAll('[data-mc]'),function(x){x.onclick=function(e){e.stopPropagation();var c=(v.items||[])[+x.getAttribute('data-mc')];if(c)menuCall({op:'browse',state:c.state||v.state,city:c.city});};});}
+/* where the person is browsing menus (sent with the next prompt), and "the second one" / a name / "next page" answered right here */
+function menuShown(){var p=document.getElementById('hdPanel');return !!(p&&!p.hidden&&HD.last&&/^menu_/.test(HD.last.type||'')&&Date.now()-(HD.menuAt||0)<20*60*1000);}
+window.phgMenuCtx=function(){if(!menuShown())return null;var v=HD.last;return v.type==='menu_pages'?null:{state:v.state||'',city:v.city||''};};
+var ORD={first:1,'1st':1,one:1,second:2,'2nd':2,two:2,third:3,'3rd':3,three:3,fourth:4,'4th':4,four:4,fifth:5,'5th':5,five:5,sixth:6,six:6,seventh:7,seven:7,eighth:8,eight:8,ninth:9,nine:9,tenth:10,ten:10,last:-1};
+window.phgMenuPick=function(q){if(!menuShown())return false;var v=HD.last,s=String(q||'').toLowerCase().replace(/[.?!,]+/g,' ').replace(/\s+/g,' ').trim();if(!s)return false;
+  if(v.type==='menu_pages'){if(/^(next( page)?|forward|turn( the)? page)$/.test(s)&&HD.menuGo){var n=document.querySelector('#hdPanel [data-mp-n]');HD.menuGo((n?parseInt(n.textContent,10):1));return true;}
+    if(/^(previous( page)?|back|go back|last page)$/.test(s)&&HD.menuGo){var n2=document.querySelector('#hdPanel [data-mp-n]');HD.menuGo((n2?parseInt(n2.textContent,10):1)-2);return true;}return false;}
+  var list=v.type==='menu_choices'?(v.choices||[]):(v.items||[]),nameOf=function(x){return String(v.type==='menu_choices'?x.venue:x.city).toLowerCase();};
+  var m=s.match(/^(?:(?:open|show|pick|choose|go with|let'?s do|i want|give me)\s+)?(?:the\s+)?(?:number\s+)?(first|1st|one|second|2nd|two|third|3rd|three|fourth|4th|four|fifth|5th|five|sixth|six|seventh|seven|eighth|eight|ninth|nine|tenth|ten|last|\d{1,2})(?:\s+one)?(?:\s+(?:please|one))?$/);
+  var pick=null;if(m){var k=ORD[m[1]]||parseInt(m[1],10);pick=k===-1?list[list.length-1]:list[k-1];}
+  if(!pick&&s.split(' ').length<=6){var t=s.replace(/^(?:open|show(?: me)?|pick|choose|go with|the|let'?s do)\s+/,'').replace(/\s+(?:please|menu|menus)$/,'').trim();
+    var ex=list.filter(function(x){return nameOf(x)===t;});var part=ex.length?ex:list.filter(function(x){var n=nameOf(x);return t.length>=3&&(n.indexOf(t)===0||n.indexOf(' '+t)>=0);});if(part.length===1)pick=part[0];}
+  if(!pick)return false;
+  if(v.type==='menu_choices')menuCall({op:'pages',account_id:pick.account_id});else menuCall({op:'browse',state:pick.state||v.state,city:pick.city});
+  return true;};
 /* v12.16 (PHG-211): save an illustration as PNG, JPEG or PDF. The master is fetched once when the picture is shown
    (PHG storage sends CORS headers), so a tap converts it immediately on the device: canvas -> PNG / JPEG, and a one-page
    PDF that embeds the JPEG. iPhone / iPad get the share sheet (Save Image / Save to Files); elsewhere it downloads. */
@@ -49924,11 +50126,16 @@ function post(body){var t=tok();if(!t)return Promise.reject(new Error('signed_ou
     .then(function(r){return r.json().catch(function(){return {};}).then(function(j){j._status=r.status;j._ok=r.ok;return j;});});}
 function css(){if($('phgPFcss'))return;var s=document.createElement('style');s.id='phgPFcss';s.textContent=
  '#phgFbBtn{display:none!important}'
-+'#phgPFBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:50%;transform:translateX(-50%);z-index:99970;display:flex;align-items:center;gap:8px;'
-+'background:rgba(14,17,24,.86);color:#eceadf;border:1px solid rgba(201,162,39,.55);border-radius:999px;padding:8px 14px;font:600 13.5px/1.2 -apple-system,system-ui,sans-serif;'
-+'box-shadow:0 8px 24px rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);cursor:pointer;max-width:calc(100vw - 32px);white-space:nowrap}'
-+'#phgPFBtn[hidden]{display:none}#phgPFBtn .pfStar{color:#e3c766}#phgPFBtn .pfSub{color:#9a978e;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42vw}'
-+'#phgPFBtn.pfDone{border-color:rgba(92,114,89,.7)}'
+/* v12.20 (Rob): star only, top-right, just left of the 3-line toggle (#phgAcctBtn: top +4px, right 8px, 28px, same glass).
+   Light mode flips every body child (invert + hue-rotate); flipping the emoji twice dulls it, so in light mode the button
+   keeps its flipped frame (identical to the toggle) and the star is shown by #phgPFStar, a twin on <html> outside the flip. */
++'#phgPFBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 4px);right:42px;left:auto;z-index:2147483005;width:28px;height:28px;padding:0;'
++'display:flex;align-items:center;justify-content:center;border-radius:9px;border:1px solid var(--line2,rgba(125,211,252,.35));background:rgba(var(--lk-ground-rgb),.72);'
++'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer;-webkit-tap-highlight-color:transparent;font:15px/1 -apple-system,system-ui,sans-serif}'
++'#phgPFBtn[hidden]{display:none}#phgPFBtn .pfStar{display:block;line-height:1;pointer-events:none}#phgPFBtn:active{transform:scale(.92)}'
++'#phgPFBtn.pfDone{border-color:rgba(143,179,137,.85)}#phgPFBtn.pfBusy .pfStar,#phgPFStar.pfBusy{opacity:.5}'
++'#phgPFStar{position:fixed;top:calc(env(safe-area-inset-top,0px) + 4px);right:42px;z-index:2147483005;width:28px;height:28px;display:flex;align-items:center;justify-content:center;'
++'font:15px/1 -apple-system,system-ui,sans-serif;pointer-events:none}#phgPFStar[hidden]{display:none}html.phg-light #phgPFBtn .pfStar{visibility:hidden}'
 +'#phgPF{position:fixed;inset:0;z-index:99985;background:rgba(5,7,13,.6);display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 56px) 14px 20px}'
 +'#phgPF[hidden]{display:none}'
 +'#phgPF .pfCard{width:100%;max-width:520px;background:#0e1118;border:1px solid rgba(247,244,238,.14);border-radius:16px;padding:18px;color:#eceadf;font:15px/1.5 -apple-system,system-ui,sans-serif;box-shadow:0 30px 70px rgba(0,0,0,.6)}'
@@ -49998,13 +50205,250 @@ PF.done=function(rid,j){PF.items.forEach(function(it){if(it.rid===rid){it.state=
 PF.fail=function(rid){PF.items.forEach(function(it){if(it.rid===rid)it.state='failed';});paint();};
 function paint(){
   var b=btn(),it=PF.cur,on=!!(it&&tok()&&document.body.classList.contains('phg-view-open')&&!document.body.classList.contains('phg-launch-review-open'));
+  var o=$('phgPFStar');if(!o){o=document.createElement('span');o.id='phgPFStar';o.setAttribute('aria-hidden','true');o.textContent='\u2b50';o.hidden=true;document.documentElement.appendChild(o);}
+  var tw=on&&document.documentElement.classList.contains('phg-light');if(o.hidden===tw)o.hidden=!tw;   /* v12.20: light-mode star twin */
   if(b.hidden===on)b.hidden=!on;if(!on)return;
   var lab=PF.busy?'Finding a different answer\u2026':it.score?'Rated '+it.score+'/10 \u00b7 Different answer':'Rate \u00b7 Different answer';
-  var html='<span class="pfStar">\u2605</span><span>'+esc(lab)+'</span>'+(it.attempt>1?'<span class="pfSub">#'+it.attempt+'</span>':'');
-  if(b._h!==html){b.innerHTML=html;b._h=html;}b.classList.toggle('pfDone',!!it.score);}
+  if(it.attempt>1)lab+=' \u00b7 answer '+it.attempt;
+  var html='<span class="pfStar" aria-hidden="true">\u2b50</span>';   /* v12.20: star only, no text */
+  if(b._h!==html){b.innerHTML=html;b._h=html;}if(b._l!==lab){b.setAttribute('aria-label',lab);b.title=lab;b._l=lab;}
+  b.classList.toggle('pfDone',!!it.score);b.classList.toggle('pfBusy',!!PF.busy);o.classList.toggle('pfBusy',!!PF.busy);}
 G.phgPFState=function(){var it=PF.cur;return {items:PF.items.length,cur:it?{rid:it.rid,q:it.q,attempt:it.attempt,state:it.state,score:it.score}:null,busy:PF.busy,open:PF.open,button:!!($('phgPFBtn')&&!$('phgPFBtn').hidden)};};
 function boot(){if(!document.body||!document.head)return setTimeout(boot,50);css();paint();setInterval(function(){try{paint();}catch(e){}},500);}
 boot();
+})();
+/* ===== v12.21 MY FILES + ACCOUNT SYNC (Rob 2026-10-09: "every single different user should have their own file saved to their
+   account individual. No one should have access to anyone else's files") =====
+   What used to live only on this device now also lives in the signed-in person's OWN account:
+     settings  -> public.phg_user_settings (one row per login; RLS: own row only)
+     files     -> public.phg_user_files    (saved menu designs, the menu design brief, menu guide, workflows; RLS: own rows only)
+   Reads and writes use the person's own login, so the database itself refuses anyone else's rows.
+   Rules on a shared device: nothing is uploaded until this login's own copy has been downloaded; if a DIFFERENT login signs in,
+   the previous person's local copies are removed from the device first (they are safe in that person's account); signing out
+   uploads anything pending and then clears these copies from the device.
+   "My files" (3-line menu, or ask Harmony "open my files" / "show my pictures") lists the person's own files, the pictures
+   Harmony made for them and their past Harmony conversations. Self-contained; defines window.phgFiles*. */
+(function(){
+var G=window,SB='https://lqjtwabzmgjcufftuqvu.supabase.co',REST=SB+'/rest/v1',FN=SB+'/functions/v1/';
+var LS;try{LS=G.localStorage;}catch(e){return;}
+if(!LS||G.phgFiles)return;
+function $(i){return document.getElementById(i);}
+function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function tok(){try{return typeof phgAuthAccessToken==='function'?phgAuthAccessToken():null;}catch(e){return null;}}
+function uidOf(t){try{var p=String(t||'').split('.')[1];p=p.replace(/-/g,'+').replace(/_/g,'/');while(p.length%4)p+='=';var j=JSON.parse(atob(p));return /^[0-9a-f-]{36}$/i.test(j.sub||'')?j.sub:null;}catch(e){return null;}}
+function apikey(){try{return typeof KEY!=='undefined'?KEY:'';}catch(e){return '';}}
+function api(path,opt){var t=tok();if(!t)return Promise.reject(new Error('signed_out'));opt=opt||{};
+  var h={apikey:apikey(),Authorization:'Bearer '+t,'Content-Type':'application/json'};for(var k in (opt.headers||{}))h[k]=opt.headers[k];
+  return fetch(REST+path,{method:opt.method||'GET',headers:h,body:opt.body}).then(function(r){return r.text().then(function(x){var j=null;try{j=x?JSON.parse(x):null;}catch(e){}
+    if(!r.ok){var er=new Error((j&&(j.message||j.error))||('HTTP '+r.status));er.status=r.status;throw er;}return j;});});}
+var RAW_SET=Storage.prototype.setItem,RAW_DEL=Storage.prototype.removeItem;
+function lsGet(k){try{return LS.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{RAW_SET.call(LS,k,v);}catch(e){}}
+function lsDel(k){try{RAW_DEL.call(LS,k);}catch(e){}}
+/* settings that follow the login */
+var SETTINGS=['phg_look_v1','phg_theme_v1','phg_harmony_voice_prefs_v1','phg_ai_voice_profile_v1','phg_ai_voice_confirmed_v1','phg_local_voice_v1',
+  'phg_setup_complete_v2','phg_launch_done_v1','phg_tour_seen_v1','phg_home_install_v1','phg_nav_recent_v1'];
+/* files that follow the login */
+var FILES={'phg_pms_saved_v1':'menu_design','phg_pms_brief_v1':'menu_brief','phg_menu_guide_v2':'document','phg_workflows_v2':'document'};
+var OWNER='phg_sync_owner_v1',META='phg_sync_meta_v1';
+var S={uid:null,pulled:false,pulling:false,pushing:false,dirty:{},timer:null,err:'',lastPull:0,lastPush:0,leaving:0};
+function meta(){try{return JSON.parse(lsGet(META)||'{}')||{};}catch(e){return {};}}
+function stamp(k){var m=meta();m[k]=Date.now();lsSet(META,JSON.stringify(m));}
+function tracked(k){return SETTINGS.indexOf(k)>=0||Object.prototype.hasOwnProperty.call(FILES,k);}
+Storage.prototype.setItem=function(k,v){RAW_SET.apply(this,arguments);try{if(this===LS&&tracked(String(k))){stamp(String(k));mark(String(k));}}catch(e){}};
+Storage.prototype.removeItem=function(k){RAW_DEL.apply(this,arguments);try{if(this===LS&&tracked(String(k))){stamp(String(k));mark(String(k));}}catch(e){}};
+function mark(k){S.dirty[k]=1;clearTimeout(S.timer);S.timer=setTimeout(function(){push();},1500);}
+function parse(k,d){try{var x=lsGet(k);return x==null?d:JSON.parse(x);}catch(e){return d;}}
+
+/* ---- rows for the account */
+function fileRows(k){
+  var kind=FILES[k],v=lsGet(k),now=new Date().toISOString(),rows=[],gone=[];
+  if(k==='phg_pms_saved_v1'){
+    (parse(k,[])||[]).forEach(function(it){if(!it||!it.at)return;
+      rows.push({user_id:S.uid,kind:kind,client_key:'pms:'+it.at,title:String(it.title||'Menu design').slice(0,200),body:it,tags:[String(it.dir||'')].filter(Boolean),updated_at:now,deleted_at:null});});
+    return {rows:rows,gone:gone};
+  }
+  var ck=k==='phg_pms_brief_v1'?'brief':k==='phg_menu_guide_v2'?'menu_guide':'workflows';
+  if(v==null){gone.push({kind:kind,client_key:ck});return {rows:rows,gone:gone};}
+  var body=parse(k,null);if(body==null)return {rows:rows,gone:gone};
+  var title=k==='phg_pms_brief_v1'?('Menu design brief'+(body&&body.venue?' \u00b7 '+String(body.venue).slice(0,80):'')):k==='phg_menu_guide_v2'?'Menu guide':'Workflows';
+  rows.push({user_id:S.uid,kind:kind,client_key:ck,title:title,body:body,updated_at:now,deleted_at:null});
+  return {rows:rows,gone:gone};
+}
+function settingsBody(){var m=meta(),o={};SETTINGS.forEach(function(k){var v=lsGet(k);o[k]={v:v,at:m[k]||0};});return o;}
+
+/* ---- upload what changed (only after this login's own copy has been downloaded) */
+function push(){
+  if(!S.uid||!S.pulled||S.pushing)return Promise.resolve(false);
+  var keys=Object.keys(S.dirty);if(!keys.length)return Promise.resolve(true);
+  if(uidOf(tok())!==S.uid)return Promise.resolve(false);
+  S.pushing=true;S.dirty={};
+  var jobs=[],rows=[],gone=[];
+  if(keys.some(function(k){return SETTINGS.indexOf(k)>=0;}))
+    jobs.push(api('/phg_user_settings?on_conflict=user_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify({user_id:S.uid,settings:settingsBody(),updated_at:new Date().toISOString()})}));
+  keys.forEach(function(k){if(FILES[k]){var f=fileRows(k);rows=rows.concat(f.rows);gone=gone.concat(f.gone);}});
+  if(rows.length)jobs.push(api('/phg_user_files?on_conflict=user_id,kind,client_key',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(rows)}));
+  gone.forEach(function(g){jobs.push(api('/phg_user_files?kind=eq.'+encodeURIComponent(g.kind)+'&client_key=eq.'+encodeURIComponent(g.client_key),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({deleted_at:new Date().toISOString()})}));});
+  return Promise.all(jobs).then(function(){S.err='';S.lastPush=Date.now();S.pushing=false;return true;},function(e){
+    S.err=String(e&&e.message||e);keys.forEach(function(k){S.dirty[k]=1;});S.pushing=false;
+    clearTimeout(S.timer);S.timer=setTimeout(function(){push();},15000);return false;});
+}
+
+/* ---- download this login's copy and merge it in */
+function pull(){
+  if(!S.uid||S.pulling)return Promise.resolve();
+  S.pulling=true;var uid=S.uid;
+  var a=api('/phg_user_settings?select=settings,updated_at&limit=1').then(function(r){
+    var row=r&&r[0],st=row&&row.settings||{},m=meta(),ch=false;
+    SETTINGS.forEach(function(k){var sv=st[k];if(!sv||typeof sv!=='object')return;var local=lsGet(k),lt=m[k]||0;
+      if((local==null&&sv.v!=null)||(Number(sv.at||0)>lt)){if(sv.v==null)lsDel(k);else lsSet(k,String(sv.v));m[k]=Number(sv.at||Date.now());ch=true;}});
+    if(ch)lsSet(META,JSON.stringify(m));});
+  var b=api('/phg_user_files?select=kind,client_key,title,body,updated_at&deleted_at=is.null&kind=in.(menu_design,menu_brief,document)&order=updated_at.desc&limit=300').then(function(rows){
+    rows=rows||[];var m=meta();
+    var saved=parse('phg_pms_saved_v1',[])||[],seen={};saved.forEach(function(x){if(x&&x.at)seen[x.at]=1;});
+    var added=0;rows.forEach(function(r){if(r.kind==='menu_design'&&r.body&&r.body.at&&!seen[r.body.at]){saved.push(r.body);seen[r.body.at]=1;added++;}});
+    if(added){saved.sort(function(x,y){return String(x.at).localeCompare(String(y.at));});lsSet('phg_pms_saved_v1',JSON.stringify(saved.slice(-60)));
+      try{if(G.PMS)G.PMS.saved=saved.slice(-60);}catch(e){}}
+    [['phg_pms_brief_v1','brief'],['phg_menu_guide_v2','menu_guide'],['phg_workflows_v2','workflows']].forEach(function(p){
+      var r=rows.filter(function(x){return x.client_key===p[1];})[0];if(!r||r.body==null)return;
+      var st=Date.parse(r.updated_at)||0;if(lsGet(p[0])==null||st>(m[p[0]]||0)){lsSet(p[0],JSON.stringify(r.body));m[p[0]]=st;
+        if(p[0]==='phg_pms_brief_v1'){try{if(G.PMS)G.PMS.brief=r.body;}catch(e){}}}});
+    lsSet(META,JSON.stringify(m));});
+  return Promise.all([a,b]).then(function(){
+    if(S.uid!==uid){S.pulling=false;return;}
+    S.pulled=true;S.pulling=false;S.err='';S.lastPull=Date.now();
+    /* first time on this login: upload whatever this device already had */
+    SETTINGS.concat(Object.keys(FILES)).forEach(function(k){if(lsGet(k)!=null)S.dirty[k]=1;});push();
+  },function(e){S.pulling=false;S.err=String(e&&e.message||e);setTimeout(function(){if(S.uid===uid&&!S.pulled)pull();},20000);});
+}
+function wipeLocal(){
+  SETTINGS.concat(Object.keys(FILES)).forEach(function(k){lsDel(k);});lsDel(META);
+  try{if(G.PMS){G.PMS.saved=[];G.PMS.brief={};}}catch(e){}
+}
+/* ---- who is signed in */
+function watch(){
+  var u=uidOf(tok());
+  /* signing out: stand down until the login is really gone, so nothing is downloaded again in the meantime */
+  if(S.leaving){if(!u||Date.now()-S.leaving>20000)S.leaving=0;else return;}
+  if(u&&u!==S.uid){
+    var owner=lsGet(OWNER);
+    if(owner&&owner!==u)wipeLocal();          /* someone else's copies: never shown to, or uploaded as, this login */
+    lsSet(OWNER,u);S.uid=u;S.pulled=false;S.dirty={};pull();
+  }else if(!u&&S.uid){S.uid=null;S.pulled=false;}
+}
+setInterval(function(){try{watch();}catch(e){}},1000);
+/* signing out: upload what is pending, then clear this person's copies from the device */
+function wrapSignOut(){
+  var orig=G.phgAuthSignOut;if(typeof orig!=='function'||orig.__phgFiles)return false;
+  var w=function(){var self=this,args=arguments;S.leaving=Date.now();
+    var p=(S.uid&&S.pulled&&Object.keys(S.dirty).length)?push():Promise.resolve(true);
+    return p.catch(function(){return false;}).then(function(ok){
+      if(ok!==false&&!Object.keys(S.dirty).length){wipeLocal();lsDel(OWNER);}
+      S.uid=null;S.pulled=false;return orig.apply(self,args);});};
+  w.__phgFiles=true;G.phgAuthSignOut=w;return true;
+}
+if(!wrapSignOut()){var tries=0,iv=setInterval(function(){if(wrapSignOut()||++tries>40)clearInterval(iv);},250);}
+
+/* ================= MY FILES screen ================= */
+var KINDS=[['','All'],['menu_design','Menu designs'],['picture','Pictures'],['conversation','Conversations'],['menu_brief','Briefs'],['document','Documents']];
+var KLAB={menu_design:'Menu design',picture:'Picture',conversation:'Conversation',menu_brief:'Menu brief',document:'Document',menu:'Menu',chat:'Chat',cocktail:'Cocktail',note:'Note',photo:'Photo',other:'File'};
+var V={open:false,kind:'',q:'',items:[],busy:false,msg:'',sel:null};
+function css(){if($('phgFilesCss'))return;var s=document.createElement('style');s.id='phgFilesCss';s.textContent=
+ '#phgFiles{position:fixed;inset:0;z-index:99992;background:rgba(5,7,13,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 44px) 12px 40px}'
++'#phgFiles[hidden]{display:none}'
++'#phgFiles .fCard{width:100%;max-width:640px;background:#0e1118;border:1px solid rgba(247,244,238,.14);border-radius:16px;padding:16px;color:#eceadf;font:15px/1.45 -apple-system,system-ui,sans-serif;box-shadow:0 30px 70px rgba(0,0,0,.55)}'
++'#phgFiles .fHead{display:flex;align-items:center;gap:10px;margin-bottom:10px}#phgFiles h2{margin:0;font-size:19px;font-weight:600;flex:1}'
++'#phgFiles .fX{background:none;border:0;color:#9a978e;font-size:26px;line-height:1;cursor:pointer;padding:0 4px}'
++'#phgFiles .fQ{width:100%;box-sizing:border-box;background:#070910;border:1px solid rgba(247,244,238,.16);color:#eceadf;border-radius:10px;padding:10px 12px;font-size:16px;-webkit-appearance:none}'
++'#phgFiles .fChips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 6px}'
++'#phgFiles .fChips button{background:none;border:1px solid rgba(247,244,238,.2);color:#c7c3b8;border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}'
++'#phgFiles .fChips button.on{background:#c9a227;border-color:#c9a227;color:#1a1405;font-weight:600}'
++'#phgFiles .fList{margin-top:6px}#phgFiles .fRow{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid rgba(247,244,238,.08);color:inherit;padding:11px 2px;cursor:pointer;font:inherit}'
++'#phgFiles .fRow b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#phgFiles .fRow small{color:#9a978e;font-size:12.5px}'
++'#phgFiles .fIc{flex:none;width:34px;height:34px;border-radius:9px;background:rgba(201,162,39,.14);display:flex;align-items:center;justify-content:center;font-size:17px}'
++'#phgFiles .fMsg{color:#9a978e;font-size:13.5px;padding:12px 2px}#phgFiles .fErr{color:#e0a39b}'
++'#phgFiles .fDetail{margin-top:8px;border-top:1px solid rgba(247,244,238,.12);padding-top:12px}#phgFiles .fDetail dl{margin:0}'
++'#phgFiles .fDetail dt{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#9a978e;margin-top:10px}#phgFiles .fDetail dd{margin:2px 0 0;white-space:pre-wrap}'
++'#phgFiles .fBtn{margin-top:12px;background:#c9a227;color:#1a1405;border:0;border-radius:999px;padding:10px 16px;font-size:14.5px;font-weight:600;cursor:pointer}'
++'#phgFiles .fBack{margin-top:12px;margin-left:8px;background:none;color:#c7c3b8;border:1px solid rgba(247,244,238,.2);border-radius:999px;padding:9px 14px;font-size:14px;cursor:pointer}'
++'#phgFiles .fNote{color:#9a978e;font-size:12px;margin-top:12px}'
++'#phgAcctFiles{display:block}';
+ document.head.appendChild(s);}
+function icon(k){return k==='picture'?'\ud83d\uddbc\ufe0f':k==='conversation'?'\ud83d\udcac':k==='menu_design'?'\ud83c\udfa8':k==='menu_brief'?'\ud83d\udcdd':'\ud83d\udcc4';}
+function when(t){try{var d=new Date(t);return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:(new Date().getFullYear()!==d.getFullYear()?'numeric':undefined)})+' \u00b7 '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});}catch(e){return '';}}
+function sheet(){var d=$('phgFiles');if(d)return d;css();d=document.createElement('div');d.id='phgFiles';d.hidden=true;d.setAttribute('role','dialog');d.setAttribute('aria-label','My files');
+  d.innerHTML='<div class="fCard"><div class="fHead"><h2>My files</h2><button type="button" class="fX" aria-label="Close">\u00d7</button></div>'
+   +'<input class="fQ" type="search" placeholder="Search my files" autocomplete="off" enterkeyhint="search"><div class="fChips"></div><div class="fBody"></div>'
+   +'<div class="fNote">Only you can see these. They are saved to your login, not to this device.</div></div>';
+  ['pointerdown','touchstart','wheel','keydown'].forEach(function(ev){d.addEventListener(ev,function(e){e.stopPropagation();},{passive:true});});
+  d.addEventListener('click',function(e){if(e.target===d)return closeFiles();
+    if(e.target.closest('.fX'))return closeFiles();
+    var c=e.target.closest('[data-k]');if(c){V.kind=c.getAttribute('data-k');V.sel=null;load();return;}
+    var r=e.target.closest('[data-i]');if(r){openItem(V.items[+r.getAttribute('data-i')]);return;}
+    if(e.target.closest('.fBack')){V.sel=null;draw();return;}
+    var a=e.target.closest('[data-act]');if(a)act(a.getAttribute('data-act'));});
+  var qt=null;d.querySelector('.fQ').addEventListener('input',function(e){V.q=e.target.value;clearTimeout(qt);qt=setTimeout(function(){V.sel=null;load();},350);});
+  document.body.appendChild(d);return d;}
+function draw(){var d=sheet(),b=d.querySelector('.fBody');
+  d.querySelector('.fChips').innerHTML=KINDS.map(function(k){return '<button type="button" data-k="'+k[0]+'"'+(V.kind===k[0]?' class="on"':'')+'>'+esc(k[1])+'</button>';}).join('');
+  if(V.sel){b.innerHTML=detailHTML(V.sel);return;}
+  if(V.busy&&!V.items.length){b.innerHTML='<div class="fMsg">Loading your files\u2026</div>';return;}
+  if(V.msg){b.innerHTML='<div class="fMsg fErr">'+esc(V.msg)+'</div>';return;}
+  if(!V.items.length){b.innerHTML='<div class="fMsg">'+(V.q?'Nothing matches \u201c'+esc(V.q)+'\u201d.':'Nothing saved yet. Menu designs, briefs, pictures and conversations appear here as you make them.')+'</div>';return;}
+  b.innerHTML='<div class="fList">'+V.items.map(function(it,i){return '<button type="button" class="fRow" data-i="'+i+'"><span class="fIc">'+icon(it.kind)+'</span><span style="min-width:0;flex:1"><b>'+esc(it.title||'Untitled')+'</b><small>'+esc(KLAB[it.kind]||'File')+' \u00b7 '+esc(when(it.at))+'</small></span></button>';}).join('')+'</div>';}
+function detailHTML(it){
+  var h='<div class="fDetail"><b style="font-size:16px">'+esc(it.title||'Untitled')+'</b><div><small style="color:#9a978e">'+esc(KLAB[it.kind]||'File')+' \u00b7 '+esc(when(it.at))+'</small></div>';
+  if(it.kind==='conversation')h+='<dl><dt>You asked</dt><dd>'+esc(it.prompt||'')+'</dd><dt>Harmony</dt><dd>'+esc(it.reply||'')+'</dd></dl><button type="button" class="fBtn" data-act="askagain">Ask Harmony again</button>';
+  else if(it.kind==='menu_brief'){var bd=it.body||{};var keys=Object.keys(bd).filter(function(k){return typeof bd[k]==='string'&&bd[k].trim();});
+    h+='<dl>'+(keys.length?keys.map(function(k){return '<dt>'+esc(k.replace(/_/g,' '))+'</dt><dd>'+esc(bd[k])+'</dd>';}).join(''):'<dd>The brief is empty.</dd>')+'</dl><button type="button" class="fBtn" data-act="studio">Open Menu Studio</button>';}
+  else if(it.kind==='menu_design')h+='<dl><dt>Design</dt><dd>'+esc((it.body&&it.body.dir)||'')+'</dd>'+(it.body&&it.body.content?'':'<dd style="color:#9a978e">Saved before menu content was kept with designs: it reopens with the menu that is open now.</dd>')+'</dl><button type="button" class="fBtn" data-act="opendesign">Open in Menu Studio</button>';
+  else if(it.kind==='document')h+='<dl><dd>'+esc(it.title)+' is saved to your login and restored on every device you sign in on.</dd></dl>';
+  else if(it.kind==='picture')h+='<dl><dd>Opening the picture\u2026</dd></dl>';
+  return h+'<button type="button" class="fBack">Back</button></div>';}
+function load(){
+  if(!tok()){V.items=[];V.msg='Sign in to see your files.';draw();return;}
+  V.busy=true;V.msg='';draw();var q=V.q.trim()||null,k=V.kind;
+  var jobs=[];
+  if(k!=='conversation')jobs.push(api('/rpc/phg_my_files',{method:'POST',body:JSON.stringify({p_query:q,p_kind:k||null,p_limit:200})}).then(function(r){return (r||[]).map(function(x){return {id:x.id,kind:x.kind,title:x.title,at:x.updated_at,has_body:x.has_body};});}));
+  if(!k||k==='conversation')jobs.push(api('/rpc/phg_my_conversations',{method:'POST',body:JSON.stringify({p_query:q,p_limit:k?200:40})}).then(function(r){return (r||[]).map(function(x){return {id:'ix:'+x.id,kind:'conversation',title:x.prompt,at:x.at,prompt:x.prompt,reply:x.reply};});}));
+  Promise.all(jobs).then(function(lists){var all=[].concat.apply([],lists);all.sort(function(a,b){return String(b.at).localeCompare(String(a.at));});V.items=all.slice(0,240);V.busy=false;draw();},
+    function(e){V.busy=false;V.items=[];V.msg='Your files could not be loaded. '+(e&&e.status===401?'Sign in again.':'Check your connection and try again.');draw();});}
+function getBody(it){if(it.body!==undefined||!it.has_body)return Promise.resolve(it.body||null);
+  return api('/phg_user_files?select=body&id=eq.'+encodeURIComponent(it.id)+'&limit=1').then(function(r){it.body=r&&r[0]?r[0].body:null;return it.body;});}
+function openItem(it){if(!it)return;V.sel=it;
+  if(it.kind==='picture'){draw();var t=tok();
+    fetch(FN+'phg-my-files',{method:'POST',headers:{'Content-Type':'application/json',apikey:apikey(),Authorization:'Bearer '+t},body:JSON.stringify({op:'sign',id:it.id})})
+      .then(function(r){return r.json();}).then(function(j){if(!j||!j.url)throw new Error('no url');closeFiles();
+        if(typeof G.harmonyDataShow==='function'&&document.getElementById('phgView'))G.harmonyDataShow({type:'image',title:it.title||'Picture',url:j.url,note:'A picture Harmony made for you.'});
+        else G.open(j.url,'_blank','noopener');})
+      .catch(function(){V.sel=null;V.msg='That picture could not be opened.';draw();setTimeout(function(){V.msg='';draw();},2500);});
+    return;}
+  if(it.kind==='menu_design'||it.kind==='menu_brief'){getBody(it).then(function(){draw();},function(){draw();});return;}
+  draw();}
+function act(a){var it=V.sel;if(!it)return;
+  if(a==='askagain'){closeFiles();if(typeof G.harmonyConverse==='function')G.harmonyConverse(it.prompt);return;}
+  if(a==='studio'){closeFiles();try{if(G.PMS&&G.PMS.open_)G.PMS.open_();}catch(e){}return;}
+  if(a==='opendesign'){closeFiles();try{if(G.PMS&&G.PMS.openSaved)G.PMS.openSaved(it.body||{});}catch(e){}return;}}
+function openFiles(q,kind){var d=sheet();V.open=true;V.q=q||'';V.kind=kind||'';V.sel=null;d.querySelector('.fQ').value=V.q;d.hidden=false;load();}
+function closeFiles(){var d=$('phgFiles');if(d)d.hidden=true;V.open=false;}
+/* "My files" row in the 3-line account menu */
+setInterval(function(){try{var bd=document.querySelector('.phgAuthBadge.phgAcctOpen'),ex=$('phgAcctFiles');
+  if(!bd||!tok()){return;}
+  if(!ex||ex.parentNode!==bd){if(ex)ex.remove();ex=document.createElement('button');ex.id='phgAcctFiles';ex.type='button';ex.textContent='My files';
+    ex.onclick=function(e){e.stopPropagation();try{var t=$('phgAcctBtn');if(t&&t.getAttribute('aria-expanded')==='true')t.click();}catch(_){}openFiles();};
+    var role=bd.querySelector('.role');if(role&&role.nextSibling)bd.insertBefore(ex,role.nextSibling);else bd.insertBefore(ex,bd.firstChild);}}catch(e){}},600);
+/* Harmony: "open my files", "show my pictures", "find my Tuesday menu" */
+G.phgFilesIntent=function(q){q=String(q||'').trim();
+  var m=q.match(/^(?:please\s+)?(?:open|show|find|pull up|bring up|get|list|see)\s+(?:me\s+)?(?:all\s+)?my\s+(.+?)[.?!]*$/i);
+  if(!m)return false;var w=m[1].toLowerCase().trim();
+  var kind=/^(files?|stuff|things|saved( (stuff|things|files))?)$/.test(w)?'':/^(pictures?|images?|illustrations?|drawings?|art)$/.test(w)?'picture':/^(conversations?|chats?|history|questions?)$/.test(w)?'conversation':/^(menu )?designs?$|^saved menus?$/.test(w)?'menu_design':/^(menu )?briefs?$/.test(w)?'menu_brief':/^(documents?|docs?|workflows?|guides?)$/.test(w)?'document':null;
+  if(kind===null){var qq=w.replace(/\b(menu|design|file|picture|brief)s?\b/g,' ').replace(/\s+/g,' ').trim();openFiles(qq||w,'');}
+  else openFiles('',kind);
+  if(typeof G.agentSay==='function')G.agentSay(kind===null?'Here\u2019s what I found in your files.':'Here are your '+(KINDS.filter(function(k){return k[0]===kind;})[0]||['','files'])[1].toLowerCase()+'.');
+  return true;};
+G.phgFilesOpen=openFiles;G.phgFilesClose=closeFiles;
+G.phgFiles={state:function(){return {uid:S.uid,pulled:S.pulled,pushing:S.pushing,dirty:Object.keys(S.dirty),err:S.err,lastPull:S.lastPull,lastPush:S.lastPush,open:V.open,items:V.items.length};},push:push,pull:pull};
 })();
 </script>
 </body>
