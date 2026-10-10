@@ -7373,8 +7373,8 @@ function phgPkRegister(done,silent){
     var as=pk.authenticatorSelection||{};pk.authenticatorSelection={authenticatorAttachment:'platform',residentKey:'required',requireResidentKey:true,userVerification:silent?'preferred':(as.userVerification||'preferred')};
     pk.hints=['client-device'];
     var req={publicKey:pk};
-    /* silent save: the device either saves at once or declines; if it neither saves nor declines in 6 s, stop and offer one tap */
-    if(silent){req.mediation='conditional';var ac=new AbortController();req.signal=ac.signal;setTimeout(function(){try{ac.abort();}catch(_){}},6000);}
+    /* silent save: the device either saves at once or declines; if it neither saves nor declines in 3 s, stop and offer one tap */
+    if(silent){req.mediation='conditional';var ac=new AbortController();req.signal=ac.signal;setTimeout(function(){try{ac.abort();}catch(_){}},3000);}
     return navigator.credentials.create(req).then(function(cred){
       if(!cred)throw new Error('cancelled');var r=cred.response;
       return phgAuthApi('/passkeys/registration/verify',{challenge_id:o.challenge_id,credential:{id:cred.id,rawId:phgPkU2B(cred.rawId),type:'public-key',
@@ -7391,7 +7391,7 @@ function phgPkRegister(done,silent){
 function phgPkCard(title,body,yes,no){
   var d=document.getElementById('phgPkCard');if(d)d.remove();
   d=document.createElement('div');d.id='phgPkCard';d.setAttribute('role','dialog');d.setAttribute('aria-label',title);
-  d.style.cssText='position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2147483000;width:min(92vw,380px);'
+  d.style.cssText='position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2147483647;width:min(92vw,380px);'
     +'background:rgba(15,23,42,.96);color:#e2e8f0;border:1px solid rgba(125,211,252,.35);border-radius:18px;padding:16px 16px 14px;box-shadow:0 18px 50px rgba(0,0,0,.45);font:15px/1.4 system-ui,-apple-system,sans-serif';
   d.innerHTML='<div style="font-weight:700;font-size:16px;margin:0 0 4px">'+phgAuthEsc(title)+'</div><div class="pkBody" style="opacity:.85;margin:0 0 12px">'+phgAuthEsc(body)+'</div>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end">'+(no?'<button type="button" class="pkNo" style="padding:9px 14px;border-radius:12px;border:1px solid rgba(148,163,184,.4);background:transparent;color:#e2e8f0;font:inherit">'+phgAuthEsc(no)+'</button>':'')
@@ -7419,13 +7419,13 @@ function phgPkOfferSoon(){
   PHGPK.offerShown=true;
   var caps=(window.PublicKeyCredential&&PublicKeyCredential.getClientCapabilities)?PublicKeyCredential.getClientCapabilities().catch(function(){return {};}):Promise.resolve({});
   caps.then(function(c){
-    if(!(c&&c.conditionalCreate)){setTimeout(function(){if(PHGAUTH.workspace&&phgAuthAccessToken())phgPkAsk(false);},2500);return;}
+    if(!(c&&c.conditionalCreate)){setTimeout(function(){if(phgAuthAccessToken())phgPkAsk(false);},600);return;}
     phgPkPrefetchReg().then(function(o){if(!o)return;
       PHGPK.silent=true;
       phgPkRegister(function(ok,msg,n){PHGPK.silent=false;
         if(ok){phgPkNote(phgPkLabel()+' saved automatically. Next time, tap Sign in with '+phgPkLabel()+'.');return;}
         /* the device would not save it silently (e.g. the password was typed, not filled): one tap instead */
-        setTimeout(function(){if(PHGAUTH.workspace&&phgAuthAccessToken())phgPkAsk(false);},800);
+        setTimeout(function(){if(phgAuthAccessToken())phgPkAsk(false);},200);
       },true);
     });
   });
@@ -7508,7 +7508,7 @@ function phgAuthLogin(){
      "Opening Harmony" splash instead of being redrawn empty while the workspace loads. Safari / iCloud Keychain treat an
      empty login form coming back as a failed sign-in and never offer Save Password, so nothing was ever saved to recall. */
   PHGAUTH.pkUsed=false;try{phgPkStopAutofill();}catch(_){}
-  phgAuthApi('/token?grant_type=password',c,null).then(function(j){phgAuthRememberEmail(c.email);phgAuthOfferSave(c);phgAuthSaveSession(j);PHGAUTH.auto=true;return phgAuthBootstrap().then(function(r){try{phgPkOfferSoon();}catch(_){}return r;});}).catch(function(e){PHGAUTH.auto=false;PHGAUTH.busy=false;PHGAUTH.error=e.message||String(e);phgAuthDraw();});
+  phgAuthApi('/token?grant_type=password',c,null).then(function(j){phgAuthRememberEmail(c.email);phgAuthOfferSave(c);phgAuthSaveSession(j);PHGAUTH.auto=true;try{phgPkOfferSoon();}catch(_){}return phgAuthBootstrap();}).catch(function(e){PHGAUTH.auto=false;PHGAUTH.busy=false;PHGAUTH.error=e.message||String(e);phgAuthDraw();});
 }
 function phgAuthSignup(){
   var c=phgAuthCredentials();if(!c.email||!c.password){PHGAUTH.error='Enter an email and password.';phgAuthDraw();return;}
